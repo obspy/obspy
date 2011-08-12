@@ -375,7 +375,7 @@ class Client(object):
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e.message)
+            msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         return data
 
@@ -454,7 +454,7 @@ class Client(object):
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e.message)
+            msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         return data
 
@@ -525,7 +525,7 @@ class Client(object):
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
             msg = "No waveform data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e.message)
+            msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         # if filename is given, create fh, write to file and return
         if filename:
@@ -623,7 +623,7 @@ class Client(object):
             data = self._fetch(url, data=bulk)
         except HTTPError, e:
             msg = "No waveform data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e.message)
+            msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         # create temporary file for writing data
         tf = NamedTemporaryFile()
@@ -938,7 +938,7 @@ class Client(object):
             data = self._fetch(url, headers=headers, **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e.message)
+            msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         data = json.loads(data)
         results = {}
@@ -946,6 +946,52 @@ class Client(object):
         results['backazimuth'] = data['DistanceAzimuth']['backAzimuth']
         results['azimuth'] = data['DistanceAzimuth']['azimuth']
         return results
+
+    def flinnengdahl(self, lat, lon, rtype="both"):
+        """
+        Interface for `flinnengdahl` Web service of IRIS
+        (http://www.iris.edu/ws/flinnengdahl/).
+
+        This method converts a latitude, longitude pair into either a Flinn-
+        Engdahl region code or name.
+
+        Example
+        -------
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
+        683
+        >>> client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
+        'OREGON'
+        >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
+        (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN ')
+
+        :param lat: Latitude of interest.
+        :type lat: float
+        :param lon: Longitude of interest.
+        :type lon: float
+        :param rtype: 'code', 'region' or 'both' (default) 
+        :type rtype: 
+
+        :rtype: int, string, or (int, string)
+        :returns: Returns Flinn-Engdahl region code or name or both, depending
+            on the request type parameter ``rtype``.
+        """
+        url = '/flinnengdahl/%s?lat=%f&lon=%f'
+        # check rtype
+        try:
+            if rtype == 'code':
+                return int(self._fetch(url % (rtype, lat, lon)))
+            elif rtype == 'region':
+                return self._fetch(url % (rtype, lat, lon)).strip()
+            else:
+                code = int(self._fetch(url % ('code', lat, lon)))
+                region = self._fetch(url % ('region', lat, lon)).strip()
+                return (code, region)
+        except HTTPError, e:
+            msg = "No Flinn-Engdahl data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e)
+            raise Exception(msg)
 
 
 if __name__ == '__main__': # pragma: no cover

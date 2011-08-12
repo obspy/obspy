@@ -138,6 +138,43 @@ class ClientTestCase(unittest.TestCase):
         expected.pop(5)
         self.assertEquals(got, expected)
 
+    def test_distaz(self):
+        """
+        Tests distance and azimuth calculation between two points on a sphere.
+        """
+        client = Client()
+        #1 - normal request
+        result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, evtlon=1.4)
+        self.assertAlmostEquals(result['distance'], 2.09554)
+        self.assertAlmostEquals(result['backazimuth'], 5.46946)
+        self.assertAlmostEquals(result['azimuth'], 185.47692)
+        #2 - missing parameters
+        self.assertRaises(Exception, client.distaz, stalat=1.1)
+        self.assertRaises(Exception, client.distaz, stalat=1.1, stalon=1.2)
+
+    def test_flinnengdahl(self):
+        """
+        Tests calculation of Flinn-Engdahl region code or name.
+        """
+        client = Client()
+        #1 - code
+        result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="code")
+        self.assertEquals(result, 683)
+        #2 - region
+        result = client.flinnengdahl(lat=42, lon= -122.24, rtype="region")
+        self.assertEquals(result, 'OREGON')
+        #3 - both
+        result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="both")
+        self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        #4 - default rtype
+        result = client.flinnengdahl(lat=42, lon= -122.24)
+        self.assertEquals(result, (32, 'OREGON'))
+        #5 - outside boundaries
+        self.assertRaises(Exception, client.flinnengdahl, lat= -90.1, lon=0)
+        self.assertRaises(Exception, client.flinnengdahl, lat= +90.1, lon=0)
+        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon= -180.1)
+        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon= +180.1)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
