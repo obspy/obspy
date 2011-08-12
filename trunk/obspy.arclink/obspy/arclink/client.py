@@ -17,6 +17,7 @@ from telnetlib import Telnet
 import os
 import sys
 import time
+from fnmatch import fnmatch
 
 
 ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
@@ -142,19 +143,15 @@ class Client(Telnet):
         # skip routing on request
         if not route:
             return self._request(request_type, request_data)
-        # using route
+        # request routing table for given network/station/times combination
+        # location and channel information are ignored by ArcLink
         routes = self.getRouting(network=request_data[2],
                                  station=request_data[3],
                                  starttime=request_data[0],
                                  endtime=request_data[1])
-        # check if route for network and station combination exists
-        id = request_data[2] + '.' + request_data[3]
-        if id in routes.keys() and routes[id] == []:
-            # we are at the responsible ArcLink node 
-            return self._request(request_type, request_data)
-        # check if route for network exists
-        id = request_data[2] + '.'
-        if id not in routes.keys():
+        # search routes for network/station/location/channel
+        table = self._findRoute(routes, request_data)
+        if not table:
             # retry first ArcLink node if host and port have been changed
             if self.host != self.init_host and self.port != self.init_port:
                 self.host = self.init_host
@@ -164,12 +161,15 @@ class Client(Telnet):
                 return self._fetch(request_type, request_data, route)
             msg = 'Could not find route to %s.%s'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
-        # route for network id exists
-        routes = routes[id]
-        routes.sort(lambda x, y: cmp(x['priority'], y['priority']))
-        for route in routes:
-            self.host = route['host']
-            self.port = route['port']
+        # we got a routing table
+        for item in table:
+            if item == {}:
+                return self._request(request_type, request_data)
+            # check if current connection is enough
+            if item['host'] == self.host and item['port'] == self.port:
+                return self._request(request_type, request_data)
+            self.host = item['host']
+            self.port = item['port']
             if self.debug:
                 print('\nRequesting %s:%d' % (self.host, self.port))
             # only use timeout from python2.6
@@ -469,9 +469,13 @@ class Client(Telnet):
         result = {}
         for route in xml_doc.xpath('ns0:route', namespaces={'ns0':xml_ns}):
             if xml_ns == ROUTING_NS_0_1:
-                id = route.get('net_code') + '.' + route.get('sta_code')
+                # no location/stream codes in 0.1
+                id = route.get('net_code') + '.' + route.get('sta_code') + '..'
             else:
-                id = route.get('networkCode') + '.' + route.get('stationCode')
+                id = route.get('networkCode') + '.' + \
+                    route.get('stationCode') + '.' + \
+                    route.get('locationCode') + '.' + \
+                    route.get('streamCode')
             result[id] = []
             for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
                 temp = {}
@@ -488,6 +492,42 @@ class Client(Telnet):
                 temp['port'] = int(node.get('address').split(':')[1].strip())
                 result[id].append(temp)
         return result
+
+    def _findRoute(self, routes, request_data):
+        """
+        Searches routing table for requested stream id and date/times.
+        """
+        # Note: Filtering by date/times is not really supported by ArcLink yet,
+        # therefore not included here
+        # Multiple fitting entries are sorted by priority only
+        net, sta, cha, loc = (request_data + ['', ''])[2:6]
+        keys = []
+        for key in routes:
+            parts = key.split('.')
+            if parts[0] and net != '*'  and not fnmatch(parts[0], net):
+                continue
+            if parts[1] and sta != '*'  and not fnmatch(parts[1], sta):
+                continue
+            if parts[2] and loc != '*'  and not fnmatch(parts[2], loc):
+                continue
+            if parts[3] and cha != '*' and not fnmatch(parts[3], cha):
+                continue
+            keys.append(key)
+        if not keys:
+            # no route found
+            return False
+        # merge all
+        out = []
+        for key in keys:
+            temp = routes[key]
+            if temp == []:
+                out.append({})
+            else:
+                out.extend(temp)
+        # sort by priority
+        out.sort(lambda x, y: cmp(x.get('priority', 1000),
+                                  y.get('priority', 1000)))
+        return out
 
     def getQC(self, network, station, location, channel, starttime,
               endtime, parameters='*', outages=True, logs=True):
