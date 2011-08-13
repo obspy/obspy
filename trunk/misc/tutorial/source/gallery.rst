@@ -7,66 +7,71 @@ Gallery
 **Click on any image to see full size image and source code**
 
 .. plot:: source/tutorial/reading_seismograms.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/reading_seismograms.html
     :alt: Reading Seismograms
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_1.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/waveform_plotting_tutorial.html
     :alt: Waveform Plotting Tutorial 1
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_2.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/waveform_plotting_tutorial.html#saving-plot-to-file
     :alt: Waveform Plotting Tutorial 2
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_3.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/waveform_plotting_tutorial.html#plotting-multiple-channels
     :alt: Waveform Plotting Tutorial 3
 
 .. plot:: source/tutorial/filtering_seismograms.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/filtering_seismograms.html
     :alt: Filtering Seismograms
 
 .. plot:: source/tutorial/downsampling_seismograms.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/downsampling_seismograms.html
     :alt: Downsampling Seismograms
 
 .. plot:: source/tutorial/seismogram_envelopes.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/seismogram_envelopes.html
     :alt: Seismogram Envelopes
 
 .. plot:: source/tutorial/plotting_spectrograms.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/plotting_spectrograms.html
     :alt: Plotting Spectrograms
 
+.. plot:: source/tutorial/frequency_response.py
+    :width: 300px
+    :target: tutorial/frequency_response.html
+    :alt: Poles and Zeros, Frequency Response
+
 .. plot:: source/tutorial/retrieving_data_via_arclink.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/retrieving_data_via_arclink.html
     :alt: Retrieving Data via ArcLink
 
 .. plot:: source/tutorial/beachball_plot.py
-    :width: 300 px
+    :height: 200px
     :target: tutorial/beachball_plot.html
     :alt: Beachball Plot
 
 .. plot:: source/tutorial/basemap_plot_with_beachballs.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/basemap_plot_with_beachballs.html
     :alt: Basemap Plot with Beachballs¶
 
 .. plot:: source/tutorial/merging_seismograms.py
-    :height: 300 px
+    :width: 300px
     :target: tutorial/merging_seismograms.html
     :alt: Merging Seismograms
 
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
-    :width: 300 px
+    :width: 300px
     :target: tutorial/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities

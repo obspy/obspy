@@ -2,11 +2,38 @@
 #gallery div.figure {
   display : inline;
 }
+
 #gallery div.figure img {
   padding : 5px;
   vertical-align : middle;
 }
+
 a.external[href^="http:"] {
   background : transparent url(extlink.gif) no-repeat scroll left center;
   padding-left : 15px;
+}
+pre {
+  background-color : #F5F5F5;
+  border : 1px solid #CCCCCC;
+  font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
+  font-size : 0.9em;
+  line-height : 130%;
+  margin-bottom : 20px;
+  margin-left : 20px;
+  padding : 0.5em;
+}
+
+tt {
+  background-color : #ECF0F3;
+  font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
+  font-size : 0.9em;
+  padding : 2px;
+}
+
+.highlight {
+  background : none repeat scroll 0 0 #FFFFFF;
+}
+
+div.highlight pre {
+  background: none repeat scroll 0 0 #EEFFCC;
 }

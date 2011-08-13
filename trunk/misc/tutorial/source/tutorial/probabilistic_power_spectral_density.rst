@@ -3,7 +3,7 @@ Visualizing Probabilistic Power Spectral Densities
 ==================================================
 
 The following code example shows how to use the
-:py:class:`~obspy.signal.psd.PPSD` class defined in :py:mod:`obspy.signal`. The
+:class:`~obspy.signal.psd.PPSD` class defined in :mod:`obspy.signal`. The
 routine is useful for interpretation of e.g. noise measurements for site
 quality control checks. For more information on the topic see
 `McNamara and Buland 2004`_.
@@ -22,7 +22,7 @@ Read data and select a trace with the desired station/channel combination:
     >>> tr = st.select(id="BW.KW1..EHZ")[0]
 
 Get poles and zeros information, e.g. from a dataless SEED file. Then
-initialize a new :py:class:`~obspy.signal.psd.PPSD` instance. The ppsd object
+initialize a new :class:`~obspy.signal.psd.PPSD` instance. The ppsd object
 will then make sure that only appropriate data go into the probabilistic psd
 statistics.
 
@@ -69,7 +69,8 @@ Additional information from other files/sources can be added step by step.
     >>> ppsd.add(st)
     True
         
-The graphical representation of the ppsd can be displayed in a matplotlib window..
+The graphical representation of the ppsd can be displayed in a matplotlib
+window..
 
     >>> ppsd.plot()
 
@@ -80,12 +81,19 @@ The graphical representation of the ppsd can be displayed in a matplotlib window
 
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
 
-Below the actual PPSD (for a detailed discussion see `McNamara and Buland 2004`_) is a visualization of the data basis for the PPSD (can also be switched off during plotting). The top row shows data fed into the PPSD, green patches represent available data, red patches represent gaps in streams that were added to the PPSD. The bottom row in blue shows the single psd measurements that go into the histogram. The default processing method fills gaps with zeros, these data segments then show up as single outlying psd lines.
+Below the actual PPSD (for a detailed discussion see
+`McNamara and Buland 2004`_) is a visualization of the data basis for the PPSD
+(can also be switched off during plotting). The top row shows data fed into the
+PPSD, green patches represent available data, red patches represent gaps in
+streams that were added to the PPSD. The bottom row in blue shows the single
+psd measurements that go into the histogram. The default processing method
+fills gaps with zeros, these data segments then show up as single outlying psd
+lines.
 
 .. note::
    
    Providing metadata from e.g. a Dataless SEED volume is safer than specifying
-   static poles and zeros information (see :py:class:`~obspy.signal.psd.PPSD`). 
+   static poles and zeros information (see :class:`~obspy.signal.psd.PPSD`). 
 
 
 .. _`McNamara and Buland 2004`: http://bssa.geoscienceworld.org/cgi/content/abstract/94/4/1517
