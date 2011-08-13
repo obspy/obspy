@@ -135,11 +135,12 @@ import ctypes as C
 import math
 import numpy as np
 import os
-import warnings
+
 
 # as defined in libmseed.h
 MS_ENDOFFILE = 1
 MS_NOERROR = 0
+
 
 class LibMSEED(object):
     """
@@ -263,8 +264,6 @@ class LibMSEED(object):
                               raise_flag=False)
             if errcode != MS_NOERROR:
                 if errcode == MS_ENDOFFILE:
-                    msg = "Broken last record in mseed file %s" % filename
-                    warnings.warn(msg)
                     break
                 raise Exception("Error %d in ms_readmsr_r" % errcode)
             chain = ms.msr.contents
