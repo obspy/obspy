@@ -281,16 +281,15 @@ def writeSLIST(stream, filename, **kwargs):
                            dtype, unit)
         fh.write(header)
         # write data
-        rest = stats.npts % 5
+        rest = stats.npts % 6
         if rest:
             data = trace.data[:-rest]
         else:
             data = trace.data
-        data = data.reshape((-1, 5))
-        for slice in data:
-            np.savetxt(fh, slice, fmt="%f")
+        data = data.reshape((-1, 6))
+        np.savetxt(fh, data, fmt="%f", delimiter='\t')
         if rest:
-            np.savetxt(fh, trace.data[-rest:], fmt="%f")
+            fh.write('\t'.join(['%f' % d for d in trace.data[-rest:]]) + '\n')
     fh.close()
 
 
