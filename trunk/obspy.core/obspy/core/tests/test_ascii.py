@@ -308,7 +308,7 @@ class ASCIITestCase(unittest.TestCase):
         lines = open(tmpfile, 'rt').readlines()
         self.assertTrue(lines[0].startswith('TIMESERIES'))
         self.assertTrue('TSPAIR' in lines[0])
-        self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185.000000\n')
+        self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185\n')
         # read again
         stream = readTSPAIR(tmpfile)
         stream.verify()
@@ -404,9 +404,7 @@ class ASCIITestCase(unittest.TestCase):
         lines = open(tmpfile, 'rt').readlines()
         self.assertTrue(lines[0].startswith('TIMESERIES'))
         self.assertTrue('SLIST' in lines[0])
-        self.assertEqual(lines[1].strip(),
-            '185.000000\t181.000000\t185.000000\t189.000000\t194.000000\t' + \
-            '205.000000')
+        self.assertEqual(lines[1].strip(), '185\t181\t185\t189\t194\t205')
         # read again
         stream = readSLIST(tmpfile)
         stream.verify()

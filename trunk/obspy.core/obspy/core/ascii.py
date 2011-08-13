@@ -265,8 +265,10 @@ def writeSLIST(stream, filename, **kwargs):
         # sample type
         if trace.data.dtype.name.startswith('int'):
             dtype = 'INTEGER'
+            fmt = '%d'
         elif trace.data.dtype.name.startswith('float'):
             dtype = 'FLOAT'
+            fmt = '%f'
         else:
             raise NotImplementedError
         # unit
@@ -287,9 +289,9 @@ def writeSLIST(stream, filename, **kwargs):
         else:
             data = trace.data
         data = data.reshape((-1, 6))
-        np.savetxt(fh, data, fmt="%f", delimiter='\t')
+        np.savetxt(fh, data, fmt=fmt, delimiter='\t')
         if rest:
-            fh.write('\t'.join(['%f' % d for d in trace.data[-rest:]]) + '\n')
+            fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) + '\n')
     fh.close()
 
 
@@ -366,8 +368,10 @@ def writeTSPAIR(stream, filename, **kwargs):
         # sample type
         if trace.data.dtype.name.startswith('int'):
             dtype = 'INTEGER'
+            fmt = '%d'
         elif trace.data.dtype.name.startswith('float'):
             dtype = 'FLOAT'
+            fmt = '%f'
         else:
             raise NotImplementedError
         # unit
@@ -387,7 +391,7 @@ def writeTSPAIR(stream, filename, **kwargs):
                           stats.delta)
         data = np.vstack((times, trace.data)).T
         # .26s cuts the Z from the time string
-        np.savetxt(fh, data, fmt="%.26s  %f")
+        np.savetxt(fh, data, fmt="%.26s  " + fmt)
     fh.close()
 
 
