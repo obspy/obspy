@@ -1,0 +1,39 @@
+=================================
+Seismometer Correction/Simulation
+=================================
+
+The following script shows how to simulate a 1Hz seismometer from a STS-2
+seismometer with the given poles and zeros. Poles, zeros, gain
+(*A0 normalization factor*) and sensitivity (*overall sensitivity*) are
+specified as keys of a dictionary. 
+
+.. include:: seismometer_correction_simulation_1.py
+   :literal:
+
+.. plot:: source/tutorial/seismometer_correction_simulation_1.py
+
+For more customized plotting we could also work with matplotlib_ manually from
+here: 
+
+.. code-block:: python
+   
+   import numpy as np
+   import matplotlib.pyplot as plt
+   
+   tr = st[0]
+   tr_orig = st_orig[0]
+   
+   t = np.arange(tr.stats.npts) / tr.stats.sampling_rate
+   
+   plt.subplot(211)
+   plt.plot(t, tr_orig.data, 'k')
+   plt.ylabel('STS-2 [counts]')
+   plt.subplot(212)
+   plt.plot(t, tr.data, 'k')
+   plt.ylabel('1Hz Instrument [m/s]')
+   plt.xlabel('Time [s]')
+   plt.show()
+
+.. plot:: source/tutorial/seismometer_correction_simulation_2.py
+
+.. _matplotlib: http://matplotlib.sourceforge.net/

@@ -24,7 +24,7 @@ The first lines of our SRTM data file (from
 
 .. plot:: source/tutorial/basemap_plot_with_beachballs.py
 
-*Some notes:*
+**Some notes:**
 
 * The Python package GDAL_ allows you to directly read a GeoTiff into NumPy_
   :class:`~numpy.ndarray`

@@ -41,6 +41,11 @@ Gallery
     :target: tutorial/seismogram_envelopes.html
     :alt: Seismogram Envelopes
 
+.. plot:: source/tutorial/seismometer_correction_simulation_1.py
+    :width: 300px
+    :target: tutorial/seismometer_correction_simulation.html
+    :alt: Seismometer Correction/Simulation
+
 .. plot:: source/tutorial/plotting_spectrograms.py
     :width: 300px
     :target: tutorial/plotting_spectrograms.html
@@ -57,7 +62,7 @@ Gallery
     :alt: Retrieving Data via ArcLink
 
 .. plot:: source/tutorial/beachball_plot.py
-    :height: 200px
+    :height: 100px
     :target: tutorial/beachball_plot.html
     :alt: Beachball Plot
 

@@ -1,6 +1,6 @@
-===================
-Merging Seismograms
-===================
+=================================================
+Merging Seismograms (XXX: not working on Windows)
+=================================================
 
 The following example shows how to merge and plot three seismograms with
 overlaps, the longest one is taken to be the right one. Please also refer to

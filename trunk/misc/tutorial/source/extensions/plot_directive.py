@@ -440,10 +440,11 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
                 # Copy the linked-to files to the destination within the build tree,
                 # and add a link for them
                 links = []
+                newlinkdir = linkdir.replace(os.sep, '/')
                 if plot_code is None:
-                    links.append('`source code <%(linkdir)s/%(basename)s.py>`__')
+                    links.append('`source code <%(newlinkdir)s/%(basename)s.py>`__')
                 for format, dpi in formats[1:]:
-                    links.append('`%s <%s/%s.%s>`__' % (format, linkdir, outname, format))
+                    links.append('`%s <%s/%s.%s>`__' % (format, newlinkdir, outname, format))
                 if len(links):
                     links = '[%s]' % (', '.join(links) % locals())
                 else:

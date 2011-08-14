@@ -9,10 +9,10 @@ corners de facto.
 
 The available filters are:
 
-* "bandpass"
-* "bandstop"
-* "lowpass"
-* "highpass" 
+* ``bandpass``
+* ``bandstop``
+* ``lowpass``
+* ``highpass`` 
 
 .. include:: filtering_seismograms.py
    :literal:
