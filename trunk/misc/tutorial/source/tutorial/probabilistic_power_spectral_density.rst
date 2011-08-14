@@ -58,6 +58,7 @@ object makes sure that no overlapping data segments go into the ppsd estimate.
 .. doctest::
 
     >>> ppsd.add(st)
+    False
     >>> print "number of psd segments:", len(ppsd.times)
     number of psd segments: 47
 
