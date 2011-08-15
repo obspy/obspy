@@ -40,7 +40,7 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
 
 >>> from obspy.core import UTCDateTime
 >>> from obspy.arclink.client import Client
->>> client = Client("webdc.eu", 18001)
+>>> client = Client("webdc.eu", 18001, user='test@obspy.org')
 >>> t = UTCDateTime("2009-08-20 04:03:12")
 >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
 >>> st.plot() #doctest: +SKIP 
@@ -49,7 +49,7 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
 
     from obspy.core import UTCDateTime
     from obspy.arclink.client import Client
-    client = Client("webdc.eu", 18001)
+    client = Client("webdc.eu", 18001, 'test@obspy.org')
     t = UTCDateTime("2009-08-20 04:03:12")
     st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
     st.plot() #doctest: +SKIP

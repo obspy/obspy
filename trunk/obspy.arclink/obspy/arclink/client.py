@@ -44,8 +44,9 @@ class Client(Telnet):
         Seconds before a connection timeout is raised (default is 20 seconds).
         This works only for Python >= 2.6.x.
     user : string, optional
-        The user name used for authentication with the ArcLink server (default
-        is an 'Anonymous' for accessing public ArcLink server).
+        The user name is used for identification with the ArcLink server. This
+        entry is also used for usage statistics within the data centers, so
+        please provide a meaningful user id (default is 'ObsPy client').
     password : string, optional
         A password used for authentication with the ArcLink server (default is
         an empty string).
@@ -76,8 +77,8 @@ class Client(Telnet):
     status_timeout = 2
     status_delay = 0.1
 
-    def __init__(self, host="webdc.eu", port=18002, timeout=20,
-                 user="ObsPy client", password="", institution="Anonymous",
+    def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
+                 password="", institution="Anonymous", timeout=20,
                  debug=False, command_delay=0, plain_status_allowed=True):
         """
         """
