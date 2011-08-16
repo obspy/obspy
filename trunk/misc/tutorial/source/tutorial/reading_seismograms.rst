@@ -30,6 +30,11 @@ only one :class:`~obspy.core.trace.Trace` in the given seismogram:
    >>> print st
    1 Trace(s) in Stream:
    .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples
+   >>> len(st)
+   1
+   >>> tr = st[0]  # assign first and only trace to new variable
+   >>> print tr
+   .RJOB..Z | 2005-10-06T07:21:59.849998Z - 2005-10-06T07:24:59.844998Z | 200.0 Hz, 36000 samples
 
 -------------------
 Accessing Meta Data
@@ -40,7 +45,7 @@ via the ``stats`` keyword on each :class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
-    >>> print st[0].stats
+    >>> print tr.stats
              network:
              station: RJOB
             location:
@@ -53,9 +58,9 @@ via the ``stats`` keyword on each :class:`~obspy.core.trace.Trace`:
                calib: 0.0948999971151
              _format: GSE2
                 gse2: AttribDict({'instype': '      ', 'datatype': 'CM6', 'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0, 'calper': 1.0})
-    >>> st[0].stats.station
+    >>> tr.stats.station
     'RJOB'
-    >>> st[0].stats.gse2.datatype
+    >>> tr.stats.gse2.datatype
     'CM6'
 
 -----------------------
@@ -67,11 +72,11 @@ The actual waveform data may be retrieved via the ``data`` keyword on each
 
 .. doctest::
 
-    >>> st[0].data
+    >>> tr.data
     array([-38,  12,  -4, ..., -14,  -3,  -9])
-    >>> st[0].data[0:3]
+    >>> tr.data[0:3]
     array([-38,  12,  -4])
-    >>> len(st[0])
+    >>> len(tr)
     36000
 
 ------------
