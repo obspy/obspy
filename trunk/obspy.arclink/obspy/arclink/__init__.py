@@ -38,6 +38,11 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
     order to download the requested data. Please make sure that no firewall is
     blocking access to this server/port combination.
 
+.. note::
+    The ``user`` keyword in the following example is used for identification
+    with the ArcLink server as well as for usage statistics within the data
+    center, so please provide a meaningful user id such as your email address.
+
 >>> from obspy.core import UTCDateTime
 >>> from obspy.arclink.client import Client
 >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
