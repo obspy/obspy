@@ -751,7 +751,7 @@ class Stream(object):
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted from the beginning.
             Defaults to False.
-        :param endtime: Enditime of the graph as a
+        :param endtime: Endtime of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
             Defaults to False.
