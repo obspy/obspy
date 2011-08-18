@@ -318,8 +318,8 @@ class WaveformPlotting(object):
             ax.plot(x_values, y_values, color=self.color[(_i % self.repeat)
                                                            % len(self.color)])
         # Set ranges.
-        ax.xlim(0, self.width - 1)
-        ax.ylim(-0.3 , self.steps + 0.3)
+        ax.set_xlim(0, self.width - 1)
+        ax.set_ylim(-0.3 , self.steps + 0.3)
         self.axis = [ax]
         # Set ticks.
         # XXX: Ugly workaround to get the ticks displayed correctly.
@@ -331,9 +331,9 @@ class WaveformPlotting(object):
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
         s = self.stream[0].stats
-        self.fig.title('%s.%s.%s.%s' % (s.network, s.location, s.station,
-                                   s.channel),
-                  fontsize='medium')
+        self.fig.suptitle(
+            '%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel),
+            fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):
         """
@@ -698,8 +698,8 @@ class WaveformPlotting(object):
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count + 1)
         ticklabels = np.linspace(0.0, count, count + 1)
-        self.axis[0].xticks(ticks, ['%g' % _i for _i in ticklabels])
-        self.axis[0].xlabel('time in %s' % type)
+        self.axis[0].set_xticks(ticks, ['%g' % _i for _i in ticklabels])
+        self.axis[0].set_xlabel('time in %s' % type)
 
     def __dayplotSetYTicks(self, *args, **kwargs):
         """
@@ -716,8 +716,8 @@ class WaveformPlotting(object):
             ticks -= 0.5
         ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') \
                       for _i in tick_steps]
-        self.axis[0].yticks(ticks, ticklabels)
-        self.axis[0].ylabel('UTC')
+        self.axis[0].set_yticks(ticks, ticklabels)
+        self.axis[0].set_ylabel('UTC')
         # Save range.
         yrange = self.axis[0].get_ylim()
         # Create twin axis.
