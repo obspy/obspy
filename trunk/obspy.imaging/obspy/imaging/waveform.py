@@ -5,7 +5,7 @@
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Lion Krischer
+# Copyright (C) 2008-2011 Lion Krischer
 #---------------------------------------------------------------------
 """
 Waveform plotting for obspy.Stream objects.
@@ -166,20 +166,20 @@ class WaveformPlotting(object):
         # The following just serves as a unified way of saving and displaying
         # the plots.
         if self.outfile:
-            #If format is set use it.
+            # If format is set use it.
             if self.format:
                 self.fig.savefig(self.outfile, dpi=self.dpi,
                                  transparent=self.transparent,
                                  facecolor=self.face_color,
                                  edgecolor=self.face_color,
                                  format=self.format)
-            #Otherwise get the self.format from self.outfile or default to PNG.
+            # Otherwise get the self.format from self.outfile or default to PNG.
             else:
                 self.fig.savefig(self.outfile, dpi=self.dpi,
                                  transparent=self.transparent,
                                  facecolor=self.face_color,
                                  edgecolor=self.face_color)
-        #Return an binary imagestring if not self.outfile but self.format.
+        # Return an binary imagestring if not self.outfile but self.format.
         if not self.outfile:
             if self.format:
                 imgdata = StringIO.StringIO()
@@ -283,8 +283,7 @@ class WaveformPlotting(object):
                            round((UTCDateTime(datetime.now()) - \
                            UTCDateTime()) / 3600.0 , 2))
         self.timezone = kwargs.get('timezone', 'local time')
-        # Try to guess how many steps are needed to advance one full time
-        # unit.
+        # Try to guess how many steps are needed to advance one full time unit.
         self.repeat = None
         if self.interval < 60 and 60 % self.interval == 0:
             self.repeat = 60 / self.interval
@@ -315,15 +314,13 @@ class WaveformPlotting(object):
             y_values[0::2] += self.extreme_values[_i, :, 0]
             y_values[1::2] += self.extreme_values[_i, :, 1]
             # Plot the values.
-            ax.plot(x_values, y_values, color=self.color[(_i % self.repeat)
-                                                           % len(self.color)])
+            ax.plot(x_values, y_values,
+                    color=self.color[(_i % self.repeat) % len(self.color)])
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
         ax.set_ylim(-0.3 , self.steps + 0.3)
         self.axis = [ax]
         # Set ticks.
-        # XXX: Ugly workaround to get the ticks displayed correctly.
-        self.__dayplotSetXTicks()
         self.__dayplotSetYTicks()
         self.__dayplotSetXTicks()
         # Choose to show grid but only on the x axis.
@@ -577,74 +574,21 @@ class WaveformPlotting(object):
         trace = self.stream[0]
         trace_length = len(trace.data)
         # Samples per interval.
-        spt = self.interval * trace.stats.sampling_rate
+        spt = int(self.interval * trace.stats.sampling_rate)
         # Calculate the steps. Cut the result after three digits.
-        steps = ceil(round((self.endtime - self.starttime) / self.interval, 3))
+        steps = ceil(trace_length / spt)
         self.steps = int(steps)
         # How many data points in one pixel.
         pixel_width = int(spt // self.width)
-        # If the last step has just one sample, then merge it.
-        merged_value = False
-        if trace_length % (self.steps - 1) == 1:
-            merged_value = True
-            #self.steps -= 1
-        # Check whether the sample count is just right.
-        good_sample_count = False
-        if steps % 1 == 0.0 or merged_value:
-            good_sample_count = True
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((self.steps, self.width, 2))
-        # Looping is now unfortunately unavoidable. It would be faster to
-        # reshape the whole data array at once but that would not work
-        # for all npts, picture width combinations.
-        if good_sample_count:
-            loop_count = self.steps
-        else:
-            loop_count = self.steps - 1
-        for _i in xrange(loop_count):
-            data = trace.data[_i * spt: (_i + 1) * spt]
-            # Reshaping only works if the length of the array is the
-            # multiple of the two arguments.
-            slice_value = len(data) // self.width * self.width
-            data_sliced = data[: slice_value]
-            data_rest = data[slice_value:]
-            data_sliced = data_sliced.reshape(self.width, pixel_width)
-            # Write the min/max values to the array. The first value on axis
-            # is the minimum value, the second on the maximum value.
-            extreme_values[_i, :, 0] = data_sliced.min(axis=1)
-            extreme_values[_i, :, 1] = data_sliced.max(axis=1)
-            # Eventually override the last value.
-            if len(data_rest):
-                if data_rest.min() < extreme_values[_i, -1, 0]:
-                    extreme_values[_i, -1, 0] = data_rest.min()
-                if data_rest.max() < extreme_values[_i, -1, 1]:
-                    extreme_values[_i, -1, 1] = data_rest.max()
-        # The last step might need separate handling.
-        if not good_sample_count:
-            data = trace.data[(self.steps - 1) * spt:]
-            # Mask all entries in the last row. Therefore no more need to worry
-            # about missing entries.
-            extreme_values[-1, :, :] = np.ma.masked
-            # The following code is somewhat redundant.
-            pixel_count = len(data) // pixel_width
-            slice_value = pixel_count * pixel_width
-            data_sliced = data[: slice_value]
-            data_rest = data[slice_value:]
-            data_sliced = data_sliced.reshape(pixel_count, pixel_width)
-            # Write to array.
-            extreme_values[-1, : pixel_count, 0] = data_sliced.min(axis=1)
-            extreme_values[-1, : pixel_count, 1] = data_sliced.max(axis=1)
-            # Write last values.
-            if len(data_rest):
-                extreme_values[-1, pixel_count, 0] = data_rest.min()
-                extreme_values[-1, pixel_count, 1] = data_rest.max()
-        # One might also need to include the single valued trace.
-        if merged_value:
-            point = trace.data[-1]
-            if point < extreme_values[-1, -1, 0]:
-                extreme_values[-1, -1, 0] = point
-            if point > extreme_values[-1, -1, 1]:
-                extreme_values[-1, -1, 1] = point
+        for _i in range(self.steps):
+            p0 = _i * spt
+            for _j in range(self.width):
+                p = p0 + _j * pixel_width
+                pe = p + pixel_width
+                extreme_values[_i, _j, 0] = min(trace.data[p:pe])
+                extreme_values[_i, _j, 1] = max(trace.data[p:pe])
         # Set class variable.
         self.extreme_values = extreme_values
 
@@ -697,8 +641,9 @@ class WaveformPlotting(object):
                     break
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count + 1)
-        ticklabels = np.linspace(0.0, count, count + 1)
-        self.axis[0].set_xticks(ticks, ['%g' % _i for _i in ticklabels])
+        ticklabels = ['%.1f' % _i for _i in np.linspace(0.0, count, count + 1)]
+        self.axis[0].set_xticks(ticks)
+        self.axis[0].set_xticklabels(ticklabels)
         self.axis[0].set_xlabel('time in %s' % type)
 
     def __dayplotSetYTicks(self, *args, **kwargs):
@@ -716,7 +661,8 @@ class WaveformPlotting(object):
             ticks -= 0.5
         ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') \
                       for _i in tick_steps]
-        self.axis[0].set_yticks(ticks, ticklabels)
+        self.axis[0].set_yticks(ticks)
+        self.axis[0].set_yticklabels(ticklabels)
         self.axis[0].set_ylabel('UTC')
         # Save range.
         yrange = self.axis[0].get_ylim()
