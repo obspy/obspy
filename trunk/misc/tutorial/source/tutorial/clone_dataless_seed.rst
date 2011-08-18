@@ -11,13 +11,10 @@ DatalessSEED volume (stored on our `examples webserver`_):
 
 .. doctest::
 
-    >>> from urllib import urlopen
     >>> from obspy.core import UTCDateTime
     >>> from obspy.xseed import Parser
-    >>> 
-    >>> url = "http://examples.obspy.org/dataless.seed.BW_RNON"
-    >>> data = urlopen(url).read()
-    >>> p = Parser(data)
+    >>>
+    >>> p = Parser("http://examples.obspy.org/dataless.seed.BW_RNON")
     >>> blk = p.blockettes
 
 Now we can adapt the information only appearing once in the DatalessSEED at the

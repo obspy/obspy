@@ -1,6 +1,7 @@
-import pickle, urllib
-import matplotlib.pyplot as plt
 import hcluster
+import matplotlib.pyplot as plt
+import pickle
+import urllib
 
 url = "http://examples.obspy.org/dissimilarities.pkl"
 dissimilarity = pickle.load(urllib.urlopen(url))

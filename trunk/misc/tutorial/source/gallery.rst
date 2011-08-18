@@ -62,19 +62,24 @@ Gallery
     :alt: Retrieving Data via ArcLink
 
 .. plot:: source/tutorial/beachball_plot.py
-    :height: 100px
+    :height: 90px
     :target: tutorial/beachball_plot.html
     :alt: Beachball Plot
 
 .. plot:: source/tutorial/basemap_plot_with_beachballs.py
     :width: 300px
     :target: tutorial/basemap_plot_with_beachballs.html
-    :alt: Basemap Plot with Beachballs¶
+    :alt: Basemap Plot with Beachballs
 
 .. plot:: source/tutorial/merging_seismograms.py
     :width: 300px
     :target: tutorial/merging_seismograms.html
     :alt: Merging Seismograms
+
+.. plot:: source/tutorial/hierarchical_clustering.py
+    :width: 300px
+    :target: tutorial/hierarchical_clustering.html
+    :alt: Hierarchical Clustering
 
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
     :width: 300px

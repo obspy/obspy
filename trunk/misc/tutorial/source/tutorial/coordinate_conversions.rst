@@ -17,3 +17,6 @@ coordinates of two German stations to the regionally used Gauß-Krüger system:
     >>> x, y = pyproj.transform(proj_wgs84, proj_gk4, lon, lat)
     >>> print x, y
     [4443947.179, 4446185.667] [5506428.401, 5336354.055]
+
+.. _`pyproj`: http://pypi.python.org/pypi/pyproj
+.. _`EPSG`: http://www.epsg-registry.org/
