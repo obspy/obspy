@@ -31,13 +31,13 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 from copy import deepcopy, copy
 from datetime import datetime
 from math import ceil
+from matplotlib.cm import hsv #@UnresolvedImport
+from matplotlib.dates import date2num, num2date
+from matplotlib.ticker import FuncFormatter
 from obspy.core import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 import StringIO
 import matplotlib.pyplot as plt
-from matplotlib.dates import date2num, num2date
-from matplotlib.ticker import FuncFormatter
-from matplotlib.cm import hsv #@UnresolvedImport
 import numpy as np
 import warnings
 
@@ -148,7 +148,7 @@ class WaveformPlotting(object):
         For all color values you can use legit HTML names, HTML hex strings
         (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
         R , G , B are in the range [0, 1]. You can also use single letters for
-        basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
+        basic built-in colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
         """
@@ -179,8 +179,8 @@ class WaveformPlotting(object):
                                  transparent=self.transparent,
                                  facecolor=self.face_color,
                                  edgecolor=self.face_color)
-        # Return an binary imagestring if not self.outfile but self.format.
-        if not self.outfile:
+        else:
+            # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
                 imgdata = StringIO.StringIO()
                 self.fig.savefig(imgdata, dpi=self.dpi,
@@ -328,9 +328,8 @@ class WaveformPlotting(object):
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
         s = self.stream[0].stats
-        self.fig.suptitle(
-            '%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel),
-            fontsize='medium')
+        suptitle = '%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel)
+        self.fig.axes[0].set_title(suptitle, fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):
         """
@@ -698,13 +697,8 @@ class WaveformPlotting(object):
         pattern = '%Y-%m-%dT%H:%M:%SZ'
         suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                   self.endtime.strftime(pattern))
-        try:
-            self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
-                              horizontalalignment='left')
-        except AttributeError:
-            msg = "Available matplotlib version too old. You'll get a " + \
-                  "simpler plot."
-            warnings.warn(msg)
+        self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
+                          horizontalalignment='left')
 
 
 def _plot_list(streams):

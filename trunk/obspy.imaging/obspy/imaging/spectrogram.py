@@ -29,13 +29,12 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 02110-1301, USA.
 """
 
-import matplotlib
 from matplotlib import mlab
-import matplotlib.pyplot as plt
 from matplotlib.colors import Normalize
+from obspy.core.util import MATPLOTLIB_VERSION
 import math as M
+import matplotlib.pyplot as plt
 import numpy as np
-from obspy.core.util import deprecated_keywords, MATPLOTLIB_VERSION
 
 
 def nearestPow2(x):
@@ -59,7 +58,7 @@ def nearestPow2(x):
     else:
         return b
 
-@deprecated_keywords({'axis':'axes'})
+
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 outfile=None, format=None, axes=None, dbscale=False,
                 mult=8.0, cmap=None, zorder=None, title=None, show=True,

@@ -135,6 +135,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     collection.set_zorder(zorder)
     return collection
 
+
 def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
               bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
               format=None, nofill=False, fig=None):
@@ -591,6 +592,7 @@ def xy2patch(x, y, res, xy):
     codes.append(Path.CLOSEPOLY)
     path = Path(verts, codes)
     return patches.PathPatch(path)
+
 
 def Pol2Cart(th, r):
     """
