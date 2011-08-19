@@ -11,10 +11,10 @@ contains three channels of a seismograph.
 .. doctest::
 
    >>> from obspy.core import read
-   >>> singlechannel = read('http://examples.obspy.org/COP.BHE.DK.2009.050')
+   >>> singlechannel = read('http://examples.obspy.org/COP.BHZ.DK.2009.050')
    >>> print singlechannel
    1 Trace(s) in Stream:
-   DK.COP..BHE | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
+   DK.COP..BHZ | 2009-02-19T00:00:00.035100Z - 2009-02-19T23:59:59.985100Z | 20.0 Hz, 1728000 samples
 
 .. doctest::
 
@@ -50,10 +50,9 @@ ticks shown, their format and rotation and how to set the start- and endtime of
 the plot.
 
    >>> dt = singlechannel[0].stats.starttime
-   >>> singlechannel.plot(outfile = 'singlechannel_adjusted.png',
-   ...                    color = 'red', number_of_ticks = 7,
-   ...                    tick_rotation = 5, tick_format = '%I:%M %p',
-   ...                    starttime = dt + 60*60, endtime = dt + 60*60 + 120)
+   >>> singlechannel.plot(color='red', number_of_ticks=7,
+   ...                    tick_rotation=5, tick_format='%I:%M %p',
+   ...                    starttime=dt + 60*60, endtime=dt + 60*60 + 120)
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_2.py
 
@@ -66,7 +65,7 @@ format is determined automatically from the filename. Supported file formats
 depend on your matplotlib backend. Most backends support png, pdf, ps, eps and
 svg.
 
-   >>> singlechannel.plot(outfile = 'singlechannel_adjusted.png')
+   >>> singlechannel.plot(outfile='singlechannel.png')
 
 --------------------------
 Plotting multiple Channels
@@ -76,10 +75,10 @@ If the :class:`~obspy.core.stream.Stream` object contains more than one
 :class:`~obspy.core.trace.Trace`, each Trace will be plotted in a subplot.
 The start- and endtime of each trace will be the same and the range on the
 y-axis will also be identical on each trace. Each additional subplot will add
-250 pixel to the height of the resulting plot. Use the ``size`` attribute to
-change the size of the plot.
+250 pixel to the height of the resulting plot. The ``size`` attribute is used
+in the following example to change the overall size of the plot.
 
-   >>> threechannels.plot(size=(800, 400))
+   >>> threechannels.plot(size=(800, 600))
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_3.py
 
