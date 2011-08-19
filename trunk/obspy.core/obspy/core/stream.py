@@ -31,26 +31,48 @@ def read(pathname_or_url=None, format=None, headonly=False,
     """
     Read waveform files into an ObsPy Stream object.
 
-    The `read` function opens either one or multiple files given via wildcards
-    or URL of a waveform file using the *pathname_or_url* attribute. If no
-    file location or URL is specified, a Stream object with an example data set
-    will be created.
+    The :func:`~obspy.core.stream.read` function opens either one or multiple
+    waveform files given via file name or URL using the ``pathname_or_url``
+    attribute.
 
     The format of the waveform file will be automatically detected if not
     given. Allowed formats mainly depend on ObsPy packages installed. See the
-    notes section below.
+    `Supported Formats` section below.
 
     This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
-    list like object of multiple ObsPy :class:`~obspy.core.stream.Trace`
+    ``list``-like object of multiple ObsPy :class:`~obspy.core.stream.Trace`
     objects.
 
-    Basic Usage
-    -----------
-    In most cases a filename is specified as the only argument to `read()`.
-    For a quick start you may omit all arguments. ObsPy will create and return
-    an example seismogram. Further examples deploying the
-    :func:`~obspy.core.stream.read` function can be seen in the Examples
-    section underneath.
+    :type pathname_or_url: string, optional
+    :param pathname_or_url: String containing a file name or a URL. Wildcards
+        are allowed for a file name. If this attribute is omitted, a Stream
+        object with an example data set will be created.
+    :type format: string, optional
+    :param format: Format of the file to read, e.g. "GSE2", "MSEED", "SAC",
+        "SEISAN", "WAV", "Q", "SH_ASC", etc. See the `Supported Formats` section
+        below for a full list of supported formats. If format is set to `None`
+        it will be automatically detected which results in a slightly slower
+        reading. If you specify a format no further format checking is done.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the data header. This is most
+        useful for scanning available meta information of huge data sets.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    :param starttime: Specify the start time to read.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    :param endtime: Specify the end time to read.
+    :type nearest_sample: bool, optional
+    :param nearest_sample: Only applied if `starttime` or `endtime` is given.
+        Select nearest sample or the one containing the specified time. For more
+        info, see :meth:`~obspy.core.trace.Trace.trim`.
+    :return: A ObsPy :class:`~obspy.core.stream.Stream` object.
+
+    .. rubric:: Basic Usage
+
+    In most cases a filename is specified as the only argument to
+    :func:`~obspy.core.stream.read`. For a quick start you may omit all
+    arguments and ObsPy will create and return a basic example seismogram.
+    Further usages of the :func:`~obspy.core.stream.read` function can
+    be seen in the `Further Examples` section underneath.
 
     >>> from obspy.core import read
     >>> st = read()
@@ -60,37 +82,15 @@ def read(pathname_or_url=None, format=None, headonly=False,
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
 
-    Parameters
-    ----------
-    pathname_or_url : string
-        String containing a file name or a URL. Wildcards are allowed for a
-        file name.
-    format : string, optional
-        Format of the file to read. Commonly one of "GSE2", "MSEED", "SAC",
-        "SEISAN", "WAV", "Q" or "SH_ASC". If the format is set to `None` it
-        will be automatically detected which results in a slightly slower
-        reading. If you specify a format no further format checking is done.
-    headonly : bool, optional
-        If set to True, read only the data header. This is most useful for
-        scanning available meta information of huge data sets.
-    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        Specify the start time to read.
-    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        Specify the end time to read.
-    nearest_sample : bool, optional
-        Only applied if `starttime` or `endtime` is given. Select nearest
-        sample or the one containing the specified time.
-        For more info, see :meth:`~obspy.core.trace.Trace.trim`.
+    .. rubric:: Supported Formats
 
-    Notes
-    -----
     Additional ObsPy modules extend the functionality of the
     :func:`~obspy.core.stream.read` function. The following table summarizes
-    all known formats currently available for ObsPy. The table order also 
+    all known file formats currently supported by ObsPy. The table order also 
     reflects the order of the autodetection routine if no format option is
     specified.
 
-    Please refer to the linked function call of each module for any extra
+    Please refer to the `Linked Function Call` of each module for any extra
     options available at the import stage.
 
     =======  ===================  ====================================
@@ -112,11 +112,12 @@ def read(pathname_or_url=None, format=None, headonly=False,
     =======  ===================  ====================================
 
     Next to the :func:`~obspy.core.stream.read` function the
-    :meth:`~Stream.write` function is a method of the returned
-    :class:`~obspy.core.stream.Stream` object.
+    :meth:`~obspy.core.stream.Stream.write` method of the returned
+    :class:`~obspy.core.stream.Stream` object can be used to export the data
+    to the file system.
 
-    Examples
-    --------
+    .. rubric:: Further Examples
+
     Example waveform files may be retrieved via http://examples.obspy.org.
 
     (1) Reading multiple local files using wildcards.
@@ -126,7 +127,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
         :class:`~obspy.core.stream.Stream` object.
 
         >>> from obspy.core import read  # doctest: +SKIP
-        >>> st = read("loc_R*.z")  # doctest: +SKIP
+        >>> st = read("/path/to/loc_R*.z")  # doctest: +SKIP
         >>> print(st)  # doctest: +SKIP
         2 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
@@ -137,9 +138,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
         Using the ``format`` parameter disables the automatic detection and
         enforces reading a file in a given format.
 
-        >>> from obspy.core import read  # doctest: +SKIP
-        >>> read("loc_RJOB20050831023349.z", format="GSE2") # doctest: +SKIP
-        <obspy.core.stream.Stream object at 0x101700150>
+        >>> from obspy.core import read
+        >>> read("/path/to/loc_RJOB20050831023349.z", format="GSE2")  # doctest: +ELLIPSIS
+        <obspy.core.stream.Stream object at 0x...>
 
     (3) Reading a remote file via HTTP protocol.
 
@@ -295,13 +296,11 @@ class Stream(object):
     """
     List like object of multiple ObsPy trace objects.
 
-    Parameters
-    ----------
-    traces : list of :class:`~obspy.core.trace.Trace`, optional
-        Initial list of ObsPy Trace objects.
+    :type traces: list of :class:`~obspy.core.trace.Trace`, optional
+    :param traces: Initial list of ObsPy Trace objects.
 
-    Basic Usage
-    -----------
+    .. rubric:: Basic Usage
+
     >>> trace1 = Trace()
     >>> trace2 = Trace()
     >>> stream = Stream(traces=[trace1, trace2])
@@ -309,8 +308,8 @@ class Stream(object):
     2 Trace(s) in Stream:
     ...
 
-    Supported Operations
-    --------------------
+    .. rubric:: Supported Operations
+
     ``stream = streamA + streamB``
         Merges all traces within the two Stream objects ``streamA`` and
         ``streamB`` into the new Stream object ``stream``.
@@ -336,8 +335,8 @@ class Stream(object):
         """
         Method to add two streams.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st1 = read()
         >>> len(st1)
@@ -381,6 +380,8 @@ class Stream(object):
         Doing this it is safe to remove traces from streams inside of
         for-loops using stream's remove() method. Actually this creates a new
         iterator every time a trace is removed inside the for-loop.
+
+        .. rubric:: Example
 
         >>> from obspy.core import Stream
         >>> st = Stream()
@@ -443,8 +444,8 @@ class Stream(object):
         """
         Implements rich comparison of Stream objects for "==" operator.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> st2 = st.copy()
@@ -479,8 +480,8 @@ class Stream(object):
         """
         Implements rich comparison of Stream objects for "!=" operator.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> st2 = st.copy()
@@ -600,18 +601,21 @@ class Stream(object):
         """
         Returns a list of all trace gaps/overlaps of the Stream object.
 
+        :param min_gap: All gaps smaller than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
+        :param max_gap: All gaps larger than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
+
         The returned list contains one item in the following form for each gap/
-        overlap:
-        [network, station, location, channel, starttime of the gap, endtime of
-        the gap, duration of the gap, number of missing samples]
+        overlap: [network, station, location, channel, starttime of the gap,
+        endtime of the gap, duration of the gap, number of missing samples]
 
         Please be aware that no sorting and checking of stations, channels, ...
         is done. This method only compares the start- and endtimes of the
         Traces.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         Our example stream has no gaps:
         
         >>> from obspy.core import read, UTCDateTime
@@ -636,11 +640,6 @@ class Stream(object):
         Source            Last Sample                 Next Sample                 Delta           Samples 
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z 2009-08-24T00:20:14.000000Z 1.000000        99      
         Total: 1 gap(s) and 0 overlap(s)
-
-        :param min_gap: All gaps smaller than this value will be omitted. The
-            value is assumed to be in seconds. Defaults to None.
-        :param max_gap: All gaps larger than this value will be omitted. The
-            value is assumed to be in seconds. Defaults to None.
         """
         # Create shallow copy of the traces to be able to sort them later on.
         copied_traces = copy.copy(self.traces)
@@ -714,18 +713,6 @@ class Stream(object):
         """
         Creates a waveform plot of the current ObsPy Stream object.
 
-        Example
-        -------
-        >>> from obspy.core import read
-        >>> st = read()
-        >>> st.plot() #doctest: +SKIP
-
-        .. plot::
-
-            from obspy.core import read
-            st = read()
-            st.plot()
-
         :param outfile: Output file string. Also used to automatically
             determine the output format. Supported file formats depend on your
             matplotlib backend. Most backends support png, pdf, ps, eps and svg.
@@ -782,6 +769,18 @@ class Stream(object):
         basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
         'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
         can be given as a string encoding a float in the 0-1 range.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> st.plot() #doctest: +SKIP
+
+        .. plot::
+
+            from obspy.core import read
+            st = read()
+            st.plot()
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting
@@ -798,10 +797,10 @@ class Stream(object):
         Creates a spectrogram plot for each trace in the stream.
 
         For details on kwargs that can be used to customize the spectrogram
-        plot see :func:`~obspy.imaging.spectrogram.spectrogram`.
+        plot see :func:`obspy.imaging.spectrogram.spectrogram`.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> st.spectrogram() #doctest: +SKIP
@@ -834,9 +833,8 @@ class Stream(object):
         """
         Print gap/overlap list summary information of the Stream object.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         Our example stream has no gaps:
         
         >>> from obspy.core import read, UTCDateTime
@@ -880,11 +878,12 @@ class Stream(object):
     def remove(self, trace):
         """
         Removes the first occurrence of the specified Trace object in the
-        Stream object.
-        Passes on the remove() call to self.traces.
+        Stream object. Passes on the remove() call to self.traces.
 
-        Example
-        -------
+        :param trace: Trace object to be removed from Stream.
+        :returns: None
+
+        .. rubric:: Example
 
         This example shows how to delete all "E" component traces in a stream:
 
@@ -901,9 +900,6 @@ class Stream(object):
         2 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-
-        :param trace: Trace object to be removed from Stream.
-        :returns: None
         """
         return self.traces.remove(trace)
 
@@ -922,6 +918,7 @@ class Stream(object):
         by the first item first, then by the second and so on. It will always
         be sorted from low to high and from A to Z.
 
+        :type keys: list, optional
         :param keys: List containing the values according to which the traces
              will be sorted. They will be sorted by the first item first and
              then by the second item and so on.
@@ -951,8 +948,14 @@ class Stream(object):
         """
         Saves stream into a file.
 
-        Basic Usage
-        -----------
+        :type filename: string
+        :param filename: The name of the file to write.
+        :type format: string
+        :param format: The format to write must be specified. Depending on your
+            ObsPy installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q",
+            "SH_ASC", "SEGY", "SU", "WAV"
+
+        .. rubric:: Example
 
         >>> from obspy.core import read
         >>> st = read() # doctest: +SKIP
@@ -963,22 +966,13 @@ class Stream(object):
         >>> for tr in st: #doctest: +SKIP
         ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
 
-        Parameters
-        ----------
-        filename : string
-            The name of the file to write.
-        format : string
-            The format to write must be specified. Depending on your ObsPy
-            installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q", "SH_ASC",
-            "SEGY", "SU", "WAV"
+        .. rubric:: Supported Formats
 
-        Notes
-        -----
         Additional ObsPy modules extend the parameters of the
         :meth:`~obspy.core.stream.Stream.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the linked function call of each module for any extra
+        Please refer to the *Linked Function Call* of each module for any extra
         options available.
 
         =======  ===================  ====================================
@@ -1090,8 +1084,8 @@ class Stream(object):
         Returns new Stream object only with these traces that match the given
         stats criteria (e.g. all traces with `channel="EHZ"`).
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> st = read()
         >>> print(st)
         3 Trace(s) in Stream:
@@ -1116,9 +1110,9 @@ class Stream(object):
         >>> print(st2) # doctest: +NORMALIZE_WHITESPACE
         0 Trace(s) in Stream:
 
-
-        Caution: A new Stream object is returned but the traces it contains are
-        just aliases to the traces of the original stream.
+        .. warning::
+            A new Stream object is returned but the traces it contains are
+            just aliases to the traces of the original stream.
 
         Does not copy the data but only passes a reference.
 
@@ -1167,8 +1161,8 @@ class Stream(object):
         """
         Verifies all traces of current Stream against available meta data.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.array([1, 2, 3, 4]))
         >>> tr.stats.npts = 100
         >>> st = Stream([tr])
@@ -1211,33 +1205,32 @@ class Stream(object):
         """
         Merges ObsPy Trace objects with same IDs.
 
-        Gaps and overlaps are usually separated in distinct traces. This method
-        tries to merge them and to create distinct traces within this 
-        :class:`~Stream` object. The method is working on the stream object
-        itself (inplace), thus returns nothing. Merged trace data will be
-        converted into a NumPy masked array data type if any gaps are
-        present. This behavior may be prevented by setting the
-        ``fill_value`` parameter. The ``method`` argument controls the
-        handling of overlapping data values.
-
-        Parameters
-        ----------
-        method : [ -1 | 0 | 1 ], optional
-            Methodology to handle overlaps of traces (default is 0).
+        :type method: [ -1 | 0 | 1 ], optional
+        :param method: Methodology to handle overlaps of traces (default is 0).
             See :meth:`obspy.core.trace.Trace.__add__` for details on methods 0
             and 1, see :meth:`obspy.core.stream.Stream._cleanup` for details on
             method -1.
-        fill_value : int or float, 'latest' or 'interpolate', optional
-            Fill value for gaps (default is None). Traces will be converted to
-            NumPy masked arrays if no value is given and gaps are present. If
-            the keyword 'latest' is provided it will use the latest value
-            before the gap. If keyword 'interpolate' is provided, missing
+        :type fill_value: int or float, 'latest' or 'interpolate', optional
+        :param fill_value: Fill value for gaps (default is None). Traces will be
+            converted to NumPy masked arrays if no value is given and gaps are
+            present. If the keyword 'latest' is provided it will use the latest
+            value before the gap. If keyword 'interpolate' is provided, missing
             values are linearly interpolated (not changing the data type e.g.
             of integer valued traces). Not used for `method=-1`.
-        interpolation_samples : int, optional
-            Used only for method 1. It specifies the number of samples which
-            are used to interpolate between overlapping traces (default is 0).
-            If set to -1 all overlapping samples are interpolated.
+        :type interpolation_samples: int, optional
+        :param interpolation_samples: Used only for method 1. It specifies the
+            number of samples which are used to interpolate between overlapping
+            traces (default is 0). If set to -1 all overlapping samples are
+            interpolated.
+
+        Gaps and overlaps are usually separated in distinct traces. This method
+        tries to merge them and to create distinct traces within this 
+        :class:`~obspy.core.stream.Stream` object. The method is working on the
+        stream object itself (inplace), thus returns nothing. Merged trace data
+        will be converted into a NumPy masked array data type if any gaps are
+        present. This behavior may be prevented by setting the ``fill_value``
+        parameter. The ``method`` argument controls the handling of overlapping
+        data values.
         """
         if method == -1:
             self._cleanup()
@@ -1279,13 +1272,35 @@ class Stream(object):
         """
         Correct for instrument response / Simulate new instrument response.
 
+        :type paz_remove: Dictionary, None
+        :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
+            (A0 normalization factor). poles and zeros must be a list of complex
+            floating point numbers, gain must be of type float. Poles and Zeros
+            are assumed to correct to m/s, SEED convention. Use None for no
+            inverse filtering.
+            Use 'self' to use paz AttribDict in trace.stats for every trace in
+            stream.
+        :type paz_simulate: Dictionary, None
+        :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
+            'gain'. Poles and zeros must be a list of complex floating point
+            numbers, gain must be of type float. Or None for no simulation.
+        :type remove_sensitivity: Boolean
+        :param remove_sensitivity: Determines if data is divided by
+            `paz_remove['sensitivity']` to correct for overall sensitivity of
+            recording instrument (seismometer/digitizer) during instrument
+            correction.
+        :type simulate_sensitivity: Boolean
+        :param simulate_sensitivity: Determines if data is multiplied with
+            `paz_simulate['sensitivity']` to simulate overall sensitivity of new
+            instrument (seismometer/digitizer) during instrument simulation.
+
         This function corrects for the original instrument response given by
         `paz_remove` and/or simulates a new instrument response given by
         `paz_simulate`.
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
         :func:`~obspy.signal.invsim.seisSim`.
-        
+
         `paz_remove` and `paz_simulate` are expected to be dictionaries
         containing information on poles, zeros and gain (and usually also
         sensitivity).
@@ -1300,9 +1315,8 @@ class Stream(object):
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing`` of every trace.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
@@ -1333,30 +1347,6 @@ class Stream(object):
             paz_1hz['sensitivity'] = 1.0
             st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             st.plot()
-
-        :type paz_remove: Dictionary, None
-        :param paz_remove: Dictionary containing keys 'poles', 'zeros',
-                    'gain' (A0 normalization factor). poles and zeros must be a
-                    list of complex floating point numbers, gain must be of
-                    type float. Poles and Zeros are assumed to correct to m/s,
-                    SEED convention. Use None for no inverse filtering.
-                    Use 'self' to use paz AttribDict in trace.stats for every
-                    trace in stream.
-        :type paz_simulate: Dictionary, None
-        :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
-                         'gain'. Poles and zeros must be a list of complex
-                         floating point numbers, gain must be of type float. Or
-                         None for no simulation.
-        :type remove_sensitivity: Boolean
-        :param remove_sensitivity: Determines if data is divided by
-                `paz_remove['sensitivity']` to correct for overall sensitivity
-                of recording instrument (seismometer/digitizer) during
-                instrument correction.
-        :type simulate_sensitivity: Boolean
-        :param simulate_sensitivity: Determines if data is multiplied with
-                `paz_simulate['sensitivity']` to simulate overall sensitivity
-                of new instrument (seismometer/digitizer) during instrument
-                simulation.
         """
         for tr in self:
             tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
@@ -1370,13 +1360,19 @@ class Stream(object):
         Filters the data of all traces in the ``Stream``. This is performed in
         place on the actual data arrays. The raw data is not accessible anymore
         afterwards.
+
+        :param type: String that specifies which filter is applied (e.g.
+            "bandpass").
+        :param options: Necessary keyword arguments for the respective filter
+            that will be passed on. (e.g. freqmin=1.0, freqmax=20.0 for
+            "bandpass")
+
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
         to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Example
-        -------
+        .. rubric:: Example
 
         >>> from obspy.core import read
         >>> st = read()
@@ -1389,12 +1385,6 @@ class Stream(object):
             st = read()
             st.filter("highpass", freq=1.0)
             st.plot()
-
-        :param type: String that specifies which filter is applied (e.g.
-                "bandpass").
-        :param options: Necessary keyword arguments for the respective filter
-                that will be passed on.
-                (e.g. freqmin=1.0, freqmax=20.0 for "bandpass")
         """
         for tr in self:
             tr.filter(type, **options)
@@ -1406,13 +1396,23 @@ class Stream(object):
         Runs a triggering algorithm on all traces in the stream. This is
         performed in place on the actual data arrays. The raw data
         is not accessible anymore afterwards.
+
+        :param type: String that specifies which trigger is applied (e.g.
+            'recStalta').
+        :param options: Necessary keyword arguments for the respective trigger
+            that will be passed on.
+            (e.g. sta=3, lta=10)
+            Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
+            and ``nlta`` (samples) by multiplying with sampling rate of trace.
+            (e.g. sta=3, lta=10 would call the trigger with 3 and 10 seconds
+            average, respectively)
+
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
         to make a copy of your trace.
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Example
-        -------
+        .. rubric:: Example
 
         >>> from obspy.core import read
         >>> st = read()
@@ -1429,17 +1429,6 @@ class Stream(object):
             st.plot()
             st.trigger('recStalta', sta=3, lta=10)
             st.plot()
-
-        :param type: String that specifies which trigger is applied (e.g.
-                'recStalta').
-        :param options: Necessary keyword arguments for the respective trigger
-                that will be passed on.
-                (e.g. sta=3, lta=10)
-                Arguments ``sta`` and ``lta`` (seconds) will be mapped to
-                ``nsta`` and ``nlta`` (samples) by multiplying with sampling
-                rate of trace.
-                (e.g. sta=3, lta=10 would call the trigger with 3 and
-                10 seconds average, respectively)
         """
         for tr in self:
             tr.trigger(type, **options)
@@ -1449,6 +1438,13 @@ class Stream(object):
                    strict_length=False):
         """
         Downsample data in all traces of stream.
+
+        :param decimation_factor: integer factor by which the sampling rate is
+            lowered by decimation.
+        :param no_filter: deactivate automatic filtering
+        :param strict_length: leave traces unchanged for which endtime of trace
+            would change
+        :return: ``None``
 
         Currently a simple integer decimation is implemented.
         Only every decimation_factor-th sample remains in the trace, all other
@@ -1466,11 +1462,10 @@ class Stream(object):
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Basic Usage
-        -----------
-
         For the example we switch off the automatic pre-filtering so that
         the effect of the downsampling routine becomes clearer:
+
+        .. rubric:: Example
 
         >>> tr = Trace(data=np.arange(10))
         >>> st = Stream(traces=[tr])
@@ -1483,13 +1478,6 @@ class Stream(object):
         0.25
         >>> tr.data
         array([0, 4, 8])
-        
-        :param decimation_factor: integer factor by which the sampling rate is
-            lowered by decimation.
-        :param no_filter: deactivate automatic filtering
-        :param strict_length: leave traces unchanged for which endtime of trace
-            would change
-        :return: ``None``
         """
         for tr in self:
             tr.downsample(decimation_factor=decimation_factor,
@@ -1501,14 +1489,14 @@ class Stream(object):
         Method to get the values of the absolute maximum amplitudes of all
         traces in the stream. See :meth:`~obspy.core.trace.Trace.max`.
 
+        :return: List of values of absolute maxima of all traces
+
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0, -3, -9, 6, 4]))
         >>> tr3 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2, tr3])
         >>> st.max()
         [9, -9, 9.0]
-
-        :return: List of values of absolute maxima of all traces
         """
         return [tr.max() for tr in self]
 
@@ -1519,14 +1507,16 @@ class Stream(object):
         Standard deviations are calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
         stream.
-        
+
+        :return: List of standard deviations of all traces.
+
+        .. rubric:: Example
+
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2])
         >>> st.std()
         [4.2614551505325036, 4.4348618918744247]
-
-        :return: List of standard deviations of all traces.
         """
         return [tr.std() for tr in self]
 
@@ -1536,6 +1526,12 @@ class Stream(object):
         normalized separately to their respective absolute maximum. By setting
         ``global_max=True`` all traces get normalized to the global maximum of
         all traces.
+
+        :param global_max: If set to ``True``, all traces are normalized with
+                respect to the global maximum of all traces in the stream
+                instead of normalizing every trace separately.
+        :return: ``None``
+
         This operation is performed in place on the actual data arrays. The raw
         data is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
@@ -1545,9 +1541,8 @@ class Stream(object):
 
         Note: If ``data.dtype`` of a trace was integer it is changing to float.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         Make a Stream with two Traces:
 
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
@@ -1583,11 +1578,6 @@ class Stream(object):
         array([ 0.03333333, -0.05555556, -0.08888889,  0.04444444,  0.03333333])
         >>> st[1].stats.processing
         ['normalize:9']
-
-        :param global_max: If set to ``True``, all traces are normalized with
-                respect to the global maximum of all traces in the stream
-                instead of normalizing every trace separately.
-        :return: ``None``
         """
         # use the same value for normalization on all traces?
         if global_max:
@@ -1603,8 +1593,10 @@ class Stream(object):
         """
         Returns a deepcopy of the stream.
 
-        Examples
-        --------
+        :return: Copy of current stream.
+
+        .. rubric:: Examples
+
         1. Make a Trace and copy it
 
             >>> from obspy.core import read
@@ -1629,8 +1621,6 @@ class Stream(object):
             True
             >>> st3 == st
             True
-
-        :return: Copy of stream.
         """
         return copy.deepcopy(self)
 
@@ -1642,8 +1632,8 @@ class Stream(object):
         are contained/equal/overlapping traces with exactly the same waveform
         data in the overlapping part.
 
-        Notes
-        -----
+        .. rubric:: Notes
+
         Traces with overlapping data parts that do not match are not merged::
         
             before:
