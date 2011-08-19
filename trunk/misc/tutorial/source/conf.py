@@ -32,7 +32,6 @@ extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.doctest',
               'sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
-              'sphinx.ext.coverage',
               'plot_directive',
               'matplotlib.sphinxext.only_directives',
               'sphinx.ext.viewcode']
@@ -244,7 +243,5 @@ autoclass_content = 'class'
 # applied to all autodoc directives. The supported flags are 'members',
 # 'undoc-members', 'private-members', 'special-members', 'inherited-members' and
 # 'show-inheritance'.
-#autodoc_default_flags = [
-#    'members', 'undoc-members', 'inherited-members', 'show-inheritance']
-
-coverage_ignore_functions = ['test($|_)', ]
+autodoc_default_flags = [
+    'members', 'undoc-members', 'inherited-members', 'show-inheritance']
