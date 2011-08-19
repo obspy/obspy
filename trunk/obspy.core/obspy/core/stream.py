@@ -712,7 +712,7 @@ class Stream(object):
 
     def plot(self, *args, **kwargs):
         """
-        Creates a graph of the current ObsPy Stream object.
+        Creates a waveform plot of the current ObsPy Stream object.
 
         Example
         -------
@@ -725,16 +725,6 @@ class Stream(object):
             from obspy.core import read
             st = read()
             st.plot()
-
-        It either saves the image directly to the file system or returns a
-        binary image string.
-
-        For all color values you can use valid HTML names, HTML hex strings
-        (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
-        R , G , B are in the range [0,1]. You can also use single letters for
-        basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
-        'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
-        can be given as a string encoding a float in the 0-1 range.
 
         :param outfile: Output file string. Also used to automatically
             determine the output format. Currently supported are emf, eps, pdf,
@@ -784,6 +774,15 @@ class Stream(object):
         :param handle: Whether or not to return the matplotlib figure instance
             after the plot has been created.
             Defaults to False.
+        :param type: Type may be set to 'dayplot' in order to create a one-day
+            plot for a single Trace.
+
+        For all color values you can use valid HTML names, HTML hex strings
+        (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
+        R , G , B are in the range [0,1]. You can also use single letters for
+        basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
+        'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
+        can be given as a string encoding a float in the 0-1 range.
         """
         try:
             from obspy.imaging.waveform import WaveformPlotting

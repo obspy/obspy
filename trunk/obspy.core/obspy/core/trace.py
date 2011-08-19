@@ -657,6 +657,8 @@ class Trace(object):
         """
         Creates a simple graph of the current trace.
 
+        For more info see :meth:`~obspy.core.stream.Stream.plot`.
+
         Basic Usage
         -----------
         >>> from obspy.core import read
