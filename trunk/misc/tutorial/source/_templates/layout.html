@@ -13,6 +13,11 @@
 {% set script_files = script_files + ['_static/sidebar.js'] %}
 {% endif %}
 
+{% block rootrellink %}
+        <li><a href="{{ pathto('index') }}">ObsPy Documentation</a>
+          &raquo;</li>
+{% endblock %}
+
 {% block extrahead %}
 <link rel="stylesheet" type="text/css" href="{{ pathto('_static/custom.css', 1) }}" />
 {% endblock %}

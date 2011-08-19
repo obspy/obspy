@@ -218,20 +218,24 @@ def run_code(plot_path, function_name, plot_code, context=False):
 
     else:
         pwd = os.getcwd()
-        path, fname = os.path.split(plot_path)
+        path, fname = os.path.split(plot_path.replace('/', os.sep))
         sys.path.insert(0, os.path.abspath(path))
         stdout = sys.stdout
         sys.stdout = cStringIO.StringIO()
         try:
             os.chdir(path)
         except OSError:
-            os.mkdir(path)
+            os.makedirs(path)
             os.chdir(path)
         fd = None
         try:
+
             fd = open(fname)
             module = imp.load_module(
                 "__plot__", fd, fname, ('py', 'r', imp.PY_SOURCE))
+        except:
+            sys.stdout = stdout
+            raise
         finally:
             del sys.path[0]
             os.chdir(pwd)
