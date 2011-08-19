@@ -329,7 +329,7 @@ class WaveformPlotting(object):
         # Set the title of the plot.
         s = self.stream[0].stats
         suptitle = '%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel)
-        self.fig.axes[0].set_title(suptitle, fontsize='medium')
+        self.fig.suptitle(suptitle, fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):
         """
@@ -694,11 +694,15 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
-        pattern = '%Y-%m-%dT%H:%M:%SZ'
-        suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
-                                  self.endtime.strftime(pattern))
-        self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
-                          horizontalalignment='left')
+        if self.type == 'dayplot':
+            suptitle = self.starttime.strftime('%Y-%m-%d')
+            self.fig.suptitle(suptitle, y=0.94, fontsize='small')
+        else:
+            pattern = '%Y-%m-%dT%H:%M:%SZ'
+            suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
+                                      self.endtime.strftime(pattern))
+            self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
+                              horizontalalignment='left')
 
 
 def _plot_list(streams):
