@@ -40,14 +40,14 @@ your needs.
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_1.py
 
--------------------
-Saving Plot to File
--------------------
 
-To save a file use the ``outfile`` parameter. The format is determined
-automatically from the filename. This example also shows the options to adjust
-the color of the graph, the number of ticks shown, their format and rotation
-and how to set the start- and endtime of the plot.
+----------------
+Customized Plots
+----------------
+
+This example shows the options to adjust the color of the graph, the number of
+ticks shown, their format and rotation and how to set the start- and endtime of
+the plot.
 
    >>> dt = singlechannel[0].stats.starttime
    >>> singlechannel.plot(outfile = 'singlechannel_adjusted.png',
@@ -56,6 +56,17 @@ and how to set the start- and endtime of the plot.
    ...                    starttime = dt + 60*60, endtime = dt + 60*60 + 120)
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_2.py
+
+-------------------
+Saving Plot to File
+-------------------
+
+Plots may be saved into the file system by the ``outfile`` parameter. The
+format is determined automatically from the filename. Supported file formats
+depend on your matplotlib backend. Most backends support png, pdf, ps, eps and
+svg.
+
+   >>> singlechannel.plot(outfile = 'singlechannel_adjusted.png')
 
 --------------------------
 Plotting multiple Channels
@@ -68,9 +79,20 @@ y-axis will also be identical on each trace. Each additional subplot will add
 250 pixel to the height of the resulting plot. Use the ``size`` attribute to
 change the size of the plot.
 
-   >>> threechannels.plot()
+   >>> threechannels.plot(size=(800, 400))
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_3.py
+
+-----------------------
+Creating a One-Day Plot
+-----------------------
+
+A day plot of a :class:`~obspy.core.trace.Trace` object may be plotted by
+setting the ``type`` parameter to ``'dayplot'``:
+
+   >>> singlechannel.plot(type='dayplot')
+
+.. plot:: source/tutorial/waveform_plotting_tutorial_4.py
 
 ------------
 Plot Options
@@ -80,8 +102,8 @@ Various options are available to change the appearance of the waveform:
 
    ``outfile``
       Output file string. Also used to automatically determine the output
-      format. Currently supported is emf, eps, pdf, png, ps, raw, rgba, svg
-      and svgz output. Defaults to ``None``.
+      format. Supported file formats depend on your matplotlib backend. Most
+      backends support png, pdf, ps, eps and svg. Defaults to ``None``.
    ``format``
       Format of the graph picture. If no ``format`` is given, the ``outfile``
       parameter will be used to try to automatically determine the output
@@ -121,6 +143,12 @@ Various options are available to change the appearance of the waveform:
       Number of degrees of rotation for ticks on the time axis. Ticks with big
       rotations might be cut off depending on the ``tick_format``.
       Defaults to ``0``. 
+   ``handle``
+      Whether or not to return the matplotlib figure instance after the plot has
+      been created. Defaults to False.
+   ``type``
+      Type may be set to ``'dayplot'`` in order to create a one-day plot for a
+      single Trace.
 
 -------------
 Color Options

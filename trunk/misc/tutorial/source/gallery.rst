@@ -14,17 +14,22 @@ Gallery
 .. plot:: source/tutorial/waveform_plotting_tutorial_1.py
     :width: 300px
     :target: tutorial/waveform_plotting_tutorial.html
-    :alt: Waveform Plotting Tutorial 1
+    :alt: Basic Plotting
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_2.py
     :width: 300px
-    :target: tutorial/waveform_plotting_tutorial.html#saving-plot-to-file
-    :alt: Waveform Plotting Tutorial 2
+    :target: tutorial/waveform_plotting_tutorial.html#customized-plots
+    :alt: Customized Plots
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_3.py
     :width: 300px
     :target: tutorial/waveform_plotting_tutorial.html#plotting-multiple-channels
-    :alt: Waveform Plotting Tutorial 3
+    :alt: Plotting multiple Channels
+
+.. plot:: source/tutorial/waveform_plotting_tutorial_4.py
+    :width: 300px
+    :target: tutorial/waveform_plotting_tutorial.html#creating-a-one-day-plot
+    :alt: Creating a One-Day Plot
 
 .. plot:: source/tutorial/filtering_seismograms.py
     :width: 300px

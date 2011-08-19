@@ -727,9 +727,8 @@ class Stream(object):
             st.plot()
 
         :param outfile: Output file string. Also used to automatically
-            determine the output format. Currently supported are emf, eps, pdf,
-            png, ps, raw, rgba, svg and svgz output although this is depended
-            on the matplotlib backend used.
+            determine the output format. Supported file formats depend on your
+            matplotlib backend. Most backends support png, pdf, ps, eps and svg.
             Defaults to None.
         :param format: Format of the graph picture. If no format is given the
             outfile parameter will be used to try to automatically determine
