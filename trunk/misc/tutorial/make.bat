@@ -49,7 +49,7 @@ if "%1" == "clean" (
 
 if "%1" == "coverage" (
     coverage run --rcfile=%BUILDDIR%\.coveragerc -m obspy.core.scripts.runtests --all
-    coverage html --rcfile=%BUILDDIR%\.coveragerc -d %BUILDDIR%\coverage
+    coverage html --rcfile=%BUILDDIR%\.coveragerc -d %BUILDDIR%\html\coverage
     goto end
 )
 
