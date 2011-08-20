@@ -10,6 +10,46 @@ import os
 import unittest
 import filecmp
 
+EXPECTED_SACPZ = """* **********************************
+* NETWORK   (KNETWK): IU
+* STATION    (KSTNM): ANMO
+* LOCATION   (KHOLE): 00
+* CHANNEL   (KCMPNM): BHZ
+* CREATED           : ...
+* START             : 2002-11-19T21:07:00
+* END               : 2008-06-30T00:00:00
+* DESCRIPTION       : Albuquerque, New Mexico, USA
+* LATITUDE          : 34.945981
+* LONGITUDE         : -106.457133
+* ELEVATION         : 1671.0
+* DEPTH             : 145.0
+* DIP               : 0.0
+* AZIMUTH           : 0.0
+* SAMPLE RATE       : 20.0
+* INPUT UNIT        : M
+* OUTPUT UNIT       : COUNTS
+* INSTTYPE          : Geotech KS-54000 Borehole Seismometer
+* INSTGAIN          : 2.204000e+03 (M/S)
+* COMMENT           : 
+* SENSITIVITY       : 9.244000e+08 (M/S)
+* A0                : 8.608300e+04
+* **********************************
+ZEROS\t3
+\t+0.000000e+00\t+0.000000e+00\t
+\t+0.000000e+00\t+0.000000e+00\t
+\t+0.000000e+00\t+0.000000e+00\t
+POLES\t5
+\t-5.943130e+01\t+0.000000e+00\t
+\t-2.271210e+01\t+2.710650e+01\t
+\t-2.271210e+01\t-2.710650e+01\t
+\t-4.800400e-03\t+0.000000e+00\t
+\t-7.319900e-02\t+0.000000e+00\t
+CONSTANT\t7.957513e+13
+
+
+
+"""
+
 
 class ClientTestCase(unittest.TestCase):
     """
@@ -96,43 +136,7 @@ class ClientTestCase(unittest.TestCase):
         got = client.sacpz(network="IU", station="ANMO", location="00",
                            channel="BHZ", starttime=t1, endtime=t2)
         got = got.split("\n")
-        expected = ['**************************************************',
-                    '* NETWORK\tIU',
-                    '* STATION\tANMO',
-                    '* CHANNEL\tBHZ',
-                    '* LOCATION\t00',
-                    '* CREATED\t2011/05/05 09:56:08.639',
-                    '* START\t\t2002/11/19 00:00:00.000',
-                    '* END\t\t2008/06/30 00:00:00.000',
-                    '* DESCRIPTION\tAlbuquerque, New Mexico, USA',
-                    '* LATITUDE\t34.94598',
-                    '* LONGITUDE\t-106.45713',
-                    '* ELEVATION\t1671.0',
-                    '* DEPTH\t\t145.0',
-                    '* DIP\t\t0.0',
-                    '* AZIMUTH\t0.0',
-                    '* SAMPLE RATE\t20.0',
-                    '* INPUT UNIT\tM',
-                    '* OUTPUT UNIT\tCOUNTS',
-                    '* INSTTYPE\tGeotech KS-54000 Borehole Seismometer',
-                    '* INSTGAIN\t2.204000e+03',
-                    '* SENSITIVITY\t9.244000e+08',
-                    '* A0\t\t8.608300e+04',
-                    '* ****',
-                    'ZEROS\t3',
-                    '\t+0.000000e+00\t+0.000000e+00\t',
-                    '\t+0.000000e+00\t+0.000000e+00\t',
-                    '\t+0.000000e+00\t+0.000000e+00\t',
-                    'POLES\t5',
-                    '\t-5.943130e+01\t+0.000000e+00\t',
-                    '\t-2.271210e+01\t+2.710650e+01\t',
-                    '\t-2.271210e+01\t-2.710650e+01\t',
-                    '\t-4.800400e-03\t+0.000000e+00\t',
-                    '\t-7.319900e-02\t+0.000000e+00\t',
-                    'CONSTANT\t7.957513e+13',
-                    '',
-                    '',
-                    '']
+        expected = EXPECTED_SACPZ.splitlines()
         # drop lines with creation date (current time during request)
         got.pop(5)
         expected.pop(5)

@@ -406,12 +406,14 @@ class Client(object):
         <StaMessage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.data.scec.org/xml/station/" xsi:schemaLocation="http://www.data.scec.org/xml/station/ http://www.data.scec.org/xml/station/station.xsd">
          <Source>IRIS-DMC</Source>
          <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: http://www.iris.edu/ws/station Networks: [IU] Stations: [ANMO] Channels: [BHZ] Locations: [00] Time Window: [2006-03-01T00:00:00.000Z-2006-09-01T00:00:00.000Z] level:[net]</Module>
+         <Module>IRIS WEB SERVICE: http://www.iris.edu/ws/station</Module>
+         <ModuleURI>http://www.iris.edu/ws/station/query?network=IU&amp;level=net&amp;timewindow=2006-03-01%2C2006-09-01&amp;station=ANMO&amp;location=00&amp;channel=BHZ</ModuleURI>
          <SentDate>...</SentDate>
          <Network net_code="IU">
           <StartDate>1988-01-01T00:00:00</StartDate>
           <EndDate>2500-12-12T23:59:59</EndDate>
           <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+          <TotalNumberStations>91</TotalNumberStations>
          </Network>
         </StaMessage>
 
@@ -813,39 +815,40 @@ class Client(object):
         >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",
         ...                      channel="BHZ", starttime=t1, endtime=t2)
         >>> print(sacpz) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        **************************************************
-        * NETWORK   IU
-        * STATION   ANMO
-        * CHANNEL   BHZ
-        * LOCATION  00
-        * CREATED   ...
-        * START     2002/11/19 00:00:00.000
-        * END       2008/06/30 00:00:00.000
-        * DESCRIPTION   Albuquerque, New Mexico, USA
-        * LATITUDE  34.94598
-        * LONGITUDE -106.45713
-        * ELEVATION 1671.0
-        * DEPTH     145.0
-        * DIP       0.0
-        * AZIMUTH   0.0
-        * SAMPLE RATE   20.0
-        * INPUT UNIT    M
-        * OUTPUT UNIT   COUNTS
-        * INSTTYPE  Geotech KS-54000 Borehole Seismometer
-        * INSTGAIN  2.204000e+03
-        * SENSITIVITY   9.244000e+08
-        * A0        8.608300e+04
-        * ****
-        ZEROS   3
-            +0.000000e+00   +0.000000e+00   
-            +0.000000e+00   +0.000000e+00   
-            +0.000000e+00   +0.000000e+00   
-        POLES   5
-            -5.943130e+01   +0.000000e+00   
-            -2.271210e+01   +2.710650e+01   
-            -2.271210e+01   -2.710650e+01   
-            -4.800400e-03   +0.000000e+00   
-            -7.319900e-02   +0.000000e+00   
+        * **********************************
+        * NETWORK   (KNETWK): IU
+        * STATION    (KSTNM): ANMO
+        * LOCATION   (KHOLE): 00
+        * CHANNEL   (KCMPNM): BHZ
+        * CREATED           : ...
+        * START             : 2002-11-19T21:07:00
+        * END               : 2008-06-30T00:00:00
+        * DESCRIPTION       : Albuquerque, New Mexico, USA
+        * LATITUDE          : 34.945981
+        * LONGITUDE         : -106.457133
+        * ELEVATION         : 1671.0
+        * DEPTH             : 145.0
+        * DIP               : 0.0
+        * AZIMUTH           : 0.0
+        * SAMPLE RATE       : 20.0
+        * INPUT UNIT        : M
+        * OUTPUT UNIT       : COUNTS
+        * INSTTYPE          : Geotech KS-54000 Borehole Seismometer
+        * INSTGAIN          : 2.204000e+03 (M/S)
+        * COMMENT           : 
+        * SENSITIVITY       : 9.244000e+08 (M/S)
+        * A0                : 8.608300e+04
+        * **********************************
+        ZEROS    3
+            +0.000000e+00    +0.000000e+00    
+            +0.000000e+00    +0.000000e+00    
+            +0.000000e+00    +0.000000e+00    
+        POLES    5
+            -5.943130e+01    +0.000000e+00    
+            -2.271210e+01    +2.710650e+01    
+            -2.271210e+01    -2.710650e+01    
+            -4.800400e-03    +0.000000e+00    
+            -7.319900e-02    +0.000000e+00    
         CONSTANT    7.957513e+13
         <BLANKLINE>
         <BLANKLINE>
@@ -964,7 +967,7 @@ class Client(object):
         >>> client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
         'OREGON'
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
-        (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN ')
+        (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
 
         :param lat: Latitude of interest.
         :type lat: float
