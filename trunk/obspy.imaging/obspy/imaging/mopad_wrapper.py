@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #-----------------------------------------------
-# Filename: core.py
+# Filename: mopad_wrapper.py
 #  Purpose: Wrapper for mopad
 #   Author: Tobias Megies, Moritz Beyreuther
 #    Email: megies@geophysik.uni-muenchen.de
@@ -8,14 +8,19 @@
 # Copyright (C) 2008-2011 ObsPy Development Team
 #-----------------------------------------------
 """
-ObsPy bindings/wrapper to the mopad beachball generator
+ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (mopad)
+written by Lars Krieger and Sebastian Heimann.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU General Public License (GPL)
+    (http://www.gnu.org/licenses/gpl.txt)
 """
 
 import warnings
 import numpy as np
-from matplotlib import pyplot as plt, patches
-from matplotlib.collections import PatchCollection
-from matplotlib.path import Path
+from matplotlib import patches, collections
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
 from obspy.imaging.scripts.mopad import MomentTensor as mopad_MomentTensor
 from obspy.imaging.scripts.mopad import epsilon
@@ -23,17 +28,18 @@ from obspy.imaging.beachball import xy2patch
 
 
 # seems the base system we (gmt) are using is called "USE" in mopad
-KWARG_MAP = {'size': ['plot_size', 'plot_aux_plot_size'],
-             'linewidth': ['plot_nodalline_width', 'plot_outerline_width'],
-             'facecolor': ['plot_tension_colour'],
-             'edgecolor': ['plot_outerline_colour'],
-             'bgcolor': [],
-             'alpha': ['plot_total_alpha'],
-             'width': [],
-             'outfile': ['plot_outfile'],
-             'format': ['plot_outfile_format'],
-             'nofill': ['plot_only_lines']
-             }
+KWARG_MAP = {
+    'size': ['plot_size', 'plot_aux_plot_size'],
+    'linewidth': ['plot_nodalline_width', 'plot_outerline_width'],
+    'facecolor': ['plot_tension_colour'],
+    'edgecolor': ['plot_outerline_colour'],
+    'bgcolor': [],
+    'alpha': ['plot_total_alpha'],
+    'width': [],
+    'outfile': ['plot_outfile'],
+    'format': ['plot_outfile_format'],
+    'nofill': ['plot_only_lines']
+}
 #  state of mopads kwargs dict before plotting after following command:
 #python mopad.py p 10,10,10 -f bla.png -s 0.5 -a 0.5 -l 3 r 0.4 -n 2 b 0.8 -w b -r g -q 72
 # ipdb> kwargs_dict
@@ -64,10 +70,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection). Based on mopad.
-    
+
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
-    
+
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
         (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
         six independent components of the moment tensor). The strike is of the 
@@ -82,27 +88,26 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         curves. Defaults to 80, note that this and especially smaller
         values might produce artifacts, however it makes the plotting much
         faster. Use 360 for full resolution and no artifacts.
-    :param facecolor: Color to use for quadrants of tension; can be a string, e.g. 
-        'r', 'b' or three component color vector, [R G B].
+    :param facecolor: Color to use for quadrants of tension; can be a string,
+        e.g. 'r', 'b' or three component color vector, [R G B].
     :param edgecolor: Color of the edges.
     :param bgcolor: The background color, usually white.
     :param alpha: The alpha level of the beach ball.
     :param xy: Origin position of the beach ball as tuple.
     :param width: Symbol size of beach ball.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param zorder: Set zorder. Artists with lower zorder values are drawn
-                   first.
-    :param mopad_basis: The system which may be chosen as
-            'NED' (North, East Down), 'USE' (Up, South, East), 'NWU' (North,
-            West, Up) or 'XYZ'. 'USE' mimics the obspy Beachball behaviour.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn first.
+    :param mopad_basis: The system which may be chosen as 'NED' (North, East
+        Down), 'USE' (Up, South, East), 'NWU' (North, West, Up) or 'XYZ'. 'USE'
+        mimics the ObsPy Beachball behaviour.
     """
     # initialize beachball
     mt = mopad_MomentTensor(fm, mopad_basis)
     bb = mopad_BeachBall(mt, npoints=size)
     bb._setup_BB(unit_circle=False)
-    
+
     # extract the coordinates and colors of the lines
-    radius = width/2.0
+    radius = width / 2.0
     neg_nodalline = bb._nodalline_negative_final_US
     pos_nodalline = bb._nodalline_positive_final_US
     tension_colour = facecolor
@@ -116,8 +121,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # collect patches for the selection
     coll = [None, None, None]
     coll[0] = patches.Circle(xy, radius=radius)
-    coll[1] = xy2patch(neg_nodalline[0,:], neg_nodalline[1,:], radius, xy)
-    coll[2] = xy2patch(pos_nodalline[0,:], pos_nodalline[1,:], radius, xy)
+    coll[1] = xy2patch(neg_nodalline[0, :], neg_nodalline[1, :], radius, xy)
+    coll[2] = xy2patch(pos_nodalline[0, :], pos_nodalline[1, :], radius, xy)
 
     # set the color of the three parts
     fc = [None, None, None]
@@ -149,7 +154,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
                 fc[2] = pressure_colour
 
     if bb._pure_isotropic:
-        if abs( np.trace( bb._M )) > epsilon:
+        if abs(np.trace(bb._M)) > epsilon:
             # use the circle as the upperst layer
             coll = [coll[0]]
             if bb._plot_clr_order < 0:
@@ -159,7 +164,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     # transfrom the patches to a path collection and set
     # the appropriate attributes
-    collection = PatchCollection(coll, match_original=False)
+    collection = collections.PatchCollection(coll, match_original=False)
     collection.set_facecolors(fc)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)
@@ -173,15 +178,15 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
     """
     Draws a beach ball diagram of an earthquake focal mechanism. Based on
     mopad.
-    
+
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
 
     :param size: Draw with this diameter.
     :param fig: Give an existing figure instance to plot into. New Figure if
-                set to None.
-    :param format: If specified the format in which the plot should be
-                   saved. E.g. (pdf, png, jpg, eps)
+        set to None.
+    :param format: If specified the format in which the plot should be saved,
+        e.g. pdf, png, jpg, or eps.
 
     For info on the remaining parameters see the
     :func:`~obspy.imaging.beachball.Beach` function of this module.
@@ -213,9 +218,12 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
     else:
         # no format specified, parse it from outfile name
         if mopad_kwargs['plot_outfile_format'] is None:
-            mopad_kwargs['plot_outfile_format'] = mopad_kwargs['plot_outfile'].split(".")[-1]
+            mopad_kwargs['plot_outfile_format'] = \
+                mopad_kwargs['plot_outfile'].split(".")[-1]
         else:
             # append file format if not already at end of outfile
-            if not mopad_kwargs['plot_outfile'].endswith(mopad_kwargs['plot_outfile_format']):
-                mopad_kwargs['plot_outfile'] += "." + mopad_kwargs['plot_outfile_format']
+            if not mopad_kwargs['plot_outfile'].endswith(\
+               mopad_kwargs['plot_outfile_format']):
+                mopad_kwargs['plot_outfile'] += "." + \
+                    mopad_kwargs['plot_outfile_format']
         bb.save_BB(mopad_kwargs)

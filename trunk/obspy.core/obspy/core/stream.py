@@ -803,13 +803,13 @@ class Stream(object):
 
         >>> from obspy.core import read
         >>> st = read()
-        >>> st.spectrogram() #doctest: +SKIP
+        >>> st[0].spectrogram() #doctest: +SKIP
 
         .. plot::
 
             from obspy.core import read
             st = read()
-            st.spectrogram(sphinx=True)
+            st[0].spectrogram()
         """
         spec_list = []
         for tr in self:

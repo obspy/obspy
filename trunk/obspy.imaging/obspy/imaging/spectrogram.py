@@ -5,28 +5,16 @@
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Christian Sippl
+# Copyright (C) 2008-2011 Christian Sippl
 #---------------------------------------------------------------------
 """
-Plotting Spectrogram of Seismograms.
+Plotting spectrogram of seismograms.
 
-
-GNU General Public License (GPL)
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-    
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU General Public License (GPL)
+    (http://www.gnu.org/licenses/gpl.txt)
 """
 
 from matplotlib import mlab
@@ -37,13 +25,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def nearestPow2(x):
+def _nearestPow2(x):
     """
     Find power of two nearest to x
 
-    >>> nearestPow2(3)
+    >>> _nearestPow2(3)
     2.0
-    >>> nearestPow2(15)
+    >>> _nearestPow2(15)
     16.0
 
     :type x: Float
@@ -64,50 +52,50 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
                 mult=8.0, cmap=None, zorder=None, title=None, show=True,
                 sphinx=False, clip=[0.0, 1.0]):
     """
-    Computes and plots logarithmic spectrogram of the input data.
-    
+    Computes and plots spectrogram of the input data.
+
     :param data: Input data
     :type samp_rate: float
     :param samp_rate: Samplerate in Hz
     :type per_lap: float
-    :param per_lap: Percentage of overlap of sliding window. (Ranging from 0 to 1)
-            High overlaps take a long time to compute.
+    :param per_lap: Percentage of overlap of sliding window, ranging from 0
+        to 1. High overlaps take a long time to compute.
     :type wlen: int or float
     :param wlen: Window length for fft in seconds. If this parameter is too
-                 small, the calculation will take forever.
+        small, the calculation will take forever.
     :type log: bool
     :param log: Logarithmic frequency axis if True, linear frequency axis
-            otherwise
+        otherwise.
     :type outfile: String
     :param outfile: String for the filename of output file, if None
-                    interactive plotting is activated.
+        interactive plotting is activated.
     :type format: String
     :param format: Format of image to save
     :type axes: :class:`matplotlib.axes.Axes`
     :param axes: Plot into given axes, this deactivates the format and
-                 outfile option
+        outfile option.
     :type dbscale: bool
-    :param dbscale: If True 10 * log10 of color values is taken, if False
-                    the sqrt is taken
+    :param dbscale: If True 10 * log10 of color values is taken, if False the
+        sqrt is taken.
     :type mult: float
-    :param mult: Pad zeros to lengh mult * wlen. This will make the
-                 spectrogram smoother. Available for matplotlib > 0.99.0
+    :param mult: Pad zeros to lengh mult * wlen. This will make the spectrogram
+        smoother. Available for matplotlib > 0.99.0.
     :type cmap: :class:`matplotlib.colors.Colormap`
     :param cmap: Specify a custom colormap instance
     :type zorder: float
     :param zorder: Specify the zorder of the plot. Only of importance if other
-            plots in the same axes are executed.
+        plots in the same axes are executed.
     :type title: String
     :param title: Set the plot title
     :type show: bool
-    :param show: Do not call `plt.show()` at end of routine. That way,
-            further modifications can be done to the figure before showing it.
+    :param show: Do not call `plt.show()` at end of routine. That way, further
+        modifications can be done to the figure before showing it.
     :type sphinx: bool
     :param sphinx: Internal flag used for API doc generation, default False
     :type clip: [float, float]
     :param clip: adjust colormap to clip at lower and/or upper end. The given
-            percentages of the amplitude range (linear or logarithmic depending
-            on option `dbscale`) are clipped.
+        percentages of the amplitude range (linear or logarithmic depending
+        on option `dbscale`) are clipped.
     """
     # enforce float for samp_rate
     samp_rate = float(samp_rate)
@@ -119,12 +107,12 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     npts = len(data)
     # nfft needs to be an integer, otherwise a deprecation will be raised
     #XXX add condition for too many windows => calculation takes for ever
-    nfft = int(nearestPow2(wlen * samp_rate))
+    nfft = int(_nearestPow2(wlen * samp_rate))
     if nfft > npts:
-        nfft = int(nearestPow2(npts / 8.0))
+        nfft = int(_nearestPow2(npts / 8.0))
 
     if mult != None:
-        mult = int(nearestPow2(mult))
+        mult = int(_nearestPow2(mult))
         mult = mult * nfft
     nlap = int(nfft * float(per_lap))
 
@@ -224,7 +212,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
             fig.savefig(outfile, format=format)
         else:
             fig.savefig(outfile)
+    elif show:
+        plt.show()
     else:
-        if show:
-            plt.show()
-    return fig
+        return fig

@@ -34,48 +34,52 @@ class Client(Telnet):
     """
     The ArcLink/WebDC client.
 
-    Parameters
-    ----------
-    host : string, optional
-        Host name of the remote ArcLink server (default host is 'webdc.eu').
-    port : int, optional
-        Port of the remote ArcLink server (default port is 18001).
-    timeout : int, optional
-        Seconds before a connection timeout is raised (default is 20 seconds).
-        This works only for Python >= 2.6.x.
-    user : string, optional
-        The user name is used for identification with the ArcLink server. This
-        entry is also used for usage statistics within the data centers, so
-        please provide a meaningful user id (default is 'ObsPy client').
-    password : string, optional
-        A password used for authentication with the ArcLink server (default is
-        an empty string).
-    institution : string, optional
-        A string containing the name of the institution of the requesting
-        person (default is an 'Anonymous').
-    debug : boolean, optional
-        Enables verbose output of the connection handling (default is False).
-    command_delay : float, optional
-        Delay between each command send to the ArcLink server (default is 0).
-    plain_status_allowed : boolean, optional
-        Certain ArcLink versions do not allow a plain STATUS request. Set this
-        to False if you experience a endless loop during a request. Default is
-        True.
+    :type host: string, optional
+    :param host: Host name of the remote ArcLink server (default host is
+        ``'webdc.eu'``).
+    :type port: int, optional
+    :param port: Port of the remote ArcLink server (default port is ``18001``).
+    :type timeout: int, optional
+    :param timeout: Seconds before a connection timeout is raised (default is
+        ``20`` seconds). This works only for Python >= 2.6.x.
+    :type user: string, optional
+    :param user: The user name is used for identification with the ArcLink
+        server. This entry is also used for usage statistics within the data
+        centers, so please provide a meaningful user id (default is
+        ``'ObsPy client'``).
+    :type password: string, optional
+    :param password: A password used for authentication with the ArcLink server
+        (default is an empty string).
+    :type institution: string, optional
+    :param institution: A string containing the name of the institution of the
+        requesting person (default is an ``'Anonymous'``).
+    :type debug: boolean, optional
+    :param debug: Enables verbose output of the connection handling (default is
+        ``False``).
+    :type command_delay: float, optional
+    :param command_delay: Delay between each command send to the ArcLink server
+        (default is ``0``). 
+    :type plain_status_allowed: boolean, optional
+    :param plain_status_allowed: Certain ArcLink versions do not allow a plain
+        STATUS request. Set this to False if you experience a endless loop
+        during a request. Default is ``True``.
 
-    Notes
-    -----
-    The following ArcLink servers may be accessed via ObsPy:
+    .. rubric:: Notes
 
-    Public servers:
-      * WebDC servers: webdc.eu:18001, webdc:18002
+    The following ArcLink servers may be accessed via ObsPy (partly restricted
+    access only):
 
-    Further mirrors listed at webdc.eu (partly restricted access only):
-      * ODC Server:  bhlsa03.knmi.nl:18001
-      * INGV Server: eida.rm.ingv.it:18001
-      * IPGP Server: geosrt2.ipgp.fr:18001
+    * WebDC servers: webdc.eu:18001, webdc:18002
+    * ODC Server:  bhlsa03.knmi.nl:18001
+    * INGV Server: eida.rm.ingv.it:18001
+    * IPGP Server: geosrt2.ipgp.fr:18001
     """
+
+    """Timeout value for a status request"""
     status_timeout = 2
+
     status_delay = 0.1
+    """Delay in seconds between each status request"""
 
     def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
                  password="", institution="Anonymous", timeout=20,
@@ -287,42 +291,40 @@ class Client(Telnet):
         """
         Retrieve waveform via ArcLink and returns an ObsPy Stream object.
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        format : ['FSEED' | 'MSEED'], optional
-            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED').
-            .. note::
-                Format 'XSEED' is documented, but not yet implemented in
-                ArcLink.
-        compressed : boolean, optional
-            Request compressed files from ArcLink server (default is True).
-        getPAZ : boolean
-            Fetch PAZ information and append to
-            :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
-        getCoordinates : boolean
-            Fetch coordinate information and append to
-            :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
-        route : boolean, optional
-            Enables ArcLink routing (default is True).
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+            Mini-SEED (``'MSEED'``) volume (default is an ``'MSEED'``).
 
-        Returns
-        -------
-            :class:`~obspy.core.stream.Stream`
+            .. note::
+                A format ``'XSEED'`` is documented, but not yet implemented in
+                ArcLink.
+        :type compressed: boolean, optional
+        :param compressed: Request compressed files from ArcLink server
+            (default is ``True``).
+        :type getPAZ: boolean
+        :param getPAZ: Fetch PAZ information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type getCoordinates: boolean
+        :param getCoordinates: Fetch coordinate information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. This
+            considerably slows down the request.
+        :type route: boolean, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :return: ObsPy Stream object.
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -376,32 +378,33 @@ class Client(Telnet):
         quality flags of MiniSEED files which would be neglected reading it
         with obspy.mseed.
 
-        Parameters
-        ----------
-        filename : string
-            Name of the output file.
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        format : ['FSEED' | 'MSEED'], optional
-            Output format. Either as full SEED ('FSEED') or Mini-SEED ('MSEED')
-            volume (default is an 'MSEED').
+        :type filename: string
+        :param filename: Name of the output file.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type format: ``'FSEED'`` or ``'MSEED'``, optional
+        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+            Mini-SEED (``'MSEED'``) volume (default is an ``'MSEED'``).
+
             .. note::
-                Format 'XSEED' is documented, but not yet implemented in
+                A format ``'XSEED'`` is documented, but not yet implemented in
                 ArcLink.
-        compressed : boolean, optional
-            Request compressed files from ArcLink server (default is True).
-        route : boolean, optional
-            Enables ArcLink routing (default is True).
+        :type compressed: boolean, optional
+        :param compressed: Request compressed files from ArcLink server
+            (default is ``True``).
+        :type route: boolean, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+        :return: None
         """
         # request type
         rtype = 'REQUEST WAVEFORM format=%s' % format
@@ -435,20 +438,16 @@ class Client(Telnet):
         """
         Get responsible host addresses for given network/stations from ArcLink.
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-
-        Returns
-        -------
-            Dictionary of host names.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :rtype: dict
+        :return: Dictionary of host names.
         """
         # request type
         rtype = 'REQUEST ROUTING '
@@ -538,35 +537,33 @@ class Client(Telnet):
         .. note::
             Requesting QC is documented but seems not to work at the moment. 
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        parameters : str, optional
-            Comma-separated list of QC parameters. The following QC parameters
-            are implemented in the present version: availability, delay, 
-            gaps count, gaps interval, gaps length, latency, offset, 
-            overlaps count, overlaps interval, overlaps length, rms, 
-            spikes amplitude, spikes count, spikes interval, timing quality
-            (default is '*' for all parameters).
-        outages : boolean, optional
-            Include list of outages (default is True).
-        logs : boolean, optional
-            Include log messages (default is True).
-
-        Returns
-        -------
-            XML document as string.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type parameters: str, optional
+        :param parameters: Comma-separated list of QC parameters. The following
+            QC parameters are implemented in the present version:
+            ``'availability'``, ``'delay'``, ``'gaps count'``,
+            ``'gaps interval'``, ``'gaps length'``, ``'latency'``, ``'offset'``, 
+            ``'overlaps count'``, ``'overlaps interval'``,
+            ``'overlaps length'``, ``'rms'``, ``'spikes amplitude'``,
+            ``'spikes count'``, ``'spikes interval'``, ``'timing quality'``
+            (default is ``'*'`` for requesting all parameters).
+        :type outages: boolean, optional
+        :param outages: Include list of outages (default is ``True``).
+        :type logs: boolean, optional
+        :param logs: Include log messages (default is ``True``).
+        :rtype: str
+        :return: XML document as string.
         """
         # request type
         rtype = 'REQUEST QC'
@@ -590,26 +587,22 @@ class Client(Telnet):
         """
         Returns metadata (PAZ and Coordinates).
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        route : boolean, optional
-            Enables ArcLink routing (default is True).
-
-        Returns
-        -------
-            Dictionary containing keys 'paz' and 'coordinates'.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type route: boolean, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+        :rtype: dict
+        :return: Dictionary containing keys 'paz' and 'coordinates'.
         """
         if not getPAZ and not getCoordinates:
             return {}
@@ -683,24 +676,20 @@ class Client(Telnet):
         """
         Returns poles, zeros, gain and sensitivity of a single channel.
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-
-        Returns
-        -------
-            Dictionary containing PAZ information.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :rtype: dict
+        :return: Dictionary containing PAZ information.
         """
         result = self.getInventory(network=network, station=station,
                                    location=location, channel=channel,
@@ -725,24 +714,23 @@ class Client(Telnet):
         """
         Writes response information into a file.
 
-        Parameters
-        ----------
-        filename : string
-            Name of the output file.
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        format : ['SEED'], optional
-            Output format. Currently only Dataless SEED is supported.
+        :type filename: string
+        :param filename: Name of the output file.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type format: ``'SEED'``, optional
+        :param format: Output format. Currently only Dataless SEED is supported.
+        :return: None
         """
         # request type
         rtype = 'REQUEST RESPONSE format=%s' % format
@@ -763,45 +751,42 @@ class Client(Telnet):
         """
         Returns inventory data.
 
-        Parameters
-        ----------
-        network : string
-            Network code, e.g. 'BW'.
-        station : string
-            Station code, e.g. 'MANZ'.
-        location : string
-            Location code, e.g. '01'.
-        channel : string
-            Channel code, e.g. 'EHE'.
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        instruments : boolean, optional
-            Include instrument data (default is False).
-        route : boolean, optional
-            Enables ArcLink routing (default is True).
-        sensortype : string, optional
-            Limit streams to those using specific sensor types: "VBB", 
-            "BB", "SM", "OBS", etc. Can be also a combination like "VBB+BB+SM".
-        min_latitude : float, optional
-            Minimum latitude
-        max_latitude : float, optional
-            Maximum latitude
-        min_longitude : float, optional
-            Minimum longitude
-        max_longitude : float, optional
-            Maximum longitude
-        permanent : boolean, optional
-            Requesting only permanent or temporary networks respectively.
-            Default is None, therefore requesting all data.
-        restricted : boolean, optional
-            Requesting only networks/stations/streams that have restricted or
-            open data respectively. Default is None.
-
-        Returns
-        -------
-            Dictionary of inventory information.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: string
+        :param station: Station code, e.g. ``'MANZ'``.
+        :type location: string
+        :param location: Location code, e.g. ``'01'``.
+        :type channel: string
+        :param channel: Channel code, e.g. ``'EHE'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type instruments: boolean, optional
+        :param instruments: Include instrument data (default is ``False``).
+        :type route: boolean, optional
+        :param route: Enables ArcLink routing (default is ``True``).
+        :type sensortype: string, optional
+        :param sensortype: Limit streams to those using specific sensor types:
+            ``"VBB"``, ``"BB"``, ``"SM"``, ``"OBS"``, etc. Can be also a
+            combination like ``"VBB+BB+SM"``.
+        :type min_latitude: float, optional
+        :param min_latitude: Minimum latitude.
+        :type max_latitude: float, optional
+        :param max_latitude: Maximum latitude.
+        :type min_longitude: float, optional
+        :param min_longitude: Minimum longitude.
+        :type max_longitude: float, optional
+        :param max_longitude: Maximum longitude
+        :type permanent: boolean, optional
+        :param permanent: Requesting only permanent or temporary networks
+            respectively. Default is ``None``, therefore requesting all data.
+        :type restricted: boolean, optional
+        :param restricted: Requesting only networks/stations/streams that have
+            restricted or open data respectively. Default is ``None``.
+        :rtype: dict
+        :return: Dictionary of inventory information.
         """
         # request type
         rtype = 'REQUEST INVENTORY '
@@ -1010,16 +995,12 @@ class Client(Telnet):
             Currently the time span seems to be ignored by the ArcLink servers,
             therefore all possible networks are returned.
 
-        Parameters
-        ----------
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-
-        Returns
-        -------
-            Dictionary of network data.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :rtype: dict
+        :return: Dictionary of network data.
         """
         return self.getInventory(network='*', starttime=starttime,
                                  endtime=endtime, route=False)
@@ -1032,18 +1013,14 @@ class Client(Telnet):
             Currently the time span seems to be ignored by the ArcLink servers,
             therefore all possible stations are returned.
 
-        Parameters
-        ----------
-        starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            Start date and time.
-        endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`
-            End date and time.
-        network : string
-            Network code, e.g. 'BW'.
-
-        Returns
-        -------
-            Dictionary of station data.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type network: string
+        :param network: Network code, e.g. ``'BW'``.
+        :rtype: dict
+        :return: Dictionary of station data.
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)

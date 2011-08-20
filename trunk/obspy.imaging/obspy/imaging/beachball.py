@@ -13,45 +13,28 @@ Draws a beachball diagram of an earthquake focal mechanism
 
 Most source code provided here are adopted from
 
-1. MatLab script written by Oliver Boyd 
-   see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
-2. ps_meca program from the Generic Mapping Tools (GMT)
-   see: http://gmt.soest.hawaii.edu
+1. MatLab script `bb.m`_ written by Andy Michael and Oliver Boyd.
+2. ps_meca program from the `Generic Mapping Tools (GMT)`_.
 
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU General Public License (GPL)
+    (http://www.gnu.org/licenses/gpl.txt)
 
-GNU General Public License (GPL)
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
-USA.
+.. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
+.. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
 """
 
-#Needs to be done before importing pyplot and the like.
-from matplotlib import pyplot as plt, patches
-from matplotlib.collections import PatchCollection
-from matplotlib.path import Path
-from numpy import array, linalg, zeros, sqrt, fabs, arcsin, arccos, pi, cos, \
-    power, abs, arange, sin, ones, arctan2, ndarray, concatenate
-from pylab import show
+import matplotlib.pyplot as plt
+from matplotlib import patches, collections, path as mplpath
 import StringIO
-import doctest
+import numpy as np
 
 
-D2R = pi / 180
-R2D = 180 / pi
+D2R = np.pi / 180
+R2D = 180 / np.pi
 EPSILON = 0.00001
-
 
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
@@ -60,10 +43,10 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     """
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
-    
+
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
-    
+
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
         (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
         six independent components of the moment tensor, where the coordinate
@@ -77,16 +60,15 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         opposite to strike (right-lateral). 
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to 100.
-    :param facecolor: Color to use for quadrants of tension; can be a string, e.g. 
-        'r', 'b' or three component color vector, [R G B].
+    :param facecolor: Color to use for quadrants of tension; can be a string,
+        e.g. 'r', 'b' or three component color vector, [R G B].
     :param edgecolor: Color of the edges.
     :param bgcolor: The background color, usually white.
     :param alpha: The alpha level of the beach ball.
     :param xy: Origin position of the beach ball as tuple.
     :param width: Symbol size of beach ball.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param zorder: Set zorder. Artists with lower zorder values are drawn
-                   first.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn first.
     """
     mt = None
     np1 = None
@@ -110,7 +92,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # Return as collection
     if mt:
         (T, N, P) = MT2Axes(mt)
-        if fabs(N.val) < EPSILON and fabs(T.val + P.val) < EPSILON:
+        if np.fabs(N.val) < EPSILON and np.fabs(T.val + P.val) < EPSILON:
             colors, p = plotDC(np1, size, xy=xy, width=width)
         else:
             colors, p = plotMT(T, N, P, size, outline=True,
@@ -121,19 +103,19 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     if nofill:
         #XXX not tested with plotMT
-        collection = PatchCollection([p[1]], match_original=False)
-        collection.set_facecolor('none')
+        col = collections.PatchCollection([p[1]], match_original=False)
+        col.set_facecolor('none')
     else:
-        collection = PatchCollection(p, match_original=False)
+        col = collections.PatchCollection(p, match_original=False)
         # Replace color dummies 'b' and 'w' by face and bgcolor
         fc = [facecolor if c == 'b' else bgcolor for c in colors]
-        collection.set_facecolors(fc)
+        col.set_facecolors(fc)
 
-    collection.set_edgecolor(edgecolor)
-    collection.set_alpha(alpha)
-    collection.set_linewidth(linewidth)
-    collection.set_zorder(zorder)
-    return collection
+    col.set_edgecolor(edgecolor)
+    col.set_alpha(alpha)
+    col.set_linewidth(linewidth)
+    col.set_zorder(zorder)
+    return col
 
 
 def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
@@ -141,15 +123,15 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
               format=None, nofill=False, fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. 
-    
+
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
     be vectors of multiple focal mechanisms.
 
     :param size: Draw with this diameter.
     :param fig: Give an existing figure instance to plot into. New Figure if
-                set to None.
+        set to None.
     :param format: If specified the format in which the plot should be
-                   saved. E.g. (pdf, png, jpg, eps)
+        saved, e.g. pdf, png, jpg, or eps.
 
     For info on the remaining parameters see the
     :func:`~obspy.imaging.beachball.Beach` function of this module.
@@ -187,7 +169,7 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
         imgdata.seek(0)
         return imgdata.read()
     else:
-        show()
+        plt.show()
         return fig
 
 
@@ -195,14 +177,15 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
            x0=0, y0=0, xy=(0, 0), width=200):
     """
     Uses a principal axis T, N and P to draw a beach ball plot.
-    
+
     :param ax: axis object of a matplotlib figure
-    :param T: L{PrincipalAxis}
-    :param N: L{PrincipalAxis}
-    :param P: L{PrincipalAxis}
-    
-    Adapted from ps_tensor / utilmeca.c / Generic Mapping Tools (GMT).
-    @see: http://gmt.soest.hawaii.edu
+    :param T: :class:`~PrincipalAxis`
+    :param N: :class:`~PrincipalAxis`
+    :param P: :class:`~PrincipalAxis`
+
+    Adapted from ps_tensor / utilmeca.c / `Generic Mapping Tools (GMT)`_.
+
+    .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
     """
     collect = []
     colors = []
@@ -213,21 +196,21 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     j2 = 0
     j3 = 0
     n = 0
-    azi = zeros((3, 2))
-    x = zeros(400)
-    y = zeros(400)
-    x2 = zeros(400)
-    y2 = zeros(400)
-    x3 = zeros(400)
-    y3 = zeros(400)
-    xp1 = zeros(800)
-    yp1 = zeros(800)
-    xp2 = zeros(400)
-    yp2 = zeros(400)
+    azi = np.zeros((3, 2))
+    x = np.zeros(400)
+    y = np.zeros(400)
+    x2 = np.zeros(400)
+    y2 = np.zeros(400)
+    x3 = np.zeros(400)
+    y3 = np.zeros(400)
+    xp1 = np.zeros(800)
+    yp1 = np.zeros(800)
+    xp2 = np.zeros(400)
+    yp2 = np.zeros(400)
 
-    a = zeros(3)
-    p = zeros(3)
-    v = zeros(3)
+    a = np.zeros(3)
+    p = np.zeros(3)
+    v = np.zeros(3)
     a[0] = T.strike
     a[1] = N.strike
     a[2] = P.strike
@@ -244,7 +227,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
 
     radius_size = size * 0.5
 
-    if fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
+    if np.fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
         # pure implosion-explosion
         if vi > 0.:
             cir = patches.Circle(xy, radius=width / 2.0)
@@ -256,7 +239,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             colors.append('w')
         return colors, collect
 
-    if fabs(v[0]) >= fabs(v[2]):
+    if np.fabs(v[0]) >= np.fabs(v[2]):
         d = 0
         m = 2
     else:
@@ -285,30 +268,31 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         colors.append('b')
         return colors, collect
 
-    spd = sin(p[d] * D2R)
-    cpd = cos(p[d] * D2R)
-    spb = sin(p[b] * D2R)
-    cpb = cos(p[b] * D2R)
-    spm = sin(p[m] * D2R)
-    cpm = cos(p[m] * D2R)
-    sad = sin(a[d] * D2R)
-    cad = cos(a[d] * D2R)
-    sab = sin(a[b] * D2R)
-    cab = cos(a[b] * D2R)
-    sam = sin(a[m] * D2R)
-    cam = cos(a[m] * D2R)
+    spd = np.sin(p[d] * D2R)
+    cpd = np.cos(p[d] * D2R)
+    spb = np.sin(p[b] * D2R)
+    cpb = np.cos(p[b] * D2R)
+    spm = np.sin(p[m] * D2R)
+    cpm = np.cos(p[m] * D2R)
+    sad = np.sin(a[d] * D2R)
+    cad = np.cos(a[d] * D2R)
+    sab = np.sin(a[b] * D2R)
+    cab = np.cos(a[b] * D2R)
+    sam = np.sin(a[m] * D2R)
+    cam = np.cos(a[m] * D2R)
 
     for i in range(0, 360):
         fir = i * D2R
-        s2alphan = (2. + 2. * iso) / float(3. + (1. - 2. * f) * cos(2. * fir))
+        s2alphan = (2. + 2. * iso) / \
+            float(3. + (1. - 2. * f) * np.cos(2. * fir))
         if s2alphan > 1.:
             big_iso += 1
         else:
-            alphan = arcsin(sqrt(s2alphan))
-            sfi = sin(fir)
-            cfi = cos(fir)
-            san = sin(alphan)
-            can = cos(alphan)
+            alphan = np.arcsin(np.sqrt(s2alphan))
+            sfi = np.sin(fir)
+            cfi = np.cos(fir)
+            san = np.sin(alphan)
+            can = np.cos(alphan)
 
             xz = can * spd + san * sfi * spb + san * cfi * spm
             xn = can * cpd * cad + san * sfi * cpb * cab + \
@@ -316,37 +300,38 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             xe = can * cpd * sad + san * sfi * cpb * sab + \
                  san * cfi * cpm * sam
 
-            if fabs(xn) < EPSILON and fabs(xe) < EPSILON:
+            if np.fabs(xn) < EPSILON and np.fabs(xe) < EPSILON:
                 takeoff = 0.
                 az = 0.
             else:
-                az = arctan2(xe, xn)
+                az = np.arctan2(xe, xn)
                 if az < 0.:
-                    az += pi * 2.
-                takeoff = arccos(xz / float(sqrt(xz * xz + xn * xn + xe * xe)))
-            if takeoff > pi / 2.:
-                takeoff = pi - takeoff
-                az += pi
-                if az > pi * 2.:
-                    az -= pi * 2.
-            r = sqrt(2) * sin(takeoff / 2.)
-            si = sin(az)
-            co = cos(az)
+                    az += np.pi * 2.
+                takeoff = np.arccos(xz / float(np.sqrt(xz * xz + xn * xn + \
+                                                       xe * xe)))
+            if takeoff > np.pi / 2.:
+                takeoff = np.pi - takeoff
+                az += np.pi
+                if az > np.pi * 2.:
+                    az -= np.pi * 2.
+            r = np.sqrt(2) * np.sin(takeoff / 2.)
+            si = np.sin(az)
+            co = np.cos(az)
             if i == 0:
                 azi[i][0] = az
                 x[i] = x0 + radius_size * r * si
                 y[i] = y0 + radius_size * r * co
                 azp = az
             else:
-                if fabs(fabs(az - azp) - pi) < D2R * 10.:
+                if np.fabs(np.fabs(az - azp) - np.pi) < D2R * 10.:
                         azi[n][1] = azp
                         n += 1
                         azi[n][0] = az
-                if fabs(fabs(az - azp) - pi * 2.) < D2R * 2.:
+                if np.fabs(np.fabs(az - azp) - np.pi * 2.) < D2R * 2.:
                         if azp < az:
-                            azi[n][0] += pi * 2.
+                            azi[n][0] += np.pi * 2.
                         else:
-                            azi[n][0] -= pi * 2.
+                            azi[n][0] -= np.pi * 2.
                 if n == 0:
                     x[j] = x0 + radius_size * r * si
                     y[j] = y0 + radius_size * r * co
@@ -380,15 +365,15 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         for i in range(0, j):
             xp1[i] = x[i]
             yp1[i] = y[i]
-        if azi[0][0] - azi[0][1] > pi:
-            azi[0][0] -= pi * 2.;
-        elif azi[0][1] - azi[0][0] > pi:
-            azi[0][0] += pi * 2.
+        if azi[0][0] - azi[0][1] > np.pi:
+            azi[0][0] -= np.pi * 2.;
+        elif azi[0][1] - azi[0][0] > np.pi:
+            azi[0][0] += np.pi * 2.
         if azi[0][0] < azi[0][1]:
             az = azi[0][1] - D2R
             while az > azi[0][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp1[i] = x0 + radius_size * si
                 yp1[i] = y0 + radius_size * co
                 i += 1
@@ -396,8 +381,8 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         else:
             az = azi[0][1] + D2R
             while az < azi[0][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp1[i] = x0 + radius_size * si
                 yp1[i] = y0 + radius_size * co
                 i += 1
@@ -407,15 +392,15 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
-        if azi[1][0] - azi[1][1] > pi:
-            azi[1][0] -= pi * 2.
-        elif azi[1][1] - azi[1][0] > pi:
-            azi[1][0] += pi * 2.
+        if azi[1][0] - azi[1][1] > np.pi:
+            azi[1][0] -= np.pi * 2.
+        elif azi[1][1] - azi[1][0] > np.pi:
+            azi[1][0] += np.pi * 2.
         if azi[1][0] < azi[1][1]:
             az = azi[1][1] - D2R
             while az > azi[1][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp2[i] = x0 + radius_size * si;
                 i += 1
                 yp2[i] = y0 + radius_size * co;
@@ -423,8 +408,8 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         else:
             az = azi[1][1] + D2R
             while az < azi[1][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp2[i] = x0 + radius_size * si
                 i += 1
                 yp2[i] = y0 + radius_size * co
@@ -451,15 +436,15 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             colors.append(rgb1)
             return colors, collect
 
-        if azi[2][0] - azi[0][1] > pi:
-            azi[2][0] -= pi * 2.
-        elif azi[0][1] - azi[2][0] > pi:
-            azi[2][0] += pi * 2.
+        if azi[2][0] - azi[0][1] > np.pi:
+            azi[2][0] -= np.pi * 2.
+        elif azi[0][1] - azi[2][0] > np.pi:
+            azi[2][0] += np.pi * 2.
         if azi[2][0] < azi[0][1]:
             az = azi[0][1] - D2R
             while az > azi[2][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp1[i] = x0 + radius_size * si
                 i += 1
                 yp1[i] = y0 + radius_size * co
@@ -467,8 +452,8 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         else:
             az = azi[0][1] + D2R
             while az < azi[2][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp1[i] = x0 + radius_size * si
                 i += 1
                 yp1[i] = y0 + radius_size * co
@@ -479,15 +464,15 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         for i in range(0, j2):
             xp2[i] = x2[i]
             yp2[i] = y2[i]
-        if azi[1][0] - azi[1][1] > pi:
-            azi[1][0] -= pi * 2.
-        elif azi[1][1] - azi[1][0] > pi:
-            azi[1][0] += pi * 2.
+        if azi[1][0] - azi[1][1] > np.pi:
+            azi[1][0] -= np.pi * 2.
+        elif azi[1][1] - azi[1][0] > np.pi:
+            azi[1][0] += np.pi * 2.
         if azi[1][0] < azi[1][1]:
             az = azi[1][1] - D2R
             while az > azi[1][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp2[i] = x0 + radius_size * si
                 i += 1
                 yp2[i] = y0 + radius_size * co
@@ -495,8 +480,8 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         else:
             az = azi[1][1] + D2R
             while az < azi[1][0]:
-                si = sin(az)
-                co = cos(az)
+                si = np.sin(az)
+                co = np.cos(az)
                 xp2[i] = x0 + radius_size * si
                 i += 1
                 yp2[i] = y0 + radius_size * co
@@ -511,10 +496,11 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     Uses one nodal plane of a double couple to draw a beach ball plot.
     
     :param ax: axis object of a matplotlib figure
-    :param np1: L{NodalPlane}
-    
-    Adapted from bb.m written by Oliver S. Boyd.
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    :param np1: :class:`~NodalPlane`
+
+    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
+
+    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
     S1 = np1.strike
     D1 = np1.dip
@@ -538,11 +524,11 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
-    phi = arange(0, pi, .01)
-    l1 = sqrt(power(90 - D1, 2) / (power(sin(phi), 2) + power(cos(phi), 2) * \
-                                 power(90 - D1, 2) / power(90, 2)))
-    l2 = sqrt(power(90 - D2, 2) / (power(sin(phi), 2) + power(cos(phi), 2) * \
-                                 power(90 - D2, 2) / power(90, 2)))
+    phi = np.arange(0, np.pi, .01)
+    l1 = np.sqrt(np.power(90 - D1, 2) / (np.power(np.sin(phi), 2) + \
+        np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
+    l2 = np.sqrt(np.power(90 - D2, 2) / (np.power(np.sin(phi), 2) + \
+        np.power(np.cos(phi), 2) * np.power(90 - D2, 2) / np.power(90, 2)))
 
     inc = 1
     (X1, Y1) = Pol2Cart(phi + S1 * D2R, l1)
@@ -552,24 +538,24 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         hi = S2
         if lo > hi:
             inc = -inc
-        th1 = arange(S1 - 180, S2, inc)
-        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * ones((1, len(th1))))
+        th1 = np.arange(S1 - 180, S2, inc)
+        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
         (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
-        th2 = arange(S2 + 180, S1, -inc)
+        th2 = np.arange(S2 + 180, S1, -inc)
     else:
         hi = S1 - 180
         lo = S2 - 180
         if lo > hi:
             inc = -inc
-        th1 = arange(hi, lo, -inc)
-        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * ones((1, len(th1))))
+        th1 = np.arange(hi, lo, -inc)
+        (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
         (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
         X2 = X2[::-1]
         Y2 = Y2[::-1]
-        th2 = arange(S2, S1, inc)
-    (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * ones((1, len(th2))))
-    X = concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
-    Y = concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
+        th2 = np.arange(S2, S1, inc)
+    (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * np.ones((1, len(th2))))
+    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
+    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
 
     X = X * D / 90
     Y = Y * D / 90
@@ -587,18 +573,18 @@ def xy2patch(x, y, res, xy):
     x = x * res + xy[0]
     y = y * res + xy[1]
     verts = zip(x.tolist(), y.tolist())
-    codes = [Path.MOVETO]
-    codes.extend([Path.LINETO] * (len(x) - 2))
-    codes.append(Path.CLOSEPOLY)
-    path = Path(verts, codes)
+    codes = [mplpath.Path.MOVETO]
+    codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
+    codes.append(mplpath.Path.CLOSEPOLY)
+    path = mplpath.Path(verts, codes)
     return patches.PathPatch(path)
 
 
 def Pol2Cart(th, r):
     """
     """
-    x = r * cos(th)
-    y = r * sin(th)
+    x = r * np.cos(th)
+    y = r * np.sin(th)
     return (x, y)
 
 
@@ -606,55 +592,57 @@ def StrikeDip(n, e, u):
     """
     Finds strike and dip of plane given normal vector having components n, e, 
     and u.
-   
-    Adapted from bb.m written by Andy Michaels and Oliver Boyd.
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+
+    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
+
+    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    r2d = 180 / pi
+    r2d = 180 / np.pi
     if u < 0:
         n = -n
         e = -e
         u = -u
 
-    strike = arctan2(e, n) * r2d
+    strike = np.arctan2(e, n) * r2d
     strike = strike - 90
     while strike >= 360:
             strike = strike - 360
     while strike < 0:
             strike = strike + 360
-    x = sqrt(power(n, 2) + power(e, 2))
-    dip = arctan2(x, u) * r2d
+    x = np.sqrt(np.power(n, 2) + np.power(e, 2))
+    dip = np.arctan2(x, u) * r2d
     return (strike, dip)
 
 
 def AuxPlane(s1, d1, r1):
     """
     Get Strike and dip of second plane.
-    
-    Adapted from bb.m written by Andy Michael and Oliver Boyd.
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+
+    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
+
+    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    r2d = 180 / pi
+    r2d = 180 / np.pi
 
     z = (s1 + 90) / r2d
     z2 = d1 / r2d
     z3 = r1 / r2d
     # slick vector in plane 1
-    sl1 = -cos(z3) * cos(z) - sin(z3) * sin(z) * cos(z2)
-    sl2 = cos(z3) * sin(z) - sin(z3) * cos(z) * cos(z2)
-    sl3 = sin(z3) * sin(z2)
+    sl1 = -np.cos(z3) * np.cos(z) - np.sin(z3) * np.sin(z) * np.cos(z2)
+    sl2 = np.cos(z3) * np.sin(z) - np.sin(z3) * np.cos(z) * np.cos(z2)
+    sl3 = np.sin(z3) * np.sin(z2)
     (strike, dip) = StrikeDip(sl2, sl1, sl3)
 
-    n1 = sin(z) * sin(z2) # normal vector to plane 1
-    n2 = cos(z) * sin(z2)
+    n1 = np.sin(z) * np.sin(z2) # normal vector to plane 1
+    n2 = np.cos(z) * np.sin(z2)
     h1 = -sl2 # strike vector of plane 2
     h2 = sl1
     # note h3=0 always so we leave it out
-    # n3 = cos(z2)
+    # n3 = np.cos(z2)
 
     z = h1 * n1 + h2 * n2
-    z = z / sqrt(h1 * h1 + h2 * h2)
-    z = arccos(z)
+    z = z / np.sqrt(h1 * h1 + h2 * h2)
+    z = np.arccos(z)
     rake = 0
     if sl3 > 0:
         rake = z * r2d
@@ -666,24 +654,25 @@ def AuxPlane(s1, d1, r1):
 def MT2Plane(mt):
     """
     Calculates a nodal plane of a given moment tensor.
-     
-    :param mt: L{MomentTensor}
-    :return: L{NodalPlane}
-    
-    Adapted from bb.m written by Oliver S. Boyd.
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+
+    :param mt: :class:`~MomentTensor`
+    :return: :class:`~NodalPlane`
+
+    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
+
+    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
-    (d, v) = linalg.eig(mt.mt)
-    D = array([d[1], d[0], d[2]])
-    V = array([[v[1, 1], -v[1, 0], -v[1, 2]],
+    (d, v) = np.linalg.eig(mt.mt)
+    D = np.array([d[1], d[0], d[2]])
+    V = np.array([[v[1, 1], -v[1, 0], -v[1, 2]],
                [v[2, 1], -v[2, 0], -v[2, 2]],
                [-v[0, 1], v[0, 0], v[0, 2]]])
     IMAX = D.argmax()
     IMIN = D.argmin()
-    AE = (V[:, IMAX] + V[:, IMIN]) / sqrt(2.0)
-    AN = (V[:, IMAX] - V[:, IMIN]) / sqrt(2.0)
-    AER = sqrt(power(AE[0], 2) + power(AE[1], 2) + power(AE[2], 2))
-    ANR = sqrt(power(AN[0], 2) + power(AN[1], 2) + power(AN[2], 2))
+    AE = (V[:, IMAX] + V[:, IMIN]) / np.sqrt(2.0)
+    AN = (V[:, IMAX] - V[:, IMIN]) / np.sqrt(2.0)
+    AER = np.sqrt(np.power(AE[0], 2) + np.power(AE[1], 2) + np.power(AE[2], 2))
+    ANR = np.sqrt(np.power(AN[0], 2) + np.power(AN[1], 2) + np.power(AN[2], 2))
     AE = AE / AER
     AN = AN / ANR
     if AN[2] <= 0.:
@@ -699,9 +688,10 @@ def MT2Plane(mt):
 def TDL(AN, BN):
     """
     Helper function for MT2Plane.
-    
-    Adapted from bb.m written by Oliver S. Boyd.
-    @see: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+
+    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
+
+    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
     """
     XN = AN[0]
     YN = AN[1]
@@ -711,12 +701,12 @@ def TDL(AN, BN):
     ZE = BN[2]
     AAA = 1.0 / (1000000)
     CON = 57.2957795
-    if fabs(ZN) < AAA:
+    if np.fabs(ZN) < AAA:
         FD = 90.
-        AXN = fabs(XN)
+        AXN = np.fabs(XN)
         if AXN > 1.0:
             AXN = 1.0
-        FT = arcsin(AXN) * CON
+        FT = np.arcsin(AXN) * CON
         ST = -XN
         CT = YN
         if ST >= 0. and CT < 0:
@@ -725,9 +715,9 @@ def TDL(AN, BN):
             FT = 180. + FT
         if ST < 0. and CT > 0:
             FT = 360. - FT
-        FL = arcsin(abs(ZE)) * CON
+        FL = np.arcsin(abs(ZE)) * CON
         SL = -ZE
-        if fabs(XN) < AAA:
+        if np.fabs(XN) < AAA:
             CL = XE / YN
         else:
             CL = -YE / XN
@@ -740,17 +730,17 @@ def TDL(AN, BN):
     else:
         if - ZN > 1.0:
             ZN = -1.0
-        FDH = arccos(-ZN)
+        FDH = np.arccos(-ZN)
         FD = FDH * CON
-        SD = sin(FDH)
+        SD = np.sin(FDH)
         if SD == 0:
             return
         ST = -XN / SD
         CT = YN / SD
-        SX = fabs(ST)
+        SX = np.fabs(ST)
         if SX > 1.0:
             SX = 1.0
-        FT = arcsin(SX) * CON
+        FT = np.arcsin(SX) * CON
         if ST >= 0. and CT < 0:
             FT = 180. - FT
         if ST < 0. and CT <= 0:
@@ -758,10 +748,10 @@ def TDL(AN, BN):
         if ST < 0. and CT > 0:
             FT = 360. - FT
         SL = -ZE / SD
-        SX = fabs(SL)
+        SX = np.fabs(SL)
         if SX > 1.0:
             SX = 1.0
-        FL = arcsin(SX) * CON
+        FL = np.arcsin(SX) * CON
         if ST == 0:
             CL = XE / CT
         else:
@@ -781,24 +771,25 @@ def TDL(AN, BN):
 def MT2Axes(mt):
     """
     Calculates the principal axes of a given moment tensor.
-     
-    :param mt: L{MomentTensor}
-    :return: tuple of L{PrincipalAxis} T, N and P
-    
-    Adapted from GMT_momten2axe / utilmeca.c / Generic Mapping Tools (GMT).
-    @see: http://gmt.soest.hawaii.edu
+
+    :param mt: :class:`~MomentTensor`
+    :return: tuple of :class:`~PrincipalAxis` T, N and P
+
+    Adapted from ps_tensor / utilmeca.c / `Generic Mapping Tools (GMT)`_.
+
+    .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
     """
-    (D, V) = linalg.eigh(mt.mt)
-    pl = arcsin(-V[0])
-    az = arctan2(V[2], -V[1])
+    (D, V) = np.linalg.eigh(mt.mt)
+    pl = np.arcsin(-V[0])
+    az = np.arctan2(V[2], -V[1])
     for i in range(0, 3):
         if pl[i] <= 0:
             pl[i] = -pl[i]
-            az[i] += pi
+            az[i] += np.pi
         if az[i] < 0:
-            az[i] += 2 * pi
-        if az[i] > 2 * pi:
-            az[i] -= 2 * pi
+            az[i] += 2 * np.pi
+        if az[i] > 2 * np.pi:
+            az[i] -= 2 * np.pi
     pl *= R2D
     az *= R2D
 
@@ -811,17 +802,16 @@ def MT2Axes(mt):
 class PrincipalAxis(object):
     """
     A principal axis.
-    
+
     Strike and dip values are in degrees.
-    
-    Usage:
-      >>> a = PrincipalAxis(1.3, 20, 50)
-      >>> a.dip
-      50
-      >>> a.strike
-      20
-      >>> a.val
-      1.3
+
+    >>> a = PrincipalAxis(1.3, 20, 50)
+    >>> a.dip
+    50
+    >>> a.strike
+    20
+    >>> a.val
+    1.3
     """
     def __init__(self, val=0, strike=0, dip=0):
         self.val = val
@@ -832,17 +822,16 @@ class PrincipalAxis(object):
 class NodalPlane(object):
     """
     A nodal plane.
-    
+
     All values are in degrees.
-    
-    Usage:
-      >>> a = NodalPlane(13, 20, 50)
-      >>> a.strike
-      13
-      >>> a.dip
-      20
-      >>> a.rake
-      50
+
+    >>> a = NodalPlane(13, 20, 50)
+    >>> a.strike
+    13
+    >>> a.dip
+    20
+    >>> a.rake
+    50
     """
     def __init__(self, strike=0, dip=0, rake=0):
         self.strike = strike
@@ -853,19 +842,18 @@ class NodalPlane(object):
 class MomentTensor(object):
     """
     A moment tensor.
-    
-    Usage:
-      >>> a = MomentTensor(1, 1, 0, 0, 0, -1, 26)
-      >>> b = MomentTensor(array([1, 1, 0, 0, 0, -1]), 26)
-      >>> c = MomentTensor(array([[1, 0, 0], [0, 1, -1], [0, -1, 0]]), 26)
-      >>> a.mt
-      array([[ 1,  0,  0],
-             [ 0,  1, -1],
-             [ 0, -1,  0]])
-      >>> b.yz
-      -1
-      >>> a.expo
-      26
+
+    >>> a = MomentTensor(1, 1, 0, 0, 0, -1, 26)
+    >>> b = MomentTensor(np.array([1, 1, 0, 0, 0, -1]), 26)
+    >>> c = MomentTensor(np.array([[1, 0, 0], [0, 1, -1], [0, -1, 0]]), 26)
+    >>> a.mt
+    array([[ 1,  0,  0],
+           [ 0,  1, -1],
+           [ 0, -1,  0]])
+    >>> b.yz
+    -1
+    >>> a.expo
+    26
     """
     def __init__(self, *args):
         if len(args) == 2:
@@ -873,19 +861,19 @@ class MomentTensor(object):
             self.expo = args[1]
             if len(A) == 6:
                 # six independent components
-                self.mt = array([[A[0], A[3], A[4]],
-                                 [A[3], A[1], A[5]],
-                                 [A[4], A[5], A[2]]])
-            elif isinstance(A, ndarray) and A.shape == (3, 3):
+                self.mt = np.array([[A[0], A[3], A[4]],
+                                    [A[3], A[1], A[5]],
+                                    [A[4], A[5], A[2]]])
+            elif isinstance(A, np.ndarray) and A.shape == (3, 3):
                 # full matrix
                 self.mt = A
             else:
                 raise TypeError("Wrong size of input parameter.")
         elif len(args) == 7:
             # six independent components
-            self.mt = array([[args[0], args[3], args[4]],
-                             [args[3], args[1], args[5]],
-                             [args[4], args[5], args[2]]])
+            self.mt = np.array([[args[0], args[3], args[4]],
+                                [args[3], args[1], args[5]],
+                                [args[4], args[5], args[2]]])
             self.expo = args[6]
         else:
             raise TypeError("Wrong size of input parameter.")
@@ -916,4 +904,5 @@ class MomentTensor(object):
 
 
 if __name__ == '__main__':
+    import doctest
     doctest.testmod()

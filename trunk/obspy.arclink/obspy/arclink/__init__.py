@@ -29,9 +29,17 @@ Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
 
 Basic Usage
 -----------
-The example illustrates how to request and plot 30 minutes of all three
-broadband channels ("BH*") of station Fürstenfeldbruck ("FUR") of the German
-Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
+The example illustrates how to request and plot 18 seconds of all three
+broadband channels (``"BH*"``) of station Fürstenfeldbruck (``"FUR"``) of the
+German Regional network (``"GR"``) for an seismic event around
+2009-08-20 06:35:00 (UTC).
+
+>>> from obspy.core import UTCDateTime
+>>> from obspy.arclink.client import Client
+>>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+>>> t = UTCDateTime("2009-08-20 04:03:12")
+>>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+>>> st.plot() #doctest: +SKIP 
 
 .. note:: 
     The client needs to open port 18001 to the host webdc.eu via TCP/IP in
@@ -43,12 +51,11 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
     with the ArcLink server as well as for usage statistics within the data
     center, so please provide a meaningful user id such as your email address.
 
->>> from obspy.core import UTCDateTime
->>> from obspy.arclink.client import Client
->>> client = Client("webdc.eu", 18001, user='test@obspy.org')
->>> t = UTCDateTime("2009-08-20 04:03:12")
->>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
->>> st.plot() #doctest: +SKIP 
+Waveform data fetched from an ArcLink node is converted into an ObsPy
+:class:`~obspy.core.stream.Stream` object. The seismogram is truncated by the
+ObsPy client to the actual requested time span, as ArcLink internally cuts SEED
+files for performance reasons on record base in order to avoid uncompressing the
+waveform data. The output of the script above is shown in the next picture.
 
 .. plot::
 
@@ -58,16 +65,6 @@ Regional network ("GR") for an seismic event around 2009-08-20 06:35:00 (UTC).
     t = UTCDateTime("2009-08-20 04:03:12")
     st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
     st.plot() #doctest: +SKIP
-
-Waveform data fetched from an ArcLink node is converted into an ObsPy stream
-object. The seismogram is truncated by the ObsPy client to the actual requested
-time span, as ArcLink internally cuts SEED files for performance reasons on
-record base in order to avoid uncompressing the waveform data. The output of
-the script above is shown in the next picture.
-
-Video Tutorial
---------------
-http://www.obspy.org/www/obspy.arclink/arclink.html
 
 Further Examples
 ----------------
@@ -119,10 +116,12 @@ example above.
 Further Resources
 -----------------
 * ArcLink protocol specifications:
-    - http://www.seiscomp3.org/wiki/doc/applications/arclink
-    - http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
-    - https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
-* Short introduction_ to the ArcLink protocol
+
+  * http://www.seiscomp3.org/wiki/doc/applications/arclink
+  * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
+  * https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
+
+* `Short introduction`_ to the ArcLink protocol
 * Latest `ArcLink server`_ package
 * SeismoLink_: a SOAP Web service on top of the ArcLink network
 
@@ -142,7 +141,7 @@ Further Resources
         http://www.gfz-potsdam.de
 .. _IPGP:
         http://www.ipgp.fr
-.. _introduction:
+.. _`Short introduction`:
         http://www.webdc.eu/webdc_sum.html
 .. _`ArcLink server`:
         ftp://ftp.gfz-potsdam.de/pub/home/st/GEOFON/software/SeisComP/ArcLink/

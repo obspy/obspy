@@ -250,11 +250,11 @@ class ClientTestCase(unittest.TestCase):
             'network': 'BW',
             '_format': 'MSEED',
             'paz': AttribDict({
-                'poles': [(-0.037004000000000002 + 0.037016j),
-                          (-0.037004000000000002 - 0.037016j),
-                          (-251.33000000000001 + 0j),
-                          (-131.03999999999999 - 467.29000000000002j),
-                          (-131.03999999999999 + 467.29000000000002j)],
+                'poles': [(-0.037004 + 0.037016j),
+                          (-0.037004 - 0.037016j),
+                          (-251.33 + 0j),
+                          (-131.04 - 467.29j),
+                          (-131.04 + 467.29j)],
                 'sensitivity': 2516778600.0,
                 'zeros': [0j, 0j],
                 'name': 'STS-2/N/g=1500',
@@ -263,7 +263,7 @@ class ClientTestCase(unittest.TestCase):
                                  'record_length': 512,
                                  'encoding': 'STEIM1',
                                  'byteorder': '>'}),
-            'coordinates': AttribDict({'latitude': 47.737166999999999,
+            'coordinates': AttribDict({'latitude': 47.737167,
                                        'elevation': 860.0,
                                        'longitude': 12.795714}),
             'station': 'RJOB',
@@ -283,11 +283,11 @@ class ClientTestCase(unittest.TestCase):
             'network': 'CZ',
             '_format': 'MSEED',
             'paz': AttribDict({
-                'poles': [(-0.037004000000000002 + 0.037016j),
-                          (-0.037004000000000002 - 0.037016j),
-                          (-251.33000000000001 + 0j),
-                          (-131.03999999999999 - 467.29000000000002j),
-                          (-131.03999999999999 + 467.29000000000002j)],
+                'poles': [(-0.037004 + 0.037016j),
+                          (-0.037004 - 0.037016j),
+                          (-251.33 + 0j),
+                          (-131.04 - 467.29j),
+                          (-131.04 + 467.29j)],
                 'sensitivity': 8200000000.0,
                 'zeros': [0j, 0j],
                 'gain': 60077000.0,
@@ -296,9 +296,9 @@ class ClientTestCase(unittest.TestCase):
                                  'record_length': 512,
                                  'encoding': 'STEIM1',
                                  'byteorder': '>'}),
-            'coordinates': AttribDict({'latitude': 49.308399999999999,
+            'coordinates': AttribDict({'latitude': 49.3084,
                                        'elevation': 470.0,
-                                       'longitude': 16.593299999999999}),
+                                       'longitude': 16.5933}),
             'station': 'VRAC',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
@@ -403,22 +403,25 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.channel, 'EHZ')
         os.remove(fseedfile)
 
-    def test_getCompressedWaveform(self):
+    def test_getWaveformNoCompression(self):
         """
+        Disabling compression during waveform request.
         """
         # initialize client
         client = Client()
-        start = UTCDateTime(2008, 1, 1, 0, 0)
+        start = UTCDateTime(2011, 1, 1, 0, 0)
         end = start + 10
-        stream = client.getWaveform('GE', 'APE', '', 'BH*', start, end,
+        stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
                                     compressed=False)
         self.assertEquals(len(stream), 3)
         for trace in stream:
-            self.assertEquals(trace.stats.network, 'GE')
-            self.assertEquals(trace.stats.station, 'APE')
+            self.assertEquals(trace.stats.network, 'BW')
+            self.assertEquals(trace.stats.station, 'MANZ')
 
-    def test_saveCompressedWaveform(self):
+    def test_saveWaveformNoCompression(self):
         """
+        Disabling compression during waveform request and save it directly to
+        disk.
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
