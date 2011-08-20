@@ -18,10 +18,12 @@ data = np.fromstring(weather, dtype='|S1')
 # Fill header attributes
 stats = {'network': 'BW', 'station': 'RJOB', 'location': '',
          'channel': 'WLZ', 'npts': len(data), 'sampling_rate': 0.1,
-         'mseed' : {'dataquality' : 'D'}}
-stats['starttime'] = UTCDateTime() #the current time
+         'mseed': {'dataquality': 'D'}}
+# set current time
+stats['starttime'] = UTCDateTime()
 st = Stream([Trace(data=data, header=stats)])
-st.write("weather.mseed", format='MSEED', encoding=0, reclen=256) #encoding 0==ASCII
+# write as ASCII file (encoding=0)
+st.write("weather.mseed", format='MSEED', encoding=0, reclen=256)
 
 # Show that it worked, convert numpy character array back to string
 st1 = read("weather.mseed")

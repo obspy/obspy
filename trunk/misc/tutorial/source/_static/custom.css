@@ -50,6 +50,10 @@ table.docutils {
   width: 100%;
 }
 
+table.docutils.field-list {
+  width: auto;
+}
+
 table.docutils th {
   background-color : #EEDDEE;
   padding : 3px 5px;

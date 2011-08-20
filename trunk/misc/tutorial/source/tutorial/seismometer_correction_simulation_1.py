@@ -7,7 +7,7 @@ paz_sts2 = {
     'zeros': [0j, 0j],
     'gain': 60077000.0,
     'sensitivity': 2516778400.0}
-paz_1hz = cornFreq2Paz(1.0, damp=0.707) # 1Hz instrument
+paz_1hz = cornFreq2Paz(1.0, damp=0.707)  # 1Hz instrument
 paz_1hz['sensitivity'] = 1.0
 
 st = read()

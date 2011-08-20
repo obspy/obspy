@@ -14,6 +14,7 @@ libraries and applications, our build tools and our web sites.
 * Martin van Driel
 * Sven Egdorf
 * Conny Hammer
+* Sebastian Heimann
 * Seyed Kasra Hosseini Zad
 * Heiner Igel
 * Simon Kremers

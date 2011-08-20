@@ -1,5 +1,6 @@
 from obspy.core import read
-import numpy as np, matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import numpy as np
 
 # Read in all files starting with dis.
 st = read("http://examples.obspy.org/dis.G.SCZ.__.BHE")
@@ -8,7 +9,7 @@ st += read("http://examples.obspy.org/dis.G.SCZ.__.BHE.2")
 
 # Go through the stream object, determine time range in julian seconds
 # and plot the data with a shared x axis
-ax = plt.subplot(4, 1, 1) #dummy for tying axis
+ax = plt.subplot(4, 1, 1)  # dummy for tying axis
 for i in range(3):
     plt.subplot(4, 1, i + 1, sharex=ax)
     t = np.linspace(st[i].stats.starttime.timestamp,

@@ -35,13 +35,27 @@ if "%1" == "help" (
 	echo.  changes    to make an overview over all changed/added/deprecated items
 	echo.  linkcheck  to check all external links for integrity
 	echo.  doctest    to run all doctests embedded in the documentation if enabled
+	echo.  coverage   to make create coverage HTML files
+	echo.  pep8       to check PEP8 of tutorial
 	goto end
 )
 
 if "%1" == "clean" (
 	for /d %%i in (%BUILDDIR%\*) do rmdir /q /s %%i
 	del /q /s %BUILDDIR%\*
+    del /q /s source\packages\autogen\obspy.*
 	goto end
+)
+
+if "%1" == "coverage" (
+    coverage run --rcfile=%BUILDDIR%\.coveragerc -m obspy.core.scripts.runtests --all
+    coverage html --rcfile=%BUILDDIR%\.coveragerc -d %BUILDDIR%\coverage
+    goto end
+)
+
+if "%1" == "pep8" (
+    pep8 --show-source source\tutorial
+    goto end
 )
 
 if "%1" == "html" (

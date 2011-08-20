@@ -15,7 +15,7 @@ except:
 
 st = read(in_file)
 for i, tr in enumerate(st):
-    f = open("%s_%d" % (out_file, i), "w");
+    f = open("%s_%d" % (out_file, i), "w")
     f.write("# STATION %s\n" % (tr.stats.station))
     f.write("# CHANNEL %s\n" % (tr.stats.channel))
     f.write("# START_TIME %s\n" % (str(tr.stats.starttime)))

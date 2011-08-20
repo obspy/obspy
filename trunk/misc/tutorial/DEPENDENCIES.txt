@@ -1,0 +1,23 @@
+General
+=======
+  sphinx>=1.1
+  coverage (for 'make coverage' only)
+  pep8 (for 'make pep8' only)
+
+ObsPy Library
+=============
+  obspy.*
+  lxml
+  numpy
+  scipy
+  matplotlib
+  suds (obspy.neries)
+  sqlalchemy (obspy.db)
+ 
+Tutorial
+========
+  basemap
+  hcluster
+  mlpy
+  pyproj (doctest only)
+  r2py (doctest only)

@@ -243,5 +243,4 @@ autoclass_content = 'class'
 # applied to all autodoc directives. The supported flags are 'members',
 # 'undoc-members', 'private-members', 'special-members', 'inherited-members' and
 # 'show-inheritance'.
-autodoc_default_flags = [
-    'members', 'undoc-members', 'inherited-members', 'show-inheritance']
+autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance']
