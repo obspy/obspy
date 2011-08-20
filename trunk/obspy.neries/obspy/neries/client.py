@@ -12,6 +12,7 @@ See: http://www.seismicportal.eu/jetspeed/portal/web-services.psml
 """
 from obspy.core import UTCDateTime
 from obspy.core.util import _getVersionString
+import functools
 import platform
 import sys
 import urllib
@@ -43,6 +44,20 @@ MAP_INVERSE['magtype'] = "magnitude_type"
 VERSION = _getVersionString("obspy.neries")
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
                                                    platform.python_version())
+
+
+def _mapKwargs(f):
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        # set some default values
+        new_kwargs = {'sort': "datetime", 'dir': "ASC", 'limit': 100,
+                      'format': "list"}
+        for key in kwargs:
+            if key in MAP:
+                new_kwargs[MAP[key]] = kwargs[key]
+        v = f(*args, **new_kwargs)
+        return v
+    return wrapper
 
 
 class Client(object):
@@ -130,6 +145,7 @@ class Client(object):
             events.append(event)
         return events
 
+    @_mapKwargs
     def getEvents(self, min_datetime=None, max_datetime=None,
                   min_longitude=None, max_longitude=None, min_latitude=None,
                   max_latitude=None, min_depth=None, max_depth=None,
@@ -205,13 +221,8 @@ class Client(object):
         -------
             List of event dictionaries or QuakeML string.
         """
-        # NOTHING goes ABOVE this line!
-        for key, value in locals().iteritems():
-            if value and key not in ["self", "kwargs"]:
-                key = MAP[key]
-                kwargs[key] = value
         # map request format string "list" -> "json"
-        if kwargs.get("format") == "list":
+        if format == "list":
             kwargs['format'] = "json"
         # switch depth to positive down
         if kwargs.get("depthMin"):
