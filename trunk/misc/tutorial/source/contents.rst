@@ -8,6 +8,7 @@ ObsPy Documentation Contents
 
    tutorial/index
    packages/index
+   packages/includes
    credits
    gallery
 
