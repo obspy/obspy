@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Utilities for obspy.taup
+"""
 
 import ctypes as C
 import os

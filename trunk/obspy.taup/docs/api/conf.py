@@ -226,7 +226,7 @@ latex_documents = [
 #        return False 
 #    return skip 
 
-autosummary_generate = ["obspy.signal.rst"]
+autosummary_generate = ["obspy.taup.rst"]
 exclude_trees = ['_templates']
 
 from numpydoc.docscrape_sphinx import SphinxDocString
