@@ -91,11 +91,11 @@ Writing
 -------
 Writing is also done in the usual way:
 
->>> st.write('file.segy', format = 'SEGY') #doctest: +SKIP
+>>> st.write('file.segy', format='SEGY') #doctest: +SKIP
 
 or 
 
->>> st.write('file.su', format = 'SU') #doctest: +SKIP
+>>> st.write('file.su', format='SU') #doctest: +SKIP
 """
 
 from obspy.core.util import _getVersionString
