@@ -11,7 +11,8 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys, os
+import os
+import sys
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -24,17 +25,19 @@ import sys, os
 needs_sphinx = '1.1'
 
 # Add extensions into path
-sys.path = ['source' + os.sep + 'extensions'] + sys.path
+sys.path = [os.path.dirname(__file__) + os.sep + 'extensions'] + sys.path
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.doctest',
               'sphinx.ext.autodoc',
-              'sphinx.ext.autosummary',
-              'plot_directive',
+              'sphinx.ext.viewcode',
               'matplotlib.sphinxext.only_directives',
-              'sphinx.ext.viewcode']
+              # local extensions
+              'autosummary',
+              'plot_directive',
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -73,7 +76,7 @@ release = '0.2'
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '_templates']
+exclude_patterns = ['**/.svn', '_build', '_templates', 'extensions']
 
 # The reST default role (used for this markup: `text`) to use for all documents.
 #default_role = None
@@ -83,7 +86,7 @@ exclude_patterns = ['_build', '_templates']
 
 # If true, the current module name will be prepended to all description
 # unit titles (such as .. function::).
-#add_module_names = True
+add_module_names = False
 
 # If true, sectionauthor and moduleauthor directives will be shown in the
 # output. They are ignored by default.
@@ -235,12 +238,11 @@ intersphinx_mapping = {
 # generate automatically stubs
 autosummary_generate = True
 
-# Both the class’ and the __init__ method’s docstring are concatenated and
-# inserted.
+# Don't merge __init__ method in auoclass content
 autoclass_content = 'class'
 
 # This value is a list of autodoc directive flags that should be automatically
 # applied to all autodoc directives. The supported flags are 'members',
 # 'undoc-members', 'private-members', 'special-members', 'inherited-members' and
-# 'show-inheritance'.
-autodoc_default_flags = ['members', 'undoc-members', 'show-inheritance']
+# 'show-inheritance'. Don't set it to anything !
+autodoc_default_flags = ['show-inheritance']

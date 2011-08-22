@@ -8,18 +8,33 @@
   vertical-align : middle;
 }
 
+/* external links */
 a.external[href^="http:"] {
   background : transparent url(extlink.gif) no-repeat scroll left center;
   padding-left : 15px;
 }
+a.external[href^="https:"] {
+  background : transparent url(extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+a.external[href^="ftp:"] {
+  background : transparent url(extlink.gif) no-repeat scroll left center;
+  padding-left : 15px;
+}
+
+
+/* code sections */
 pre {
-  background-color : #F5F5F5;
+  background-color : #EEEEEE;
   border : 1px solid #CCCCCC;
+  border-radius : 6px 6px 6px 6px;
   font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
   font-size : 0.9em;
   line-height : 130%;
-  margin : 0 0 1.5em;
+  margin : 1em 2em;
   padding : 0.5em;
+  overflow-x : auto;
+  overflow-y : hidden;
 }
 
 tt {
@@ -29,14 +44,16 @@ tt {
   padding : 2px;
 }
 
-div.highlight-python {
-  margin-left : 1.5em;
+div.highlight {
+  background-color : transparent;
 }
 
 div.highlight pre {
   background : none repeat scroll 0 0 #EEFFCC;
 }
 
+
+/* table stuff */
 table.highlighttable td {
   padding : 0 0.2em;
 }
@@ -47,11 +64,11 @@ table.highlighttable {
 
 table.docutils {
   border-collapse : collapse;
-  width: 100%;
+  width : 100%;
 }
 
 table.docutils.field-list {
-  width: auto;
+  width : auto;
 }
 
 table.docutils th {
@@ -70,4 +87,34 @@ table.docutils td {
   padding : 3px 5px;
   border : 1px solid #AAAAAA;
   border-collapse : collapse;
+}
+
+
+/* navigation bar */
+div.related {
+  line-height : 2.5em;
+}
+
+div.related ul {
+  list-style : none outside none;
+  margin : 0;
+  padding : 0 0 0 10px;
+  height : 2.5em;
+}
+
+div.bodywrapper {
+  margin : 0 0 0 275px;
+}
+
+/* */
+tt.descname {
+  font-size : 1.1em;
+}
+dl.method,
+dl.attribute {
+  margin-left : 2em;
+}
+
+p.rubric {
+  font-size : 1.1em;
 }

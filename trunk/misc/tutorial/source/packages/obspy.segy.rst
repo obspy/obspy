@@ -1,16 +1,18 @@
 .. currentmodule:: obspy.segy
 .. automodule:: obspy.segy
 
+    .. comment to end block
+
     Modules
     -------
     .. autosummary::
-      :toctree: autogen
-      :nosignatures:
+       :toctree: autogen
+       :nosignatures:
 
-        segy
-        util
-        header
-        pack
-        unpack
+       segy
+       util
+       header
+       pack
+       unpack
 
     .. comment to end block

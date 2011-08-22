@@ -1,19 +1,13 @@
 {{ fullname }}
 {{ underline }}
 
-.. currentmodule:: {{ fullname }}
 .. automodule:: {{ fullname }}
-
-   .. comment to end block
 
    {% block functions %}
    {% if functions %}
    .. rubric:: Functions
 
    .. autosummary::
-      :toctree: .
-      :nosignatures:
-
    {% for item in functions %}
       {{ item }}
    {%- endfor %}
@@ -25,9 +19,6 @@
    .. rubric:: Classes
 
    .. autosummary::
-      :toctree: .
-      :nosignatures:
-
    {% for item in classes %}
       {{ item }}
    {%- endfor %}
@@ -39,9 +30,6 @@
    .. rubric:: Exceptions
 
    .. autosummary::
-      :toctree: .
-      :nosignatures:
-
    {% for item in exceptions %}
       {{ item }}
    {%- endfor %}

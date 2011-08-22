@@ -1,12 +1,14 @@
 .. currentmodule:: obspy.seisan
 .. automodule:: obspy.seisan
 
+    .. comment to end block
+
     Modules
     -------
     .. autosummary::
-      :toctree: autogen
-      :nosignatures:
+       :toctree: autogen
+       :nosignatures:
 
-        core
+       core
 
     .. comment to end block

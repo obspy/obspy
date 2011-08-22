@@ -4,40 +4,40 @@ ObsPy Library Reference
 
 The functionality is provided through the following packages:
 
-.. rubric:: General packages
+.. rubric:: General Packages
 
 .. autosummary::
-  :toctree: .
-  :nosignatures:
+   :toctree: .
+   :nosignatures:
 
-    obspy.core
-    obspy.signal
-    obspy.imaging
-    obspy.taup
-    obspy.xseed
+   obspy.core
+   obspy.signal
+   obspy.imaging
+   obspy.taup
+   obspy.xseed
 
-.. rubric:: Waveform import/export plug-ins
-
-.. autosummary::
-  :toctree: .
-  :nosignatures:
-
-    obspy.gse2
-    obspy.sac
-    obspy.mseed
-    obspy.seisan
-    obspy.segy
-    obspy.wav
-    obspy.sh
-
-.. rubric:: Database or Web service access clients
+.. rubric:: Waveform Import/Export Plug-ins
 
 .. autosummary::
-  :toctree: .
-  :nosignatures:
+   :toctree: .
+   :nosignatures:
 
-    obspy.arclink
-    obspy.seishub
-    obspy.db
-    obspy.iris
-    obspy.neries
+   obspy.gse2
+   obspy.sac
+   obspy.mseed
+   obspy.seisan
+   obspy.segy
+   obspy.wav
+   obspy.sh
+
+.. rubric:: Database or Web Service Access Clients
+
+.. autosummary::
+   :toctree: .
+   :nosignatures:
+
+   obspy.arclink
+   obspy.seishub
+   obspy.db
+   obspy.iris
+   obspy.neries

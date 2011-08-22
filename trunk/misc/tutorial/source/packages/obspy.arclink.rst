@@ -1,22 +1,24 @@
 .. currentmodule:: obspy.arclink
 .. automodule:: obspy.arclink
 
+    .. comment to end block
+
     Classes & Functions
     -------------------
     .. autosummary::
-      :toctree: autogen
-      :nosignatures:
+       :toctree: autogen
+       :nosignatures:
 
-        client.Client
+       client.Client
 
     .. comment to end block
 
     Modules
     -------
     .. autosummary::
-      :toctree: autogen
-      :nosignatures:
+       :toctree: autogen
+       :nosignatures:
 
-        client
+       client
 
     .. comment to end block
