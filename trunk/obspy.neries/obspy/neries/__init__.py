@@ -25,9 +25,9 @@ Basic Usage
     >>> events = client.getEvents(min_datetime="2004-01-01",
     ...                           max_datetime="2005-01-01",
     ...                           min_magnitude=9)
-    >>> print(len(events))
+    >>> len(events)
     1
-    >>> print(events) #doctest: +SKIP
+    >>> events #doctest: +SKIP
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
       'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
@@ -39,9 +39,9 @@ Basic Usage
     >>> from obspy.neries import Client
     >>> client = Client()
     >>> events = client.getLatestEvents(num=5, format='list')
-    >>> print(len(events))
+    >>> len(events)
     5
-    >>> print(events[0]) #doctest: +SKIP 
+    >>> events[0] #doctest: +SKIP 
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0,
       'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498, 
@@ -54,21 +54,35 @@ Basic Usage
     >>> from obspy.neries import Client
     >>> client = Client()
     >>> result = client.getEventDetail("20041226_0000148", 'list')
-
-    Number of calculated origins for the requested event:
-
-    >>> print(len(result))
+    >>> len(result)  # Number of calculated origins
     11
-
-    Details about first calculated origin of the requested event:
-
-    >>> print(result[0]) #doctest: +SKIP
+    >>> result[0]  # Details about first calculated origin #doctest: +SKIP
     {'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
      'longitude': 95.724, 'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50),
      'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
      'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}
 
-(4) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a Taup
+(4) The :meth:`~obspy.neries.client.Client.getWaveform()` method wraps the
+    a NERIES Web service build on top of the ArcLink protocol. Here we give a
+    small example how to fetch and display waveforms.
+
+    >>> from obspy.neries import Client
+    >>> from obspy.core import UTCDateTime
+    >>> client = Client(user='test@obspy.org')
+    >>> dt = UTCDateTime("2009-04-01T00:02:00")
+    >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+60*10)
+    >>> st.plot()  #doctest: +SKIP
+
+    .. plot::
+
+        from obspy.core import UTCDateTime
+        from obspy.neries import Client
+        client = Client(user='test@obspy.org')
+        dt = UTCDateTime("2009-04-01T00:02:00")
+        st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+60*10)
+        st.plot()
+
+(5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a Taup
     Web service, an utility to compute arrival times using a few default
     velocity models such as iasp91, ak135 or qdt.
 

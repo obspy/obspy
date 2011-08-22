@@ -61,9 +61,9 @@ Gallery
     :target: tutorial/frequency_response.html
     :alt: Poles and Zeros, Frequency Response
 
-.. plot:: source/tutorial/retrieving_data_via_arclink.py
+.. plot:: source/tutorial/retrieving_data_from_datacenters_1.py
     :width: 300px
-    :target: tutorial/retrieving_data_via_arclink.html
+    :target: tutorial/retrieving_data_from_datacenters.html
     :alt: Retrieving Data via ArcLink
 
 .. plot:: source/tutorial/beachball_plot.py

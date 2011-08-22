@@ -74,12 +74,12 @@ class Client(Telnet):
     * INGV Server: eida.rm.ingv.it:18001
     * IPGP Server: geosrt2.ipgp.fr:18001
     """
-
-    """Timeout value for a status request"""
+    # Timeout value for a status request
     status_timeout = 2
 
+    # Delay in seconds between each status request
     status_delay = 0.1
-    """Delay in seconds between each status request"""
+
 
     def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
                  password="", institution="Anonymous", timeout=20,
@@ -289,16 +289,18 @@ class Client(Telnet):
                     endtime, format="MSEED", compressed=True, getPAZ=False,
                     getCoordinates=False, route=True):
         """
-        Retrieve waveform via ArcLink and returns an ObsPy Stream object.
+        Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
         :type network: string
         :param network: Network code, e.g. ``'BW'``.
         :type station: string
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: string
-        :param location: Location code, e.g. ``'01'``.
+        :param location: Location code, e.g. ``'01'``. Location code may contain
+            wild cards.
         :type channel: string
-        :param channel: Channel code, e.g. ``'EHE'``.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
+            wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -323,8 +325,7 @@ class Client(Telnet):
             considerably slows down the request.
         :type route: boolean, optional
         :param route: Enables ArcLink routing (default is ``True``).
-        :rtype: :class:`~obspy.core.stream.Stream`
-        :return: ObsPy Stream object.
+        :return: ObsPy :class:`~obspy.core.stream.Stream` object.
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -385,16 +386,18 @@ class Client(Telnet):
         :type station: string
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: string
-        :param location: Location code, e.g. ``'01'``.
+        :param location: Location code, e.g. ``'01'``. Location code may contain
+            wild cards.
         :type channel: string
-        :param channel: Channel code, e.g. ``'EHE'``.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
+            wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or 
-            Mini-SEED (``'MSEED'``) volume (default is an ``'MSEED'``).
+            Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
 
             .. note::
                 A format ``'XSEED'`` is documented, but not yet implemented in
@@ -427,8 +430,7 @@ class Client(Telnet):
         elif isinstance(filename, file):
             fh = filename
         else:
-            msg = "Parameter filename must be either string or file " + \
-                "handler."
+            msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         fh.write(data)
         if isinstance(filename, basestring):
@@ -446,7 +448,6 @@ class Client(Telnet):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :rtype: dict
         :return: Dictionary of host names.
         """
         # request type
@@ -562,7 +563,6 @@ class Client(Telnet):
         :param outages: Include list of outages (default is ``True``).
         :type logs: boolean, optional
         :param logs: Include log messages (default is ``True``).
-        :rtype: str
         :return: XML document as string.
         """
         # request type
@@ -601,7 +601,6 @@ class Client(Telnet):
         :param endtime: End date and time.
         :type route: boolean, optional
         :param route: Enables ArcLink routing (default is ``True``).
-        :rtype: dict
         :return: Dictionary containing keys 'paz' and 'coordinates'.
         """
         if not getPAZ and not getCoordinates:
@@ -688,7 +687,6 @@ class Client(Telnet):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :rtype: dict
         :return: Dictionary containing PAZ information.
         """
         result = self.getInventory(network=network, station=station,
@@ -785,7 +783,6 @@ class Client(Telnet):
         :type restricted: boolean, optional
         :param restricted: Requesting only networks/stations/streams that have
             restricted or open data respectively. Default is ``None``.
-        :rtype: dict
         :return: Dictionary of inventory information.
         """
         # request type
@@ -999,7 +996,6 @@ class Client(Telnet):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :rtype: dict
         :return: Dictionary of network data.
         """
         return self.getInventory(network='*', starttime=starttime,
@@ -1019,7 +1015,6 @@ class Client(Telnet):
         :param endtime: End date and time.
         :type network: string
         :param network: Network code, e.g. ``'BW'``.
-        :rtype: dict
         :return: Dictionary of station data.
         """
         data = self.getInventory(network=network, starttime=starttime,

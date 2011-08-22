@@ -13,21 +13,21 @@ will give you a good idea of the library’s flavor and style.
    python_introduction
    reading_seismograms
    waveform_plotting_tutorial
-   retrieving_data_via_arclink
+   retrieving_data_from_datacenters
    filtering_seismograms
    downsampling_seismograms
+   merging_seismograms
    seismogram_envelopes
-   seismometer_correction_simulation
    plotting_spectrograms
    frequency_response
-   beachball_plot
-   basemap_plot_with_beachballs
-   anything_to_miniseed
+   seismometer_correction_simulation
+   clone_dataless_seed
    export_seismograms_to_matlab
    export_seismograms_to_ascii
+   anything_to_miniseed
+   beachball_plot
+   basemap_plot_with_beachballs
    interfacing_r_from_python
-   merging_seismograms
    coordinate_conversions
    hierarchical_clustering.rst
-   clone_dataless_seed
    probabilistic_power_spectral_density

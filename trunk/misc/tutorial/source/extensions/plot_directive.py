@@ -554,7 +554,7 @@ def setup(app):
     app.add_directive('plot', plot_directive, True, (0, 2, 0), **options)
     app.add_config_value(
         'plot_formats',
-        [('png', 100), ('hires.png', 200), ('pdf', 50)],
+        [('png', 80), ('hires.png', 200), ('pdf', 50)],
         True)
 
     app.connect('doctree-read', mark_plot_labels)

@@ -83,10 +83,11 @@ The actual waveform data may be retrieved via the ``data`` keyword on each
 Data Preview
 ------------
 
-:class:`~obspy.core.stream.Stream` objects offer a plotting method for fast
+:class:`~obspy.core.stream.Stream` objects offer a
+:meth:`~obspy.core.stream.Stream.plot` method for fast
 preview of the waveform (requires the :mod:`obspy.imaging` module):
 
-    >>> st.plot(color='k')
+    >>> st.plot()
 
 .. plot:: source/tutorial/reading_seismograms.py
 
