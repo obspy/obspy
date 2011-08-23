@@ -371,6 +371,7 @@ class ClientTestCase(unittest.TestCase):
 
     def test_saveWaveform(self):
         """
+        Default behavior is requesting data compressed and unpack on the fly.
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
@@ -420,8 +421,8 @@ class ClientTestCase(unittest.TestCase):
 
     def test_saveWaveformNoCompression(self):
         """
-        Disabling compression during waveform request and save it directly to
-        disk.
+        Explicitly disable compression during waveform request and save it
+        directly to disk.
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
@@ -449,6 +450,29 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.station, 'APE')
         self.assertEquals(st[0].stats.location, '')
         self.assertEquals(st[0].stats.channel, 'BHZ')
+        os.remove(fseedfile)
+
+    def test_saveWaveformCompressed(self):
+        """
+        Tests saving compressed and not unpacked bzip2 files to disk.
+        """
+        mseedfile = NamedTemporaryFile().name
+        fseedfile = NamedTemporaryFile().name
+        # initialize client
+        client = Client()
+        start = UTCDateTime(2008, 1, 1, 0, 0)
+        end = start + 1
+        # MiniSEED
+        client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                            unpack=False)
+        # check if compressed
+        self.assertEquals(open(mseedfile, 'rb').read(2), 'BZ')
+        os.remove(mseedfile)
+        # Full SEED
+        client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                            format="FSEED", unpack=False)
+        # check if compressed
+        self.assertEquals(open(fseedfile, 'rb').read(2), 'BZ')
         os.remove(fseedfile)
 
     def test_getPAZ(self):

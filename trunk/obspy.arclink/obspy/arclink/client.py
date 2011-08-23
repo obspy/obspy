@@ -372,7 +372,7 @@ class Client(Telnet):
 
     def saveWaveform(self, filename, network, station, location, channel,
                      starttime, endtime, format="MSEED", compressed=True,
-                     route=True):
+                     route=True, unpack=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -405,10 +405,13 @@ class Client(Telnet):
                 A format ``'XSEED'`` is documented, but not yet implemented in
                 ArcLink.
         :type compressed: bool, optional
-        :param compressed: Request compressed files from ArcLink server
-            (default is ``True``).
+        :param compressed: Request compressed files from ArcLink server. Default
+            is ``True``.
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing. Default is ``True``.
+        :type unpack: bool, optional
+        :param unpack: Unpack compressed waveform files before storing to disk.
+            Default is ``True``.
         :return: None
         """
         # request type
@@ -424,7 +427,8 @@ class Client(Telnet):
         rdata = [starttime, endtime, network, station, channel, location]
         # fetch waveform
         data = self._fetch(rtype, rdata, route=route)
-        if data and compressed:
+        # unpack compressed data if option unpack is set
+        if data and compressed and unpack:
             data = bz2.decompress(data)
         # create file handler if a file name is given
         if isinstance(filename, basestring):
