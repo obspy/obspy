@@ -63,7 +63,7 @@ def DateTime2String(dt, compact=False):
 def compareSEED(seed1, seed2):
     """
     Compares two SEED files.
-    
+
     Only works with a record length of 4096 bytes.
     """
     # Each SEED string should be a multiple of the record length.

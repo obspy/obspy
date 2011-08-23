@@ -52,12 +52,14 @@ class Parser(object):
     """
     The XML-SEED parser class parses dataless or full SEED volumes.
 
-    The SEED file format description can be found at
-    @see: http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
+    .. seealso::
 
-    The XML-SEED format was proposed in
-    @see: http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml,
-    @see: http://www.jamstec.go.jp/pacific21/xmlninja/.
+        The SEED file format description can be found at
+        http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
+
+        The XML-SEED format was proposed in
+        * http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml
+        * http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
 
     def __init__(self, data=None, debug=False, strict=False,
@@ -162,17 +164,14 @@ class Parser(object):
         """
         Returns a XML representation of all headers of a SEED volume.
 
-        Parameters
-        ----------
-        version : float, optional
-            XSEED version string (default is 1.1).
-        split_stations : boolean, optional
-            Returns 
-
-        Returns
-        -------
-        string or list of strings
-            Return type depends on the flag ``split_stations``.
+        :type version: float, optional
+        :param version: XSEED version string (default is ``1.1``).
+        :type split_stations: boolean, optional
+        :param split_stations: Splits stations containing multiple channels
+            into multiple documents.
+        :rtype: str or list of str
+        :return: Returns either a string or a list of strings depending
+            on the flag ``split_stations``.
         """
         if version not in XSEED_VERSIONS:
             raise SEEDParserException("Unknown XML-SEED version!")
@@ -782,8 +781,6 @@ class Parser(object):
         """
         Checks if all blockettes necessary for creating a SEED String are
         available.
-
-        Returns True/False.
         """
         if not 10 in [_i.id for _i in self.volume]:
             return False
@@ -802,8 +799,6 @@ class Parser(object):
     def _compareBlockettes(self, blkt1, blkt2):
         """
         Compares two blockettes.
-        
-        Returns True or False.
         """
         for key in blkt1.__dict__.keys():
             # Continue if just some meta data.
