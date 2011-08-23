@@ -1,6 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Simple ASCII time series format
+Simple ASCII time series formats
+
+* ``SLIST``, a ASCII time series format represented with a header line
+  followed by a sample lists (see also
+  :func:`SLIST format description<obspy.core.ascii.writeSLIST>`)::
+
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, SLIST, INTEGER, 
+    288 300 292 285 265 287
+    279 250 278 278 268 258    
+    ...
+
+* ``TSPAIR``, a ASCII format where data is written in time-sample pairs
+  (see also :func:`TSPAIR format description<obspy.core.ascii.writeTSPAIR>`)::
+
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, TSPAIR, INTEGER, 
+    2009-08-24T00:20:03.000000  288
+    2009-08-24T00:20:03.005000  300
+    2009-08-24T00:20:03.010000  292
+    2009-08-24T00:20:03.015000  285
+    2009-08-24T00:20:03.020000  265
+    2009-08-24T00:20:03.025000  287
+    ...
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -21,10 +42,15 @@ def isSLIST(filename):
     """
     Checks whether a file is ASCII SLIST format. Returns True or False.
 
-    :type filename: string
+    :type filename: str
     :param filename: Name of the ASCII SLIST file to be checked.
-    :rtype: boolean
+    :rtype: bool
     :return: ``True`` if ASCII SLIST file.
+
+    .. rubric:: Example
+
+    >>> isSLIST('/path/to/slist.ascii')  #doctest: +SKIP
+    True
     """
     try:
         temp = open(filename, 'rt').readline()
@@ -41,10 +67,15 @@ def isTSPAIR(filename):
     """
     Checks whether a file is ASCII TSPAIR format. Returns True or False.
 
-    :type filename: string
+    :type filename: str
     :param filename: Name of the ASCII TSPAIR file to be checked.
-    :rtype: boolean
+    :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
+
+    .. rubric:: Example
+
+    >>> isTSPAIR('/path/to/tspair.ascii')  #doctest: +SKIP
+    True
     """
     try:
         temp = open(filename, 'rt').readline()
@@ -61,17 +92,19 @@ def readSLIST(filename, headonly=False):
     """
     Reads a ASCII SLIST file and returns an ObsPy Stream object.
 
-    .. note::
+    .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: ASCII file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
+
+    .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read('/path/to/slist.ascii')
@@ -132,17 +165,19 @@ def readTSPAIR(filename, headonly=False):
     """
     Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
 
-    .. note::
+    .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename: string
+    :type filename: str
     :param filename: ASCII file to be read.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the headers. This is most useful
         for scanning available data in huge (temporary) data sets.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
+
+    .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read('/path/to/tspair.ascii')
@@ -203,15 +238,21 @@ def writeSLIST(stream, filename, **kwargs):
     """
     Writes a ASCII SLIST file.
 
-    .. note::
+    .. warning::
         This function should NOT be called directly, it registers via the
-        :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-        :class:`~obspy.core.stream.Stream` object, call this instead.
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    :type filename: stream : :class:`~obspy.core.stream.Stream`
-    :param filename: The ObsPy Stream object to write.
-    :type filename: string
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
     :param filename: Name of file to write.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write("slist.ascii", format="SLIST")  #doctest: +SKIP
 
     .. rubric:: SLIST Format Description
 
@@ -299,15 +340,21 @@ def writeTSPAIR(stream, filename, **kwargs):
     """
     Writes a ASCII TSPAIR file.
 
-    .. note::
+    .. warning::
         This function should NOT be called directly, it registers via the
-        :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-        :class:`~obspy.core.stream.Stream` object, call this instead.
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    :type filename: stream : :class:`~obspy.core.stream.Stream`
-    :param filename: The ObsPy Stream object to write.
-    :type filename: string
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
     :param filename: Name of file to write.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write("tspair.ascii", format="TSPAIR")  #doctest: +SKIP
 
     .. rubric:: TSPAIR Format Description
 
