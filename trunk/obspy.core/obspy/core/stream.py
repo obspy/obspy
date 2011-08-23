@@ -11,13 +11,14 @@ Module for handling ObsPy Stream objects.
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _getPlugins, \
-    interceptDict, getExampleFile, getEntryPoints
+from obspy.core.util import NamedTemporaryFile, _getPlugins, interceptDict, \
+    getExampleFile, getEntryPoints
 from pkg_resources import load_entry_point
 import copy
-import math
-import numpy as np
 import fnmatch
+import math
+import mimetypes
+import numpy as np
 import os
 import urllib2
 import warnings
@@ -145,17 +146,30 @@ def read(pathname_or_url=None, format=None, headonly=False,
     (3) Reading a remote file via HTTP protocol.
 
         >>> from obspy.core import read
-        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z") \
-            # doctest: +SKIP
-        >>> print(st)  # doctest: +ELLIPSIS +SKIP
+        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
+        >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.8449...
+
+    (4) Reading a compressed files.
+
+        >>> from obspy.core import read
+        >>> st = read("/path/to/tspair.ascii.gz")
+        >>> print(st)
+        1 Trace(s) in Stream:
+        XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
+
+        >>> st = read("http://examples.obspy.org/slist.ascii.bz2")
+        >>> print(st)
+        1 Trace(s) in Stream:
+        XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - 2008-01-15T00:00:15.875000Z | 40.0 Hz, 635 samples
     """
     # if no pathname or URL specified, make example stream
     if not pathname_or_url:
         return _readExample(headonly=headonly)
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and pathname_or_url.startswith('/path/to/'):
+    if isinstance(pathname_or_url, basestring) and \
+       pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
         except:
@@ -164,12 +178,13 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     st = Stream()
     if "://" in pathname_or_url:
+        # extract extension if any
+        suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         # some URL
-        fh = NamedTemporaryFile()
+        fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
-        fh.seek(0)
-        st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         fh.close()
+        st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         os.remove(fh.name)
     else:
         # file name
@@ -204,17 +219,44 @@ def _read(filename, format=None, headonly=False, **kwargs):
     if isinstance(filename, basestring) and not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
-    # Hack to make StringIO reading work.
-    # XXX: Needs to be unified for all modules, e.g. maybe a module property
-    # whether nor not it can read memory files.
-    elif hasattr(filename, 'read') and hasattr(filename, 'tell') and \
-         hasattr(filename, 'seek') and (format.upper() == 'MSEED' or \
-         format is None):
-        format = 'MSEED'
+#XXX: not used in trunk
+#    # Hack to make StringIO reading work.
+#    # XXX: Needs to be unified for all modules, e.g. maybe a module property
+#    # whether nor not it can read memory files.
+#    elif hasattr(filename, 'read') and hasattr(filename, 'tell') and \
+#         hasattr(filename, 'seek') and (format.upper() == 'MSEED' or \
+#         format is None):
+#        format = 'MSEED'
+    # check if we got a compressed file
+    (type, encoding) = mimetypes.guess_type(filename)
+    unpacked_data = None
+    if (type, encoding) == (None, 'bzip2'):
+        # bzip2
+        try:
+            import bz2
+            unpacked_data = bz2.decompress(open(filename, 'rb').read())
+        except:
+            pass
+    elif (type, encoding) == (None, 'gzip'):
+        # gzip
+        try:
+            import gzip
+            unpacked_data = gzip.open(filename, 'rb').read()
+        except:
+            pass
+    if unpacked_data:
+        # ok we could unpack something without errors - create temporary file
+        tempfile = NamedTemporaryFile()
+        tempfile._fileobj.write(unpacked_data)
+        tempfile.close()
+        filename2 = tempfile.name
+    else:
+        filename2 = filename
+    # go through all known formats
     format_ep = None
     if not format:
-        eps = ENTRY_POINTS
         # detect format
+        eps = ENTRY_POINTS
         for ep in eps:
             try:
                 # search isFormat for given entry point
@@ -226,7 +268,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
                 msg = "Cannot load module %s:\n%s" % (ep.dist.key, str(e))
                 warnings.warn(msg, category=ImportWarning)
                 continue
-            if isFormat(filename):
+            if isFormat(filename2):
                 format_ep = ep
                 break
     else:
@@ -235,9 +277,12 @@ def _read(filename, format=None, headonly=False, **kwargs):
         try:
             format_ep = [_i for _i in ENTRY_POINTS if _i.name == format][0]
         except IndexError:
+            # clean up unpacking procedure
+            if unpacked_data:
+                tempfile.close()
+                os.remove(tempfile.name)
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
-
     # file format should be known by now
     try:
         # search readFormat for given entry point
@@ -245,12 +290,20 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                       'obspy.plugin.waveform.' + \
                                       format_ep.name, 'readFormat')
     except:
+        # clean up unpacking procedure
+        if unpacked_data:
+            tempfile.close()
+            os.remove(tempfile.name)
         msg = "Format is not supported. Supported Formats: "
         raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
     if headonly:
-        stream = readFormat(filename, headonly=True, **kwargs)
+        stream = readFormat(filename2, headonly=True, **kwargs)
     else:
-        stream = readFormat(filename, **kwargs)
+        stream = readFormat(filename2, **kwargs)
+    # clean up unpacking procedure
+    if unpacked_data:
+        tempfile.close()
+        os.remove(tempfile.name)
     # set a format keyword for each trace
     for trace in stream:
         trace.stats._format = format_ep.name

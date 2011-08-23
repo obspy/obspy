@@ -428,8 +428,13 @@ class Client(Telnet):
         # fetch waveform
         data = self._fetch(rtype, rdata, route=route)
         # unpack compressed data if option unpack is set
-        if data and compressed and unpack:
-            data = bz2.decompress(data)
+        if data and compressed:
+            if unpack:
+                data = bz2.decompress(data)
+            else:
+                # check for "good" filename
+                if not filename.endswith('.bz2'):
+                    filename += '.bz2'
         # create file handler if a file name is given
         if isinstance(filename, basestring):
             fh = open(filename, "wb")

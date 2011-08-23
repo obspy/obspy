@@ -245,6 +245,24 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 os.remove(tempfile[:-4])
             np.testing.assert_array_equal(tr.data, tr_test.data)
 
+    def test_readGzip2File(self):
+        """
+        Tests reading gzip compressed waveforms.
+        """
+        path = os.path.dirname(__file__)
+        st1 = read(os.path.join(path, 'data', 'tspair.ascii.gz'))
+        st2 = read(os.path.join(path, 'data', 'tspair.ascii'))
+        self.assertTrue(st1 == st2)
+
+    def test_readBzip2File(self):
+        """
+        Tests reading bzip2 compressed waveforms.
+        """
+        path = os.path.dirname(__file__)
+        st1 = read(os.path.join(path, 'data', 'slist.ascii.bz2'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+
 
 def suite():
     return unittest.makeSuite(WaveformPluginsTestCase, 'test')

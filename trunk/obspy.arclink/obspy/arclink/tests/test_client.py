@@ -456,8 +456,8 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests saving compressed and not unpacked bzip2 files to disk.
         """
-        mseedfile = NamedTemporaryFile().name
-        fseedfile = NamedTemporaryFile().name
+        mseedfile = NamedTemporaryFile(suffix='.bz2').name
+        fseedfile = NamedTemporaryFile(suffix='.bz2').name
         # initialize client
         client = Client()
         start = UTCDateTime(2008, 1, 1, 0, 0)
@@ -467,12 +467,16 @@ class ClientTestCase(unittest.TestCase):
                             unpack=False)
         # check if compressed
         self.assertEquals(open(mseedfile, 'rb').read(2), 'BZ')
+        # importing via read should work to
+        read(mseedfile)
         os.remove(mseedfile)
         # Full SEED
         client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                             format="FSEED", unpack=False)
         # check if compressed
         self.assertEquals(open(fseedfile, 'rb').read(2), 'BZ')
+        # importing via read should work to
+        read(fseedfile)
         os.remove(fseedfile)
 
     def test_getPAZ(self):
