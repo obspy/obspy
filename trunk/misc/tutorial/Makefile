@@ -14,7 +14,7 @@ ALLSPHINXOPTS   = -d $(BUILDDIR)/doctrees $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) sou
 # the i18n builder cannot share the environment and doctrees with the others
 I18NSPHINXOPTS  = $(PAPEROPT_$(PAPER)) $(SPHINXOPTS) source
 
-.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext
+.PHONY: help clean html dirhtml singlehtml pickle json htmlhelp qthelp devhelp epub latex latexpdf text man changes linkcheck doctest gettext coverage pep8
 
 help:
 	@echo "Please use \`make <target>' where <target> is one of"
@@ -37,9 +37,19 @@ help:
 	@echo "  changes    to make an overview of all changed/added/deprecated items"
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
+	@echo "  coverage   to make create coverage HTML files"
+	@echo "  pep8       to check PEP8 of tutorial"
 
 clean:
 	-rm -rf $(BUILDDIR)/*
+	-rm -rf source/packages/autogen/obspy.*
+
+coverage:
+	@coverage run --rcfile=$(BUILDDIR)/.coveragerc -m obspy.core.scripts.runtests --all
+	@coverage html --rcfile=$(BUILDDIR)/.coveragerc -d $(BUILDDIR)/html/coverage
+
+pep8:
+	@pep8 --show-source source/tutorial
 
 html:
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
