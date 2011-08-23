@@ -11,8 +11,8 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.core
-   obspy.signal
    obspy.imaging
+   obspy.signal
    obspy.taup
    obspy.xseed
 
@@ -23,12 +23,12 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.gse2
-   obspy.sac
    obspy.mseed
+   obspy.sac
    obspy.seisan
    obspy.segy
-   obspy.wav
    obspy.sh
+   obspy.wav
 
 .. rubric:: Database or Web Service Access Clients
 
@@ -37,7 +37,7 @@ The functionality is provided through the following packages:
    :nosignatures:
 
    obspy.arclink
-   obspy.seishub
    obspy.db
    obspy.iris
    obspy.neries
+   obspy.seishub

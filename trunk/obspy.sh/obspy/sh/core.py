@@ -60,12 +60,17 @@ INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
 
 def isASC(filename):
     """
-    Checks whether a file is ASC or not. Returns True or False.
+    Checks whether a file is a Seismic Handler ASCII file or not.
 
-    Parameters
-    ----------
-    filename : string
-        Name of the ASC file to be checked.
+    :type filename: str
+    :param filename: Name of the ASCII file to be checked.
+    :rtype: bool
+    :return: ``True`` if a Seismic Handler ASCII file.
+
+    .. rubric:: Example
+
+    >>> isASC("/path/to/QFILE-TEST-ASC.ASC")  #doctest: +SKIP
+    True
     """
     # first six chars should contain 'DELTA:'
     try:
@@ -79,26 +84,22 @@ def isASC(filename):
 
 def readASC(filename, headonly=False):
     """
-    Reads a ASC file and returns an ObsPy Stream object.
+    Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        ASC file to be read.
-    headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
+    :type filename: str
+    :param filename: ASCII file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Returns
-    -------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric: Example
 
-    Basic Usage
-    -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
     >>> st    #doctest: +ELLIPSIS
@@ -186,18 +187,17 @@ def readASC(filename, headonly=False):
 
 def writeASC(stream, filename, **kwargs):
     """
-    Writes a ASC file from given ObsPy Stream object.
+    Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        Name of ASC file to be written.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of the ASCII file to write.
     """
     fh = open(filename, 'wb')
     for trace in stream:
@@ -231,12 +231,17 @@ def writeASC(stream, filename, **kwargs):
 
 def isQ(filename):
     """
-    Checks whether a file is Q or not. Returns True or False.
+    Checks whether a file is a Seismic Handler Q file or not.
 
-    Parameters
-    ----------
-    filename : string
-        Name of the Q file to be checked.
+    :type filename: str
+    :param filename: Name of the Q file to be checked.
+    :rtype: bool
+    :return: ``True`` if a Seismic Handler Q file.
+
+    .. rubric:: Example
+
+    >>> isQ("/path/to/QFILE-TEST.QHD")  #doctest: +SKIP
+    True
     """
     # file must start with magic number 43981
     try:
@@ -250,7 +255,27 @@ def isQ(filename):
 
 def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     """
-    Reads a Q file and returns an ObsPy Stream object.
+    Reads a Seismic Handler Q file and returns an ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :type filename: str
+    :param filename: Q header file to be read. Must have a `QHD` file extension.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :type data_directory: str, optional
+    :param data_directory: Data directory where the corresponding QBN file can
+        be found.
+    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
+    :param byteorder: Enforce byte order for data file. This is important for
+        Q files written in older versions of Seismic Handler, which don't
+        explicit state the `BYTEORDER` flag within the header file. Defaults
+        to ``'='`` (local byte order).
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
     Q files consists of two files per data set:
 
@@ -264,28 +289,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        Q header file to be read. Must have a `QHD` file extension.
-    headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
-    data_directory : string, optional
-        Data directory where the corresponding QBN file can be found.
-    byteorder : [ '<' | '>' | '=' ], optional
-        Enforce byte order for data file. This is important for Q files written
-        in older versions of Seismic Handler, which don't explicit state the
-        BYTEORDER flag within the header file. Defaults to '=' (local byte
-        order).
+    .. rubric: Example
 
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-
-    Basic Usage
-    -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/QFILE-TEST.QHD")
     >>> st    #doctest: +ELLIPSIS
@@ -393,24 +398,25 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='='):
+def writeQ(stream, filename, data_directory=None, byteorder='=', **kwargs):
     """
-    Writes a Q file from given ObsPy Stream object.
+    Writes a Seismic Handler Q file from given ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        Name of Q file to be written.
-    data_directory : string, optional
-        Data directory where the corresponding QBN will be written.
-    byteorder : [ '<' | '>' | '=' ], optional
-        Enforce byte order for data file. Defaults to '=' (local byte order).
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of the Q file to write.
+    :type data_directory: str, optional
+    :param data_directory: Data directory where the corresponding QBN will be
+        written.
+    :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
+    :param byteorder: Enforce byte order for data file. Defaults to ``'='``
+        (local byte order).
     """
     if filename.endswith('.QHD'):
         filename = os.path.splitext(filename)[0]
@@ -481,8 +487,12 @@ def toUTCDateTime(value):
     """
     Converts time string used within Seismic Handler into a UTCDateTime.
 
-    Example
-    -------
+    :type value: str
+    :param value: A Date time string.
+    :return: Converted :class:`~obspy.core.UTCDateTime` object.
+
+    .. rubric:: Example
+
     >>> toUTCDateTime(' 2-JAN-2008_03:04:05.123')
     UTCDateTime(2008, 1, 2, 3, 4, 5, 123000)
     """
@@ -502,8 +512,12 @@ def fromUTCDateTime(dt):
     """
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
-    Example
-    -------
+    :type dt: :class:`~obspy.core.UTCDateTime`
+    :param dt: A UTCDateTime object. 
+    :return: Converted date time string usable by Seismic Handler.
+
+    .. rubric:: Example
+
     >>> from obspy.core import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
     >>> fromUTCDateTime(dt)

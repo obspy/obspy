@@ -40,7 +40,7 @@ HEADER = "TIMESERIES %s_%s_%s_%s_%s, %d samples, %d sps, %.26s, %s, %s, %s\n"
 
 def isSLIST(filename):
     """
-    Checks whether a file is ASCII SLIST format. Returns True or False.
+    Checks whether a file is ASCII SLIST format.
 
     :type filename: str
     :param filename: Name of the ASCII SLIST file to be checked.
@@ -65,7 +65,7 @@ def isSLIST(filename):
 
 def isTSPAIR(filename):
     """
-    Checks whether a file is ASCII TSPAIR format. Returns True or False.
+    Checks whether a file is ASCII TSPAIR format.
 
     :type filename: str
     :param filename: Name of the ASCII TSPAIR file to be checked.
