@@ -59,6 +59,34 @@ BAND_CODE = {'F': 1000.0,
              'Q': 0.00000001, }
 
 
+def guessDelta(channel):
+    """
+    Estimate time delta in seconds between each sample from given channel name.
+
+    :type channel: str
+    :param channel: Channel name, e.g. ``'BHZ'`` or ``'H'``
+    :rtype: float
+    :return: Returns ``0`` if band code is not given or unknown.
+
+    .. rubric:: Example
+
+    >>> guessDelta('BHZ')
+    0.1
+    >>> guessDelta('H')
+    0.0125
+    >>> guessDelta('XZY')  #doctest: +SKIP
+    0
+    """
+    try:
+        return 1. / BAND_CODE[channel[0]]
+    except:
+        msg = "No or unknown channel id provided. Specifying a channel id " + \
+              "could lead to better selection of first/last samples of " + \
+              "fetched traces."
+        warnings.warn(msg)
+    return 0
+
+
 class AttribDict(dict, object):
     """
     A class which behaves like a dictionary.

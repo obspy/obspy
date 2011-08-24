@@ -14,12 +14,12 @@ from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
 from obspy.core import UTCDateTime
-from obspy.core.util import BAND_CODE, deprecated, deprecated_keywords
+from obspy.core.util import deprecated, deprecated_keywords, guessDelta
+import httplib
 import os
 import pickle
 import sys
 import time
-import httplib
 import urllib
 import urllib2
 import warnings
@@ -467,21 +467,16 @@ class _WaveformMapperClient(object):
         for time in ["starttime", "endtime"]:
             if isinstance(kwargs[time], str):
                 kwargs[time] = UTCDateTime(kwargs[time])
+
+        trim_start = kwargs['starttime']
+        trim_end = kwargs['endtime']
         # we expand the requested timespan on both ends by two samples in
         # order to be able to make use of the nearest_sample option of
         # stream.trim(). (see trim() and tickets #95 and #105)
-        # only possible if a channel is specified.
-        if channel:
-            band_code = kwargs['channel'][0]
-            trim_start = kwargs['starttime']
-            trim_end = kwargs['endtime']
-            kwargs['starttime'] = trim_start - 2.0 / BAND_CODE[band_code]
-            kwargs['endtime'] = trim_end + 2.0 / BAND_CODE[band_code]
-        else:
-            msg = "No channel id provided. Specifying a channel id can " + \
-                  "lead to better selection of first/last samples of " + \
-                  "fetched traces."
-            warnings.warn(msg)
+        # only possible if a channel is specified otherwise delta = 0
+        delta = 2 * guessDelta(kwargs['channel'])
+        kwargs['starttime'] = trim_start - delta
+        kwargs['endtime'] = trim_end + delta
 
         url = '/seismology/waveform/getWaveform'
         data = self.client._fetch(url, **kwargs)
