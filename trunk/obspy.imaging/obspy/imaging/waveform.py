@@ -316,9 +316,7 @@ class WaveformPlotting(object):
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
-        s = self.stream[0].stats
-        suptitle = '%s.%s.%s.%s' % (s.network, s.location, s.station, s.channel)
-        self.fig.suptitle(suptitle, fontsize='medium')
+        self.fig.suptitle(self.stream[0].id, fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):
         """
