@@ -17,7 +17,6 @@ from pkg_resources import load_entry_point
 import copy
 import fnmatch
 import math
-import mimetypes
 import numpy as np
 import os
 import urllib2
@@ -228,16 +227,15 @@ def _read(filename, format=None, headonly=False, **kwargs):
 #         format is None):
 #        format = 'MSEED'
     # check if we got a compressed file
-    (type, encoding) = mimetypes.guess_type(filename)
     unpacked_data = None
-    if (type, encoding) == (None, 'bzip2'):
+    if filename.endswith('.bz2'):
         # bzip2
         try:
             import bz2
             unpacked_data = bz2.decompress(open(filename, 'rb').read())
         except:
             pass
-    elif (type, encoding) == (None, 'gzip'):
+    elif filename.endswith('.gz'):
         # gzip
         try:
             import gzip
