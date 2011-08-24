@@ -382,6 +382,8 @@ class ClientTestCase(unittest.TestCase):
         # MiniSEED
         client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
         st = read(mseedfile)
+        # MiniSEED may not start with Volume Index Control Headers (V)
+        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -394,7 +396,8 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                             format='FSEED')
         st = read(fseedfile)
-        self.assertEquals(open(fseedfile).read(8), "000001V ")
+        # Full SEED must start with Volume Index Control Headers (V)
+        self.assertEquals(open(fseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -434,6 +437,8 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                             compressed=False)
         st = read(mseedfile)
+        # MiniSEED may not start with Volume Index Control Headers (V)
+        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertEquals(st[0].stats.network, 'GE')
         self.assertEquals(st[0].stats.station, 'APE')
@@ -444,7 +449,9 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                             format='FSEED')
         st = read(fseedfile)
-        self.assertEquals(open(fseedfile).read(8), "000001V ")
+        # Full SEED
+        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                            format='FSEED')
         # ArcLink cuts on record base
         self.assertEquals(st[0].stats.network, 'GE')
         self.assertEquals(st[0].stats.station, 'APE')
@@ -467,7 +474,7 @@ class ClientTestCase(unittest.TestCase):
                             unpack=False)
         # check if compressed
         self.assertEquals(open(mseedfile, 'rb').read(2), 'BZ')
-        # importing via read should work to
+        # importing via read should work too
         read(mseedfile)
         os.remove(mseedfile)
         # Full SEED
@@ -475,7 +482,7 @@ class ClientTestCase(unittest.TestCase):
                             format="FSEED", unpack=False)
         # check if compressed
         self.assertEquals(open(fseedfile, 'rb').read(2), 'BZ')
-        # importing via read should work to
+        # importing via read should work too
         read(fseedfile)
         os.remove(fseedfile)
 
