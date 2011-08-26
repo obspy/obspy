@@ -89,7 +89,7 @@ class HoctavbandsTestCase(unittest.TestCase):
         """
         """
         hob = hoctavbands.sonogram(self.data_win, self.fs, self.fc1,
-                                   self.nofb, self.no_win, self.fk)
+                                   self.nofb, self.no_win)
         rms = np.sqrt(np.sum((hob[:, 0] - self.res[:, 20]) ** 2) /
                       np.sum(self.res[:, 20] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
