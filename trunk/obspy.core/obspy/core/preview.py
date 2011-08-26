@@ -238,5 +238,4 @@ def resamplePreview(trace, samples, method='accurate'):
         # Return number of omitted samples. Should be 0 for this method.
         return npts - int(samples * step)
     else:
-        msg = 'Unknown method'
-        raise Exception(msg)
+        raise NotImplementedError('Unknown method')

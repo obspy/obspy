@@ -14,7 +14,7 @@ from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
 from obspy.core import UTCDateTime
-from obspy.core.util import deprecated, deprecated_keywords, guessDelta
+from obspy.core.util import deprecated_keywords, guessDelta
 import httplib
 import os
 import pickle
@@ -186,8 +186,8 @@ class Client(object):
         elif method in HTTP_ACCEPTED_NODATA_METHODS and xml_string:
             raise TypeError("Unexpected data for %s request." % method)
 
-        req = RequestWithMethod(method=method, url=url, data=xml_string,
-                                headers=headers)
+        req = _RequestWithMethod(method=method, url=url, data=xml_string,
+                                 headers=headers)
         # it seems the following always ends in a urllib2.HTTPError even with
         # nice status codes...?!?
         try:
@@ -824,14 +824,6 @@ class _EventMapperClient(_BaseRESTClient):
             warnings.warn(msg)
         return results
 
-    @deprecated
-    def getKml(self, nolabels=False, **kwargs):
-        """
-        Deprecated. Please use
-        :meth:`~obspy.seishub.client._EventMapperClient.getKML()` instead.
-        """
-        return self.getKML(nolabels=nolabels, **kwargs)
-
     def getKML(self, nolabels=False, **kwargs):
         """
         Posts an event.getList() and returns the results as a KML file. For
@@ -966,7 +958,7 @@ class _EventMapperClient(_BaseRESTClient):
         return
 
 
-class RequestWithMethod(urllib2.Request):
+class _RequestWithMethod(urllib2.Request):
     """
     Improved urllib2.Request Class for which the HTTP Method can be set to
     values other than only GET and POST.

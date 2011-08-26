@@ -56,10 +56,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.npts, 10599)
         self.assertEqual(tr.stats['sampling_rate'], 7000)
         np.testing.assert_array_equal(tr.data[:13], testdata)
-        # write 
+        # write
         st2 = Stream()
         st2.traces.append(Trace())
-        st2[0].data = tr.data.copy() #copy the data
+        st2[0].data = tr.data.copy()  # copy the data
         st2.write(testfile, format='WAV', framerate=7000)
         # read without giving the WAV format option
         tr3 = read(testfile)[0]

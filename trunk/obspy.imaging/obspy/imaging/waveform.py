@@ -162,7 +162,7 @@ class WaveformPlotting(object):
                                  facecolor=self.face_color,
                                  edgecolor=self.face_color,
                                  format=self.format)
-            # Otherwise get the self.format from self.outfile or default to PNG.
+            # Otherwise use format from self.outfile or default to PNG.
             else:
                 self.fig.savefig(self.outfile, dpi=self.dpi,
                                  transparent=self.transparent,
@@ -318,7 +318,7 @@ class WaveformPlotting(object):
         # Set the title of the plot.
         self.fig.suptitle(self.stream[0].id, fontsize='medium')
 
-    def __plotStraight(self, trace, ax, *args, **kwargs):
+    def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Just plots the data samples in the self.stream. Useful for smaller
         datasets up to around 1000000 samples (depending on the machine its
@@ -391,7 +391,7 @@ class WaveformPlotting(object):
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
 
-    def __plotMinMax(self, trace, ax, *args, **kwargs):
+    def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
         Plots the data using a min/max approach that calculated the minimum and
         maximum values of each "pixel" and than plots only these values. Works
@@ -488,7 +488,7 @@ class WaveformPlotting(object):
         # Set the x-limit to avoid clipping of masked values.
         ax.set_xlim(0, self.width - 1)
 
-    def __plotSetXTicks(self, *args, **kwargs):
+    def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
@@ -507,7 +507,7 @@ class WaveformPlotting(object):
                                 for _i in range(self.number_of_ticks)],
                                 fontsize='small')
 
-    def __plotSetYTicks(self, *args, **kwargs):
+    def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         Goes through all axes in pyplot, reads self.stats and sets all ticks on
         the y axis.
@@ -527,8 +527,11 @@ class WaveformPlotting(object):
             max_range = mean + max_distance
             # Set the location of the ticks.
             ticks = [mean - 0.75 * max_distance,
-                     mean - 0.5 * max_distance, mean - 0.25 * max_distance,
-                     mean, mean + 0.25 * max_distance, mean + 0.5 * max_distance,
+                     mean - 0.5 * max_distance,
+                     mean - 0.25 * max_distance,
+                     mean,
+                     mean + 0.25 * max_distance,
+                     mean + 0.5 * max_distance,
                      mean + 0.75 * max_distance]
             ax.set_yticks(ticks)
             # Setup format of the major ticks
@@ -543,7 +546,7 @@ class WaveformPlotting(object):
                       fontsize='small', verticalalignment='center')
             ax.set_ylim(min_range, max_range)
 
-    def __dayplotGetMinMaxValues(self, *args, **kwargs):
+    def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
         """
         Takes a Stream object and calculates the min and max values for each
         pixel in the dayplot.
@@ -578,7 +581,7 @@ class WaveformPlotting(object):
         # Set class variable.
         self.extreme_values = extreme_values
 
-    def __dayplotNormalizeValues(self, *args, **kwargs):
+    def __dayplotNormalizeValues(self, *args, **kwargs):  # @UnusedVariable
         """
         Normalizes all values in the 3 dimensional array, so that the minimum
         value will be 0 and the maximum value will be 1.
@@ -599,7 +602,7 @@ class WaveformPlotting(object):
         else:
             self.extreme_values = (self.extreme_values / abs(min)) / 2 + 0.5
 
-    def __dayplotSetXTicks(self, *args, **kwargs):
+    def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the xticks for the dayplot.
         """
@@ -632,7 +635,7 @@ class WaveformPlotting(object):
         self.axis[0].set_xticklabels(ticklabels)
         self.axis[0].set_xlabel('time in %s' % type)
 
-    def __dayplotSetYTicks(self, *args, **kwargs):
+    def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the yticks for the dayplot.
         """
@@ -694,7 +697,7 @@ class WaveformPlotting(object):
 
 def _plot_list(streams):
 
-    def formatXTicklabels(x, pos):
+    def formatXTicklabels(x, pos):  # @UnusedVariable
         """
         Make a nice formatting for x axis ticklabels
         """
@@ -755,8 +758,6 @@ def _plot_list(streams):
         start = date2num(tr.stats.starttime)
         end = date2num(tr.stats.endtime)
         time = np.linspace(start, end, tr.stats.npts)
-        #axs[comp_id].plot_date(time, tr.data, ls="-", marker="", c=colors[sta_id],
-        #                       alpha=alpha, label=sta_id)
         axs[comp_id].plot(time, tr.data, ls="-", marker="", c=colors[sta_id],
                           alpha=alpha, label=sta_id)
 
@@ -772,17 +773,12 @@ def _plot_list(streams):
         ax.text(0.02, 0.95, comp_id, color="b", fontsize=16, ha="left",
                 va="top", transform=ax.transAxes)
         ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-        plt.setp(ax.get_xticklabels(), rotation=20, horizontalalignment="right")
+        plt.setp(ax.get_xticklabels(), rotation=20,
+                 horizontalalignment="right")
         plt.setp(ax.xaxis.get_ticklabels(), visible=False)
     plt.setp(ax1.xaxis.get_ticklabels(), visible=True)
     ax0.legend()
 
-    #locator = AutoDateLocator()#minticks=3, maxticks=6)
-    #locator = ax1.xaxis.set_major_locator(locator)
-    #ax1.xaxis.set_major_formatter(DateFormatter('%a %d\n%b %Y'))
-    # XXX ax1.xaxis.set_major_formatter(AutoDateFormatter(ax1.xaxis.get_major_locator()))
-
-    #fig.autofmt_xdate()
     fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
     plt.show()
 

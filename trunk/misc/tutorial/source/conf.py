@@ -96,7 +96,7 @@ add_module_names = False
 pygments_style = 'sphinx'
 
 # A list of ignored prefixes for module index sorting.
-#modindex_common_prefix = []
+modindex_common_prefix = ['obspy.']
 
 
 # -- Options for HTML output ---------------------------------------------------
@@ -236,7 +236,8 @@ intersphinx_mapping = {
 }
 
 # generate automatically stubs
-autosummary_generate = True
+import glob
+autosummary_generate = glob.glob("packages" + os.sep + "*.rst")
 
 # Don't merge __init__ method in auoclass content
 autoclass_content = 'class'

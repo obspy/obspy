@@ -26,7 +26,8 @@ def isMSEED(filename):
 
 
 def readMSEED(filename, headonly=False, starttime=None, endtime=None,
-              readMSInfo=True, reclen=-1, quality=False, **kwargs):
+              readMSInfo=True, reclen=-1, quality=False,
+              **kwargs):  # @UnusedVariable
     """
     Reads a given Mini-SEED file and returns an Stream object.
 

@@ -21,7 +21,7 @@ import numpy as np
 import util
 
 
-def sonogram(data, fs, fc1, nofb, no_win, fk):
+def sonogram(data, fs, fc1, nofb, no_win):
     """
     Sonogram of a signal:
 

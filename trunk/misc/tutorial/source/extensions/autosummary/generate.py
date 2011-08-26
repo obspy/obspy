@@ -136,18 +136,26 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                     template = template_env.get_template('autosummary/base.rst')
 
             def get_members(obj, typ, include_public=[]):
-                items = [
-                    name for name in dir(obj)
-                    if get_documenter(getattr(obj, name), obj).objtype == typ
-                ]
-                # XXX: Monkey in order to remove imported objects from namespace
-                if typ != 'attribute':
-                    items = [
-                        name for name in items
-                        if getattr(obj, name).__module__ == obj.__name__]
-                # XXX: End Monkey
+                # XXX: whole function is a patch!
+                if typ in ('function', 'class', 'exception'):
+                    # modules seem to work
+                    items = [name for name in dir(obj)
+                             if get_documenter(getattr(obj, name), obj).objtype == typ
+                    ]
+                    items = [name for name in items
+                             if getattr(obj, name).__module__ == obj.__name__]
+                elif typ == 'method':
+                    # filter methods (__call__) which are defined within this
+                    # class (im_class)
+                    items = [name for name in dir(obj)
+                             if hasattr(getattr(obj, name), '__call__')
+                             and hasattr(getattr(obj, name), 'im_class')]
+                elif typ == 'attribute':
+                    # attribute
+                    items = [name for name in dir(obj)
+                             if not hasattr(getattr(obj, name), '__call__')]
                 public = [x for x in items
-                          if x in include_public or not x.startswith('_')]
+                          if not x.startswith('_') or x.endswith('__')]
                 return public, items
 
             ns = {}

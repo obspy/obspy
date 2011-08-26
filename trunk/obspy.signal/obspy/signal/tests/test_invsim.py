@@ -4,11 +4,9 @@
 The InvSim test suite.
 """
 
-from obspy.core import Stream, Trace, UTCDateTime, read
+from obspy.core import Stream, Trace, UTCDateTime
 from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
-from obspy.sac import attach_paz, attach_resp
-from obspy.core.util import NamedTemporaryFile
-from obspy.signal.cross_correlation import xcorr
+from obspy.sac import attach_paz
 import gzip
 import numpy as np
 import os
@@ -228,13 +226,13 @@ class InvSimTestCase(unittest.TestCase):
         # too big for that.
         pzf = os.path.join(self.path, 'SAC_PZs_KARC_BHZ')
         sacf = os.path.join(self.path, 'KARC.LHZ.SAC.asc.gz')
-        testsacf = os.path.join(self.path,'KARC_corrected.sac.asc.gz')
+        testsacf = os.path.join(self.path, 'KARC_corrected.sac.asc.gz')
         plow = 160.
         phigh = 4.
-        fl1=1.0/(plow+0.0625*plow)
-        fl2=1.0/plow
-        fl3=1.0/phigh
-        fl4=1.0/(phigh-0.25*phigh)
+        fl1 = 1.0 / (plow + 0.0625 * plow)
+        fl2 = 1.0 / plow
+        fl3 = 1.0 / phigh
+        fl4 = 1.0 / (phigh - 0.25 * phigh)
         #Uncomment the following to run the sac-commands
         #that created the testing file
         #if 1:
@@ -260,9 +258,9 @@ class InvSimTestCase(unittest.TestCase):
                  'sampling_rate': 1.0000001192092896, 'channel': 'BHZ'}
         tr = Trace(data, stats)
 
-        attach_paz(tr,pzf,tovel=False)
-        tr.data = seisSim(tr.data,tr.stats.sampling_rate,paz_remove=tr.stats.paz,
-                          remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4))
+        attach_paz(tr, pzf, tovel=False)
+        tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=tr.stats.paz,
+                          remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4))
         data = np.loadtxt(testsacf)
         stats = {'network': 'KA', 'delta': 0.99999988079072466,
                  'station': 'KARC', 'location': 'S1',
@@ -277,7 +275,7 @@ class InvSimTestCase(unittest.TestCase):
         #plt.show()
         rms = np.sqrt(np.sum((tr.data - tr2.data) ** 2) / \
                       np.sum(tr2.data ** 2))
-        self.assertTrue(rms<0.0421)
+        self.assertTrue(rms < 0.0421)
 
     def test_evalrespsac_vs_obspy(self):
         """
@@ -298,21 +296,21 @@ class InvSimTestCase(unittest.TestCase):
                  'npts': 49000, 'calib': 1.0,
                  'sampling_rate': 100.0, 'channel': 'HHZ'}
         tr = Trace(data, stats)
-        trtest = Trace(test_data,stats)
-        fl1=0.00588
-        fl2=0.00625
-        fl3=30.
-        fl4=35.
-        date=UTCDateTime(2003,11,1,0,0,0)
-        seedresp = {'filename':respf,'date':date,'units':'VEL'}
-        tr.data = seisSim(tr.data,tr.stats.sampling_rate,paz_remove=None,
-                          remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4),
+        trtest = Trace(test_data, stats)
+        fl1 = 0.00588
+        fl2 = 0.00625
+        fl3 = 30.
+        fl4 = 35.
+        date = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        seedresp = {'filename':respf, 'date':date, 'units':'VEL'}
+        tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
+                          remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4),
                           seedresp=seedresp)
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0041)
-        
+
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')
 

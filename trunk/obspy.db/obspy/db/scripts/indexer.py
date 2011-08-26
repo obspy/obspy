@@ -165,7 +165,7 @@ Default path option is 'data=*.*'.""")
              "archived in the database.")
     parser.add_option("--force-reindex", action="store_true",
         dest="force_reindex", default=False,
-        help="Deletes and recreates existing index entry for every crawled file.")
+        help="Reindex existing index entry for every crawled file.")
     parser.add_option("--drop_database", action="store_true",
         dest="drop_database", default=False,
         help="Deletes and recreates the complete database at start up.")

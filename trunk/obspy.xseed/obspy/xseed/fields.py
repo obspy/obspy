@@ -24,7 +24,7 @@ class Field(object):
     """
     General SEED field.
     """
-    def __init__(self, id, name, *args, **kwargs):
+    def __init__(self, id, name, *args, **kwargs):  # @UnusedVariable
         # default
         self.id = id
         self.flag = ''
@@ -230,7 +230,7 @@ class Integer(Field):
             msg = "No integer value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
-    def read(self, data, strict=False):
+    def read(self, data, strict=False):  # @UnusedVariable
         temp = data.read(self.length)
         return self.convert(temp)
 
@@ -273,7 +273,7 @@ class Float(Field):
             msg = "No float value found for %s." % self.attribute_name
             raise SEEDTypeException(msg)
 
-    def read(self, data, strict=False):
+    def read(self, data, strict=False):  # @UnusedVariable
         temp = data.read(self.length)
         return self.convert(temp)
 
@@ -305,7 +305,7 @@ class FixedString(Field):
         self.length = length
         self.flags = flags
 
-    def read(self, data, strict=False):
+    def read(self, data, strict=False):  # @UnusedVariable
         return self._formatString(data.read(self.length).strip())
 
     def write(self, data):
@@ -455,7 +455,7 @@ class Loop(Field):
                 data += field.getSEED(blockette, i)
         return data
 
-    def getXML(self, blockette, pos=0):
+    def getXML(self, blockette, pos=0):  # @UnusedVariable
         """
         """
         if self.ignore:

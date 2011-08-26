@@ -11,7 +11,6 @@ import numpy as np
 from obspy.core import Trace, Stream, UTCDateTime
 from obspy.signal import PPSD, psd
 from obspy.signal.psd import welch_window, welch_taper
-from matplotlib.mlab import detrend_linear
 
 
 class PsdTestCase(unittest.TestCase):
@@ -48,7 +47,7 @@ class PsdTestCase(unittest.TestCase):
         noise = np.load(file_noise)
         # in principle to mimic PITSA's results detrend should be specified as
         # some linear detrending (e.g. from matplotlib.mlab.detrend_linear)
-        psd_obspy, f = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
+        psd_obspy, _ = psd(noise, NFFT=NFFT, Fs=SAMPLING_RATE,
                            window=welch_taper, noverlap=NOVERLAP)
         psd_pitsa = np.load(file_psd_pitsa)
 
@@ -113,8 +112,8 @@ class PsdTestCase(unittest.TestCase):
         tr = Trace(data, stats)
         st = Stream([tr])
         paz = {'gain': 60077000.0,
-               'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
-                         (-251.33+0j), (-131.04-467.29j), (-131.04+467.29j)],
+               'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
+                         (-251.33 + 0j), (-131.04 - 467.29j), (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
         ppsd = PPSD(tr.stats, paz)

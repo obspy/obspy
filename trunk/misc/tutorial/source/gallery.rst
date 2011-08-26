@@ -1,3 +1,5 @@
+.. ifconfig:: muh = 21!321
+
 .. gallery:
 
 =======

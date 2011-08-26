@@ -581,6 +581,6 @@ class UTCDateTime(datetime.datetime):
                  self.second, self.microsecond // 1000)
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

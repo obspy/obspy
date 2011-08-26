@@ -4,12 +4,13 @@ ObsPy Documentation Contents
 ============================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    tutorial/index
    packages/index
-   packages/includes
    credits
+   pep8/index
+   coding_style
    gallery
 
 Indices and tables

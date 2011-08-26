@@ -5,9 +5,9 @@ import datetime
 import copy
 import unittest
 import numpy as np
-try: # pragma: no cover
+try:
     from unittest import skipIf
-except ImportError: # pragma: no cover
+except ImportError:
     from obspy.core.util import skipIf
 
 
@@ -472,5 +472,5 @@ def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     unittest.main(defaultTest='suite')

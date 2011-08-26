@@ -64,11 +64,6 @@ table.highlighttable {
 
 table.docutils {
   border-collapse : collapse;
-  width : 100%;
-}
-
-table.docutils.field-list {
-  width : auto;
 }
 
 table.docutils th {
@@ -83,6 +78,7 @@ table.docutils th.head {
 }
 
 table.docutils td {
+  min-width : 10em;
   background-color : #EEEEFF;
   padding : 3px 5px;
   border : 1px solid #AAAAAA;
@@ -109,10 +105,6 @@ div.bodywrapper {
 /* */
 tt.descname {
   font-size : 1.1em;
-}
-dl.method,
-dl.attribute {
-  margin-left : 2em;
 }
 
 p.rubric {

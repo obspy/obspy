@@ -5,9 +5,9 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2009 Moritz Beyreuther
+# Copyright (C) 2009-2011 Moritz Beyreuther
 #-------------------------------------------------------------------------
-""" 
+"""
 WAV bindings to ObsPy core module.
 
 :copyright:
@@ -25,12 +25,17 @@ import wave
 
 def isWAV(filename):
     """
-    Checks whether a file is WAV or not. Returns True or False.
+    Checks whether a file is a audio WAV file or not.
 
-    Parameters
-    ----------
-    filename : string
-        WAV file to be checked.
+    :type filename: str
+    :param filename: Name of the audio WAV file to be checked.
+    :rtype: bool
+    :return: ``True`` if a WAV file.
+
+    .. rubric:: Example
+
+    >>> isWAV("/path/to/3cssan.near.8.1.RNON.wav")  #doctest: +SKIP
+    True
     """
     try:
         fh = wave.open(filename, 'rb')
@@ -43,27 +48,24 @@ def isWAV(filename):
     return False
 
 
-def readWAV(filename, headonly=False, **kwargs):
+def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
-    Read audio WAV file.
-    
+    Reads a audio WAV file and returns an ObsPy Stream object.
+
     Currently supports uncompressed unsigned char and short integer and
-    integer data values. This should cover most WAV files. This function
-    should NOT be called directly, it registers via the ObsPy
-    :func:`~obspy.core.stream.read` function, call this instead.
+    integer data values. This should cover most WAV files.
 
-    Parameters
-    ----------
-    filename : string
-        Name of WAV file to read.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Returns
-    -------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    :type filename: str
+    :param filename: Audio WAV file to be read.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Basic Usage
-    -----------
+    .. rubric: Example
+
     >>> from obspy.core import read
     >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
     >>> print(st)
@@ -80,11 +82,11 @@ def readWAV(filename, headonly=False, **kwargs):
     # WAVE data format is unsigned char up to 8bit, and signed int
     # for the remaining.
     if width == 1:
-        fmt = '<u1' #unsigned char
+        fmt = '<u1'  # unsigned char
     elif width == 2:
-        fmt = '<i2' #signed short int
+        fmt = '<i2'  # signed short int
     elif width == 4:
-        fmt = '<i4' #signed int (int32)
+        fmt = '<i4'  # signed int (int32)
     else:
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     data = np.fromstring(fh.readframes(length), dtype=fmt)
@@ -92,32 +94,30 @@ def readWAV(filename, headonly=False, **kwargs):
     return Stream([Trace(header=header, data=data)])
 
 
-def writeWAV(stream_object, filename, framerate=7000, **kwargs):
+def writeWAV(stream, filename, framerate=7000, **kwargs):  # @UnusedVariable
     """
-    Write audio WAV file. The seismogram is squeezed to audible frequencies.
+    Writes a audio WAV file from given ObsPy Stream object. The seismogram is
+    squeezed to audible frequencies.
 
     The generated WAV sound file is as a result really short. The data
     are written uncompressed as signed 4-byte integers.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    .. note::
-        The attributes `self.stats.npts` (number of samples) and
-        `self.data` (array of data samples) are required
-
-    Parameters
-    ----------
-    filename : string
-        Name of WAV file to write.
-    framerate : int, optional
-        Sample rate of WAV file to use. This this will squeeze the seismogram
-        (default is 7000). 
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of the audio WAV file to write.
+    :type framerate: int, optional
+    :param framerate: Sample rate of WAV file to use. This this will squeeze
+        the seismogram (default is 7000).
     """
     i = 0
-    base , ext = os.path.splitext(filename)
-    for trace in stream_object:
+    base, ext = os.path.splitext(filename)
+    for trace in stream:
         # write WAV file
         if i != 0:
             filename = "%s%02d%s" % (base, i, ext)

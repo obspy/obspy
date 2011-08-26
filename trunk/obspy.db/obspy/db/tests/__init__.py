@@ -3,7 +3,9 @@
 import unittest
 from obspy.core.util import add_unittests
 
+
 MODULE_NAME = "obspy.db"
+
 
 def suite():
     suite = unittest.TestSuite()

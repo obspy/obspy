@@ -72,9 +72,11 @@ def guessDelta(channel):
 
     >>> print guessDelta('BHZ')
     0.1
+
     >>> print guessDelta('H')
     0.0125
-    >>> print guessDelta('XZY')  #doctest: +SKIP
+
+    >>> print guessDelta('XZY')
     0
     """
     try:
@@ -91,10 +93,12 @@ class AttribDict(dict, object):
     """
     A class which behaves like a dictionary.
 
-    Basic Usage
-    -----------
-    You may use the following syntax to change or access data in this
-    class.
+    :type data: dict, optional
+    :param data: Dictionary with initial keywords.
+
+    .. rubric:: Basic Usage
+
+    You may use the following syntax to change or access data in this class.
 
     >>> stats = AttribDict()
     >>> stats.network = 'BW'
@@ -109,11 +113,6 @@ class AttribDict(dict, object):
     >>> x = sorted(x)
     >>> x[0:3]
     ['network', 'station']
-
-    Parameters
-    ----------
-    data : dict, optional
-        Dictionary with initial keywords.
     """
     readonly = []
 
@@ -160,7 +159,7 @@ class AttribDict(dict, object):
     def copy(self):
         return self.__class__(self.__dict__.copy())
 
-    def __deepcopy__(self, *args, **kwargs): #@UnusedVariable
+    def __deepcopy__(self, *args, **kwargs):  #@UnusedVariable
         st = self.__class__()
         st.update(self)
         return st
@@ -173,7 +172,7 @@ class AttribDict(dict, object):
 
 
 def scoreatpercentile(a, per, limit=(), issorted=True):
-    """ 
+    """
     Calculates the score at the given per percentile of the sequence a.
 
     For example, the score at ``per=50`` is the median.
@@ -200,7 +199,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
         >>> scoreatpercentile(a, 75)
         42.5
 
-    This method is taken from scipy.stats.scoreatpercentile 
+    This method is taken from scipy.stats.scoreatpercentile
     Copyright (c) Gary Strangman
     """
     if issorted:
@@ -211,7 +210,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
         values = a
 
     def _interpolate(a, b, fraction):
-        return a + (b - a) * fraction;
+        return a + (b - a) * fraction
 
     idx = per / 100. * (len(values) - 1)
     if (idx % 1 == 0):
@@ -221,7 +220,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
 
 
 # C file pointer/ descriptor class
-class FILE(C.Structure): # Never directly used
+class FILE(C.Structure):  # Never directly used
     """
     C file pointer class for type checking with argtypes
     """
@@ -257,8 +256,8 @@ def formatScientific(value):
     For speed issues any number ending with `E+0XX` or `E-0XX` is simply cut
     down to `E+XX` or `E-XX`. This will fail for numbers `XX>99`.
 
-    Basic Usage
-    -----------
+    .. rubric:: Example
+
     >>> formatScientific("3.4e+002")
     '3.4e+02'
 
@@ -305,8 +304,8 @@ def complexifyString(line):
     """
     Converts a string in the form "(real, imag)" into a complex type.
 
-    Basic Usage
-    -----------
+    .. rubric:: Example
+
     >>> complexifyString("(1,2)")
     (1+2j)
 
@@ -323,17 +322,19 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
     If no ``fill_value`` is given a masked array will be returned.
 
-    @param delta: Number of samples for data chunk
-    @param dtype: NumPy dtype for returned data chunk
-    @param fill_value: If None, masked array is returned, if not None the
+    :param delta: Number of samples for data chunk
+    :param dtype: NumPy dtype for returned data chunk
+    :param fill_value: If None, masked array is returned, if not None the
                        array is filled with the corresponding value
 
-    Basic Usage
-    -----------
+    .. rubric: Example
+
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
+
     >>> createEmptyDataChunk(6, np.dtype('complex128'), 0)
     array([ 0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j,  0.+0.j])
+
     >>> createEmptyDataChunk(3, 'f') # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
     masked_array(data = [-- -- --],
                  mask = ...,
@@ -363,14 +364,21 @@ def getExampleFile(testfile):
 
     The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
-    installed ObsPy modules and checks weather the testfile is in any of
+    installed ObsPy modules and checks weather the file is in any of
     the "tests/data" subdirectories.
 
-    :param testfile: The testfile to which the path should be returned.
-    :return: Full path to testfile.
+    :param testfile: A test file name to which the path should be returned.
+    :return: Full path to file.
 
-    >>> path('slist.ascii') # doctest: +SKIP
+    .. rubric:: Example
+
+    >>> getExampleFile('slist.ascii')  # doctest: +SKIP
     /custom/path/to/obspy/core/tests/data/slist.ascii
+
+    >>> getExampleFile('does.not.exists')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
         try:
@@ -387,7 +395,15 @@ def getExampleFile(testfile):
 
 def _getVersionString(module="obspy.core"):
     """
-    Returns either the EGG version or current SVN revision for a given module.
+    Returns either the .egg version or current SVN revision for a given module.
+
+    .. rubric:: Example
+
+    >>> _getVersionString('obspy.core')  # doctest: +SKIP
+    
+
+    >>> _getVersionString('does.not.exist')  # doctest: +ELLIPSIS
+    'Module does.not.exist is not installed via setup.py!'
     """
     try:
         mod = require(module)[0]
@@ -412,20 +428,15 @@ def _getPlugins(group, subgroup_name=None):
     """
     Gets a dictionary of all available waveform features plug-ins.
 
-    Parameter
-    ---------
-    group : string
-        Group name.
-    subgroup_name : string, optional
-        Subgroup name (defaults to None).
+    :type group: string
+    :param group: Group name.
+    :type subgroup_name: string, optional
+    :param subgroup_name: Subgroup name (defaults to None).
+    :rtype: dict
+    :returns: Dictionary of entry points of each plug-in.
 
-    Returns
-    -------
-    dict
-        Dictionary of entry points of each plug-in.
+    .. rubric: Example
 
-    Basic Usage
-    -----------
     >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
     {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
     """
@@ -455,6 +466,7 @@ def deprecated(func, warning_msg=None):
             msg = "Call to deprecated function %s." % func.__name__
         warnings.warn(msg, category=DeprecationWarning)
         return func(*args, **kwargs)
+
     new_func.__name__ = func.__name__
     new_func.__doc__ = func.__doc__
     new_func.__dict__.update(func.__dict__)
@@ -488,8 +500,9 @@ def interceptDict(func):
     on had to be specified as a dictionary in the first implementation and
     now are expected to be given as kwargs directly.
     So we do:
-        - throw a DeprecationWarning
-        - make the correct call
+
+    * throw a DeprecationWarning
+    * make the correct call
     """
     @functools.wraps(func)
     def new_func(*args, **kwargs):
@@ -515,16 +528,16 @@ def add_doctests(testsuite, module_name):
     All submodules in the module's root directory are added.
     Occurring errors are shown as warnings.
 
-    Example
-    -------
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_doctests(suite, "obspy.core")
-
     :type testsuite: unittest.TestSuite
     :param testsuite: testsuite to which the tests should be added
     :type module_name: String
     :param module_name: name of the module of which the tests should be added
+
+    .. rubric: Example
+
+    >>> import unittest
+    >>> suite = unittest.TestSuite()
+    >>> add_doctests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
     MODULE = __import__(MODULE_NAME, fromlist="obspy")
@@ -543,25 +556,25 @@ def add_unittests(testsuite, module_name):
     Function to add all available unittests of the module with given name
     (e.g. "obspy.core") to the given unittest TestSuite.
     All submodules in the "tests" directory whose names are starting with
-    "test_" are added.
-
-    Example
-    -------
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_unittests(suite, "obspy.core")
+    ``test_`` are added.
 
     :type testsuite: unittest.TestSuite
     :param testsuite: testsuite to which the tests should be added
     :type module_name: String
     :param module_name: name of the module of which the tests should be added
+
+    .. rubric: Example
+
+    >>> import unittest
+    >>> suite = unittest.TestSuite()
+    >>> add_unittests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
     MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
 
     filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
-    names = (os.path.basename(file).split(".")[0] for file in files)
+    names = (os.path.basename(file).split(".") [0] for file in files)
     module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
     for module_name in module_names:
         module = __import__(module_name, fromlist="obspy")
@@ -573,10 +586,12 @@ def skip(reason):
     Unconditionally skip a test.
     """
     def decorator(test_item):
-        if not (isinstance(test_item, type) and issubclass(test_item, unittest.TestCase)):
+        if not (isinstance(test_item, type) and issubclass(test_item,
+                                                           unittest.TestCase)):
             @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs): #@UnusedVariable
+            def skip_wrapper(*args, **kwargs):  #@UnusedVariable
                 return
+
             test_item = skip_wrapper
 
         test_item.__unittest_skip__ = True
@@ -632,8 +647,8 @@ def get_matplotlib_version():
     """
     Get matplotlib version information.
 
-    :returns: Matplotlib version as a list of three integers or None if
-            matplotlib import fails.
+    :returns: Matplotlib version as a list of three integers or ``None`` if
+        matplotlib import fails.
     """
     try:
         import matplotlib

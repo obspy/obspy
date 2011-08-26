@@ -22,16 +22,16 @@ AVAILABLE_PHASES = [
 
 def getTravelTimes(delta, depth, model='iasp91'):
     """
-    Returns the travel times calculated by the iaspei-tau, a travel time library
-    by Arthur Snoke (http://www.iris.edu/pub/programs/iaspei-tau/).
+    Returns the travel times calculated by the iaspei-tau, a travel time
+    library by Arthur Snoke (http://www.iris.edu/pub/programs/iaspei-tau/).
 
     :type delta: float
     :param delta: Distance in degrees.
     :type depth: float
     :param depth: Depth in kilometer.
     :type model: string, optional
-    :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model. Defaults to
-        ``'iasp91'``.
+    :param model: Either ``'iasp91'`` or ``'ak135'`` velocity model. Defaults
+        to ``'iasp91'``.
     :rtype: list of dicts
     :return:
         A list of phase arrivals given in time order. Each phase is represented
@@ -217,7 +217,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         for item in tt:
             phase = item['phase_name']
             # Check if this phase should be plotted.
-            if data.has_key(phase):
+            if 'phase' in data:
                 try:
                     data[phase][1].append(item['time'] / 60.0)
                     data[phase][0].append(degree)
@@ -239,6 +239,6 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
     plt.show()
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

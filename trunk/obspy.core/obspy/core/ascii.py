@@ -234,7 +234,7 @@ def readTSPAIR(filename, headonly=False):
     return stream
 
 
-def writeSLIST(stream, filename, **kwargs):
+def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII SLIST file.
 
@@ -336,7 +336,7 @@ def writeSLIST(stream, filename, **kwargs):
     fh.close()
 
 
-def writeTSPAIR(stream, filename, **kwargs):
+def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a ASCII TSPAIR file.
 
@@ -442,6 +442,6 @@ def writeTSPAIR(stream, filename, **kwargs):
     fh.close()
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

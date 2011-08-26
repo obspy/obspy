@@ -16,11 +16,11 @@ import platform
 import sys
 import urllib
 import urllib2
-try: # pragma: no cover
+try:
     import json
     if not getattr(json, "loads", None):
         json.loads = json.read #@UndefinedVariable
-except ImportError: # pragma: no cover
+except ImportError:
     import simplejson as json
 
 
@@ -104,9 +104,9 @@ class Client(object):
             print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000: # pragma: no cover
+        if sys.hexversion < 0x02060000:
             response = urllib2.urlopen(req)
-        else: # pragma: no cover
+        else:
             response = urllib2.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -997,6 +997,6 @@ class Client(object):
             raise Exception(msg)
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

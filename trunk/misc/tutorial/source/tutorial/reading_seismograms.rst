@@ -4,8 +4,8 @@
 Reading Seismograms
 ===================
 
-Seismograms of the formats SAC, MiniSEED, GSE2, SEISAN, Q, etc. can be imported
-into a :class:`~obspy.core.stream.Stream` object using the 
+Seismograms of various formats (e.g. SAC, MiniSEED, GSE2, SEISAN, Q, etc.) can
+be imported into a :class:`~obspy.core.stream.Stream` object using the
 :func:`~obspy.core.stream.read` function.
 
 :class:`Streams <obspy.core.stream.Stream>` are list-like objects which

@@ -14,8 +14,8 @@ import time
 class WaveformFileCrawler(object):
     """
     A waveform file crawler.
-    
-    This class scans periodically all given paths for waveform files and 
+
+    This class scans periodically all given paths for waveform files and
     collects them into a watch list.
     """
     def __init__(self):
@@ -41,7 +41,8 @@ class WaveformFileCrawler(object):
             query = query.filter(WaveformChannel.station == data['station'])
             query = query.filter(WaveformChannel.location == data['location'])
             query = query.filter(WaveformChannel.channel == data['channel'])
-            query = query.filter(WaveformChannel.starttime == data['starttime'])
+            query = query.filter(WaveformChannel.starttime == \
+                                 data['starttime'])
             query = query.filter(WaveformChannel.endtime == data['endtime'])
             if query.count() > 0:
                 msg = "Duplicate entry '%s' in '%s'."
@@ -195,19 +196,24 @@ class WaveformFileCrawler(object):
                 getattr(self, 'first_run_complete', False):
             # before shutting down make sure all queues are empty!
             while self.output_queue or self.work_queue:
-                self.log.debug('Crawler stopped but waiting for empty queues to exit.')
+                msg = 'Crawler stopped but waiting for empty queues to exit.'
+                self.log.debug(msg)
                 if self.log_queue:
-                    self.log.debug('log_queue still has %s item(s)' % len(self.log_queue))
+                    msg = 'log_queue still has %s item(s)'
+                    self.log.debug(msg % len(self.log_queue))
                     # Fetch items from the log queue
                     self._processLogQueue()
                     continue
                 if self.output_queue:
-                    self.log.debug('output_queue still has %s item(s)' % len(self.output_queue))
-                    # try to finalize a single processed stream object from output queue
+                    msg = 'output_queue still has %s item(s)'
+                    self.log.debug(msg % len(self.output_queue))
+                    # try to finalize a single processed stream object from
+                    # output queue
                     self._processOutputQueue()
                     continue
                 if self.work_queue:
-                    self.log.debug('work_queue still has %s items' % len(self.work_queue))
+                    msg = 'work_queue still has %s items'
+                    self.log.debug(msg % len(self.work_queue))
                 time.sleep(10)
             self.log.debug('Crawler stopped by option run_once.')
             sys.exit()
@@ -379,7 +385,7 @@ class WaveformFileCrawler(object):
         self.input_queue[filepath] = (path, file, self.features)
 
 
-def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
+def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
@@ -411,7 +417,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 continue
             work_queue.append(filepath)
             # get additional kwargs for read method from waveform plug-ins
-            kwargs = {'verify_chksum':False}
+            kwargs = {'verify_chksum': False}
             for feature in features:
                 if feature not in all_features:
                     log_queue.append('%s: Unknown feature %s' % (filepath,
@@ -496,8 +502,8 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         # run plug-in and update results
                         temp = all_features[key]['run'](trace)
                         for key, value in temp.iteritems():
-                            result['features'].append({'key':key,
-                                                       'value':value})
+                            result['features'].append({'key': key,
+                                                       'value': value})
                     except Exception, e:
                         msg = '[Processing feature] %s: %s'
                         log_queue.append(msg % (filepath, e))
@@ -506,7 +512,7 @@ def worker(i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 try:
                     trace = createPreview(trace, 30)
                     result['preview'] = trace.data.dumps()
-                except Exception , e:
+                except Exception, e:
                     msg = '[Creating preview] %s: %s'
                     log_queue.append(msg % (filepath, e))
                     result['preview'] = None

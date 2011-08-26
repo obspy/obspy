@@ -25,8 +25,8 @@ Trace, UTCDateTime, Stats classes and methods for reading seismogram files.
 
 Summary
 -------
-Seismograms of the formats SAC, MiniSEED, GSE2, SEISAN, Q, etc. can be imported
-into a :class:`~obspy.core.stream.Stream` object using the
+Seismograms of various formats (e.g. SAC, MiniSEED, GSE2, SEISAN, Q, etc.) can
+be imported into a :class:`~obspy.core.stream.Stream` object using the
 :func:`~obspy.core.stream.read` function.
 
 Streams are list-like objects which contain multiple
@@ -79,6 +79,6 @@ from obspy.core.scripts.runtests import runTests
 __version__ = _getVersionString("obspy.core")
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

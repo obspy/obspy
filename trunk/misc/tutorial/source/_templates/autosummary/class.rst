@@ -3,10 +3,28 @@
 
 .. currentmodule:: {{ module }}
 .. autoclass:: {{ objname }}
-   :members:
+  :show-inheritance:
 
-   .. comment to end block
+  {% block attributes %}
+  {% if attributes %}
+  .. rubric:: Attributes
 
-{% if methods or attributes %}
-   .. rubric:: Methods & Attributes
-{% endif %}
+  .. autosummary::
+  {% for item in attributes %}
+     ~{{ name }}.{{ item }}
+  {%- endfor %}
+  {% endif %}
+  {% endblock %}
+
+  {% block methods %}
+  {% if methods %}
+  .. rubric:: Methods
+
+  .. autosummary::
+    :toctree: .
+    :nosignatures:
+  {% for item in methods %}
+     ~{{ name }}.{{ item }}
+  {%- endfor %}
+  {% endif %}
+  {% endblock %}

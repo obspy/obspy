@@ -1,0 +1,22 @@
+# .coveragerc to control coverage.py
+[report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain about missing debug-only code:
+    if self\.debug
+
+    # Don't complain if non-runnable code isn't run:
+    if __name__ == .__main__.:
+
+    # ignore Python 2.5.x
+    sys.hexversion < 0x02060000
+    sys.hexversion < 0x020600F0
+
+    # ignore ImportErrors
+    except ImportError
+
+    # ignore not implemented features
+    raise NotImplementedError 

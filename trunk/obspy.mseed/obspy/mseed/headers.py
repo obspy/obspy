@@ -492,6 +492,6 @@ PyFile_FromFile.restype = C.py_object
 
 
 # Python callback functions for C
-def __PyFile_callback(f):
+def __PyFile_callback(f):  # @UnusedVariable
     return 1
 _PyFile_callback = C.CFUNCTYPE(C.c_int, Py_ssize_t)(__PyFile_callback)

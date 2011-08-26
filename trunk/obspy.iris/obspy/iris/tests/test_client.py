@@ -184,5 +184,5 @@ def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':
     unittest.main(defaultTest='suite')

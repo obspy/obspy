@@ -47,7 +47,8 @@ gse2_extra = [
 ]
 
 
-def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
+def readGSE2(filename, headonly=False, verify_chksum=True,
+             **kwargs):  # @UnusedVariable
     """
     Reads a GSE2 file and returns a Stream object.
 
@@ -114,7 +115,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True, **kwargs):
     return Stream(traces=traces)
 
 
-def writeGSE2(stream, filename, inplace=False, **kwargs):
+def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     """
     Write GSE2 file from a Stream object.
 
@@ -188,7 +189,8 @@ def isGSE1(filename):
     return False
 
 
-def readGSE1(filename, headonly=False, verify_chksum=True, **kwargs):
+def readGSE1(filename, headonly=False, verify_chksum=True,
+             **kwargs):  # @UnusedVariable
     """
     Reads a GSE1 file and returns a Stream object.
 
