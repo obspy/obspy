@@ -22,6 +22,9 @@ a.external[href^="ftp:"] {
   padding-left : 15px;
 }
 
+div.highlight-python {
+  margin : 1em 2em;
+}
 
 /* code sections */
 pre {
@@ -31,7 +34,6 @@ pre {
   font-family : Consolas, Menlo, Monaco, LucidaConsole, LiberationMono, DejaVuSansMono, BitstreamVeraSansMono, CourierNew, monospace, serif;
   font-size : 0.9em;
   line-height : 130%;
-  margin : 1em 2em;
   padding : 0.5em;
   overflow-x : auto;
   overflow-y : hidden;
@@ -98,15 +100,31 @@ div.related ul {
   height : 2.5em;
 }
 
-div.bodywrapper {
-  margin : 0 0 0 275px;
-}
 
-/* */
 tt.descname {
   font-size : 1.1em;
 }
 
 p.rubric {
   font-size : 1.1em;
+}
+
+table.docutils td.field-body span.dash {
+  display : block;
+  padding : 0.5em 1em 0.5em 2em;
+}
+
+table.docutils td.field-body ul li {
+  list-style-type : none;
+  list-style-position : inside;
+  padding-bottom : 0.5em;
+}
+
+table.docutils td.field-body ul {
+  padding-left : 5px;
+}
+
+table.docutils td.field-body p {
+  padding-left : 5px;
+  padding-bottom : 0.5em;
 }

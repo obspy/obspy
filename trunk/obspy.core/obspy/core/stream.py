@@ -49,10 +49,11 @@ def read(pathname_or_url=None, format=None, headonly=False,
         object with an example data set will be created.
     :type format: string, optional
     :param format: Format of the file to read, e.g. "GSE2", "MSEED", "SAC",
-        "SEISAN", "WAV", "Q", "SH_ASC", etc. See the `Supported Formats` section
-        below for a full list of supported formats. If format is set to `None`
-        it will be automatically detected which results in a slightly slower
-        reading. If you specify a format no further format checking is done.
+        "SEISAN", "WAV", "Q", "SH_ASC", etc. See the `Supported Formats`
+        section below for a full list of supported formats. If format is set to
+        `None` it will be automatically detected which results in a slightly
+        slower reading. If you specify a format no further format checking is
+        done.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the data header. This is most
         useful for scanning available meta information of huge data sets.
@@ -62,8 +63,8 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :param endtime: Specify the end time to read.
     :type nearest_sample: bool, optional
     :param nearest_sample: Only applied if `starttime` or `endtime` is given.
-        Select nearest sample or the one containing the specified time. For more
-        info, see :meth:`~obspy.core.trace.Trace.trim`.
+        Select nearest sample or the one containing the specified time. For
+        more info, see :meth:`~obspy.core.trace.Trace.trim`.
     :return: A ObsPy :class:`~obspy.core.stream.Stream` object.
 
     .. rubric:: Basic Usage
@@ -86,7 +87,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     Additional ObsPy modules extend the functionality of the
     :func:`~obspy.core.stream.read` function. The following table summarizes
-    all known file formats currently supported by ObsPy. The table order also 
+    all known file formats currently supported by ObsPy. The table order also
     reflects the order of the autodetection routine if no format option is
     specified.
 
@@ -1133,50 +1134,50 @@ class Stream(object):
                sampling_rate=None, npts=None, component=None, id=None):
         """
         Returns new Stream object only with these traces that match the given
-        stats criteria (e.g. all traces with `channel="EHZ"`).
+        stats criteria (e.g. all traces with ``channel="EHZ"``).
 
-        .. rubric:: Example
+        .. rubric:: Examples
 
         >>> st = read()
-        >>> print(st)
-        3 Trace(s) in Stream:
-        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         >>> st2 = st.select(station="R*")
         >>> print(st2)
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
         >>> st2 = st.select(id="BW.RJOB..EHZ")
         >>> print(st2)
         1 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
         >>> st2 = st.select(component="Z")
         >>> print(st2)
         1 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+
         >>> st2 = st.select(network="CZ")
         >>> print(st2) # doctest: +NORMALIZE_WHITESPACE
         0 Trace(s) in Stream:
 
         .. warning::
             A new Stream object is returned but the traces it contains are
-            just aliases to the traces of the original stream.
+            just aliases to the traces of the original stream. Does not copy
+            the data but only passes a reference.
 
-        Does not copy the data but only passes a reference.
+        All keyword arguments except for ``component`` are tested directly
+        against the respective entry in the
+        :class:`Trace.stats <obspy.core.trace.Stats>`` dictionary.
+        If a string for ``component`` is given (should be a single letter) it
+        is tested (case insensitive) against the last letter of the
+        ``Trace.stats.channel`` entry.
 
-        All kwargs except for component are tested directly against the
-        respective entry in the trace.stats dictionary.
-        If a string for component is given (should be a single letter) it is
-        tested (case insensitive) against the last letter of the
-        trace.stats.channel entry.
-        `channel` may have the last one or two letters wildcarded
-        (e.g. `channel="EH*"`) to select all components with a common
-        band/instrument code.
+        Alternatively, ``channel`` may have the last one or two letters
+        wildcarded (e.g. ``channel="EH*"``) to select all components with a
+        common band/instrument code.
+
         All other selection criteria that accept strings (network, station,
-        location) may also contain Unix style widlcards (*, ?, ...).
+        location) may also contain Unix style wildcards (``*``, ``?``, ...).
         """
         # make given component letter uppercase (if e.g. "z" is given)
         if component:
@@ -1256,32 +1257,35 @@ class Stream(object):
         """
         Merges ObsPy Trace objects with same IDs.
 
-        :type method: [ -1 | 0 | 1 ], optional
-        :param method: Methodology to handle overlaps of traces (default is 0).
-            See :meth:`obspy.core.trace.Trace.__add__` for details on methods 0
-            and 1, see :meth:`obspy.core.stream.Stream._cleanup` for details on
-            method -1.
-        :type fill_value: int or float, 'latest' or 'interpolate', optional
-        :param fill_value: Fill value for gaps (default is None). Traces will be
-            converted to NumPy masked arrays if no value is given and gaps are
-            present. If the keyword 'latest' is provided it will use the latest
-            value before the gap. If keyword 'interpolate' is provided, missing
-            values are linearly interpolated (not changing the data type e.g.
-            of integer valued traces). Not used for `method=-1`.
+        :type method: ``-1``, ``0`` or ``1``, optional
+        :param method: Methodology to handle overlaps of traces. Defaults
+            to ``0``.
+            See :meth:`obspy.core.trace.Trace.__add__` for details on
+            methods ``0`` and ``1``,
+            see :meth:`obspy.core.stream.Stream._cleanup` for details on
+            method ``-1``.
+        :type fill_value: int or float, ``'latest'`` or ``'interpolate'``,
+            optional
+        :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
+            will be converted to NumPy masked arrays if no value is given and
+            gaps are present. The value ``'latest'`` will use the latest value
+            before the gap. If value ``'interpolate'`` is provided, missing
+            values are linearly interpolated (not changing the data
+            type e.g. of integer valued traces). Not used for ``method=-1``.
         :type interpolation_samples: int, optional
-        :param interpolation_samples: Used only for method 1. It specifies the
-            number of samples which are used to interpolate between overlapping
-            traces (default is 0). If set to -1 all overlapping samples are
-            interpolated.
+        :param interpolation_samples: Used only for ``method=1``. It specifies
+            the number of samples which are used to interpolate between
+            overlapping traces. Default to ``0``. If set to ``-1`` all
+            overlapping samples are interpolated.
 
-        Gaps and overlaps are usually separated in distinct traces. This method
-        tries to merge them and to create distinct traces within this 
-        :class:`~obspy.core.stream.Stream` object. The method is working on the
-        stream object itself (inplace), thus returns nothing. Merged trace data
-        will be converted into a NumPy masked array data type if any gaps are
-        present. This behavior may be prevented by setting the ``fill_value``
-        parameter. The ``method`` argument controls the handling of overlapping
-        data values.
+        Importing waveform data containing gaps or overlaps results into
+        a :class:`~obspy.core.stream.Stream` object with multiple traces having
+        the same identifier. This method tries to merge such traces inplace,
+        thus returning nothing. Merged trace data will be converted into a
+        NumPy :class:`~numpy.ma.MaskedArray` type if any gaps are present. This
+        behavior may be prevented by setting the ``fill_value`` parameter.
+        The ``method`` argument controls the handling of overlapping data
+        values.
         """
         if method == -1:
             self._cleanup()
@@ -1323,41 +1327,44 @@ class Stream(object):
         """
         Correct for instrument response / Simulate new instrument response.
 
-        :type paz_remove: Dictionary, None
-        :param paz_remove: Dictionary containing keys 'poles', 'zeros', 'gain'
-            (A0 normalization factor). poles and zeros must be a list of complex
-            floating point numbers, gain must be of type float. Poles and Zeros
-            are assumed to correct to m/s, SEED convention. Use None for no
-            inverse filtering.
-            Use 'self' to use paz AttribDict in trace.stats for every trace in
-            stream.
-        :type paz_simulate: Dictionary, None
-        :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
-            'gain'. Poles and zeros must be a list of complex floating point
-            numbers, gain must be of type float. Or None for no simulation.
-        :type remove_sensitivity: Boolean
+        :type paz_remove: dict, None
+        :param paz_remove: Dictionary containing keys ``'poles'``, ``'zeros'``,
+            ``'gain'`` (A0 normalization factor). Poles and zeros must be a
+            list of complex floating point numbers, gain must be of type float.
+            Poles and Zeros are assumed to correct to m/s, SEED convention.
+            Use ``None`` for no inverse filtering.
+            Use ``'self'`` to use paz AttribDict in ``trace.stats`` for every
+            trace in stream.
+        :type paz_simulate: dict, None
+        :param paz_simulate: Dictionary containing keys ``'poles'``, ``'zeros'``,
+            ``'gain'``. Poles and zeros must be a list of complex floating
+            point numbers, gain must be of type float. Or ``None`` for no
+            simulation.
+        :type remove_sensitivity: bool
         :param remove_sensitivity: Determines if data is divided by
-            `paz_remove['sensitivity']` to correct for overall sensitivity of
+            ``paz_remove['sensitivity']`` to correct for overall sensitivity of
             recording instrument (seismometer/digitizer) during instrument
             correction.
-        :type simulate_sensitivity: Boolean
+        :type simulate_sensitivity: bool
         :param simulate_sensitivity: Determines if data is multiplied with
-            `paz_simulate['sensitivity']` to simulate overall sensitivity of new
-            instrument (seismometer/digitizer) during instrument simulation.
+            ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
+            new instrument (seismometer/digitizer) during instrument
+            simulation.
 
         This function corrects for the original instrument response given by
-        `paz_remove` and/or simulates a new instrument response given by
-        `paz_simulate`.
+        ``paz_remove`` and/or simulates a new instrument response given by
+        ``paz_simulate``.
+
         For additional information and more options to control the instrument
         correction/simulation (e.g. water level, demeaning, tapering, ...) see
         :func:`~obspy.signal.invsim.seisSim`.
 
-        `paz_remove` and `paz_simulate` are expected to be dictionaries
-        containing information on poles, zeros and gain (and usually also
-        sensitivity).
+        The keywords `paz_remove` and `paz_simulate` are expected to be
+        dictionaries containing information on poles, zeros and gain (and
+        usually also sensitivity).
 
-        If both `paz_remove` and `paz_simulate` are specified, both steps are
-        performed in one go in the frequency domain, otherwise only the
+        If both ``paz_remove`` and ``paz_simulate`` are specified, both steps
+        are performed in one go in the frequency domain, otherwise only the
         specified step is performed.
 
         Processing is performed in place on the actual data array.
@@ -1408,15 +1415,15 @@ class Stream(object):
     @interceptDict
     def filter(self, type, **options):
         """
-        Filters the data of all traces in the ``Stream``. This is performed in
+        Filters the data of all traces in the Stream. This is performed in
         place on the actual data arrays. The raw data is not accessible anymore
         afterwards.
 
         :param type: String that specifies which filter is applied (e.g.
-            "bandpass").
+            ``"bandpass"``).
         :param options: Necessary keyword arguments for the respective filter
-            that will be passed on. (e.g. freqmin=1.0, freqmax=20.0 for
-            "bandpass")
+            that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
+            ``"bandpass"``)
 
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
         to make a copy of your trace.
@@ -1449,14 +1456,14 @@ class Stream(object):
         is not accessible anymore afterwards.
 
         :param type: String that specifies which trigger is applied (e.g.
-            'recStalta').
+            ``'recStalta'``).
         :param options: Necessary keyword arguments for the respective trigger
             that will be passed on.
-            (e.g. sta=3, lta=10)
+            (e.g. ``sta=3``, ``lta=10``)
             Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
             and ``nlta`` (samples) by multiplying with sampling rate of trace.
-            (e.g. sta=3, lta=10 would call the trigger with 3 and 10 seconds
-            average, respectively)
+            (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
+            seconds average, respectively)
 
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
         to make a copy of your trace.
@@ -1473,7 +1480,7 @@ class Stream(object):
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
-            
+
             from obspy.core import read
             st = read()
             st.filter("highpass", freq=1.0)
@@ -1490,9 +1497,13 @@ class Stream(object):
         """
         Downsample data in all traces of stream.
 
-        :param decimation_factor: integer factor by which the sampling rate is
-            lowered by decimation.
-        :param no_filter: deactivate automatic filtering
+        :type decimation_factor: int
+        :param decimation_factor: Factor by which the sampling rate is lowered
+            by decimation.
+        :type no_filter: bool, optional
+        :param no_filter: Deactivates automatic filtering if set to ``True``.
+            Defaults to ``False``.
+        :type strict_length: bool, optional
         :param strict_length: leave traces unchanged for which endtime of trace
             would change
         :return: ``None``
@@ -1502,14 +1513,17 @@ class Stream(object):
         samples are thrown away. Prior to decimation a lowpass filter is
         applied to ensure no aliasing artifacts are introduced. The automatic
         filtering can be deactivated with ``no_filter=True``.
+
         If the length of the data array modulo ``decimation_factor`` is not
         zero then the endtime of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing endtimes set
         ``strict_length=True``.
+
         This operation is performed in place on the actual data arrays. The raw
         data is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
         to make a copy of your trace.
+
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
@@ -1555,6 +1569,7 @@ class Stream(object):
         """
         Method to get the standard deviations of amplitudes in all trace in the
         stream.
+
         Standard deviations are calculated by NumPy method
         :meth:`~numpy.ndarray.std` on ``trace.data`` of every trace in the
         stream.

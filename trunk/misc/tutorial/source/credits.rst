@@ -33,3 +33,7 @@ libraries and applications, our build tools and our web sites.
 * Chad Trabant
 * Marcus Walther
 * Joachim Wassermann
+
+Quotes
+
+* "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."
