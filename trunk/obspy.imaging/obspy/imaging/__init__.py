@@ -54,7 +54,7 @@ size of 4096 points. For more info see
 
 >>> from obspy.core import read
 >>> st = read()
->>> tr.spectrogram(log=True) #doctest: +SKIP
+>>> st[0].spectrogram(log=True) #doctest: +SKIP
 
 .. plot::
 

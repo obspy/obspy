@@ -18,6 +18,7 @@ will give you a good idea of the library’s flavor and style.
    filtering_seismograms
    downsampling_seismograms
    merging_seismograms
+   beamforming-fk-analysis
    seismogram_envelopes
    plotting_spectrograms
    trigger_tutorial

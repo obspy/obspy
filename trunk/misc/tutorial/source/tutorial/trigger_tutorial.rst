@@ -14,10 +14,12 @@ for similar applications.
 * `branches/sandbox/stalta/stalta4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/stalta4baynet.py>`_
 * `branches/sandbox/stalta/coincidence4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/coincidence4baynet.py>`_
 
-Please also note the convenience method of ObsPy's
-:meth:`Stream.trigger <obspy.core.stream.Stream.trigger>` and
-:meth:`Trace.trigger <obspy.core.trace.Trace.trigger>`
-objects for triggering.
+
+.. seealso::
+    Please note the convenience method of ObsPy's
+    :meth:`Stream.trigger <obspy.core.stream.Stream.trigger>` and
+    :meth:`Trace.trigger <obspy.core.trace.Trace.trigger>`
+    objects for triggering.
 
 ---------------------
 Reading Waveform Data

@@ -96,6 +96,16 @@ Gallery
     :target: tutorial/merging_seismograms.html
     :alt: Merging Seismograms
 
+.. plot:: source/tutorial/beamforming-fk-analysis_1.py
+    :width: 300px
+    :target: tutorial/beamforming-fk-analysis.html
+    :alt: Beamforming - FK Analysis
+
+.. plot:: source/tutorial/beamforming-fk-analysis_2.py
+    :width: 300px
+    :target: tutorial/beamforming-fk-analysis.html
+    :alt: Beamforming - FK Analysis
+
 .. plot:: source/tutorial/hierarchical_clustering.py
     :width: 300px
     :target: tutorial/hierarchical_clustering.html
