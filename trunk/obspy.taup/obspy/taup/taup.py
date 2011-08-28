@@ -46,7 +46,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     >>> tt = getTravelTimes(delta=52.474, depth=611.0, model='ak135')
     >>> len(tt)
     24
-    >>> tt[0]  #doctest: +NORMALIZE_WHITESPACE
+    >>> tt[0]  #doctest: +SKIP
     {'phase_name': 'P', 'dT/dD': 7.1050525, 'take-off angle': 45.169445,
      'time': 497.53741, 'd2T/dD2': -0.0044748308, 'dT/dh': -0.070258446}
     """
