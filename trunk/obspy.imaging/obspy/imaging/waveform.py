@@ -128,6 +128,8 @@ class WaveformPlotting(object):
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
+        # Handles Date string.
+        self.hide_date = kwargs.get('hide_date', False)
 
     def plotWaveform(self, *args, **kwargs):
         """
@@ -147,10 +149,10 @@ class WaveformPlotting(object):
         else:
             self.fig = self.fig_obj
         # Determine kind of plot and do the actual plotting.
-        if self.type == 'normal':
-            self.plot(*args, **kwargs)
-        elif self.type == 'dayplot':
+        if self.type == 'dayplot':
             self.plotDay(*args, **kwargs)
+        else:
+            self.plot(*args, **kwargs)
         self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
         # the plots.
@@ -684,6 +686,9 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
+        # hide time information if set as option
+        if self.hide_date:
+            return
         if self.type == 'dayplot':
             suptitle = self.starttime.strftime('%Y-%m-%d')
             self.fig.suptitle(suptitle, y=0.94, fontsize='small')

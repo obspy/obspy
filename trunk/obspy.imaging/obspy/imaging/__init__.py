@@ -71,7 +71,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 
     (1) :mod:`obspy.imaging.beachball`
         is based on the program from the
-        `Generic Mapping Tools (GMT)`_. and the MATLAB script `bb.m`_ written by
+        `Generic Mapping Tools (GMT)`_ and the MATLAB script `bb.m`_ written by
         Andy Michael and Oliver Boyd, which both have known limitations.
     (2) :mod:`obspy.imaging.mopad_wrapper`
         is based on the the *Moment tensor Plotting and Decomposition tool*

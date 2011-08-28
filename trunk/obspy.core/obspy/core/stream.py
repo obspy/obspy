@@ -768,59 +768,70 @@ class Stream(object):
         :param outfile: Output file string. Also used to automatically
             determine the output format. Supported file formats depend on your
             matplotlib backend. Most backends support png, pdf, ps, eps and svg.
-            Defaults to None.
+            Defaults to ``None``.
         :param format: Format of the graph picture. If no format is given the
             outfile parameter will be used to try to automatically determine
             the output format. If no format is found it defaults to png output.
             If no outfile is specified but a format is, than a binary
             imagestring will be returned.
-            Defaults to None.
+            Defaults to ``None``.
         :param starttime: Starttime of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted from the beginning.
-            Defaults to False.
+            Defaults to ``False``.
         :param endtime: Endtime of the graph as a
             :class:`~obspy.core.utcdatetime.UTCDateTime` object. If not set
             the graph will be plotted until the end.
-            Defaults to False.
+            Defaults to ``False``.
         :param fig: Use an existing matplotlib figure instance.
-            Default to None.
+            Default to ``None``.
         :param automerge: If automerge is True, Traces with the same id will be
             merged.
-            Defaults to True.
+            Defaults to ``True``.
         :param size: Size tuple in pixel for the output file. This corresponds
             to the resolution of the graph for vector formats.
-            Defaults to 800x250(per channel) pixels.
+            Defaults to ``(800, 250)`` pixel per channel.
         :param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
-            Defaults to 100.
+            Defaults to ``100``.
         :param color: Color of the graph.
-            Defaults to 'black'.
+            Defaults to ``'black'``.
         :param bgcolor: Background color of the graph.
-            Defaults to 'white'.
+            Defaults to ``'white'``.
         :param face_color: Facecolor of the matplotlib canvas.
-            Defaults to 'white'.
+            Defaults to ``'white'``.
         :param transparent: Make all backgrounds transparent (True/False). This
             will overwrite the bgcolor param.
-            Defaults to False.
+            Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
-            Defaults to 5.
+            Defaults to ``5``.
         :param tick_format: The way the time axis is formated.
-            Defaults to '%H:%M:%S'.
+            Defaults to ``'%H:%M:%S'``.
         :param tick_rotation: Tick rotation in degrees.
-            Default to 0.
+            Default to ``0``.
         :param handle: Whether or not to return the matplotlib figure instance
             after the plot has been created.
-            Defaults to False.
-        :param type: Type may be set to 'dayplot' in order to create a one-day
-            plot for a single Trace.
+            Defaults to ``False``.
+        :param type: Type may be set to ``'dayplot'`` in order to create
+            a one-day plot for a single Trace.
+        :param hide_date: Whether or not to include a date/time string in the
+            image caption . Defaults to ``False``.
 
-        For all color values you can use valid HTML names, HTML hex strings
-        (e.g. '#eeefff') or you can pass an R , G , B tuple, where each of
-        R , G , B are in the range [0,1]. You can also use single letters for
-        basic builtin colors ('b' = blue, 'g' = green, 'r' = red, 'c' = cyan,
-        'm' = magenta, 'y' = yellow, 'k' = black, 'w' = white) and gray shades
-        can be given as a string encoding a float in the 0-1 range.
+        .. rubric:: Color Options
+
+        Colors can be specified as defined in the :mod:`matplotlib.colors`
+        documentation.
+        
+        Short Version: For all color values, you can either use:
+        
+        * legit `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_,
+          e.g. ``'blue'``,
+        * HTML hex strings, e.g. ``'#EE00FF'``,
+        * pass an string of a R, G, B tuple, where each of the component is a
+          float value in the range of 0 to 1, e.g. ``'(1, 0.25, 0.5)'``, or
+        * use a single letters for the basic built-in colors, such as ``'b'``
+          (blue), ``'g'`` (green), ``'r'`` (red), ``'c'`` (cyan), ``'m'``
+          (magenta), ``'y'`` (yellow), ``'k'`` (black), ``'w'`` (white).
 
         .. rubric:: Example
 
