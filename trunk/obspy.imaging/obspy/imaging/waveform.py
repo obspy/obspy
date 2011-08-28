@@ -54,6 +54,8 @@ class WaveformPlotting(object):
         if len(self.stream) < 1:
             msg = "Empty stream object"
             raise IndexError(msg)
+        # Type of the plot.
+        self.type = kwargs.get('type', 'normal')
         # Start- and endtimes of the plots.
         self.starttime = kwargs.get('starttime', None)
         self.endtime = kwargs.get('endtime', None)
@@ -67,8 +69,15 @@ class WaveformPlotting(object):
                            trace in self.stream])
         # Map stream object and slice just in case.
         self.stream = self.stream.slice(self.starttime, self.endtime)
-        # Type of the plot.
-        self.type = kwargs.get('type', 'normal')
+        # normalize times
+        if self.type == 'relative':
+            dt = self.starttime
+            # fix plotting boundaries
+            self.endtime = UTCDateTime(self.endtime - self.starttime)
+            self.starttime = UTCDateTime(0)
+            # fix stream times
+            for tr in self.stream:
+                tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
         # below).
@@ -120,7 +129,11 @@ class WaveformPlotting(object):
         self.transparent = kwargs.get('transparent', False)
         # Ticks.
         self.number_of_ticks = kwargs.get('number_of_ticks', 5)
-        self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
+        self.tick_format = kwargs.get('tick_format', None)
+        if not self.tick_format and self.type == 'relative':
+            self.tick_format = '%S'
+        else:
+            self.tick_format = '%H:%M:%S'
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
@@ -128,8 +141,6 @@ class WaveformPlotting(object):
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
-        # Handles Date string.
-        self.hide_date = kwargs.get('hide_date', False)
 
     def plotWaveform(self, *args, **kwargs):
         """
@@ -687,7 +698,7 @@ class WaveformPlotting(object):
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
         # hide time information if set as option
-        if self.hide_date:
+        if self.type == 'relative':
             return
         if self.type == 'dayplot':
             suptitle = self.starttime.strftime('%Y-%m-%d')

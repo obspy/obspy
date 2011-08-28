@@ -812,10 +812,10 @@ class Stream(object):
         :param handle: Whether or not to return the matplotlib figure instance
             after the plot has been created.
             Defaults to ``False``.
-        :param type: Type may be set to ``'dayplot'`` in order to create
-            a one-day plot for a single Trace.
-        :param hide_date: Whether or not to include a date/time string in the
-            image caption . Defaults to ``False``.
+        :param type: Type may be set to either ``'dayplot'`` in order to create
+            a one-day plot for a single Trace or ``'relative'`` to convert all
+            date/time information to a relative scale, effectively starting
+            the seismogram at 0 seconds.
 
         .. rubric:: Color Options
 
