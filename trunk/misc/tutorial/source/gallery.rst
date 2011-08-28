@@ -56,6 +56,21 @@ Gallery
     :target: tutorial/plotting_spectrograms.html
     :alt: Plotting Spectrograms
 
+.. plot:: source/tutorial/trigger_tutorial_classic_sta_lta.py
+    :width: 300px
+    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :alt: Classic Sta Lta
+
+.. plot:: source/tutorial/trigger_tutorial_z_detect.py
+    :width: 300px
+    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :alt: Z-Detect
+
+.. plot:: source/tutorial/trigger_tutorial_recursive_sta_lta.py
+    :width: 300px
+    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :alt: Recursive Sta Lta
+
 .. plot:: source/tutorial/frequency_response.py
     :width: 300px
     :target: tutorial/frequency_response.html

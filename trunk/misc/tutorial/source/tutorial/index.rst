@@ -1,4 +1,4 @@
-.. _tutorial-index:
+.. _tutorial:
 
 ObsPy Tutorial
 ==============
@@ -9,6 +9,7 @@ will give you a good idea of the library’s flavor and style.
 
 .. toctree::
    :numbered:
+   :maxdepth: 2
 
    python_introduction
    reading_seismograms
@@ -19,6 +20,7 @@ will give you a good idea of the library’s flavor and style.
    merging_seismograms
    seismogram_envelopes
    plotting_spectrograms
+   trigger_tutorial
    frequency_response
    seismometer_correction_simulation
    clone_dataless_seed

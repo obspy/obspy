@@ -12,6 +12,7 @@ ObsPy Documentation Contents
    pep8/index
    coding_style
    gallery
+   citations
 
 Indices and tables
 ==================

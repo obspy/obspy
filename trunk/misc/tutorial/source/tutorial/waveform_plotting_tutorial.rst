@@ -160,9 +160,9 @@ Short Version: For all color values, you can either use:
 
 * legit `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_, e.g.
   ``'blue'``,
-* HTML hex strings, e.g. ``'#ee00ff'``,
+* HTML hex strings, e.g. ``'#EE00FF'``,
 * pass an string of a R, G, B tuple, where each of the component is a float
-  value in the range of 0 to 1, e.g. ``'(1,0.25,0.5)'``, or
+  value in the range of 0 to 1, e.g. ``'(1, 0.25, 0.5)'``, or
 * use a single letters for the basic built-in colors, such as ``'b'``
   (blue), ``'g'`` (green), ``'r'`` (red), ``'c'`` (cyan), ``'m'`` (magenta),
   ``'y'`` (yellow), ``'k'`` (black), ``'w'`` (white).

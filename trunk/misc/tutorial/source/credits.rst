@@ -1,5 +1,5 @@
-ObsPy Contributers
-==================
+Contributers
+============
 
 We would like to thank our contributors, whose efforts make this software what
 it is. These people have helped by writing code and documentation, and by
@@ -34,6 +34,6 @@ libraries and applications, our build tools and our web sites.
 * Marcus Walther
 * Joachim Wassermann
 
-Quotes
+.. rubric:: Quotes
 
 * "I believe that ObsPy is what will finally make students and some of my colleagues consider using Python for doing science!  I tell people of it whenever I get a chance."
