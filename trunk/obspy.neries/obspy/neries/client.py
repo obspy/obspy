@@ -224,7 +224,7 @@ class Client(object):
 
         :return: List of event dictionaries or QuakeML string.
 
-        .. seealso:: http://www.seismicportal.eu/services/event/search/info
+        .. seealso:: http://www.seismicportal.eu/services/event/search/info/
 
         .. rubric:: Example
 
@@ -272,7 +272,7 @@ class Client(object):
         :param format: Format of returned results. Defaults to ``'xml'``.
         :return: List of event dictionaries or QuakeML string.
 
-        .. seealso:: http://www.seismicportal.eu/services/event/latest/info
+        .. seealso:: http://www.seismicportal.eu/services/event/latest/info/
 
         .. rubric:: Example
 
@@ -318,7 +318,7 @@ class Client(object):
         :param format: Format of returned results. Defaults to ``'xml'``.
         :return: List of event dictionaries or QuakeML string.
 
-        .. seealso:: http://www.seismicportal.eu/services/event/detail/info
+        .. seealso:: http://www.seismicportal.eu/services/event/detail/info/
 
         .. rubric:: Example
 
