@@ -41,14 +41,21 @@ help:
 	@echo "  pep8       to check PEP8 of tutorial"
 
 clean:
-	-rm -rf $(BUILDDIR)/*
-	-rm -rf source/packages/autogen/obspy.*
+	@rm -rf $(BUILDDIR)/*
+	@rm -rf source/packages/autogen/obspy.*
+	@rm -rf source/pep8/*
 
 coverage:
-	@coverage run --rcfile=$(BUILDDIR)/.coveragerc -m obspy.core.scripts.runtests --all
-	@coverage html --rcfile=$(BUILDDIR)/.coveragerc -d $(BUILDDIR)/html/coverage
+	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -q --all
+	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
+
+coverager:
+    @coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r -q --all
+    @coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
+
 
 pep8:
+	@python pep8_packages.py 1
 	@pep8 --show-source source/tutorial
 
 html:

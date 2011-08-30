@@ -1,7 +1,8 @@
-import pickle, urllib
 from obspy.core import UTCDateTime
-from obspy.signal.array_analysis import sonic
 from obspy.signal import cornFreq2Paz
+from obspy.signal.array_analysis import sonic
+import pickle
+import urllib
 
 # Load data
 st = pickle.load(urllib.urlopen("http://examples.obspy.org/agfa.dump"))
@@ -13,23 +14,23 @@ st.simulate(paz_remove='self', paz_simulate=paz1hz)
 # Execute sonic
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
-    sll_x= -3.0, slm_x=3.0, sll_y= -3.0, slm_y=3.0, sl_s=0.03,
+    sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
     # sliding window propertieds
     win_len=1.0, win_frac=0.05,
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres= -1e9, vel_thres= -1e9, verbose=True, timestamp='mlabhour',
+    semb_thres=-1e9, vel_thres=-1e9, verbose=True, timestamp='mlabhour',
     stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
 )
 out = sonic(st, **kwargs)
 
 # Plot
-import numpy as np
-import matplotlib.cm as cm
-import matplotlib.pyplot as plt
 from matplotlib.colorbar import ColorbarBase
 from matplotlib.colors import Normalize
+import matplotlib.cm as cm
+import matplotlib.pyplot as plt
+import numpy as np
 
 cmap = cm.hot_r
 pi = np.pi
@@ -39,7 +40,7 @@ pi = np.pi
 t, rel_power, abs_power, baz, slow = out.T
 baz[baz < 0.0] += 360
 
-# choose number of fractions in plot (desirably 360 degree/N is an integer!) 
+# choose number of fractions in plot (desirably 360 degree/N is an integer!)
 N = 30
 abins = np.arange(N + 1) * 360. / N
 sbins = np.linspace(0, 3, N + 1)
@@ -67,11 +68,11 @@ for i, row in enumerate(hist):
                   color=cmap(row / hist.max()))
 
 ax.set_xticks([pi / 2, 0, 3. / 2 * pi, pi])
-ax.set_xticklabels(['N', 'E' , 'S', 'W'])
+ax.set_xticklabels(['N', 'E', 'S', 'W'])
 
 # set slowness limits
 ax.set_ylim(0, 3)
 ColorbarBase(cax, cmap=cmap,
-        norm=Normalize(vmin=hist.min(), vmax=hist.max()))
+             norm=Normalize(vmin=hist.min(), vmax=hist.max()))
 
 plt.show()

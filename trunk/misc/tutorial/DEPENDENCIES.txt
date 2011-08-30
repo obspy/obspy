@@ -13,7 +13,7 @@ ObsPy Library
   matplotlib
   suds (obspy.neries)
   sqlalchemy (obspy.db)
- 
+
 Tutorial
 ========
   basemap

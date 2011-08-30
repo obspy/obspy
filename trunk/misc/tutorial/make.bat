@@ -43,8 +43,8 @@ if "%1" == "help" (
 if "%1" == "clean" (
 	for /d %%i in (%BUILDDIR%\*) do rmdir /q /s %%i
 	del /q /s %BUILDDIR%\*
-  del /q /s source\packages\autogen\obspy.*
-  del /q /s source\pep8\*
+	del /q /s source\packages\autogen\obspy.*
+	del /q /s source\pep8\*
 	goto end
 )
 
@@ -54,10 +54,16 @@ if "%1" == "coverage" (
     goto end
 )
 
+if "%1" == "coverager" (
+    coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r --all
+    coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
+    goto end
+)
+
 if "%1" == "pep8" (
-    pep8 --show-source source\tutorial
     python pep8_packages.py 1
-    goto html
+    pep8 --show-source source\tutorial
+    goto end
 )
 
 if "%1" == "html" (

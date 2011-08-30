@@ -14,13 +14,13 @@ st.simulate(paz_remove='self', paz_simulate=paz1hz)
 # Execute sonic
 kwargs = dict(
     # slowness grid: X min, X max, Y min, Y max, Slow Step
-    sll_x= -3.0, slm_x=3.0, sll_y= -3.0, slm_y=3.0, sl_s=0.03,
+    sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
     # sliding window propertieds
     win_len=1.0, win_frac=0.05,
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres= -1e9, vel_thres= -1e9, verbose=True, timestamp='mlabhour',
+    semb_thres=-1e9, vel_thres=-1e9, verbose=True, timestamp='mlabhour',
     stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
 )
 out = sonic(st, **kwargs)
