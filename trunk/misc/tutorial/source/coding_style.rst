@@ -15,8 +15,8 @@ reduce the memory consumption by using references where ever possible. In the
 following example ``a`` is appended to ``b`` as reference, that is the reason
 why ``b`` get changed when we change ``a``:
 
->>> a = [1,2,3,4]
->>> b = [5,6]
+>>> a = [1, 2, 3, 4]
+>>> b = [5, 6]
 >>> b.append(a)
 >>> a[0] = -99
 >>> print b
@@ -25,8 +25,9 @@ why ``b`` get changed when we change ``a``:
 Import Conventions
 ------------------
 
-Like the Python projects `NumPy`_, SciPy_ and matplotlib_, we try to improve
-readability of the code by import the following modules in an unified manner:
+Like the Python projects NumPy_, SciPy_ and matplotlib_, we try to improve
+readability of the code by importing the following modules in an unified
+manner:
 
 >>> import numpy as np
 >>> import matplotlib.pylab as plt 
@@ -54,7 +55,7 @@ Naming
   mangling).
 * Place related classes and top-level functions together in a module. Unlike
   Java, there is no need to limit yourself to one class per module.
-* Use CamelCase for class names, but ``lower_with_under.py`` for module names.
+* Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module names.
 
 ==================  ====================  ====================================
 Type                Public                Internal
@@ -95,17 +96,18 @@ Doc Strings
 
       def test():
           """
-          This is a much longer doc string which won't fit in one line. 
+          This is just the short story. 
 
-          Therefore we have to break lines.
+          The long story is, this docstring would not have been able to fit in
+          one line. Therefore we have to break lines.
           """
           print "test"
 
-Function Definitions
---------------------
+Function/Method Definitions
+---------------------------
 
-Inside Python object description directives, reST field lists with these fields
-are recognized and formatted nicely:
+In docstrings which annotate functions and methods, the following
+reStructuredText_ fields are recognized and formatted nicely:
 
 ``param``
     Description of a parameter.
@@ -153,10 +155,12 @@ which renders like this:
    :rtype: list of strings
    :return: Traceback messages.
 
+.. _reStructuredText: http://docutils.sourceforge.net/rst.html
+
 Tests
 -----
 
-* Tests which are expected to fail, cause there is a known/unfixed bug should
+* Tests which are expected to fail, because there is a known/unfixed bug should
   be commented with an ``XXX:`` followed by an valid ticket number, e.g.
 
   .. code-block:: python
