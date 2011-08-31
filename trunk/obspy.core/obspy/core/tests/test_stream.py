@@ -340,7 +340,7 @@ class StreamTestCase(unittest.TestCase):
 
     def test_slice2(self):
         """
-        Slicing using a step should return Stream objects. 
+        Slicing using a step should return Stream objects.
         """
         tr1 = Trace()
         tr2 = Trace()
@@ -410,7 +410,7 @@ class StreamTestCase(unittest.TestCase):
             {'starttime': UTCDateTime(1990, 1, 1), 'network': 'AA',
              'station': 'ZZZZ', 'channel': 'EHZ', 'sampling_rate': 200.0,
              'npts': 100},
-            {'starttime' : UTCDateTime(1990, 1, 1), 'network': 'BB',
+            {'starttime': UTCDateTime(1990, 1, 1), 'network': 'BB',
              'station': 'YYYY', 'channel': 'EHN', 'sampling_rate': 200.0,
              'npts': 100},
             {'starttime': UTCDateTime(2000, 1, 1), 'network': 'AA',
@@ -425,7 +425,8 @@ class StreamTestCase(unittest.TestCase):
         # Make stream object for test case
         traces = []
         for header in headers:
-            traces.append(Trace(data=np.random.randint(0, 1000, 100), header=header))
+            traces.append(Trace(data=np.random.randint(0, 1000, 100),
+                                header=header))
         stream = Stream(traces=traces)
         # Test cases:
         stream2 = stream.select()
@@ -493,7 +494,6 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
 
-
     def test_sort(self):
         """
         Tests the sort method of the Stream object.
@@ -503,16 +503,16 @@ class StreamTestCase(unittest.TestCase):
         # Create a list of header dictionaries. The sampling rate serves as a
         # unique identifier for each Trace.
         headers = [
-            {'starttime' : UTCDateTime(1990, 1, 1), 'network' : 'AAA',
-             'station' : 'ZZZ', 'channel' : 'XXX', 'sampling_rate' : 100.0},
-            {'starttime' : UTCDateTime(1990, 1, 1), 'network' : 'AAA',
-             'station' : 'YYY', 'channel' : 'CCC', 'sampling_rate' : 200.0},
-            {'starttime' : UTCDateTime(2000, 1, 1), 'network' : 'AAA',
-             'station' : 'EEE', 'channel' : 'GGG', 'sampling_rate' : 300.0},
-            {'starttime' : UTCDateTime(1989, 1, 1), 'network' : 'AAA',
-             'station' : 'XXX', 'channel' : 'GGG', 'sampling_rate' : 400.0},
-            {'starttime' : UTCDateTime(2010, 1, 1), 'network' : 'AAA',
-             'station' : 'XXX', 'channel' : 'FFF', 'sampling_rate' : 500.0}]
+            {'starttime': UTCDateTime(1990, 1, 1), 'network': 'AAA',
+             'station': 'ZZZ', 'channel': 'XXX', 'sampling_rate': 100.0},
+            {'starttime': UTCDateTime(1990, 1, 1), 'network': 'AAA',
+             'station': 'YYY', 'channel': 'CCC', 'sampling_rate': 200.0},
+            {'starttime': UTCDateTime(2000, 1, 1), 'network': 'AAA',
+             'station': 'EEE', 'channel': 'GGG', 'sampling_rate': 300.0},
+            {'starttime': UTCDateTime(1989, 1, 1), 'network': 'AAA',
+             'station': 'XXX', 'channel': 'GGG', 'sampling_rate': 400.0},
+            {'starttime': UTCDateTime(2010, 1, 1), 'network': 'AAA',
+             'station': 'XXX', 'channel': 'FFF', 'sampling_rate': 500.0}]
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
             new_trace = Trace(header=_i)
@@ -544,21 +544,27 @@ class StreamTestCase(unittest.TestCase):
         Sorting twice should not change order.
         """
         stream = Stream()
-        headers = [{'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
-                UTCDateTime(1990, 1, 2), 'network' : 'AAA', 'station' : 'ZZZ',
-                'channel' : 'XXX', 'npts' : 10000, 'sampling_rate' : 100.0},
-                {'starttime' : UTCDateTime(1990, 1, 1), 'endtime' : \
-                UTCDateTime(1990, 1, 3), 'network' : 'AAA', 'station' : 'YYY',
-                'channel' : 'CCC', 'npts' : 10000, 'sampling_rate' : 200.0},
-                {'starttime' : UTCDateTime(2000, 1, 1), 'endtime' : \
-                UTCDateTime(2001, 1, 2), 'network' : 'AAA', 'station' : 'EEE',
-                'channel' : 'GGG', 'npts' : 1000, 'sampling_rate' : 300.0},
-                {'starttime' : UTCDateTime(1989, 1, 1), 'endtime' : \
-                UTCDateTime(2010, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
-                'channel' : 'GGG', 'npts' : 10000, 'sampling_rate' : 400.0},
-                {'starttime' : UTCDateTime(2010, 1, 1), 'endtime' : \
-                UTCDateTime(2011, 1, 2), 'network' : 'AAA', 'station' : 'XXX',
-                'channel' : 'FFF', 'npts' : 1000, 'sampling_rate' : 500.0}]
+        headers = [
+            {'starttime': UTCDateTime(1990, 1, 1),
+             'endtime': UTCDateTime(1990, 1, 2), 'network': 'AAA',
+             'station': 'ZZZ', 'channel': 'XXX', 'npts': 10000,
+             'sampling_rate': 100.0},
+            {'starttime': UTCDateTime(1990, 1, 1),
+             'endtime': UTCDateTime(1990, 1, 3), 'network': 'AAA',
+             'station': 'YYY', 'channel': 'CCC', 'npts': 10000,
+             'sampling_rate': 200.0},
+            {'starttime': UTCDateTime(2000, 1, 1),
+             'endtime': UTCDateTime(2001, 1, 2), 'network': 'AAA',
+             'station': 'EEE', 'channel': 'GGG', 'npts': 1000,
+             'sampling_rate': 300.0},
+            {'starttime': UTCDateTime(1989, 1, 1),
+             'endtime': UTCDateTime(2010, 1, 2), 'network': 'AAA',
+             'station': 'XXX', 'channel': 'GGG', 'npts': 10000,
+             'sampling_rate': 400.0},
+            {'starttime': UTCDateTime(2010, 1, 1),
+             'endtime': UTCDateTime(2011, 1, 2), 'network': 'AAA',
+             'station': 'XXX', 'channel': 'FFF', 'npts': 1000,
+             'sampling_rate': 500.0}]
         # Create a Trace object of it and append it to the Stream object.
         for _i in headers:
             new_trace = Trace(header=_i)
@@ -765,7 +771,7 @@ class StreamTestCase(unittest.TestCase):
         #
         #3 - contained overlap with same data
         # Trace 1: 0123456789
-        # Trace 2:      56 
+        # Trace 2:      56
         # 1 + 2  : 0123456789
         tr1 = Trace(data=np.arange(10))
         tr2 = Trace(data=np.arange(5, 7))
@@ -823,7 +829,8 @@ class StreamTestCase(unittest.TestCase):
         traces = [trace1]
         for _ in xrange(10):
             trace = Trace(data=np.empty(10))
-            trace.stats.starttime = traces[-1].stats.endtime - trace1.stats.delta
+            trace.stats.starttime = \
+                traces[-1].stats.endtime - trace1.stats.delta
             traces.append(trace)
         st = Stream(traces)
         st.merge()
@@ -909,7 +916,7 @@ class StreamTestCase(unittest.TestCase):
         st.merge(method=1)
         np.testing.assert_array_equal(st[0].data, np.array([1] * 4 + [5] * 8))
         # Interpolate first two samples (``interpolation_samples=2``)::
-        # 
+        #
         #     Trace 1: 00000000
         #     Trace 2:     66666666
         #     1 + 2  : 000024666666 (interpolation_samples=2)
@@ -921,7 +928,7 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st[0].data,
                                       np.array([0] * 4 + [2] + [4] + [6] * 6))
         # Interpolate all samples (``interpolation_samples=-1``)::
-        # 
+        #
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
@@ -929,13 +936,13 @@ class StreamTestCase(unittest.TestCase):
         trace2 = Trace(data=5 * np.ones(8, dtype='int32'))
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
-        st.merge(method=1, interpolation_samples= -1)
+        st.merge(method=1, interpolation_samples=(-1))
         np.testing.assert_array_equal(st[0].data,
                           np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
         # Interpolate all samples (``interpolation_samples=5``)::
         # Given number of samples is bigger than the actual overlap - should
-        # interpolate all samples 
-        # 
+        # interpolate all samples
+        #
         #     Trace 1: 00000000
         #     Trace 2:     55555555
         #     1 + 2  : 000012345555
@@ -1071,14 +1078,14 @@ class StreamTestCase(unittest.TestCase):
         tr0 = Trace(np.arange(3))
         tr1 = Trace(np.arange(3))
         tr2 = Trace(np.arange(3), {'station': 'X'})
-        tr3 = Trace(np.arange(3), {'processing': \
-                                   ["filter:lowpass:{'freq': 10}"]})
+        tr3 = Trace(np.arange(3),
+                    {'processing': ["filter:lowpass:{'freq': 10}"]})
         tr4 = Trace(np.arange(5))
         tr5 = Trace(np.arange(5), {'station': 'X'})
-        tr6 = Trace(np.arange(5), {'processing': \
-                                   ["filter:lowpass:{'freq': 10}"]})
-        tr7 = Trace(np.arange(5), {'processing': \
-                                   ["filter:lowpass:{'freq': 10}"]})
+        tr6 = Trace(np.arange(5),
+                    {'processing': ["filter:lowpass:{'freq': 10}"]})
+        tr7 = Trace(np.arange(5),
+                    {'processing': ["filter:lowpass:{'freq': 10}"]})
         st0 = Stream([tr0])
         st1 = Stream([tr1])
         st2 = Stream([tr0, tr1])
@@ -1156,7 +1163,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(stA != st, True)
         # some weirder tests against non-Stream objects
         for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
-                       set(), set(tr0), {}, {"test": "test"}, Trace(), None, ]:
+                       set(), set(tr0), {}, {"test": "test"}, Trace(), None]:
             self.assertEqual(st0 == object, False)
             self.assertEqual(st0 != object, True)
 
@@ -1186,11 +1193,10 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.endtime.timestamp, 3.0)
         self.assertEqual(st[1].stats.endtime.timestamp, 3.4)
 
-
     def test_trimConsistentStartEndtimeNearestSample(self):
         """
         Test case for #127. It ensures that the sample sizes stay
-        consistent after trimming. That is that _ltrim and _rtrim 
+        consistent after trimming. That is that _ltrim and _rtrim
         round in the same direction.
         """
         data = np.zeros(10)
@@ -1208,11 +1214,10 @@ class StreamTestCase(unittest.TestCase):
             self.assertEquals(st[i].stats.starttime.timestamp, start[i])
             self.assertEquals(st[i].stats.endtime.timestamp, end[i])
 
-
     def test_trimConsistentStartEndtimeNearestSamplePadded(self):
         """
         Test case for #127. It ensures that the sample sizes stay
-        consistent after trimming. That is that _ltrim and _rtrim 
+        consistent after trimming. That is that _ltrim and _rtrim
         round in the same direction. Padded version.
         """
         data = np.zeros(10)
@@ -1229,7 +1234,6 @@ class StreamTestCase(unittest.TestCase):
             self.assertEquals(22, st[i].stats.npts)
             self.assertEquals(st[i].stats.starttime.timestamp, start[i])
             self.assertEquals(st[i].stats.endtime.timestamp, end[i])
-
 
     def test_trimConsistentStartEndtime(self):
         """

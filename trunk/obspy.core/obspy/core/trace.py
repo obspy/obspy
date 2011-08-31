@@ -31,8 +31,13 @@ class Stats(AttribDict):
     required by every waveform import and export modules within ObsPy such as
     :mod:`obspy.mseed`.
 
-    Basic Usage
-    -----------
+    :type header: dict or :class:`~obspy.core.trace.Stats`, optional
+    :param header: Dictionary containing meta information of a single
+        :class:`~obspy.core.trace.Trace` object. Possible keywords are
+        summarized in the following *Default Attributes* section.
+
+    .. rubric:: Basic Usage
+
     >>> stats = Stats()
     >>> stats.network = 'BW'
     >>> stats['network']
@@ -41,41 +46,34 @@ class Stats(AttribDict):
     >>> stats.station
     'MANZ'
 
-    Parameters
-    ----------
-    header : dict or :class:`~obspy.core.trace.Stats`, optional
-        Dictionary containing meta information of a single
-        :class:`~obspy.core.trace.Trace` object. Possible keywords are
-        summarized in the following attributes section.
+    .. rubric:: Default Attributes
 
-    Attributes
-    ----------
-    sampling_rate : float, optional
+    ``sampling_rate`` : float, optional
         Sampling rate in hertz (default value is 1.0).
-    delta : float, optional
+    ``delta`` : float, optional
         Sample distance in seconds (default value is 1.0).
-    calib : float, optional
+    ``calib`` : float, optional
         Calibration factor (default value is 1.0).
-    npts : int, optional
+    ``npts`` : int, optional
         Number of sample points (default value is 0, which implies that no data
         is present).
-    network : string, optional
+    ``network`` : string, optional
         Network code (default is an empty string).
-    location : string, optional
+    ``location`` : string, optional
         Location code (default is an empty string).
-    station : string, optional
+    ``station`` : string, optional
         Station code (default is an empty string).
-    channel : string, optional
+    ``channel`` : string, optional
         Channel code (default is an empty string).
-    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    ``starttime`` : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Date and time of the first data sample given in UTC (default value is
         "1970-01-01T00:00:00.0Z").
-    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    ``endtime`` : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Date and time of the last data sample given in UTC
         (default value is "1970-01-01T00:00:00.0Z").
 
-    Notes
-    -----
+    .. rubric:: Notes
+
     (1) The attributes ``sampling_rate`` and ``delta`` are linked to each
         other. If one of the attributes is modified the other will be
         recalculated.

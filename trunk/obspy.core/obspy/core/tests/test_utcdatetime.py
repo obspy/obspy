@@ -13,9 +13,9 @@ except ImportError:
 
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
-try: # pragma: no cover
+try:  # pragma: no cover
     UTCDateTime(-1)
-except: # pragma: no cover
+except:  # pragma: no cover
     NO_NEGATIVE_TIMESTAMPS = True
 
 
@@ -84,7 +84,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12, 23))
         dt = UTCDateTime("2009-12-31T12")
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009-12-31", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 12, 31))
         # compact
@@ -100,7 +100,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12, 23))
         dt = UTCDateTime("20091231T12")
         self.assertEquals(dt, UTCDateTime(2009, 12, 31, 12))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("20091231", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 12, 31))
         # w/ trailing Z
@@ -158,7 +158,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12))
         dt = UTCDateTime("2009-355")
         self.assertEquals(dt, UTCDateTime(2009, 12, 21))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009-001", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 1, 1))
         # compact
@@ -172,7 +172,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2009, 1, 1, 12))
         dt = UTCDateTime("2009355")
         self.assertEquals(dt, UTCDateTime(2009, 12, 21))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009001", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2009, 1, 1))
         # w/ trailing Z
@@ -207,7 +207,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2008, 12, 29, 12, 23))
         dt = UTCDateTime("2009-W01-1T12")
         self.assertEquals(dt, UTCDateTime(2008, 12, 29, 12))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009-W01-1", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2008, 12, 29))
         # compact
@@ -219,7 +219,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt, UTCDateTime(2008, 12, 29, 12, 23))
         dt = UTCDateTime("2009W011T12")
         self.assertEquals(dt, UTCDateTime(2008, 12, 29, 12))
-        # enforce ISO8601 - no chance to detect that format 
+        # enforce ISO8601 - no chance to detect that format
         dt = UTCDateTime("2009W011", iso8601=True)
         self.assertEquals(dt, UTCDateTime(2008, 12, 29))
         # w/ trailing Z
@@ -461,7 +461,8 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt.formatSEED(compact=True), "2010,001,12:34:56")
         #6
         dt = UTCDateTime("2010-01-01T12:34:56.123456")
-        self.assertEquals(dt.formatSEED(compact=True), "2010,001,12:34:56.1234")
+        self.assertEquals(dt.formatSEED(compact=True),
+                          "2010,001,12:34:56.1234")
         #7 - explicit disabling compact flag still results into compact date if
         # no time information is given
         dt = UTCDateTime("2010-01-01")

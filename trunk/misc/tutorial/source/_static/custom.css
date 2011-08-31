@@ -128,3 +128,7 @@ table.docutils td.field-body p {
   padding-left : 5px;
   padding-bottom : 0.5em;
 }
+
+dd p {
+  margin-top: 16px;
+}

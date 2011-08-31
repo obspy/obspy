@@ -106,7 +106,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertEquals(stats.test['test2'], 'maeh')
         self.assertEquals(stats['test'].test2, 'maeh')
         self.assertEquals(stats['test']['test2'], 'maeh')
-        #2 - multiple initialization 
+        #2 - multiple initialization
         stats = Stats({'muh': 'meah'})
         stats2 = Stats(Stats(Stats(stats)))
         self.assertEquals(stats2.muh, 'meah')

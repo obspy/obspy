@@ -76,7 +76,7 @@ def guessDelta(channel):
     >>> print guessDelta('H')
     0.0125
 
-    >>> print guessDelta('XZY')
+    >>> print guessDelta('XZY')  # doctest: +SKIP
     0
     """
     try:
@@ -159,7 +159,7 @@ class AttribDict(dict, object):
     def copy(self):
         return self.__class__(self.__dict__.copy())
 
-    def __deepcopy__(self, *args, **kwargs):  #@UnusedVariable
+    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
         st = self.__class__()
         st.update(self)
         return st
@@ -199,7 +199,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
         >>> scoreatpercentile(a, 75)
         42.5
 
-    This method is taken from scipy.stats.scoreatpercentile
+    This function is taken from :func:`scipy.stats.scoreatpercentile`
     Copyright (c) Gary Strangman
     """
     if issorted:
@@ -227,21 +227,21 @@ class FILE(C.Structure):  # Never directly used
     pass
 c_file_p = C.POINTER(FILE)
 
-# Define ctypes arg- and restypes.
-#C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-#C.pythonapi.PyFile_AsFile.restype = c_file_p
-
 
 def formatScientific(value):
     """
     Returns a float string in a fixed exponential style.
 
+    :type value: float
+    :param value: Floating point number
+    :rtype: str
+    :return: Fixed string of given float number.
+
     Different operation systems are delivering different output for the
     exponential format of floats.
 
-    (1) Python 2.5.2, WinXP, 32bit::
-        Python 2.5.2 (r252:60911, Feb 21 2008, 13:11:45)
-        [MSC v.1310 32 bit (Intel)] on win32
+    (1) **Python 2.5.2** (r252:60911, Feb 21 2008, 13:11:45)
+        [MSC v.1310 32 bit (Intel)] on **win32**
 
         >>> '%E' % 2.5 # doctest: +SKIP
         '2.500000E+000'`
@@ -280,13 +280,34 @@ def formatScientific(value):
 
 def NamedTemporaryFile(dir=None, suffix='.tmp'):
     """
-    Weak replacement for the Python class :class:`tempfile.NamedTemporaryFile`.
+    Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This class will work also with Windows Vista's UAC.
+    This function is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    will work also with Windows 7/Vista's UAC.
+
+    :type dir: str
+    :param dir: If specified, the file will be created in that directory,
+        otherwise the default directory for temporary files is used.
+    :type suffix: str
+    :param suffix: The temporary file name will end with that suffix. Defaults
+        to ``'.tmp'``.
 
     .. warning::
-        The calling program is responsible to close the returned file pointer
-        after usage.
+        Caller is responsible for deleting the file when done with it.
+
+    .. rubric:: Example
+
+    >>> ntf = NamedTemporaryFile()
+    >>> ntf._fileobj  # doctest: +ELLIPSIS
+    <open file '<fdopen>', mode 'w+b' at 0x...>
+    >>> ntf._fileobj.close()
+    >>> os.remove(ntf.name)
+
+    >>> filename = NamedTemporaryFile().name
+    >>> fh = open(filename, 'wb')
+    >>> fh.write("test")
+    >>> fh.close()
+    >>> os.remove(filename)
     """
 
     class NamedTemporaryFile(object):
@@ -297,12 +318,18 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
 
         def __getattr__(self, attr):
             return getattr(self._fileobj, attr)
+
     return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
 
 
 def complexifyString(line):
     """
     Converts a string in the form "(real, imag)" into a complex type.
+
+    :type line: str
+    :param line: String in the form ``"(real, imag)"``.
+    :rtype: complex
+    :return: Complex number.
 
     .. rubric:: Example
 
@@ -324,10 +351,10 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
 
     :param delta: Number of samples for data chunk
     :param dtype: NumPy dtype for returned data chunk
-    :param fill_value: If None, masked array is returned, if not None the
-                       array is filled with the corresponding value
+    :param fill_value: If ``None``, masked array is returned, else the
+        array is filled with the corresponding value
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> createEmptyDataChunk(3, 'int', 10)
     array([10, 10, 10])
@@ -358,7 +385,7 @@ def createEmptyDataChunk(delta, dtype, fill_value=None):
     return temp
 
 
-def getExampleFile(testfile):
+def getExampleFile(filename):
     """
     Function to find the absolute path of a test data file
 
@@ -367,7 +394,7 @@ def getExampleFile(testfile):
     installed ObsPy modules and checks weather the file is in any of
     the "tests/data" subdirectories.
 
-    :param testfile: A test file name to which the path should be returned.
+    :param filename: A test file name to which the path should be returned.
     :return: Full path to file.
 
     .. rubric:: Example
@@ -383,12 +410,12 @@ def getExampleFile(testfile):
     for module in ALL_MODULES:
         try:
             mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
-            file = os.path.join(mod.__path__[0], "data", testfile)
+            file = os.path.join(mod.__path__[0], "data", filename)
             if os.path.isfile(file):
                 return file
         except ImportError:
             pass
-    msg = "Could not find file %s in tests/data directory " % testfile + \
+    msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
     raise IOError(msg)
 
@@ -400,7 +427,7 @@ def _getVersionString(module="obspy.core"):
     .. rubric:: Example
 
     >>> _getVersionString('obspy.core')  # doctest: +SKIP
-    
+    '0.4.8.dev-r2767'
 
     >>> _getVersionString('does.not.exist')  # doctest: +ELLIPSIS
     'Module does.not.exist is not installed via setup.py!'
@@ -428,14 +455,14 @@ def _getPlugins(group, subgroup_name=None):
     """
     Gets a dictionary of all available waveform features plug-ins.
 
-    :type group: string
+    :type group: str
     :param group: Group name.
-    :type subgroup_name: string, optional
+    :type subgroup_name: str, optional
     :param subgroup_name: Subgroup name (defaults to None).
     :rtype: dict
     :returns: Dictionary of entry points of each plug-in.
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
     {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
@@ -477,6 +504,7 @@ def deprecated_keywords(keywords):
     def fdec(func):
         fname = func.func_name
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
+
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
             for kw in kwargs.keys():
@@ -488,6 +516,7 @@ def deprecated_keywords(keywords):
                     del(kwargs[kw])
             return func(*args, **kwargs)
         return echo_func
+
     return fdec
 
 
@@ -530,10 +559,10 @@ def add_doctests(testsuite, module_name):
 
     :type testsuite: unittest.TestSuite
     :param testsuite: testsuite to which the tests should be added
-    :type module_name: String
+    :type module_name: str
     :param module_name: name of the module of which the tests should be added
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> import unittest
     >>> suite = unittest.TestSuite()
@@ -560,10 +589,10 @@ def add_unittests(testsuite, module_name):
 
     :type testsuite: unittest.TestSuite
     :param testsuite: testsuite to which the tests should be added
-    :type module_name: String
+    :type module_name: str
     :param module_name: name of the module of which the tests should be added
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> import unittest
     >>> suite = unittest.TestSuite()
@@ -574,7 +603,7 @@ def add_unittests(testsuite, module_name):
 
     filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
-    names = (os.path.basename(file).split(".") [0] for file in files)
+    names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
     for module_name in module_names:
         module = __import__(module_name, fromlist="obspy")
@@ -589,7 +618,7 @@ def skip(reason):
         if not (isinstance(test_item, type) and issubclass(test_item,
                                                            unittest.TestCase)):
             @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):  #@UnusedVariable
+            def skip_wrapper(*args, **kwargs):  # @UnusedVariable
                 return
 
             test_item = skip_wrapper
@@ -606,8 +635,10 @@ def skipIf(condition, reason):
     """
     if condition:
         return skip(reason)
+
     def _id(obj):
         return obj
+
     return _id
 
 

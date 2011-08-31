@@ -568,7 +568,7 @@ class TraceTestCase(unittest.TestCase):
         """
         Test __add__ method of the Trace object.
         """
-        #1 
+        #1
         # overlapping trace with differing data
         # Trace 1: 0000000
         # Trace 2:      1111111
@@ -652,7 +652,6 @@ class TraceTestCase(unittest.TestCase):
         tr = tr1 + tr2
         self.assertTrue(isinstance(tr.data, np.ma.masked_array))
         self.assertEqual(tr.data.tolist(), [None] * 10)
-
 
     def test_addWithDifferentSamplingRates(self):
         """

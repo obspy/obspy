@@ -158,7 +158,7 @@ class UtilTestCase(unittest.TestCase):
         # merge
         st2 = mergePreviews(st1)
         st2.verify()
-        # check 
+        # check
         self.assertTrue(st2[0].stats.preview)
         self.assertEqual(st2[0].stats.starttime, tr1.stats.starttime)
         self.assertEqual(st2[0].stats.endtime, tr2.stats.endtime)

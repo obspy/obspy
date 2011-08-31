@@ -34,13 +34,13 @@ class UTCDateTime(datetime.datetime):
     ``UTCDateTime = UTCDateTime + delta``
         Adds/removes ``delta`` seconds (given as int or float) to/from the
         current ``UTCDateTime`` object and returns a new ``UTCDateTime``
-        object. 
+        object.
         See also: :meth:`~obspy.core.utcdatetime.UTCDateTime.__add__`.
-    
+
     ``delta = UTCDateTime - UTCDateTime``
         Calculates the time difference in seconds between two ``UTCDateTime``
         objects. The time difference is given as float data type and may also
-        contain a negative number. 
+        contain a negative number.
         See also: :meth:`~obspy.core.utcdatetime.UTCDateTime.__sub__`.
 
     .. rubric:: Examples
@@ -132,12 +132,12 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(year=2009, julday=234, hour=14, minute=13)
         UTCDateTime(2009, 8, 22, 14, 13)
 
-    (6) Using a Python :class:`datetime.datetime` object. 
+    (6) Using a Python :class:`datetime.datetime` object.
 
         >>> dt = datetime.datetime(2009, 5, 24, 8, 28, 12, 5001)
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
-    
+
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
 
@@ -342,14 +342,16 @@ class UTCDateTime(datetime.datetime):
 
     def getTimeStamp(self):
         """
-        Returns UTC timestamp in floating point seconds.
+        Returns UTC timestamp in seconds.
+
+        :rtype: float
+        :return: Timestamp in seconds
+
+        .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 123456)
         >>> dt.getTimeStamp()
         1222864235.123456
-
-        :rtype: float
-        :return: Time stamp in seconds
         """
         return float(timegm(self.timetuple())) + self.microsecond / 1.0e6
 
@@ -359,12 +361,14 @@ class UTCDateTime(datetime.datetime):
         """
         Returns a Python datetime object from the current UTCDateTime object.
 
+        :rtype: :class:`datetime.datetime`
+        :return: Python datetime object of current UTCDateTime object.
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getDateTime()
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
-
-        :rtype: :class:`datetime.datetime`
-        :return: Python datetime object of current UTCDateTime object.
         """
         return datetime.datetime(self.year, self.month, self.day, self.hour,
                                  self.minute, self.second, self.microsecond)
@@ -375,12 +379,14 @@ class UTCDateTime(datetime.datetime):
         """
         Returns a Python date object from the current UTCDateTime object.
 
+        :rtype: :class:`datetime.date`
+        :return: Python date object of current UTCDateTime object.
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getDate()
         datetime.date(2008, 10, 1)
-
-        :rtype: :class:`datetime.date`
-        :return: Python date object of current UTCDateTime object.
         """
         return datetime.date(self.year, self.month, self.day)
 
@@ -390,12 +396,14 @@ class UTCDateTime(datetime.datetime):
         """
         Returns a Python time object from the current UTCDateTime object.
 
+        :rtype: :class:`datetime.time`
+        :return: Python time object of current UTCDateTime object.
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getTime()
         datetime.time(12, 30, 35, 45020)
-
-        :rtype: :class:`datetime.time`
-        :return: Python time object of current UTCDateTime object.
         """
         return datetime.time(self.hour, self.minute, self.second,
                              self.microsecond)
@@ -406,12 +414,14 @@ class UTCDateTime(datetime.datetime):
         """
         Returns the Julian day of the current UTCDateTime object.
 
+        :rtype: int
+        :return: Julian day of current UTCDateTime
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.getJulday()
         275
-
-        :rtype: int
-        :return: Julian day of current UTCDateTime
         """
         try:
             return int(self.strftime("%j"))
@@ -425,15 +435,19 @@ class UTCDateTime(datetime.datetime):
         """
         Adds seconds and microseconds to current UTCDateTime object.
 
-        Adding two UTCDateTime objects results into a time span in seconds.
+        :type value: int, float
+        :param value: Seconds to add
+        :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :return: New UTCDateTime object.
 
-        >>> a = UTCDateTime(0.0)
-        >>> a
-        UTCDateTime(1970, 1, 1, 0, 0)
-        >>> a + 1.123456
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(1970, 1, 1, 0, 0)
+        >>> dt + 2
+        UTCDateTime(1970, 1, 1, 0, 0, 2)
+
+        >>> UTCDateTime(1970, 1, 1, 0, 0) + 1.123456
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
-
-        :return: :class:`~obspy.core.utcdatetime.UTCDateTime`
         """
         try:
             frac = value % 1.0
@@ -455,20 +469,23 @@ class UTCDateTime(datetime.datetime):
         """
         Subtracts seconds and microseconds from current UTCDateTime object.
 
-        Subtracting two UTCDateTime objects from each other results into a
-        relative time span in seconds.
+        :type value: int, float or :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param value: Seconds or UTCDateTime object to subtract. Subtracting an
+            UTCDateTime objects results into a relative time span in seconds.
+        :rtype: :class:`~obspy.core.utcdatetime.UTCDateTime` or float
+        :return: New UTCDateTime object or relative time span in seconds.
 
-        >>> a = UTCDateTime(0.0) + 60 * 60 * 24 * 31
-        >>> a
-        UTCDateTime(1970, 2, 1, 0, 0)
-        >>> a - 1
-        UTCDateTime(1970, 1, 31, 23, 59, 59)
-        >>> a - 1.123456
-        UTCDateTime(1970, 1, 31, 23, 59, 58, 876544)
-        >>> a - 60 * 60 * 24 * 31
-        UTCDateTime(1970, 1, 1, 0, 0)
+        .. rubric:: Example
 
-        :return: :class:`~obspy.core.utcdatetime.UTCDateTime` or float
+        >>> dt = UTCDateTime(1970, 1, 2, 0, 0)
+        >>> dt - 2
+        UTCDateTime(1970, 1, 1, 23, 59, 58)
+
+        >>> UTCDateTime(1970, 1, 2, 0, 0) - 1.123456
+        UTCDateTime(1970, 1, 1, 23, 59, 58, 876544)
+
+        >>> UTCDateTime(1970, 1, 2, 0, 0) - UTCDateTime(1970, 1, 1, 0, 0)
+        86400.0
         """
         if isinstance(value, int):
             td = datetime.timedelta(seconds=value)
@@ -490,11 +507,13 @@ class UTCDateTime(datetime.datetime):
         """
         Returns ISO8601 string representation from current UTCDateTime object.
 
+        :return: string
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
-
-        :return: string
         """
         text = datetime.datetime.__str__(self)
         if not '.' in text:
@@ -505,11 +524,13 @@ class UTCDateTime(datetime.datetime):
         """
         Returns string representation for the Fissures protocol.
 
+        :return: string
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.formatFissures()
         '2008275T123035.0450Z'
-
-        :return: string
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
                 (self.year, self.julday, self.hour, self.minute, self.second,
@@ -519,11 +540,13 @@ class UTCDateTime(datetime.datetime):
         """
         Returns string representation for the ArcLink protocol.
 
+        :return: string
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         >>> dt.formatArcLink()
         '2008,10,1,12,30,35,45020'
-
-        :return: string
         """
         return "%d,%d,%d,%d,%d,%d,%d" % (self.year, self.month, self.day,
                                          self.hour, self.minute, self.second,
@@ -533,18 +556,21 @@ class UTCDateTime(datetime.datetime):
         """
         Returns string representation for a SEED volume.
 
-        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.formatSEED()
-        '2008,275,12:30:35.0450'
-        >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
-        >>> dt.formatSEED(compact=True)
-        '2008,275,00:30'
-
         :type compact: boolean, optional
         :param compact: Delivers a compact SEED date string if enabled. Default
             value is set to False.
         :rtype: string
         :return: Datetime string in the SEED format.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.formatSEED()
+        '2008,275,12:30:35.0450'
+
+        >>> dt = UTCDateTime(2008, 10, 1, 0, 30, 0, 0)
+        >>> dt.formatSEED(compact=True)
+        '2008,275,00:30'
         """
         if not compact:
             if not self.time:
@@ -570,11 +596,13 @@ class UTCDateTime(datetime.datetime):
         """
         Returns string representation usable for the IRIS Web services.
 
+        :return: string
+
+        .. rubric:: Example
+
         >>> dt = UTCDateTime(2008, 5, 27, 12, 30, 35, 45020)
         >>> dt.formatIRISWebService()
         '2008-05-27T12:30:35.045'
-
-        :return: string
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
                 (self.year, self.month, self.day, self.hour, self.minute,

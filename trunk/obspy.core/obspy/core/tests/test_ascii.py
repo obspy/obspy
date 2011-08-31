@@ -18,7 +18,7 @@ class ASCIITestCase(unittest.TestCase):
 
     def test_isSLISTFile(self):
         """
-        Testing SLIST file format. 
+        Testing SLIST file format.
         """
         testfile = os.path.join(self.path, 'data', 'slist.ascii')
         self.assertEqual(isSLIST(testfile), True)
@@ -137,7 +137,7 @@ class ASCIITestCase(unittest.TestCase):
 
     def test_isTSPAIRFile(self):
         """
-        Testing TSPAIR file format. 
+        Testing TSPAIR file format.
         """
         testfile = os.path.join(self.path, 'data', 'tspair.ascii')
         self.assertEqual(isTSPAIR(testfile), True)
