@@ -115,3 +115,13 @@ Gallery
     :width: 300px
     :target: tutorial/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
+
+.. plot:: source/tutorial/array_response_function.py
+    :width: 300px
+    :target: tutorial/array_response_function.html
+    :alt: Array Response Function
+
+.. plot:: source/tutorial/continuous_wavelet_transform.py
+    :width: 300px
+    :target: tutorial/continuous_wavelet_transform.html
+    :alt: Continuous Wavelet Transform

@@ -34,3 +34,5 @@ will give you a good idea of the library’s flavor and style.
    coordinate_conversions
    hierarchical_clustering.rst
    probabilistic_power_spectral_density
+   array_response_function
+   continuous_wavelet_transform
