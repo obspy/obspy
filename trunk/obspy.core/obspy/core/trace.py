@@ -221,22 +221,17 @@ class Trace(object):
     """
     An object containing data of a continuous series, such as a seismic trace.
 
-    Parameters
-    ----------
-    data : numpy.array or ma.masked_array
-        NumPy array of data samples
-    header : dict or :class:`~obspy.core.trace.Stats`
-        Dictionary containing header fields
+    :type data: numpy.array or ma.masked_array
+    :param data: NumPy array of data samples
+    :type header: dict or :class:`~obspy.core.trace.Stats`
+    :param header: Dictionary containing header fields
 
-    Attributes
-    ----------
-    id : str
-        A SEED compatible identifier of the trace.
-    stats : :class:`~obspy.core.trace.Stats`
-        A container for additional header information of the trace.
+    :var id: A SEED compatible identifier of the trace.
+    :var stats: A container :class:`~obspy.core.trace.Stats` for additional
+        header information of the trace.
 
-    Supported Operations
-    --------------------
+    .. rubric:: Supported Operations
+
     ``trace = traceA + traceB``
         Merges traceA and traceB into one new trace object.
         See also: :meth:`Trace.__add__`.
@@ -334,18 +329,16 @@ class Trace(object):
         """
         Returns short summary string of the current trace.
 
-        Returns
-        -------
-        string
-            short summary string of the current trace containing the SEED
+        :rtype: str
+        :return: Short summary string of the current trace containing the SEED
             identifier, start time, end time, sampling rate and number of
             points of the current trace.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> tr = Trace(header={'station':'FUR', 'network':'GR'})
-        >>> str(tr)
-        'GR.FUR.. | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.000000Z | 1.0 Hz, 0 samples'
+        >>> str(tr)  # doctest: +ELLIPSIS
+        'GR.FUR.. | 1970-01-01T00:00:00.000000Z - ... | 1.0 Hz, 0 samples'
         """
         # set fixed id width
         if id_length:
@@ -381,13 +374,11 @@ class Trace(object):
         """
         Returns number of data samples of the current trace.
 
-        Returns
-        -------
-        int
-            Number of data samples.
+        :rtype: int
+        :return: Number of data samples.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> trace = Trace(data=np.array([1, 2, 3, 4]))
         >>> trace.count()
         4
@@ -424,6 +415,25 @@ class Trace(object):
         """
         Adds another Trace object to current trace.
 
+        :type method: ``0`` or ``1``, optional
+        :param method : Method to handle overlaps of traces. Defaults to ``0``.
+            See the table given in the notes section below for further details.
+        :type fill_value: int, float or ``'latest'``, optional
+        :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
+            will be converted to NumPy masked arrays if no value is given and
+            gaps are present. If the keyword ``'latest'`` is provided it will
+            use the latest value before the gap. If keyword ``'interpolate'``
+            is provided, missing values are linearly interpolated (not
+            changing the data type e.g. of integer valued traces).
+        :type interpolation_samples: int, optional
+        :param interpolation_samples: Used only for ``method=1``. It specifies
+            the number of samples which are used to interpolate between
+            overlapping traces. Defaults to ``0``. If set to ``-1`` all
+            overlapping samples are interpolated.
+        :type sanity_checks: boolean, optional
+        :param sanity_checks: Enables some sanity checks before merging traces.
+            Defaults to ``True``.
+
         Trace data will be converted into a NumPy masked array data type if
         any gaps are present. This behavior may be prevented by setting the
         ``fill_value`` parameter. The ``method`` argument controls the
@@ -431,27 +441,8 @@ class Trace(object):
 
         Sampling rate, data type and trace.id of both traces must match.
 
-        Parameters
-        ----------
-        method : [ 0 | 1 ], optional
-            Method to handle overlaps of traces (default is 0). See the
-            table given in the notes section below for further details.
-        fill_value : int or float or 'latest', optional
-            Fill value for gaps (default is None). Traces will be converted to
-            NumPy masked arrays if no value is given and gaps are present.
-            If the keyword 'latest' is provided it will use the latest value
-            before the gap. If keyword 'interpolate' is provided, missing
-            values are linearly interpolated (not changing the data type e.g.
-            of integer valued traces).
-        interpolation_samples : int, optional
-            Used only for method 1. It specifies the number of samples which
-            are used to interpolate between overlapping traces (default is 0).
-            If set to -1 all overlapping samples are interpolated.
-        sanity_checks : boolean, optional
-            Enables some sanity checks before merging traces (default is True).
+        .. rubric:: Notes
 
-        Notes
-        -----
         ======  ===============================================================
         Method  Description
         ======  ===============================================================
@@ -629,16 +620,14 @@ class Trace(object):
         """
         Returns a SEED compatible identifier of the trace.
 
+        :rtype: str
+        :return: SEED identifier
+
         The SEED identifier contains the network, station, location and channel
         code for the current Trace object.
 
-        Returns
-        -------
-        string
-            SEED identifier
+        .. rubric:: Example
 
-        Example
-        -------
         >>> meta = {'station': 'MANZ', 'network': 'BW', 'channel': 'EHZ'}
         >>> tr = Trace(header=meta)
         >>> tr.getId()
@@ -657,8 +646,8 @@ class Trace(object):
 
         For more info see :meth:`~obspy.core.stream.Stream.plot`.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
@@ -687,8 +676,8 @@ class Trace(object):
         For details on kwargs that can be used to customize the spectrogram
         plot see :func:`~obspy.imaging.spectrogram.spectrogram`.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
@@ -718,17 +707,17 @@ class Trace(object):
         """
         Saves current trace into a file.
 
-        Parameters
-        ----------
-        filename : string
-            Name of the output file.
-        format : string
-            Name of the output format.
-            See :meth:`~obspy.core.stream.Stream.write` method for all possible
+        :type filename: string
+        :param filename: The name of the file to write.
+        :type format: string
+        :param format: The format to write must be specified. Depending on your
+            ObsPy installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q",
+            "SH_ASC", "SEGY", "SU", "WAV". See
+            :meth:`~obspy.core.stream.Stream.write` method for all possible
             formats.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
         """
@@ -743,8 +732,8 @@ class Trace(object):
         Cuts current trace to given start time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> tr._ltrim(tr.stats.starttime + 8)
@@ -802,8 +791,8 @@ class Trace(object):
         Cuts current trace to given end time. For more info see
         :meth:`~obspy.core.trace.Trace.trim`.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> tr._rtrim(tr.stats.starttime + 2)
@@ -876,8 +865,8 @@ class Trace(object):
         time frame of the original trace, filling the trace with fill_value
         (the default fill_value=None will mask the corresponding values).
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
@@ -902,8 +891,8 @@ class Trace(object):
 
         Does not copy data but just passes a reference to it.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
@@ -920,8 +909,8 @@ class Trace(object):
         """
         Verifies current trace object against available meta data.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.array([1,2,3,4]))
         >>> tr.stats.npts = 100
         >>> tr.verify()  #doctest: +ELLIPSIS
@@ -963,6 +952,28 @@ class Trace(object):
         """
         Correct for instrument response / Simulate new instrument response.
 
+        :type paz_remove: dict, None
+        :param paz_remove: Dictionary containing keys ``'poles'``, ``'zeros'``,
+            ``'gain'`` (A0 normalization factor). Poles and zeros must be a
+            list of complex floating point numbers, gain must be of type float.
+            Poles and Zeros are assumed to correct to m/s, SEED convention.
+            Use ``None`` for no inverse filtering.
+        :type paz_simulate: dict, None
+        :param paz_simulate: Dictionary containing keys ``'poles'``,
+            ``'zeros'``, ``'gain'``. Poles and zeros must be a list of complex
+            floating point numbers, gain must be of type float. Or ``None`` for
+            no simulation.
+        :type remove_sensitivity: bool
+        :param remove_sensitivity: Determines if data is divided by
+            ``paz_remove['sensitivity']`` to correct for overall sensitivity of
+            recording instrument (seismometer/digitizer) during instrument
+            correction.
+        :type simulate_sensitivity: bool
+        :param simulate_sensitivity: Determines if data is multiplied with
+            ``paz_simulate['sensitivity']`` to simulate overall sensitivity of
+            new instrument (seismometer/digitizer) during instrument
+            simulation.
+
         This function corrects for the original instrument response given by
         `paz_remove` and/or simulates a new instrument response given by
         `paz_simulate`.
@@ -984,9 +995,8 @@ class Trace(object):
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
@@ -1004,7 +1014,7 @@ class Trace(object):
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
-            
+
             from obspy.core import read
             from obspy.signal import cornFreq2Paz
             st = read()
@@ -1020,29 +1030,6 @@ class Trace(object):
             paz_1hz['sensitivity'] = 1.0
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             tr.plot()
-
-        :type paz_remove: Dictionary, None
-        :param paz_remove: Dictionary containing keys 'poles', 'zeros',
-                    'gain' (A0 normalization factor). poles and zeros must be a
-                    list of complex floating point numbers, gain must be of
-                    type float. Poles and Zeros are assumed to correct to m/s,
-                    SEED convention. Use None for no inverse filtering.
-        :type paz_simulate: Dictionary, None
-        :param paz_simulate: Dictionary containing keys 'poles', 'zeros',
-                'gain'. Poles and zeros must be a list of complex
-                floating point numbers, gain must be of type float. Or
-                None for no simulation.
-                Use 'self' to use paz AttribDict in trace.stats
-        :type remove_sensitivity: Boolean
-        :param remove_sensitivity: Determines if data is divided by
-                `paz_remove['sensitivity']` to correct for overall sensitivity
-                of recording instrument (seismometer/digitizer) during
-                instrument correction.
-        :type simulate_sensitivity: Boolean
-        :param simulate_sensitivity: Determines if data is multiplied with
-                `paz_simulate['sensitivity']` to simulate overall sensitivity
-                of new instrument (seismometer/digitizer) during instrument
-                simulation.
         """
         global signal
         if not signal:
@@ -1079,6 +1066,13 @@ class Trace(object):
         """
         Filters the data of the current trace.
 
+        :type type: str
+        :param type: String that specifies which filter is applied (e.g.
+            ``"bandpass"``).
+        :param options: Necessary keyword arguments for the respective filter
+            that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
+            ``"bandpass"``)
+
         This is performed in place on the actual data array. The original data
         is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
@@ -1087,9 +1081,8 @@ class Trace(object):
         in ``trace.stats.processing``.
         For details see :mod:`obspy.signal`.
 
-        Example
-        -------
-        
+        .. rubric:: Example
+
         >>> from obspy.core import read
         >>> st = read()
         >>> tr = st[0]
@@ -1103,12 +1096,6 @@ class Trace(object):
             tr = st[0]
             tr.filter("highpass", freq=1.0)
             tr.plot()
-
-        :param type: String that specifies which filter is applied (e.g.
-                "bandpass").
-        :param options: Necessary keyword arguments for the respective filter
-                that will be passed on.
-                (e.g. freqmin=1.0, freqmax=20.0 for "bandpass")
         """
         global signal
         if not signal:
@@ -1150,16 +1137,27 @@ class Trace(object):
         """
         Runs a triggering algorithm on the data of the current trace.
 
+        :param type: String that specifies which trigger is applied (e.g.
+            ``'recStalta'``).
+        :param options: Necessary keyword arguments for the respective trigger
+            that will be passed on.
+            (e.g. ``sta=3``, ``lta=10``)
+            Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
+            and ``nlta`` (samples) by multiplying with sampling rate of trace.
+            (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
+            seconds average, respectively)
+
         This is performed in place on the actual data array. The original data
         is not accessible anymore afterwards.
+
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
         to make a copy of your trace.
+
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
         For details see :mod:`obspy.signal`.
 
-        Example
-        -------
+        .. rubric:: Example
 
         >>> from obspy.core import read
         >>> st = read()
@@ -1170,7 +1168,7 @@ class Trace(object):
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
-            
+
             from obspy.core import read
             st = read()
             tr = st[0]
@@ -1178,17 +1176,6 @@ class Trace(object):
             tr.plot()
             tr.trigger('recStalta', sta=3, lta=10)
             tr.plot()
-
-        :param type: String that specifies which trigger is applied (e.g.
-                'recStalta').
-        :param options: Necessary keyword arguments for the respective trigger
-                that will be passed on.
-                (e.g. sta=3, lta=10)
-                Arguments ``sta`` and ``lta`` (seconds) will be mapped to
-                ``nsta`` and ``nlta`` (samples) by multiplying with sampling
-                rate of trace.
-                (e.g. sta=3, lta=10 would call the trigger with 3 and
-                10 seconds average, respectively)
         """
         global signal
         if not signal:
@@ -1241,6 +1228,16 @@ class Trace(object):
         """
         Downsample trace data.
 
+        :type decimation_factor: int
+        :param decimation_factor: Factor by which the sampling rate is lowered
+            by decimation.
+        :type no_filter: bool, optional
+        :param no_filter: Deactivates automatic filtering if set to ``True``.
+            Defaults to ``False``.
+        :type strict_length: bool, optional
+        :param strict_length: Leave traces unchanged for which endtime of trace
+            would change. Defaults to ``False``.
+
         Currently a simple integer decimation is implemented.
         Only every ``decimation_factor``-th sample remains in the trace, all
         other samples are thrown away. Prior to decimation a lowpass filter is
@@ -1256,8 +1253,7 @@ class Trace(object):
         This also makes an entry with information on the applied processing
         in ``stats.processing`` of every trace.
 
-        Example
-        -------
+        .. rubric:: Example
 
         For the example we switch off the automatic pre-filtering so that
         the effect of the downsampling routine becomes clearer:
@@ -1272,12 +1268,6 @@ class Trace(object):
         0.25
         >>> tr.data
         array([0, 4, 8])
-
-        :param decimation_factor: integer factor by which the sampling rate is
-            lowered by decimation.
-        :param no_filter: deactivate automatic filtering
-        :param strict_length: abort, if endtime of trace would change
-        :return: ``None``
         """
         global signal
         if not signal:
@@ -1312,10 +1302,12 @@ class Trace(object):
 
     def max(self):
         """
-        Method to get the value of the absolute maximum amplitude in the trace.
+        Returns the value of the absolute maximum amplitude in the trace.
 
-        Basic Usage
-        -----------
+        :return: Value of absolute maximum of ``trace.data``.
+
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.max()
         9
@@ -1325,8 +1317,6 @@ class Trace(object):
         >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> tr.max()
         9.0
-
-        :return: Value of absolute maximum of ``trace.data``.
         """
         value = self.data.max()
         _min = self.data.min()
@@ -1338,19 +1328,19 @@ class Trace(object):
         """
         Method to get the standard deviation of amplitudes in the trace.
 
+        :return: Standard deviation of ``trace.data``.
+
         Standard deviation is calculated by numpy method
         :meth:`~numpy.ndarray.std` on ``trace.data``.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.std()
         4.2614551505325036
         >>> tr = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> tr.std()
         4.4348618918744247
-
-        :return: Standard deviation of ``trace.data``.
         """
         return self.data.std()
 
@@ -1358,16 +1348,24 @@ class Trace(object):
         """
         Method to normalize the trace to its absolute maximum.
 
+        :type norm: ``None`` or float
+        :param norm: If not ``None``, trace is normalized by dividing by
+            specified value ``norm`` instead of dividing by its absolute
+            maximum. If a negative value is specified then its absolute value
+            is used.
+
         The original data is not accessible anymore afterwards.
         To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
         to make a copy of your trace.
+
         This also makes an entry with information on the applied processing
         in ``trace.stats.processing``.
 
-        Note: If ``trace.data.dtype`` was integer it is changing to float.
+        .. note::
+            If ``trace.data.dtype`` was integer it is changing to float.
 
-        Basic Usage
-        -----------
+        .. rubric:: Example
+
         >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr.normalize()
         >>> tr.data
@@ -1380,12 +1378,6 @@ class Trace(object):
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217,  0.4673913 ])
         >>> tr.stats.processing
         ['normalize:-9.2']
-        
-        :param norm: If not ``None``, trace is normalized by dividing by
-            specified value ``norm`` instead of dividing by its absolute
-            maximum. If a negative value is specified then its absolute value
-            is used.
-        :return: ``None``
         """
         # normalize, use norm-kwarg otherwise normalize to 1
         if norm:
@@ -1410,13 +1402,14 @@ class Trace(object):
         """
         Returns a deepcopy of the trace.
 
+        :return: Copy of trace.
+
         This actually copies all data in the trace and does not only provide
         another pointer to the same data. At any processing step if the
-        original data has to be available afterwards, this is the method to use
-        to make a copy of the trace.
+        original data has to be available afterwards, this is the method to
+        use to make a copy of the trace.
 
-        Example
-        -------
+        .. rubric:: Example
 
         Make a Trace and copy it:
 
@@ -1433,16 +1426,14 @@ class Trace(object):
         >>> tr2 == tr
         True
 
-        The following example shows how to make an alias but not copy the data.
-        Any changes on ``tr3`` would also change the contents of ``tr``.
+        The following example shows how to make an alias but not copy the
+        data. Any changes on ``tr3`` would also change the contents of ``tr``.
 
         >>> tr3 = tr
         >>> tr3 is tr
         True
         >>> tr3 == tr
         True
-
-        :return: Copy of trace.
         """
         return deepcopy(self)
 

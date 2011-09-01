@@ -18,18 +18,18 @@ of experiment number, year and REFTEK DAS ID.
 Found packets are written to one file per recording event like in normal
 acquisition. The output filenames consist of (separated by dots):
 
- - REFTEK DAS ID
- - recording event number
- - packet information (number of found EH-ET-DT packets)
- - 'ok' or 'bad' depending on the number of different packet types found
- - 'reftek' file suffix
+- REFTEK DAS ID
+- recording event number
+- packet information (number of found EH-ET-DT packets)
+- 'ok' or 'bad' depending on the number of different packet types found
+- 'reftek' file suffix
 
 The restored REFTEK data can then be converted to other formats using available
 conversion tools.
 
-For details on the data format specifications of the REFTEK packets refer to::
-
-    http://support.reftek.com/support/130-01/doc/130_record.pdf
+.. seealso::
+    For details on the data format specifications of the REFTEK packets refer
+    to http://support.reftek.com/support/130-01/doc/130_record.pdf.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -63,14 +63,14 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
     pattern = experiment_number + year + reftek_id
     pattern = a2b_hex(pattern)
 
-    # In REFTEK nomenclature an 'event' in normal acquisition seems to be a piece
-    # of continuous registration that gets written to a single file consisting of
-    # one EH (event header) packet, many DT (data) packets and one ET (event
-    # trailer) packet.
-    # The event number is coded in the EH/DT/ET packets directly after the header
-    # fields common to all packet types. Counting the different packet types found
-    # for an event number gives some kind of indication if it seems like the event
-    # can be reconstructed OK.
+    # In REFTEK nomenclature an 'event' in normal acquisition seems to be a
+    # piece of continuous registration that gets written to a single file
+    # consisting of one EH (event header) packet, many DT (data) packets and
+    # one ET (event trailer) packet.
+    # The event number is coded in the EH/DT/ET packets directly after the
+    # header fields common to all packet types. Counting the different packet
+    # types found for an event number gives some kind of indication if it
+    # seems like the event can be reconstructed OK.
     event_info = {}
 
     # memory map the file
@@ -87,21 +87,22 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                 # ind marks the actual packet start 2 bytes left of pos
                 ind = pos - 2
                 # if it seems we have found a packet, process it
-                pt = m[ind:ind+2]
+                pt = m[ind:(ind + 2)]
                 if pt in PACKET_TYPES:
                     # all packet types have the same 16 byte header
-                    header = m[ind:ind+16]
-                    # from byte 3 onward information is stored in packed BCD format
+                    header = m[ind:(ind + 16)]
+                    # from byte 3 onward information is stored in packed BCD
+                    # format
                     header = header[:2] + b2a_hex(header[2:])
                     header = header.upper()
                     # get event number, encoded in 2 bytes after the header
                     # at least for packet types 'DT', 'EH' and 'ET'
                     try:
-                        event_no = int(b2a_hex(m[ind+16:ind+18]))
+                        event_no = int(b2a_hex(m[(ind + 16):(ind + 18)]))
                     except:
                         msg = "Could not decode event number. Dropping " + \
-                              "possibly corrupted packet at byte position %d " + \
-                              "in input file."
+                              "possibly corrupted packet at byte position" + \
+                              " %d in input file."
                         msg = msg % ind
                         warnings.warn(msg)
                         pos = m.find(pattern, pos + 1)
@@ -111,12 +112,13 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
                                               {'EH': 0, 'ET': 0, 'DT': 0})
                     d[pt] += 1
                     # all packets consist of 1024 bytes
-                    packet = m[ind:ind+1024]
+                    packet = m[ind:(ind + 1024)]
                     # write to output folder, one file per recording event
                     filename = "%s.%04d" % (reftek_id, event_no)
                     filename = os.path.join(output_folder, filename)
                     open(filename, "ab").write(packet)
-                # search for pattern in memory map starting right of last position
+                # search for pattern in memory map starting right of last
+                # position
                 pos = m.find(pattern, pos + 1)
 
     # rename event files with packet information included

@@ -5,7 +5,6 @@
 #           Moritz Beyreuther
 #           Lion Krischer
 #           Tobias Megies
-#    Email: barsch@lmu.de
 #
 # Copyright (C) 2008-2011 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
@@ -49,19 +48,21 @@ URL. For details see the documentation of :func:`~obspy.core.stream.read`.
 
 >>> from obspy.core import read
 >>> st = read()
->>> print(st)
+>>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
-BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 >>> tr = st[0]
->>> print(tr)
-BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+>>> print(tr)  # doctest: +ELLIPSIS
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 >>> tr.data
 array([ 0.        ,  0.00694644,  0.07597424, ...,  1.93449584,
         0.98196204,  0.44196924])
->>> tr.stats
-Stats({'network': 'BW', 'delta': 0.01, 'station': 'RJOB', 'location': '', 'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3), 'npts': 3000, 'calib': 1.0, 'sampling_rate': 100.0, 'channel': 'EHZ'})
+>>> tr.stats  # doctest: +NORMALIZE_WHITESPACE
+Stats({'network': 'BW', 'delta': 0.01, 'station': 'RJOB', 'location': '',
+       'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3), 'npts': 3000,
+       'calib': 1.0, 'sampling_rate': 100.0, 'channel': 'EHZ'})
 >>> tr.stats.starttime
 UTCDateTime(2009, 8, 24, 0, 20, 3)
 

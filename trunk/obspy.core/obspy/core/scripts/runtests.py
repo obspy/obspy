@@ -15,8 +15,8 @@ the names of all available test cases.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-Examples
---------
+.. rubric:: Examples::
+
 (1) Run all tests on command line::
 
         obspy-runtests
@@ -37,7 +37,7 @@ Examples
 
 (3) Run tests of module :mod:`obspy.mseed`::
 
-        obspy-runtests obspy.mseed.tests.suite 
+        obspy-runtests obspy.mseed.tests.suite
 
     or as shortcut::
 
@@ -68,7 +68,7 @@ DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy',
                 'sqlalchemy', 'suds']
 
 
-#XXX: start of ugly monkey patch for Python 2.7 
+#XXX: start of ugly monkey patch for Python 2.7
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
 class _WritelnDecorator(object):
     """
@@ -85,7 +85,7 @@ class _WritelnDecorator(object):
     def writeln(self, arg=None):
         if arg:
             self.write(arg)
-        self.write('\n') # text-mode streams translate to \r\n if needed
+        self.write('\n')  # text-mode streams translate to \r\n if needed
 
 unittest._WritelnDecorator = _WritelnDecorator
 #XXX: end of ugly monkey patch
@@ -195,6 +195,7 @@ def _createReport(ttrs, timetaken, log, server):
     result['tests'] = tests
     result['errors'] = errors
     result['failures'] = failures
+
     # generate XML document
     def _dict2xml(doc, result):
         for key, value in result.iteritems():
@@ -289,7 +290,8 @@ class _TextTestRunner:
             if faileds:
                 self.stream.write("failures=%d" % faileds)
             if erroreds:
-                if faileds: self.stream.write(", ")
+                if faileds:
+                    self.stream.write(", ")
                 self.stream.write("errors=%d" % erroreds)
             self.stream.writeln(")")
         else:
@@ -302,20 +304,19 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     """
     This function executes ObsPy test suites.
 
-    Parameters
-    ----------
-    verbosity : [ 0 | 1 | 2 ], optional
-        Run tests in verbose mode (0=quiet, 1=normal, 2=verbose, default is 1).
-    tests : list of strings, optional
-        Test suites to run. If no suite is given all installed tests suites
-        will be started (default is a empty list).
-        Example ['obspy.core.tests.suite']
-    report : boolean, optional
-        Submits a test report if enabled (default is False).
-    log : string, optional
-        Filename of install log file to append to report
-    server : string, optional
-        Report server URL (default is "tests.obspy.org").
+    :type verbosity: int, optional
+    :param verbosity: Run tests in verbose mode (``0``=quiet, ``1``=normal,
+        ``2``=verbose, default is ``1``).
+    :type tests: list of strings, optional
+    :param tests: Test suites to run. If no suite is given all installed tests
+        suites will be started (default is a empty list).
+        Example ``['obspy.core.tests.suite']``.
+    :type report: boolean, optional
+    :param report: Submits a test report if enabled (default is ``False``).
+    :type log: string, optional
+    :param log: Filename of install log file to append to report.
+    :type server: string, optional
+    :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     suites = _getSuites(verbosity, tests, all)
     ttr, timetaken = _TextTestRunner(verbosity=verbosity).run(suites)

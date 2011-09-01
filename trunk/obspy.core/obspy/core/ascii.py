@@ -6,15 +6,15 @@ Simple ASCII time series formats
   followed by a sample lists (see also
   :func:`SLIST format description<obspy.core.ascii.writeSLIST>`)::
 
-    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, SLIST, INTEGER, 
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, SLIST, INTEGER,
     288 300 292 285 265 287
-    279 250 278 278 268 258    
+    279 250 278 278 268 258
     ...
 
 * ``TSPAIR``, a ASCII format where data is written in time-sample pairs
   (see also :func:`TSPAIR format description<obspy.core.ascii.writeTSPAIR>`)::
 
-    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, TSPAIR, INTEGER, 
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, TSPAIR, INTEGER,
     2009-08-24T00:20:03.000000  288
     2009-08-24T00:20:03.005000  300
     2009-08-24T00:20:03.010000  292
@@ -141,8 +141,8 @@ def readSLIST(filename, headonly=False):
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality' : temp[4]})
-        stats.ascii = AttribDict({'unit' : parts[-1]})
+        stats.mseed = AttribDict({'dataquality': temp[4]})
+        stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
         if headonly:
@@ -214,8 +214,8 @@ def readTSPAIR(filename, headonly=False):
         stats.channel = temp[3]
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality' : temp[4]})
-        stats.ascii = AttribDict({'unit' : parts[-1]})
+        stats.mseed = AttribDict({'dataquality': temp[4]})
+        stats.ascii = AttribDict({'unit': parts[-1]})
         stats.starttime = UTCDateTime(parts[6])
         stats.npts = parts[2]
         if headonly:

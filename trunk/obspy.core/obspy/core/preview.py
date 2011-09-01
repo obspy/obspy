@@ -24,20 +24,13 @@ def createPreview(trace, delta=60):
     ``delta`` seconds. The parameter ``delta`` must be a multiple of the
     sampling rate of the ``trace`` object.
 
-    Parameters
-    ----------
-    delta : integer, optional
-        Difference between two preview points (default value is 60).
+    :type delta: integer, optional
+    :param delta: Difference between two preview points. Defaults to ``60``.
+    :rtype: :class:`~obspy.core.Trace`
+    :return: New Trace object.
 
-    Notes
-    -----
-        This method will modify the original Trace object. Create a copy of the
-        Trace object if you want to continue using the original data.
-
-    Returns
-    -------
-    :class:`~obspy.core.Trace`
-        New Trace object.
+    This method will modify the original Trace object. Create a copy of the
+    Trace object if you want to continue using the original data.
     """
     if not isinstance(delta, int) or delta < 1:
         msg = 'The delta values need to be an Integer and at least 1.'
@@ -89,15 +82,10 @@ def mergePreviews(stream):
     Merges all preview traces in one Stream object. Does not change the
     original stream because the data needs to be copied anyway.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.Stream`
-        Stream object to be merged
-
-    Returns
-    -------
-    :class:`~obspy.core.Stream`
-        Merged Stream object.
+    :type stream: :class:`~obspy.core.Stream`
+    :param stream: Stream object to be merged
+    :rtype: :class:`~obspy.core.Stream`
+    :return: Merged Stream object.
     """
     copied_traces = copy(stream.traces)
     stream.sort()
@@ -165,39 +153,32 @@ def resamplePreview(trace, samples, method='accurate'):
     """
     Resamples a preview Trace to the chosen number of samples.
 
-    Parameters
-    ----------
-    trace : :class:`~obspy.core.Trace`
-        Trace object to be resampled.
-    samples: integer
-        Desired number of samples.
-    method: string, optional
-        Resample method. Available are 'fast' and 'accurate'.
-        Defaults to 'accurate'.
+    :type trace: :class:`~obspy.core.Trace`
+    :param trace: Trace object to be resampled.
+    :type samples: int
+    :param samples: Desired number of samples.
+    :type method: str, optional
+    :param method: Resample method. Available are ``'fast'`` and
+        ``'accurate'``. Defaults to ``'accurate'``.
 
-    Notes
-    -----
-        
-        This method will destroy the data in the original Trace object.
-        Deepcopy the Trace if you want to continue using the original data.
+    .. rubric:: Notes
 
-        The fast method works by reshaping the data array to a
-        sample x int(npts/samples) matrix (npts are the number of samples in
-        the original trace) and taking the maximum of each row. Therefore
-        the last npts - int(npts/samples)*samples will be omitted. The worst
-        case scenario is resampling a 1999 samples array to 1000 samples. 999
-        samples, almost half the data will be omitted.
+    This method will destroy the data in the original Trace object.
+    Deepcopy the Trace if you want to continue using the original data.
 
-        The accurate method has no such problems because it will move a window
-        over the whole array and take the maximum for each window. It loops
-        over each window and is up to 10 times slower than the fast method.
-        This of course is highly depended on the number of wished samples and
-        the original trace and usually the accurate method is still fast
-        enough.
+    The fast method works by reshaping the data array to a
+    sample x int(npts/samples) matrix (npts are the number of samples in
+    the original trace) and taking the maximum of each row. Therefore
+    the last npts - int(npts/samples)*samples will be omitted. The worst
+    case scenario is resampling a 1999 samples array to 1000 samples. 999
+    samples, almost half the data will be omitted.
 
-    Returns
-    -------
-        Nothing. The input Trace object will be altered.
+    The accurate method has no such problems because it will move a window
+    over the whole array and take the maximum for each window. It loops
+    over each window and is up to 10 times slower than the fast method.
+    This of course is highly depended on the number of wished samples and
+    the original trace and usually the accurate method is still fast
+    enough.
     """
     # Only works for preview traces.
     if not hasattr(trace.stats, 'preview') or not trace.stats.preview:

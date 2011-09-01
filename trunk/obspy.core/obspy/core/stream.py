@@ -40,7 +40,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     `Supported Formats` section below.
 
     This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
-    ``list``-like object of multiple ObsPy :class:`~obspy.core.stream.Trace`
+    ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
     :type pathname_or_url: string, optional
@@ -1479,6 +1479,7 @@ class Stream(object):
         place on the actual data arrays. The raw data is not accessible anymore
         afterwards.
 
+        :type type: str
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``).
         :param options: Necessary keyword arguments for the respective filter
@@ -1564,8 +1565,8 @@ class Stream(object):
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
         :type strict_length: bool, optional
-        :param strict_length: leave traces unchanged for which endtime of trace
-            would change
+        :param strict_length: Leave traces unchanged for which endtime of trace
+            would change. Defaults to ``False``.
 
         Currently a simple integer decimation is implemented.
         Only every decimation_factor-th sample remains in the trace, all other
