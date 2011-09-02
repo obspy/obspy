@@ -35,7 +35,7 @@ class ClientTestSuite(unittest.TestCase):
         self.assertEqual(UTCDateTime(2003, 6, 20, 5, 59, 0, 1000),
                          tr.stats.starttime)
         self.assertEqual(50.0, tr.stats.sampling_rate)
-        self.assertEqual(501, len(tr.data))
+        self.assertEqual(500, len(tr.data))
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
         st2.trim(starttime=t, endtime=t + 10)

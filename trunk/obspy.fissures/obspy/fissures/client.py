@@ -177,15 +177,15 @@ class Client(object):
         >>> client = Client()
         >>> t = UTCDateTime(2003,06,20,06,00,00)
         >>> st = client.getWaveform("GE", "APE", "", "SHZ", t, t+600)
-        >>> print(st)
+        >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
+        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z ... | 50.0 Hz, 30000 samples
         >>> st = client.getWaveform("GE", "APE", "", "SH*", t, t+600)
-        >>> print(st)
+        >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
-        GE.APE..SHN | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
-        GE.APE..SHE | 2003-06-20T06:00:00.001000Z - 2003-06-20T06:10:00.001000Z | 50.0 Hz, 30001 samples
+        GE.APE..SHZ | 2003-06-20T06:00:00.001000Z ... | 50.0 Hz, 30000 samples
+        GE.APE..SHN | 2003-06-20T06:00:00.001000Z ... | 50.0 Hz, 30000 samples
+        GE.APE..SHE | 2003-06-20T06:00:00.001000Z ... | 50.0 Hz, 30000 samples
 
         :param network: Network id, 2 char; e.g. "GE"
         :param station: Station id, 5 char; e.g. "APE"
@@ -346,8 +346,9 @@ class Client(object):
         >>> from obspy.fissures import Client
         >>> client = Client()
         >>> client.getCoordinates(network="GR", station="GRA1",
-        ...                       datetime="2010-08-01")
-        AttribDict({'latitude': 49.691886901855469, 'elevation': 499.5, 'longitude': 11.221719741821289})
+        ...     datetime="2010-08-01")  # doctest: +NORMALIZE_WHITESPACE
+        AttribDict({'latitude': 49.691886901855469, 'elevation': 499.5,
+                    'longitude': 11.221719741821289})
         """
         sta = self._getStationObj(network=network, station=station,
                                   datetime=datetime)
@@ -375,7 +376,8 @@ class Client(object):
 
         >>> from obspy.fissures import Client
         >>> client = Client()
-        >>> client.getPAZ("GE", "APE", "BHZ", "2010-08-01") #doctest: +NORMALIZE_WHITESPACE
+        >>> client.getPAZ("GE", "APE", "BHZ",
+        ...               "2010-08-01") #doctest: +NORMALIZE_WHITESPACE
         AttribDict({'zeros': [0j, 0j], 'sensitivity': 588000000.0,
                     'poles': [(-0.037004001438617706+0.037016000598669052j),
                               (-0.037004001438617706-0.037016000598669052j),

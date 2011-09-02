@@ -900,8 +900,20 @@ class Client(object):
 
     def distaz(self, **kwargs):
         """
-        Interface for `distaz` Web service of IRIS
-        (http://www.iris.edu/ws/distaz/).
+        Calculates the distance and azimuth between two points on a sphere
+        using the IRIS `distaz` Web service (http://www.iris.edu/ws/distaz/).
+
+        :type stalat: float
+        :param stalat: Station latitude.
+        :type stalon: float
+        :param stalon: Station longitude.
+        :type evtlat: float
+        :param evtlat: Event latitude.
+        :type evtlon: float
+        :param evtlon: Event longitude.
+        :rtype: dict
+        :return: Dictionary containing values for azimuth, backazimuth and
+            distance.
 
         This method will calculate the distance and azimuth between two points
         on a sphere. Azimuths start at north and go clockwise, i.e.
@@ -909,29 +921,18 @@ class Client(object):
         the station to the event, the backazimuth is from the event to the
         station.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.iris import Client
         >>> client = Client()
         >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, 
         ...                        evtlon=1.4)
-        >>> print(result)
-        {'distance': 2.09554, 'backazimuth': 5.46946, 'azimuth': 185.47692}
-
-        Parameters
-        ----------
-        stalat : float
-            Station latitude.
-        stalon : float
-            Station longitude.
-        evtlat : float
-            Event latitude.
-        evtlon : float
-            Event longitude.
-
-        Returns
-        -------
-            Dictionary containing values for azimuth, backazimuth and distance.
+        >>> print(result['distance'])
+        2.09554
+        >>> print(result['backazimuth'])
+        5.46946
+        >>> print(result['azimuth'])
+        185.47692
         """
         # set JSON as expected content type
         headers = {'Accept': 'application/json'}
@@ -952,14 +953,22 @@ class Client(object):
 
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
-        Interface for `flinnengdahl` Web service of IRIS
-        (http://www.iris.edu/ws/flinnengdahl/).
+        Converts a latitude, longitude pair into either a Flinn-Engdahl region
+        code or name using the IRIS `flinnengdahl` Web
+        service (http://www.iris.edu/ws/flinnengdahl/).
 
-        This method converts a latitude, longitude pair into either a Flinn-
-        Engdahl region code or name.
+        :param lat: Latitude of interest.
+        :type lat: float
+        :param lon: Longitude of interest.
+        :type lon: float
+        :param rtype: 'code', 'region' or 'both' (default) 
+        :type rtype: 
+        :rtype: int, string, or (int, string)
+        :returns: Returns Flinn-Engdahl region code or name or both, depending
+            on the request type parameter ``rtype``.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.iris import Client
         >>> client = Client()
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
@@ -968,17 +977,6 @@ class Client(object):
         'OREGON'
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
         (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
-
-        :param lat: Latitude of interest.
-        :type lat: float
-        :param lon: Longitude of interest.
-        :type lon: float
-        :param rtype: 'code', 'region' or 'both' (default) 
-        :type rtype: 
-
-        :rtype: int, string, or (int, string)
-        :returns: Returns Flinn-Engdahl region code or name or both, depending
-            on the request type parameter ``rtype``.
         """
         url = '/flinnengdahl/%s?lat=%f&lon=%f'
         # check rtype
