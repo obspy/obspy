@@ -38,8 +38,7 @@ class ClientTestSuite(unittest.TestCase):
         self.assertEqual(500, len(tr.data))
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
-        st2.trim(starttime=t, endtime=t + 10)
-        np.testing.assert_array_equal(st[0].data, st2[0].data)
+        np.testing.assert_array_equal(st[0].data[0:500], st2[0].data[0:500])
 
     def test_getNetworkIds(self):
         """

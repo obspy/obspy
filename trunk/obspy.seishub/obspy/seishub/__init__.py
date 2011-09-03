@@ -20,20 +20,21 @@ Basic Example
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
->>> print(st)
+>>> st.sort()
+>>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
-BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
-BW.MANZ..EHN | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
-BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - 2010-01-01T10:00:20.000000Z | 200.0 Hz, 4001 samples
+BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
+BW.MANZ..EHN | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
+BW.MANZ..EHZ | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples
 
 Advanced Examples
 -----------------
 
->>> client.waveform.getNetworkIds()     #doctest: +ELLIPSIS
+>>> client.waveform.getNetworkIds()     #doctest: +SKIP
 ['KT', 'BW', 'NZ', 'GR', ...]
 
 >>> sta_ids = client.waveform.getStationIds(network='BW')
->>> sorted(sta_ids)     #doctest: +ELLIPSIS
+>>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
 >>> cha_ids = client.waveform.getChannelIds(network='BW', station_id='MANZ')
@@ -42,7 +43,7 @@ Advanced Examples
 
 >>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
 ...                                  format='metadata')
->>> print(res) #doctest: +NORMALIZE_WHITESPACE
+>>> print(res)  # doctest: +NORMALIZE_WHITESPACE
 <?xml version="1.0" encoding="utf-8"?>
 <metadata>
   <item title="Station Name">
@@ -72,7 +73,7 @@ Advanced Examples
 
 >>> paz = client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
->>> sorted(paz)    #doctest: +NORMALIZE_WHITESPACE
+>>> sorted(paz)  # doctest: +SKIP
 [('gain', 60077000.0),
  ('poles', [(-0.037004+0.037016j), (-0.037004-0.037016j), (-251.33+0j),
             (-131.04-467.29j), (-131.04+467.29j)]),

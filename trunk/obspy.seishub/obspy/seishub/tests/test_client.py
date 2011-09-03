@@ -21,7 +21,7 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime("2009-09-03 00:00:00")
         #1 - w/o apply_filter
         st = self.client.waveform.getWaveform("BW", "RTPI", "", "EHZ",
-                                              t, t + 20)
+                                              t, t + 20, apply_filter=False)
         self.assertEqual(len(st), 1)
         self.assertEqual(st[0].stats.network, '')
         self.assertEqual(st[0].stats.station, 'GP01')
