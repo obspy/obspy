@@ -21,7 +21,6 @@ from omniORB import CORBA
 from CosNaming import NameComponent, NamingContext
 from idl import Fissures
 from obspy.core import Trace, UTCDateTime, Stream, AttribDict
-from obspy.core.util import deprecated_keywords
 from obspy.mseed.libmseed import LibMSEED
 from obspy.fissures.util import FissuresException, FissuresWarning, \
         poleZeroFilter2PAZ, utcdatetime2Fissures, use_first_and_raise_or_warn
@@ -30,10 +29,6 @@ import sys
 import warnings
 from copy import deepcopy
 
-
-DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
-                       'location_id':'location', 'channel_id':'channel',
-                       'start_datetime':'starttime', 'end_datetime':'endtime'}
 
 MAG_TYPES = {'lg': "edu.iris.Fissures/MagType/LG",
              'mb': "edu.iris.Fissures/MagType/mb",
@@ -166,7 +161,6 @@ class Client(object):
             msg = "Neither NetworkFinder nor DataCenter nor EventFinder could be initialized."
             raise FissuresException(msg)
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, getPAZ=False, getCoordinates=False):
         """
@@ -314,8 +308,6 @@ class Client(object):
             net_list.append(attributes.id.network_code)
         return net_list
 
-
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getStationIds(self, network=None):
         """
         Return all available stations as list.
@@ -337,7 +329,6 @@ class Client(object):
                 station_list.append(station.id.station_code)
         return station_list
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getCoordinates(self, network, station, datetime):
         """
         Get Coordinates of a station.
@@ -368,7 +359,6 @@ class Client(object):
         coords['longitude'] = loc.longitude
         return coords
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getPAZ(self, network, station, channel, datetime):
         """
         Get Poles&Zeros, gain and sensitivity of instrument for given ids and
@@ -540,8 +530,6 @@ class Client(object):
                     NameComponent(id=dc[1], kind='object_FVer1.0')])
         return dns
 
-
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def _getChannelObj(self, network, station, location, channel):
         """
         Return Fissures channel object.
@@ -567,7 +555,6 @@ class Client(object):
         return net.retrieve_channels_by_code(station, location,
                                              channel)
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def _getSeisObj(self, channel_obj, starttime, endtime):
         """
         Return Fissures seismogram object.
@@ -589,7 +576,6 @@ class Client(object):
         # Retrieve Seismogram object
         return self.seisDC.retrieve_seismograms(request)
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def _getStationObj(self, network, station, datetime):
         """
         Return Fissures station object.

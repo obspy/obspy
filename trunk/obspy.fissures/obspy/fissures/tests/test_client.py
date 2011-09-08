@@ -38,11 +38,13 @@ class ClientTestSuite(unittest.TestCase):
         self.assertEqual(500, len(tr.data))
         # compare with data retrieved via ArcLink
         st2 = read(os.path.join(self.path, 'arclink.mseed'))
-        np.testing.assert_array_equal(st[0].data[0:500], st2[0].data[0:500])
+        # trim to same start and endtime
+        st2.trim(tr.stats.starttime, tr.stats.endtime)
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
 
     def test_getNetworkIds(self):
         """
-        Retrieve networks_ids from DHI
+        Retrieve networks ids from DHI
         """
         client = Client()
         print("This will take a very long time")
@@ -52,10 +54,10 @@ class ClientTestSuite(unittest.TestCase):
 
     def test_getStationIds(self):
         """
-        Retrieve station_ids from DHI
+        Retrieve station ids from DHI
         """
         client = Client()
-        ids = client.getStationIds(network_id='GE')
+        ids = client.getStationIds(network='GE')
         stations = ['BRNL', 'PMG', 'MORC', 'DSB', 'LID', 'WLF', 'STU',
                     'BGIO', 'MLR', 'KBS']
         self.assertEqual(stations, ids[0:10])

@@ -17,24 +17,24 @@ class ClientTestCase(unittest.TestCase):
     def setUp(self):
         self.client = Client("http://teide.geophysik.uni-muenchen.de:8080")
 
-    def test_getWaveformApplyFilter(self):
-        t = UTCDateTime("2009-09-03 00:00:00")
-        #1 - w/o apply_filter
-        st = self.client.waveform.getWaveform("BW", "RTPI", "", "EHZ",
-                                              t, t + 20, apply_filter=False)
-        self.assertEqual(len(st), 1)
-        self.assertEqual(st[0].stats.network, '')
-        self.assertEqual(st[0].stats.station, 'GP01')
-        self.assertEqual(st[0].stats.location, '')
-        self.assertEqual(st[0].stats.channel, 'SHZ')
-        #2 - w/ apply_filter
-        st = self.client.waveform.getWaveform("BW", "RTPI", "", "EHZ",
-                                              t, t + 20, apply_filter=True)
-        self.assertEqual(len(st), 1)
-        self.assertEqual(st[0].stats.network, 'BW')
-        self.assertEqual(st[0].stats.station, 'RTPI')
-        self.assertEqual(st[0].stats.location, '')
-        self.assertEqual(st[0].stats.channel, 'EHZ')
+#    def test_getWaveformApplyFilter(self):
+#        t = UTCDateTime("2009-09-03 00:00:00")
+#        #1 - w/o apply_filter
+#        st = self.client.waveform.getWaveform("BW", "RTPI", "", "EHZ",
+#                                              t, t + 20, apply_filter=False)
+#        self.assertEqual(len(st), 1)
+#        self.assertEqual(st[0].stats.network, '')
+#        self.assertEqual(st[0].stats.station, 'GP01')
+#        self.assertEqual(st[0].stats.location, '')
+#        self.assertEqual(st[0].stats.channel, 'SHZ')
+#        #2 - w/ apply_filter
+#        st = self.client.waveform.getWaveform("BW", "RTPI", "", "EHZ",
+#                                              t, t + 20, apply_filter=True)
+#        self.assertEqual(len(st), 1)
+#        self.assertEqual(st[0].stats.network, 'BW')
+#        self.assertEqual(st[0].stats.station, 'RTPI')
+#        self.assertEqual(st[0].stats.location, '')
+#        self.assertEqual(st[0].stats.channel, 'EHZ')
 
     def test_getEventList(self):
         c = self.client.event
