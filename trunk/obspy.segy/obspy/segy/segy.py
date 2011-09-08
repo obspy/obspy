@@ -51,7 +51,7 @@ class SEGYWritingError(SEGYError):
 
 class SEGYFile(object):
     """
-    Convenience class that internally handles SEG Y files.
+    Class that internally handles SEG Y files.
     """
     def __init__(self, file=None, endian=None, textual_header_encoding=None,
                  unpack_headers=False):
@@ -212,6 +212,33 @@ class SEGYFile(object):
         """
         # Write the textual header.
         self._writeTextualHeader(file)
+
+        # Write certain fields in the binary header if they are not set. Most
+        # fields will be written using the data from the first trace. It is
+        # usually better to set the header manually!
+        if self.binary_file_header.number_of_data_traces_per_ensemble <= 0:
+            self.binary_file_header.number_of_data_traces_per_ensemble = \
+                len(self.traces)
+        if self.binary_file_header.sample_interval_in_microseconds <= 0:
+            self.binary_file_header.sample_interval_in_microseconds = \
+                self.traces[0].header.sample_interval_in_ms_for_this_trace
+        if self.binary_file_header.number_of_samples_per_data_trace <= 0:
+            self.binary_file_header.number_of_samples_per_data_trace = \
+                    len(self.traces[0].data)
+
+        # Always set the SEGY Revision number to 1.0 (hex-coded).
+        self.binary_file_header.seg_y_format_revision_number = 16
+        # Set the fixed length flag to zero if all traces have NOT the same
+        # length. Leave unchanged otherwise.
+        if len(set([len(tr.data) for tr in self.traces])) != 1:
+            self.binary_file_header.fixed_length_trace_flag = 0
+        # Extended textual headers are not supported by ObsPy so far.
+        self.binary_file_header.number_of_3200_byte_ext_file_header_records_following\
+        = 0
+        # Enforce the encoding
+        if data_encoding:
+            self.binary_file_header.data_sample_format_code = data_encoding
+
         # Write the binary header.
         self.binary_file_header.write(file, endian=endian)
         # Write all traces.
@@ -339,7 +366,12 @@ class SEGYBinaryFileHeader(object):
                 file.write(pack(format, getattr(self, name)))
             # These are the two unassigned values in the binary file header.
             elif name.startswith('unassigned'):
-                file.write(getattr(self, name))
+                temp = '%s' % str(getattr(self, name))
+                temp_length = len(temp)
+                # Pad to desired length if necessary.
+                if temp_length != length:
+                    temp += '\x00' * (length - temp_length)
+                file.write(temp)
             # Should not happen.
             else:
                 raise Exception
@@ -440,6 +472,9 @@ class SEGYTrace(object):
         If endian or data_encoding is set, these values will be enforced.
         Otherwise use the values of the SEGYTrace object.
         """
+        # Set the data length in the header before writing it.
+        self.header.number_of_samples_in_this_trace = len(self.data)
+
         # Write the header.
         self.header.write(file, endian=endian)
         if data_encoding is None:

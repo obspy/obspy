@@ -368,8 +368,11 @@ class SEGYTestCase(unittest.TestCase):
                 # Create strings again.
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
-            # Test the identity.
-            self.assertEqual(org_data, new_data)
+            # Always write the SEGY File revision number!
+            #org_data[3500:3502] = new_data[3500:3502]
+            # Test the identity without the SEGY revision number
+            self.assertEqual(org_data[:3500], new_data[:3500])
+            self.assertEqual(org_data[3502:], new_data[3502:])
 
     def test_unpackBinaryFileHeader(self):
         """

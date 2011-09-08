@@ -15,9 +15,10 @@ from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
 from obspy.segy.segy import SEGYTrace, autodetectEndianAndSanityCheckSU
-from obspy.segy.segy import SUFile
+from obspy.segy.segy import SUFile, SEGYTraceHeader
 from obspy.segy.header import BINARY_FILE_HEADER_FORMAT, TRACE_HEADER_FORMAT
 from obspy.segy.header import DATA_SAMPLE_FORMAT_CODE_DTYPE, TRACE_HEADER_KEYS
+from obspy.segy.header import ENDIAN
 from obspy.segy.util import unpack_header_value
 
 import numpy as np
@@ -104,6 +105,8 @@ def isSEGY(filename):
     _fixed_length = unpack('%sh' % _endian, _fixed_length)[0]
     _extended_number = unpack('%sh' % _endian, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
+    # Unfortunately the format number is 0 in many files so it cannot be truly
+    # tested.
     if _sample_interval <= 0 or _samples_per_trace <= 0 \
        or _number_of_data_traces < 0 or _number_of_auxiliary_traces < 0 \
        or _format_number < 0 or _fixed_length < 0 or _extended_number < 0:
@@ -294,20 +297,19 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
                                               'binary_file_header'):
             data_encoding = \
                 stream.stats.binary_file_header.data_sample_format_code
+        # Set it to float if it in not given.
         else:
             data_encoding = 1
-    if not hasattr(stream, 'stats') or \
-       not hasattr(stream.stats, 'textual_file_header') or \
-       not hasattr(stream.stats, 'binary_file_header'):
-        msg = """
-        Stream.stats.textual_file_header and
-        Stream.stats.binary_file_header need to exists.
 
-        Please refer to the ObsPy documentation for further information.
-        """.strip()
-        raise SEGYCoreWritingError(msg)
-    # Valid dtype for the data encoding. If None is given the encoding of the
-    # first trace is used.
+    # Create empty file wide headers if they do not exist.
+    if not hasattr(stream, 'stats'):
+        stream.stats = AttribDict()
+    if not hasattr(stream.stats, 'textual_file_header'):
+        stream.stats.textual_file_header = ""
+    if not hasattr(stream.stats, 'binary_file_header'):
+        stream.stats.binary_file_header = SEGYBinaryFileHeader()
+
+    # Valid dtype for the data encoding.
     valid_dtype = DATA_SAMPLE_FORMAT_CODE_DTYPE[data_encoding]
     # Makes sure that the dtype is for every Trace is correct.
     for trace in stream:
@@ -335,6 +337,8 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             byteorder = stream.stats.endian
         else:
             byteorder = '>'
+    # Map the byteorder.
+    byteorder = ENDIAN[byteorder]
     if textual_header_encoding is None:
         if hasattr(stream, 'stats') and hasattr(stream.stats,
                                             'textual_file_header_encoding'):
@@ -363,6 +367,14 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     for trace in stream:
         new_trace = SEGYTrace()
         new_trace.data = trace.data
+        # Create empty trace header if none is there.
+        if not hasattr(trace.stats, 'segy'):
+            print "CREATING TRACE HEADER"
+            trace.stats.segy = {}
+            trace.stats.segy.trace_header = SEGYTraceHeader(endian=byteorder)
+        elif not hasattr(trace.stats.segy, 'trace_header'):
+            print "CREATING TRACE HEADER"
+            trace.stats.segy.trace_header = SEGYTraceHeader()
         this_trace_header = trace.stats.segy.trace_header
         new_trace_header = new_trace.header
         # Again loop over all field of the trace header and if they exists, set
@@ -371,6 +383,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
+#print this_trace_header.trace_sequence_number_within_line
         starttime = trace.stats.starttime
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
