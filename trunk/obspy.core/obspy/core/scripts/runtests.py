@@ -15,43 +15,66 @@ the names of all available test cases.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 
-.. rubric:: Examples::
+.. rubric:: Examples
 
-(1) Run all tests on command line::
+(1) Run all local tests (ignoring tests requiring a network connection) on
+    command line::
 
-        obspy-runtests
+        $ obspy-runtests
 
     or via Python interpreter
 
     >>> import obspy.core
     >>> obspy.core.runTests()  # DOCTEST: +SKIP
 
-(2) Verbose output::
+(2) Run all tests on command line::
 
-        obspy-runtests -v
+        $ obspy-runtests --all
+
+    or via Python interpreter
+
+    >>> import obspy.core
+    >>> obspy.core.runTests(all=True)  # DOCTEST: +SKIP
+
+(3) Verbose output::
+
+        $ obspy-runtests -v
 
     or
 
     >>> import obspy.core
     >>> obspy.core.runTests(verbosity=2)"  # DOCTEST: +SKIP
 
-(3) Run tests of module :mod:`obspy.mseed`::
+(4) Run tests of module :mod:`obspy.mseed`::
 
-        obspy-runtests obspy.mseed.tests.suite
+        $ obspy-runtests obspy.mseed.tests.suite
 
     or as shortcut::
 
-        obspy-runtests mseed
+        $ obspy-runtests mseed
 
-(4) Run a specific test case::
+(5) Run tests of multiple modules, e.g. :mod:`obspy.wav` and :mod:`obspy.sac`::
 
-        obspy-runtests obspy.core.tests.test_stats.StatsTestCase.test_init
+        $ obspy-runtests wav sac
+
+(6) Run a specific test case::
+
+        $ obspy-runtests obspy.core.tests.test_stats.StatsTestCase.test_init
 
     or
 
     >>> import obspy.core
     >>> tests = ['obspy.core.tests.test_stats.StatsTestCase.test_init']
     >>> obspy.core.runTests(verbosity=2, tests=tests)  # DOCTEST: +SKIP
+
+(7) Report test results to http://tests.obspy.org/::
+
+        $ obspy-runtests -r
+
+Of course you may combine most of the options here, e.g. in order to test
+all modules, have a verbose output and report everything you would run::
+
+        $ obspy-runtests -r -v --all
 """
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES

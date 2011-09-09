@@ -3,11 +3,8 @@ import numpy as np
 from obspy.signal.array_analysis import array_transff_wavenumber
 
 # generate array coordinates
-coords = np.array([[  10., 60., 0.],
-                   [ 200., 50., 0.],
-                   [-120., 170., 0.],
-                   [-100., -150., 0.],
-                   [  30., -220., 0.]])
+coords = np.array([[10., 60., 0.], [200., 50., 0.], [-120., 170., 0.],
+                   [-100., -150., 0.], [30., -220., 0.]])
 
 # coordinates in km
 coords /= 1000.

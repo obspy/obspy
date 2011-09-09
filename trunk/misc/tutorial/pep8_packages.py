@@ -35,7 +35,7 @@ Here are the results of the automatic PEP 8 syntax checker:
 .. toctree::
 
 """)
-for module in modules:
+for module in sorted(modules):
     fh.write('   %s\n' % module)
 fh.close()
 
