@@ -147,22 +147,22 @@ headers and optionally setting custom header values::
     stream.stats.binary_file_header = SEGYBinaryFileHeader()
     stream.stats.binary_file_header.trace_sorting_code = 5
     
-    print "\nStream object before writing..."
+    print "Stream object before writing..."
     print stream
     
     stream.write("TEST.sgy", format="SEGY", data_encoding=1, byteorder=sys.byteorder)
-    print "\nStream object after writing. Will have some segy attributes..."
+    print "Stream object after writing. Will have some segy attributes..."
     print stream
     
-    print "\nReading using obspy.segy..."
+    print "Reading using obspy.segy..."
     st1 = readSEGY("TEST.sgy")
     print st1
     
-    print "\nReading using obspy.core..."
+    print "Reading using obspy.core..."
     st2 = read("TEST.sgy")
     print st2
     
-    print "\nJust to show that the values are written..."
+    print "Just to show that the values are written..."
     print [tr.stats.segy.trace_header.receiver_group_elevation for tr in stream]
     print [tr.stats.segy.trace_header.receiver_group_elevation for tr in st2]
     print stream.stats.binary_file_header.trace_sorting_code
