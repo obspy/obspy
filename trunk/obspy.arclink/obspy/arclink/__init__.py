@@ -39,9 +39,9 @@ German Regional network (``"GR"``) for an seismic event around
 >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
 >>> t = UTCDateTime("2009-08-20 04:03:12")
 >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
->>> st.plot() #doctest: +SKIP 
+>>> st.plot() #doctest: +SKIP
 
-.. note:: 
+.. note::
     The client needs to open port 18001 to the host webdc.eu via TCP/IP in
     order to download the requested data. Please make sure that no firewall is
     blocking access to this server/port combination.
@@ -54,8 +54,8 @@ German Regional network (``"GR"``) for an seismic event around
 Waveform data fetched from an ArcLink node is converted into an ObsPy
 :class:`~obspy.core.stream.Stream` object. The seismogram is truncated by the
 ObsPy client to the actual requested time span, as ArcLink internally cuts SEED
-files for performance reasons on record base in order to avoid uncompressing the
-waveform data. The output of the script above is shown in the next picture.
+files for performance reasons on record base in order to avoid uncompressing
+the waveform data. The output of the script above is shown in the next picture.
 
 .. plot::
 
@@ -78,13 +78,13 @@ example above.
     >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
     >>> paz  #doctest: +NORMALIZE_WHITESPACE +SKIP
     {'STS-2/N/g=1500': {
-        'poles': [(-0.037004000000000002+0.037016j), 
-                  (-0.037004000000000002-0.037016j), 
-                  (-251.33000000000001+0j), 
-                  (-131.03999999999999-467.29000000000002j), 
-                  (-131.03999999999999+467.29000000000002j)], 
-        'sensitivity': 2516778600.0, 
-        'zeros': [0j, 0j], 
+        'poles': [(-0.037004000000000002+0.037016j),
+                  (-0.037004000000000002-0.037016j),
+                  (-251.33000000000001+0j),
+                  (-131.03999999999999-467.29000000000002j),
+                  (-131.03999999999999+467.29000000000002j)],
+        'sensitivity': 2516778600.0,
+        'zeros': [0j, 0j],
         'gain': 60077000.0}}
 
 (2) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
@@ -101,17 +101,18 @@ example above.
     >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
     ...                     t, t + 20, format='FSEED') #doctest: +SKIP
 
-(4) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory data.
+(4) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory
+    data.
 
     >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
-    ...                           permanent=True, min_longitude=12, 
+    ...                           permanent=True, min_longitude=12,
     ...                           max_longitude=12.2) #doctest: +SKIP
     >>> inv.keys() #doctest: +SKIP
     ['BW.MROB', 'BW.MANZ..EHZ', 'BW', 'BW.MANZ', 'BW.MROB..EHZ']
     >>> inv['BW'] #doctest: +SKIP
-    AttribDict({'description': 'BayernNetz', 'region': 'Germany', 'archive': ...
+    AttribDict({'description': 'BayernNetz', 'region': 'Germany', ...
     >>> inv['BW.MROB'] #doctest: +SKIP
-    AttribDict({'code': 'MROB', 'description': 'Rosenbuehl, Bavaria', 'start'...
+    AttribDict({'code': 'MROB', 'description': 'Rosenbuehl, Bavaria', ...
 
 Further Resources
 -----------------

@@ -10,20 +10,23 @@ ArcLink/WebDC client for ObsPy.
 """
 
 from copy import deepcopy
+from fnmatch import fnmatch
 from lxml import objectify, etree
-from obspy.core import read, Stream, UTCDateTime
+from obspy.core import read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from telnetlib import Telnet
 import os
 import sys
 import time
-from fnmatch import fnmatch
+import warnings
 
 
 ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
 ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
 INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
+
+DCID_KEY_FILE = os.path.join(os.getenv('HOME'), 'dcidpasswords.txt')
 
 
 class ArcLinkException(Exception):
@@ -55,12 +58,21 @@ class Client(Telnet):
     :type institution: str, optional
     :param institution: A string containing the name of the institution of the
         requesting person (default is an ``'Anonymous'``).
+    :type dcid_keys: dict, optional
+    :param dcid_keys: Dictionary of datacenter ids (DCID) and passwords used
+        for decoding encrypted waveform requests.
+    :type dcid_key_file: str, optional
+    :param dcid_key_file: Simple text configuration file containing lines of
+        data center ids (DCIDs) and password pairs separated by a equal sign,
+        e.g. for DCID ``BIA`` and password ``OfH9ekhi`` use ``"BIA=OfH9ekhi"``.
+        If not set, passwords found in a file called `$HOME/dcidpasswords.txt`
+        will be used automatically.
     :type debug: bool, optional
     :param debug: Enables verbose output of the connection handling (default is
         ``False``).
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
-        (default is ``0``). 
+        (default is ``0``).
     :type plain_status_allowed: bool, optional
     :param plain_status_allowed: Certain ArcLink versions do not allow a plain
         STATUS request. Set this to False if you experience a endless loop
@@ -84,7 +96,8 @@ class Client(Telnet):
 
     def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
                  password="", institution="Anonymous", timeout=20,
-                 debug=False, command_delay=0, plain_status_allowed=True):
+                 dcid_keys={}, dcid_key_file=None, debug=False,
+                 command_delay=0, plain_status_allowed=True):
         """
         Initializes an ArcLink client.
         """
@@ -94,6 +107,7 @@ class Client(Telnet):
         self.command_delay = command_delay
         self.init_host = host
         self.init_port = port
+        self.dcid_keys = dcid_keys
         self.plain_status_allowed = plain_status_allowed
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
@@ -106,6 +120,24 @@ class Client(Telnet):
         self.debug = debug
         if self.debug:
             print('\nConnected to %s:%d' % (self.host, self.port))
+        # check for dcid_key_file
+        if not dcid_key_file:
+            # check in user directory
+            if not os.path.isfile(DCID_KEY_FILE):
+                return
+            dcid_key_file = DCID_KEY_FILE
+        # parse dcid_key_file
+        try:
+            lines = open(dcid_key_file, 'rt').readlines()
+        except:
+            pass
+        else:
+            for line in lines:
+                key, value = line.split('=', 1)
+                key = key.strip()
+                # ensure that dcid_keys set via parameters are not overwritten
+                if key not in self.dcid_keys:
+                    self.dcid_keys[key] = value.strip()
 
     def _writeln(self, buffer):
         if self.command_delay:
@@ -208,7 +240,7 @@ class Client(Telnet):
         if self.plain_status_allowed:
             self._readln('OK')
             self._writeln('STATUS')
-        while 1:
+        while True:
             status = self._readln()
             try:
                 req_id = int(status)
@@ -219,7 +251,7 @@ class Client(Telnet):
                 pass
             else:
                 break
-        while 1:
+        while True:
             self._writeln('STATUS %d' % req_id)
             xml_doc = self._readln()
             if 'ready="true"' in xml_doc:
@@ -284,7 +316,21 @@ class Client(Telnet):
                 print("%d bytes of data read" % len(data))
         self._writeln('PURGE %d' % req_id)
         self._bye()
-        self.data = data
+        # check for encryption
+        if 'encrypted="true"' in xml_doc:
+            # extract dcid
+            xml_doc = objectify.fromstring(xml_doc[:-3])
+            dcid = xml_doc.request.volume.get('dcid')
+            # check if given in known list of keys
+            if dcid in self.dcid_keys:
+                # call decrypt routine
+                from obspy.arclink.decrypt import SSLWrapper
+                decryptor = SSLWrapper(self.dcid_keys[dcid])
+                data = decryptor.update(data)
+                data += decryptor.final()
+            else:
+                msg = "Could not decrypt waveform data for dcid %s."
+                warnings.warn(msg % (dcid))
         return data
 
     def getWaveform(self, network, station, location, channel, starttime,
@@ -298,17 +344,17 @@ class Client(Telnet):
         :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
-            wild cards.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+            contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
-        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+        :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume (default is an ``'MSEED'``).
 
             .. note::
@@ -335,10 +381,7 @@ class Client(Telnet):
                           compressed=compressed, route=route)
         # read stream using obspy.mseed
         tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
+        stream = read(tf.name, 'MSEED')
         tf.close()
         # remove temporary file:
         try:
@@ -388,25 +431,25 @@ class Client(Telnet):
         :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
-            wild cards.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+            contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
-        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+        :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
 
             .. note::
                 A format ``'XSEED'`` is documented, but not yet implemented in
                 ArcLink.
         :type compressed: bool, optional
-        :param compressed: Request compressed files from ArcLink server. Default
-            is ``True``.
+        :param compressed: Request compressed files from ArcLink server.
+            Default is ``True``.
         :type route: bool, optional
         :param route: Enables ArcLink routing. Default is ``True``.
         :type unpack: bool, optional
@@ -414,6 +457,11 @@ class Client(Telnet):
             Default is ``True``.
         :return: None
         """
+        # check parameters
+        is_name = isinstance(filename, basestring)
+        if not is_name and not isinstance(filename, file):
+            msg = "Parameter filename must be either string or file handler."
+            raise TypeError(msg)
         # request type
         rtype = 'REQUEST WAVEFORM format=%s' % format
         if compressed:
@@ -427,24 +475,33 @@ class Client(Telnet):
         rdata = [starttime, endtime, network, station, channel, location]
         # fetch waveform
         data = self._fetch(rtype, rdata, route=route)
-        # unpack compressed data if option unpack is set
-        if data and compressed:
+        # check if data is still encrypted
+        if data.startswith('Salted__'):
+            # set "good" filenames
+            if is_name:
+                if compressed and not filename.endswith('.bz2.openssl'):
+                    filename += '.bz2.openssl'
+                elif not compressed and not filename.endswith('.openssl'):
+                    filename += '.openssl'
+            # warn user that encoded files will not be unpacked
             if unpack:
-                data = bz2.decompress(data)
-            else:
-                # check for "good" filename
-                if not filename.endswith('.bz2'):
+                warnings.warn("Cannot unpack encrypted waveforms.")
+        else:
+            # not encoded - handle as usual
+            if compressed:
+                # unpack compressed data if option unpack is set
+                if unpack:
+                    data = bz2.decompress(data)
+                elif is_name and not filename.endswith('.bz2'):
+                    # set "good" filenames
                     filename += '.bz2'
         # create file handler if a file name is given
-        if isinstance(filename, basestring):
+        if is_name:
             fh = open(filename, "wb")
-        elif isinstance(filename, file):
-            fh = filename
         else:
-            msg = "Parameter filename must be either string or file handler."
-            raise TypeError(msg)
+            fh = filename
         fh.write(data)
-        if isinstance(filename, basestring):
+        if is_name:
             fh.close()
 
     def getRouting(self, network, station, starttime, endtime):
@@ -479,7 +536,7 @@ class Client(Telnet):
             raise ArcLinkException(msg % xml_doc.nsmap)
         # convert into dictionary
         result = {}
-        for route in xml_doc.xpath('ns0:route', namespaces={'ns0':xml_ns}):
+        for route in xml_doc.xpath('ns0:route', namespaces={'ns0': xml_ns}):
             if xml_ns == ROUTING_NS_0_1:
                 # no location/stream codes in 0.1
                 id = route.get('net_code') + '.' + route.get('sta_code') + '..'
@@ -489,7 +546,7 @@ class Client(Telnet):
                     route.get('locationCode') + '.' + \
                     route.get('streamCode')
             result[id] = []
-            for node in route.xpath('ns0:arclink', namespaces={'ns0':xml_ns}):
+            for node in route.xpath('ns0:arclink', namespaces={'ns0': xml_ns}):
                 temp = {}
                 try:
                     temp['priority'] = int(node.get('priority'))
@@ -547,7 +604,7 @@ class Client(Telnet):
         Retrieve QC information of ArcLink streams.
 
         .. note::
-            Requesting QC is documented but seems not to work at the moment. 
+            Requesting QC is documented but seems not to work at the moment.
 
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -565,8 +622,8 @@ class Client(Telnet):
         :param parameters: Comma-separated list of QC parameters. The following
             QC parameters are implemented in the present version:
             ``'availability'``, ``'delay'``, ``'gaps count'``,
-            ``'gaps interval'``, ``'gaps length'``, ``'latency'``, ``'offset'``, 
-            ``'overlaps count'``, ``'overlaps interval'``,
+            ``'gaps interval'``, ``'gaps length'``, ``'latency'``,
+            ``'offset'``, ``'overlaps count'``, ``'overlaps interval'``,
             ``'overlaps length'``, ``'rms'``, ``'spikes amplitude'``,
             ``'spikes count'``, ``'spikes interval'``, ``'timing quality'``
             (default is ``'*'`` for requesting all parameters).
@@ -654,7 +711,7 @@ class Client(Telnet):
             nzeros = int(xml_doc.get('nzeros', 0))
         try:
             zeros = xml_doc.xpath('ns:zeros/text()',
-                                  namespaces={'ns':xml_ns})[0]
+                                  namespaces={'ns': xml_ns})[0]
             temp = zeros.strip().replace(' ', '').replace(')(', ') (')
             for zeros in temp.split():
                 paz['zeros'].append(complexifyString(zeros))
@@ -671,7 +728,7 @@ class Client(Telnet):
             npoles = int(xml_doc.get('npoles', 0))
         try:
             poles = xml_doc.xpath('ns:poles/text()',
-                                  namespaces={'ns':xml_ns})[0]
+                                  namespaces={'ns': xml_ns})[0]
             temp = poles.strip().replace(' ', '').replace(')(', ') (')
             for poles in temp.split():
                 paz['poles'].append(complexifyString(poles))
@@ -738,7 +795,8 @@ class Client(Telnet):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'SEED'``, optional
-        :param format: Output format. Currently only Dataless SEED is supported.
+        :param format: Output format. Currently only Dataless SEED is
+            supported.
         :return: None
         """
         # request type
@@ -767,8 +825,8 @@ class Client(Telnet):
         :param station: Station code, e.g. ``'MANZ'``. Station code may contain
             wild cards.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``. Channel code may contain
             wild cards.
@@ -852,7 +910,7 @@ class Client(Telnet):
             raise ArcLinkException(msg % xml_doc.nsmap)
         # convert into dictionary
         data = AttribDict()
-        for network in xml_doc.xpath('ns:network', namespaces={'ns':xml_ns}):
+        for network in xml_doc.xpath('ns:network', namespaces={'ns': xml_ns}):
             net = AttribDict()
             # strings
             for key in ['archive', 'code', 'description', 'institutions',
@@ -875,14 +933,14 @@ class Client(Telnet):
             # remark
             try:
                 net.remark = network.xpath('ns:remark',
-                    namespaces={'ns':xml_ns})[0].text or ''
+                    namespaces={'ns': xml_ns})[0].text or ''
             except:
                 net.remark = ''
             # write network entries
             data[net.code] = net
             # stations
             for station in network.xpath('ns0:station',
-                                         namespaces={'ns0':xml_ns}):
+                                         namespaces={'ns0': xml_ns}):
                 sta = AttribDict()
                 # strings
                 for key in ['code', 'description', 'affiliation', 'country',
@@ -911,14 +969,14 @@ class Client(Telnet):
                 # remark
                 try:
                     sta.remark = station.xpath('ns:remark',
-                        namespaces={'ns':xml_ns})[0].text or ''
+                        namespaces={'ns': xml_ns})[0].text or ''
                 except:
                     sta.remark = ''
                 # write station entry
                 data[net.code + '.' + sta.code] = sta
                 # instruments
                 for stream in station.xpath('ns:' + stream_ns,
-                                            namespaces={'ns':xml_ns}):
+                                            namespaces={'ns': xml_ns}):
                     # date / times
                     try:
                         start = UTCDateTime(stream.get('start'))
@@ -935,7 +993,7 @@ class Client(Telnet):
                         continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
-                                             namespaces={'ns':xml_ns}):
+                                             namespaces={'ns': xml_ns}):
                         if xml_ns == INVENTORY_NS_0_2:
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:
@@ -944,12 +1002,12 @@ class Client(Telnet):
                         if xml_ns == INVENTORY_NS_0_2:
                             # channel code is split into two attributes
                             id = '.'.join([net.code, sta.code,
-                                           stream.get('loc_code' , ''),
-                                           stream.get('code' , '  ') + \
+                                           stream.get('loc_code', ''),
+                                           stream.get('code', '  ') + \
                                            comp.get('code', ' ')])
                         else:
                             id = '.'.join([net.code, sta.code,
-                                           stream.get('code' , ''),
+                                           stream.get('code', ''),
                                            comp.get('code', '')])
                         # write channel entry
                         if not id in data:
@@ -976,7 +1034,7 @@ class Client(Telnet):
                         paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
                                                '[@' + name_ns + '="' + \
                                                seismometer_id + '"]/@response',
-                                               namespaces={'ns':xml_ns})
+                                               namespaces={'ns': xml_ns})
                         if not paz_id:
                             continue
                         paz_id = paz_id[0]
@@ -985,7 +1043,7 @@ class Client(Telnet):
                             paz_id = paz_id[4:]
                         xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' + \
                                                 name_ns + '="' + paz_id + '"]',
-                                                namespaces={'ns':xml_ns})
+                                                namespaces={'ns': xml_ns})
                         if not xml_paz:
                             continue
                         # parse PAZ

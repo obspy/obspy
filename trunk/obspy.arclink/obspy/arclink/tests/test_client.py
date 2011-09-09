@@ -73,18 +73,18 @@ class ClientTestCase(unittest.TestCase):
             self.assertEquals(trace.stats.channel[0:2], 'EH')
 
     def test_delayedRequest(self):
-        """ 
+        """
         """
         # initialize client with 0.1 delay
         client = Client(host='webdc.eu', port=18002, command_delay=0.1)
         start = UTCDateTime(2010, 1, 1)
         end = start + 100
-        # getWaveform with 0.1 delay  
+        # getWaveform with 0.1 delay
         stream = client.getWaveform('BW', 'MANZ', '', 'EHE', start, end)
         self.assertEquals(len(stream), 1)
-        # getRouting with 0.1 delay  
+        # getRouting with 0.1 delay
         results = client.getRouting('BW', 'MANZ', start, end)
-        self.assertTrue(results.has_key('BW.MANZ..'))
+        self.assertTrue('BW.MANZ..' in results)
 
     def test_getRouting(self):
         """
@@ -164,7 +164,7 @@ class ClientTestCase(unittest.TestCase):
                                      endtime=dt + 1, instruments=True)
         self.assertTrue('GE' in result)
         self.assertTrue('GE.APE' in result)
-        self.assertTrue('GE.APE..BHE' in result) # only for instruments=True
+        self.assertTrue('GE.APE..BHE' in result)  # only for instruments=True
         #3 - BW network
         result = client.getInventory('BW', 'RJOB', starttime=dt,
                                      endtime=dt + 1)
@@ -489,8 +489,8 @@ class ClientTestCase(unittest.TestCase):
     def test_getPAZ(self):
         """
         Test for the Client.getPAZ function.
-        
-        As reference the EHZ channel of MANZ is taken, the result is compared 
+
+        As reference the EHZ channel of MANZ is taken, the result is compared
         to the entries of the local response file of the Bavarian network.
         """
         # reference values
@@ -557,7 +557,7 @@ class ClientTestCase(unittest.TestCase):
                          (-131.03999999999999 - 467.29000000000002j),
                          (-131.03999999999999 + 467.29000000000002j)],
                'sensitivity': 2516778600.0,
-               'zeros': [0j, 0j] }
+               'zeros': [0j, 0j]}
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
         # Retrieve data via ArcLink
