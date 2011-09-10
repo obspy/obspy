@@ -1,4 +1,9 @@
 # .coveragerc to control coverage.py
+[run]
+# a list of filename patterns; files to leave out of measurement or reporting
+omit = */suds*,*/distribute*,*/pyshared/*,*/python-support/*
+
+
 [report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
