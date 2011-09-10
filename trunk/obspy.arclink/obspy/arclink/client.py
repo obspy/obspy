@@ -100,6 +100,8 @@ class Client(object):
                  command_delay=0, plain_status_allowed=True):
         """
         Initializes an ArcLink client.
+
+        See :mod:`obspy.arclink` for all parameters.
         """
         self.user = user
         self.password = password
@@ -342,7 +344,7 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``. Location code may
             contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+        :param channel: Channel code, e.g. ``'EHE'``. Channel code may
             contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
@@ -429,7 +431,7 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``. Location code may
             contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+        :param channel: Channel code, e.g. ``'EHE'``. Channel code may
             contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
