@@ -94,8 +94,9 @@ example above.
     >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
     ...                     t, t + 1, format="SEED") #doctest: +SKIP
 
-(3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes a seismogram
-    into a Full SEED volume.
+(3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes the requested
+    waveform unmodified into your local file system. Here we request a Full
+    SEED volume.
 
     >>> t = UTCDateTime(2009, 1, 1, 12, 0)
     >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',

@@ -21,12 +21,12 @@ import time
 import warnings
 
 
-ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
-ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
-INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
-INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
-
 DCID_KEY_FILE = os.path.join(os.getenv('HOME'), 'dcidpasswords.txt')
+
+_ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
+_ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
+_INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
+_INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 
 class ArcLinkException(Exception):
@@ -35,7 +35,7 @@ class ArcLinkException(Exception):
     """
 
 
-class Client(Telnet):
+class Client(object):
     """
     The ArcLink/WebDC client.
 
@@ -111,15 +111,16 @@ class Client(Telnet):
         self.plain_status_allowed = plain_status_allowed
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
-            Telnet.__init__(self, host, port)
+            self._client = Telnet(host, port)
         else:
-            Telnet.__init__(self, host, port, timeout)
+            self._client = Telnet(host, port, timeout)
         # silent connection check
         self.debug = False
         self._hello()
         self.debug = debug
         if self.debug:
-            print('\nConnected to %s:%d' % (self.host, self.port))
+            print('\nConnected to %s:%d' % (self._client.host,
+                                            self._client.port))
         # check for dcid_key_file
         if not dcid_key_file:
             # check in user directory
@@ -142,12 +143,12 @@ class Client(Telnet):
     def _writeln(self, buffer):
         if self.command_delay:
             time.sleep(self.command_delay)
-        Telnet.write(self, buffer + '\n')
+        self._client.write(buffer + '\n')
         if self.debug:
             print('>>> ' + buffer)
 
     def _readln(self, value=''):
-        line = self.read_until(value + '\r\n', self.status_timeout)
+        line = self._client.read_until(value + '\r\n', self.status_timeout)
         line = line.strip()
         if value not in line:
             print "TIMEOUT!!! %s" % value
@@ -157,9 +158,10 @@ class Client(Telnet):
 
     def _hello(self):
         if sys.hexversion < 0x020600F0:
-            self.open(self.host, self.port)
+            self._client.open(self._client.host, self._client.port)
         else:
-            self.open(self.host, self.port, self.timeout)
+            self._client.open(self._client.host, self._client.port,
+                              self._client.timeout)
         self._writeln('HELLO')
         self.version = self._readln(')')
         # certain ArcLink versions do not allow a plain STATUS request
@@ -176,7 +178,7 @@ class Client(Telnet):
 
     def _bye(self):
         self._writeln('BYE')
-        self.close()
+        self._client.close()
 
     def _fetch(self, request_type, request_data, route=True):
         # skip routing on request
@@ -192,11 +194,13 @@ class Client(Telnet):
         table = self._findRoute(routes, request_data)
         if not table:
             # retry first ArcLink node if host and port have been changed
-            if self.host != self.init_host and self.port != self.init_port:
-                self.host = self.init_host
-                self.port = self.init_port
+            if self._client.host != self.init_host and \
+               self._client.port != self.init_port:
+                self._client.host = self.init_host
+                self._client.port = self.init_port
                 if self.debug:
-                    print('\nRequesting %s:%d' % (self.host, self.port))
+                    print('\nRequesting %s:%d' % (self._client.host,
+                                                  self._client.port))
                 return self._fetch(request_type, request_data, route)
             msg = 'Could not find route to %s.%s'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
@@ -205,17 +209,20 @@ class Client(Telnet):
             if item == {}:
                 return self._request(request_type, request_data)
             # check if current connection is enough
-            if item['host'] == self.host and item['port'] == self.port:
+            if item['host'] == self._client.host and \
+               item['port'] == self._client.port:
                 return self._request(request_type, request_data)
-            self.host = item['host']
-            self.port = item['port']
+            self._client.host = item['host']
+            self._client.port = item['port']
             if self.debug:
-                print('\nRequesting %s:%d' % (self.host, self.port))
+                print('\nRequesting %s:%d' % (self._client.host,
+                                              self._client.port))
             # only use timeout from python2.6
             if sys.hexversion < 0x020600F0:
-                self.open(self.host, self.port)
+                self._client.open(self._client.host, self._client.port)
             else:
-                self.open(self.host, self.port, self.timeout)
+                self._client.open(self._client.host, self._client.port,
+                                  self._client.timeout)
             try:
                 return self._request(request_type, request_data)
             except ArcLinkException:
@@ -255,24 +262,12 @@ class Client(Telnet):
             self._writeln('STATUS %d' % req_id)
             xml_doc = self._readln()
             if 'ready="true"' in xml_doc:
-                self.read_until('\r\n', self.status_timeout)
+                self._client.read_until('\r\n', self.status_timeout)
                 break
             time.sleep(self.status_delay)
         # check for errors
-        # XXX: not everything implemented yet
-        #     = OK - request sucessfully processed, data available
-        #     = NODATA - no processing errors, but data not available
-        #     = WARN - processing errors, some downloadable data available
-        #     = ERROR - processing errors, no downloadable data available
-        #     = RETRY - temporarily no data available
-        #     = DENIED - access to data denied for the user
-        #     = CANCEL - processing cancelled (eg., by operator)
-        #     = MESSAGE <any_string> - error message in case of WARN or
-        #           ERROR, but can be used regardless of status (the last
-        #           message is shown in STATUS response)
-        #     = SIZE <n> - data size. In case of volume, it must be the
-        #           exact size of downloadable product.
-        for err_code in ['DENIED', 'CANCELLED', 'CANCEL', 'ERROR']:
+        for err_code in ['DENIED', 'CANCELLED', 'CANCEL', 'ERROR', 'RETRY',
+                         'WARN']:
             err_str = 'status="%s"' % (err_code)
             if err_str in xml_doc:
                 # cleanup
@@ -295,12 +290,12 @@ class Client(Telnet):
             xml_doc = objectify.fromstring(xml_doc[:-3])
             raise ArcLinkException(xml_doc.request.volume.line.get('message'))
         elif '<line content' not in xml_doc:
-            # XXX: safeguard as long not all status messages are covered
+            # safeguard for not covered status messages
             self._writeln('PURGE %d' % req_id)
             self._bye()
             raise ArcLinkException('No content')
         self._writeln('DOWNLOAD %d' % req_id)
-        fd = self.get_socket().makefile('rb+')
+        fd = self._client.get_socket().makefile('rb+')
         length = int(fd.readline(100).strip())
         data = ''
         while len(data) < length:
@@ -527,17 +522,17 @@ class Client(Telnet):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if ROUTING_NS_1_0 in xml_doc.nsmap.values():
-            xml_ns = ROUTING_NS_1_0
-        elif ROUTING_NS_0_1 in xml_doc.nsmap.values():
-            xml_ns = ROUTING_NS_0_1
+        if _ROUTING_NS_1_0 in xml_doc.nsmap.values():
+            xml_ns = _ROUTING_NS_1_0
+        elif _ROUTING_NS_0_1 in xml_doc.nsmap.values():
+            xml_ns = _ROUTING_NS_0_1
         else:
             msg = "Unknown routing namespace %s"
             raise ArcLinkException(msg % xml_doc.nsmap)
         # convert into dictionary
         result = {}
         for route in xml_doc.xpath('ns0:route', namespaces={'ns0': xml_ns}):
-            if xml_ns == ROUTING_NS_0_1:
+            if xml_ns == _ROUTING_NS_0_1:
                 # no location/stream codes in 0.1
                 id = route.get('net_code') + '.' + route.get('sta_code') + '..'
             else:
@@ -697,7 +692,7 @@ class Client(Telnet):
         paz['name'] = xml_doc.get('name', '')
         # gain
         try:
-            if xml_ns == INVENTORY_NS_1_0:
+            if xml_ns == _INVENTORY_NS_1_0:
                 paz['gain'] = float(xml_doc.get('normalizationFactor'))
             else:
                 paz['gain'] = float(xml_doc.get('norm_fac'))
@@ -705,7 +700,7 @@ class Client(Telnet):
             paz['gain'] = None
         # zeros
         paz['zeros'] = []
-        if xml_ns == INVENTORY_NS_1_0:
+        if xml_ns == _INVENTORY_NS_1_0:
             nzeros = int(xml_doc.get('numberOfZeros', 0))
         else:
             nzeros = int(xml_doc.get('nzeros', 0))
@@ -722,7 +717,7 @@ class Client(Telnet):
             raise ArcLinkException('Could not parse all zeros')
         # poles
         paz['poles'] = []
-        if xml_ns == INVENTORY_NS_1_0:
+        if xml_ns == _INVENTORY_NS_1_0:
             npoles = int(xml_doc.get('numberOfPoles', 0))
         else:
             npoles = int(xml_doc.get('npoles', 0))
@@ -891,15 +886,15 @@ class Client(Telnet):
         # parse XML document
         xml_doc = etree.fromstring(result)
         # get routing version
-        if INVENTORY_NS_1_0 in xml_doc.nsmap.values():
-            xml_ns = INVENTORY_NS_1_0
+        if _INVENTORY_NS_1_0 in xml_doc.nsmap.values():
+            xml_ns = _INVENTORY_NS_1_0
             stream_ns = 'sensorLocation'
             component_ns = 'stream'
             seismometer_ns = 'sensor'
             name_ns = 'publicID'
             resp_paz_ns = 'responsePAZ'
-        elif INVENTORY_NS_0_2 in xml_doc.nsmap.values():
-            xml_ns = INVENTORY_NS_0_2
+        elif _INVENTORY_NS_0_2 in xml_doc.nsmap.values():
+            xml_ns = _INVENTORY_NS_0_2
             stream_ns = 'seis_stream'
             component_ns = 'component'
             seismometer_ns = 'seismometer'
@@ -994,12 +989,12 @@ class Client(Telnet):
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
                                              namespaces={'ns': xml_ns}):
-                        if xml_ns == INVENTORY_NS_0_2:
+                        if xml_ns == _INVENTORY_NS_0_2:
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:
                             seismometer_id = comp.get(seismometer_ns, None)
                         # channel id
-                        if xml_ns == INVENTORY_NS_0_2:
+                        if xml_ns == _INVENTORY_NS_0_2:
                             # channel code is split into two attributes
                             id = '.'.join([net.code, sta.code,
                                            stream.get('loc_code', ''),
