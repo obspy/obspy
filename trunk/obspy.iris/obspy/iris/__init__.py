@@ -72,6 +72,9 @@ IRIS (http://www.iris.edu/ws/):
   of time series data
 * :meth:`~obspy.iris.client.Client.distaz()` - calculate the distance and
   azimuth between two points on a sphere.
+* :meth:`~obspy.iris.client.Client.evalresp()` - evaluates instrument response
+  information stored at the IRIS DMC and outputs ASCII data or
+  `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
 * :meth:`~obspy.iris.client.Client.flinnengdahl()` - converts a latitude,
   longitude pair into either a Flinn-Engdahl seismic region code or region
   name.

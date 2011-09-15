@@ -132,3 +132,7 @@ table.docutils td.field-body p {
 dd p {
   margin-top: 16px;
 }
+
+table.docutils td.field-body ul li ul li {
+    list-style-type: square;
+}

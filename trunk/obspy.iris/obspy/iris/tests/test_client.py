@@ -9,6 +9,7 @@ from obspy.iris import Client
 import os
 import unittest
 import filecmp
+import numpy as np
 
 
 class ClientTestCase(unittest.TestCase):
@@ -122,22 +123,108 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # code
-        result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="code")
+        result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         self.assertEquals(result, 683)
         # region
-        result = client.flinnengdahl(lat=42, lon= -122.24, rtype="region")
+        result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
         self.assertEquals(result, 'OREGON')
         # both
-        result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="both")
+        result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
         self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
         # default rtype
-        result = client.flinnengdahl(lat=42, lon= -122.24)
+        result = client.flinnengdahl(lat=42, lon=-122.24)
         self.assertEquals(result, (32, 'OREGON'))
         # outside boundaries
-        self.assertRaises(Exception, client.flinnengdahl, lat= -90.1, lon=0)
+        self.assertRaises(Exception, client.flinnengdahl, lat=-90.1, lon=0)
         self.assertRaises(Exception, client.flinnengdahl, lat=90.1, lon=0)
-        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon= -180.1)
+        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=-180.1)
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=180.1)
+
+    def test_evalresp(self):
+        """
+        Tests evaluating instrument response information.
+        """
+        client = Client()
+        dt = UTCDateTime("2005-01-01")
+        # plot as PNG file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='plot',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+        os.remove(tempfile)
+        # plot-amp as PNG file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='plot-amp',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+        os.remove(tempfile)
+        # plot-phase as PNG file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='plot-phase',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+        os.remove(tempfile)
+        # fap as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='fap',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+        os.remove(tempfile)
+        # cs as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='cs',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05 -1.202685E+04 1.677835E+02\n')
+        os.remove(tempfile)
+        # fap & def as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='fap', units='def',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+        os.remove(tempfile)
+        # fap & dis as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='fap', units='dis',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05  7.557425E-01  2.692007E+02\n')
+        os.remove(tempfile)
+        # fap & vel as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='fap', units='vel',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+        os.remove(tempfile)
+        # fap & acc as ASCII file
+        tempfile = NamedTemporaryFile().name
+        client.evalresp(network="IU", station="ANMO", location="00",
+                        channel="BHZ", time=dt, output='fap', units='acc',
+                        filename=tempfile)
+        self.assertEqual(open(tempfile, 'rt').readline(),
+                         '1.000000E-05  1.914318E+08  8.920073E+01\n')
+        os.remove(tempfile)
+        # fap as NumPy ndarray
+        data = client.evalresp(network="IU", station="ANMO", location="00",
+                               channel="BHZ", time=dt, output='fap')
+        np.testing.assert_array_equal(data[0],
+            [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
+        # cs as NumPy ndarray
+        data = client.evalresp(network="IU", station="ANMO", location="00",
+                               channel="BHZ", time=dt, output='cs')
+        np.testing.assert_array_equal(data[0],
+            [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
 
 
 def suite():

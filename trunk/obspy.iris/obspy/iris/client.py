@@ -11,6 +11,8 @@ IRIS Web service client for ObsPy.
 from obspy.core import UTCDateTime, read, Stream
 from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString
 from urllib2 import HTTPError
+import StringIO
+import numpy as np
 import os
 import platform
 import sys
@@ -113,12 +115,16 @@ class Client(object):
         doc = response.read()
         return doc
 
-    def _toFileOrData(self, filename, data, method='wt'):
+    def _toFileOrData(self, filename, data, binary=False):
         """
         Either writes data into a file if filename is given or returns it.
         """
         if filename is None:
             return data
+        if binary:
+            method = 'wb'
+        else:
+            method = 'wt'
         # filename is given, create fh, write to file and return nothing
         if isinstance(filename, basestring):
             fh = open(filename, method)
@@ -346,6 +352,7 @@ class Client(object):
         :param station: Station code, e.g. ``'ANMO'``.
         :type location: str
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
+            Use ``'--'`` for empty location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -415,7 +422,8 @@ class Client(object):
         :type station: str
         :param station: Station code, e.g. ``'ANMO'``.
         :type location: str
-        :param location: Location code, e.g. ``'00'``.
+        :param location: Location code, e.g. ``'00'``. Use ``'--'`` for empty
+            location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -495,7 +503,8 @@ class Client(object):
         :type station: str
         :param station: Station code, e.g. ``'ANMO'``.
         :type location: str
-        :param location: Location code, e.g. ``'00'``.
+        :param location: Location code, e.g. ``'00'``. Use ``'--'`` for empty
+            location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -547,7 +556,7 @@ class Client(object):
             raise Exception(msg)
         # write directly if filename is given
         if filename:
-            return self._toFileOrData(filename, data, method='wb')
+            return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
         tf = NamedTemporaryFile()
         tf.write(data)
@@ -635,7 +644,7 @@ class Client(object):
             raise Exception(msg)
         # write directly if filename is given
         if filename:
-            return self._toFileOrData(filename, data, method='wb')
+            return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
         tf = NamedTemporaryFile()
         tf.write(data)
@@ -680,6 +689,7 @@ class Client(object):
         :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
         :type location: str
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
+            Use ``'--'`` for empty location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -822,6 +832,7 @@ class Client(object):
         :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
         :type location: str
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
+            Use ``'--'`` for empty location codes.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -906,7 +917,8 @@ class Client(object):
         Interface for `distaz` Web service of IRIS
         (http://www.iris.edu/ws/distaz/).
 
-        Calculates the distance and azimuth between two points on a sphere.
+        This method calculates the distance and azimuth between two points on
+        a sphere.
 
         :type stalat: float
         :param stalat: Station latitude.
@@ -961,9 +973,9 @@ class Client(object):
         Interface for `flinnengdahl` Web service of IRIS
         (http://www.iris.edu/ws/flinnengdahl/).
 
-        Converts a latitude, longitude pair into either a Flinn-Engdahl seismic
-        region code or region name. More information on Flinn-Engdahl regions
-        can be found at http://en.wikipedia.org/wiki/Flinn-Engdahl_regions.
+        This method converts a latitude, longitude pair into either a
+        `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
+        seismic region code or region name.
 
         :type lat: float
         :param lat: Latitude of interest.
@@ -1001,6 +1013,177 @@ class Client(object):
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
+
+    def evalresp(self, network, station, location, channel, time=UTCDateTime(),
+                 minfreq=0.00001, maxfreq=None, nfreq=200, units='def',
+                 width=800, height=600, annotate=True, output='plot',
+                 filename=None):
+        """
+        Interface for `evalresp` Web service of IRIS
+        (http://www.iris.edu/ws/evalresp/).
+
+        This method evaluates instrument response information stored at the
+        IRIS DMC and outputs ASCII data or
+        `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+
+        :type network: str
+        :param network: Network code, e.g. ``'IU'``.
+        :type station: str
+        :param station: Station code, e.g. ``'ANMO'``.
+        :type location: str
+        :param location: Location code, e.g. ``'00'``. Use ``'--'`` for empty
+            location codes.
+        :type channel: str
+        :param channel: Channel code, e.g. ``'BHZ'``.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Evaluate the response at the given time. If not specified,
+            the current time is used.
+        :type minfreq: float, optional
+        :param minfreq: The minimum frequency (Hz) at which response will be
+            evaluated. Must be positive and less than the ``maxfreq`` value.
+            Defaults to ``0.00001`` Hz (1/day ~ 0.000012 Hz).
+        :type maxfreq: float, optional
+        :param maxfreq: The maximum frequency (Hz) at which response will be
+            evaluated. Must be positive and greater than the ``minfreq`` value.
+            Defaults to the channel sample-rate or the frequency of
+            sensitivity, which ever is larger.
+        :type nfreq: int, optional
+        :param nfreq: Number frequencies at which response will be evaluated.
+            Must be a positive integer no greater than ``10000``. The
+            instrument response is evaluated on a equally spaced logarithmic
+            scale. Defaults to ``200``.
+        :type units:  ``'def'``, ``'dis'``, ``'vel'``, ``'acc'``, optional
+        :param units: Output Unit. Defaults to ``'def'``.
+
+            ``'def'``
+                default units indicated in response metadata
+            ``'dis'``
+                converts to units of displacement
+            ``'vel'``
+                converts to units of velocity
+            ``'acc'``
+                converts to units of acceleration
+
+            If units are not specified, then the units will default to those
+            indicated in the response metadata
+        :type width: int, optional
+        :param width: The width of the generated plot. Defaults to ``800``.
+            Can only be used with the ``output='plot'``, ``output='plot-amp'``
+            and ``output='plot-phase'`` options. Cannot be larger than ``5000``
+            and the product of width and height cannot be larger than
+            ``6,000,000``.
+        :type height: int, optional
+        :param height: The height of the generated plot. Defaults to ``600``.
+            Can only be used with the ``output='plot'``, ``output='plot-amp'``
+            and ``output='plot-phase'`` options. Cannot be larger than ``5000``
+            and the product of width and height cannot be larger than
+            ``6,000,000``.
+        :type annotate: bool, optional
+        :param annotate: Can be either ``True`` or ``False``. Defaults
+            to ``True``.
+
+            * Draws vertical lines at the Nyquist frequency (one half the
+              sample rate).
+            * Draw a vertical line at the stage-zero frequency of sensitivity.
+            * Draws a horizontal line at the stage-zero gain.
+
+            Can only be used with the ``output='plot'``, ``output='plot-amp'``
+            and ``output='plot-phase'`` options.
+        :type output: str
+        :param output: Output Options. Defaults to ``'plot'``.
+
+            ``'fap'``
+                Three column ASCII (frequency, amplitude, phase)
+            ``'cs'``
+                Three column ASCII (frequency, real, imaginary)
+            ``'plot'``
+                Amplitude and phase plot
+            ``'plot-amp'``
+                Amplitude only plot
+            ``'plot-phase'``
+                Phase only plot
+
+            Plots are stored to the file system if the parameter ``filename``
+            is set, otherwise it will try to use matplotlib to directly plot
+            the returned image.
+        :type filename: str, optional
+        :param filename: Name of a output file. If this parameter is given
+            nothing will be returned. Default is ``None``.
+        :rtype: numpy.ndarray, str or `None`
+        :returns: Returns either a NumPy :class:`~numpy.ndarray`, image string
+            or nothing, depending on the ``output`` parameter.
+
+        .. rubric:: Example
+
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> dt = UTCDateTime("2005-01-01")
+        >>> data = client.evalresp(network="IU", station="ANMO", location="00",
+        ...                        channel="BHZ", time=dt, output='fap')
+        >>> data[0]  # frequency, amplitude, phase of first point
+        array([  1.00000000e-05,   1.20280200e+04,   1.79200700e+02])
+        """
+        url = '/evalresp/query'
+        kwargs = {}
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        kwargs['location'] = str(location)
+        kwargs['channel'] = str(channel)
+        try:
+            kwargs['time'] = UTCDateTime(time).formatIRISWebService()
+        except:
+            kwargs['time'] = time
+        kwargs['minfreq'] = float(minfreq)
+        if maxfreq:
+            kwargs['maxfreq'] = float(maxfreq)
+        kwargs['nfreq'] = int(nfreq)
+        if units in ['def', 'dis', 'vel', 'acc']:
+            kwargs['units'] = units
+        else:
+            kwargs['units'] = 'def'
+        if output in ['fap', 'cs', 'plot', 'plot-amp', 'plot-phase']:
+            kwargs['output'] = output
+        else:
+            kwargs['output'] = 'plot'
+        # height, width and annotate work only for plots
+        if 'plot' in output:
+            kwargs['width'] = int(width)
+            kwargs['height'] = int(height)
+            kwargs['annotate'] = bool(annotate)
+        data = self._fetch(url, **kwargs)
+        # check output
+        if 'plot' in output:
+            # image
+            if filename is None:
+                # ugly way to show an image
+                from matplotlib import image
+                import matplotlib.pyplot as plt
+                # need temporary file for reading into matplotlib
+                tf = NamedTemporaryFile()
+                tf.write(data)
+                tf.close()
+                # create new figure
+                fig = plt.figure()
+                # new axes using full window
+                ax = fig.add_axes([0, 0, 1, 1])
+                # load image
+                img = image.imread(tf.name, 'png')
+                # add image to axis
+                ax.imshow(img)
+                # delete temporary file
+                os.remove(tf.name)
+                # hide axes
+                plt.gca().axison = False
+                # show plot
+                plt.show()
+            else:
+                self._toFileOrData(filename, data, binary=True)
+        else:
+            # ASCII data
+            if filename is None:
+                return np.loadtxt(StringIO.StringIO(data))
+            else:
+                return self._toFileOrData(filename, data)
 
 
 if __name__ == '__main__':
