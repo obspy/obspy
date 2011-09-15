@@ -3,7 +3,7 @@
 obspy.iris - IRIS Web service client for ObsPy
 ==============================================
 The obspy.iris package contains a client for the DMC Web services provided by
-IRIS (http://www.iris.edu/ws/). 
+IRIS (http://www.iris.edu/ws/).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -13,10 +13,11 @@ IRIS (http://www.iris.edu/ws/).
 
 Basic Usage
 -----------
-(1) In the following example the :meth:`~obspy.iris.client.Client.getWaveform()`
-    method is used to request and plot 60 minutes of the BHZ channel of station
-    Albuquerque, New Mexico ("ANMO") of the Global Seismograph Network ("IU")
-    for an seismic event around 2010-02-27 06:30 (UTC).
+(1) In the following example the
+    :meth:`~obspy.iris.client.Client.getWaveform()` method is used to request
+    and plot 60 minutes of the BHZ channel of station Albuquerque,
+    New Mexico ("ANMO") of the Global Seismograph Network ("IU") for an seismic
+    event around 2010-02-27 06:30 (UTC).
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
@@ -34,9 +35,9 @@ Basic Usage
         st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
         st.plot() #doctest: +SKIP
 
-(2) Alternatively you may save any requested waveform unmodified into your local
-    file system using the :meth:`~obspy.iris.client.Client.saveWaveform()`
-    method.
+(2) Alternatively you may save any requested waveform unmodified into your
+    local file system using the
+    :meth:`~obspy.iris.client.Client.saveWaveform()` method.
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
@@ -57,24 +58,30 @@ Basic Usage
     >>> client.saveResponse('resp.txt', 'IU', 'ANMO', '', '*',
     ...                     t, t + 1, format="RESP") #doctest: +SKIP
 
+Direct Web service Interfaces
+-----------------------------
+
 Each of the following methods directly wrap a single Web service provided by
 IRIS (http://www.iris.edu/ws/):
 
-* :meth:`~obspy.iris.client.Client.resp()` - provides access to channel
-  response information in the SEED RESP format (as used by evalresp)
-* :meth:`~obspy.iris.client.Client.station()` - provides access to station
-  metadata in the IRIS DMC database
-* :meth:`~obspy.iris.client.Client.dataselect()` - returns a single channel
-  of time series data
-* :meth:`~obspy.iris.client.Client.bulkdataselect()` - returns multiple
-  channels of time series data for specified time ranges
 * :meth:`~obspy.iris.client.Client.availability()` - returns information about
   what time series data is available at the IRIS-DMC
+* :meth:`~obspy.iris.client.Client.bulkdataselect()` - returns multiple
+  channels of time series data for specified time ranges
+* :meth:`~obspy.iris.client.Client.dataselect()` - returns a single channel
+  of time series data
+* :meth:`~obspy.iris.client.Client.distaz()` - calculate the distance and
+  azimuth between two points on a sphere.
+* :meth:`~obspy.iris.client.Client.flinnengdahl()` - converts a latitude,
+  longitude pair into either a Flinn-Engdahl seismic region code or region
+  name.
+* :meth:`~obspy.iris.client.Client.resp()` - provides access to channel
+  response information in the SEED RESP format (as used by evalresp)
 * :meth:`~obspy.iris.client.Client.sacpz()` - provides access to instrument
   response information (per-channel) as poles and zeros in the ASCII format
   used by SAC and other programs
-* :meth:`~obspy.iris.client.Client.distaz()` -  calculate the distance and
-  azimuth between two points on a sphere.
+* :meth:`~obspy.iris.client.Client.station()` - provides access to station
+  metadata in the IRIS DMC database
 
 Please see the documentation for each method for further information and
 examples to retrieve various data from the IRIS DMC.

@@ -10,60 +10,20 @@ import os
 import unittest
 import filecmp
 
-EXPECTED_SACPZ = """* **********************************
-* NETWORK   (KNETWK): IU
-* STATION    (KSTNM): ANMO
-* LOCATION   (KHOLE): 00
-* CHANNEL   (KCMPNM): BHZ
-* CREATED           : ...
-* START             : 2002-11-19T21:07:00
-* END               : 2008-06-30T00:00:00
-* DESCRIPTION       : Albuquerque, New Mexico, USA
-* LATITUDE          : 34.945981
-* LONGITUDE         : -106.457133
-* ELEVATION         : 1671.0
-* DEPTH             : 145.0
-* DIP               : 0.0
-* AZIMUTH           : 0.0
-* SAMPLE RATE       : 20.0
-* INPUT UNIT        : M
-* OUTPUT UNIT       : COUNTS
-* INSTTYPE          : Geotech KS-54000 Borehole Seismometer
-* INSTGAIN          : 2.204000e+03 (M/S)
-* COMMENT           : 
-* SENSITIVITY       : 9.244000e+08 (M/S)
-* A0                : 8.608300e+04
-* **********************************
-ZEROS\t3
-\t+0.000000e+00\t+0.000000e+00\t
-\t+0.000000e+00\t+0.000000e+00\t
-\t+0.000000e+00\t+0.000000e+00\t
-POLES\t5
-\t-5.943130e+01\t+0.000000e+00\t
-\t-2.271210e+01\t+2.710650e+01\t
-\t-2.271210e+01\t-2.710650e+01\t
-\t-4.800400e-03\t+0.000000e+00\t
-\t-7.319900e-02\t+0.000000e+00\t
-CONSTANT\t7.957513e+13
-
-
-
-"""
-
 
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.iris.client.Client.
     """
     def setUp(self):
-        # Directory where the test files are located
+        # directory where the test files are located
         self.path = os.path.dirname(__file__)
 
     def test_getWaveform(self):
         """
         Testing simple waveform request method.
         """
-        #1 - simple example
+        # simple example
         client = Client()
         start = UTCDateTime("2010-02-27T06:30:00.019538Z")
         end = start + 20
@@ -75,7 +35,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(stream[0].stats.station, 'ANMO')
         self.assertEquals(stream[0].stats.location, '00')
         self.assertEquals(stream[0].stats.channel, 'BHZ')
-        #2 - no data raises an exception
+        # no data raises an exception
         self.assertRaises(Exception, client.getWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
 
@@ -83,7 +43,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Testing simple waveform file save method.
         """
-        #1 - file identical to file retrieved via web interface
+        # file identical to file retrieved via web interface
         client = Client()
         start = UTCDateTime("2010-02-27T06:30:00")
         end = UTCDateTime("2010-02-27T06:31:00")
@@ -92,7 +52,7 @@ class ClientTestCase(unittest.TestCase):
         client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
-        #2 - no data raises an exception
+        # no data raises an exception
         self.assertRaises(Exception, client.saveWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
 
@@ -103,19 +63,19 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         start = UTCDateTime("2005-001T00:00:00")
         end = UTCDateTime("2008-001T00:00:00")
-        #1 - RESP, single channel
+        # RESP, single channel
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
         tempfile = NamedTemporaryFile().name
         client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
-        #2 - RESP, multiple channels
+        # RESP, multiple channels
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._.BH_')
         tempfile = NamedTemporaryFile().name
         client.saveResponse(tempfile, "IU", "ANMO", "*", "BH?", start, end)
         self.assertTrue(filecmp.cmp(origfile, tempfile))
         os.remove(tempfile)
-        #3 - StationXML, single channel
+        # StationXML, single channel
         tempfile = NamedTemporaryFile().name
         client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end,
                             format="StationXML")
@@ -130,13 +90,13 @@ class ClientTestCase(unittest.TestCase):
         included in resulting text.
         """
         client = Client()
-
         t1 = UTCDateTime("2005-01-01")
         t2 = UTCDateTime("2008-01-01")
         got = client.sacpz(network="IU", station="ANMO", location="00",
                            channel="BHZ", starttime=t1, endtime=t2)
-        got = got.split("\n")
-        expected = EXPECTED_SACPZ.splitlines()
+        got = got.splitlines()
+        sacpz_file = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.sacpz')
+        expected = open(sacpz_file, 'rt').read().splitlines()
         # drop lines with creation date (current time during request)
         got.pop(5)
         expected.pop(5)
@@ -147,12 +107,12 @@ class ClientTestCase(unittest.TestCase):
         Tests distance and azimuth calculation between two points on a sphere.
         """
         client = Client()
-        #1 - normal request
+        # normal request
         result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, evtlon=1.4)
         self.assertAlmostEquals(result['distance'], 2.09554)
         self.assertAlmostEquals(result['backazimuth'], 5.46946)
         self.assertAlmostEquals(result['azimuth'], 185.47692)
-        #2 - missing parameters
+        # missing parameters
         self.assertRaises(Exception, client.distaz, stalat=1.1)
         self.assertRaises(Exception, client.distaz, stalat=1.1, stalon=1.2)
 
@@ -161,23 +121,23 @@ class ClientTestCase(unittest.TestCase):
         Tests calculation of Flinn-Engdahl region code or name.
         """
         client = Client()
-        #1 - code
+        # code
         result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="code")
         self.assertEquals(result, 683)
-        #2 - region
+        # region
         result = client.flinnengdahl(lat=42, lon= -122.24, rtype="region")
         self.assertEquals(result, 'OREGON')
-        #3 - both
+        # both
         result = client.flinnengdahl(lat= -20.5, lon= -100.6, rtype="both")
         self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
-        #4 - default rtype
+        # default rtype
         result = client.flinnengdahl(lat=42, lon= -122.24)
         self.assertEquals(result, (32, 'OREGON'))
-        #5 - outside boundaries
+        # outside boundaries
         self.assertRaises(Exception, client.flinnengdahl, lat= -90.1, lon=0)
-        self.assertRaises(Exception, client.flinnengdahl, lat= +90.1, lon=0)
+        self.assertRaises(Exception, client.flinnengdahl, lat=90.1, lon=0)
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon= -180.1)
-        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon= +180.1)
+        self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=180.1)
 
 
 def suite():
