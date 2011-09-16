@@ -787,6 +787,27 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(UTCDateTime(2007, 5, 31, 22, 45, 46, 720000),
                          tr.stats.endtime)
 
+    def test_issue289(self):
+        """XXX: see #289
+        Reading using start-/endtime outside of data.
+        """
+        # 1
+        file = os.path.join(self.path, 'data', 'steim2.mseed')
+        # XXX: fails under Windows with:
+        # ...
+        #   File "obspy\mseed\libmseed.py", line 253, in readMSTracesViaRecords
+        #   ms.offset = bytes[0]
+        # TypeError: 'NoneType' object is not subscriptable
+        read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        # 2
+        file = os.path.join(self.path, 'data', 'fullseed.mseed')
+        # XXX: fails under Windows with:
+        # ...
+        #   File "obspy\mseed\libmseed.py", line 1156, in read
+        #   raise Exception("Error %d in ms_readmsr_r" % errcode)
+        # Exception: Error 1 in ms_readmsr_r
+        read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
