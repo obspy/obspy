@@ -199,7 +199,12 @@ def read(pathname_or_url=None, format=None, headonly=False,
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
-            else:
+            # Only raise error if no starttime/endtime has been set. This
+            # will return an empty stream if the user chose a time window with
+            # no data in it.
+            # XXX: Might cause problems if the data is faulty and the user
+            # set starttime/endtime. Not sure what to do in this case.
+            elif not 'starttime' in kwargs and not 'endtime' in kwargs:
                 raise Exception("Cannot open file/files: %s" % pathname)
     # Trim if times are given.
     starttime = kwargs.get('starttime')

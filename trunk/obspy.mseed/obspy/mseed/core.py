@@ -44,6 +44,8 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
     starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         Specify the starttime to read. The remaining records are not
         extracted. Providing a starttime usually results into faster reading.
+        Under windows this only works if all the file's records have the same
+        id and are chronologically ordered.
     endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         See description of starttime.
     readMSInfo : bool, optional

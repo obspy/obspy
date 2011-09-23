@@ -222,7 +222,7 @@ class LibMSEED(object):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
-        
+
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
         containing the data values as a NumPy array.
@@ -231,6 +231,13 @@ class LibMSEED(object):
         :param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
         :param quality: Read quality information or not. Defaults to false.
+        :param starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+            Specify the starttime to read. The remaining records are not
+            extracted. Providing a starttime usually results into faster
+            reading.  Under windows this only works if all the file's records
+            have the same id and are chronologically ordered.
+        :param endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+            See description of starttime.
         """
         # Open file handler necessary for reading quality informations.
         if quality:
@@ -244,9 +251,15 @@ class LibMSEED(object):
             trace_list[-1][0]['data_quality_flags'] = [0] * 8
         ms = _MSStruct(filename)
         end_byte = 1e99
+        # XXX: Will only work correctly if all the records in the file have the
+        # same id and are in chronological order.
         if starttime or endtime:
             bytes = self._bytePosFromTime(filename, starttime=starttime,
                                           endtime=endtime)
+            # The above function returns None if the file contains no records
+            # in the chose time window.
+            if bytes is None:
+                return []
             if bytes == '':
                 del ms # for valgrind
                 return ''
@@ -371,7 +384,12 @@ class LibMSEED(object):
                                          verbose=verbose,
                                          starttime=starttime,
                                          endtime=endtime)
-        chain = mstg.contents.traces.contents
+        # Return empty list if no suitable traces have been found
+        try:
+            chain = mstg.contents.traces.contents
+        except ValueError:
+            return trace_list
+
         numtraces = mstg.contents.numtraces
         # Loop over traces and append to trace_list.
         for i in xrange(numtraces):
@@ -731,23 +749,23 @@ class LibMSEED(object):
     def _bytePosFromTime(self, filename, starttime=None, endtime=None):
         """
         Return start and end byte position from mseed file.
-        
+
         The method takes a MiniSEED file and tries to match it as good as
         possible to the supplied time range. It will simply return the byte
         position of records that are within the time range. The byte
         position of the record that covers the start time will be the first
         byte position. The byte length will be until the record that covers
         the end time.
-        
+
         This method will only work correctly for files containing only traces
         from one single source. All traces have to be in chronological order.
         Also all records in the file need to have the same length in bytes.
-        
+
         It will return an empty string if the file does not cover the desired
         range.
-        
+
         :return: Byte position of beginning and total length of bytes
-        
+
         :param filename: File string of the MiniSEED file to be cut.
         :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
@@ -757,6 +775,10 @@ class LibMSEED(object):
         info = ms.fileinfo()
         start = ms.getStart()
         pos = (info['number_of_records'] - 1) * info['record_length']
+        # Can occur in files that contain records with differing record
+        # lengths.
+        if info['filesize'] < pos:
+            return None
         ms.offset = pos
         end = ms.getEnd()
         # Set the start time.
@@ -966,7 +988,7 @@ class LibMSEED(object):
         """
         Takes dictionary containing MSTrace header data and writes them to the
         MSTrace Group
-        
+
         :param m: MST structure to be modified.
         :param h: Dictionary containing all necessary information.
         """
@@ -985,7 +1007,7 @@ class LibMSEED(object):
         Takes a Mini-SEED filename as an argument and returns a dictionary
         with some basic information about the file. Also suiteable for Full
         SEED.
-        
+
         :param f: File pointer of opened file in binary format
         :param real_name: Realname of the file, needed for calculating size
         """

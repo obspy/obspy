@@ -631,6 +631,68 @@ class LibMSEEDTestCase(unittest.TestCase):
         st = read(msfile)
         np.testing.assert_array_equal(data, st[0].data[:len(data)])
 
+    def test_issue289(self):
+        """
+        see #289
+        Reading using start-/endtime outside of data.
+
+        Tests both reading methods.
+        """
+        __libmseed__ = LibMSEED()
+        # 1
+        file = os.path.join(self.path, 'steim2.mseed')
+        traces =__libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(traces, [])
+        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(traces, [])
+        # 2
+        file = os.path.join(self.path, 'fullseed.mseed')
+        traces =__libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(traces, [])
+        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(traces, [])
+
+
+    def test_readMSTracesViaRecords_MultipleIds(self):
+        """
+        Tests a critical issue when the LibMSEED.readMSTracesViaRecords method
+        is used (e.g. on Windows systems) and a start/endtime is set and the
+        file has multiple ids.
+
+        This is due to the face that the readMSTraceViaRecords method uses the
+        first and the last records of a file to take an educated guess about
+        which records to actually read. This of course only works if all
+        records have the same id and are chronologically ordered.
+
+        I don't think there is an easy solution for it.
+        """
+        # The used file has ten records in successive order and then the first
+        # record again with a different record id:
+        # 2 Trace(s) in Stream:
+        #     BW.BGLD..EHE | 2007-12-31T23:59:59.915000Z -
+        #     2008-01-01T00:00:20.510000Z | 200.0 Hz, 4120 samples
+        #     OB.BGLD..EHE | 2007-12-31T23:59:59.915000Z -
+        #     2008-01-01T00:00:01.970000Z | 200.0 Hz, 412 samples
+        #
+        # Thus reading a small time window in between should contain at least
+        # some samples.
+        __libmseed__ = LibMSEED()
+        starttime = UTCDateTime(2008,1,1,0,0,10)
+        endtime = starttime + 5
+        file = os.path.join(self.path, 'constructedFileToTestReadViaRecords.mseed')
+        # Some samples should be in the time window. Use the working read
+        # method to confirm this
+        traces =__libmseed__.readMSTraces(file, starttime=starttime,
+                                          endtime=endtime)
+        self.assertEqual(len(traces), 1)
+        samplecount = traces[0][0]['samplecnt']
+        self.assertEqual(samplecount, 1648)
+        # The second one will not work.
+        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(len(traces), 1)
+        samplecount = traces[0][0]['samplecnt']
+        self.assertEqual(samplecount, 1648)
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')

@@ -793,20 +793,12 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         file = os.path.join(self.path, 'data', 'steim2.mseed')
-        # XXX: fails under Windows with:
-        # ...
-        #   File "obspy\mseed\libmseed.py", line 253, in readMSTracesViaRecords
-        #   ms.offset = bytes[0]
-        # TypeError: 'NoneType' object is not subscriptable
-        read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        st = read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(len(st), 0)
         # 2
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
-        # XXX: fails under Windows with:
-        # ...
-        #   File "obspy\mseed\libmseed.py", line 1156, in read
-        #   raise Exception("Error %d in ms_readmsr_r" % errcode)
-        # Exception: Error 1 in ms_readmsr_r
-        read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        st = read(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        self.assertEqual(len(st), 0)
 
 
 def suite():
