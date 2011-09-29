@@ -1175,7 +1175,8 @@ class SacIO(object):
                 import obspy.signal as signal
             except Exception, e:
                 msg = "ERROR: obspy.signal is needed for this function " + \
-                      "and is not installed, or not working properly"
+                      "and is not installed, or not working properly." + \
+                      "The problem is" + str(e)
                 warnings.warn(msg, category=ImportWarning)
                 raise SacError(e)
 
