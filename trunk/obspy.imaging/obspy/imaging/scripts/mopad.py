@@ -3845,6 +3845,8 @@ class BeachBall:
         
         See http://www.ecse.rpi.edu/Homepages/wrf/Research/Short_Notes/pnpoly.html    
         """
+        # using take instead of getitem, about ten times faster, see
+        # http://wesmckinney.com/blog/?p=215
         
         verts = N.require(verts, dtype=N.float64)
         x,y = point
@@ -3852,15 +3854,15 @@ class BeachBall:
         xpi = verts[:,0]
         ypi = verts[:,1]    
         # shift
-        xpj = xpi[self.arange_1[:xpi.size]]
-        ypj = ypi[self.arange_1[:ypi.size]]
+        xpj = xpi.take(self.arange_1[:xpi.size])
+        ypj = ypi.take(self.arange_1[:ypi.size])
         
         possible_crossings = ((ypi <= y) & (y < ypj)) | ((ypj <= y) & (y < ypi))
     
-        xpi = xpi[possible_crossings]
-        ypi = ypi[possible_crossings]
-        xpj = xpj[possible_crossings]
-        ypj = ypj[possible_crossings]
+        xpi = xpi.take(possible_crossings)
+        ypi = ypi.take(possible_crossings)
+        xpj = xpj.take(possible_crossings)
+        ypj = ypj.take(possible_crossings)
         
         crossings = x < (xpj-xpi)*(y - ypi) / (ypj - ypi) + xpi
         
