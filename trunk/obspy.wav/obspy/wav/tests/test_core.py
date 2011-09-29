@@ -67,6 +67,34 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr3.data[:13], testdata)
         os.remove(testfile)
 
+    def test_writeStreamViaObsPy(self):
+        """
+        Write streams, i.e. multiple files via L{obspy.Trace}
+        """
+        testdata = np.array([111, 111, 111, 111, 111, 109, 106, 103, 103,
+                             110, 121, 132, 139])
+        testfile = NamedTemporaryFile().name
+        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
+        tr = read(self.file, format='WAV')[0]
+        np.testing.assert_array_equal(tr.data[:13], testdata)
+        # write
+        st2 = Stream([Trace(), Trace()])
+        st2[0].data = tr.data.copy()       # copy the data
+        st2[1].data = tr.data.copy() // 2  # be sure data are different
+        st2.write(testfile, format='WAV', framerate=7000)
+        # read without giving the WAV format option
+        base, ext = os.path.splitext(testfile)
+        testfile0 = "%s%03d%s" % (base, 0, ext)
+        testfile1 = "%s%03d%s" % (base, 1, ext)
+        tr30 = read(testfile0)[0]
+        tr31 = read(testfile1)[0]
+        self.assertEqual(tr30.stats, tr.stats)
+        self.assertEqual(tr31.stats, tr.stats)
+        np.testing.assert_array_equal(tr30.data[:13], testdata)
+        np.testing.assert_array_equal(tr31.data[:13], testdata // 2)
+        os.remove(testfile0)
+        os.remove(testfile1)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

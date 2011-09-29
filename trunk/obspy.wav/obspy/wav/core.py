@@ -68,9 +68,10 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     >>> from obspy.core import read
     >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
-    >>> print(st)
+    >>> print(st) #doctest: +NORMALIZE_WHITESPACE
     1 Trace(s) in Stream:
-    ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
+    ... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z
+    | 7000.0 Hz, 2599 samples
     """
     # read WAV file
     fh = wave.open(filename, 'rb')
@@ -119,8 +120,8 @@ def writeWAV(stream, filename, framerate=7000, **kwargs):  # @UnusedVariable
     base, ext = os.path.splitext(filename)
     for trace in stream:
         # write WAV file
-        if i != 0:
-            filename = "%s%02d%s" % (base, i, ext)
+        if len(stream) >= 2:
+            filename = "%s%03d%s" % (base, i, ext)
         w = wave.open(filename, 'wb')
         trace.stats.npts = len(trace.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)

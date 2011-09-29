@@ -20,20 +20,21 @@ http://examples.obspy.org.
 
 >>> from obspy.core import read
 >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
->>> print(st)
+>>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:
-... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z | 7000.0 Hz, 2599 samples
+... | 1970-01-01T00:00:00.000000Z - 1970-01-01T00:00:00.371143Z
+| 7000.0 Hz, 2599 samples
 
 The format will be determined automatically. As WAV files can contain only one
 data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
 'st[0]' will have a stats attribute containing the essential meta information
 of the WAV file.
 
->>> print(st[0].stats)
-         network: 
-         station: 
-        location: 
-         channel: 
+>>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
+         network:
+         station:
+        location:
+         channel:
        starttime: 1970-01-01T00:00:00.000000Z
          endtime: 1970-01-01T00:00:00.371143Z
    sampling_rate: 7000.0
