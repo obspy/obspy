@@ -38,7 +38,7 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_convertDatetime(self):
         """
         Tests all time conversion methods.
-        
+
         This is a sanity test. A conversion to a format and back should not
         change the value
         """
@@ -72,8 +72,8 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_readMSTracesViaRecords(self):
         """
         Compares waveform data read by libmseed with an ASCII dump.
-        
-        Checks the first 9 datasamples of each entry in trace_list of 
+
+        Checks the first 9 datasamples of each entry in trace_list of
         gaps.mseed. The values are assumed to be correct. The first values
         were created using Pitsa.
         """
@@ -115,8 +115,8 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_readMSTraces(self):
         """
         Compares waveform data read by libmseed with an ASCII dump.
-        
-        Checks the first 9 datasamples of each entry in trace_list of 
+
+        Checks the first 9 datasamples of each entry in trace_list of
         gaps.mseed. The values are assumed to be correct. The first values
         were created using Pitsa.
         """
@@ -208,9 +208,9 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_readAndWriteTraces(self):
         """
         Writes, reads and compares files created via libmseed.
-        
-        This uses all possible encodings, record lengths and the byte order 
-        options. A re-encoded SEED file should still have the same values 
+
+        This uses all possible encodings, record lengths and the byte order
+        options. A re-encoded SEED file should still have the same values
         regardless of write options.
         Note: Test currently only tests the first trace
         """
@@ -319,8 +319,8 @@ class LibMSEEDTestCase(unittest.TestCase):
     def test_getStartAndEndTime(self):
         """
         Tests getting the start- and end time of a file.
-        
-        The values are compared with the readFileToTraceGroup() method which 
+
+        The values are compared with the readFileToTraceGroup() method which
         parses the whole file. This will only work for files with only one
         trace and without any gaps or overlaps.
         """
@@ -362,12 +362,12 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         This test reads a self-made Mini-SEED file with Timing Quality
         information in Blockette 1001. A real test file would be better.
-        
+
         The test file contains 101 records with the timing quality ranging from
         0 to 100 in steps of 1.
-        
+
         The result is compared to the result from the following R command:
-        
+
         V <- 0:100; min(V); max(V); mean(V); median(V); quantile(V, 0.75,
         type = 3); quantile(V, 0.25, type = 3)
         """
@@ -390,7 +390,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         This tests the isMSEED method by just validating that each file in the
         data directory is a Mini-SEED file and each file in the working
         directory is not a Mini-SEED file.
-        
+
         The filenames are hard coded so the test will not fail with future
         changes in the structure of the package.
         """
@@ -615,7 +615,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         msfile = os.path.join(self.path,
                               'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         pyobj = np.fromfile(msfile, dtype='b')
-        
+
         errcode = clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
                                       len(pyobj), C.pointer(msr), -1, 1, 1)
         self.assertEquals(errcode, 0)

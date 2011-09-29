@@ -44,7 +44,7 @@ MSTraceID._fields_ = [
     ('prvtptr', C.c_void_p),          # Private pointer for general use, unused by libmseed
     ('numsegments', C.c_int),         # Number of segments for this ID
     ('first', C.POINTER(MSTraceSeg)), # Pointer to first of list of segments
-    ('last', C.POINTER(MSTraceSeg)),  # Pointer to last of list of segments  
+    ('last', C.POINTER(MSTraceSeg)),  # Pointer to last of list of segments
     ('next', C.POINTER(MSTraceID))    # Pointer to next trace
     ]
 
@@ -144,7 +144,7 @@ def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
     """
     Takes a Ctypes array and its length and type and returns it as a
     NumPy array.
-    
+
     :param buffer: Ctypes c_void_p pointer to buffer.
     :param buffer_elements: length of the whole buffer
     :param sampletype: type of sample, on of "a", "i", "f", "d"
@@ -160,7 +160,7 @@ def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
 def _convertMSTimeToDatetime(timestring):
     """
     Takes Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
-    
+
     :param timestamp: Mini-SEED timestring (Epoch time string in ms).
     """
     return UTCDateTime(timestring / HPTMODULUS)
@@ -168,7 +168,7 @@ def _convertMSTimeToDatetime(timestring):
 def _convertDatetimeToMSTime(dt):
     """
     Takes obspy.util.UTCDateTime object and returns an epoch time in ms.
-    
+
     :param dt: obspy.util.UTCDateTime object.
     """
     return int(dt.timestamp * HPTMODULUS)
@@ -184,7 +184,7 @@ def readMSEED(mseed_object, selection=None, unpack_data=True, reclen=None):
         considered to be a file like object.
     :param selection: If given only parts of the MiniSEED data will be used. It
         is a dictionary with the following structure:
-                
+
             selection = {'starttime': UTCDateTime(...),
                          'endtime': UTCDateTime(...),
                          'sourcename': '*EHZ'}
@@ -238,13 +238,13 @@ def readMSEED(mseed_object, selection=None, unpack_data=True, reclen=None):
                 type(selection['starttime']) == UTCDateTime:
             selections.timewindows.contents.starttime = \
                     _convertDatetimeToMSTime(selection['starttime'])
-        else: 
+        else:
             selections.timewindows.contents.starttime = HPTERROR
         if 'endtime' in selection and \
                 type(selection['endtime']) == UTCDateTime:
             selections.timewindows.contents.endtime = \
                     _convertDatetimeToMSTime(selection['endtime'])
-        else: 
+        else:
             selections.timewindows.contents.endtime = HPTERROR
         if 'sourcename' in selection:
             # libmseed uses underscores as seperators and allows filtering

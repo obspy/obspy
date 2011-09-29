@@ -282,7 +282,7 @@ class blkt_2000_s(C.Structure):
 class blkt_link_s(C.Structure):
     pass
 
-# incomplete type has to be defined this way 
+# incomplete type has to be defined this way
 blkt_link_s._fields_ = [
     ('blkt_type', C.c_ushort), # Blockette type
     ('next_blkt', C.c_ushort), # Offset to next blockette
@@ -311,7 +311,7 @@ MSRecord_s._fields_ = [
     # Pointers to SEED data record structures
     ('fsdh', C.POINTER(fsdh_s)), # Fixed Section of Data Header
     ('blkts', C.POINTER(BlktLink)), # Root of blockette chain
-    ('Blkt100', C.POINTER(blkt_100_s)), # Blockette 100, if present 
+    ('Blkt100', C.POINTER(blkt_100_s)), # Blockette 100, if present
     ('Blkt1000', C.POINTER(blkt_1000_s)), # Blockette 1000, if present
     ('Blkt1001', C.POINTER(blkt_1001_s)), # Blockette 1001, if present
     # Common header fields in accessible form
@@ -352,7 +352,7 @@ MSTrace_s._fields_ = [
     ('samplecnt', C.c_int), # Number of samples in trace coverage
     ('datasamples', C.c_void_p), # Data samples, 'numsamples' of type 'sampletype'
     ('numsamples', C.c_int), # Number of data samples in datasamples
-    ('sampletype', C.c_char), # Sample type code: a, i, f, d 
+    ('sampletype', C.c_char), # Sample type code: a, i, f, d
     ('prvtptr', C.c_void_p), # Private pointer for general use
     ('ststate', C.POINTER(StreamState)), # Stream processing state information
     ('next', C.POINTER(MSTrace_s)), # Pointer to next trace

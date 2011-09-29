@@ -127,9 +127,9 @@ class CoreTestCase(unittest.TestCase):
     def test_writeWithDateTimeBefore1970(self):
         """
         Write an stream via libmseed with a datetime before 1970.
-        
+
         This test depends on the platform specific localtime()/gmtime()
-        function. 
+        function.
         """
         # create trace
         tr = Trace(data=np.empty(1000))
@@ -461,7 +461,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
         encoding set in stats.mseed.encoding.  This will just raise a warning.
-        
+
         Tests issue 256.
         """
         file = os.path.join(self.path, "data", "steim2.mseed")
@@ -541,7 +541,7 @@ class CoreTestCase(unittest.TestCase):
             for _i in ('littleEndian', 'bigEndian'):
                 cur_file = file[:-6] + '_' + _i + '.mseed'
                 st = read(os.path.join(cur_file))
-                # Check the array. 
+                # Check the array.
                 np.testing.assert_array_equal(st[0].data, files[file][3])
                 # Check the dtype.
                 self.assertEqual(st[0].data.dtype, files[file][0])

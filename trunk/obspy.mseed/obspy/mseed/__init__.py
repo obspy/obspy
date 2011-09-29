@@ -74,7 +74,7 @@ Mini-SEED file. Please refer to :
   completely fill a record. The default value is -1 and thus every data value
   will be packed by default.
 * verbose: Controls verbosity of the underlying libmseed. A value higher than
-  0 will give diagnostic output. Defaults to 0. 
+  0 will give diagnostic output. Defaults to 0.
 
 So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 512 byte do the following:
