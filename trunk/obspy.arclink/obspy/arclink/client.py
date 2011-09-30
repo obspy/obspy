@@ -22,6 +22,7 @@ import warnings
 
 
 DCID_KEY_FILE = os.path.join(os.getenv('HOME'), 'dcidpasswords.txt')
+MAX_REQUESTS = 100
 
 _ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
 _ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
@@ -260,16 +261,29 @@ class Client(object):
                 pass
             else:
                 break
+        # loop until we hit ready="true" in the status message
+        _loops = 0
+        _old_xml_doc = None
         while True:
             self._writeln('STATUS %d' % req_id)
             xml_doc = self._readln()
             if 'ready="true"' in xml_doc:
                 self._client.read_until('\r\n', self.status_timeout)
                 break
+            # check if status messages changes over time
+            if _old_xml_doc == xml_doc:
+                _loops += 1
+            else:
+                _loops = 0
+                _old_xml_doc = xml_doc
+            # if we hit MAX_REQUESTS equal status break the loop
+            if _loops > MAX_REQUESTS:
+                break
+            # wait a bit
             time.sleep(self.status_delay)
         # check for errors
         for err_code in ['DENIED', 'CANCELLED', 'CANCEL', 'ERROR', 'RETRY',
-                         'WARN']:
+                         'WARN', 'UNSET']:
             err_str = 'status="%s"' % (err_code)
             if err_str in xml_doc:
                 # cleanup
