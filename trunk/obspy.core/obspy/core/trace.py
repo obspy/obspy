@@ -609,7 +609,7 @@ class Trace(object):
             gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
             data = [lt.data, gap, rt.data]
         # merge traces depending on numpy array type
-        if True in [np.ma.is_masked(_i) for _i in data]:
+        if True in [np.ma.isMaskedArray(_i) for _i in data]:
             data = np.ma.concatenate(data)
         else:
             data = np.concatenate(data)

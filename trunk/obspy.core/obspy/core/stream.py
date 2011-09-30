@@ -1109,7 +1109,7 @@ class Stream(object):
         """
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
-            if np.ma.is_masked(trace.data):
+            if np.ma.isMaskedArray(trace.data):
                 msg = 'Masked array writing is not supported. You can use ' + \
                       'np.array.filled() to convert the masked array to a ' + \
                       'normal array.'
