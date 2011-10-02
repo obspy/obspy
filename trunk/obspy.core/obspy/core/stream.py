@@ -1109,11 +1109,11 @@ class Stream(object):
         """
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
-            if np.ma.isMaskedArray(trace.data):
+            if isinstance(trace.data, np.ma.masked_array):
                 msg = 'Masked array writing is not supported. You can use ' + \
                       'np.array.filled() to convert the masked array to a ' + \
                       'normal array.'
-                raise Exception(msg)
+                raise NotImplementedError(msg)
         format = format.upper()
         # Gets all available formats and the corresponding entry points.
         formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')

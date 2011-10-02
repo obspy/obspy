@@ -20,7 +20,7 @@ class UtilTestCase(unittest.TestCase):
                           Trace(data=np.arange(10)), 60.0)
         self.assertRaises(TypeError, createPreview,
                           Trace(data=np.arange(10)), 0)
-        #1
+        # 1
         trace = Trace(data=np.array([0] * 28 + [0, 1] * 30 + [-1, 1] * 29))
         trace.stats.starttime = UTCDateTime(32)
         preview = createPreview(trace, delta=60)
@@ -28,27 +28,45 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(preview.stats.endtime, UTCDateTime(120))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([1, 2]))
-        #2
+        # 2
         trace = Trace(data=np.arange(0, 30))
         preview = createPreview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(0))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([29]))
-        #2
+        # 3
         trace = Trace(data=np.arange(0, 60))
         preview = createPreview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(0))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([59]))
-        #3
+        # 4
         trace = Trace(data=np.arange(0, 90))
         preview = createPreview(trace, delta=60)
         self.assertEqual(preview.stats.starttime, UTCDateTime(0))
         self.assertEqual(preview.stats.endtime, UTCDateTime(60))
         self.assertEqual(preview.stats.delta, 60)
         np.testing.assert_array_equal(preview.data, np.array([59, 29]))
+
+    def test_createPreviewWithMaskedArrays(self):
+        """
+        Test for creating preview using masked arrays.
+        """
+        # 1 - masked arrays without masked values
+        trace = Trace(data=np.ma.ones(600))
+        preview = createPreview(trace, delta=60)
+        # only masked values get replaced with an -1
+        np.testing.assert_array_equal(preview.data, np.array(10 * [0]))
+        # 2 - masked arrays but not masked values
+        trace = Trace(data=np.ma.ones(600))
+        trace.data.mask = False
+        trace.data.mask[200:400] = True
+        preview = createPreview(trace, delta=60)
+        # masked values get replaced with an -1
+        np.testing.assert_array_equal(preview.data,
+                                      np.array(4 * [0] + 2 * [-1] + 4 * [0]))
 
     def test_mergePreviews(self):
         """
@@ -143,12 +161,14 @@ class UtilTestCase(unittest.TestCase):
         """
         Test case for issue #84.
         """
-        tr1 = Trace(data=np.empty(2880))
+        # Note: explicitly creating np.ones instead of np.empty in order to
+        # prevent NumPy warnings related to max function
+        tr1 = Trace(data=np.ones(2880))
         tr1.stats.starttime = UTCDateTime("2010-01-01T00:00:00.670000Z")
         tr1.stats.delta = 30.0
         tr1.stats.preview = True
         tr1.verify()
-        tr2 = Trace(data=np.empty(2881))
+        tr2 = Trace(data=np.ones(2881))
         tr2.stats.starttime = UTCDateTime("2010-01-01T23:59:30.670000Z")
         tr2.stats.delta = 30.0
         tr2.stats.preview = True

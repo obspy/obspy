@@ -9,11 +9,10 @@ Tools for creating and merging previews.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import copy
-import numpy as np
-from numpy.ma import is_masked
-from obspy.core.trace import Trace
 from obspy.core.stream import Stream
+from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
+import numpy as np
 
 
 def createPreview(trace, delta=60):
@@ -65,7 +64,7 @@ def createPreview(trace, delta=60):
     # get minimum and maximum for each row
     diff = data.ptp(axis=1)
     # fill masked values with -1 -> means missing data
-    if is_masked(diff):
+    if isinstance(diff, np.ma.masked_array):
         diff = np.ma.filled(diff, -1)
     data = np.concatenate([first_diff, diff, last_diff])
     data = np.require(data, dtype="float32")

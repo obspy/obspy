@@ -1007,9 +1007,14 @@ class StreamTestCase(unittest.TestCase):
         """
         Writing a masked array should raise an exception.
         """
+        # np.ma.masked_array with masked values
         tr = Trace(data=np.ma.masked_all(10))
         st = Stream([tr])
-        self.assertRaises(Exception, st.write, 'filename')
+        self.assertRaises(NotImplementedError, st.write, 'filename', 'MSEED')
+        # np.ma.masked_array without masked values
+        tr = Trace(data=np.ma.ones(10))
+        st = Stream([tr])
+        self.assertRaises(NotImplementedError, st.write, 'filename', 'MSEED')
 
     def test_pickle(self):
         """
