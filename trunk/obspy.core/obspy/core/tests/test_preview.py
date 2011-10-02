@@ -59,7 +59,7 @@ class UtilTestCase(unittest.TestCase):
         preview = createPreview(trace, delta=60)
         # only masked values get replaced with an -1
         np.testing.assert_array_equal(preview.data, np.array(10 * [0]))
-        # 2 - masked arrays but not masked values
+        # 2 - masked arrays with masked values
         trace = Trace(data=np.ma.ones(600))
         trace.data.mask = False
         trace.data.mask[200:400] = True
