@@ -495,12 +495,39 @@ def toUTCDateTime(value):
 
     >>> toUTCDateTime(' 2-JAN-2008_03:04:05.123')
     UTCDateTime(2008, 1, 2, 3, 4, 5, 123000)
+    >>> toUTCDateTime('2-JAN-2008')
+    UTCDateTime(2008, 1, 2, 0, 0)
+    >>> toUTCDateTime('2-JAN-08')
+    UTCDateTime(2008, 1, 2, 0, 0)
+    >>> toUTCDateTime('2-JAN-99')
+    UTCDateTime(1999, 1, 2, 0, 0)
+    >>> toUTCDateTime('2-JAN-2008_1')
+    UTCDateTime(2008, 1, 2, 1, 0)
+    >>> toUTCDateTime('2-JAN-2008_1:1')
+    UTCDateTime(2008, 1, 2, 1, 1)
     """
-    date, time = value.split('_')
+    try:
+        date, time = value.split('_')
+    except ValueError:
+        date = value
+        time = "0:0:0"
     day, month, year = date.split('-')
-    hour, mins, secs = time.split(':')
+    time = time.split(':')
+    try:
+        hour, mins, secs = time
+    except ValueError:
+        hour = time[0]
+        mins = "0"
+        secs = "0"
+        if len(time) == 2:
+            mins = time[1]
     day = int(day)
     month = MONTHS.index(month.upper()) + 1
+    if len(year) == 2:
+        if int(year) < 70:
+            year = "20" + year
+        else:
+            year = "19" + year
     year = int(year)
     hour = int(hour)
     mins = int(mins)
