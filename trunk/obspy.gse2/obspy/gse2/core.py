@@ -12,21 +12,17 @@ def isGSE2(filename):
     """
     Checks whether a file is GSE2 or not. Returns True or False.
 
-    Parameters
-    ----------
-    filename : string
-        GSE2 file to be checked.
+    :type filename : string
+    :param filename : GSE2 file to be checked.
     """
     # Open file.
     try:
         f = open(filename)
-        data = f.readline()
+        libgse2.isGse2(f)
+        f.close()
     except:
         return False
-    f.close()
-    if data.startswith('WID2'):
-        return True
-    return False
+    return True
 
 
 convert_dict = {
@@ -56,19 +52,15 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        GSE2 file to be read.
-    headonly : boolean, optional
-        If True read only head of GSE2 file.
-    verify_chksum : boolean, optional
-        If True verify Checksum and raise Exception if it is not correct.
-
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        Stream object containing header and data.
+    :type filename : string
+    :param filename : GSE2 file to be read.
+    :type headonly : boolean, optional
+    :param headonly : If True read only head of GSE2 file.
+    :type verify_chksum : boolean, optional
+    :param verify_chksum : If True verify Checksum and raise Exception if
+        it is not correct.
+    :rtype:`~obspy.core.stream.Stream`
+    :returns: Stream object containing header and data.
 
     Example
     -------
@@ -123,16 +115,14 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        The ObsPy Stream object to write.
-    filename : string
-        Name of file to write.
-    inplace : boolean, optional
-        If True, do compression not on a copy of the data but on the data
-        itself - note this will change the data values and make them therefore
-        unusable!
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: string
+    :param filename: Name of file to write.
+    :type inplace: boolean, optional
+    :param inplace: If True, do compression not on a copy of the data but
+        on the data itself - note this will change the data values and make
+        them therefore unusable!
     """
     #
     # Translate the common (renamed) entries
@@ -169,10 +159,8 @@ def isGSE1(filename):
     """
     Checks whether a file is GSE1 or not. Returns True or False.
 
-    Parameters
-    ----------
-    filename : string
-        GSE1 file to be checked.
+    :type filename: string
+    :param filename: GSE1 file to be checked.
     """
     # Open file.
     try:
@@ -195,22 +183,16 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        GSE2 file to be read.
-    headonly : boolean, optional
-        If True read only header of GSE1 file.
-    verify_chksum : boolean, optional
-        If True verify Checksum and raise Exception if it is not correct.
+    :type filename: string
+    :type param: GSE2 file to be read.
+    :type headonly: boolean, optional
+    :param headonly: If True read only header of GSE1 file.
+    :type verify_chksum: boolean, optional
+    :param verify_chksum: If True verify Checksum and raise Exception if
+        it is not correct.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :returns: Stream object containing header and data.
 
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        Stream object containing header and data.
-
-    Example
-    -------
     >>> from obspy.core import read # doctest: +SKIP
     >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
     """
