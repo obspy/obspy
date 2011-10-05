@@ -848,14 +848,18 @@ class Stream(object):
         :param dpi: Dots per inch of the output file. This also affects the
             size of most elements in the graph (text, linewidth, ...).
             Defaults to ``100``.
-        :param color: Color of the graph.
-            Defaults to ``'black'``.
+        :param color: Color of the graph as a matplotlib color string as
+            described below. If ``type='dayplot'`` a list/tuple of color
+            strings is expected that will be periodically repeated for each
+            line plotted.
+            Defaults to ``'black'`` or to ``('#B2000F', '#004C12', '#847200',
+            '#0E01FF')`` for ``type='dayplot'``.
         :param bgcolor: Background color of the graph.
             Defaults to ``'white'``.
         :param face_color: Facecolor of the matplotlib canvas.
             Defaults to ``'white'``.
         :param transparent: Make all backgrounds transparent (True/False). This
-            will overwrite the bgcolor param.
+            will overwrite the bgcolor and face_color arguments.
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
             Defaults to ``5``.
@@ -869,7 +873,31 @@ class Stream(object):
         :param type: Type may be set to either ``'dayplot'`` in order to create
             a one-day plot for a single Trace or ``'relative'`` to convert all
             date/time information to a relative scale, effectively starting
-            the seismogram at 0 seconds.
+            the seismogram at 0 seconds. ``'normal'`` will produce a standard
+            plot.
+            Defaults to ``'normal'``.
+        :param vertical_scaling_range: Only used if ``type='dayplot'``.
+            Determines how each line is scaled in its given space. Every line
+            will be centered around its mean value and then clamped to fit its
+            given space. This argument is the range in data units that will be
+            used to clamp the data. If the range is smaller than the actual
+            range, the lines' data may overshoot to other lines which is usually
+            a desired effect. Larger ranges will result in a vertical padding.
+            If ``0``, the actual range of the data will be used and no overshooting
+            or additional padding will occur.
+            If ``None`` the range will be chosen to be the 99.5-percentile of the
+            actual range - so some values will overshoot.
+            Defaults to None.
+        :param interval: Only used if ``type='dayplot'``. This defines the
+            interval length in minutes for one line.
+        :param time_offset: Only used if ``type='dayplot'``. The dayplot will
+            have two vertical scales. One showing UTC time and the other a user
+            defined timezone. This argument specifies the offset of the other
+            time scale in hours relative to UTC time.
+            Defaults to the current offset of the system time to UTC time.
+        :param timezone: Only used if ``type='dayplot'``. Defines the name of
+            the user defined time scale.
+            Defaults to ``'local time'``.
 
         .. rubric:: Color Options
 
@@ -907,7 +935,7 @@ class Stream(object):
             warnings.warn(msg, category=ImportWarning)
             raise
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
-        return waveform.plotWaveform()
+        return waveform.plotWaveform(*args, **kwargs)
 
     def spectrogram(self, *args, **kwargs):
         """

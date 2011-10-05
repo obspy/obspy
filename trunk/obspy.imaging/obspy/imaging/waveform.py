@@ -115,25 +115,30 @@ class WaveformPlotting(object):
             self.width, self.height = self.size
         # Interval length in minutes for dayplot.
         self.interval = 60 * kwargs.get('interval', 15)
+        # Scaling.
+        self.vertical_scaling_range = kwargs.get('vertical_scaling_range',
+                                                 None)
         # Dots per inch of the plot. Might be useful for printing plots.
         self.dpi = kwargs.get('dpi', 100)
         # Color of the graph.
-        self.color = kwargs.get('color', 'k')
-        if self.type == 'dayplot' and type(self.color) == str:
-            self.color = ('#a04F07', '#597053', '#3336B1', '#B7C49B',
-                          '#B0CBF7', '#64CB9B')
+        if self.type == 'dayplot':
+            self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
+                                              '#0E01FF'))
+            if isinstance(self.color, basestring):
+                self.color = (self.color,)
+            self.number_of_ticks = kwargs.get('number_of_ticks', None)
+        else:
+            self.color = kwargs.get('color', 'k')
+            self.number_of_ticks = kwargs.get('number_of_ticks', 5)
         # Background and face color.
         self.background_color = kwargs.get('bgcolor', 'w')
         self.face_color = kwargs.get('face_color', 'w')
-        # Transparency. Overwrites all background and face color settings.
+        # Transparency. Overwrites background and facecolor settings.
         self.transparent = kwargs.get('transparent', False)
+        if self.transparent:
+            self.background_color = None
         # Ticks.
-        self.number_of_ticks = kwargs.get('number_of_ticks', 5)
-        self.tick_format = kwargs.get('tick_format', None)
-        if not self.tick_format and self.type == 'relative':
-            self.tick_format = '%S'
-        else:
-            self.tick_format = '%H:%M:%S'
+        self.tick_format = kwargs.get('tick_format', '%H:%M:%S')
         self.tick_rotation = kwargs.get('tick_rotation', 0)
         # Whether or not to save a file.
         self.outfile = kwargs.get('outfile')
@@ -168,28 +173,26 @@ class WaveformPlotting(object):
         # The following just serves as a unified way of saving and displaying
         # the plots.
         if self.outfile:
+            if not self.transparent:
+                extra_args = {'dpi':self.dpi,
+                              'facecolor':self.face_color,
+                              'edgecolor':self.face_color}
+            else:
+                extra_args = {'dpi':self.dpi,
+                              'transparent': self.transparent}
             # If format is set use it.
             if self.format:
-                self.fig.savefig(self.outfile, dpi=self.dpi,
-                                 transparent=self.transparent,
-                                 facecolor=self.face_color,
-                                 edgecolor=self.face_color,
-                                 format=self.format)
+                self.fig.savefig(self.outfile, format=self.format,
+                                 **extra_args)
             # Otherwise use format from self.outfile or default to PNG.
             else:
-                self.fig.savefig(self.outfile, dpi=self.dpi,
-                                 transparent=self.transparent,
-                                 facecolor=self.face_color,
-                                 edgecolor=self.face_color)
+                self.fig.savefig(self.outfile, **extra_args)
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
                 imgdata = StringIO.StringIO()
-                self.fig.savefig(imgdata, dpi=self.dpi,
-                                 transparent=self.transparent,
-                                 facecolor=self.face_color,
-                                 edgecolor=self.face_color,
-                                 format=self.format)
+                self.fig.savefig(imgdata, format=self.format,
+                                 **extra_args)
                 imgdata.seek(0)
                 return imgdata.read()
             elif self.handle:
@@ -260,8 +263,11 @@ class WaveformPlotting(object):
                       "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
-            ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                      axisbg=self.background_color)
+            if self.background_color:
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
+                                          axisbg=self.background_color)
+            else:
+                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
             if (self.endtime - self.starttime) * sampling_rate > self.max_npts:
@@ -298,7 +304,10 @@ class WaveformPlotting(object):
             else:
                 self.repeat = self.steps
         # Create axis to plot on.
-        ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
+        if self.background_color:
+            ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
+        else:
+            ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots to be symmetrical. Also make some more room
         # at the top.
         self.fig.subplots_adjust(left=0.12, right=0.88, top=0.88)
@@ -317,7 +326,7 @@ class WaveformPlotting(object):
             y_values[1::2] += self.extreme_values[_i, :, 1]
             # Plot the values.
             ax.plot(x_values, y_values,
-                    color=self.color[(_i % self.repeat) % len(self.color)])
+                    color=self.color[_i % len(self.color)])
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
         ax.set_ylim(-0.3 , self.steps + 0.3)
@@ -512,13 +521,18 @@ class WaveformPlotting(object):
             # Set the location of the ticks.
             ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
             # Figure out times.
-            interval = (self.endtime - self.starttime) / (self.number_of_ticks
+            interval = float(self.endtime - self.starttime) / (self.number_of_ticks
                                                          - 1)
             # Set the actual labels.
-            ax.set_xticklabels([(self.starttime + _i *
-                                interval).strftime(self.tick_format)
-                                for _i in range(self.number_of_ticks)],
-                                fontsize='small')
+            if self.type == 'relative':
+                labels = ['%.2f' % (self.starttime + _i * interval).timestamp \
+                          for _i in range(self.number_of_ticks)]
+            else:
+                labels = [(self.starttime + _i * \
+                          interval).strftime(self.tick_format) for _i in \
+                          range(self.number_of_ticks)]
+
+            ax.set_xticklabels(labels, fontsize='small', rotation=self.tick_rotation)
 
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -606,14 +620,31 @@ class WaveformPlotting(object):
                               self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         self.extreme_values -= self.extreme_values.mean()
-        # Now make sure that the range of all values goes from 0 to 1. With the
-        # mean value at 0.5.
-        max = self.extreme_values[:, :, 1].max()
-        min = self.extreme_values[:, :, 0].min()
-        if max > -min:
-            self.extreme_values = (self.extreme_values / max) / 2 + 0.5
+
+        # Scale so that 99.5 % of the data will fit the given range.
+        if self.vertical_scaling_range is None:
+            percentile_delta = 0.005
+            max_values = self.extreme_values[:, :, 1].ravel().copy()
+            min_values = self.extreme_values[:, :, 0].ravel().copy()
+            max_values.sort()
+            min_values.sort()
+            length = len(max_values)
+            index = int((1.0 - percentile_delta) * length)
+            max_val = max_values[index]
+            index = int(percentile_delta * length)
+            min_val = min_values[index]
+        # Exact fit.
+        elif float(self.vertical_scaling_range) == 0.0:
+            max_val = self.extreme_values[:, :, 1].max()
+            min_val = self.extreme_values[:, :, 0].min()
+        # Fit with custom range.
         else:
-            self.extreme_values = (self.extreme_values / abs(min)) / 2 + 0.5
+            max_val = min_val = abs(self.vertical_scaling_range)/2.0
+
+        # Scale from 0 to 1.
+        self.extreme_values = (self.extreme_values / max(abs(max_val),
+                                                 abs(min_val))) / 2 + 0.5
+
 
     def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -621,32 +652,66 @@ class WaveformPlotting(object):
         """
         max_value = self.width - 1
         # Check whether it are sec/mins/hours and convert to a universal unit.
-        if self.interval < 60:
-            type = 'seconds'
+        if self.interval < 240:
+            time_type = 'seconds'
             time_value = self.interval
-        elif self.interval < 3600:
-            type = 'minutes'
+        elif self.interval < 24000:
+            time_type = 'minutes'
             time_value = self.interval / 60
         else:
-            type = 'hours'
+            time_type = 'hours'
             time_value = self.interval / 3600
-        # Up to 20 time units and if its a full number, show every unit.
-        if time_value <= 20 and time_value % 1 == 0:
-            count = time_value
-        # Otherwise determine whether they are dividable for numbers up to 20.
-        # If a number is not dividable just show 10 units.
-        else:
-            count = 10
-            for _i in xrange(20, 1, -1):
-                if time_value % _i == 0:
-                    count = _i
-                    break
+        count = None
+        # Hardcode some common values. The plus one is itentional. It had
+        # hardly any performance impact and enhances readability.
+        if self.interval == 15*60:
+            count = 15 + 1
+        elif self.interval == 20*60:
+            count = 4 + 1
+        elif self.interval == 30*60:
+            count = 6 + 1
+        elif self.interval == 60*60:
+            count = 4 + 1
+        elif self.interval == 90*60:
+            count = 6 + 1
+        elif self.interval == 120*60:
+            count = 4 + 1
+        elif self.interval == 180*60:
+            count = 6 + 1
+        elif self.interval == 240*60:
+            count = 6 + 1
+        elif self.interval == 300*60:
+            count = 6 + 1
+        elif self.interval == 360*60:
+            count = 12 + 1
+        elif self.interval == 720*60:
+            count = 12 + 1
+        # Otherwise run some kind of autodetection routine.
+        if not count:
+            # Up to 15 time units and if its a full number, show every unit.
+            if time_value <= 15 and time_value % 1 == 0:
+                count = time_value
+            # Otherwise determine whether they are dividable for numbers up to
+            # 15. If a number is not dividable just show 10 units.
+            else:
+                count = 10
+                for _i in xrange(15, 1, -1):
+                    if time_value % _i == 0:
+                        count = _i
+                        break
+            # Show at least 5 ticks.
+            if count < 5:
+                count = 5
+        # Everything can be overwritten by user specified number of ticks.
+        if self.number_of_ticks:
+            count = self.number_of_ticks
         # Calculate and set ticks.
-        ticks = np.linspace(0.0, max_value, count + 1)
-        ticklabels = ['%.1f' % _i for _i in np.linspace(0.0, count, count + 1)]
+        ticks = np.linspace(0.0, max_value, count)
+        ticklabels = ['%i' % _i for _i in np.linspace(0.0,
+                                    time_value, count)]
         self.axis[0].set_xticks(ticks)
-        self.axis[0].set_xticklabels(ticklabels)
-        self.axis[0].set_xlabel('time in %s' % type)
+        self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation)
+        self.axis[0].set_xlabel('time in %s' % time_type)
 
     def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -677,11 +742,11 @@ class WaveformPlotting(object):
                       * 3600).strftime('%H:%M') for _i in tick_steps]
         self.twin.set_yticklabels(ticklabels)
         # Complicated way to calculate the label of the y-Axis showing the
-        # local time.
+        # second time zone.
         sign = '%+i' % self.time_offset
         sign = sign[0]
         time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
-                     (sign, self.time_offset, (self.time_offset % 1 * 60))
+                     (sign, abs(self.time_offset), (self.time_offset % 1 * 60))
         self.twin.set_ylabel(time_label)
 
     def __setupFigure(self):
