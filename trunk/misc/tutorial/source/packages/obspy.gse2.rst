@@ -12,5 +12,6 @@
        core
        libgse2
        libgse1
+       paz
 
     .. comment to end block
