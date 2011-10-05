@@ -43,8 +43,7 @@ class LibGSE2TestCase(unittest.TestCase):
             header['d_day'],
             header['t_hour'],
             header['t_min'],
-            header['t_sec'])
-        )
+            header['t_sec']))
         self.assertAlmostEquals(9.49e-02, header['calib'])
         self.assertEqual(1.0, header['calper'])
         self.assertEqual(-1.0, header['vang'])
@@ -100,8 +99,7 @@ class LibGSE2TestCase(unittest.TestCase):
             header['d_day'],
             header['t_hour'],
             header['t_min'],
-            header['t_sec'])
-        )
+            header['t_sec']))
 
     def test_getStartAndEndTime(self):
         """
@@ -167,7 +165,7 @@ class LibGSE2TestCase(unittest.TestCase):
     def test_CHK2InCM6(self):
         """
         Tests a file which contains the "CHK2" string in the CM6 encoded
-        string (line 13 of twiceCHK2.gse2). 
+        string (line 13 of twiceCHK2.gse2).
         """
         f = open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb')
         header, data = libgse2.read(f, verify_chksum=True)

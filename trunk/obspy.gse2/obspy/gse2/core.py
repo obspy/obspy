@@ -31,7 +31,7 @@ def isGSE2(filename):
 
 convert_dict = {
     'station': 'station',
-    'samp_rate':'sampling_rate',
+    'samp_rate': 'sampling_rate',
     'n_samps': 'npts',
     'channel': 'channel',
     'calib': 'calib',
@@ -78,20 +78,20 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     traces = []
     # read GSE2 file
     f = open(filename, 'rb')
-    for _k in xrange(10000): # avoid endless loop
+    for _k in xrange(10000):  # avoid endless loop
         pos = f.tell()
         widi = f.readline()[0:4]
-        if widi == '': # end of file
+        if widi == '':  # end of file
             break
         elif widi != 'WID2':
             continue
-        else: # valid gse2 part
+        else:  # valid gse2 part
             f.seek(pos)
             if headonly:
                 header = libgse2.readHead(f)
             else:
                 header, data = libgse2.read(f, verify_chksum=verify_chksum)
-            # assign all header entries to a new dictionary compatible with an 
+            # assign all header entries to a new dictionary compatible with an
             # ObsPy Trace object.
             new_header = {}
             for i, j in convert_dict.iteritems():
@@ -147,16 +147,13 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
             except:
                 pass
         # year, month, day, hour, min, sec
-        try:
-            (header['d_year'],
-             header['d_mon'],
-             header['d_day'],
-             header['t_hour'],
-             header['t_min'],
-             header['t_sec']) = trace.stats.starttime.timetuple()[0:6]
-            header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
-        except:
-            raise
+        (header['d_year'],
+            header['d_mon'],
+            header['d_day'],
+            header['t_hour'],
+            header['t_min'],
+            header['t_sec']) = trace.stats.starttime.timetuple()[0:6]
+        header['t_sec'] += trace.stats.starttime.microsecond / 1.0e6
         dtype = np.dtype('int32')
         if trace.data.dtype.name == dtype.name:
             trace.data = np.require(trace.data, dtype, ['C_CONTIGUOUS'])
@@ -220,7 +217,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
     traces = []
     # read GSE1 file
     fh = open(filename, 'rb')
-    while True: # avoid endless loop
+    while True:
         try:
             if headonly:
                 header = libgse1.readHeader(fh)

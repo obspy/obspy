@@ -125,7 +125,7 @@ clibgse2.rem_2nd_diff.restype = C.c_int
 clibgse2.check_sum.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int, C.c_int32]
-clibgse2.check_sum.restype = C.c_int # do not know why not C.c_int32
+clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 # gse_functions buf_init
 clibgse2.buf_init.argtypes = [C.c_void_p]
@@ -223,7 +223,7 @@ def uncompress_CM6(f, n_samps):
 def verifyChecksum(fh, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
-    
+
     :type fh: File Pointer
     :param fh: File Pointer
     :type version: Int

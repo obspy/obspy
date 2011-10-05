@@ -25,13 +25,14 @@ behavior of reading the file:
 * headonly=True: Read only the header part, not the data part
 * verify_chksum=False: Do not verify the checksum of the GSE2 file. This is
   very useful if the program, which wrote the checksum, calculated it in a
-  wrong way. 
+  wrong way.
 
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)
+>>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:
-.RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z | 200.0 Hz, 12000 samples
+.RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z
+| 200.0 Hz, 12000 samples
 
 The format will be determined automatically. Each trace (multiple 'WID2'
 entries are mapped to multiple traces) will have a stats attribute
@@ -40,9 +41,9 @@ additional attribute: 'gse2'. This attribute contains all GSE2 specific
 attributes:
 
 >>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
-         network: 
+         network:
          station: RJOB
-        location: 
+        location:
          channel: Z
        starttime: 2005-08-31T02:33:49.849998Z
          endtime: 2005-08-31T02:34:49.844998Z
@@ -51,8 +52,9 @@ attributes:
             npts: 12000
            calib: 0.0948999971151
          _format: GSE2
-            gse2: AttribDict({'instype': '      ', 'datatype': 'CM6', 'hang': -1.0,
-                              'auxid': 'RJOB', 'vang': -1.0, 'calper': 1.0})
+            gse2: AttribDict({'instype': '      ', 'datatype': 'CM6',
+                              'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
+                              'calper': 1.0})
 
 The data are available via the data attribute.
 

@@ -20,7 +20,7 @@ class LibGSE1TestCase(unittest.TestCase):
 
     def test_verifyChecksums(self):
         """
-        Tests verifying checksums for CM6 encoded GSE1 files. 
+        Tests verifying checksums for CM6 encoded GSE1 files.
         """
         #1
         fh = open(os.path.join(self.path, 'acc.gse'), 'rb')
@@ -37,10 +37,9 @@ class LibGSE1TestCase(unittest.TestCase):
         #4 - second checksum is wrong
         fh = open(os.path.join(self.path, 'GRF_031102_0225.GSE.wrong_chksum'),
                   'rb')
-        libgse1.read(fh, verify_chksum=True) # correct
+        libgse1.read(fh, verify_chksum=True)  # correct
         self.assertRaises(ChksumError, libgse1.read, fh, verify_chksum=True)
         fh.close()
-
 
 
 def suite():
