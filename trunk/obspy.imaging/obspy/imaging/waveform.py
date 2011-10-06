@@ -20,7 +20,7 @@ Waveform plotting for obspy.Stream objects.
 from copy import deepcopy, copy
 from datetime import datetime
 from math import ceil
-from matplotlib.cm import hsv #@UnresolvedImport
+from matplotlib.cm import hsv  # @UnresolvedImport
 from matplotlib.dates import date2num, num2date
 from matplotlib.ticker import FuncFormatter
 from obspy.core import UTCDateTime, Stream, Trace
@@ -169,16 +169,26 @@ class WaveformPlotting(object):
             self.plotDay(*args, **kwargs)
         else:
             self.plot(*args, **kwargs)
+        # Adjust the subplot so there is always a margin of 80 px on every
+        # side except for plots with just a single trace.
+        if self.type != 'dayplot':
+            if self.height >= 400:
+                fract_y = 80.0 / self.height
+            else:
+                fract_y = 25.0 / self.height
+            fract_x = 80.0 / self.width
+            self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y,
+                                     left=fract_x, right=1 - fract_x)
         self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
         # the plots.
         if self.outfile:
             if not self.transparent:
-                extra_args = {'dpi':self.dpi,
-                              'facecolor':self.face_color,
-                              'edgecolor':self.face_color}
+                extra_args = {'dpi': self.dpi,
+                              'facecolor': self.face_color,
+                              'edgecolor': self.face_color}
             else:
-                extra_args = {'dpi':self.dpi,
+                extra_args = {'dpi': self.dpi,
                               'transparent': self.transparent}
             # If format is set use it.
             if self.format:
@@ -289,7 +299,7 @@ class WaveformPlotting(object):
         # Get timezone information. If none is  given, use local time.
         self.time_offset = kwargs.get('time_offset',
                            round((UTCDateTime(datetime.now()) - \
-                           UTCDateTime()) / 3600.0 , 2))
+                           UTCDateTime()) / 3600.0, 2))
         self.timezone = kwargs.get('timezone', 'local time')
         # Try to guess how many steps are needed to advance one full time unit.
         self.repeat = None
@@ -329,7 +339,7 @@ class WaveformPlotting(object):
                     color=self.color[_i % len(self.color)])
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
-        ax.set_ylim(-0.3 , self.steps + 0.3)
+        ax.set_ylim(-0.3, self.steps + 0.3)
         self.axis = [ax]
         # Set ticks.
         self.__dayplotSetYTicks()
@@ -521,8 +531,8 @@ class WaveformPlotting(object):
             # Set the location of the ticks.
             ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
             # Figure out times.
-            interval = float(self.endtime - self.starttime) / (self.number_of_ticks
-                                                         - 1)
+            interval = float(self.endtime - self.starttime) / \
+                       (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
                 labels = ['%.2f' % (self.starttime + _i * interval).timestamp \
@@ -532,7 +542,8 @@ class WaveformPlotting(object):
                           interval).strftime(self.tick_format) for _i in \
                           range(self.number_of_ticks)]
 
-            ax.set_xticklabels(labels, fontsize='small', rotation=self.tick_rotation)
+            ax.set_xticklabels(labels, fontsize='small',
+                               rotation=self.tick_rotation)
 
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -639,12 +650,11 @@ class WaveformPlotting(object):
             min_val = self.extreme_values[:, :, 0].min()
         # Fit with custom range.
         else:
-            max_val = min_val = abs(self.vertical_scaling_range)/2.0
+            max_val = min_val = abs(self.vertical_scaling_range) / 2.0
 
         # Scale from 0 to 1.
         self.extreme_values = (self.extreme_values / max(abs(max_val),
                                                  abs(min_val))) / 2 + 0.5
-
 
     def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -664,27 +674,27 @@ class WaveformPlotting(object):
         count = None
         # Hardcode some common values. The plus one is itentional. It had
         # hardly any performance impact and enhances readability.
-        if self.interval == 15*60:
+        if self.interval == 15 * 60:
             count = 15 + 1
-        elif self.interval == 20*60:
+        elif self.interval == 20 * 60:
             count = 4 + 1
-        elif self.interval == 30*60:
+        elif self.interval == 30 * 60:
             count = 6 + 1
-        elif self.interval == 60*60:
+        elif self.interval == 60 * 60:
             count = 4 + 1
-        elif self.interval == 90*60:
+        elif self.interval == 90 * 60:
             count = 6 + 1
-        elif self.interval == 120*60:
+        elif self.interval == 120 * 60:
             count = 4 + 1
-        elif self.interval == 180*60:
+        elif self.interval == 180 * 60:
             count = 6 + 1
-        elif self.interval == 240*60:
+        elif self.interval == 240 * 60:
             count = 6 + 1
-        elif self.interval == 300*60:
+        elif self.interval == 300 * 60:
             count = 6 + 1
-        elif self.interval == 360*60:
+        elif self.interval == 360 * 60:
             count = 12 + 1
-        elif self.interval == 720*60:
+        elif self.interval == 720 * 60:
             count = 12 + 1
         # Otherwise run some kind of autodetection routine.
         if not count:
