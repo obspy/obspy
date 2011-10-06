@@ -674,7 +674,7 @@ def getEntryPoints():
     return new_entries
 
 
-def get_matplotlib_version():
+def getMatplotlibVersion():
     """
     Get matplotlib version information.
 
@@ -688,8 +688,6 @@ def get_matplotlib_version():
     except ImportError:
         version = None
     return version
-
-MATPLOTLIB_VERSION = get_matplotlib_version()
 
 
 if __name__ == '__main__':

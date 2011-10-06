@@ -25,9 +25,13 @@ import math
 import bisect
 import numpy as np
 from obspy.core import Trace, Stream
-from obspy.core.util import MATPLOTLIB_VERSION
+from obspy.core.util import getMatplotlibVersion
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
+
 
 if MATPLOTLIB_VERSION == None:
     # if matplotlib is not present be silent about it and only raise the
@@ -56,27 +60,27 @@ else:
 
 
 # build colormap as done in paper by mcnamara
-CDICT = {'red': ((0.0,  1.0, 1.0),
-                 (0.05,  1.0, 1.0),
-                 (0.2,  0.0, 0.0),
-                 (0.4,  0.0, 0.0),
-                 (0.6,  0.0, 0.0),
-                 (0.8,  1.0, 1.0),
-                 (1.0,  1.0, 1.0)),
-         'green': ((0.0,  1.0, 1.0),
-                   (0.05,  0.0, 0.0),
-                   (0.2,  0.0, 0.0),
-                   (0.4,  1.0, 1.0),
-                   (0.6,  1.0, 1.0),
-                   (0.8,  1.0, 1.0),
-                   (1.0,  0.0, 0.0)),
-         'blue': ((0.0,  1.0, 1.0),
-                  (0.05,  1.0, 1.0),
-                  (0.2,  1.0, 1.0),
-                  (0.4,  1.0, 1.0),
-                  (0.6,  0.0, 0.0),
-                  (0.8,  0.0, 0.0),
-                  (1.0,  0.0, 0.0))}
+CDICT = {'red': ((0.0, 1.0, 1.0),
+                 (0.05, 1.0, 1.0),
+                 (0.2, 0.0, 0.0),
+                 (0.4, 0.0, 0.0),
+                 (0.6, 0.0, 0.0),
+                 (0.8, 1.0, 1.0),
+                 (1.0, 1.0, 1.0)),
+         'green': ((0.0, 1.0, 1.0),
+                   (0.05, 0.0, 0.0),
+                   (0.2, 0.0, 0.0),
+                   (0.4, 1.0, 1.0),
+                   (0.6, 1.0, 1.0),
+                   (0.8, 1.0, 1.0),
+                   (1.0, 0.0, 0.0)),
+         'blue': ((0.0, 1.0, 1.0),
+                  (0.05, 1.0, 1.0),
+                  (0.2, 1.0, 1.0),
+                  (0.4, 1.0, 1.0),
+                  (0.6, 0.0, 0.0),
+                  (0.8, 0.0, 0.0),
+                  (1.0, 0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 # do not change these variables, otherwise results may differ from PQLX!
@@ -377,7 +381,7 @@ class PPSD():
         per_octaves_right = [per_right]
         per_octaves = [per_center]
         # we move through the period range at 1/8 octave steps
-        factor_eighth_octave = 2**0.125
+        factor_eighth_octave = 2 ** 0.125
         # do this for the whole period range and append the values to our lists
         while per_right < per[-1]:
             per_left *= factor_eighth_octave
@@ -510,7 +514,7 @@ class PPSD():
             # enforce time limits, pad zeros if gaps
             #tr.trim(t, t+PPSD_LENGTH, pad=True)
         return changed
-            
+
     def __process(self, tr):
         """
         Processes a one-hour segment of data and adds the information to the
@@ -658,7 +662,7 @@ class PPSD():
         # map to power db values
         percentile_values = self.spec_bins[percentile_values]
         return (self.period_bin_centers, percentile_values)
-        
+
     def __get_normalized_cumulative_histogram(self):
         """
         Returns the current histogram in a cumulative version normalized per
@@ -714,7 +718,7 @@ class PPSD():
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
-        
+
         fig = plt.figure()
 
         if show_coverage:
@@ -752,7 +756,7 @@ class PPSD():
         ax.semilogx()
         ax.set_xlim(0.01, 179)
         ax.set_ylim(-200, -50)
-        ax.set_xlabel('Period [s]') 
+        ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         title = "%s   %s -- %s  (%i segments)"
@@ -808,10 +812,10 @@ class PPSD():
         ax.clear()
         ax.xaxis_date()
         ax.set_yticks([])
-        
+
         # plot data coverage
         starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t+PPSD_LENGTH).datetime) for t in self.times_used]
+        ends = [date2num((t + PPSD_LENGTH).datetime) for t in self.times_used]
         for start, end in zip(starts, ends):
             ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
         # plot data
@@ -824,7 +828,7 @@ class PPSD():
             start = date2num(start.datetime)
             end = date2num(end.datetime)
             ax.axvspan(start, end, 0.7, 1, facecolor="r", lw=0)
-        
+
         ax.autoscale_view()
 
 

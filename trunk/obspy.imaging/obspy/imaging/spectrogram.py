@@ -19,10 +19,13 @@ Plotting spectrogram of seismograms.
 
 from matplotlib import mlab
 from matplotlib.colors import Normalize
-from obspy.core.util import MATPLOTLIB_VERSION
+from obspy.core.util import getMatplotlibVersion
 import math as M
 import matplotlib.pyplot as plt
 import numpy as np
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 def _nearestPow2(x):
