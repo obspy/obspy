@@ -24,6 +24,7 @@ from matplotlib.cm import hsv  # @UnresolvedImport
 from matplotlib.dates import date2num, num2date
 from matplotlib.ticker import FuncFormatter
 from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core.util import createEmptyDataChunk
 from obspy.core.preview import mergePreviews
 import StringIO
 import matplotlib.pyplot as plt
@@ -292,6 +293,14 @@ class WaveformPlotting(object):
         """
         Extend the seismogram.
         """
+        # Create a copy of the stream because it might be operated on.
+        self.stream = self.stream.copy()
+        # Merge and trim to pad.
+        self.stream.merge()
+        if len(self.stream) != 1:
+            msg = "All traces need to be of the same id for a dayplot"
+            raise ValueError(msg)
+        self.stream.trim(self.starttime, self.endtime, pad=True)
         # Get minmax array.
         self.__dayplotGetMinMaxValues(self, *args, **kwargs)
         # Normalize array
@@ -303,16 +312,17 @@ class WaveformPlotting(object):
         self.timezone = kwargs.get('timezone', 'local time')
         # Try to guess how many steps are needed to advance one full time unit.
         self.repeat = None
+        intervals = self.extreme_values.shape[0]
         if self.interval < 60 and 60 % self.interval == 0:
             self.repeat = 60 / self.interval
         elif self.interval < 1800 and 3600 % self.interval == 0:
             self.repeat = 3600 / self.interval
         # Otherwise use a maximum value of 10.
         else:
-            if self.steps >= 10:
+            if intervals >= 10:
                 self.repeat = 10
             else:
-                self.repeat = self.steps
+                self.repeat = intervals
         # Create axis to plot on.
         if self.background_color:
             ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
@@ -326,11 +336,12 @@ class WaveformPlotting(object):
         x_values = np.empty(2 * self.width)
         x_values[0::2] = aranged_array
         x_values[1::2] = aranged_array
+        intervals = self.extreme_values.shape[0]
         # Loop over each step.
-        for _i in xrange(self.steps):
+        for _i in xrange(intervals):
             # Create offset array.
-            y_values = np.empty(self.width * 2)
-            y_values.fill(self.steps - (_i + 1))
+            y_values = np.ma.empty(self.width * 2)
+            y_values.fill(intervals - (_i + 1))
             # Add min and max values.
             y_values[0::2] += self.extreme_values[_i, :, 0]
             y_values[1::2] += self.extreme_values[_i, :, 1]
@@ -339,7 +350,7 @@ class WaveformPlotting(object):
                     color=self.color[_i % len(self.color)])
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
-        ax.set_ylim(-0.3, self.steps + 0.3)
+        ax.set_ylim(-0.3, intervals + 0.3)
         self.axis = [ax]
         # Set ticks.
         self.__dayplotSetYTicks()
@@ -593,29 +604,69 @@ class WaveformPlotting(object):
         number of trace, the second is the pixel in that step and the third
         contains the minimum and maximum value of the pixel.
         """
-        # XXX: Currently only works for Streams containing just one Trace.
-        if len(self.stream) != 1:
-            msg = 'Currently only Stream objects with one Trace are supported.'
-            raise NotImplementedError(msg)
         # Helper variables for easier access.
         trace = self.stream[0]
         trace_length = len(trace.data)
+
         # Samples per interval.
-        spt = int(self.interval * trace.stats.sampling_rate)
-        # Calculate the steps. Cut the result after three digits.
-        steps = ceil(trace_length / spt)
-        self.steps = int(steps)
-        # How many data points in one pixel.
-        pixel_width = int(spt // self.width)
+        spi = int(self.interval * trace.stats.sampling_rate)
+        # Check the approximate number of samples per pixel and raise
+        # error as fit.
+        spp = float(spi) / self.width
+        if spp < 1.0:
+            msg = """
+            Too few samples to use dayplot with the given arguments.
+            Adjust your arguments or use a different plotting method.
+            """
+            msg = " ".join(msg.strip().split())
+            raise ValueError(msg)
+        # Number of intervals plotted.
+        noi = float(trace_length) / spi
+        inoi = int(round(noi))
+        # Plot an extra interval if at least 2 percent of the last interval
+        # will actually contain data. Do it this way to lessen floating point
+        # inaccuracies.
+        if abs(noi - inoi) > 2E-2:
+            noi = inoi + 1
+        else:
+            noi = inoi
+
+        # Adjust data. Fill with masked values in case it is necessary.
+        number_of_samples = noi * spi
+        delta = number_of_samples - trace_length
+        if delta < 0:
+            trace.data = trace.data[:number_of_samples]
+        elif delta > 0:
+            trace.data = np.ma.concatenate([trace.data,
+                            createEmptyDataChunk(delta, trace.data.dtype)])
+
         # Create array for min/max values. Use masked arrays to handle gaps.
-        extreme_values = np.ma.empty((self.steps, self.width, 2))
-        for _i in range(self.steps):
-            p0 = _i * spt
-            for _j in range(self.width):
-                p = p0 + _j * pixel_width
-                pe = p + pixel_width
-                extreme_values[_i, _j, 0] = min(trace.data[p:pe])
-                extreme_values[_i, _j, 1] = max(trace.data[p:pe])
+        extreme_values = np.ma.empty((noi, self.width, 2))
+        trace.data.shape = (noi, spi)
+
+        ispp = int(spp)
+        fspp = spp % 1.0
+        if fspp == 0.0:
+            delta = None
+        else:
+            delta = spi - ispp * self.width
+
+        # Loop over each interval to avoid larger errors towards the end.
+        for _i in range(noi):
+            if delta:
+                cur_interval = trace.data[_i][:-delta]
+                rest = trace.data[_i][-delta:]
+            else:
+                cur_interval = trace.data[_i]
+            cur_interval.shape = (self.width, ispp)
+            extreme_values[_i, :, 0] = cur_interval.min(axis=1)
+            extreme_values[_i, :, 1] = cur_interval.max(axis=1)
+            # Add the rest.
+            if delta:
+                extreme_values[_i, -1, 0] = min(extreme_values[_i, -1, 0],
+                                                rest.min())
+                extreme_values[_i, -1, 1] = max(extreme_values[_i, -1, 0],
+                                                rest.max())
         # Set class variable.
         self.extreme_values = extreme_values
 
@@ -635,8 +686,9 @@ class WaveformPlotting(object):
         # Scale so that 99.5 % of the data will fit the given range.
         if self.vertical_scaling_range is None:
             percentile_delta = 0.005
-            max_values = self.extreme_values[:, :, 1].ravel().copy()
-            min_values = self.extreme_values[:, :, 0].ravel().copy()
+            max_values = self.extreme_values[:, :, 1].compressed()
+            min_values = self.extreme_values[:, :, 0].compressed()
+            # Remove masked values.
             max_values.sort()
             min_values.sort()
             length = len(max_values)
@@ -653,8 +705,9 @@ class WaveformPlotting(object):
             max_val = min_val = abs(self.vertical_scaling_range) / 2.0
 
         # Scale from 0 to 1.
-        self.extreme_values = (self.extreme_values / max(abs(max_val),
-                                                 abs(min_val))) / 2 + 0.5
+        self.extreme_values /= max(abs(max_val), abs(min_val))
+        self.extreme_values /= 2
+        self.extreme_values += 0.5
 
     def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -727,14 +780,15 @@ class WaveformPlotting(object):
         """
         Sets the yticks for the dayplot.
         """
+        intervals = self.extreme_values.shape[0]
         # Do not display all ticks except if it are five or less steps.
-        if self.steps <= 5:
-            tick_steps = range(0, self.steps)
-            ticks = np.arange(self.steps, 0, -1, dtype=np.float)
+        if intervals <= 5:
+            tick_steps = range(0, intervals)
+            ticks = np.arange(intervals, 0, -1, dtype=np.float)
             ticks -= 0.5
         else:
-            tick_steps = range(0, self.steps, self.repeat)
-            ticks = np.arange(self.steps, 0, -1 * self.repeat, dtype=np.float)
+            tick_steps = range(0, intervals, self.repeat)
+            ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
         ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') \
                       for _i in tick_steps]
@@ -748,8 +802,9 @@ class WaveformPlotting(object):
         self.twin = self.axis[0].twinx()
         self.twin.set_ylim(yrange)
         self.twin.set_yticks(ticks)
-        ticklabels = [(self.starttime + _i * self.interval + self.time_offset \
-                      * 3600).strftime('%H:%M') for _i in tick_steps]
+        ticklabels = [(self.starttime + (_i + 1) * self.interval + \
+                      self.time_offset * 3600).strftime('%H:%M') \
+                      for _i in tick_steps]
         self.twin.set_yticklabels(ticklabels)
         # Complicated way to calculate the label of the y-Axis showing the
         # second time zone.
