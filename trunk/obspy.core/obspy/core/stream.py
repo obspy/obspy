@@ -870,6 +870,12 @@ class Stream(object):
         :param handle: Whether or not to return the matplotlib figure instance
             after the plot has been created.
             Defaults to ``False``.
+        :param method: By default, all traces with more than 400.000 samples
+            will be plotted with a fast method that cannot be zoomed.
+            Setting this argument to ``'full'`` will straight up plot the data.
+            This results in a potentially worse performance but the interactive
+            matplotlib view can be used properly.
+            Defaults to 'fast'.
         :param type: Type may be set to either ``'dayplot'`` in order to create
             a one-day plot for a single Trace or ``'relative'`` to convert all
             date/time information to a relative scale, effectively starting

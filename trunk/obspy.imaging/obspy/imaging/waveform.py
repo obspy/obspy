@@ -79,9 +79,11 @@ class WaveformPlotting(object):
             # fix stream times
             for tr in self.stream:
                 tr.stats.starttime = UTCDateTime(tr.stats.starttime - dt)
+        # Whether to use straight plotting or the fast minmax method.
+        self.plotting_method = kwargs.get('method', 'fast')
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
-        # below).
+        # below). Can be overwritten by the above self.plotting_method kwarg.
         self.max_npts = 400000
         # If automerge is enabled. Merge traces with the same id for the plot.
         self.automerge = kwargs.get('automerge', True)
@@ -281,7 +283,9 @@ class WaveformPlotting(object):
                 ax = self.fig.add_subplot(len(stream_new), 1, _i + 1)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
-            if (self.endtime - self.starttime) * sampling_rate > self.max_npts:
+            if self.plotting_method != 'full' and \
+                ((self.endtime - self.starttime) * sampling_rate > \
+                 self.max_npts):
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
