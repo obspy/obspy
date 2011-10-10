@@ -20,7 +20,7 @@ import time
 import warnings
 import obspy.core
 from obspy.core import UTCDateTime, Trace
-ffrom obspy.core.util import gps2DistAzimuth
+from obspy.core.util import gps2DistAzimuth
 
 # we put here everything but the time, they are going to stats.starttime
 # left SAC attributes, right trace attributes, see also
