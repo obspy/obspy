@@ -13,16 +13,14 @@ Lowlevel module internally used for handling SAC files
 An object-oriented version of C. J. Ammon's SAC I/O module.
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
 """
-from obspy.core import UTCDateTime, Trace
 import numpy as np
-import obspy.core
 import os
 import string
 import time
 import warnings
-
-# avoid import statement overhead
-signal = False
+import obspy.core
+from obspy.core import UTCDateTime, Trace
+ffrom obspy.core.util import gps2DistAzimuth
 
 # we put here everything but the time, they are going to stats.starttime
 # left SAC attributes, right trace attributes, see also
@@ -1166,20 +1164,6 @@ class SacIO(object):
         average radius of 6371 km. Therefore, our routine should be more
         accurate.
         """
-        # Avoid top level dependency on obspy.signal. Thus if obspy.signal
-        # is not allow only this function will not work, not the whole
-        # module
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except Exception, e:
-                msg = "ERROR: obspy.signal is needed for this function " + \
-                      "and is not installed, or not working properly." + \
-                      "The problem is" + str(e)
-                warnings.warn(msg, category=ImportWarning)
-                raise SacError(e)
-
         eqlat = self.GetHvalue('evla')
         eqlon = self.GetHvalue('evlo')
         stlat = self.GetHvalue('stla')
@@ -1190,8 +1174,7 @@ class SacIO(object):
             raise SacError('Insufficient information to calculate distance.')
         if d != -12345.0:
             raise SacError('Distance is already set.')
-        dist, az, baz = signal.rotate.gps2DistAzimuth(eqlat, eqlon, stlat,
-                                                      stlon)
+        dist, az, baz = gps2DistAzimuth(eqlat, eqlon, stlat, stlon)
         self.SetHvalue('dist', dist / 1000.)
         self.SetHvalue('az', az)
         self.SetHvalue('baz', baz)
