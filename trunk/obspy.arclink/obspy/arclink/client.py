@@ -74,10 +74,6 @@ class Client(object):
     :type command_delay: float, optional
     :param command_delay: Delay between each command send to the ArcLink server
         (default is ``0``).
-    :type plain_status_allowed: bool, optional
-    :param plain_status_allowed: Certain ArcLink versions do not allow a plain
-        STATUS request. Set this to False if you experience a endless loop
-        during a request. Default is ``True``.
 
     .. rubric:: Notes
 
@@ -90,7 +86,7 @@ class Client(object):
     * IPGP Server: geosrt2.ipgp.fr:18001
     """
     #: Timeout value for a status request
-    status_timeout = 2
+    status_timeout = 3
 
     #: Delay in seconds between each status request
     status_delay = 0.1
@@ -98,7 +94,7 @@ class Client(object):
     def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
-                 command_delay=0, plain_status_allowed=True):
+                 command_delay=0):
         """
         Initializes an ArcLink client.
 
@@ -111,7 +107,6 @@ class Client(object):
         self.init_host = host
         self.init_port = port
         self.dcid_keys = dcid_keys
-        self.plain_status_allowed = plain_status_allowed
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
             self._client = Telnet(host, port)
@@ -146,7 +141,7 @@ class Client(object):
     def _writeln(self, buffer):
         if self.command_delay:
             time.sleep(self.command_delay)
-        self._client.write(buffer + '\n')
+        self._client.write(buffer + '\r\n')
         if self.debug:
             print('>>> ' + buffer)
 
@@ -238,8 +233,6 @@ class Client(object):
     def _request(self, request_type, request_data):
         self._hello()
         self._writeln(request_type)
-        if not self.plain_status_allowed:
-            self._readln('OK')
         # create request string
         # adding one second to start and end time to ensure right date times
         out = (request_data[0] - 1).formatArcLink() + ' '
@@ -247,9 +240,8 @@ class Client(object):
         out += ' '.join([str(i) for i in request_data[2:]])
         self._writeln(out)
         self._writeln('END')
-        if self.plain_status_allowed:
-            self._readln('OK')
-            self._writeln('STATUS')
+        self._readln('OK')
+        # get status id
         while True:
             status = self._readln()
             try:
@@ -266,9 +258,8 @@ class Client(object):
         _old_xml_doc = None
         while True:
             self._writeln('STATUS %d' % req_id)
-            xml_doc = self._readln()
+            xml_doc = self._readln('END')
             if 'ready="true"' in xml_doc:
-                self._client.read_until('\r\n', self.status_timeout)
                 break
             # check if status messages changes over time
             if _old_xml_doc == xml_doc:
