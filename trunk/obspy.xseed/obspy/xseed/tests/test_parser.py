@@ -45,14 +45,14 @@ class ParserTestCase(unittest.TestCase):
         if hasattr(warnings, 'catch_warnings'):
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                # Trigger a warning. 
+                # Trigger a warning.
                 parser.read(file)
                 self.assertEqual(len(w), 1)
                 self.assertTrue(issubclass(w[-1].category, UserWarning))
                 self.assertTrue('date' and 'required' in \
                                         w[-1].message.message.lower())
         else:
-            # Just raise the warning using Python 2.5. 
+            # Just raise the warning using Python 2.5.
             parser.read(file)
         paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
         result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
@@ -63,7 +63,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz, result)
         self.assertRaises(SEEDParserException, parser.getPAZ,
                           "NZ.DCZ.10.HHZ", t)
-
 
     def test_invalidStartHeader(self):
         """
@@ -133,7 +132,7 @@ class ParserTestCase(unittest.TestCase):
         b054 = "0540960A0400300300000039"
         nr = ""
         for i in range(0, 78):
-            nr = nr + "+1.000%02dE-03" % i # 960 chars
+            nr = nr + "+1.000%02dE-03" % i #  960 chars
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
         self.assertEquals(b054 + nr, blockette.getSEED())
@@ -152,15 +151,15 @@ class ParserTestCase(unittest.TestCase):
             blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
         data = "000001V " + b010 + (' ' * 206)
-        data += "000002S " + b054 + nr[0:224] # 256-8-24 = 224
+        data += "000002S " + b054 + nr[0:224] #  256-8-24 = 224
         data += "000003S*" + nr[224:472] # 256-8 = 248
         data += "000004S*" + nr[472:720]
-        data += "000005S*" + nr[720:] + b051 + ' ' * 5 # 5 spaces left
+        data += "000005S*" + nr[720:] + b051 + ' ' * 5 #  5 spaces left
         self.assertEqual(len(data), 256 * 5)
-        data += "000006S " + b054 + nr[0:224] # 256-8-24 = 224
-        data += "000007S*" + nr[224:472] # 256-8 = 248
+        data += "000006S " + b054 + nr[0:224] #  256-8-24 = 224
+        data += "000007S*" + nr[224:472] #  256-8 = 248
         data += "000008S*" + nr[472:720]
-        data += "000009S*" + nr[720:] + ' ' * 32 # 32 spaces left
+        data += "000009S*" + nr[720:] + ' ' * 32 #  32 spaces left
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=False)
@@ -213,13 +212,13 @@ class ParserTestCase(unittest.TestCase):
         """
         Reads all SEED records from the Bavarian network and writes them
         again.
-        
+
         This should not change them.
-        
+
         There are some differences which will be edited before comparison:
         - The written SEED file will always have the version 2.4. BW uses
           version 2.3.
-        
+
         The different formating of numbers in the stations blockettes will not
         be changed but 'evened'. Both are valid ways to do it - see SEED-Manual
         chapter 3 for more informations.
@@ -247,13 +246,13 @@ class ParserTestCase(unittest.TestCase):
         This test takes some SEED files, reads them to a Parser object
         and converts them back to SEED once. This is done to avoid any
         formating issues as seen in test_readAndWriteSEED.
-        
+
         Therefore the reading and writing of SEED files is considered to be
         correct.
-        
+
         Finally the resulting SEED gets converted to XSEED and back to SEED
         and the two SEED strings are then evaluated to be identical.
-        
+
         This tests also checks for XML validity using a XML schema.
         """
         # Loop over all files and versions.
@@ -272,7 +271,7 @@ class ParserTestCase(unittest.TestCase):
                 # test_readAndWriteSEED.
                 original_seed = parser1.getSEED()
                 del parser1
-                # Now read the file, parse it, write XSEED, read XSEED and 
+                # Now read the file, parse it, write XSEED, read XSEED and
                 # write SEED again. The output should be totally identical.
                 parser2 = Parser(original_seed)
                 xseed_string = parser2.getXSEED(version=version)
@@ -332,7 +331,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefined channels
         self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
-        # Raise exception if not a Laplacian transfer function ('A'). 
+        # Raise exception if not a Laplacian transfer function ('A').
         # Modify transfer_fuction_type on the fly
         for blk in sp.blockettes[53]:
             blk.transfer_function_types = 'X'
@@ -346,7 +345,7 @@ class ParserTestCase(unittest.TestCase):
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j,
-                    - 6.32511E+02 + 0.00000E+00j],
+                  - 6.32511E+02 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j]]
         poles = [[-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
                   - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
@@ -366,7 +365,8 @@ class ParserTestCase(unittest.TestCase):
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         paz = sp.getPAZ("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         result = {'gain': 1.0,
-                  'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j), (-1.083 + 0j)],
+                  'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j),
+                            (-1.083 + 0j)],
                   'seismometer_gain': 400.0,
                   'sensitivity': 671140000.0,
                   'zeros': [0j, 0j, 0j],
@@ -393,12 +393,12 @@ class ParserTestCase(unittest.TestCase):
         sp1 = Parser(filename)
         sp2 = Parser(sp1.getXSEED())
         paz = sp2.getPAZ('EHE')
-        result = {'gain':+1.00000e+00,
+        result = {'gain': 1.00000e+00,
                   'zeros': [0j, 0j, 0j],
                   'poles': [(-4.44400e+00 + 4.44400e+00j),
-                             (-4.44400e+00 - 4.44400e+00j),
-                             (-1.08300e+00 + 0.00000e+00j)],
-                  'sensitivity':+6.71140E+08,
+                            (-4.44400e+00 - 4.44400e+00j),
+                            (-1.08300e+00 + 0.00000e+00j)],
+                  'sensitivity': 6.71140E+08,
                   'seismometer_gain': 4.00000E+02,
                   'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
@@ -500,6 +500,25 @@ class ParserTestCase(unittest.TestCase):
         blockette.parseSEED(b010)
         self.assertEquals(b010, blockette.getSEED())
 
+    def test_issue298a(self):
+        """
+        Test case for issue #298.
+        """
+        file = os.path.join(self.path, "AI.ESPZ._.BHE.dataless")
+        tempfile = NamedTemporaryFile().name
+        parser = Parser(file)
+        parser.writeRESP(tempfile)
+        os.remove(tempfile)
+
+    def test_issue298b(self):
+        """
+        Second test case for issue #298.
+        """
+        file = os.path.join(self.path, "AI.ESPZ._.BH_.dataless")
+        tempfile = NamedTemporaryFile().name
+        parser = Parser(file)
+        parser.writeRESP(tempfile)
+        os.remove(tempfile)
 
 
 def suite():
