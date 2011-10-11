@@ -185,14 +185,14 @@ class WaveformPlotting(object):
         self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
         # the plots.
+        if not self.transparent:
+            extra_args = {'dpi': self.dpi,
+                          'facecolor': self.face_color,
+                          'edgecolor': self.face_color}
+        else:
+            extra_args = {'dpi': self.dpi,
+                          'transparent': self.transparent}
         if self.outfile:
-            if not self.transparent:
-                extra_args = {'dpi': self.dpi,
-                              'facecolor': self.face_color,
-                              'edgecolor': self.face_color}
-            else:
-                extra_args = {'dpi': self.dpi,
-                              'transparent': self.transparent}
             # If format is set use it.
             if self.format:
                 self.fig.savefig(self.outfile, format=self.format,
