@@ -127,7 +127,7 @@ class RotateTestCase(unittest.TestCase):
 
     def test_gps2DistAzimuth(self):
         """
-        Test gps2DistAzimuth() method with test data from Geocentric Datum of 
+        Test gps2DistAzimuth() method with test data from Geocentric Datum of
         Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
         """
         # test data:

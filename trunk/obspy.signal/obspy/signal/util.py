@@ -77,7 +77,7 @@ if not clibevresp:
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
     """
     Transform lon, lat to km in reference to orig_lon and orig_lat
-    
+
     >>> utlGeoKm(12.0, 48.0, 12.0, 48.0)
     (0.0, 0.0)
     >>> x, y = utlGeoKm(12.0, 48.0, 13.0, 49.0)
@@ -109,7 +109,7 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
 def utlLonLat(orig_lon, orig_lat, x, y):
     """
     Transform x, y [km] to decimal degree in reference to orig_lon and orig_lat
-    
+
     >>> utlLonLat(12.0, 48.0, 0.0, 0.0)
     (12.0, 48.0)
     >>> lon, lat = utlLonLat(12.0, 48.0, 73.904141685064957, 111.19082623047636)
@@ -186,7 +186,7 @@ def enframe(x, win, inc):
     :param win: window multiplied to each frame, length determines frame length
     :param inc: increment to shift frames, in samples
     :return f: output matrix, each frame occupies one row
-    :return length, no_win: length of each frame in samples, number of frames  
+    :return length, no_win: length of each frame in samples, number of frames
     """
     nx = len(x)
     nwin = len(win)
@@ -253,7 +253,7 @@ def rdct(x, n=0):
 
     :params x: signal to compute discrete cosine transform
     :params n: window length (default: signal length)
-    :return y: discrete cosine transform  
+    :return y: discrete cosine transform
     """
     m, k = x.shape
     if (n == 0):

@@ -126,7 +126,7 @@ The following example demonstrates a recursive Sta/Lta triggering:
 >>> from obspy.core import read
 >>> from obspy.signal import recStalta
 >>> from obspy.imaging.waveform import plot_trigger
->>> 
+>>>
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)
@@ -181,7 +181,7 @@ automated use and network coincidence there are some example scripts in the
 .. _`Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
 .. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
 
-**There are many more functions available (rotation, pazToFreqResp, 
+**There are many more functions available (rotation, pazToFreqResp,
 cpxtrace analysis, ...), please also check the tutorial.**
 """
 

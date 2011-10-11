@@ -28,10 +28,10 @@ def mper(data, win, Nfft, n1=0, n2=0):
 
     Computes the spectrum of the given data which can be windowed or not. The
     spectrum is estimated using the modified periodogram. If n1 and n2 are not
-    specified the periodogram of the entire sequence is returned. 
+    specified the periodogram of the entire sequence is returned.
 
     The modified periodogram of the given signal is returned.
-    
+
     :param data: Data to make spectrum of, type numpy.ndarray.
     :param win: Window to multiply with given signal.
     :param Nfft: Number of points for FFT.
@@ -140,7 +140,7 @@ def bwith(data, fs, smoothie, fk):
     :param smoothie: Factor for smoothing the result.
     :param fk: Filter coefficients for computing time derivative.
     :return bwith: Bandwith.
-    :return dbwithd: Time derivative of predominant period, only returned if 
+    :return dbwithd: Time derivative of predominant period, only returned if
          data are windowed.
     """
     nfft = util.nextpow2(data.shape[1])
@@ -231,7 +231,7 @@ def logbankm(p, n, fs, w):
     :return mn: The lowest fft bin with a non-zero coefficient.
     :return mx: The highest fft bin with a non-zero coefficient.
     """
-    # alternative to avoid above problems: low end of the lowest filter 
+    # alternative to avoid above problems: low end of the lowest filter
     # corresponds to maximum frequency resolution
     fn2 = np.floor(n / 2)
     fl = np.floor(fs) / np.floor(n)
@@ -261,7 +261,7 @@ def logbankm(p, n, fs, w):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
     elif (w == 'Hamming'):
         v = 1. - 0.92 / 1.08 * np.cos(v * float(np.pi / 2))
-    # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a 
+    # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a
     # transposed matrix depending on the installed NumPy version - using
     # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
     xx = sparse.coo_matrix((v, help)).transpose().todense()
@@ -286,7 +286,7 @@ def logcep(data, fs, nc, p, n, w):
     :return z: Cepstral coefficients.
     """
     dataT = np.transpose(data)
-    nfft = util.nextpow2(dataT.shape[0]) 
+    nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)
     f = fc[1:len(fc) / 2 + 1, :]
     m, a, b = logbankm(p, nfft, fs, w)

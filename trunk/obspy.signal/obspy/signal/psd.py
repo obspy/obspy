@@ -95,10 +95,10 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning, noverlap
     Always returns a onesided psd (positive frequencies only), corrects for
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
     by dividing with sampling rate.
-    
+
     This wrapper is intended to intercept changes in `mlab.psd`'s default
     behavior which changes with matplotlib version 0.98.4:
-    
+
       - http://matplotlib.sourceforge.net/
                 users/whats_new.html#psd-amplitude-scaling
       - http://matplotlib.sourceforge.net/_static/CHANGELOG
@@ -226,7 +226,7 @@ class PPSD():
 
     >>> st = read()
     >>> tr = st.select(channel="EHZ")[0]
-    >>> paz = {'gain': 60077000.0, 
+    >>> paz = {'gain': 60077000.0,
     ...        'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
     ...                  -251.33+0j, -131.04-467.29j, -131.04+467.29j],
     ...        'sensitivity': 2516778400.0,
@@ -289,7 +289,7 @@ class PPSD():
                dictionary (other keys do not have to be present then). For
                scaling factors that are usually multiplied to the data remember
                to use the inverse as `paz['sensitivity']`.
-        
+
         :type stats: :class:`~obspy.core.trace.Stats`
         :param stats: Stats of the station/instrument to process
         :type paz: dict (optional)
@@ -308,7 +308,7 @@ class PPSD():
                 the PPSD.
         :type is_rotational_data: Boolean (optional)
         :param is_rotational_data: If set to True adapt processing of data to
-                rotational data. See note for details. 
+                rotational data. See note for details.
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal

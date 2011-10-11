@@ -46,7 +46,7 @@ class TraceTestCase(unittest.TestCase):
     def test_filter(self):
         """
         Tests the filter method of the Trace object.
-        
+
         Basically three scenarios are tested (with differing filter options):
         - filtering with in_place=False:
             - is original trace unchanged?

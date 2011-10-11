@@ -61,7 +61,7 @@ def recStaltaPy(a, nsta, nlta):
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
     Bit slower version written in Python.
-    
+
     :note: There exists a faster version of this trigger wrapped in C
            called recstalta in this module!
     :type a: NumPy ndarray
@@ -247,8 +247,8 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     Calculate trigger on and off times.
 
     Given thres1 and thres2 calculate trigger on and off times from
-    characteristic function. 
-    
+    characteristic function.
+
     This method is written in pure Python and gets slow as soon as there
     are more then 1e6 triggerings ("on" AND "of") in charfct --- normally
     this does not happen.
@@ -358,7 +358,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     if errcode != 0:
         raise Exception("Error in function ppick of mk_mbaer.c")
     # add the sample to the time which is not taken into account
-    # pfm has to be decoded from byte to string 
+    # pfm has to be decoded from byte to string
     return pptime.value + 1, pfm.value.decode('utf-8')
 
 

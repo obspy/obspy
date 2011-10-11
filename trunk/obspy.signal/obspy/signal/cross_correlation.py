@@ -27,7 +27,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
     Supports ndarrays (float32) and Trace objects.
-    
+
     >>> tr1 = np.random.randn(10000).astype('float32')
     >>> tr2 = tr1.copy()
     >>> a, b = xcorr(tr1, tr2, 1000)
@@ -39,12 +39,12 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     ::
 
                                     Mid Sample
-                                        |                           
+                                        |
         |AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|AAAAAAAAAAAAAAA|
         |BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|BBBBBBBBBBBBBBB|
         |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
 
-    
+
     :type tr1: numpy ndarray float32 or obspy.core.Trace
     :param tr1: Trace 1
     :type tr2: numpy ndarray float32 or obspy.core.Trace
@@ -125,7 +125,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     three components, please also take a look at the documentation of that
     function. Useful e.g. for estimation of waveform similarity on a three
     component seismogram.
-    
+
     :type st1: obspy.core.Stream
     :param st1: Stream 1, containing one trace for Z, N, E component (other
             component_id codes are ignored)
@@ -181,7 +181,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
 def xcorr_max(fct, abs_max=True):
     """
     Return shift and value of maximum xcorr function
-    
+
     >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
     >>> xcorr_max(fct)
@@ -197,7 +197,7 @@ def xcorr_max(fct, abs_max=True):
     (-10.0, -1.0)
     >>> xcorr_max(fct, abs_max=False)
     (10.0, 0.5)
-    
+
     :type fct: numpy.ndarray
     :param fct: xcorr function e.g. returned bei xcorr
     :type abs_max: boolean

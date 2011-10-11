@@ -35,7 +35,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param freqmin: Pass band low corner frequency.
     :param freqmax: Pass band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
+    :param corners: Filter corners. Note: This is twice the value of PITSA's
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
@@ -82,7 +82,7 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     :param freqmin: Stop band low corner frequency.
     :param freqmax: Stop band high corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
+    :param corners: Filter corners. Note: This is twice the value of PITSA's
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
@@ -122,13 +122,13 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     """
     Butterworth-Lowpass Filter.
 
-    Filter data removing data over certain frequency freq using corners 
+    Filter data removing data over certain frequency freq using corners
     corners.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
+    :param corners: Filter corners. Note: This is twice the value of PITSA's
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
@@ -169,7 +169,7 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
     :param df: Sampling rate in Hz.
-    :param corners: Filter corners. Note: This is twice the value of PITSA's 
+    :param corners: Filter corners. Note: This is twice the value of PITSA's
         filter sections
     :param zerophase: If True, apply filter once forwards and once backwards.
         This results in twice the number of corners but zero phase shift in
@@ -204,8 +204,8 @@ def envelope(data):
     Envelope of a function.
 
     Computes the envelope of the given function. The envelope is determined by
-    adding the squared amplitudes of the function and it's Hilbert-Transform 
-    and then taking the squareroot. 
+    adding the squared amplitudes of the function and it's Hilbert-Transform
+    and then taking the squareroot.
     (See Kanasewich: Time Sequence Analysis in Geophysics)
     The envelope at the start/end should not be taken too seriously.
 
@@ -259,11 +259,11 @@ def remezFIR(data, freqmin, freqmax, samp_rate):
     #
     # y[t] = c0*x[t] + c1*x[t-1] + ... + c(N-1)*x[t-(N-1)]
     #
-    # After playing around with remez for a bit, it looks like numtaps should 
-    # be above 100 for a solid filter. See what works out for you. Eventually, 
-    # take those coefficients and then move them over and do the convolution 
-    # in C or whatever. Also, note the gaps between the bands in the call to 
-    # remez. You have to leave some space for the transition in frequency 
+    # After playing around with remez for a bit, it looks like numtaps should
+    # be above 100 for a solid filter. See what works out for you. Eventually,
+    # take those coefficients and then move them over and do the convolution
+    # in C or whatever. Also, note the gaps between the bands in the call to
+    # remez. You have to leave some space for the transition in frequency
     # response to occur, otherwise the call to remez will complain.
     #
     # SRC: # http://episteme.arstechnica.com/eve/forums/a/tpc/f/6330927813/m/175006289731
@@ -289,16 +289,16 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Data below this frequency pass.
     :param samprate: Sampling rate in Hz.
-    :param winlen: Window length for filter in samples, must be power of 2; 
+    :param winlen: Window length for filter in samples, must be power of 2;
         Default 2048
     :return: Filtered data.
     """
-    # There is not currently an FIR-filter design program in SciPy.  One 
-    # should be constructed as it is not hard to implement (of course making 
+    # There is not currently an FIR-filter design program in SciPy.  One
+    # should be constructed as it is not hard to implement (of course making
     # it generic with all the options you might want would take some time).
-    # 
+    #
     # What kind of window are you currently using?
-    # 
+    #
     # For your purposes this is what I would do:
     # SRC: Travis Oliphant
     # http://aspn.activestate.com/ASPN/Mail/Message/scipy-user/2009409]

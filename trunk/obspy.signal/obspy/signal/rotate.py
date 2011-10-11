@@ -27,12 +27,12 @@ from obspy.core.util import deprecated
 def rotate_NE_RT(n, e, ba):
     """
     Rotates horizontal components of a seismogram.
-  
+
     The North- and East-Component of a seismogram will be rotated in Radial
     and Transversal Component. The angle is given as the back-azimuth, that is
     defined as the angle measured between the vector pointing from the station
     to the source and the vector pointing from the station to the north.
-    
+
     :param n: Data of the North component of the seismogram.
     :param e: Data of the East component of the seismogram.
     :param ba: The back azimuth from station to source in degrees.
@@ -54,7 +54,7 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     The components will be rotated from ZNE (Z, North, East, left-handed) to
     LQT (eg. ray coordinate system, rigth-handed). The rotation angles are
     given as the back-azimuth and inclination.
-    
+
     The transformation consists of 3 steps::
 
         1. mirroring of E-component at ZN plain: ZNE -> ZNW

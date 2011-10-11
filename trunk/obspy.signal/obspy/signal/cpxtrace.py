@@ -155,7 +155,7 @@ def centroid(data, fk):
         for row in x[1]:
             # Integral within window
             half = 0.5 * sum(row)
-            # Estimate energy centroid 
+            # Estimate energy centroid
             for k in xrange(2, size(row)):
                 t = sum(row[0:k])
                 if (t >= half):
@@ -173,7 +173,7 @@ def centroid(data, fk):
         centroid = np.zeros(1, dtype='float64')
         # Integral within window
         half = 0.5 * sum(x[1])
-        # Estimate energy centroid 
+        # Estimate energy centroid
         for k in xrange(2, size(x[1])):
             t = sum(x[1][0:k])
             if (t >= half):
@@ -185,7 +185,7 @@ def centroid(data, fk):
 
 
 def instFreq(data, fs, fk):
-    """ 
+    """
     Instantaneous frequency of a signal.
 
     Computes the instantaneous frequency of the given data which can be

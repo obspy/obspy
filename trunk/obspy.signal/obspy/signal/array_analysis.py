@@ -29,39 +29,39 @@ from scipy.integrate import cumtrapz
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
                           sigmau):
     """
-    This routine calculates the best-fitting rigid body rotation and 
-    uniform strain as functions of time, and their formal errors, given 
-    three-component ground motion time series recorded on a seismic array. 
-    The theory implemented herein is presented in the papers:: 
-    
-      Spudich et al. (J. Geophys. Res., 1995), (abbreviated S95 herein) 
-      Spudich and Fletcher (Bull. Seismol. Soc. Am., 2008)  (SF08) 
+    This routine calculates the best-fitting rigid body rotation and
+    uniform strain as functions of time, and their formal errors, given
+    three-component ground motion time series recorded on a seismic array.
+    The theory implemented herein is presented in the papers::
+
+      Spudich et al. (J. Geophys. Res., 1995), (abbreviated S95 herein)
+      Spudich and Fletcher (Bull. Seismol. Soc. Am., 2008)  (SF08)
       Spudich and Fletcher (Bull. Seismol. Soc. Am., 2009). (SF09)
 
-    
-    This is a translation of the Matlab Code presented in (SF09) with 
-    small changes in details only. Output has been checked to be the same 
+
+    This is a translation of the Matlab Code presented in (SF09) with
+    small changes in details only. Output has been checked to be the same
     as the original Matlab Code.
 
-    .. note:: 
+    .. note::
         ts_ below means "time series"
-    
+
     :type vp: Float
     :param vp: P wave speed in the soil under the array (km/s)
     :type vs: Float
     :param vs: S wave speed in the soil under the array Note - vp and vs may be
         any unit (e.g. miles/week), and this unit need not be related to the
         units of the station coordinates or ground motions, but the units of vp
-        and vs must be the SAME because only their ratio is used. 
-    :type array_coords: numpy.ndarray 
+        and vs must be the SAME because only their ratio is used.
+    :type array_coords: numpy.ndarray
     :param array_coords: array of dimension Na x 3, where Na is the number of
         stations in the array.  array_coords[i,j], i in arange(Na), j in
         arange(3) is j coordinate of station i.  units of array_coords may be
         anything, but see the "Discussion of input and output units" above.
         The origin of coordinates is arbitrary and does not affect the
         calculated strains and rotations.  Stations may be entered in any
-        order. 
-    :type ts1: numpy.ndarray 
+        order.
+    :type ts1: numpy.ndarray
     :param ts1: array of x1-component seismograms, dimension nt x Na.
         ts1[j,k], j in arange(nt), k in arange(Na) contains the kth time sample
         of the x1 component ground motion at station k. NOTE that the
@@ -69,25 +69,25 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         are in row k of in.array_coords. nt is the number of time samples in
         the seismograms.  Seismograms may be displacement, velocity,
         acceleration, jerk, etc.  See the "Discussion of input and output
-        units" below. 
-    :type ts2: numpy.ndarray 
+        units" below.
+    :type ts2: numpy.ndarray
     :param ts2: same as ts1, but for the x2 component of motion.
-    :type ts3: numpy.ndarray 
-    :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion. 
-    :type sigmau: Float or numpy.ndarray 
+    :type ts3: numpy.ndarray
+    :param ts3: same as ts1, but for the x3 (UP or DOWN) component of motion.
+    :type sigmau: Float or numpy.ndarray
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
         - If sigmau is a scalar, it will be used for all components of all
-          stations. 
+          stations.
         - If sigmau is a 1D array of length Na, sigmau[i] will be the noise
           assigned to all components of the station corresponding to
           array_coords[i,:]
         - If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
-          used as the noise of station i, component j.  
+          used as the noise of station i, component j.
         In all cases, this routine assumes that the noise covariance between
-        different stations and/or components is zero.  
-    :type subarray: numpy.ndarray 
+        different stations and/or components is zero.
+    :type subarray: numpy.ndarray
     :param subarray: NumPy array of subarray stations to use. I.e. if subarray
         = array([1, 4, 10]), then only rows 1, 4, and 10 of array_coords will
         be used, and only ground motion time series in the first, fourth, and
@@ -99,80 +99,80 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         unimportant; i.e.  subarray = array([1, 4, 10]) will yield essentially
         the same rotations and strains as subarray = array([10, 4, 1]).
         "Essentially" because permuting subarray sequence changes the d vector,
-        yielding a slightly different numerical result. 
-    :return: Dictionary with fields:  
+        yielding a slightly different numerical result.
+    :return: Dictionary with fields:
         | **A:** (array, dimension 3N x 6) - data mapping matrix 'A' of
         |     S95(A4)
         | **g:** (array, dimension 6 x 3N) - generalized inverse matrix
         |     relating ptilde and data vector, in S95(A5)
         | **Ce:** (4 x 4) covariance matrix of the 4 independent strain
-        |     tensor elements e11, e21, e22, e33 
+        |     tensor elements e11, e21, e22, e33
         | **ts_d:** (array, length nt) - dilatation
         |     (trace of the 3x3 strain tensor) as a function of time
-        | **sigmad:** scalar, standard deviation of dilatation 
+        | **sigmad:** scalar, standard deviation of dilatation
         | **ts_dh:** (array, length nt) - horizontal dilatation (also
         |     known as areal strain) (eEE+eNN) as a function of time
         | **sigmadh:** scalar, standard deviation of horizontal dilatation
-        |     (areal strain) 
+        |     (areal strain)
         | **ts_e:** (array, dimension nt x 3 x 3) - strain tensor
-        | **ts_s:** (array, length nt) -  maximum strain 
-        |     ( .5*(max eigval of e - min eigval of e) as a 
+        | **ts_s:** (array, length nt) -  maximum strain
+        |     ( .5*(max eigval of e - min eigval of e) as a
         |     function of time, where e is the 3x3 strain tensor
-        | **Cgamma:** (4 x 4) covariance matrix of the 4 independent shear 
+        | **Cgamma:** (4 x 4) covariance matrix of the 4 independent shear
         |     strain tensor elements g11, g12, g22, g33 (includes full
-        |     covariance effects). gamma is traceless part of e. 
-        | **ts_sh:** (array, length nt) - maximum horizontal strain 
-        |     ( .5*(max eigval of eh - min eigval of eh) 
-        |     as a function of time, where eh is e(1:2,1:2)        
-        | **Cgammah:** (3 x 3) covariance matrix of the 3 independent 
+        |     covariance effects). gamma is traceless part of e.
+        | **ts_sh:** (array, length nt) - maximum horizontal strain
+        |     ( .5*(max eigval of eh - min eigval of eh)
+        |     as a function of time, where eh is e(1:2,1:2)
+        | **Cgammah:** (3 x 3) covariance matrix of the 3 independent
         |     horizontal shear strain tensor elements gamma11, gamma12,
-        |     gamma22 gamma is traceless part of e. 
+        |     gamma22 gamma is traceless part of e.
         | **ts_wmag:** (array, length nt) -  total rotation
         |     angle (radians) as a function of time.  I.e. if the
-        |     rotation vector at the j'th time step is 
+        |     rotation vector at the j'th time step is
         |     w = array([w1, w2, w3]), then ts_wmag[j] = sqrt(sum(w**2))
-        |     positive for right-handed rotation  
+        |     positive for right-handed rotation
         | **Cw:** (3 x 3) covariance matrix of the 3 independent
-        |     rotation tensor elements w21, w31, w32 
+        |     rotation tensor elements w21, w31, w32
         | **ts_w1:** (array, length nt) - rotation
         |     (rad) about the x1 axis, positive for right-handed rotation
         | **sigmaw1:** scalar, standard deviation of the ts_w1
-        |     (sigma-omega-1 in SF08) 
+        |     (sigma-omega-1 in SF08)
         | **ts_w2:** (array, length nt) - rotation
         |     (rad) about the x2 axis, positive for right-handed rotation
         | **sigmaw2:** scalar, standard deviation of ts_w2
-        |     (sigma-omega-2 in SF08) 
-        | **ts_w3:** (array, length nt) - "torsion", rotation 
-        |     (rad) about a vertical up or down axis, i.e. x3, positive 
-        |     for right-handed rotation   
+        |     (sigma-omega-2 in SF08)
+        | **ts_w3:** (array, length nt) - "torsion", rotation
+        |     (rad) about a vertical up or down axis, i.e. x3, positive
+        |     for right-handed rotation
         | **sigmaw3:** scalar, standard deviation of the torsion
-        |     (sigma-omega-3 in SF08) 
+        |     (sigma-omega-3 in SF08)
         | **ts_tilt:** (array, length nt) - tilt (rad)
         |     (rotation about a horizontal axis, positive for right
-        |     handed rotation) 
+        |     handed rotation)
         |     as a function of time.  tilt = sqrt( w1^2 + w2^2)
         | **sigmat:** scalar, standard deviation of the tilt
-        |     (not defined in SF08, From Papoulis (1965, p. 195, 
+        |     (not defined in SF08, From Papoulis (1965, p. 195,
         |     example 7.8))
-        | **ts_data:** (array, shape (nt x 3N)). time series of 
-        |     the observed displacement 
-        |     differences, which are the di in S95 eqn A1. 
-        | **ts_pred:** (array, shape (nt x 3N)) time series of 
-        |     the fitted model's predicted displacement difference 
+        | **ts_data:** (array, shape (nt x 3N)). time series of
+        |     the observed displacement
+        |     differences, which are the di in S95 eqn A1.
+        | **ts_pred:** (array, shape (nt x 3N)) time series of
+        |     the fitted model's predicted displacement difference
         |     Note that the fitted model displacement
-        |     differences correspond to linalg.dot(A, ptilde), where A 
+        |     differences correspond to linalg.dot(A, ptilde), where A
         |     is the big matrix in S95 eqn A4 and ptilde is S95 eqn A5.
-        | **ts_misfit:** (array, shape (nt x 3N)) time series of the 
-        |     residuals (fitted model displacement differences minus 
-        |     observed displacement differences). Note that the fitted 
-        |     model displacement differences correspond to 
+        | **ts_misfit:** (array, shape (nt x 3N)) time series of the
+        |     residuals (fitted model displacement differences minus
+        |     observed displacement differences). Note that the fitted
+        |     model displacement differences correspond to
         |     linalg.dot(A, ptilde), where A is the big
-        |     matrix in S95 eqn A4 and ptilde is S95 eqn A5. 
+        |     matrix in S95 eqn A4 and ptilde is S95 eqn A5.
         | **ts_M:** (array, length nt) Time series of M, misfit
-        |     ratio of S95, p. 688. 
+        |     ratio of S95, p. 688.
         | **ts_ptilde:** (array, shape (nt x 6)) - solution
         |     vector p-tilde (from S95 eqn A5) as a function of time
-        | **Cp:** 6x6 solution covariance matrix defined in SF08. 
+        | **Cp:** 6x6 solution covariance matrix defined in SF08.
 
     Warnings
     --------
@@ -180,16 +180,16 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     enough to conform to the assumption that the array aperture is less
     than 1/4 of the shortest seismic wavelength in the data.  See SF08
     for a discussion of this assumption.
-    
+
     this code assumes that ts1[j,:], ts2[j,:], and ts3[j,:] are all sampled
-    SIMULTANEOUSLY. 
+    SIMULTANEOUSLY.
 
     Notes
     -----
     ::
 
         Note On Specifying Input Array And Selecting Subarrays
-        
+
         This routine allows the user to input the coordinates and ground
         motion time series of all stations in a seismic array having Na
         stations and the user may select for analysis a subarray of Nplus1
@@ -197,30 +197,30 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
 
         Discussion Of Physical Units Of Input And Output
-        
+
         If the input seismograms are in units of displacement, the output
         strains and rotations will be in units of strain (unitless) and
         angle (radians).  If the input seismograms are in units of
         velocity, the output will be strain rate (units = 1/s) and rotation
         rate (rad/s).  Higher temporal derivative inputs yield higher
-        temporal derivative outputs. 
+        temporal derivative outputs.
 
         Input units of the array station coordinates must match the spatial
         units of the seismograms.  For example, if the input seismograms
-        are in units of m/s^2, array coordinates must be entered in m. 
-        
+        are in units of m/s^2, array coordinates must be entered in m.
+
 
         Note On Coordinate System
-        
+
         This routine assumes x1-x2-x3 is a RIGHT handed orthogonal
-        coordinate system. x3 must point either UP or DOWN.  
+        coordinate system. x3 must point either UP or DOWN.
 
     """
 
 
     # start the code -------------------------------------------------
 
-    # This assumes that all stations and components have the same number of 
+    # This assumes that all stations and components have the same number of
     # time samples, nt
     [nt, Na] = np.shape(ts1)
 
@@ -247,7 +247,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # extract the stations of the subarray to be used
     subarraycoords = array_coords[subarray , :]
 
-    # count number of subarray stations: Nplus1 and number of station 
+    # count number of subarray stations: Nplus1 and number of station
     # offsets: N
     Nplus1 = subarray.size
     N = Nplus1 - 1
@@ -281,7 +281,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
             0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
     #------------------------------------------------------
-    # define data covariance matrix Cd. 
+    # define data covariance matrix Cd.
     # step 1 - define data differencing matrix D
     # dimension of D is (3*N) * (3*Nplus1)
     I3 = np.eye(3)
@@ -354,7 +354,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
 
     #---------------------------------------------------------------
     # here we define 4x6 Be and 3x6 Bw matrices.  these map the solution
-    # ptilde to strain or to rotation.  These matrices will be used 
+    # ptilde to strain or to rotation.  These matrices will be used
     # in the calculation of the covariances of strain and rotation.
     # Columns of both matrices correspond to the model solution vector
     # containing elements [u1,1 u1,2 u1,3 u2,1 u2,2 u2,3 ]'
@@ -393,8 +393,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     Bgamma[3, 0] = -c
     Bgamma[3, 4] = -c
     #
-    # this is the 3x6 matrix mapping solution to horizontal shear strain 
-    # gamma 
+    # this is the 3x6 matrix mapping solution to horizontal shear strain
+    # gamma
     # the four elements of horiz shear are 11, 12, and 22.  It is symmetric.
     Bgammah = np.zeros((3, 6))
     Bgammah[0, 0] = .5
@@ -408,13 +408,13 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # corresponding to solution elements [u1,1 u1,2 u1,3 u2,1 u2,2 u2,3 ]
     Cp = np.dot(np.dot(g, Cd), g.T)
 
-    # Covariance of strain tensor elements 
+    # Covariance of strain tensor elements
     # Ce should be 4x4, correspond to e11, e21, e22, e33
     Ce = np.dot(np.dot(Be, Cp), Be.T)
     # Cw should be 3x3 correspond to w21, w31, w32
     Cw = np.dot(np.dot(Bw, Cp), Bw.T)
 
-    # Cgamma is 4x4 correspond to 11, 12, 22, and 33.  
+    # Cgamma is 4x4 correspond to 11, 12, 22, and 33.
     Cgamma = np.dot(np.dot(Bgamma, Cp), Bgamma.T)
     #
     #  Cgammah is 3x3 correspond to 11, 12, and 22
@@ -429,14 +429,14 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # covariance of the (total) dilatation, ts_dd
     sigmadsq = (1 - eta) ** 2 * Cdh
     sigmad = np.sqrt(sigmadsq)
-    #  
+    #
     # Cw3, covariance of w3 rotation, i.e. torsion, is 1x1, i.e. scalar
     Cw3 = (Cp[1, 1] - 2 * Cp[1, 3] + Cp[3, 3]) / 4
     sigmaw3 = np.sqrt(Cw3)
 
     # For tilt cannot use same approach because tilt is not a linear function
-    # of the solution.  Here is an approximation : 
-    # For tilt use conservative estimate from 
+    # of the solution.  Here is an approximation :
+    # For tilt use conservative estimate from
     # Papoulis (1965, p. 195, example 7.8)
     sigmaw1 = np.sqrt(Cp[5, 5])
     sigmaw2 = np.sqrt(Cp[2, 2])
@@ -464,7 +464,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         #
         # place in uij_vector the full 9 elements of the displacement gradients
         # uij_vector is (u1,1 u1,2 u1,3 u2,1 u2,2 u2,3 u3,1 u3,2 u3,3).T
-        # The following implements the free surface boundary condition 
+        # The following implements the free surface boundary condition
         u31 = -ptilde[2]
         u32 = -ptilde[5]
         u33 = -eta * (ptilde[0] + ptilde[4])
@@ -523,10 +523,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         #---------------------------------------------------------------
         #
         # Here I calculate horizontal quantities only
-        # ts_dh is horizontal dilatation (+ --> expansion).  
-        # Total dilatation, ts_dd, will be calculated outside the time 
+        # ts_dh is horizontal dilatation (+ --> expansion).
+        # Total dilatation, ts_dd, will be calculated outside the time
         # step loop.
-        # 
+        #
         ts_dh[itime] = e[0, 0] + e[1, 1]
         #
         # find maximum shear strain in horizontal plane, and find its azimuth
@@ -550,7 +550,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     #=========================================================================
     #
     # (total) dilatation is a scalar times horizontal dilatation owing to there
-    # free surface boundary condition 
+    # free surface boundary condition
     ts_d = ts_dh * (1 - eta)
 
     # load output structure
@@ -606,18 +606,18 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     """
     Parrallelized Version of sonic. EXPERIMENTAL!
 
-    usage: 
+    usage:
         - multiprocessing on local machine only: just replace sonic by sonic_pp
           and set njobs to number of cores in local machine
 
         - serveral machines:
             1. goto clients and start workers (important to make sure it uses
                 the right python version with obspy installed):
-                
+
                 python /usr/bin/ppserver -s <secret> -w <ncpus>
 
-            2. replace sonic by sonic_pp and set njobs, clientlist and secret: 
-                
+            2. replace sonic by sonic_pp and set njobs, clientlist and secret:
+
                 sonic_pp(..., njobs=njobs, pservers=('client1', 'client2',),
                          secret=<secret>)
     """
@@ -801,7 +801,7 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
     """
     Note: Interface not fixed jet
-    
+
     :type spoint: int
     :param spoint: Start sample point, probably in julian seconds
     :type offset: int
@@ -1116,7 +1116,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     :type fmax: double
     :param fmin: maximum frequency in signal
     :type fstep: double
-    :param fmin: frequency sample distance 
+    :param fmin: frequency sample distance
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(slim, float):

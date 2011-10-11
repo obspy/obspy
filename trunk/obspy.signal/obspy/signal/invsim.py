@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2011 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
-""" 
+"""
 Python Module for Instrument Correction (Seismology), PAZ
 Poles and zeros information must be given in SEED convention, correction to
 m/s.
@@ -97,7 +97,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :type debug: Boolean
     :param debug: Verbose output to stdout. Disabled by default.
     :rtype: numpy.ndarray complex128
-    :return: Frequency response from SEED RESP-file of length nfft 
+    :return: Frequency response from SEED RESP-file of length nfft
     """
 
     STALEN = 64
@@ -231,7 +231,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     :param nfft: Number of FFT points of signal which needs correction
     :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
-    :return: Frequency response of PAZ of length nfft 
+    :return: Frequency response of PAZ of length nfft
     """
     n = nfft // 2
     b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
@@ -269,7 +269,7 @@ def specInv(spec, wlev):
 
     :note: In place operations on spec, translated from PITSA spr_sinv.c
     :param spec: Spectrum as returned by numpy.fft.rfft
-    :param wlev: Water level to use 
+    :param wlev: Water level to use
     """
     # Calculated waterlevel in the scale of spec
     swamp = waterlevel(spec, wlev)
@@ -298,8 +298,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     """
     Simulate/Correct seismometer.
 
-    This function works in the frequency domain, where nfft is the next power 
-    of len(data) to avoid wrap around effects during convolution. The inverse 
+    This function works in the frequency domain, where nfft is the next power
+    of len(data) to avoid wrap around effects during convolution. The inverse
     of the frequency response of the seismometer (``paz_remove``) is
     convolved with the spectrum of the data and with the frequency response
     of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
@@ -309,7 +309,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     using pre_filt. This restricts the signal to the valid frequency band and
     thereby avoids artefacts due to amplification of frequencies outside of the
     instrument's passband (for a detailed discussion see
-    *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers). 
+    *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
 
     :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
@@ -346,7 +346,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :param pre_filt: Apply a bandpass filter to the data trace before
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
-        tapers to zero for f1 < f < f2 and f3 < f < f4. 
+        tapers to zero for f1 < f < f2 and f3 < f < f4.
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 

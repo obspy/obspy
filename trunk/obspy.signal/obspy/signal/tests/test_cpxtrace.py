@@ -60,7 +60,7 @@ class CpxTraceTestCase(unittest.TestCase):
         #[21] hob2
         #[22] hob3
         #[23] hob4
-        #[24] hob5 
+        #[24] hob5
         #[25] hob6
         #[26] hob7
         #[27] hob8
@@ -68,12 +68,12 @@ class CpxTraceTestCase(unittest.TestCase):
         #[29] dphi12
         #[30] phi13
         #[31] dphi13
-        #[32] phi23 
+        #[32] phi23
         #[33] dphi23
-        #[34] lv_h1 
-        #[35] lv_h2 
+        #[34] lv_h1
+        #[35] lv_h2
         #[36] lv_h3
-        #[37] dlv_h1 
+        #[37] dlv_h1
         #[38] dlv_h2
         #[39] dlv_h3
         #[40] rect

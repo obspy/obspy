@@ -22,9 +22,9 @@ class FilterTestCase(unittest.TestCase):
 
     def test_bandpassVsPitsa(self):
         """
-        Test Butterworth bandpass filter against Butterworth bandpass filter 
-        of PITSA. Note that the corners value is twice the value of the filter 
-        sections in PITSA. The rms of the difference between ObsPy and PITSA 
+        Test Butterworth bandpass filter against Butterworth bandpass filter
+        of PITSA. Note that the corners value is twice the value of the filter
+        sections in PITSA. The rms of the difference between ObsPy and PITSA
         tends to get bigger with higher order filtering.
         """
         # load test file
@@ -51,14 +51,14 @@ class FilterTestCase(unittest.TestCase):
 
     def test_bandpassZPHSHVsPitsa(self):
         """
-        Test Butterworth zero-phase bandpass filter against Butterworth 
-        zero-phase bandpass filter of PITSA. Note that the corners value is 
-        twice the value of the filter sections in PITSA. The rms of the 
+        Test Butterworth zero-phase bandpass filter against Butterworth
+        zero-phase bandpass filter of PITSA. Note that the corners value is
+        twice the value of the filter sections in PITSA. The rms of the
         difference between ObsPy and PITSA tends to get bigger with higher
         order filtering.
-        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters 
-        at the end of the trace! The rms for the test is calculated omitting 
-        the last 200 samples, as this part of the trace is assumed to 
+        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters
+        at the end of the trace! The rms for the test is calculated omitting
+        the last 200 samples, as this part of the trace is assumed to
         generally be of low interest/importance.
         """
         # load test file
@@ -86,9 +86,9 @@ class FilterTestCase(unittest.TestCase):
 
     def test_lowpassVsPitsa(self):
         """
-        Test Butterworth lowpass filter against Butterworth lowpass filter of 
-        PITSA. Note that the corners value is twice the value of the filter 
-        sections in PITSA. The rms of the difference between ObsPy and PITSA 
+        Test Butterworth lowpass filter against Butterworth lowpass filter of
+        PITSA. Note that the corners value is twice the value of the filter
+        sections in PITSA. The rms of the difference between ObsPy and PITSA
         tends to get bigger with higher order filtering.
         """
         # load test file
@@ -114,14 +114,14 @@ class FilterTestCase(unittest.TestCase):
 
     def test_lowpassZPHSHVsPitsa(self):
         """
-        Test Butterworth zero-phase lowpass filter against Butterworth 
-        zero-phase lowpass filter of PITSA. Note that the corners value is 
-        twice the value of the filter sections in PITSA. The rms of the 
+        Test Butterworth zero-phase lowpass filter against Butterworth
+        zero-phase lowpass filter of PITSA. Note that the corners value is
+        twice the value of the filter sections in PITSA. The rms of the
         difference between ObsPy and PITSA tends to get bigger with higher
         order filtering.
-        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters 
-        at the end of the trace! The rms for the test is calculated omitting 
-        the last 200 samples, as this part of the trace is assumed to 
+        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters
+        at the end of the trace! The rms for the test is calculated omitting
+        the last 200 samples, as this part of the trace is assumed to
         generally be of low interest/importance.
         """
         # load test file
@@ -148,9 +148,9 @@ class FilterTestCase(unittest.TestCase):
 
     def test_highpassVsPitsa(self):
         """
-        Test Butterworth highpass filter against Butterworth highpass filter 
-        of PITSA. Note that the corners value is twice the value of the filter 
-        sections in PITSA. The rms of the difference between ObsPy and PITSA 
+        Test Butterworth highpass filter against Butterworth highpass filter
+        of PITSA. Note that the corners value is twice the value of the filter
+        sections in PITSA. The rms of the difference between ObsPy and PITSA
         tends to get bigger with higher order filtering.
         """
         # load test file
@@ -176,14 +176,14 @@ class FilterTestCase(unittest.TestCase):
 
     def test_highpassZPHSHVsPitsa(self):
         """
-        Test Butterworth zero-phase highpass filter against Butterworth 
-        zero-phase highpass filter of PITSA. Note that the corners value is 
-        twice the value of the filter sections in PITSA. The rms of the 
+        Test Butterworth zero-phase highpass filter against Butterworth
+        zero-phase highpass filter of PITSA. Note that the corners value is
+        twice the value of the filter sections in PITSA. The rms of the
         difference between ObsPy and PITSA tends to get bigger with higher
         order filtering.
-        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters 
-        at the end of the trace! The rms for the test is calculated omitting 
-        the last 200 samples, as this part of the trace is assumed to 
+        Note: The Zero-Phase filters deviate from PITSA's zero-phase filters
+        at the end of the trace! The rms for the test is calculated omitting
+        the last 200 samples, as this part of the trace is assumed to
         generally be of low interest/importance.
         """
         # load test file

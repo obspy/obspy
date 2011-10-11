@@ -105,7 +105,7 @@ class InvSimTestCase(unittest.TestCase):
 
     def test_seisSimVsPitsa2(self):
         """
-        Test seisSim seismometer simulation against seismometer simulation of 
+        Test seisSim seismometer simulation against seismometer simulation of
         Pitsa - STS-2 seismometer.
         """
         # load test file
@@ -282,7 +282,7 @@ class InvSimTestCase(unittest.TestCase):
         Compare results from removing instrument response using
         evalresp in SAC and ObsPy. Visual inspection shows that the traces are pretty
         much identical but differences remain (rms ~ 0.042). Haven't
-        found the cause for those, yet. 
+        found the cause for those, yet.
         """
         evalrespf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC_resp.asc.gz')
         rawf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC.asc.gz')
