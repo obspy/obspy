@@ -433,7 +433,7 @@ class Client(object):
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=False, min_latitude= -90, max_latitude=90,
+                     instruments=True, min_latitude= -90, max_latitude=90,
                      min_longitude= -180, max_longitude=180,
                      modified_after=None, format='SUDS'):
         """
@@ -456,7 +456,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type instruments: boolean, optional
-        :param instruments: Include instrument data. Default is ``False``.
+        :param instruments: Include instrument data. Default is ``True``.
         :type min_latitude: float, optional
         :param min_latitude: Minimum latitude, defaults to ``-90.0``
         :type max_latitude: float, optional
@@ -526,6 +526,9 @@ class Client(object):
             dt = UTCDateTime(modified_after).strftime("%Y-%m-%dT%H:%M:%S")
             client.options.plugins.append(
                 _AttributePlugin({'ModifiedAfter': dt}))
+        # add version attribute needed for instruments
+        client.options.plugins.append(
+                _AttributePlugin({'Version': '1.0'}))
         # request data
         response = client.service.getInventory(usertoken, stationid,
                                                spatialbounds)

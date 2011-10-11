@@ -224,21 +224,28 @@ class ClientTestCase(unittest.TestCase):
         client = Client(user='test@obspy.org')
         dt1 = UTCDateTime("1974-01-01T00:00:00")
         dt2 = UTCDateTime("2011-01-01T00:00:00")
-        # 1
+        # 1 - XML w/ instruments
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
-                                     instruments=True, format='XML')
+                                     format='XML')
         self.assertTrue(result.startswith('<?xml'))
         self.assertTrue('code="GE"' in result)
-        # 2
+        # 2 - SUDS object w/o instruments
+        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                     instruments=False)
+        self.assertTrue(isinstance(result, object))
+        self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
+        # 3 - SUDS object w/ instruments
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      instruments=True)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
+        self.assertTrue('sensor' in result.ArclinkInventory.inventory)
+        self.assertTrue('responsePAZ' in result.ArclinkInventory.inventory)
 
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__': # pragma: no cover
+if __name__ == '__main__':  # pragma: no cover
     unittest.main(defaultTest='suite')
