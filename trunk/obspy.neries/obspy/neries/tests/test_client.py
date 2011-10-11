@@ -3,8 +3,10 @@
 The obspy.neries.client test suite.
 """
 
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client
+import os
 import unittest
 
 
@@ -17,7 +19,7 @@ class ClientTestCase(unittest.TestCase):
         Testing event request method.
         """
         client = Client()
-        #1
+        # 1
         results = client.getEvents(format="list", min_depth= -700,
                                    max_datetime="2005-01-01")
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
@@ -26,7 +28,7 @@ class ClientTestCase(unittest.TestCase):
                      'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEquals(results, expected)
-        #2
+        # 2
         results = client.getEvents(format="list", min_latitude= -95,
                                    max_latitude= -1, min_longitude=20,
                                    max_longitude=90, max_datetime="2005-01-01")
@@ -37,7 +39,7 @@ class ClientTestCase(unittest.TestCase):
                      'latitude':-46.394,
                      'flynn_region': u'PRINCE EDWARD ISLANDS REGION'}]
         self.assertEquals(results, expected)
-        #3
+        # 3
         results = client.getEvents(format="list", min_depth= -11,
                                    max_depth= -22.33, min_magnitude=6.6,
                                    max_magnitude=7, max_datetime="2005-01-01")
@@ -53,7 +55,7 @@ class ClientTestCase(unittest.TestCase):
                      'magnitude_type': u'mb', 'latitude': 12.045,
                      'flynn_region': u'NEAR THE COAST OF YEMEN'}]
         self.assertEquals(results, expected)
-        #4
+        # 4
         results = client.getEvents(format="list", author="EMSC", max_results=3,
                                    magnitude_type="mw", min_magnitude=4,
                                    max_datetime="2005-01-01")
@@ -79,7 +81,7 @@ class ClientTestCase(unittest.TestCase):
         Testing event request method with UTCDateTimes as input parameters.
         """
         client = Client()
-        #1
+        # 1
         results = client.getEvents(format="list", min_depth= -700,
                                    max_datetime=UTCDateTime("2005-01-01"))
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
@@ -88,7 +90,7 @@ class ClientTestCase(unittest.TestCase):
                      'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEquals(results, expected)
-        #2
+        # 2
         results = client.getEvents(format="list", min_depth= -700,
                                    min_datetime=UTCDateTime("2004-01-01"),
                                    max_datetime=UTCDateTime("2005-01-01"))
@@ -163,13 +165,14 @@ class ClientTestCase(unittest.TestCase):
         Testing request method for calculating travel times.
         """
         client = Client()
-        #1
+        # 1
         result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'ak135')
         self.assertEquals(len(result), 1)
         self.assertAlmostEquals(result[0]['P'], 356988.24732429383)
         self.assertAlmostEquals(result[0]['S'], 645775.5623471631)
-        #2
-        result = client.getTravelTimes(0, 0, 10, [(120, 0), (150, 0), (180, 0)])
+        # 2
+        result = client.getTravelTimes(0, 0, 10,
+                                       [(120, 0), (150, 0), (180, 0)])
         self.assertEquals(len(result), 3)
         self.assertAlmostEquals(result[0]['P'], 605519.0321213702)
         self.assertAlmostEquals(result[0]['S'], 1097834.6352750373)
@@ -177,10 +180,65 @@ class ClientTestCase(unittest.TestCase):
         self.assertAlmostEquals(result[1]['S'], 665027.0583152708)
         self.assertEquals(result[2], {})
 
+    def test_saveWaveform(self):
+        """
+        """
+        mseedfile = NamedTemporaryFile().name
+        fseedfile = NamedTemporaryFile().name
+        # initialize client
+        client = Client(user='test@obspy.org')
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 10
+        # MiniSEED
+        client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+        st = read(mseedfile)
+        # MiniSEED may not start with Volume Index Control Headers (V)
+        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+        # ArcLink cuts on record base
+        self.assertTrue(st[0].stats.starttime <= start)
+        self.assertTrue(st[0].stats.endtime >= end)
+        self.assertEquals(st[0].stats.network, 'BW')
+        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.location, '')
+        self.assertEquals(st[0].stats.channel, 'EHZ')
+        os.remove(mseedfile)
+        # Full SEED
+        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                            format='FSEED')
+        st = read(fseedfile)
+        # Full SEED must start with Volume Index Control Headers (V)
+        self.assertEquals(open(fseedfile).read(8)[6], "V")
+        # ArcLink cuts on record base
+        self.assertTrue(st[0].stats.starttime <= start)
+        self.assertTrue(st[0].stats.endtime >= end)
+        self.assertEquals(st[0].stats.network, 'BW')
+        self.assertEquals(st[0].stats.station, 'MANZ')
+        self.assertEquals(st[0].stats.location, '')
+        self.assertEquals(st[0].stats.channel, 'EHZ')
+        os.remove(fseedfile)
+
+    def test_getInventory(self):
+        """
+        Testing inventory requests.
+        """
+        client = Client(user='test@obspy.org')
+        dt1 = UTCDateTime("1974-01-01T00:00:00")
+        dt2 = UTCDateTime("2011-01-01T00:00:00")
+        # 1
+        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                     instruments=True, format='XML')
+        self.assertTrue(result.startswith('<?xml'))
+        self.assertTrue('code="GE"' in result)
+        # 2
+        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                     instruments=True)
+        self.assertTrue(isinstance(result, object))
+        self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     unittest.main(defaultTest='suite')

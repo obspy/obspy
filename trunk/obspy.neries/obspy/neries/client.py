@@ -11,7 +11,7 @@ NERIES Web service client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core import UTCDateTime, read, Stream
-from obspy.core.util import _getVersionString, NamedTemporaryFile
+from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
@@ -21,11 +21,11 @@ import platform
 import sys
 import urllib
 import urllib2
-try:
+try: # pragma: no cover
     import json
     if not getattr(json, "loads", None):
         json.loads = json.read #@UndefinedVariable
-except ImportError:
+except ImportError: # pragma: no cover
     import simplejson as json
 
 
@@ -70,14 +70,29 @@ def _mapKwargs(f):
     return wrapper
 
 
-class _RequestMSEEDPlugin(MessagePlugin):
+class _AttributePlugin(MessagePlugin):
     """
-    Suds plug-in extending the dataRequest method call with an custom attribute.
+    Suds plug-in extending the method call with arbitrary attributes.
     """
+    def __init__(self, dict):
+        self.dict = dict
+
     def marshalled(self, context):
-        foo = context.envelope.getChild('Body')[0]
-        if foo.name == 'dataRequest':
-            foo.attributes.append(Attribute("DataFormat", "MSEED"))
+        method = context.envelope.getChild('Body')[0]
+        for key, item in self.dict.iteritems():
+            method.attributes.append(Attribute(key, item))
+
+
+class _FixGMLEnvelopeTypeNamespacePlugin(MessagePlugin):
+    """
+    This is a crude hack to fix a namepsace issue which I can't figure out.
+
+    We just modify any occurence of ogc:envelope into gml:envelope within the 
+    message text before sending.
+    """
+    def sending(self, context):
+        context.envelope = context.envelope.replace('ns3:Envelope',
+                                                    'ns1:Envelope')
 
 
 class Client(object):
@@ -89,7 +104,7 @@ class Client(object):
         """
         Initializes the NERIES Web service client.
 
-        :type user: string, optional
+        :type user: str, optional
         :param user: The user name used for identification with the Web service.
             This entry in form of a email address is required for using the
             following methods:
@@ -97,7 +112,7 @@ class Client(object):
                 * :meth:`~getWaveform`
                 * :meth:`~getInventory`
             Defaults to ``''``.
-        :type password: string, optional
+        :type password: str, optional
         :param password: A password used for authentication with the Web
             service. Defaults to ``''``.
         :type timeout: int, optional
@@ -105,7 +120,7 @@ class Client(object):
             is 10 seconds). Available only for Python >= 2.6.x.
         :type debug: boolean, optional
         :param debug: Enables verbose output..
-        :type user_agent: string, optional
+        :type user_agent: str, optional
         :param user_agent: Sets an client identification string which may be
             used on server side for statistical analysis (default contains the
             current module version and basic information about the used
@@ -130,7 +145,7 @@ class Client(object):
         """
         Send a HTTP request via urllib2.
 
-        :type url: String
+        :type url: str
         :param url: Complete URL of resource
         :type headers: dict
         :param headers: Additional header information for request
@@ -138,12 +153,12 @@ class Client(object):
         headers['User-Agent'] = self.user_agent
         # replace special characters 
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
-        if self.debug:
+        if self.debug: # pragma: no cover
             print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
+        if sys.hexversion < 0x02060000: # pragma: no cover
             response = urllib2.urlopen(remoteaddr)
-        else:
+        else: # pragma: no cover
             response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -386,6 +401,12 @@ class Client(object):
         >>> result[0] # doctest: +SKIP
         {'P': 356981.13561726053, 'S': 646841.5619481194}
         """
+        # enable logging if debug option is set 
+        if self.debug:
+            import logging
+            logging.basicConfig(level=logging.INFO)
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+        # initialize client
         client = SudsClient(TAUP_WSDL)
         # set cache of 5 days
         cache = client.options.cache
@@ -410,20 +431,138 @@ class Client(object):
             result.append(times)
         return result
 
+    def getInventory(self, network, station='*', location='*', channel='*',
+                     starttime=UTCDateTime(), endtime=UTCDateTime(),
+                     instruments=False, min_latitude= -90, max_latitude=90,
+                     min_longitude= -180, max_longitude=180,
+                     modified_after=None, format='SUDS'):
+        """
+        Returns information about the available networks and stations in that
+        particular space/time region.
+
+        :type network: str
+        :param network: Network code, e.g. ``'BW'``.
+        :type station: str
+        :param station: Station code, e.g. ``'MANZ'``. Station code may contain
+            wild cards.
+        :type location: str
+        :param location: Location code, e.g. ``'01'``. Location code may contain
+            wild cards.
+        :type channel: str
+        :param channel: Channel code, e.g. ``'EHE'``. Channel code may contain
+            wild cards.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+        :type instruments: boolean, optional
+        :param instruments: Include instrument data. Default is ``False``.
+        :type min_latitude: float, optional
+        :param min_latitude: Minimum latitude, defaults to ``-90.0``
+        :type max_latitude: float, optional
+        :param max_latitude: Maximum latitude, defaults to ``90.0``
+        :type min_longitude: float, optional
+        :param min_longitude: Minimum longitude, defaults to ``-180.0``
+        :type max_longitude: float, optional
+        :param max_longitude: Maximum longitude, defaults to ``180.0``.
+        :type modified_after: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param modified_after: Returns only data modified after given date.
+            Default is ``None``, returning all available data.
+        :type format: ``'XML'`` or ``'SUDS'``, optional
+        :param format: Output format. Either returns a XML document or a
+            parsed SUDS object. Defaults to ``SUDS``.
+        :return: Dictionary of inventory information.
+        """
+        # enable logging if debug option is set 
+        if self.debug:
+            import logging
+            logging.basicConfig(level=logging.INFO)
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+        # initialize client
+        client = SudsClient(SEISMOLINK_WSDL,
+                            plugins=[_FixGMLEnvelopeTypeNamespacePlugin()],
+                            retxml=(format == 'XML'))
+        # set prefixes for easier debugging
+        client.add_prefix('gml', 'http://www.opengis.net/gml')
+        client.add_prefix('ogc', 'http://www.opengis.net/ogc')
+        client.add_prefix('xlin', 'http://www.w3.org/1999/xlink')
+        client.add_prefix('urn', 'urn:xml:seisml:orfeus:neries:org')
+        # set cache of 5 days
+        cache = client.options.cache
+        cache.setduration(days=5)
+        # create user token
+        usertoken = client.factory.create('UserTokenType')
+        usertoken.email = self.user
+        usertoken.password = self.password
+        usertoken.label = self.user_agent.replace(' ', '_')
+        usertoken.locale = ""
+        # create station filter 
+        stationid = client.factory.create('StationIdentifierType')
+        stationid.NetworkCode = network
+        stationid.StationCode = station
+        stationid.ChannelCode = channel
+        stationid.LocId = location
+        stationid.TimeSpan.TimePeriod.beginPosition = \
+            UTCDateTime(starttime).strftime("%Y-%m-%dT%H:%M:%S")
+        stationid.TimeSpan.TimePeriod.endPosition = \
+            UTCDateTime(endtime).strftime("%Y-%m-%dT%H:%M:%S")
+        # create spatial filters
+        spatialbounds = client.factory.create('SpatialBoundsType')
+        spatialbounds.BoundingBox.PropertyName = "e gero"
+        spatialbounds.BoundingBox.Envelope.lowerCorner = \
+            "%f %f" % (min_latitude, min_longitude)
+        spatialbounds.BoundingBox.Envelope.upperCorner = \
+            "%f %f" % (max_latitude, max_longitude)
+        # instruments attribute
+        if instruments:
+            client.options.plugins.append(
+                _AttributePlugin({'Instruments': 'true'}))
+        else:
+            client.options.plugins.append(
+                _AttributePlugin({'Instruments': 'false'}))
+        # modified_after attribute
+        if modified_after:
+            dt = UTCDateTime(modified_after).strftime("%Y-%m-%dT%H:%M:%S")
+            client.options.plugins.append(
+                _AttributePlugin({'ModifiedAfter': dt}))
+        # request data
+        response = client.service.getInventory(usertoken, stationid,
+                                               spatialbounds)
+        if format == 'XML':
+            # response is a full SOAP response
+            from xml.etree.ElementTree import fromstring, ElementTree
+            temp = fromstring(response)
+            xpath = '*/*/{urn:xml:seisml:orfeus:neries:org}ArclinkInventory'
+            inventory = temp.find(xpath)
+            # in order to have a valid XML declaration we have to use a
+            # modified tostring function
+            class dummy:
+                pass
+            data = []
+            file = dummy()
+            file.write = data.append
+            ElementTree(inventory).write(file, xml_declaration=True,
+                                         encoding="utf-8", method="xml")
+            return "".join(data)
+        else:
+            # response is a SUDS object
+            return response
+
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, format="MSEED"):
         """
         Retrieves waveform data from the NERIES Web service and returns a ObsPy
         Stream object.
 
-        :type network: string
+        :type network: str
         :param network: Network code, e.g. ``'BW'``.
-        :type station: string
+        :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
-        :type location: string
+        :type location: str
         :param location: Location code, e.g. ``'01'``. Location code may contain
             wild cards.
-        :type channel: string
+        :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
             wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -443,9 +582,9 @@ class Client(object):
         >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+30)
         >>> print st
         3 Trace(s) in Stream:
-        NL.WIT..BHE | 2009-04-01T00:00:00.010100Z - 2009-04-01T00:00:30.010100Z | 40.0 Hz, 1201 samples
-        NL.WIT..BHZ | 2009-04-01T00:00:00.010100Z - 2009-04-01T00:00:30.010100Z | 40.0 Hz, 1201 samples
-        NL.WIT..BHN | 2009-04-01T00:00:00.010100Z - 2009-04-01T00:00:30.010100Z | 40.0 Hz, 1201 samples
+        NL.WIT..BHZ | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
+        NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
+        NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -476,16 +615,16 @@ class Client(object):
         quality flags of MiniSEED files which would be neglected reading it
         with obspy.mseed.
 
-        :type filename: string
+        :type filename: str
         :param filename: Name of the output file.
-        :type network: string
+        :type network: str
         :param network: Network code, e.g. ``'BW'``.
-        :type station: string
+        :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
-        :type location: string
+        :type location: str
         :param location: Location code, e.g. ``'01'``. Location code may contain
             wild cards.
-        :type channel: string
+        :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
             wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -507,6 +646,12 @@ class Client(object):
         >>> st = client.saveWaveform("outfile.fseed" "NL", "WIT", "", "BH*",
         ...                          dt, dt+30, format="FSEED")  #doctest: +SKIP
         """
+        # enable logging if debug option is set 
+        if self.debug:
+            import logging
+            logging.basicConfig(level=logging.INFO)
+            logging.getLogger('suds.client').setLevel(logging.DEBUG)
+        # initialize client
         client = SudsClient(SEISMOLINK_WSDL)
         # set cache of 5 days
         cache = client.options.cache
@@ -523,19 +668,20 @@ class Client(object):
         stationid.StationCode = station
         stationid.ChannelCode = channel
         stationid.LocId = location
+        # adding default record length (4096) * delta to start and end time to
+        # ensure right date times
+        # XXX: 4096 may be overkill - 
+        delta = guessDelta(channel) * 4096
         stationid.TimeSpan.TimePeriod.beginPosition = \
-            UTCDateTime(starttime).strftime("%Y-%m-%dT%H:%M:%S")
+            (UTCDateTime(starttime) - delta).strftime("%Y-%m-%dT%H:%M:%S")
         stationid.TimeSpan.TimePeriod.endPosition = \
-            UTCDateTime(endtime).strftime("%Y-%m-%dT%H:%M:%S")
+            (UTCDateTime(endtime) + delta).strftime("%Y-%m-%dT%H:%M:%S")
         # request data
         if format == 'MSEED':
-            # XXX: dirty attribute hack for requesting waveform format MSEED
-            client.options.plugins = [_RequestMSEEDPlugin()]
+            client.options.plugins = [_AttributePlugin({'DataFormat':'MSEED'})]
         # start data request
         response = client.service.dataRequest(usertoken, stationid)
-        if format == 'MSEED':
-            # XXX: see above
-            client.options.plugins = []
+        client.options.plugins = []
         # filter for request ids
         request_ids = [r._Id for r in response.RoutedRequest]
         if not request_ids:
