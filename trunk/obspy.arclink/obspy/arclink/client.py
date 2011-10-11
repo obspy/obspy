@@ -89,7 +89,7 @@ class Client(object):
     status_timeout = 3
 
     #: Delay in seconds between each status request
-    status_delay = 0.1
+    status_delay = 0.5
 
     def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
                  password="", institution="Anonymous", timeout=20,
@@ -138,6 +138,14 @@ class Client(object):
                 if key not in self.dcid_keys:
                     self.dcid_keys[key] = value.strip()
 
+    def _reconnect(self):
+        # only use timeout from python2.6
+        if sys.hexversion < 0x02060000:
+            self._client.open(self._client.host, self._client.port)
+        else:
+            self._client.open(self._client.host, self._client.port,
+                              self._client.timeout)
+
     def _writeln(self, buffer):
         if self.command_delay:
             time.sleep(self.command_delay)
@@ -155,16 +163,9 @@ class Client(object):
         return line
 
     def _hello(self):
-        if sys.hexversion < 0x020600F0:
-            self._client.open(self._client.host, self._client.port)
-        else:
-            self._client.open(self._client.host, self._client.port,
-                              self._client.timeout)
+        self._reconnect()
         self._writeln('HELLO')
         self.version = self._readln(')')
-        # certain ArcLink versions do not allow a plain STATUS request
-        if 'ArcLink v1.2 (2010.256)' in self.version:
-            self.plain_status_allowed = False
         self.node = self._readln()
         if self.password:
             self._writeln('USER %s %s' % (self.user, self.password))
@@ -215,12 +216,7 @@ class Client(object):
             if self.debug:
                 print('\nRequesting %s:%d' % (self._client.host,
                                               self._client.port))
-            # only use timeout from python2.6
-            if sys.hexversion < 0x020600F0:
-                self._client.open(self._client.host, self._client.port)
-            else:
-                self._client.open(self._client.host, self._client.port,
-                                  self._client.timeout)
+            self._reconnect()
             try:
                 return self._request(request_type, request_data)
             except ArcLinkException:
@@ -506,7 +502,8 @@ class Client(object):
         if is_name:
             fh.close()
 
-    def getRouting(self, network, station, starttime, endtime):
+    def getRouting(self, network, station, starttime, endtime,
+                   modified_after=None):
         """
         Get primary ArcLink host for given network/stations/time combination.
 
@@ -518,10 +515,16 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
+        :type modified_after: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param modified_after: Returns only data modified after given date.
+            Default is ``None``, returning all available data.
         :return: Dictionary of host names.
         """
         # request type
         rtype = 'REQUEST ROUTING '
+        if modified_after:
+            rtype += 'modified_after=%s ' % modified_after.formatArcLink()
         # request data
         rdata = [starttime, endtime, network, station]
         # fetch plain XML document
@@ -816,7 +819,8 @@ class Client(object):
                      instruments=False, route=True, sensortype='',
                      min_latitude=None, max_latitude=None,
                      min_longitude=None, max_longitude=None,
-                     restricted=None, permanent=None):
+                     restricted=None, permanent=None,
+                     modified_after=None):
         """
         Returns information about the available networks and stations in that
         particular space/time region.
@@ -858,12 +862,18 @@ class Client(object):
         :type restricted: bool, optional
         :param restricted: Requesting only networks/stations/streams that have
             restricted or open data respectively. Default is ``None``.
+        :type modified_after: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param modified_after: Returns only data modified after given date.
+            Default is ``None``, returning all available data.
         :return: Dictionary of inventory information.
         """
         # request type
         rtype = 'REQUEST INVENTORY '
         if instruments:
             rtype += 'instruments=true '
+        if modified_after:
+            rtype += 'modified_after=%s ' % modified_after.formatArcLink()
         # request data
         rdata = [starttime, endtime, network, station, channel, location, '.']
         if restricted is True:
