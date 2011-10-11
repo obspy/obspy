@@ -196,14 +196,20 @@ class Stats(AttribDict):
         Calculates derived headers such as `delta` and `endtime`.
         """
         # set delta
-        delta = 1.0 / float(self.sampling_rate)
+        try:
+            delta = 1.0 / float(self.sampling_rate)
+        except ZeroDivisionError:
+            delta = 0
         super(Stats, self).__setitem__('delta', delta)
         # set endtime
         if self.npts == 0:
             # XXX: inconsistent, see issue #58
             delta = 0
         else:
-            delta = (self.npts - 1) / float(self.sampling_rate)
+            try:
+                delta = (self.npts - 1) / float(self.sampling_rate)
+            except ZeroDivisionError:
+                delta = 0
         endtime = self.starttime + delta
         self.__dict__['endtime'] = endtime
 
