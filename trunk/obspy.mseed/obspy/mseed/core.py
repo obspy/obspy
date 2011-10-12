@@ -199,7 +199,7 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
     if encoding is not None:
         if isinstance(encoding, int) and encoding in ENCODINGS:
             encoding = encoding
-        elif encoding and isinstance(encoding, basestring) and encoding in encoding_strings:
+        elif isinstance(encoding, basestring) and encoding in encoding_strings:
             encoding = encoding_strings[encoding]
         else:
             msg = 'Invalid encoding %s. Valid encodings: %s'
@@ -207,13 +207,15 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
         # Check if the dtype for all traces is compatible with the enforced
         # encoding.
         dtypes = [tr.data.dtype for tr in stream]
+        # removing duplicates in list
+        dtypes = list(set(dtypes))
         id, _, dtype = ENCODINGS[encoding]
         if len(dtypes) != 1 or dtypes[0].type != dtype:
-            msg = """
-                Wrong dtype of the data of one or more Traces for encoding %s.
-                Please change the dtype of your data or use an appropriate
-                encoding. See the obspy.mseed documentation for more information.
-                """ % id
+            msg = """Wrong dtype of the data of one or more Traces for encoding
+                %s expecting dtype %s. Please change the dtype of your data or
+                use an appropriate encoding. See the obspy.mseed documentation
+                for more information.
+                """ % (id, dtype)
             raise Exception(msg)
 
     # translate byteorder
@@ -309,19 +311,21 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
             enc = encoding
 
         id, sampletype, dtype = ENCODINGS[enc]
+        data = trace.data
         # INT16 needs INT32 data type
         if enc == 1:
-            trace.data = trace.data.astype(np.int32)
+            # create a copy and don't modify the original data
+            data = data.copy().astype(np.int32)
         header['sampletype'] = sampletype
         header['encoding'] = enc
         # Fill the samplecnt attribute.
-        header['samplecnt'] = len(trace.data)
+        header['samplecnt'] = len(data)
         # Check if ndarray is contiguous (see #192, #193)
-        if not trace.data.flags.c_contiguous:
+        if not data.flags.c_contiguous:
             msg = "Detected non contiguous data array during ctypes call. " \
                   "Trying to fix array."
             warnings.warn(msg)
-        trace_list.append([header, np.require(trace.data,
+        trace_list.append([header, np.require(data,
                                               requirements=('C_CONTIGUOUS',))])
     # Write resulting trace_list to Mini-SEED file.
     __libmseed__.writeMSTraces(trace_list, outfile=filename, **kwargs)

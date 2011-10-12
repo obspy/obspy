@@ -454,7 +454,7 @@ class CoreTestCase(unittest.TestCase):
         # Type is not consistent float32 cannot be compressed with STEIM1,
         # therefore a exception should be raised.
         self.assertRaises(Exception, st.write, tempfile, format="MSEED",
-                encoding=10)
+                          encoding=10)
         os.remove(tempfile)
 
     def test_writeWrongEncodingViaMseedStats(self):
@@ -786,6 +786,82 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(932, tr.stats.npts)
         self.assertEqual(UTCDateTime(2007, 5, 31, 22, 45, 46, 720000),
                          tr.stats.endtime)
+
+    def test_issue296(self):
+        """
+        Test for issue #296
+        """
+        tempfile = NamedTemporaryFile().name
+        # 1 - transform to np.float64 values
+        st = read()
+        for tr in st:
+            tr.data = tr.data.astype('float64')
+        # write a single trace automatically detecting encoding
+        st[0].write(tempfile, format="MSEED")
+        # write a single trace automatically detecting encoding
+        st.write(tempfile, format="MSEED")
+        # write a single trace with encoding 5
+        st[0].write(tempfile, format="MSEED", encoding=5)
+        # write a single trace with encoding 5
+        st.write(tempfile, format="MSEED", encoding=5)
+        # 2 - transform to np.float32 values
+        st = read()
+        for tr in st:
+            tr.data = tr.data.astype('float32')
+        # write a single trace automatically detecting encoding
+        st[0].write(tempfile, format="MSEED")
+        # write a single trace automatically detecting encoding
+        st.write(tempfile, format="MSEED")
+        # write a single trace with encoding 5
+        st[0].write(tempfile, format="MSEED", encoding=4)
+        # write a single trace with encoding 5
+        st.write(tempfile, format="MSEED", encoding=4)
+        # 3 - transform to np.int32 values
+        st = read()
+        for tr in st:
+            tr.data = tr.data.astype('int32')
+        # write a single trace automatically detecting encoding
+        st[0].write(tempfile, format="MSEED")
+        # write a single trace automatically detecting encoding
+        st.write(tempfile, format="MSEED")
+        # write a single trace with encoding 3
+        st[0].write(tempfile, format="MSEED", encoding=3)
+        # write the whole stream with encoding 3
+        st.write(tempfile, format="MSEED", encoding=3)
+        # write a single trace with encoding 10
+        st[0].write(tempfile, format="MSEED", encoding=10)
+        # write the whole stream with encoding 10
+        st.write(tempfile, format="MSEED", encoding=10)
+        # write a single trace with encoding 11
+        st[0].write(tempfile, format="MSEED", encoding=11)
+        # write the whole stream with encoding 11
+        st.write(tempfile, format="MSEED", encoding=11)
+        # 4 - transform to np.int16 values
+        st = read()
+        for tr in st:
+            tr.data = tr.data.astype('int16')
+        # write a single trace automatically detecting encoding
+        st[0].write(tempfile, format="MSEED")
+        # write a single trace automatically detecting encoding
+        st.write(tempfile, format="MSEED")
+        # write a single trace with encoding 1
+        st[0].write(tempfile, format="MSEED", encoding=1)
+        # write the whole stream with encoding 1
+        st.write(tempfile, format="MSEED", encoding=1)
+        # 5 - transform to ASCII values
+        st = read()
+        for tr in st:
+            tr.data = tr.data.astype('|S1')
+        # write a single trace automatically detecting encoding
+        st[0].write(tempfile, format="MSEED")
+        # write a single trace automatically detecting encoding
+        st.write(tempfile, format="MSEED")
+        # write a single trace with encoding 0
+        st[0].write(tempfile, format="MSEED", encoding=0)
+        # write the whole stream with encoding 0
+        st.write(tempfile, format="MSEED", encoding=0)
+        # cleanup
+        os.remove(tempfile)
 
     def test_issue289(self):
         """XXX: see #289
