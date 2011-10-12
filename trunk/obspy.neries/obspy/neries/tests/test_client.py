@@ -241,6 +241,13 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
         self.assertTrue('sensor' in result.ArclinkInventory.inventory)
         self.assertTrue('responsePAZ' in result.ArclinkInventory.inventory)
+        # 4 - SUDS object with spatial filters
+        result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
+                                     instruments=True, min_latitude=20,
+                                     max_latitude=50, min_longitude=20,
+                                     max_longitude=50)
+        self.assertTrue(isinstance(result, object))
+        self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
 
 
 def suite():

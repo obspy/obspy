@@ -54,6 +54,28 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
                                                    platform.python_version())
 
 
+# monkey patching SUDS
+# ses also https://fedorahosted.org/suds/ticket/292
+from suds.xsd.sxbase import SchemaObject
+
+def namespace(self, prefix=None):
+    """
+    Get this properties namespace
+    @param prefix: The default prefix.
+    @type prefix: str
+    @return: The schema's target namespace
+    @rtype: (I{prefix},I{URI})
+    """
+    if self.ref is not None: 
+        return ('', self.ref[1]) 
+    ns = self.schema.tns
+    if ns[0] is None:
+        ns = (prefix, ns[1])
+    return ns
+
+SchemaObject.namespace = namespace
+
+
 def _mapKwargs(f):
     """
     Maps function arguments to keyword arguments.
@@ -82,18 +104,6 @@ class _AttributePlugin(MessagePlugin):
         method = context.envelope.getChild('Body')[0]
         for key, item in self.dict.iteritems():
             method.attributes.append(Attribute(key, item))
-
-
-class _FixGMLEnvelopeTypeNamespacePlugin(MessagePlugin):
-    """
-    This is a crude hack to fix a namespace issue which I can't figure out.
-
-    We just modify any occurrence of ogc:envelope into gml:envelope within the
-    message text before sending.
-    """
-    def sending(self, context):
-        context.envelope = context.envelope.replace('ns3:Envelope',
-                                                    'ns1:Envelope')
 
 
 class Client(object):
@@ -496,7 +506,6 @@ class Client(object):
             logging.getLogger('suds.client').setLevel(logging.DEBUG)
         # initialize client
         client = SudsClient(SEISMOLINK_WSDL,
-                            plugins=[_FixGMLEnvelopeTypeNamespacePlugin()],
                             retxml=(format == 'XML'))
         # set prefixes for easier debugging
         client.add_prefix('gml', 'http://www.opengis.net/gml')
