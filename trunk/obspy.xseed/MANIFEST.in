@@ -1,2 +1,2 @@
-prune docs/*
 include obspy/xseed/tests/data/*
+include obspy/xseed/tests/blockette-tests/*

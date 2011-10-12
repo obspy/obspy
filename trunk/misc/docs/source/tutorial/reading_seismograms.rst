@@ -92,4 +92,4 @@ preview of the waveform (requires the :mod:`obspy.imaging` module):
 .. plot:: source/tutorial/reading_seismograms.py
 
 .. _NumPy: http://numpy.scipy.org/
-.. _GSE2: http://obspy.org/export/2593/obspy/trunk/obspy.gse2/docs/other/provisional_GSE2.1.pdf
+.. _GSE2: http://obspy.org/export/2593/obspy/trunk/obspy.gse2/docs/provisional_GSE2.1.pdf

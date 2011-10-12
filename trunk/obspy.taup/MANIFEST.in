@@ -1,3 +1,2 @@
-prune docs/*
 include obspy/taup/tables/*
 include obspy/taup/tests/data/*

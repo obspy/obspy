@@ -121,7 +121,7 @@ Further Resources
 
   * http://www.seiscomp3.org/wiki/doc/applications/arclink
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
-  * https://svn.obspy.org/trunk/obspy.arclink/docs/other/protocol.txt
+  * https://svn.obspy.org/trunk/obspy.arclink/docs/protocol.txt
 
 * `Short introduction`_ to the ArcLink protocol
 * Latest `ArcLink server`_ package
