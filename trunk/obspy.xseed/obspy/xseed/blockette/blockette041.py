@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from StringIO import StringIO
 from obspy.xseed.blockette import Blockette
-from obspy.xseed.fields import Integer, VariableString, FixedString, Float, Loop
+from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
+    Loop
 from obspy.xseed.utils import formatRESP, LookupCode
 
 
@@ -30,6 +32,49 @@ class Blockette041(Blockette):
         Loop("FIR Coefficient", "Number of Factors", [
             Float(9, "FIR Coefficient", 14, mask='%+1.7e')], flat=True),
     ]
+
+    def parseSEED(self, data, expected_length=0):
+        """
+        If number of FIR coefficients are larger than maximal blockette size of
+        9999 chars a follow up blockette with the same blockette id and response
+        lookup key is expected - this is checked here.
+        """
+        # get current lookup key
+        pos = data.tell()
+        data.read(7)
+        global_lookup_key = int(data.read(4))
+        data.seek(pos)
+        # read first blockette
+        temp = StringIO()
+        temp.write(data.read(expected_length))
+        # check next blockettes
+        while True:
+            # save position
+            pos = data.tell()
+            blockette_id = int(data.read(3))
+            if blockette_id != 41:
+                # different blockette id -> break
+                break
+            blockette_length = int(data.read(4))
+            lookup_key = int(data.read(4))
+            if lookup_key != global_lookup_key:
+                # different lookup key -> break
+                break
+            # ok follow up blockette found - skip some unneeded fields
+            self.fields[1].read(data)
+            self.fields[2].read(data)
+            self.fields[3].read(data)
+            self.fields[4].read(data)
+            self.fields[5].read(data)
+            # remaining length in current blockette
+            length = pos - data.tell() + blockette_length
+            # read follow up blockette and append it to temporary blockette
+            temp.write(data.read(length))
+        # reposition file pointer
+        data.seek(pos)
+        # parse new combined temporary blockette
+        temp.seek(0)
+        Blockette.parseSEED(self, temp, expected_length=temp.len)
 
     def parseXML(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':

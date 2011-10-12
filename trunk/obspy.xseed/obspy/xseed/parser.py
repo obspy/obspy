@@ -961,6 +961,9 @@ class Parser(object):
             elif blockette_id != 0:
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
+        # check if everything is parsed
+        if data.len!=data.tell():
+            warnings.warn("There exist unparsed elements!")
 
     def _createBlockettes11and12(self, blockette12=False):
         """

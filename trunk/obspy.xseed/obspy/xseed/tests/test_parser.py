@@ -505,20 +505,16 @@ class ParserTestCase(unittest.TestCase):
         Test case for issue #298.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BHE.dataless")
-        tempfile = NamedTemporaryFile().name
         parser = Parser(file)
-        parser.writeRESP(tempfile)
-        os.remove(tempfile)
+        parser.getRESP()
 
     def test_issue298b(self):
         """
         Second test case for issue #298.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BH_.dataless")
-        tempfile = NamedTemporaryFile().name
         parser = Parser(file)
-        parser.writeRESP(tempfile)
-        os.remove(tempfile)
+        parser.getRESP()
 
 
 def suite():
