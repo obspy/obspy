@@ -1,3 +1,2 @@
-prune docs/other/*
-include docs/api/*
+prune docs/*
 include obspy/core/tests/data/*

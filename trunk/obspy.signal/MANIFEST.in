@@ -1,2 +1,2 @@
-include docs/api/*
+prune docs/*
 include obspy/signal/tests/data/*
