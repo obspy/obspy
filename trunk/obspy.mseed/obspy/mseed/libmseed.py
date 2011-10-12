@@ -216,7 +216,7 @@ class LibMSEED(object):
             fp.seek(record_length - 1, 1)
         return False
 
-    def readMSTracesViaRecords(self, filename, reclen= -1, dataflag=1,
+    def readMSTracesViaRecords(self, filename, reclen=-1, dataflag=1,
                                skipnotdata=1, verbose=0, starttime=None,
                                endtime=None, quality=False):
         """
@@ -352,10 +352,9 @@ class LibMSEED(object):
         except:
             pass
 
-    def readMSTraces(self, filename, reclen= -1, timetol= -1,
-                     sampratetol= -1, dataflag=1, skipnotdata=1,
-                     dataquality=1, verbose=0, starttime=None,
-                     endtime=None):
+    def readMSTraces(self, filename, reclen=-1, timetol=-1, sampratetol=-1,
+                     dataflag=1, skipnotdata=1, dataquality=1, verbose=0,
+                     starttime=None, endtime=None):
         """
         Read MiniSEED file. Returns a list with header informations and data
         for each trace in the file.
@@ -411,8 +410,8 @@ class LibMSEED(object):
         del mstg, chain
         return trace_list
 
-    def writeMSTraces(self, trace_list, outfile, reclen= -1, encoding= -1,
-                      byteorder= -1, flush= -1, verbose=0):
+    def writeMSTraces(self, trace_list, outfile, reclen=-1, encoding=-1,
+                      byteorder=-1, flush=-1, verbose=0):
         """
         Write MiniSEED file from trace_list
 
@@ -501,8 +500,8 @@ class LibMSEED(object):
         if isinstance(f, file):  # necessary for Python 2.5.2 BUG otherwise!
             f.close()
 
-    def readFileToTraceGroup(self, filename, reclen= -1, timetol= -1,
-                             sampratetol= -1, dataflag=1, skipnotdata=1,
+    def readFileToTraceGroup(self, filename, reclen=-1, timetol=-1,
+                             sampratetol=-1, dataflag=1, skipnotdata=1,
                              dataquality=1, verbose=0, starttime=None,
                              endtime=None):
         """
@@ -566,12 +565,12 @@ class LibMSEED(object):
         ms = _MSStruct(filename)
         starttime = ms.getStart()
         # Get the endtime
-        ms.offset = ms.filePosFromRecNum(record_number= -1)
+        ms.offset = ms.filePosFromRecNum(record_number=-1)
         endtime = ms.getEnd()
         del ms  # for valgrind
         return starttime, endtime
 
-    def readMSHeader(self, filename, reclen= -1, timetol= -1, sampratetol= -1,
+    def readMSHeader(self, filename, reclen=-1, timetol=-1, sampratetol=-1,
                      skipnotdata=1, dataquality=1, verbose=0, starttime=None,
                      endtime=None):
         """
@@ -676,7 +675,7 @@ class LibMSEED(object):
         return quality_count
 
     def getTimingQuality(self, filename, first_record=True,
-                         rl_autodetection= -1):
+                         rl_autodetection=-1):
         """
         Reads timing quality and returns a dictionary containing statistics
         about it.
@@ -1150,7 +1149,7 @@ class _MSStruct(object):
             raise ValueError('Please enter a valid record_number')
         return record_number * self.info['record_length']
 
-    def read(self, reclen= -1, dataflag=1, skipnotdata=1, verbose=0,
+    def read(self, reclen=-1, dataflag=1, skipnotdata=1, verbose=0,
              raise_flag=True):
         """
         Read MSRecord using the ms_readmsr_r function. The following
