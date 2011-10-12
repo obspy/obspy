@@ -58,14 +58,7 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
 # ses also https://fedorahosted.org/suds/ticket/292
 from suds.xsd.sxbase import SchemaObject
 
-def namespace(self, prefix=None):
-    """
-    Get this properties namespace
-    @param prefix: The default prefix.
-    @type prefix: str
-    @return: The schema's target namespace
-    @rtype: (I{prefix},I{URI})
-    """
+def _namespace(self, prefix=None):
     if self.ref is not None: 
         return ('', self.ref[1]) 
     ns = self.schema.tns
@@ -73,7 +66,7 @@ def namespace(self, prefix=None):
         ns = (prefix, ns[1])
     return ns
 
-SchemaObject.namespace = namespace
+SchemaObject.namespace = _namespace
 
 
 def _mapKwargs(f):
