@@ -86,9 +86,9 @@ class _AttributePlugin(MessagePlugin):
 
 class _FixGMLEnvelopeTypeNamespacePlugin(MessagePlugin):
     """
-    This is a crude hack to fix a namepsace issue which I can't figure out.
+    This is a crude hack to fix a namespace issue which I can't figure out.
 
-    We just modify any occurence of ogc:envelope into gml:envelope within the
+    We just modify any occurrence of ogc:envelope into gml:envelope within the
     message text before sending.
     """
     def sending(self, context):
