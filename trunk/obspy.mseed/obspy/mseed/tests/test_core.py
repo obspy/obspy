@@ -812,9 +812,9 @@ class CoreTestCase(unittest.TestCase):
         st[0].write(tempfile, format="MSEED")
         # write a single trace automatically detecting encoding
         st.write(tempfile, format="MSEED")
-        # write a single trace with encoding 5
+        # write a single trace with encoding 4
         st[0].write(tempfile, format="MSEED", encoding=4)
-        # write a single trace with encoding 5
+        # write a single trace with encoding 4
         st.write(tempfile, format="MSEED", encoding=4)
         # 3 - transform to np.int32 values
         st = read()
