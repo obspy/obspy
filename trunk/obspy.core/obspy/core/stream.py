@@ -1012,6 +1012,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1107,6 +1108,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1142,6 +1144,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1253,6 +1256,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import read
         >>> st = read()
         >>> len(st[0])
         3000
@@ -1330,6 +1334,7 @@ class Stream(object):
 
         .. rubric:: Examples
 
+        >>> from obspy.core import read
         >>> st = read()
         >>> st2 = st.select(station="R*")
         >>> print(st2)  # doctest: +ELLIPSIS
@@ -1408,6 +1413,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import Trace, Stream
         >>> tr = Trace(data=np.array([1, 2, 3, 4]))
         >>> tr.stats.npts = 100
         >>> st = Stream([tr])
@@ -1725,6 +1731,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import Trace, Stream
         >>> tr = Trace(data=np.arange(10))
         >>> st = Stream(traces=[tr])
         >>> tr.stats.sampling_rate
@@ -1751,6 +1758,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0, -3, -9, 6, 4]))
         >>> tr3 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
@@ -1773,6 +1781,7 @@ class Stream(object):
 
         .. rubric:: Example
 
+        >>> from obspy.core import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2])
@@ -1805,6 +1814,7 @@ class Stream(object):
 
         Make a Stream with two Traces:
 
+        >>> from obspy.core import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])

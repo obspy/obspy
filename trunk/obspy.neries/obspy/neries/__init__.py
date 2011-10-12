@@ -41,14 +41,14 @@ Basic Usage
     >>> events = client.getLatestEvents(num=5, format='list')
     >>> len(events)
     5
-    >>> events[0] #doctest: +SKIP 
+    >>> events[0]  #doctest: +SKIP
     [{'author': u'CSEM', 'event_id': u'20041226_0000148', 'origin_id': 127773,
       'longitude': 95.724, 'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0,
-      'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498, 
+      'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
       'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
 
 (3) Additional information for each event may obtained using the
-    :meth:`~obspy.neries.client.Client.getEventDetail()` method with a 
+    :meth:`~obspy.neries.client.Client.getEventDetail()` method with a
     known event_id:
 
     >>> from obspy.neries import Client
@@ -82,8 +82,8 @@ Basic Usage
         st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+60*10)
         st.plot()
 
-(5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a Taup
-    Web service, an utility to compute arrival times using a few default
+(5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a
+    Taup Web service, an utility to compute arrival times using a few default
     velocity models such as iasp91, ak135 or qdt.
 
     >>> client = Client()

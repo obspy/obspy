@@ -21,11 +21,11 @@ import platform
 import sys
 import urllib
 import urllib2
-try: # pragma: no cover
+try:
     import json
     if not getattr(json, "loads", None):
-        json.loads = json.read #@UndefinedVariable
-except ImportError: # pragma: no cover
+        json.loads = json.read  # @UndefinedVariable
+except ImportError:
     import simplejson as json
 
 
@@ -49,7 +49,8 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 MAP_INVERSE['magtype'] = "magnitude_type"
 
 VERSION = _getVersionString("obspy.neries")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION, platform.platform(),
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+                                                   platform.platform(),
                                                    platform.python_version())
 
 
@@ -87,7 +88,7 @@ class _FixGMLEnvelopeTypeNamespacePlugin(MessagePlugin):
     """
     This is a crude hack to fix a namepsace issue which I can't figure out.
 
-    We just modify any occurence of ogc:envelope into gml:envelope within the 
+    We just modify any occurence of ogc:envelope into gml:envelope within the
     message text before sending.
     """
     def sending(self, context):
@@ -105,9 +106,9 @@ class Client(object):
         Initializes the NERIES Web service client.
 
         :type user: str, optional
-        :param user: The user name used for identification with the Web service.
-            This entry in form of a email address is required for using the
-            following methods:
+        :param user: The user name used for identification with the Web
+            service. This entry in form of a email address is required for
+            using the following methods:
                 * :meth:`~saveWaveform`
                 * :meth:`~getWaveform`
                 * :meth:`~getInventory`
@@ -135,7 +136,8 @@ class Client(object):
         self.password = password
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, self.base_url, self.user, self.password)
+        password_mgr.add_password(None, self.base_url, self.user,
+                                  self.password)
         auth_handler = urllib2.HTTPBasicAuthHandler(password_mgr)
         opener = urllib2.build_opener(auth_handler)
         # install globally
@@ -151,14 +153,14 @@ class Client(object):
         :param headers: Additional header information for request
         """
         headers['User-Agent'] = self.user_agent
-        # replace special characters 
+        # replace special characters
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
-        if self.debug: # pragma: no cover
+        if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000: # pragma: no cover
+        if sys.hexversion < 0x02060000:  # pragma: no cover
             response = urllib2.urlopen(remoteaddr)
-        else: # pragma: no cover
+        else:  # pragma: no cover
             response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
@@ -199,8 +201,8 @@ class Client(object):
         :type max_datetime: str, optional
         :param max_datetime: Latest date and time for search.
         :type min_latitude: int or float, optional
-        :param min_latitude: Minimum latitude for search. Format: +/- 90 decimal
-            degrees.
+        :param min_latitude: Minimum latitude for search. Format: +/- 90
+            decimal degrees.
         :type max_latitude: int or float, optional
         :param max_latitude: Maximum latitude for search.
         :type min_longitude: int or float, optional
@@ -232,7 +234,7 @@ class Client(object):
         :type format: ``'list'`` or ``'xml'``, optional
         :param format: Format of returned results. Defaults to ``'xml'``.
 
-            .. note:: 
+            .. note::
                 The JSON-formatted queries only look at preferred origin
                 parameters, whereas QuakeML queries search all associated
                 origins.
@@ -250,9 +252,9 @@ class Client(object):
         ...                           min_magnitude=9)
         >>> len(events)
         1
-        >>> events #doctest: +SKIP
-        [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
-          'origin_id': 127773, 'longitude': 95.724, 
+        >>> events  #doctest: +SKIP
+        [{'author': u'CSEM', 'event_id': u'20041226_0000148',
+          'origin_id': 127773, 'longitude': 95.724,
           'datetime': UTCDateTime(2004, 12, 26, 0, 58, 50), 'depth': -10.0,
           'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
           'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
@@ -296,11 +298,11 @@ class Client(object):
         >>> events = client.getLatestEvents(num=5, format='list')
         >>> len(events)
         5
-        >>> events[0] #doctest: +SKIP 
-        [{'author': u'CSEM', 'event_id': u'20041226_0000148', 
-          'origin_id': 127773, 'longitude': 95.724, 
-          'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0, 'magnitude': 9.3,
-          'magnitude_type': u'mw', 'latitude': 3.498,
+        >>> events[0]  #doctest: +SKIP
+        [{'author': u'CSEM', 'event_id': u'20041226_0000148',
+          'origin_id': 127773, 'longitude': 95.724,
+          'datetime': u'2004-12-26T00:58:50Z', 'depth': -10.0,
+          'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
           'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
         """
         # parse parameters
@@ -342,7 +344,7 @@ class Client(object):
         >>> result = client.getEventDetail("19990817_0000001", 'list')
         >>> len(result)  # Number of calculated origins
         12
-        >>> result[0]  # Details about first calculated origin #doctest: +SKIP
+        >>> result[0]  # Details about first calculated origin  #doctest: +SKIP
         {'author': u'EMSC', 'event_id': u'19990817_0000001',
          'origin_id': 1465935, 'longitude': 29.972,
          'datetime': UTCDateTime(1999, 8, 17, 0, 1, 35), 'depth': -10.0,
@@ -358,7 +360,7 @@ class Client(object):
             # QuakeML-formatted event URI
             kwargs['uri'] = str(uri)
         else:
-            # EMSC event unique identifier 
+            # EMSC event unique identifier
             kwargs['unid'] = str(uri)
         # fetch data
         data = self._fetch("/services/event/detail", **kwargs)
@@ -381,8 +383,8 @@ class Client(object):
         :type depth: float
         :param depth: Event depth in km.
         :type locations: list of tuples
-        :param locations: Each tuple contains a pair of (latitude, longitude) of
-            a station.
+        :param locations: Each tuple contains a pair of (latitude, longitude)
+            of a station.
         :type model: ``'iasp91'``, ``'ak135'``, or ``'qdt'``, optional
         :param model: Velocity model, defaults to 'iasp91'.
         :return: List of dicts containing phase name and arrival times in ms.
@@ -398,10 +400,10 @@ class Client(object):
         ...                                model='iasp91')
         >>> len(result)
         2
-        >>> result[0] # doctest: +SKIP
+        >>> result[0]  # doctest: +SKIP
         {'P': 356981.13561726053, 'S': 646841.5619481194}
         """
-        # enable logging if debug option is set 
+        # enable logging if debug option is set
         if self.debug:
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -433,8 +435,8 @@ class Client(object):
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=True, min_latitude= -90, max_latitude=90,
-                     min_longitude= -180, max_longitude=180,
+                     instruments=True, min_latitude=-90, max_latitude=90,
+                     min_longitude=-180, max_longitude=180,
                      modified_after=None, format='SUDS'):
         """
         Returns information about the available networks and stations in that
@@ -446,8 +448,8 @@ class Client(object):
         :param station: Station code, e.g. ``'MANZ'``. Station code may contain
             wild cards.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``. Channel code may contain
             wild cards.
@@ -472,9 +474,22 @@ class Client(object):
         :type format: ``'XML'`` or ``'SUDS'``, optional
         :param format: Output format. Either returns a XML document or a
             parsed SUDS object. Defaults to ``SUDS``.
-        :return: Dictionary of inventory information.
+        :return: XML document or a parsed SUDS object containing inventory
+            information.
+
+        .. rubric:: Example
+
+        >>> from obspy.neries import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client(user='test@obspy.org')
+        >>> dt = UTCDateTime("2011-01-01T00:00:00")
+        >>> result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt, dt+10,
+        ...                              instruments=True)
+        >>> paz = result.ArclinkInventory.inventory.responsePAZ
+        >>> print(paz.poles)  # doctest: +ELLIPSIS
+        (-0.037004,0.037016) (-0.037004,-0.037016) (-251.33,0.0) ...
         """
-        # enable logging if debug option is set 
+        # enable logging if debug option is set
         if self.debug:
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -497,7 +512,7 @@ class Client(object):
         usertoken.password = self.password
         usertoken.label = self.user_agent.replace(' ', '_')
         usertoken.locale = ""
-        # create station filter 
+        # create station filter
         stationid = client.factory.create('StationIdentifierType')
         stationid.NetworkCode = network
         stationid.StationCode = station
@@ -540,8 +555,10 @@ class Client(object):
             inventory = temp.find(xpath)
             # in order to have a valid XML declaration we have to use a
             # modified tostring function
+
             class dummy:
                 pass
+
             data = []
             file = dummy()
             file.write = data.append
@@ -563,17 +580,17 @@ class Client(object):
         :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
-            wild cards.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+            contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
-        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+        :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
 
@@ -583,11 +600,11 @@ class Client(object):
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
         >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+30)
-        >>> print st
+        >>> print st  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        NL.WIT..BHZ | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
-        NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
-        NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - 2009-04-01T00:00:30.010200Z | 40.0 Hz, 1201 samples
+        NL.WIT..BHZ | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
+        NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
+        NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -625,17 +642,17 @@ class Client(object):
         :type station: str
         :param station: Station code, e.g. ``'MANZ'``.
         :type location: str
-        :param location: Location code, e.g. ``'01'``. Location code may contain
-            wild cards.
+        :param location: Location code, e.g. ``'01'``. Location code may
+            contain wild cards.
         :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may contain
-            wild cards.
+        :param channel: Channel code, e.g. ``'EHE'``. . Channel code may
+            contain wild cards.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
-        :param format: Output format. Either as full SEED (``'FSEED'``) or 
+        :param format: Output format. Either as full SEED (``'FSEED'``) or
             Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :return: None
 
@@ -644,12 +661,12 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neries import Client
-        >>> client = Client(user='test@obspy.org')
+        >>> c = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
-        >>> st = client.saveWaveform("outfile.fseed" "NL", "WIT", "", "BH*",
-        ...                          dt, dt+30, format="FSEED")  #doctest: +SKIP
+        >>> st = c.saveWaveform("outfile.fseed" "NL", "WIT", "", "BH*",
+        ...                     dt, dt+30, format="FSEED")  #doctest: +SKIP
         """
-        # enable logging if debug option is set 
+        # enable logging if debug option is set
         if self.debug:
             import logging
             logging.basicConfig(level=logging.INFO)
@@ -665,7 +682,7 @@ class Client(object):
         usertoken.password = self.password
         usertoken.label = self.user_agent.replace(' ', '_')
         usertoken.locale = ""
-        # create station filter 
+        # create station filter
         stationid = client.factory.create('StationIdentifierType')
         stationid.NetworkCode = network
         stationid.StationCode = station
@@ -673,7 +690,7 @@ class Client(object):
         stationid.LocId = location
         # adding default record length (4096) * delta to start and end time to
         # ensure right date times
-        # XXX: 4096 may be overkill - 
+        # XXX: 4096 may be overkill
         delta = guessDelta(channel) * 4096
         stationid.TimeSpan.TimePeriod.beginPosition = \
             (UTCDateTime(starttime) - delta).strftime("%Y-%m-%dT%H:%M:%S")
@@ -718,7 +735,7 @@ class Client(object):
             fh.write(urllib2.urlopen(url).read())
         if isinstance(filename, basestring):
             fh.close()
-        # clean up 
+        # clean up
         response = client.service.purgeData(usertoken, request_ids)
 
 

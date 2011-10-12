@@ -20,7 +20,7 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # 1
-        results = client.getEvents(format="list", min_depth= -700,
+        results = client.getEvents(format="list", min_depth=-700,
                                    max_datetime="2005-01-01")
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
                      'origin_id': 1347097, 'longitude': 57.143,
@@ -29,8 +29,8 @@ class ClientTestCase(unittest.TestCase):
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEquals(results, expected)
         # 2
-        results = client.getEvents(format="list", min_latitude= -95,
-                                   max_latitude= -1, min_longitude=20,
+        results = client.getEvents(format="list", min_latitude=-95,
+                                   max_latitude=-1, min_longitude=20,
                                    max_longitude=90, max_datetime="2005-01-01")
         expected = [{'author': u'NEIR', 'event_id': u'20041016_0000009',
                      'origin_id': 120690, 'longitude': 33.682,
@@ -40,8 +40,8 @@ class ClientTestCase(unittest.TestCase):
                      'flynn_region': u'PRINCE EDWARD ISLANDS REGION'}]
         self.assertEquals(results, expected)
         # 3
-        results = client.getEvents(format="list", min_depth= -11,
-                                   max_depth= -22.33, min_magnitude=6.6,
+        results = client.getEvents(format="list", min_depth=-11,
+                                   max_depth=-22.33, min_magnitude=6.6,
                                    max_magnitude=7, max_datetime="2005-01-01")
         expected = [{'author': u'EMSC', 'event_id': u'20001206_0000014',
                      'origin_id': 1441886, 'longitude': 54.843,
@@ -82,7 +82,7 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # 1
-        results = client.getEvents(format="list", min_depth= -700,
+        results = client.getEvents(format="list", min_depth=-700,
                                    max_datetime=UTCDateTime("2005-01-01"))
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
                      'origin_id': 1347097, 'longitude': 57.143,
@@ -91,7 +91,7 @@ class ClientTestCase(unittest.TestCase):
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEquals(results, expected)
         # 2
-        results = client.getEvents(format="list", min_depth= -700,
+        results = client.getEvents(format="list", min_depth=-700,
                                    min_datetime=UTCDateTime("2004-01-01"),
                                    max_datetime=UTCDateTime("2005-01-01"))
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
@@ -106,7 +106,7 @@ class ClientTestCase(unittest.TestCase):
         Testing event request with QuakeML as output format.
         """
         client = Client()
-        results = client.getEvents(format="xml", min_depth= -700,
+        results = client.getEvents(format="xml", min_depth=-700,
                                    max_datetime=UTCDateTime("2005-01-01"))
         self.assertTrue(isinstance(results, basestring))
         # check for event id
@@ -153,10 +153,10 @@ class ClientTestCase(unittest.TestCase):
         data = client.getLatestEvents(5, format='xml')
         self.assertTrue(isinstance(data, basestring))
         self.assertTrue(data.startswith('<?xml'))
-        # no given number of events should default to 10 
+        # no given number of events should default to 10
         data = client.getLatestEvents(format='list')
         self.assertEquals(len(data), 10)
-        # invalid number of events should default to 10 
+        # invalid number of events should default to 10
         data = client.getLatestEvents(num='blah', format='list')
         self.assertEquals(len(data), 10)
 
@@ -247,5 +247,5 @@ def suite():
     return unittest.makeSuite(ClientTestCase, 'test')
 
 
-if __name__ == '__main__':  # pragma: no cover
+if __name__ == '__main__':
     unittest.main(defaultTest='suite')
