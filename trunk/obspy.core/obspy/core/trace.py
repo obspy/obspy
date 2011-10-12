@@ -116,7 +116,7 @@ class Stats(AttribDict):
         AttributeError: Attribute "endtime" in Stats object is read only!
 
     (4)
-        The attribute ``npts`` will be automatically updated from the 
+        The attribute ``npts`` will be automatically updated from the
         :class:`~obspy.core.trace.Trace` object.
 
         >>> trace = Trace()
@@ -203,7 +203,6 @@ class Stats(AttribDict):
         super(Stats, self).__setitem__('delta', delta)
         # set endtime
         if self.npts == 0:
-            # XXX: inconsistent, see issue #58
             delta = 0
         else:
             try:
@@ -213,7 +212,7 @@ class Stats(AttribDict):
         endtime = self.starttime + delta
         self.__dict__['endtime'] = endtime
 
-    def setEndtime(self, value): #@UnusedVariable
+    def setEndtime(self, value):  # @UnusedVariable
         msg = "Attribute \"endtime\" in Stats object is read only!"
         raise AttributeError(msg)
 
@@ -454,13 +453,13 @@ class Trace(object):
         ======  ===============================================================
         0       Discard overlapping data. Overlaps are essentially treated the
                 same way as gaps::
-                
+
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAA----FFFF
-                
+
                 Contained traces with differing data will be marked as gap::
-                
+
                     Trace 1: AAAAAAAAAAAA
                     Trace 2:     FF
                     1 + 2  : AAAA--AAAAAA
@@ -472,52 +471,52 @@ class Trace(object):
                 returned array is still a masked array, only if fill_value
                 is set, the returned array is a normal array and gaps are
                 filled with fill value.
-                
+
                 No interpolation (``interpolation_samples=0``)::
-                
+
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAAFFFFFFFF
-                
+
                 Interpolate first two samples (``interpolation_samples=2``)::
-                
+
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAACDFFFFFF (interpolation_samples=2)
-                
+
                 Interpolate all samples (``interpolation_samples=-1``)::
-                
+
                     Trace 1: AAAAAAAA
                     Trace 2:     FFFFFFFF
                     1 + 2  : AAAABCDEFFFF
-                
+
                 Any contained traces with different data will be discarded::
-                
+
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
-                
+
                 Traces with gaps::
-                
-                    Trace 1: AAAA        
+
+                    Trace 1: AAAA
                     Trace 2:         FFFF
                     1 + 2  : AAAA----FFFF
-                
+
                 Traces with gaps and given ``fill_value=0``::
-                
-                    Trace 1: AAAA        
+
+                    Trace 1: AAAA
                     Trace 2:         FFFF
                     1 + 2  : AAAA0000FFFF
 
                 Traces with gaps and given ``fill_value='latest'``::
-                
-                    Trace 1: ABCD        
+
+                    Trace 1: ABCD
                     Trace 2:         FFFF
                     1 + 2  : ABCDDDDDFFFF
 
                 Traces with gaps and given ``fill_value='interpolate'``::
-                
-                    Trace 1: AAAA        
+
+                    Trace 1: AAAA
                     Trace 2:         FFFF
                     1 + 2  : AAAABCDEFFFF
         ======  ===============================================================
@@ -717,17 +716,17 @@ class Trace(object):
         :param filename: The name of the file to write.
         :type format: string
         :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q",
-            "SH_ASC", "SEGY", "SU", "WAV". See
-            :meth:`~obspy.core.stream.Stream.write` method for all possible
-            formats.
+            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
+            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
+            ``"WAV"``. See :meth:`obspy.core.stream.Stream.write` method for
+            all possible formats.
 
         .. rubric:: Example
 
         >>> tr = Trace()
         >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
         """
-        # we need to import here in order to prevent a circular import of 
+        # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
         from obspy.core import Stream
         Stream([self]).write(filename, format, **kwargs)
@@ -760,15 +759,15 @@ class Trace(object):
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
             if delta < 0 and pad:
-                npts = abs(delta) + 10 # use this as a start
+                npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                         float(self.stats.sampling_rate)
                 newdelta = round((starttime - newstarttime) * \
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
         else:
-            delta = -1 * int(math.floor(round((self.stats.starttime - starttime) * \
-                                          self.stats.sampling_rate, 7)))
+            delta = int(math.floor(round((self.stats.starttime - starttime) * \
+                                          self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -781,7 +780,7 @@ class Trace(object):
                                            fill_value)
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
-                # too large number of pointes, e.g. 189336539799
+                # too large number of points, e.g. 189336539799
                 raise Exception("Time offset between starttime and " + \
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((gap, self.data))
@@ -1046,7 +1045,7 @@ class Trace(object):
                       "sure obspy.signal is installed properly."
                 raise ImportError(msg)
 
-        # XXX accepting string "self" and using attached paz then
+        # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
 
@@ -1096,7 +1095,7 @@ class Trace(object):
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
-            
+
             from obspy.core import read
             st = read()
             tr = st[0]
@@ -1372,16 +1371,16 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> tr = Trace(data=np.array([0, -3, 9, 6, 4]))
+        >>> tr = Trace(data=np.array([0, -3, 9, 6]))
         >>> tr.normalize()
         >>> tr.data
-        array([ 0.        , -0.33333333,  1.        ,  0.66666667,  0.44444444])
+        array([ 0.        , -0.33333333,  1.        ,  0.66666667])
         >>> tr.stats.processing
         ['normalize:9']
-        >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4, 4.3]))
+        >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
         >>> tr.normalize()
         >>> tr.data
-        array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217,  0.4673913 ])
+        array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
         >>> tr.stats.processing
         ['normalize:-9.2']
         """

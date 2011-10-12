@@ -8,8 +8,8 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from pkg_resources import require, iter_entry_points
 from math import sqrt, pi, sin, cos, asin, tan, atan, atan2
+from pkg_resources import require, iter_entry_points
 import ctypes as C
 import doctest
 import functools
@@ -698,7 +698,7 @@ def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
     This method is vulnerable if the two points are close to being antipodes.
     (Starts failing at e.g. (0,0,0,179.4))
     """
-    #Check inputs
+    # Check inputs
     if lat1 > 90 or lat1 < -90:
         msg = "Latitude of Point 1 out of bounds! (-90 <= lat1 <=90)"
         raise ValueError(msg)
@@ -714,15 +714,15 @@ def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
     while lon2 < -180:
         lon2 += 360
 
-    #Data on the WGS84 reference ellipsoid:
-    a = 6378137.0         #semimajor axis in m
-    f = 1 / 298.257223563 #flattening
-    b = a * (1 - f)       #semiminor axis
+    # Data on the WGS84 reference ellipsoid:
+    a = 6378137.0          # semimajor axis in m
+    f = 1 / 298.257223563  # flattening
+    b = a * (1 - f)        # semiminor axis
 
     if (abs(lat1 - lat2) < 1e-8) and (abs(lon1 - lon2) < 1e-8):
         return 0.0, 0.0, 0.0
 
-    #convert latitudes and longitudes to radians:
+    # convert latitudes and longitudes to radians:
     lat1 = lat1 * 2.0 * pi / 360.
     lon1 = lon1 * 2.0 * pi / 360.
     lat2 = lat2 * 2.0 * pi / 360.
@@ -768,23 +768,24 @@ def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
         alpha21 = atan2((cos(U1) * sin(dlon)),
                         (-sin(U1) * cos(U2) + cos(U1) * sin(U2) * cos(dlon)))
 
-    if (alpha12 < 0.0) :
+    if alpha12 < 0.0:
         alpha12 = alpha12 + (2.0 * pi)
-    if (alpha12 > (2.0 * pi)) :
+    if alpha12 > (2.0 * pi):
         alpha12 = alpha12 - (2.0 * pi)
 
     alpha21 = alpha21 + pi
 
-    if (alpha21 < 0.0) :
+    if alpha21 < 0.0:
         alpha21 = alpha21 + (2.0 * pi)
-    if (alpha21 > (2.0 * pi)) :
+    if alpha21 > (2.0 * pi):
         alpha21 = alpha21 - (2.0 * pi)
 
-    #convert to degrees:
+    # convert to degrees:
     alpha12 = alpha12 * 360 / (2.0 * pi)
     alpha21 = alpha21 * 360 / (2.0 * pi)
 
     return dist, alpha12, alpha21
+
 
 def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """
@@ -793,8 +794,8 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
 
     Latitudes should be positive for eastern/northern hemispheres and
     negative for western/southern hemispheres respectively.
-    
-    This code is based on an implementation incorporated in 
+
+    This code is based on an implementation incorporated in
     Matplotlib Basemap Toolkit 0.9.5
     http://sourceforge.net/projects/matplotlib/files/
     (basemap-0.9.5/lib/matplotlib/toolkits/basemap/greatcircle.py)
@@ -828,7 +829,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         negative for southern hemisphere)
     :param lon2: Longitude of point B in degrees (positive for eastern,
         negative for western hemisphere)
-    :return: (Great circle distance in m, azimuth A->B in degrees, 
+    :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
     """
     try:
@@ -843,10 +844,11 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         msg = "Catching unstable calculation on antipodes. " + \
               "If this happens too often please bully the developers " + \
               "into implementing a more secure solution for this issue."
-        if str(e) == "math domain error" and abs(lon1 - lon2) > 179.3:
+        unstable = abs(lon1 - lon2) > 179.3
+        if str(e) == "math domain error" and unstable:
             warnings.warn(msg)
             return (20004314.5, 0.0, 0.0)
-        elif str(e) == "excepting nan return values" and abs(lon1 - lon2) > 179.3:
+        elif str(e) == "excepting nan return values" and unstable:
             warnings.warn(msg)
             return (20004314.5, 0.0, 0.0)
         else:

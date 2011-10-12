@@ -48,12 +48,12 @@ def read(pathname_or_url=None, format=None, headonly=False,
         are allowed for a file name. If this attribute is omitted, a Stream
         object with an example data set will be created.
     :type format: string, optional
-    :param format: Format of the file to read, e.g. "GSE2", "MSEED", "SAC",
-        "SEISAN", "WAV", "Q", "SH_ASC", etc. See the `Supported Formats`
-        section below for a full list of supported formats. If format is set to
-        `None` it will be automatically detected which results in a slightly
-        slower reading. If you specify a format no further format checking is
-        done.
+    :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
+        ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
+        the `Supported Formats` section below for a full list of supported
+        formats. If format is set to ``None`` it will be automatically detected
+        which results in a slightly slower reading. If you specify a format no
+        further format checking is done.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the data header. This is most
         useful for scanning available meta information of huge data sets.
@@ -677,6 +677,20 @@ class Stream(object):
         Appends a single Trace object to the current Stream object.
 
         :param trace: obspy.Trace object.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read, Trace
+        >>> st = read()
+        >>> tr = Trace()
+        >>> tr.stats.station = 'TEST'
+        >>> st.append(tr)
+        >>> print(st)  # doctest: +ELLIPSIS
+        4 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        .TEST..      | 1970-01-01T00:00:00.000000Z ... | 1.0 Hz, 0 samples
         """
         if isinstance(trace, Trace):
             self.traces.append(trace)
@@ -689,6 +703,23 @@ class Stream(object):
         Extends the current Stream object with a list of Trace objects.
 
         :param trace_list: list of obspy.Trace objects.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read, Trace
+        >>> st = read()
+        >>> tr1 = Trace()
+        >>> tr1.stats.station = 'TEST1'
+        >>> tr2 = Trace()
+        >>> tr2.stats.station = 'TEST2'
+        >>> st.extend([tr1, tr2])
+        >>> print(st)  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        .TEST1..     | 1970-01-01T00:00:00.000000Z ... | 1.0 Hz, 0 samples
+        .TEST2..     | 1970-01-01T00:00:00.000000Z ... | 1.0 Hz, 0 samples
         """
         if isinstance(trace_list, list):
             for _i in trace_list:
@@ -887,12 +918,13 @@ class Stream(object):
             will be centered around its mean value and then clamped to fit its
             given space. This argument is the range in data units that will be
             used to clamp the data. If the range is smaller than the actual
-            range, the lines' data may overshoot to other lines which is usually
-            a desired effect. Larger ranges will result in a vertical padding.
-            If ``0``, the actual range of the data will be used and no overshooting
-            or additional padding will occur.
-            If ``None`` the range will be chosen to be the 99.5-percentile of the
-            actual range - so some values will overshoot.
+            range, the lines' data may overshoot to other lines which is
+            usually a desired effect. Larger ranges will result in a vertical
+            padding.
+            If ``0``, the actual range of the data will be used and no
+            overshooting or additional padding will occur.
+            If ``None`` the range will be chosen to be the 99.5-percentile of
+            the actual range - so some values will overshoot.
             Defaults to None.
         :param interval: Only used if ``type='dayplot'``. This defines the
             interval length in minutes for one line.
@@ -977,6 +1009,22 @@ class Stream(object):
 
         :param index: Index of the Trace object to be returned and removed.
         :returns: Removed Trace.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> tr = st.pop()
+        >>> print(st)  # doctest: +ELLIPSIS
+        2 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> print(tr)  # doctest: +ELLIPSIS
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         return self.traces.pop(index)
 
@@ -1056,6 +1104,21 @@ class Stream(object):
     def reverse(self):
         """
         Reverses the Traces of the Stream object in place.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> st.reverse()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         self.traces.reverse()
 
@@ -1076,6 +1139,21 @@ class Stream(object):
              'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'
              Defaults to ['network', 'station', 'location', 'channel',
              'starttime', 'endtime'].
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> st.sort()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         # Check the list and all items.
         msg = "keys must be a list of item strings. Available items to " + \
@@ -1102,8 +1180,10 @@ class Stream(object):
         :param filename: The name of the file to write.
         :type format: string
         :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of "MSEED", "GSE2", "SAC", "SACXY", "Q",
-            "SH_ASC", "SEGY", "SU", "WAV"
+            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
+            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
+            ``"WAV"``. See the `Supported Formats` section below for a full
+            list of supported formats.
 
         .. rubric:: Example
 
@@ -1170,6 +1250,20 @@ class Stream(object):
         is the select, the remaining traces are trimmed according to that
         sample point.
         For more info see :meth:`~obspy.core.trace.Trace.trim`.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> len(st[0])
+        3000
+        >>> dt = st[0].stats.starttime
+        >>> dt
+        UTCDateTime(2009, 8, 24, 0, 20, 3)
+        >>> st.trim(dt + 2, dt + 4)
+        >>> len(st[0])
+        201
+        >>> st[0].stats.starttime
+        UTCDateTime(2009, 8, 24, 0, 20, 5)
         """
         if not self:
             return
@@ -1654,6 +1748,8 @@ class Stream(object):
         traces in the stream. See :meth:`~obspy.core.trace.Trace.max`.
 
         :return: List of values of absolute maxima of all traces
+
+        .. rubric:: Example
 
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0, -3, -9, 6, 4]))

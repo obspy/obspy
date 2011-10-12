@@ -6,7 +6,8 @@ Simple ASCII time series formats
   followed by a sample lists (see also
   :func:`SLIST format description<obspy.core.ascii.writeSLIST>`)::
 
-    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, SLIST, INTEGER,
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
+00, SLIST, INTEGER,
     288 300 292 285 265 287
     279 250 278 278 268 258
     ...
@@ -14,7 +15,8 @@ Simple ASCII time series formats
 * ``TSPAIR``, a ASCII format where data is written in time-sample pairs
   (see also :func:`TSPAIR format description<obspy.core.ascii.writeTSPAIR>`)::
 
-    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.000000, TSPAIR, INTEGER,
+    TIMESERIES BW_RJOB__EHZ_D, 6001 samples, 200 sps, 2009-08-24T00:20:03.0000\
+00, TSPAIR, INTEGER,
     2009-08-24T00:20:03.000000  288
     2009-08-24T00:20:03.005000  300
     2009-08-24T00:20:03.010000  292
@@ -290,7 +292,8 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
 
     *Example SLIST file*::
 
-        TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, SLIST, INTEGER, Counts
+        TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.04\
+3400, SLIST, INTEGER, Counts
         2787        2776        2774        2780        2783        2782
         2776        2766        2759        2760        2765        2767
         ...
@@ -389,7 +392,8 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
 
     *Example TSPAIR file*::
 
-        TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.043400, TSPAIR, INTEGER, Counts
+        TIMESERIES NL_HGN_00_BHZ_R, 12 samples, 40 sps, 2003-05-29T02:13:22.04\
+3400, TSPAIR, INTEGER, Counts
         2003-05-29T02:13:22.043400  2787
         2003-05-29T02:13:22.068400  2776
         2003-05-29T02:13:22.093400  2774
