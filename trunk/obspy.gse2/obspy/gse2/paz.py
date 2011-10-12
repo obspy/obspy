@@ -18,7 +18,6 @@ The read in PAZ information can be used with
 """
 
 import doctest
-import StringIO
 import numpy as np
 import obspy.core
 
@@ -32,6 +31,7 @@ def readPaz(paz_file):
     simulation the A0_normalization_factor might be set wrongly, use
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
+    >>> import StringIO
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
@@ -84,7 +84,7 @@ def readPaz(paz_file):
     return poles, zeros, seismometer_gain
 
 
-def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
+def attach_paz(tr, paz_file):
     '''
     Attach tr.stats.paz AttribDict to trace from GSE2 paz_file
 
@@ -99,9 +99,6 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     :param tr: An ObsPy trace object containing the calib and gse2 calper
             attributes
     :param paz_file: path to pazfile or file pointer
-    :param read_digitizer_gain_from_file: Even more experimental. If this
-            option is specified, it tries to read the digitizer_gain from
-            the comment line in the paz_file
 
     >>> tr = obspy.core.Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
     >>> import StringIO
@@ -133,10 +130,6 @@ def attach_paz(tr, paz_file, read_digitizer_gain_from_file=False):
     # ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/gse2001.pdf
     # page 3
     calibration = tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper
-    # if we read it from the commented line in the paz file, this is not
-    # the case
-    if read_digitizer_gain_from_file:
-        calibration = float(PAZ[ind + 1].split()[-2])
 
     # fill up ObsPy Poles and Zeros AttribDict
     tr.stats.paz = obspy.core.AttribDict()

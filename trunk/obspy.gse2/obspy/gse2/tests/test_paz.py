@@ -5,8 +5,6 @@ The paz test suite.
 """
 
 from obspy.gse2 import paz
-import numpy as np
-import os
 import unittest
 import StringIO
 

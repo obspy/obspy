@@ -26,7 +26,6 @@ import platform
 import ctypes as C
 import doctest
 import numpy as np
-import obspy.core
 from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific, deprecated
 from obspy.gse2 import paz
