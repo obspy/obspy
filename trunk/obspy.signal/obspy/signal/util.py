@@ -217,9 +217,10 @@ def smooth(x, smoothie):
     :param smoothie: number of past/future values to calculate moving average
     :return out: smoothed signal
     """
-    suma = np.zeros(np.size(x))
+    size_x = np.size(x)
+    suma = np.zeros(size_x)
     if smoothie > 1:
-        if (len(x) > 1 and len(x) < np.size(x)):
+        if (len(x) > 1 and len(x) < size_x):
             #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
             #                     [x[(len(x)-1),:]]*smoothie,axis=0)
             out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
@@ -231,16 +232,16 @@ def smooth(x, smoothie):
             #out[1:smoothie,:] = []
         else:
             out_add = np.append(np.append([x[0]] * smoothie, x),
-                               [x[np.size(x) - 1]] * smoothie)
+                               [x[size_x - 1]] * smoothie)
             for i in xrange(smoothie, len(x) + smoothie):
                 sum = 0
-                for k in range(-smoothie, smoothie):
+                for k in xrange(-smoothie, smoothie):
                     sum = sum + out_add[i + k]
                     suma[i - smoothie] = float(sum) / (2 * smoothie)
                     out = suma
                     out[0:smoothie] = out[smoothie]
-                    out[np.size(x) - 1 - smoothie:np.size(x)] = \
-                        out[np.size(x) - 1 - smoothie]
+                    out[size_x - 1 - smoothie:size_x] = \
+                        out[size_x - 1 - smoothie]
     else:
         out = x
     return out

@@ -18,6 +18,7 @@ Complex Trace Analysis
 
 from numpy import size, pi
 from scipy import signal
+from scipy.integrate import cumtrapz
 import numpy as np
 import util
 
@@ -86,19 +87,12 @@ def normEnvelope(data, fs, smoothie, fk):
                                   [row[size(row) - 1]] * (size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
             t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
-            for k in xrange(0, size(A_win_smooth)):
-                if (A_win_smooth[k] < 1):
-                    A_win_smooth[k] = 1
+            A_win_smooth[A_win_smooth < 1] = 1
             # (dA/dt) / 2*PI*smooth(A)*fs/2
             t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
-            buff0 = (1. / fs * ((t_[0] + t_[1]) / 2.0))
-            t_[0] = buff0
             # Integral within window
-            for l in xrange(2, size(A_win_smooth)):
-                buff = buff0 + (1 / fs * ((t_[l] + t_[l - 1]) / 2.0))
-                t_[l - 1] = buff0
-                buff0 = buff
-            t_[size(A_win_smooth) - 1] = buff
+            t_ = cumtrapz(t_, dx=1./fs)
+            t_ = np.concatenate((t_[0:1], t_))
             Anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
         #Anorm = util.smooth(Anorm,smoothie)
@@ -115,19 +109,12 @@ def normEnvelope(data, fs, smoothie, fk):
                               [x[1][size(x[1]) - 1]] * (size(fk) // 2))
         t = signal.lfilter(fk, 1, A_win_add)
         t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
-        for k in xrange(0, size(A_win_smooth)):
-            if (A_win_smooth[k] < 1):
-                A_win_smooth[k] = 1
+        A_win_smooth[A_win_smooth < 1] = 1
         # (dA/dt) / 2*PI*smooth(A)*fs/2
         t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
-        buff0 = (1. / fs * ((t_[0] + t_[1]) / 2.0))
-        t_[0] = buff0
         # Integral within window
-        for l in xrange(2, size(A_win_smooth)):
-            buff = buff0 + (1 / fs * ((t_[l] + t_[l - 1]) / 2.0));
-            t_[l - 1] = buff0
-            buff0 = buff
-        t_[size(A_win_smooth) - 1] = buff
+        t_ = cumtrapz(t_, dx=1./fs)
+        t_ = np.concatenate((t_[0:1], t_))
         Anorm = ((np.exp(np.mean(t_))) - 1) * 100
         return Anorm
 
