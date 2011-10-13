@@ -1896,6 +1896,17 @@ class Stream(object):
         """
         return copy.deepcopy(self)
 
+    def clear(self):
+        """
+        Clear trace list (convenient method).
+
+        Replaces Stream's trace list by an empty one creating an empty
+        Stream object. Useful if there are references to the current
+        Stream object that should not break. Otherwise simply use a new
+        Stream() instance.
+        """
+        self.traces = []
+
     def _cleanup(self):
         """
         Merge consistent trace objects but leave everything else alone.
