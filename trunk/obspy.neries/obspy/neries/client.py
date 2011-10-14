@@ -59,8 +59,8 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
 from suds.xsd.sxbase import SchemaObject
 
 def _namespace(self, prefix=None):
-    if self.ref is not None: 
-        return ('', self.ref[1]) 
+    if self.ref is not None:
+        return ('', self.ref[1])
     ns = self.schema.tns
     if ns[0] is None:
         ns = (prefix, ns[1])
@@ -438,8 +438,8 @@ class Client(object):
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=True, min_latitude=-90, max_latitude=90,
-                     min_longitude=-180, max_longitude=180,
+                     instruments=True, min_latitude= -90, max_latitude=90,
+                     min_longitude= -180, max_longitude=180,
                      modified_after=None, format='SUDS'):
         """
         Returns information about the available networks and stations in that
@@ -527,10 +527,12 @@ class Client(object):
         # create spatial filters
         spatialbounds = client.factory.create('SpatialBoundsType')
         spatialbounds.BoundingBox.PropertyName = "e gero"
-        spatialbounds.BoundingBox.Envelope.lowerCorner = \
-            "%f %f" % (min_latitude, min_longitude)
-        spatialbounds.BoundingBox.Envelope.upperCorner = \
-            "%f %f" % (max_latitude, max_longitude)
+        spatialbounds.BoundingBox.Envelope.lowerCorner = "%f %f" %\
+            (min(min_latitude, max_latitude), 
+             min(min_longitude, max_longitude))
+        spatialbounds.BoundingBox.Envelope.upperCorner = "%f %f" %\
+            (max(min_latitude, max_latitude), 
+             max(min_longitude, max_longitude))
         # instruments attribute
         if instruments:
             client.options.plugins.append(
@@ -551,22 +553,13 @@ class Client(object):
                                                spatialbounds)
         if format == 'XML':
             # response is a full SOAP response
-            from xml.etree.ElementTree import fromstring, ElementTree
+            from xml.etree.ElementTree import fromstring, tostring
             temp = fromstring(response)
             xpath = '*/*/{urn:xml:seisml:orfeus:neries:org}ArclinkInventory'
             inventory = temp.find(xpath)
-            # in order to have a valid XML declaration we have to use a
-            # modified tostring function
-
-            class dummy:
-                pass
-
-            data = []
-            file = dummy()
-            file.write = data.append
-            ElementTree(inventory).write(file, xml_declaration=True,
-                                         encoding="utf-8", method="xml")
-            return "".join(data)
+            # export XML prepending a XML declaration
+            XML_DECLARATION = "<?xml version='1.0' encoding='UTF-8'?>\n\n"
+            return XML_DECLARATION + tostring(inventory, encoding='utf-8')
         else:
             # response is a SUDS object
             return response
