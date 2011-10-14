@@ -39,6 +39,10 @@ class Blockette041(Blockette):
         9999 chars a follow up blockette with the same blockette id and response
         lookup key is expected - this is checked here.
         """
+        # convert to stream for test issues
+        if isinstance(data, basestring):
+            expected_length = len(data)
+            data = StringIO(data)
         # get current lookup key
         pos = data.tell()
         data.read(7)
@@ -51,7 +55,10 @@ class Blockette041(Blockette):
         while True:
             # save position
             pos = data.tell()
-            blockette_id = int(data.read(3))
+            try:
+                blockette_id = int(data.read(3))
+            except ValueError:
+                break
             if blockette_id != 41:
                 # different blockette id -> break
                 break
