@@ -643,6 +643,55 @@ def skipIf(condition, reason):
     return _id
 
 
+def uncompressFile(func):
+    """
+    Decorator used for temporary uncompressing file if .gz or .bz2 archive.
+    """
+    def wrapped_func(filename, *args, **kwargs):
+        if isinstance(filename, basestring) and not os.path.exists(filename):
+            msg = "File not found '%s'" % (filename)
+            raise IOError(msg)
+        # check if we got a compressed file
+        unpacked_data = None
+        if filename.endswith('.bz2'):
+            # bzip2
+            try:
+                import bz2
+                unpacked_data = bz2.decompress(open(filename, 'rb').read())
+            except:
+                pass
+        elif filename.endswith('.gz'):
+            # gzip
+            try:
+                import gzip
+                unpacked_data = gzip.open(filename, 'rb').read()
+            except:
+                pass
+        if unpacked_data:
+            # we unpacked something without errors - create temporary file
+            tempfile = NamedTemporaryFile()
+            tempfile._fileobj.write(unpacked_data)
+            tempfile.close()
+            filename2 = tempfile.name
+        else:
+            filename2 = filename
+        # call original function
+        try:
+            result = func(filename2, *args, **kwargs)
+        except:
+            # clean up unpacking procedure
+            if unpacked_data:
+                tempfile.close()
+                os.remove(tempfile.name)
+            raise
+        # clean up unpacking procedure
+        if unpacked_data:
+            tempfile.close()
+            os.remove(tempfile.name)
+        return result
+    return wrapped_func
+
+
 def getEntryPoints():
     """
     Creates a sorted list of available entry points.
@@ -853,6 +902,8 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
             return (20004314.5, 0.0, 0.0)
         else:
             raise e
+
+
 
 
 if __name__ == '__main__':

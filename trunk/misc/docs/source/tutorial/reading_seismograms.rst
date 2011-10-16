@@ -15,8 +15,9 @@ gap-less continuous time series and related header/meta information.
 Each :class:`~obspy.core.trace.Trace` object has a attribute called ``data``
 pointing to a NumPy_ :class:`~numpy.ndarray` of
 the actual time series and the attribute ``stats`` which contains all meta
-information in a dictionary-like Stats object. Both attributes ``starttime``
-and ``endtime`` of the :class:`~obspy.core.trace.Stats` object are
+information in a dictionary-like :class:`~obspy.core.trace.Stats` object. Both
+attributes ``starttime`` and ``endtime`` of the
+:class:`~obspy.core.trace.Stats` object are
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 The following example demonstrates how a single GSE2_-formatted seismogram file

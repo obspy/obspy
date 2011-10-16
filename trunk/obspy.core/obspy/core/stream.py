@@ -12,7 +12,7 @@ from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, interceptDict, \
-    getExampleFile, getEntryPoints
+    getExampleFile, getEntryPoints, uncompressFile
 from pkg_resources import load_entry_point
 import copy
 import fnmatch
@@ -177,7 +177,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
         except:
             # otherwise just try to read the given /path/to folder
             pass
-
+    # create stream
     st = Stream()
     if "://" in pathname_or_url:
         # extract extension if any
@@ -219,6 +219,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     return st
 
 
+@uncompressFile
 def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a single file into a ObsPy Stream object.
@@ -234,30 +235,6 @@ def _read(filename, format=None, headonly=False, **kwargs):
 #         hasattr(filename, 'seek') and (format.upper() == 'MSEED' or \
 #         format is None):
 #        format = 'MSEED'
-    # check if we got a compressed file
-    unpacked_data = None
-    if filename.endswith('.bz2'):
-        # bzip2
-        try:
-            import bz2
-            unpacked_data = bz2.decompress(open(filename, 'rb').read())
-        except:
-            pass
-    elif filename.endswith('.gz'):
-        # gzip
-        try:
-            import gzip
-            unpacked_data = gzip.open(filename, 'rb').read()
-        except:
-            pass
-    if unpacked_data:
-        # ok we could unpack something without errors - create temporary file
-        tempfile = NamedTemporaryFile()
-        tempfile._fileobj.write(unpacked_data)
-        tempfile.close()
-        filename2 = tempfile.name
-    else:
-        filename2 = filename
     # go through all known formats
     format_ep = None
     if not format:
@@ -274,7 +251,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
                 msg = "Cannot load module %s:\n%s" % (ep.dist.key, str(e))
                 warnings.warn(msg, category=ImportWarning)
                 continue
-            if isFormat(filename2):
+            if isFormat(filename):
                 format_ep = ep
                 break
     else:
@@ -283,10 +260,6 @@ def _read(filename, format=None, headonly=False, **kwargs):
         try:
             format_ep = [_i for _i in ENTRY_POINTS if _i.name == format][0]
         except IndexError:
-            # clean up unpacking procedure
-            if unpacked_data:
-                tempfile.close()
-                os.remove(tempfile.name)
             msg = "Format is not supported. Supported Formats: "
             raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
     # file format should be known by now
@@ -296,20 +269,12 @@ def _read(filename, format=None, headonly=False, **kwargs):
                                       'obspy.plugin.waveform.' + \
                                       format_ep.name, 'readFormat')
     except:
-        # clean up unpacking procedure
-        if unpacked_data:
-            tempfile.close()
-            os.remove(tempfile.name)
         msg = "Format is not supported. Supported Formats: "
         raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
     if headonly:
-        stream = readFormat(filename2, headonly=True, **kwargs)
+        stream = readFormat(filename, headonly=True, **kwargs)
     else:
-        stream = readFormat(filename2, **kwargs)
-    # clean up unpacking procedure
-    if unpacked_data:
-        tempfile.close()
-        os.remove(tempfile.name)
+        stream = readFormat(filename, **kwargs)
     # set a format keyword for each trace
     for trace in stream:
         trace.stats._format = format_ep.name
@@ -392,7 +357,7 @@ class Stream(object):
 
     def __add__(self, other):
         """
-        Method to add two streams.
+        Method to add two streams or a stream with a single trace.
 
         :type other: :class:`~obspy.core.stream.Stream` or
             :class:`~obspy.core.trace.Trace`
@@ -676,7 +641,7 @@ class Stream(object):
         """
         Appends a single Trace object to the current Stream object.
 
-        :param trace: obspy.Trace object.
+        :param trace: :class:`~obspy.core.stream.Trace` object.
 
         .. rubric:: Example
 
@@ -702,7 +667,8 @@ class Stream(object):
         """
         Extends the current Stream object with a list of Trace objects.
 
-        :param trace_list: list of obspy.Trace objects.
+        :param trace_list: list of :class:`~obspy.core.stream.Trace` objects or
+            :class:`~obspy.core.stream.Stream`.
 
         .. rubric:: Example
 
