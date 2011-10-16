@@ -672,22 +672,22 @@ def uncompressFile(func):
             tempfile = NamedTemporaryFile()
             tempfile._fileobj.write(unpacked_data)
             tempfile.close()
-            filename2 = tempfile.name
-        else:
-            filename2 = filename
-        # call original function
-        try:
-            result = func(filename2, *args, **kwargs)
-        except:
+            # call wrapped function
+            try:
+                result = func(tempfile.name, *args, **kwargs)
+            except:
+                # clean up unpacking procedure
+                if unpacked_data:
+                    tempfile.close()
+                    os.remove(tempfile.name)
+                raise
             # clean up unpacking procedure
             if unpacked_data:
                 tempfile.close()
                 os.remove(tempfile.name)
-            raise
-        # clean up unpacking procedure
-        if unpacked_data:
-            tempfile.close()
-            os.remove(tempfile.name)
+        else:
+            # call wrapped function with original filename
+            result = func(filename, *args, **kwargs)
         return result
     return wrapped_func
 

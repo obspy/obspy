@@ -168,7 +168,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     """
     # if no pathname or URL specified, make example stream
     if not pathname_or_url:
-        return _readExample(headonly=headonly)
+        return _createExampleStream(headonly=headonly)
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and \
        pathname_or_url.startswith('/path/to/'):
@@ -281,7 +281,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
     return stream
 
 
-def _readExample(headonly=False):
+def _createExampleStream(headonly=False):
     """
     Create an example stream.
 
