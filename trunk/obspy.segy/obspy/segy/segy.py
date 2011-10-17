@@ -345,6 +345,15 @@ class SEGYBinaryFileHeader(object):
             else:
                 raise Exception
 
+    def __str__(self):
+        """
+        Convenience method to print the binary file header.
+        """
+        final_str = ["Binary File Header:"]
+        for item in BINARY_FILE_HEADER_FORMAT:
+            final_str.append("\t%s: %s" %(item[1], str(getattr(self, item[1]))))
+        return "\n".join(final_str)
+
     def write(self, file, endian=None):
         """
         Writes the header to an open file like object.
