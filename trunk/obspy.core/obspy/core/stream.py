@@ -1212,7 +1212,7 @@ class Stream(object):
         writeFormat(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
-             nearest_sample=True):
+             nearest_sample=True, fill_value=None):
         """
         Cuts all traces of this Stream object to given start and end time.
         If nearest_sample=True the closest sample point of the first trace
@@ -1251,7 +1251,7 @@ class Stream(object):
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
             trace.trim(starttime, endtime, pad,
-                       nearest_sample=nearest_sample)
+                       nearest_sample=nearest_sample, fill_value=fill_value)
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
