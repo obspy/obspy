@@ -298,8 +298,8 @@ class Client(object):
         Writes response information into a file.
 
         Possible output formats are
-        ``RESP`` (http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F)
-        or ``StationXML`` (http://www.data.scec.org/xml/station/).
+        ``RESP`` (http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F),
+        ``StationXML`` (http://www.data.scec.org/xml/station/) or ``SACPZ``
 
         :type filename: str
         :param filename: Name of the output file.
@@ -315,7 +315,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'RESP'`` or ``'StationXML'``, optional
+        :type format: ``'RESP'``, ``'StationXML'`` or 'SACPZ', optional
         :param format: Output format. Defaults to ``'RESP'``.
         """
         kwargs = {}
@@ -328,9 +328,16 @@ class Client(object):
         kwargs['channel'] = str(channel)[0:3]
         kwargs['starttime'] = UTCDateTime(starttime)
         kwargs['endtime'] = UTCDateTime(endtime)
-        if format == 'StationXML':
+        # check format
+        format = format.upper()
+        if format == 'STATIONXML':
+            # StationXML
             data = self.station(level='resp', **kwargs)
+        elif format == 'SACPZ':
+            # StationXML
+            data = self.sacpz(**kwargs)
         else:
+            # RESP
             data = self.resp(**kwargs)
         fh = open(filename, "wb")
         fh.write(data)
@@ -1340,6 +1347,24 @@ class Client(object):
         :type magnitudeid: int, optional
         :param magnitudeid: Retrieve an event based on the unique IRIS
             magnitude id.
+
+        .. rubric:: Example
+
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> events = client.event(minmag=9.0)
+        >>> print events  # doctest: +ELLIPSIS
+        <BLANKLINE>
+        <quakeml xmlns:iris="http://www.iris.edu/ws/event/origins/" ...
+         <eventParameters publicID="smi:www.iris.edu/ws/event/query">
+          <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
+           ...
+           <type>earthquake</type>
+           <description>
+            <type>Flinn-Engdahl region (228)</type>
+            <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+           </description>
+           ...
         """
         # convert UTCDateTimes to string
         try:

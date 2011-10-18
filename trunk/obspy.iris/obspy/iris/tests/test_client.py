@@ -84,6 +84,14 @@ class ClientTestCase(unittest.TestCase):
         data = open(tempfile).read()
         self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
         os.remove(tempfile)
+        # SACPZ, single channel
+        tempfile = NamedTemporaryFile().name
+        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end,
+                            format="SACPZ")
+        data = open(tempfile).read()
+        self.assertTrue('NETWORK   (KNETWK): IU' in data)
+        self.assertTrue('STATION    (KSTNM): ANMO' in data)
+        os.remove(tempfile)
 
     def test_sacpz(self):
         """
