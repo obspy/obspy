@@ -75,6 +75,9 @@ IRIS (http://www.iris.edu/ws/):
 * :meth:`~obspy.iris.client.Client.evalresp()` - evaluates instrument response
   information stored at the IRIS DMC and outputs ASCII data or
   `Bode Plots <http://en.wikipedia.org/wiki/Bode_plots>`_.
+* :meth:`~obspy.iris.client.Client.event()` - returns event information in the
+  `QuakeML <https://quake.ethz.ch/quakeml/>`_ format. Events may be selected
+  based on location, time, catalog, contributor and internal identifiers.
 * :meth:`~obspy.iris.client.Client.flinnengdahl()` - converts a latitude,
   longitude pair into either a Flinn-Engdahl seismic region code or region
   name.

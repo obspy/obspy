@@ -538,12 +538,12 @@ class Client(object):
         # convert UTCDateTime to string for query
         try:
             kwargs['starttime'] = \
-                    UTCDateTime(kwargs['starttime']).formatIRISWebService()
+                UTCDateTime(kwargs['starttime']).formatIRISWebService()
         except KeyError:
             pass
         try:
             kwargs['endtime'] = \
-                    UTCDateTime(kwargs['endtime']).formatIRISWebService()
+                UTCDateTime(kwargs['endtime']).formatIRISWebService()
         except KeyError:
             pass
         # build up query
@@ -1184,6 +1184,199 @@ class Client(object):
                 return np.loadtxt(StringIO.StringIO(data))
             else:
                 return self._toFileOrData(filename, data)
+
+    def event(self, **kwargs):
+        """
+        Interface for `event` Web service of IRIS
+        (http://www.iris.edu/ws/event/).
+
+        This method returns contributed earthquake origin and magnitude
+        estimates stored in the IRIS database. Selected information is returned
+        in `QuakeML <https://quake.ethz.ch/quakeml/>`_ format.
+
+        The IRIS DMC receives earthquake location and magnitude information
+        primarily from the
+        `USGS NEIC <http://earthquake.usgs.gov/regional/neic/>`_ and the
+        `ISC <http://www.isc.ac.uk/>`_, other sources include the
+        `Global CMT project <http://www.globalcmt.org/>`_ and the
+        `USArray ANF <http://anf.ucsd.edu/>`_.
+
+        **Geographic constraints - bounding rectangle**
+
+        The following four parameters work together to specify a boundary
+        rectangle. All four parameters are optional, but they may not be mixed
+        with the parameters used for searching within a defined radius.
+
+        :type minlat: float, optional
+        :param minlat: Specify the southern boundary. The minimum latitude must
+            be between -90 and 90 degrees inclusive (and less than or equal to
+            maxlat). If not specified, then this value defaults to ``-90``.
+        :type maxlat: float, optional
+        :param maxlat: Specify the northern boundary. The maximum latitude must
+            be between -90 and 90 degrees inclusive and greater than or equal
+            to minlat. If not specified, then this value defaults to ``90``.
+        :type minlon: float, optional
+        :param minlon: Specify the western boundary. The minimum longitude must
+            be between -180 and 180 degrees inclusive. If not specified, then
+            this value defaults to ``-180``. If minlon > maxlon, then the
+            boundary will cross the -180/180 meridian
+        :type maxlon: float, optional
+        :param maxlon: Specify the eastern boundary. The minimum longitude must
+            be between -180 and 180 degrees inclusive. If not specified, then
+            this value defaults to +180. If maxlon < minlon, then the boundary
+            will cross the -180/180 meridian
+
+        **Geographic constraints - bounding radius**
+
+        The following four parameters work together to specify a boundary using
+        a radius around a coordinate. ``lat``, ``lon``, and ``maxradius`` are
+        all required, and must be used together. These parameters are
+        incompatible with the boundary-box parameters described above.
+
+        :type lat: float, optional
+        :param lat: Specify the central latitude point, in degrees. This value
+            must be between -90 and 90 degrees. This MUST be used in
+            conjunction with the lon and maxradius parameters.
+        :type lon: float, optional
+        :param lon: Specify the central longitude point, in degrees. This MUST
+            be used in conjunction with the lat and maxradius parameters.
+        :type maxradius: float, optional
+        :param maxradius: Specify the maximum radius, in degrees. Only
+            earthquakes within maxradius degrees of the lat/lon point will be
+            retrieved. This MUST be used in conjunction with the lat and lon
+            parameters.
+        :type minradius: float, optional
+        :param minradius: This optional parameter allows for the exclusion of
+            events that are closer than minradius degrees from the specified
+            lat/lon point. This MUST be used in conjunction with the lat, lon,
+            and maxradius parameters and is subject to the same restrictions.
+            If this parameter isn't specified, then it defaults to ``0.0``
+            degrees.
+
+        **Depth constraints**
+
+        :type mindepth: float, optional
+        :param mindepth: Specify minimum depth (kilometers), values increase
+            positively with depth, e.g. ``-1``.
+        :type maxdepth: float, optional
+        :param maxdepth: Specify maximum depth (kilometers), values increase
+            positively with depth, e.g. ``20``.
+
+        **Temporal constraints**
+
+        The following two parameters impose time constrants on the query.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit results to the events occurring after the
+            specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit results to the events occurring before the
+            specified end time.
+
+        **Magnitude constraints**
+
+        :type minmag: float, optional
+        :param minmag: Specify a minimum magnitude.
+        :type maxmag: float, optional
+        :param maxmag: Specify a maximum magnitude.
+        :type magtype: string, optional
+        :param magtype: Specify magnitude type. Some common types (there are
+            many) include ``"Ml"`` (local/Richter magnitude), ``"Ms"`` (surface
+            magnitude), ``"mb"`` (body wave magnitude), ``"Mw"`` (moment
+            magnitude).
+
+        **Subset the data by organization**
+
+        :type catalog: string, optional
+        :param catalog: Specify a catalog
+            [`available catalogs <http://www.iris.edu/ws/event/catalogs>`_].
+            Results will include any origins which contain the specified
+            catalog text, i.e. ``"PDE"`` will match ``"NEIC PDE"``
+        :type contributor: string, optional
+        :param contributor: Specify a contributor [`available
+            contributors <http://www.iris.edu/ws/event/contributors>`_]. When
+            selecting a contributor, the result includes a preferred origin as
+            specified by the contributor. Results will include any origins
+            which contain the specified contributor text, i.e. ``"NEIC"`` will
+            match ``"NEIC PDE-Q"``.
+
+        **Miscelleneous parameters**
+
+        These parameters affect how the search is conducted, and how the events
+        are returned.
+
+        :type limit: int, optional
+        :param limit: Limit the results to the specified number of events. This
+            value must be 10 or greater. By default, the results are not
+            limited.
+        :type orderby: ``"time"`` or ``"magnitude"``, optional
+        :param orderby: Sort the resulting events in order of descending time
+            or magnitude. By default, results are sorted in descending time
+            order.
+        :type updatedafter:  :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param updatedafter: Select origins updated after a certain date. This
+            is most useful for synchronization purposes.
+        :type includeallmagnitudes: bool, optional
+        :param includeallmagnitudes: This will include all the magnitudes in
+            search and print criteria. If magnitudes do not exist for a certain
+            origin, the search algorithm will consider it a miss and therefore
+            will not include the event. Defaults to ``True``.
+        :type preferredonly: bool, optional
+        :param preferredonly: Include preferred estimates only. When catalog is
+            selected, the result returned will include the preferred origin as
+            specified by the catalog. Defaults to ``True``.
+
+        **Specifying an event using an IRIS ID number**
+
+        Individual events can be retrieved using ID numbers assigned by IRIS.
+        When these parameters are used, then only the ``includeallmagnitudes``
+        and ``preferredonly`` parameters are also allowed.
+
+        :type eventid: int, optional
+        :param eventid: Retrieve an event based on the unique IRIS event id.
+        :type originid: int, optional
+        :param originid: Retrieve an event based on the unique IRIS origin id.
+        :type magnitudeid: int, optional
+        :param magnitudeid: Retrieve an event based on the unique IRIS
+            magnitude id.
+        """
+        # convert UTCDateTimes to string
+        try:
+            kwargs['starttime'] = \
+                UTCDateTime(kwargs['starttime']).formatIRISWebService()
+        except KeyError:
+            pass
+        try:
+            kwargs['endtime'] = \
+                UTCDateTime(kwargs['endtime']).formatIRISWebService()
+        except KeyError:
+            pass
+        try:
+            kwargs['updatedafter'] = \
+                str(UTCDateTime(kwargs['updatedafter']).date)
+        except KeyError:
+            pass
+        # convert boolean values to string
+        if 'includeallmagnitudes' in kwargs:
+            if not kwargs['includeallmagnitudes']:
+                kwargs['includeallmagnitudes'] = 'no'
+            else:
+                kwargs['includeallmagnitudes'] = 'yes'
+        if 'preferredonly' in kwargs:
+            if not kwargs['preferredonly']:
+                kwargs['preferredonly'] = 'no'
+            else:
+                kwargs['preferredonly'] = 'yes'
+        # build up query
+        url = '/event/query'
+        try:
+            data = self._fetch(url, **kwargs)
+        except HTTPError, e:
+            msg = "No event data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e)
+            raise Exception(msg)
+        return data
 
 
 if __name__ == '__main__':

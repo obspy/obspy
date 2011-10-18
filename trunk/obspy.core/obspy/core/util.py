@@ -904,7 +904,5 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
             raise e
 
 
-
-
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

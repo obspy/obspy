@@ -6,10 +6,11 @@ The obspy.iris.client test suite.
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.iris import Client
-import os
-import unittest
 import filecmp
 import numpy as np
+import os
+import unittest
+import urllib
 
 
 class ClientTestCase(unittest.TestCase):
@@ -225,6 +226,61 @@ class ClientTestCase(unittest.TestCase):
                                channel="BHZ", time=dt, output='cs')
         np.testing.assert_array_equal(data[0],
             [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
+
+    def test_event(self):
+        """
+        Tests event Web service interface.
+
+        Examples are inspired by http://www.iris.edu/ws/event/.
+        """
+        client = Client()
+        # 1
+        url = "http://www.iris.edu/ws/event/query?mindepth=34.9&" + \
+            "maxdepth=35.1&catalog=NEIC%20PDE&contributor=NEIC%20PDE-Q&" + \
+            "magtype=MB&lat=-56.1&lon=-26.7&maxradius=.1"
+        # direct call
+        doc1 = urllib.urlopen(url).read()
+        # using client
+        doc2 = client.event(mindepth=34.9, maxdepth=35.1, catalog="NEIC PDE",
+                            contributor="NEIC PDE-Q", magtype="MB", lat=-56.1,
+                            lon=-26.7, maxradius=0.1)
+        self.assertEqual(doc1, doc2)
+        client = Client()
+        # 2
+        url = "http://www.iris.edu/ws/event/query?eventid=3316989"
+        # direct call
+        doc1 = urllib.urlopen(url).read()
+        # using client
+        doc2 = client.event(eventid=3316989)
+        self.assertEqual(doc1, doc2)
+        # 2
+        url = "http://www.iris.edu/ws/event/query?eventid=3316989"
+        # direct call
+        doc1 = urllib.urlopen(url).read()
+        # using client
+        doc2 = client.event(eventid=3316989)
+        self.assertEqual(doc1, doc2)
+        # 3
+        url = "http://www.iris.edu/ws/event/query?minmag=8.5"
+        # direct call
+        doc1 = urllib.urlopen(url).read()
+        # using client
+        doc2 = client.event(minmag=8.5)
+        self.assertEqual(doc1, doc2)
+        # 4
+        url = "http://www.iris.edu/ws/event/query?starttime=2011-01-07T" + \
+            "14%3A00%3A00&endtime=2011-02-07&minlat=15&maxlat=40&" + \
+            "minlon=-170&maxlon=170&preferredonly=yes&" + \
+            "includeallmagnitudes=yes&orderby=magnitude"
+        # direct call
+        doc1 = urllib.urlopen(url).read()
+        # using client
+        doc2 = client.event(starttime=UTCDateTime(2011, 1, 7, 14),
+                            endtime=UTCDateTime('2011-02-07'), minlat=15.0,
+                            maxlat=40.0, minlon=-170, maxlon=170,
+                            preferredonly=True, includeallmagnitudes=True,
+                            orderby='magnitude')
+        self.assertEqual(doc1, doc2)
 
 
 def suite():
