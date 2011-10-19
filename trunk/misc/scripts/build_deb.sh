@@ -18,6 +18,8 @@ export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 DEBDIR=`pwd`/packages
 DIR=`pwd`/../..
+FTPHOST=obspy.org
+FTPUSER=obspy
 # deactivate, else each time all packages are removed
 #rm -rf $DEBDIR
 mkdir -p $DEBDIR
@@ -100,11 +102,21 @@ fi
 for MODULE in $MODULES; do
     PACKAGE=`ls $DEBDIR/python-obspy-${MODULE#obspy.}_*.deb`
     echo $PACKAGE
-    lintian -i $PACKAGE
+    #lintian -i $PACKAGE # verbose output
+    lintian $PACKAGE
 done
 
 #
-# generating meta info
+# upload built packages
 #
-echo 'Generating package meta info Packages.gz'
-dpkg-scanpackages $DEBDIR /dev/null | gzip > $DEBDIR/Packages.gz
+cd packages
+echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
+read FTPPASSWD
+ftp -i -n -v $FTPHOST &> ftp.log << EOF
+user $FTPUSER $FTPPASSWD
+binary
+cd debian/packages
+mput *.deb
+bye
+EOF
+cd ..
