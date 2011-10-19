@@ -9,7 +9,7 @@ Depends: python-obspy-core, python-obspy-gse2, python-obspy-mseed, python-obspy-
  python-obspy-seisan, python-obspy-sh, python-obspy-wav, python-obspy-signal,
  python-obspy-xseed, python-obspy-imaging, python-obspy-arclink,
  python-obspy-fissures, python-obspy-seishub, python-obspy-db,
- python-obspy-segy, python-obspy-neries, python-obspy-iris
+ python-obspy-segy, python-obspy-neries, python-obspy-iris, python-obspy-taup
 Description: A metapackage which installs all ObsPy packages
  .
  For more information visit http://www.obspy.org.
