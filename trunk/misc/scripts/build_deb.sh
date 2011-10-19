@@ -109,7 +109,7 @@ done
 #
 # upload built packages
 #
-cd packages
+cd $DEBDIR
 echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
 read FTPPASSWD
 ftp -i -n -v $FTPHOST &> ftp.log << EOF
@@ -119,4 +119,3 @@ cd debian/packages
 mput *.deb
 bye
 EOF
-cd ..
