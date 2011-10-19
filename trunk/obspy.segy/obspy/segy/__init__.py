@@ -4,8 +4,8 @@
 obspy.segy - SEG Y and SU read and write support for ObsPy
 ==========================================================
 
-The obspy.segy package contains methods in order to read and write seismogram
-files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
+The obspy.segy package contains methods in order to read and write files in the
+SEG Y (rev. 1) and SU (Seismic Unix) format.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -18,7 +18,7 @@ files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
     rev. 1 specification but has been designed to be able to handle custom
     headers as well. This functionality is not yet exposed because the
     developers have no files to test it with. If you have access to some files
-    with custom headers please consider sending them to ``devs at obspy.org``.
+    with custom headers please consider sending them to ``devs@obspy.org``.
 
 -------
 Reading
@@ -41,8 +41,8 @@ some changes (keep in mind that SU files have no file wide headers).
 Reading using methods 1 and 2
 -----------------------------
 The first two methods will return a :class:`~obspy.core.stream.Stream` object
-and are identical except that the file wide SEGY headers are only accessible if
-method 2 is used. They are stored in Stream.stats.
+and they are identical except that the file wide SEGY headers are only
+accessible if method 2 is used. These headers are stored in Stream.stats.
 
 The obvious advantage of these methods is that the returned
 :class:`~obspy.core.stream.Stream` object interfaces very well with other
@@ -57,13 +57,15 @@ To somewhat rectify this issue all SEG Y specific trace header attributes are
 only unpacked on demand by default.
 
 >>> from obspy.segy.core import readSEGY
+>>> from obspy.core.util import getExampleFile
 >>> # or 'from obspy.core import read' if file wide headers are of no interest
->>> st = readSEGY("/path/to/00001034.sgy_first_trace")
+>>> filename = getExampleFile("00001034.sgy_first_trace")
+>>> st = readSEGY(filename)
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)
+>>> print(st) #doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - 2009-06-22T14:47:41.000000Z | 500.0 Hz, 2001 samples
+Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - 2009-06-22T14:47:41...
 
 SEG Y files contain a large amount of additional trace header fields which are
 not unpacked by default. However these values can be accessed by calling the
@@ -71,21 +73,21 @@ header key directly or by using the ``unpack_trace_headers`` keyword with the
 :func:`~obspy.core.stream.read`/ :func:`~obspy.segy.core.readSEGY` functions to
 unpack all header fields.
 
->>> st1 = readSEGY("/path/to/00001034.sgy_first_trace")
+>>> st1 = readSEGY(filename)
 >>> len(st1[0].stats.segy.trace_header)
 6
->>> st1[0].stats.segy.trace_header.data_use # unpacking a value on the fly
+>>> st1[0].stats.segy.trace_header.data_use # Unpacking a value on the fly.
 1
->>> len(st1[0].stats.segy.trace_header)
+>>> len(st1[0].stats.segy.trace_header) # This value will remain unpacked.
 7
->>> st2 = readSEGY("/path/to/00001034.sgy_first_trace", unpack_trace_headers=True)
+>>> st2 = readSEGY(filename, \
+                   unpack_trace_headers=True)
 >>> len(st2[0].stats.segy.trace_header)
 92
 
 Reading SEG Y files with ``unpack_trace_headers=True`` will be very slow and
 memory intensive for a large number of traces due to the huge number of objects
 created.
-
 
 
 Reading using method 3
@@ -96,11 +98,11 @@ not return a :class:`~obspy.core.stream.Stream` object. Instead it returns a
 :class:`~obspy.core.stream.Stream` object used in ObsPy but specific to
 :mod:`~obspy.segy`.
 
->>> from obspy.segy import readSEGY #doctest: +SKIP
->>> segy = readSEGY("/path/to/00001034.sgy_first_trace") #doctest: +SKIP
->>> segy #doctest: +SKIP
+>>> from obspy.segy import readSEGY
+>>> segy = readSEGY(filename)
+>>> segy #doctest: +ELLIPSIS
 <obspy.segy.segy.SEGYFile object at 0x...>
->>> print(segy) #doctest: +SKIP
+>>> print(segy)
 1 traces in the SEG Y structure.
 
 The traces are a list of :class:`~obspy.segy.segy.SEGYTrace` objects stored in
@@ -109,13 +111,19 @@ The traces are a list of :class:`~obspy.segy.segy.SEGYTrace` objects stored in
 
 By default these header values will not be unpacked and thus will not show up
 in ipython's tab completion. See
-:const:`~obspy.segy.header.TRACE_HEADER_FORMAT` for list of all available trace
-header attributes. They will be unpacked on the fly if they are accessed as
-class attributes.
+:const:`~obspy.segy.header.TRACE_HEADER_FORMAT` for a list of all available
+trace header attributes. They will be unpacked on the fly if they are accessed
+as class attributes.
 
+
+-------
 Writing
 -------
-Writing is also done in the usual way:
+
+Writing ObsPy :class:`~obspy.core.stream.Stream` objects
+--------------------------------------------------------
+
+Writing :class:`~obspy.core.stream.Stream` objects is done in the usual way.
 
 >>> st.write('file.segy', format='SEGY') #doctest: +SKIP
 
@@ -123,73 +131,100 @@ or
 
 >>> st.write('file.su', format='SU') #doctest: +SKIP
 
+It is possible to control the data encoding, the byte order and the textual
+header encoding of the final file either via the file wide stats object (see
+sample code below) or directly via the write method. Possible values and their
+meaning are documented here: :func:`~obspy.segy.core.writeSEGY`
+
+
+Writing :class:`~obspy.segy.segy.SEGYFile` objects
+--------------------------------------------------
+
+:class:`~obspy.segy.segy.SEGYFile` objects are written using its
+:func:`~obspy.segy.segy.SEGYFile.write` method. Optional kwargs are able to
+enforce the data encoding and the byte order.
+
+>>> segy.write('file.segy') #doctest: +SKIP
+
+
+Converting other file formats to SEG Y
+--------------------------------------
 
 SEGY files are sensitive to their headers and wrong headers might break them.
 
 If some or all headers are missing, obspy.segy will attempt to autogenerate
-them and fill them with senseful values. Most header values will be 0
-nonetheless.
+them and fill them with somehow senseful values. It is a wise idea to manually
+check the headers because some other programs might use them and misinterpret
+the data. Most header values will be 0 nonetheless.
 
-The following script demonstrated how to write SEGY without reusing some
-headers and optionally setting custom header values::
+One possibility to get valid headers for files to be converted is to read one
+correct SEG Y file and use its headers.
+
+The other possibility is to autogenerate the headers with the help of ObsPy and
+a potential manual review of them which is demonstrated in the following
+script::
 
     from obspy.core import read, Trace, AttribDict, Stream, UTCDateTime
     from obspy.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
     from obspy.segy.core import readSEGY
     import numpy as np
     import sys
-    
+
     stream = Stream()
-    
+
     for _i in xrange(3):
         # Create some random data.
         data = np.random.ranf(1000)
         data = np.require(data, dtype='float32')
         trace = Trace(data=data)
-    
+
         # Attributes in trace.stats will overwrite everything in
         # trace.stats.segy.trace_header
         trace.stats.delta = 0.01
-        # SEGY does not support microsecond precission! Any microseconds will be
-        # discarded.
+        # SEGY does not support microsecond precission! Any microseconds will
+        # be discarded.
         trace.stats.starttime = UTCDateTime(2011,11,11,11,11,11)
-    
-        # If you want to set some additional attributes in the trace header, add
-        # one and only set the attributes you want to be set. Otherwise the header
-        # will be created for you with default values.
+
+        # If you want to set some additional attributes in the trace header,
+        # add one and only set the attributes you want to be set. Otherwise the
+        # header will be created for you with default values.
         if not hasattr(trace.stats, 'segy.trace_header'):
             trace.stats.segy = {}
         trace.stats.segy.trace_header = SEGYTraceHeader()
-        trace.stats.segy.trace_header.trace_sequence_number_within_line = _i + 1
+        trace.stats.segy.trace_header.trace_sequence_number_within_line = \
+                _i + 1
         trace.stats.segy.trace_header.receiver_group_elevation = 444
-    
+
         # Add trace to stream
         stream.append(trace)
-    
-    # A SEGY file has file wide headers. This can be attached to the stream object.
-    # If these are not set, they will be autocreated with default values.
+
+    # A SEGY file has file wide headers. This can be attached to the stream
+    # object.  If these are not set, they will be autocreated with default
+    # values.
     stream.stats = AttribDict()
     stream.stats.textual_file_header = 'Textual Header!'
     stream.stats.binary_file_header = SEGYBinaryFileHeader()
     stream.stats.binary_file_header.trace_sorting_code = 5
-    
+
     print "Stream object before writing..."
     print stream
-    
-    stream.write("TEST.sgy", format="SEGY", data_encoding=1, byteorder=sys.byteorder)
+
+    stream.write("TEST.sgy", format="SEGY", data_encoding=1,
+                 byteorder=sys.byteorder)
     print "Stream object after writing. Will have some segy attributes..."
     print stream
-    
+
     print "Reading using obspy.segy..."
     st1 = readSEGY("TEST.sgy")
     print st1
-    
+
     print "Reading using obspy.core..."
     st2 = read("TEST.sgy")
     print st2
-    
+
     print "Just to show that the values are written..."
-    print [tr.stats.segy.trace_header.receiver_group_elevation for tr in stream]
+    print [tr.stats.segy.trace_header.receiver_group_elevation for \
+            tr in stream]
     print [tr.stats.segy.trace_header.receiver_group_elevation for tr in st2]
     print stream.stats.binary_file_header.trace_sorting_code
     print st1.stats.binary_file_header.trace_sorting_code
