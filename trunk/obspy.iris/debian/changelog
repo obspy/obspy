@@ -2,4 +2,4 @@ python-obspy-iris (0.4.7-1) unstable; urgency=low
 
   * Initial version
 
- -- Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>  Wed, 16 Mar 2011 07:13:16 +0100
+ -- ObsPy Development Team <devs@obspy.org>  Wed, 16 Mar 2011 07:13:16 +0100

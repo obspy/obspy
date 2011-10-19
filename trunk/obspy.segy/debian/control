@@ -1,9 +1,9 @@
 Source: python-obspy-segy
 Section: python
 Priority: extra
-Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.4
+Standards-Version: 0.4.5
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.segy
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.segy
 Homepage: http://www.obspy.org

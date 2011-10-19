@@ -1,8 +1,8 @@
 This is the Debian GNU prepackaged version of obspy.signal, which was
-written by Tobias Megies, Moritz Beyreuther, Conny Hammer and Yannik Behr.
-The C parts were written by Joachim Wassermann and Moritz Beyreuther.
+written by the ObsPy Development Team.
+Some C parts were written by Joachim Wassermann.
 
-This package was debianized by Moritz Beyreuther. The source for
+This package was debianized by the ObsPy Development Team. The source for
 this release was taken from:
 https://svn.obspy.org/trunk/obspy.signal
 

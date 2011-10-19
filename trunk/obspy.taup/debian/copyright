@@ -1,5 +1,6 @@
 This is the Debian GNU prepackaged version of obspy.taup, which was
-written by obspy developer team.
+written by the ObsPy Developer Team.
+The fortran parts were written by Engdahl, Buland and Kennett.
 
 This package was debianized by the ObsPy developer team. The source for
 this release was taken from:

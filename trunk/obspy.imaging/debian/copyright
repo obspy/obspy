@@ -1,8 +1,7 @@
 This is the Debian GNU prepackaged version of obspy.imaging, which was
-written by Robert Barsch, Moritz Beyreuther, Lion Krischer and Tobias
-Megies.
+written by the ObsPy Development Team.
 
-This package was debianized by Moritz Beyreuther. The source for
+This package was debianized by the ObsPy Development Team. The source for
 this release was taken from:
 https://svn.obspy.org/trunk/obspy.imaging
 

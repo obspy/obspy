@@ -1,9 +1,9 @@
 Source: python-obspy-iris
 Section: python
 Priority: extra
-Maintainer: Moritz Beyreuther <beyreuth@geophysik.uni-muenchen.de>
+Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.7
+Standards-Version: 0.4.8
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.iris
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.iris
 Homepage: http://www.obspy.org

@@ -1,7 +1,7 @@
 This is the Debian GNU prepackaged version of obspy.segy, which was
-written by Lion Krischer.
+written by the ObsPy Development Team.
 
-This package was debianized by Moritz Beyreuther. The source for
+This package was debianized by the ObsPy Development Team. The source for
 this release was taken from:
 https://svn.obspy.org/trunk/obspy.segy
 

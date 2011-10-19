@@ -1,7 +1,7 @@
 This is the Debian GNU prepackaged version of obspy.sac, which was
-written by Yannik Behr and Moritz Beyreuther.
+written by the ObsPy Development Team.
 
-This package was debianized by Moritz Beyreuther. The source for
+This package was debianized by Mthe ObsPy Development Team. The source for
 this release was taken from:
 https://svn.obspy.org/trunk/obspy.sac
 
