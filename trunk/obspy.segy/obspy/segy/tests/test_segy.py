@@ -5,7 +5,7 @@ The obspy.segy test suite.
 
 from __future__ import with_statement
 from StringIO import StringIO
-from obspy.segy import readSEGY
+from obspy.segy.segy import readSEGY
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
 from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile

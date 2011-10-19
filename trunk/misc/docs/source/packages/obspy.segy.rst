@@ -9,6 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
+       core
        segy
        util
        header
