@@ -168,6 +168,11 @@ class Stats(AttribDict):
             # set derived values
             self._calculateDerivedValues()
             return
+        # prevent a calibration factor of 0
+        if key=='calib' and value==0:
+            msg = 'Calibration factor may not be set to 0.0!'
+            warnings.warn(msg, UserWarning)
+            return
         # all other keys
         if isinstance(value, dict):
             super(Stats, self).__setitem__(key, AttribDict(value))

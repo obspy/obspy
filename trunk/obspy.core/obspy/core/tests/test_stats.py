@@ -5,6 +5,7 @@ from obspy.core.util import AttribDict
 import copy
 import pickle
 import unittest
+import warnings
 
 
 class StatsTestCase(unittest.TestCase):
@@ -190,6 +191,24 @@ class StatsTestCase(unittest.TestCase):
         temp = pickle.dumps(stats, protocol=2)
         stats2 = pickle.loads(temp)
         self.assertEquals(stats, stats2)
+
+    def test_setCalib(self):
+        """
+        Test to prevent setting a calibration factor of 0
+        """
+        x = Stats()
+        # this should work
+        x.update({'calib': 1.23})
+        self.assertTrue(x.calib, 1.23)
+        # this raises UserWarning 
+        warnings.simplefilter('error', UserWarning)
+        # 1
+        self.assertRaises(UserWarning, x.__setitem__, 'calib', 0)
+        # 2
+        self.assertRaises(UserWarning, x.update, {'calib': 0})
+        warnings.simplefilter('ignore', UserWarning)
+        # calib value should be untouched
+        self.assertTrue(x.calib, 1.23)
 
 
 def suite():
