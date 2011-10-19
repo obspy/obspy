@@ -709,8 +709,8 @@ class WaveformPlotting(object):
             max_val = min_val = abs(self.vertical_scaling_range) / 2.0
 
         # Scale from 0 to 1.
-        self.extreme_values /= max(abs(max_val), abs(min_val))
-        self.extreme_values /= 2
+        self.extreme_values = self.extreme_values / (max(abs(max_val),
+                                                         abs(min_val)) * 2)
         self.extreme_values += 0.5
 
     def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
