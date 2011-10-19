@@ -208,7 +208,7 @@ class StatsTestCase(unittest.TestCase):
         self.assertRaises(UserWarning, x.update, {'calib': 0})
         warnings.simplefilter('ignore', UserWarning)
         # calib value should be untouched
-        self.assertTrue(x.calib, 1.23)
+        self.assertTrue(x.calib, 0)
 
 
 def suite():
