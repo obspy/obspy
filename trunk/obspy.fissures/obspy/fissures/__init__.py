@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
 """
+.. warning::
+    This module is marked as deprecated. Please use the newer :mod:`obspy.iris`
+    module instead which offers more functionality using a much cleaner
+    interface. This module won't be supported by the ObsPy developer anymore.
+    Use at your own risk!
+
+
 obspy.fissures - DHI/Fissures Request Client
 ===========================================
 See: http://www.iris.edu/dhi/

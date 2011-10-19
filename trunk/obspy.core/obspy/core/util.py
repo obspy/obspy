@@ -25,8 +25,7 @@ import warnings
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup']
-ALL_MODULES = DEFAULT_MODULES + ['fissures', 'arclink', 'seishub', 'iris',
-                                 'neries', 'db']
+ALL_MODULES = DEFAULT_MODULES + ['arclink', 'seishub', 'iris', 'neries', 'db']
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',

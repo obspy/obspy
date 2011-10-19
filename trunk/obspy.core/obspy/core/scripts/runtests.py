@@ -87,8 +87,8 @@ import unittest
 import warnings
 
 
-DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', '_omnipy',
-                'sqlalchemy', 'suds']
+DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
+                'suds']
 
 
 #XXX: start of ugly monkey patch for Python 2.7
