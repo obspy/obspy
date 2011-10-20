@@ -169,7 +169,7 @@ class Stats(AttribDict):
             self._calculateDerivedValues()
             return
         # prevent a calibration factor of 0
-        if key=='calib' and value==0:
+        if key == 'calib' and value == 0:
             msg = 'Calibration factor set to 0.0!'
             warnings.warn(msg, UserWarning)
         # all other keys

@@ -200,7 +200,7 @@ class StatsTestCase(unittest.TestCase):
         # this should work
         x.update({'calib': 1.23})
         self.assertTrue(x.calib, 1.23)
-        # this raises UserWarning 
+        # this raises UserWarning
         warnings.simplefilter('error', UserWarning)
         # 1
         self.assertRaises(UserWarning, x.__setitem__, 'calib', 0)
