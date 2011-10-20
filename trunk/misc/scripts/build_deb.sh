@@ -21,7 +21,7 @@ DIR=`pwd`/../..
 FTPHOST=obspy.org
 FTPUSER=obspy
 # deactivate, else each time all packages are removed
-#rm -rf $DEBDIR
+rm -rf $DEBDIR
 mkdir -p $DEBDIR
 
 
