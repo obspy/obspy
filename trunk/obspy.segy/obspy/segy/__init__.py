@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-==========================================================
 obspy.segy - SEG Y and SU read and write support for ObsPy
 ==========================================================
 
@@ -21,9 +20,8 @@ and SU (Seismic Unix) format.
     developers have no files to test it with. If you have access to some files
     with custom headers please consider sending them to ``devs@obspy.org``.
 
--------
 Reading
--------
+=======
 The SEG Y and Seismic Unix (SU) file formats are quite different from the
 file formats usually used in observatories (GSE2, MiniSEED, ...). The
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace` structures
@@ -117,9 +115,8 @@ for a list of all available trace header attributes. They will be unpacked on
 the fly if they are accessed as class attributes.
 
 
--------
 Writing
--------
+=======
 
 Writing ObsPy :class:`~obspy.core.stream.Stream` objects
 --------------------------------------------------------
