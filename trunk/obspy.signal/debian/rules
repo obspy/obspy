@@ -1,12 +1,13 @@
 #!/usr/bin/make -f
 
+.PHONY: binary
+
 %:
 	dh $@
 
-binary: binary-stamp
-binary-stamp:
+binary:
 	dh binary --until dh_shlibdeps
 	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
 	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -type d -name src | xargs rm -rf \;
 	dh binary --after dh_shlibdeps
-	touch binary-stamp
