@@ -57,6 +57,13 @@ fi
 #
 for MODULE in $MODULES; do
     cd $DIR/$MODULE
+    # check for local svn changes or untracked files etc.
+    STATUS=`svn status .`
+    if [ ! "$STATUS" = "" ]; then
+        echo $STATUS
+        echo "Error: Local changes in module $MODULE, aborting."
+        exit 1
+    fi
     # remove dependencies of distribute for obspy.core
     # distribute is not packed for python2.5 in Debain
     # Note: the space before distribute is essential
@@ -66,8 +73,6 @@ g/ distribute_setup/d
 wq
 EOL
     fi
-    # remove untracked files
-    svn cleanup .
     # increase version number, the debian version
     # has to be increased manually. Uncomment only
     # on final build process
