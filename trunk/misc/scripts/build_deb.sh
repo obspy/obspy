@@ -61,8 +61,8 @@ for MODULE in $MODULES; do
     STATUS=`svn status .`
     if [ ! "$STATUS" = "" ]; then
         echo $STATUS
-        echo "Error: Local changes in module $MODULE, aborting."
-        exit 1
+        echo "Warning: Local changes in module $MODULE."
+        #exit 1
     fi
     # remove dependencies of distribute for obspy.core
     # distribute is not packed for python2.5 in Debain
@@ -131,7 +131,7 @@ done
 cd $DEBDIR
 echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
 read FTPPASSWD
-ftp -i -n -v $FTPHOST &> ftp.log << EOF
+ftp -i -n -v $FTPHOST &> ../ftp.log << EOF
 user $FTPUSER $FTPPASSWD
 binary
 cd debian/packages
