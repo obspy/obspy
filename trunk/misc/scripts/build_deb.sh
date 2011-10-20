@@ -45,6 +45,7 @@ obspy.signal \
 obspy.wav \
 obspy.xseed"
 
+
 # if first argument not empty
 if [ -n "$1" ]; then
     MODULES=$1
@@ -70,9 +71,22 @@ EOL
     # increase version number, the debian version
     # has to be increased manually. Uncomment only
     # on final build process
-    VERSION=`cat ${MODULE/./\/}/VERSION.txt` 
+    VERSION=`cat ${MODULE/./\/}/VERSION.txt`
     DEBVERSION=1
-    #dch --newversion ${VERSION}-$DEBVERSION "New release" 
+    # the commented code shows how to update the changelog
+    # information, however we do not do it as it hard to
+    # automatize it for all packages in common
+    # dch --newversion ${VERSION}-$DEBVERSION "New release" 
+    # just write a changelog template with only updated version info
+    cat >debian/changelog << EOF
+python-${MODULE/./-} (${VERSION}-${DEBVERSION}) unstable; urgency=low
+
+  * This changelog file is overwritten for every release, only the version
+    is not kept up to date. Visit www.obspy.org for more information about
+    the age and the contents of the version given above.
+
+ -- ObsPy Development Team <devs@obspy.org>  Thu, 20 Oct 2011 10:07:58 +0200
+EOF
     # update also Standards-Version: 0.3.3
     ex debian/control << EOF
 g/Standards-Version/s/[0-9.]\+/$VERSION/
