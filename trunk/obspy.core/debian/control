@@ -3,7 +3,7 @@ Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.7
+Standards-Version: 0.4.8
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.core
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.core
 Homepage: http://www.obspy.org
