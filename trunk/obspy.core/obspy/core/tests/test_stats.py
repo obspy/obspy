@@ -207,7 +207,7 @@ class StatsTestCase(unittest.TestCase):
         # 2
         self.assertRaises(UserWarning, x.update, {'calib': 0})
         warnings.simplefilter('ignore', UserWarning)
-        # calib value should be untouched
+        # calib value should nevertheless be set to 0
         self.assertTrue(x.calib, 0)
 
 
