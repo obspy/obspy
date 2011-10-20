@@ -64,7 +64,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")

@@ -23,20 +23,20 @@ http://examples.obspy.org.
 >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)
+>>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
-.TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-.TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-.WET..HHZ  | 2010-01-01T01:01:05.999000Z - 2010-01-01T01:01:45.999000Z | 100.0 Hz, 4001 samples
+.TEST..BHN | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+.TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+.WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
 
 The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
 >>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
-             network: 
+             network:
              station: TEST
-            location: 
+            location:
              channel: BHN
            starttime: 2009-10-01T12:46:01.000000Z
              endtime: 2009-10-01T12:46:41.000000Z
@@ -59,7 +59,7 @@ Writing is also done in the usual way:
 
 >>> st.write('file.q', format = 'Q') #doctest: +SKIP
 
-or 
+or
 
 >>> st.write('file.asc', format = 'SH_ASC') #doctest: +SKIP
 """

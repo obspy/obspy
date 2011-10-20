@@ -17,7 +17,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_read101Traces(self):
         """
-        Testing reading Q file with more than 100 traces. 
+        Testing reading Q file with more than 100 traces.
         """
         testfile = os.path.join(self.path, 'data', '101.QHD')
         # read
@@ -27,7 +27,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_isASCFile(self):
         """
-        Testing ASC file format. 
+        Testing ASC file format.
         """
         testfile = os.path.join(self.path, 'data', 'TEST_090101_0101.ASC')
         self.assertEqual(isASC(testfile), True)

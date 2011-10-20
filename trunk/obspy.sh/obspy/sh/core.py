@@ -17,40 +17,40 @@ import os
 
 
 MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP',
-          'OCT', 'NOV', 'DEC' ]
+          'OCT', 'NOV', 'DEC']
 
 SH_IDX = {
-    'LENGTH':'L001',
-    'SIGN':'I011',
-    'EVENTNO':'I012',
-    'MARK':'I014',
-    'DELTA':'R000',
-    'CALIB':'R026',
-    'DISTANCE':'R011',
-    'AZIMUTH':'R012',
-    'SLOWNESS':'R018',
-    'INCI':'R013',
-    'DEPTH':'R014',
-    'MAGNITUDE':'R015',
-    'LAT':'R016',
-    'LON':'R017',
-    'SIGNOISE':'R022',
-    'PWDW':'R023',
-    'DCVREG':'R024',
-    'DCVINCI':'R025',
-    'COMMENT':'S000',
-    'STATION':'S001',
-    'OPINFO':'S002',
-    'FILTER':'S011',
-    'QUALITY':'S012',
-    'COMP':'C000',
-    'CHAN1':'C001',
-    'CHAN2':'C002',
-    'BYTEORDER':'C003',
-    'START':'S021',
-    'P-ONSET':'S022',
-    'S-ONSET':'S023',
-    'ORIGIN':'S024'
+    'LENGTH': 'L001',
+    'SIGN': 'I011',
+    'EVENTNO': 'I012',
+    'MARK': 'I014',
+    'DELTA': 'R000',
+    'CALIB': 'R026',
+    'DISTANCE': 'R011',
+    'AZIMUTH': 'R012',
+    'SLOWNESS': 'R018',
+    'INCI': 'R013',
+    'DEPTH': 'R014',
+    'MAGNITUDE': 'R015',
+    'LAT': 'R016',
+    'LON': 'R017',
+    'SIGNOISE': 'R022',
+    'PWDW': 'R023',
+    'DCVREG': 'R024',
+    'DCVINCI': 'R025',
+    'COMMENT': 'S000',
+    'STATION': 'S001',
+    'OPINFO': 'S002',
+    'FILTER': 'S011',
+    'QUALITY': 'S012',
+    'COMP': 'C000',
+    'CHAN1': 'C001',
+    'CHAN2': 'C002',
+    'BYTEORDER': 'C003',
+    'START': 'S021',
+    'P-ONSET': 'S022',
+    'S-ONSET': 'S023',
+    'ORIGIN': 'S024'
 }
 
 SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
@@ -98,17 +98,17 @@ def readASC(filename, headonly=False):
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
-    >>> st    #doctest: +ELLIPSIS
+    >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
-    >>> print(st)
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-    .TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - 2010-01-01T01:01:45.999000Z | 100.0 Hz, 4001 samples
+    .TEST..BHN | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+    .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
     fh = open(filename, 'rt')
     # read file and split text into channels
@@ -262,7 +262,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: Q header file to be read. Must have a `QHD` file extension.
+    :param filename: Q header file to be read. Must have a `QHD` file
+        extension.
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
@@ -289,17 +290,17 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    .. rubric: Example
+    .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read("/path/to/QFILE-TEST.QHD")
     >>> st    #doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
-    >>> print(st)
+    >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    .TEST..BHN | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-    .TEST..BHE | 2009-10-01T12:46:01.000000Z - 2009-10-01T12:46:41.000000Z | 20.0 Hz, 801 samples
-    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - 2010-01-01T01:01:45.999000Z | 100.0 Hz, 4001 samples
+    .TEST..BHN | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+    .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
+    .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
     if not headonly:
         if not data_directory:
@@ -540,7 +541,7 @@ def fromUTCDateTime(dt):
     Converts UTCDateTime object into a time string used within Seismic Handler.
 
     :type dt: :class:`~obspy.core.UTCDateTime`
-    :param dt: A UTCDateTime object. 
+    :param dt: A UTCDateTime object.
     :return: Converted date time string usable by Seismic Handler.
 
     .. rubric:: Example
