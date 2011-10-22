@@ -41,4 +41,3 @@ The functionality is provided through the following packages:
    obspy.iris
    obspy.neries
    obspy.seishub
-   obspy.fissures

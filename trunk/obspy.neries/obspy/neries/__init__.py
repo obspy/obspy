@@ -96,6 +96,7 @@ Basic Usage
     >>> result[0] # doctest: +SKIP
     {'P': 356981.13561726053, 'S': 646841.5619481194}
 """
+
 from obspy.core.util import _getVersionString
 from client import Client
 

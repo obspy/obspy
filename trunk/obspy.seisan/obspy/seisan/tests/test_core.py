@@ -94,7 +94,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(st1[0].stats.sampling_rate, 75.2, 1)
         self.assertEqual(st1[0].stats.npts, 3675)
         self.assertAlmostEqual(st1[20].stats.delta, 0.0133, 4)
-        self.assertEqual(list(st1[0].data), []) # no data
+        self.assertEqual(list(st1[0].data), [])  # no data
 
 
 def suite():

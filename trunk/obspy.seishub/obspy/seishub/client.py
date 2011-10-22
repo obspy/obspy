@@ -31,20 +31,19 @@ HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
                         HTTP_ACCEPTED_NODATA_METHODS
 
 
-DEPRECATED_KEYWORDS = {'network_id':'network', 'station_id':'station',
-                       'location_id':'location', 'channel_id':'channel',
-                       'start_datetime':'starttime', 'end_datetime':'endtime'}
-KEYWORDS = {'network':'network_id', 'station':'station_id',
-            'location':'location_id', 'channel':'channel_id',
-            'starttime':'start_datetime', 'endtime':'end_datetime'}
+DEPRECATED_KEYWORDS = {'network_id': 'network', 'station_id': 'station',
+                       'location_id': 'location', 'channel_id': 'channel',
+                       'start_datetime': 'starttime',
+                       'end_datetime': 'endtime'}
+KEYWORDS = {'network': 'network_id', 'station': 'station_id',
+            'location': 'location_id', 'channel': 'channel_id',
+            'starttime': 'start_datetime', 'endtime': 'end_datetime'}
 
 
 class Client(object):
     """
     SeisHub database request Client class.
 
-    Notes
-    -----
     The following classes are automatically linked with initialization.
     Follow the links in "Linked Class" for more information. They register
     via the name listed in "Entry Point".
@@ -72,6 +71,22 @@ class Client(object):
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10):
+        """
+        Initializes the SeisHub Web service client.
+
+        :type base_url: str, optional
+        :param base_url: SeisHub connection string. Defaults to
+            'http://teide.geophysik.uni-muenchen.de:8080'.
+        :type user: str, optional
+        :param user: The user name used for identification with the Web
+            service. Defaults to ``'admin'``.
+        :type password: str, optional
+        :param password: A password used for authentication with the Web
+            service. Defaults to ``'admin'``.
+        :type timeout: int, optional
+        :param timeout: Seconds before a connection timeout is raised (default
+            is 10 seconds). Available only for Python >= 2.6.x.
+        """
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
@@ -113,7 +128,7 @@ class Client(object):
         else:
             raise Exception("Unexpected request status code: %s" % code)
 
-    def _fetch(self, url, *args, **kwargs): #@UnusedVariable
+    def _fetch(self, url, *args, **kwargs):  # @UnusedVariable
         params = {}
         # map keywords
         for key, value in KEYWORDS.iteritems():
@@ -149,7 +164,8 @@ class Client(object):
                 if sys.hexversion < 0x02060000:
                     response = urllib2.urlopen(remoteaddr)
                 else:
-                    response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+                    response = urllib2.urlopen(remoteaddr,
+                                               timeout=self.timeout)
             else:
                 raise
         except httplib.BadStatusLine:
@@ -271,9 +287,14 @@ class _BaseRESTClient(object):
 
 class _WaveformMapperClient(object):
     """
-    Waveform class to access the SeisHub waveform-mapper_
+    Interface to access the SeisHub Waveform Web service.
 
-    .. _waveform-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
+    .. warning::
+        This function should NOT be initialized directly, instead access the
+        object via the :attr:`obspy.seishub.Client.waveform` attribute.
+
+    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
+browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
     """
     def __init__(self, client):
         self.client = client
@@ -289,7 +310,7 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id':'network'})
+    @deprecated_keywords({'network_id': 'network'})
     def getStationIds(self, network=None, **kwargs):
         """
         Gets a list of station ids.
@@ -307,7 +328,7 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station'})
     def getLocationIds(self, network=None, station=None, **kwargs):
         """
         Gets a list of location ids.
@@ -327,8 +348,8 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station',
-                          'location_id':'location'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
+                          'location_id': 'location'})
     def getChannelIds(self, network=None, station=None, location=None,
                       **kwargs):
         """
@@ -351,8 +372,8 @@ class _WaveformMapperClient(object):
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station',
-                          'location_id':'location', 'channel_id':'channel'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
+                          'location_id': 'location', 'channel_id': 'channel'})
     def getLatency(self, network=None, station=None, location=None,
                    channel=None, **kwargs):
         """
@@ -516,8 +537,8 @@ class _WaveformMapperClient(object):
         stream = pickle.loads(data)
         return stream
 
-    @deprecated_keywords({'start_datetime':'starttime',
-                          'end_datetime':'endtime'})
+    @deprecated_keywords({'start_datetime': 'starttime',
+                          'end_datetime': 'endtime'})
     def getPreviewByIds(self, trace_ids=None, starttime=None, endtime=None,
                         **kwargs):
         """
@@ -551,14 +572,19 @@ class _WaveformMapperClient(object):
 
 class _StationMapperClient(_BaseRESTClient):
     """
-    Station class to access the SeisHub station-mapper_
+    Interface to access the SeisHub Station Web service.
 
-    .. _station-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/station.py
+    .. warning::
+        This function should NOT be initialized directly, instead access the
+        object via the :attr:`obspy.seishub.Client.station` attribute.
+
+    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
+browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
     """
     package = 'seismology'
     resourcetype = 'station'
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station'})
     def getList(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
@@ -579,8 +605,8 @@ class _StationMapperClient(_BaseRESTClient):
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station',
-                          'location_id':'location'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
+                          'location_id': 'location'})
     def getCoordinates(self, network, station, datetime, location=''):
         """
         Get coordinate information.
@@ -601,7 +627,7 @@ class _StationMapperClient(_BaseRESTClient):
         :return: Dictionary containing station coordinate information.
         """
         # NOTHING goes ABOVE this line!
-        kwargs = {} #no **kwargs so use empty dict
+        kwargs = {}  # no **kwargs so use empty dict
         for key, value in locals().iteritems():
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
@@ -619,8 +645,8 @@ class _StationMapperClient(_BaseRESTClient):
             coords[key] = metadata[key]
         return coords
 
-    @deprecated_keywords({'network_id':'network', 'station_id':'station',
-                          'location_id':'location', 'channel_id':'channel'})
+    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
+                          'location_id': 'location', 'channel_id': 'channel'})
     def getPAZ(self, network, station, datetime, location='', channel='',
                seismometer_gain=False):
         """
@@ -727,9 +753,14 @@ class _StationMapperClient(_BaseRESTClient):
 
 class _EventMapperClient(_BaseRESTClient):
     """
-    Event class to access the SeisHub event-mapper_
+    Interface to access the SeisHub Event Web service.
 
-    .. _event-mapper: http://svn.geophysik.uni-muenchen.de/trac/seishub/browser/trunk/plugins/seishub.plugins.seismology/seishub/plugins/seismology/event.py
+    .. warning::
+        This function should NOT be initialized directly, instead access the
+        object via the :attr:`obspy.seishub.Client.event` attribute.
+
+    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
+browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'
@@ -909,7 +940,8 @@ class _RequestWithMethod(urllib2.Request):
     """
     Improved urllib2.Request Class for which the HTTP Method can be set to
     values other than only GET and POST.
-    See http://benjamin.smedbergs.us/blog/2008-10-21/putting-and-deleteing-in-python-urllib2/
+    See http://benjamin.smedbergs.us/blog/2008-10-21/\
+    putting-and-deleteing-in-python-urllib2/
     """
     def __init__(self, method, *args, **kwargs):
         if method not in HTTP_ACCEPTED_METHODS:

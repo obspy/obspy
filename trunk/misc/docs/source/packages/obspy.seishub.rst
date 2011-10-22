@@ -10,6 +10,9 @@
        :nosignatures:
 
        client.Client
+       client._EventMapperClient
+       client._StationMapperClient
+       client._WaveformMapperClient
 
     .. comment to end block
 

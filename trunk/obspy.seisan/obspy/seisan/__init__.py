@@ -21,14 +21,14 @@ http://examples.obspy.org.
 
 >>> from obspy.core import read
 >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
->>> st #doctest: +ELLIPSIS
+>>> st  # doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)
+>>> print(st)  # doctest: +ELLIPSIS
 4 Trace(s) in Stream:
-.KONO.0.B0Z | 2001-01-13T17:45:01.999000Z - 2001-01-13T17:50:01.949000Z | 20.0 Hz, 6000 samples
-.KONO.0.L0Z | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
-.KONO.0.L0N | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
-.KONO.0.L0E | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
+.KONO.0.B0Z | 2001-01-13T17:45:01.999000Z - ... | 20.0 Hz, 6000 samples
+.KONO.0.L0Z | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
+.KONO.0.L0N | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
+.KONO.0.L0E | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
 
 The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual

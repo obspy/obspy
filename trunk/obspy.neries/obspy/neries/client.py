@@ -58,6 +58,7 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
 # ses also https://fedorahosted.org/suds/ticket/292
 from suds.xsd.sxbase import SchemaObject
 
+
 def _namespace(self, prefix=None):
     if self.ref is not None:
         return ('', self.ref[1])
@@ -438,8 +439,8 @@ class Client(object):
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
-                     instruments=True, min_latitude= -90, max_latitude=90,
-                     min_longitude= -180, max_longitude=180,
+                     instruments=True, min_latitude=-90, max_latitude=90,
+                     min_longitude=-180, max_longitude=180,
                      modified_after=None, format='SUDS'):
         """
         Returns information about the available networks and stations in that

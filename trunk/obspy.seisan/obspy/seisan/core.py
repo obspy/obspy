@@ -15,17 +15,17 @@ import numpy as np
 
 def isSEISAN(filename):
     """
-    Checks whether a file is SEISAN or not. Returns True or False.
+    Checks whether a file is SEISAN or not.
 
-    Parameters
-    ----------
-    filename : string
-        SEISAN file to be checked.
+    :type filename: str
+    :param filename: Name of the audio SEISAN file to be checked.
+    :rtype: bool
+    :return: ``True`` if a SEISAN file.
 
-    Returns
-    -------
-    boolean
-        True, if SEISAN file.
+    .. rubric:: Example
+
+    >>> isWAV("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    True
     """
     try:
         f = open(filename, 'rb')
@@ -107,35 +107,31 @@ def _getVersion(data):
     return None
 
 
-def readSEISAN(filename, headonly=False, **kwargs): #@UnusedVariable
+def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a SEISAN file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        SEISAN file to be read.
+    :type filename: str
+    :param filename: SEISAN file to be read.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric:: Example
 
-    Basic Usage
-    -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
-    >>> st #doctest: +ELLIPSIS
+    >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
-    >>> print(st)
+    >>> print(st)  # doctest: +ELLIPSIS
     4 Trace(s) in Stream:
-    .KONO.0.B0Z | 2001-01-13T17:45:01.999000Z - 2001-01-13T17:50:01.949000Z | 20.0 Hz, 6000 samples
-    .KONO.0.L0Z | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
-    .KONO.0.L0N | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
-    .KONO.0.L0E | 2001-01-13T17:42:24.924000Z - 2001-01-13T18:41:25.924000Z | 1.0 Hz, 3542 samples
+    .KONO.0.B0Z | 2001-01-13T17:45:01.999000Z - ... | 20.0 Hz, 6000 samples
+    .KONO.0.L0Z | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
+    .KONO.0.L0N | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
+    .KONO.0.L0E | 2001-01-13T17:42:24.924000Z - ... | 1.0 Hz, 3542 samples
     """
     def _readline(fh, length=80):
         data = fh.read(length + 8)
@@ -197,24 +193,6 @@ def readSEISAN(filename, headonly=False, **kwargs): #@UnusedVariable
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))
     return stream
-
-
-def writeSEISAN(stream, filename, **kwargs):
-    """
-    Writes a SEISAN file.
-
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
-
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        SEISAN file to be written.
-    """
-    raise NotImplementedError
 
 
 if __name__ == '__main__':
