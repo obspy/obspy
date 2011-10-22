@@ -7,7 +7,7 @@ from obspy.xseed.utils import formatRESP
 class Blockette047(Blockette):
     """
     Blockette 047: Decimation Dictionary Blockette.
-    
+
     See Decimation Blockette [57] for more information.
     """
 

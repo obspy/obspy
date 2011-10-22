@@ -8,11 +8,11 @@ from obspy.xseed.utils import Blockette34Lookup, formatRESP
 class Blockette055(Blockette):
     """
     Blockette 055: Response List Blockette.
-    
-    This blockette alone is not an acceptable response description; always use 
-    this blockette along with the standard response blockettes ([53], [54], 
-    [57], or [58]). If this is the only response available, we strongly 
-    recommend that you derive the appropriate poles and zeros and include 
+
+    This blockette alone is not an acceptable response description; always use
+    this blockette along with the standard response blockettes ([53], [54],
+    [57], or [58]). If this is the only response available, we strongly
+    recommend that you derive the appropriate poles and zeros and include
     blockette 53 and blockette 58.
     """
 

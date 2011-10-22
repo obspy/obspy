@@ -31,7 +31,7 @@ def isSEISAN(filename):
         f = open(filename, 'rb')
     except:
         return False
-    # read some data - contains at least 12 lines a 80 characters 
+    # read some data - contains at least 12 lines a 80 characters
     data = f.read(12 * 80)
     f.close()
     if _getVersion(data):
@@ -74,14 +74,14 @@ def _getVersion(data):
         structure is different on Sun, Linux, MacOSX and PC, a file written as
         unformatted on Sun, Linux or MacOSX cannot be read as unformatted on PC
         or vice versa.
-        
+
         The files are very easy to write and read on the same computer but
         difficult to read if written on a different computer. To further
         complicate matters, the byte order is different on Sun and PC. With 64
         bit systems, 8 bytes is used to define number of bytes written. This
         type of file can also be read with SEISAN, but so far only data written
         on Linux have been tested for reading on all systems.
-        
+
         From version 7.0,the Linux and PC file structures are exactly the same.
         On Sun the structure is the same except that the bytes are swapped.
         This is used by SEISAN to find out where the file was written. Since

@@ -7,7 +7,7 @@ from obspy.xseed.fields import Integer, VariableString
 class Blockette051(Blockette):
     """
     Blockette 051: Station Comment Blockette.
-        
+
     Sample:
     05100351992,001~1992,002~0740000000
     """

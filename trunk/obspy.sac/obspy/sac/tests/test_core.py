@@ -278,7 +278,7 @@ class CoreTestCase(unittest.TestCase):
 
     def test_issue156(self):
         """
-        Test case for issue #156. 
+        Test case for issue #156.
         """
         #1
         tr = Trace()

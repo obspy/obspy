@@ -1,21 +1,20 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString
 
 
 class Blockette031(Blockette):
     """
     Blockette 031: Comment Description Blockette.
-        
-    Station operators, data collection centers, and data management centers 
-    can add descriptive comments to data to indicate problems encountered or 
+
+    Station operators, data collection centers, and data management centers
+    can add descriptive comments to data to indicate problems encountered or
     special situations.
-    
+
     Sample:
     03100720750Stime correction does not include leap second, (-1000ms).~000
     """
-    
     id= 31
     name = "Comment Description"
     fields = [

@@ -28,7 +28,7 @@ B053F14     Number of poles:                       %s
 class Blockette053(Blockette):
     """
     Blockette 053: Response (Poles & Zeros) Blockette.
-    
+
     Sample::
 
         0530382B 1007008 7.87395E+00 5.00000E-02  3

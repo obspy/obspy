@@ -42,11 +42,11 @@ class ClientTestCase(unittest.TestCase):
         events = c.getList(min_datetime=UTCDateTime("2009-01-01T00:00:00"),
                            max_datetime=UTCDateTime("2009-01-10T00:00:00"))
         self.assertEqual(len(events), 4)
-        # time strings with T as separator 
+        # time strings with T as separator
         events = c.getList(min_datetime="2009-01-01T00:00:00",
                            max_datetime="2009-01-10T00:00:00")
         self.assertEqual(len(events), 4)
-        # time strings with space as separator 
+        # time strings with space as separator
         events = c.getList(min_datetime="2009-01-01 00:00:00",
                            max_datetime="2009-01-10 00:00:00")
         self.assertEqual(len(events), 4)

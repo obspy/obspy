@@ -23,7 +23,7 @@ setup(
     description="DHI/Fissures request client for of ObsPy.",
     long_description="""
     obspy.fissures - DHI/Fissures request client for of ObsPy
-    
+
     The Data Handling Interface (DHI) is a CORBA data access framework
     allowing users to access seismic data and metadata from IRIS DMC
     and other participating institutions directly from a DHI-supporting
@@ -32,7 +32,7 @@ setup(
     visualization and processing can occur. The information is loaded
     directly into the application for immediate use.
     http://www.iris.edu/dhi/
-    
+
     Detailed information on network_dc and seismogram_dc servers:
      * http://www.seis.sc.edu/wily
      * http://www.iris.edu/dhi/servers.htm

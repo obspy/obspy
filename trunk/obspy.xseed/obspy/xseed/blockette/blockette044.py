@@ -9,7 +9,7 @@ from obspy.xseed.utils import Blockette34Lookup, formatRESP
 class Blockette044(Blockette):
     """
     Blockette 044: Response (Coefficients) Dictionary Blockette.
-    
+
     See Response (Coefficients) Dictionary Blockette [54] for more information.
     """
 
@@ -34,7 +34,7 @@ class Blockette044(Blockette):
             Float(13, "Denominator error", 12, mask='%+1.5e')
         ], flat=True)
     ]
-    
+
 # Changes the name of the blockette because of an error in XSEED 1.0
     def getXML(self, *args, **kwargs):
         xml = Blockette.getXML(self, *args, **kwargs)

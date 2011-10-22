@@ -67,7 +67,7 @@ Beachballs
 Draws a beach ball diagram of an earthquake focal mechanism.
 
 .. note::
-    ObsPy ships with two engines for beachball generation. 
+    ObsPy ships with two engines for beachball generation.
 
     (1) :mod:`obspy.imaging.beachball`
         is based on the program from the
@@ -79,15 +79,15 @@ Draws a beach ball diagram of an earthquake focal mechanism.
         correct, however it consumes much more processing time.
 
     The function calls for creating beachballs are similar in both modules. The
-    following examples are based on the first module, however those example 
+    following examples are based on the first module, however those example
     will also work with mopad by using
-    
+
     >>> from obspy.imaging.mopad_wrapper import Beachball
-    
+
     and
-    
+
     >>> from obspy.imaging.mopad_wrapper import Beach
-    
+
     respectively.
 
 .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
@@ -102,7 +102,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     horizontal such that 0 is horizontal and 90 is vertical. The rake is of the
     first focal plane solution. 90 moves the hanging wall up-dip (thrust), 0
     moves it in the strike direction (left-lateral), -90 moves it down-dip
-    (normal), and 180 moves it opposite to strike (right-lateral). 
+    (normal), and 180 moves it opposite to strike (right-lateral).
 
     >>> from obspy.imaging.beachball import Beachball
     >>> np1 = [150, 87, 1]
@@ -117,13 +117,13 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 
 (2) The focal mechanism can also be specified using the 6 independent components
     of the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
-    
+
     >>> from obspy.imaging.beachball import Beachball
     >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
     >>> Beachball(mt) #doctest: +ELLIPSIS
     <matplotlib.figure.Figure object at 0x...>
 
-    .. plot:: 
+    .. plot::
 
         from obspy.imaging.beachball import Beachball
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
@@ -133,7 +133,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     :func:`obspy.imaging.mopad_wrapper.Beachball`.
 
 (3) Plot the beach ball as matplotlib collection into an existing plot.
-    
+
     >>> import matplotlib.pyplot as plt
     >>> from obspy.imaging.beachball import Beach
     >>>
@@ -154,7 +154,7 @@ Draws a beach ball diagram of an earthquake focal mechanism.
     (-20, 120)
 
     .. plot::
-    
+
         import matplotlib.pyplot as plt
         from obspy.imaging.beachball import Beach
         np1 = [150, 87, 1]

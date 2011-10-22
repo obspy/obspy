@@ -130,7 +130,7 @@ TRACE_HEADER_FORMAT = [
     [2, 'trace_value_measurement_unit', False, 202],
     # The transduction constant is encoded with the mantissa and the power of
     # the exponent, e.g.:
-    # transduction_constant = 
+    # transduction_constant =
     # transduction_constant_mantissa * 10 ** transduction_constant_exponent
     [4, 'transduction_constant_mantissa', False, 204],
     [2, 'transduction_constant_exponent', False, 208],
@@ -144,14 +144,14 @@ TRACE_HEADER_FORMAT = [
     # degrees, e.g. 347.8 is encoded as 3478.
     # As I am totally unclear how this relates to the 6 byte long field I
     # assume that the source energy direction is also encoded as the mantissa
-    # and the power of the exponent, e.g.: source_energy_direction = 
+    # and the power of the exponent, e.g.: source_energy_direction =
     # source_energy_direction_mantissa * 10 ** source_energy_direction_exponent
     # Any clarification on the subject is very welcome.
     [4, 'source_energy_direction_mantissa', False, 218],
     [2, 'source_energy_direction_exponent', False, 222],
     # The source measurement is encoded with the mantissa and the power of
     # the exponent, e.g.:
-    # source_measurement = 
+    # source_measurement =
     # source_measurement_mantissa * 10 ** source_measurement_exponent
     [4, 'source_measurement_mantissa', False, 224],
     [2, 'source_measurement_exponent', False, 228],

@@ -7,7 +7,7 @@ from obspy.xseed.fields import Integer, VariableString, FixedString, Float
 class Blockette050(Blockette):
     """
     Blockette 050: Station Identifier Blockette.
-    
+
     Sample:
     0500097ANMO +34.946200-106.456700+1740.00006001Albuquerque, NewMexico, USA~
     0013210101989,241~~NIU

@@ -7,13 +7,13 @@ from obspy.xseed.fields import Integer, VariableString, Loop
 class Blockette012(Blockette):
     """
     Blockette 012: Volume Time Span Index Blockette.
-    
-    This blockette forms an index to the time spans that encompass the actual 
-    data. One index entry exists for each time span recorded later in the 
-    volume. Time spans are not used for field station type volumes. There 
-    should be one entry in this index for each time span control header. 
+
+    This blockette forms an index to the time spans that encompass the actual
+    data. One index entry exists for each time span recorded later in the
+    volume. Time spans are not used for field station type volumes. There
+    should be one entry in this index for each time span control header.
     (For more information, see the notes for blockettes [70], [73], and [74].)
-    
+
     Sample:
     012006300011992,001,00:00:00.0000~1992,002,00:00:00.0000~000014
     """

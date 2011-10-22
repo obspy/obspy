@@ -90,7 +90,7 @@ def getVersion():
 
 
 def setupPackage():
-    # automatically install distribute if the user does not have it installed 
+    # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:

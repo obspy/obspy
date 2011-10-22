@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString
 
 
 class Blockette034(Blockette):
-    """Blockette 034: Units Abbreviations Blockette.
-    
-    This blockette defines the units of measurement in a standard, repeatable 
+    """
+    Blockette 034: Units Abbreviations Blockette.
+
+    This blockette defines the units of measurement in a standard, repeatable
     way. Mention each unit of measurement only once.
-    
+
     Sample:
     0340044001M/S~Velocity in Meters Per Second~
     """
-    
     id = 34
     name = "Units Abbreviations"
     fields = [

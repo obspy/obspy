@@ -22,7 +22,7 @@ class ClientTestSuite(unittest.TestCase):
     def test_getWavefrom(self):
         """
         Retrieve data from DHI/Fissures, compare stat attributes.
-        
+
         """
         client = Client()
         t = UTCDateTime("2003-06-20T05:59:00.0000")

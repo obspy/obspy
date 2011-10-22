@@ -4,7 +4,7 @@ obspy.sac - SAC read and write support
 ======================================
 This module provides read and write support for ascii and binary SAC-files as
 defined by IRIS (http://www.iris.edu/manuals/sac/manual.html). It depends on
-numpy and obspy.core. 
+numpy and obspy.core.
 
 :copyright: The ObsPy Development Team (devs@obspy.org) & C. J. Annon
 :license: GNU Lesser General Public License, Version 3 (LGPLv3)
@@ -29,10 +29,10 @@ points). Additionally, when reading a SAC-file it will have one additional
 attribute, 'sac', which contains all SAC-specific attributes (SAC header
 values).
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-         network: 
+>>> print(st[0].stats)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+         network:
          station: STA
-        location: 
+        location:
          channel: Q
        starttime: 1978-07-18T08:00:10.000000Z
          endtime: 1978-07-18T08:01:49.000000Z

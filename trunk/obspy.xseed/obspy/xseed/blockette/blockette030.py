@@ -7,17 +7,17 @@ from obspy.xseed.fields import Integer, VariableString, Loop
 class Blockette030(Blockette):
     """
     Blockette 030: Data Format Dictionary Blockette.
-    
-    All volumes, with the exception of miniSEED data records, must have a Data 
-    Format Dictionary Blockette [30]. Each Channel Identifier Blockette [52] 
-    has a reference (field 16) back to a Data Format Dictionary Blockette 
-    [30], so that SEED reading programs will know how to decode data for the 
-    channels. Because every kind of data format requires an entry in the Data 
-    Format Dictionary Blockette [30], each recording network needs to list 
-    entries for each data format, if a heterogeneous mix of data formats are 
-    included in a volume. This data format dictionary is used to decompress 
+
+    All volumes, with the exception of miniSEED data records, must have a Data
+    Format Dictionary Blockette [30]. Each Channel Identifier Blockette [52]
+    has a reference (field 16) back to a Data Format Dictionary Blockette
+    [30], so that SEED reading programs will know how to decode data for the
+    channels. Because every kind of data format requires an entry in the Data
+    Format Dictionary Blockette [30], each recording network needs to list
+    entries for each data format, if a heterogeneous mix of data formats are
+    included in a volume. This data format dictionary is used to decompress
     the data correctly.
-    
+
     Sample:
     0300086CDSN Gain-Ranged Format~000200104M0~W2 D0-13 A-8191~D1415~
     P0:#0,1:#2,2:#4,3:#7~

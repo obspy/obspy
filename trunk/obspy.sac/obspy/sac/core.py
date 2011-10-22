@@ -105,7 +105,7 @@ def isSACXY(filename):
 def readSACXY(filename, headonly=False, **kwargs):
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
-    
+
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
@@ -142,7 +142,7 @@ def readSACXY(filename, headonly=False, **kwargs):
 def writeSACXY(stream, filename, **kwargs):
     """
     Writes an alphanumeric SAC file
-    
+
     This function should NOT be called directly, it registers via the
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.
@@ -167,7 +167,7 @@ def writeSACXY(stream, filename, **kwargs):
 def readSAC(filename, headonly=False, **kwargs):
     """
     Reads a SAC file and returns an ObsPy Stream object.
-    
+
     This function should NOT be called directly, it registers via the
     ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
@@ -205,7 +205,7 @@ def readSAC(filename, headonly=False, **kwargs):
 def writeSAC(stream, filename, **kwargs):
     """
     Writes a SAC file
-    
+
     This function should NOT be called directly, it registers via the
     ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
     Stream object, call this instead.

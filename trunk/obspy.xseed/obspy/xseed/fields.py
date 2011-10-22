@@ -57,7 +57,7 @@ class Field(object):
         """
         Using SEED specific flags to format strings.
 
-        This method is partly adopted from fseed.py, the SEED builder for 
+        This method is partly adopted from fseed.py, the SEED builder for
         SeisComP written by Andres Heinloo, GFZ Potsdam in 2005.
         """
         sn = str(s).strip()
@@ -309,7 +309,7 @@ class FixedString(Field):
         return self._formatString(data.read(self.length).strip())
 
     def write(self, data):
-        # Leave fixed length alphanumeric fields left justified (no leading 
+        # Leave fixed length alphanumeric fields left justified (no leading
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
         result = format_str % self._formatString(data)
@@ -324,8 +324,8 @@ class VariableString(Field):
     """
     Variable length ASCII string, ending with a tilde: ~ (ASCII 126).
 
-    Variable length fields cannot have leading or trailing spaces. Character 
-    counts for variable length fields do not include the tilde terminator. 
+    Variable length fields cannot have leading or trailing spaces. Character
+    counts for variable length fields do not include the tilde terminator.
     """
     def __init__(self, id, name, min_length=0, max_length=None, flags='',
                  **kwargs):

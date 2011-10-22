@@ -7,7 +7,7 @@ from obspy.xseed.fields import Integer, VariableString, FixedString, Float
 class Blockette052(Blockette):
     """
     Blockette 052: Channel Identifier Blockette.
-    
+
     Sample:
     0520119  BHE0000004~001002+34.946200-106.456700+1740.0100.0090.0+00.0000112
     2.000E+01 2.000E-030000CG~1991,042,20:48~~N

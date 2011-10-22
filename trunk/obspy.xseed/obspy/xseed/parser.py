@@ -813,7 +813,7 @@ class Parser(object):
         Takes everything in the self.temp dictionary and writes it into the
         volume, abbreviations and stations attributes of the class.
 
-        The self.temp dictionary can only contain one seed volume with a 
+        The self.temp dictionary can only contain one seed volume with a
         correct structure.
 
         This method will try to merge everything, discard double entries and
@@ -934,7 +934,7 @@ class Parser(object):
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:
-            # remove spaces between blockettes 
+            # remove spaces between blockettes
             while data.read(1) == ' ':
                 continue
             data.seek(-1, 1)

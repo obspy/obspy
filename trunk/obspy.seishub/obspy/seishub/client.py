@@ -132,7 +132,7 @@ class Client(object):
                 params['max_' + str(key)] = str(value[1])
             else:
                 params[str(key)] = str(value)
-        # replace special characters 
+        # replace special characters
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         # timeout exists only for Python >= 2.6
         try:
@@ -402,7 +402,7 @@ class _WaveformMapperClient(object):
         :type apply_filter: bool, optional
         :param apply_filter: Apply filter (default is ``False``).
         :type getPAZ: bool, optional
-        :param getPAZ: Fetch PAZ information and append to 
+        :param getPAZ: Fetch PAZ information and append to
             :class:`~obspy.core.trace.Stats` of all fetched traces. This
             considerably slows down the request (default is ``False``).
         :type getCoordinates: bool, optional
@@ -684,14 +684,14 @@ class _StationMapperClient(_BaseRESTClient):
                 channel + "' and location_identifier='" + location + \
                 "']/following-sibling::response_poles_and_zeros"
             paz_node = base_node.xpath(xpath_expr)[0]
-            # fetch next following channel_sensitivity_node with 
+            # fetch next following channel_sensitivity_node with
             # stage_sequence_number == 0
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel + "' and location_identifier='" + location + \
                 "']/following-sibling::channel_sensitivity_" + \
                 "gain[stage_sequence_number='0']"
             sensitivity_node = base_node.xpath(xpath_expr)[0]
-            # fetch seismometer gain following channel_sensitivity_node with 
+            # fetch seismometer gain following channel_sensitivity_node with
             # stage_sequence_number == 1
             xpath_expr = "channel_identifier[channel_identifier='" + \
                 channel + "' and location_identifier='" + location + \

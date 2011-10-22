@@ -7,7 +7,7 @@ representation of `Dataless SEED`. This module contains converters from
 `Dataless SEED` to `XML-SEED` and vice versa as well as a converter from
 `Dataless SEED` to `RESP` files. The :mod:`~obspy.xseed` module is tested
 against the complete ORFEUS Dataless SEED archive, the IRIS (US) Dataless SEED
-archive and against ArcLink response requests.  
+archive and against ArcLink response requests.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -62,7 +62,7 @@ parsed in a :class:`~obspy.xseed.parser.Parser` structure.
 * Abbreviation Dictionary Control Headers
 * Station Control Headers
 * Time Span Control Headers (currently not supported by ObsPy. Some dummy
-  headers will be written in case they are needed by SEED/XSEED conventions.) 
+  headers will be written in case they are needed by SEED/XSEED conventions.)
 
 After parsing a `SEED`/`XML-SEED`/`RESP` file the Blockette objects for each
 volume will be stored in the attributes``Parser.volume``,

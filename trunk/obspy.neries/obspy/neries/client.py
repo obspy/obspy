@@ -528,10 +528,10 @@ class Client(object):
         spatialbounds = client.factory.create('SpatialBoundsType')
         spatialbounds.BoundingBox.PropertyName = "e gero"
         spatialbounds.BoundingBox.Envelope.lowerCorner = "%f %f" %\
-            (min(min_latitude, max_latitude), 
+            (min(min_latitude, max_latitude),
              min(min_longitude, max_longitude))
         spatialbounds.BoundingBox.Envelope.upperCorner = "%f %f" %\
-            (max(min_latitude, max_latitude), 
+            (max(min_latitude, max_latitude),
              max(min_longitude, max_longitude))
         # instruments attribute
         if instruments:

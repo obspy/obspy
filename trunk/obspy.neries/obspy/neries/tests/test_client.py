@@ -248,7 +248,7 @@ class ClientTestCase(unittest.TestCase):
                                      min_longitude=-3, max_longitude=-2)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
-        # 5 - SUDS object with spatial filters with incorrect coordinates 
+        # 5 - SUDS object with spatial filters with incorrect coordinates
         client = Client(user='test@obspy.org')
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt1, dt2,
                                      min_latitude=-71.0, max_latitude=-72.0,

@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 
-from obspy.xseed.blockette import Blockette 
+from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString
 
 
 class Blockette032(Blockette):
-    """Blockette 032: Cited Source Dictionary Blockette.
-        
-    This blockette identifies the contributing institution that provides 
-    the hypocenter and magnitude information. This blockette is used in event 
+    """
+    Blockette 032: Cited Source Dictionary Blockette.
+
+    This blockette identifies the contributing institution that provides
+    the hypocenter and magnitude information. This blockette is used in event
     oriented network volumes.
     """
-    
     id= 32
     name = "Cited Source Dictionary"
     fields = [

@@ -16,12 +16,12 @@ class Blockette060(Blockette):
         self.stages = []
     """
     Blockette 060: Response Reference Blockette.
-    
-    Use this blockette whenever you want to replace blockettes [53] through 
-    [58] and [61] with their dictionary counterparts, blockettes [43] through 
-    [48] and [41]. We recommend placing responses in stage order, even if this 
+
+    Use this blockette whenever you want to replace blockettes [53] through
+    [58] and [61] with their dictionary counterparts, blockettes [43] through
+    [48] and [41]. We recommend placing responses in stage order, even if this
     means using more than one Response Reference Blockette [60].
-    
+
     Here is an example:
         Stage 1:    Response (Poles & Zeros) Blockette [53]
                     Channel Sensitivity/Gain Blockette [58]
@@ -38,12 +38,12 @@ class Blockette060(Blockette):
         Stage 5         (continued): [47] [48]
         Stage 6:        [44] [47] [48]
                     (End of second response reference blockette)
-    
-    Substitute Response Reference Blockette [60] anywhere the original 
-    blockette would go, but be sure to place it in the same position as the 
-    original would have gone. (Note that this blockette uses a repeating field 
-    (response reference) within another repeating field (stage value). This is 
-    the only blockette in the current version (2.1) that has this "two 
+
+    Substitute Response Reference Blockette [60] anywhere the original
+    blockette would go, but be sure to place it in the same position as the
+    original would have gone. (Note that this blockette uses a repeating field
+    (response reference) within another repeating field (stage value). This is
+    the only blockette in the current version (2.1) that has this "two
     dimensional" structure.)
     """
 

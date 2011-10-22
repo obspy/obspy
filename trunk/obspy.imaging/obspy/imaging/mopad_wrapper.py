@@ -43,7 +43,7 @@ KWARG_MAP = {
 #  state of mopads kwargs dict before plotting after following command:
 #python mopad.py p 10,10,10 -f bla.png -s 0.5 -a 0.5 -l 3 r 0.4 -n 2 b 0.8 -w b -r g -q 72
 # ipdb> kwargs_dict
-# Out[0]: 
+# Out[0]:
 #{'plot_aux_plot_size': 1.9685039370078741,
 # 'plot_full_sphere': False,
 # 'plot_nodalline': True,
@@ -71,19 +71,19 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection). Based on mopad.
 
-    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
+    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
-    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
-        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
-        six independent components of the moment tensor). The strike is of the 
-        first plane, clockwise relative to north. 
-        The dip is of the first plane, defined clockwise and perpendicular to 
-        strike, relative to horizontal such that 0 is horizontal and 90 is 
-        vertical. The rake is of the first focal plane solution. 90 moves the 
-        hanging wall up-dip (thrust), 0 moves it in the strike direction 
-        (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
-        opposite to strike (right-lateral). 
+    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
+        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
+        six independent components of the moment tensor). The strike is of the
+        first plane, clockwise relative to north.
+        The dip is of the first plane, defined clockwise and perpendicular to
+        strike, relative to horizontal such that 0 is horizontal and 90 is
+        vertical. The rake is of the first focal plane solution. 90 moves the
+        hanging wall up-dip (thrust), 0 moves it in the strike direction
+        (left-lateral), -90 moves it down-dip (normal), and 180 moves it
+        opposite to strike (right-lateral).
     :param size: Controls the number of interpolation points for the
         curves. Defaults to 80, note that this and especially smaller
         values might produce artifacts, however it makes the plotting much
@@ -179,7 +179,7 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
     Draws a beach ball diagram of an earthquake focal mechanism. Based on
     mopad.
 
-    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
+    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
     :param size: Draw with this diameter.

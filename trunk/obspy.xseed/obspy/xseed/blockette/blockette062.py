@@ -9,19 +9,19 @@ import sys
 class Blockette062(Blockette):
     """
     Blockette 062: Response [Polynomial] Blockette.
-    
-    Use this blockette to characterize the response of a non-linear sensor. 
-    The polynomial response blockette describes the output of an Earth sensor 
-    in fundamentally a different manner than the other response blockettes. 
-    The functional describing the sensor for the polynomial response blockette 
-    will have Earth units while the independent variable of the function will 
-    be in volts. This is precisely opposite to the other response blockettes. 
-    While it is a simple matter to convert a linear response to either form, 
-    the non-linear response (which we can describe in the polynomial 
-    blockette) would require extensive curve fitting or polynomial inversion 
-    to convert from one function to the other. Most data users are interested 
-    in knowing the sensor output in Earth units, and the polynomial response 
-    blockette facilitates the access to Earth units for sensors with 
+
+    Use this blockette to characterize the response of a non-linear sensor.
+    The polynomial response blockette describes the output of an Earth sensor
+    in fundamentally a different manner than the other response blockettes.
+    The functional describing the sensor for the polynomial response blockette
+    will have Earth units while the independent variable of the function will
+    be in volts. This is precisely opposite to the other response blockettes.
+    While it is a simple matter to convert a linear response to either form,
+    the non-linear response (which we can describe in the polynomial
+    blockette) would require extensive curve fitting or polynomial inversion
+    to convert from one function to the other. Most data users are interested
+    in knowing the sensor output in Earth units, and the polynomial response
+    blockette facilitates the access to Earth units for sensors with
     non-linear responses.
     """
 

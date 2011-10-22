@@ -9,7 +9,7 @@ from obspy.xseed.utils import Blockette34Lookup, formatRESP
 class Blockette043(Blockette):
     """
     Blockette 043: Response (Poles & Zeros) Dictionary Blockette.
-    
+
     See Response (Poles & Zeros) Blockette [53] for more information.
     """
 
@@ -40,7 +40,7 @@ class Blockette043(Blockette):
             Float(19, "Imaginary pole error", 12, mask='%+1.5e')
         ])
     ]
-    
+
 # Changes the name of the blockette because of an error in XSEED 1.0
     def getXML(self, *args, **kwargs):
         xml = Blockette.getXML(self, *args, **kwargs)

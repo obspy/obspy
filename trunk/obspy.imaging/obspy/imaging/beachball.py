@@ -44,20 +44,20 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     Return a beach ball as a collection which can be connected to an
     current matplotlib axes instance (ax.add_collection).
 
-    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
+    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
-    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3 
-        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the 
+    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
+        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
         six independent components of the moment tensor, where the coordinate
         system is x,y,z = Up,South,East). The strike is of the first plane,
-        clockwise relative to north. 
-        The dip is of the first plane, defined clockwise and perpendicular to 
-        strike, relative to horizontal such that 0 is horizontal and 90 is 
-        vertical. The rake is of the first focal plane solution. 90 moves the 
-        hanging wall up-dip (thrust), 0 moves it in the strike direction 
-        (left-lateral), -90 moves it down-dip (normal), and 180 moves it 
-        opposite to strike (right-lateral). 
+        clockwise relative to north.
+        The dip is of the first plane, defined clockwise and perpendicular to
+        strike, relative to horizontal such that 0 is horizontal and 90 is
+        vertical. The rake is of the first focal plane solution. 90 moves the
+        hanging wall up-dip (thrust), 0 moves it in the strike direction
+        (left-lateral), -90 moves it down-dip (normal), and 180 moves it
+        opposite to strike (right-lateral).
     :param size: Controls the number of interpolation points for the
         curves. Minimum is automatically set to 100.
     :param facecolor: Color to use for quadrants of tension; can be a string,
@@ -122,9 +122,9 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
               bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
               format=None, nofill=False, fig=None):
     """
-    Draws a beach ball diagram of an earthquake focal mechanism. 
+    Draws a beach ball diagram of an earthquake focal mechanism.
 
-    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can 
+    S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
     :param size: Draw with this diameter.
@@ -494,7 +494,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
 def plotDC(np1, size=200, xy=(0, 0), width=200):
     """
     Uses one nodal plane of a double couple to draw a beach ball plot.
-    
+
     :param ax: axis object of a matplotlib figure
     :param np1: :class:`~NodalPlane`
 
@@ -569,7 +569,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     return ['b', 'w'], collect
 
 def xy2patch(x, y, res, xy):
-    # transform into the Path coordinate system 
+    # transform into the Path coordinate system
     x = x * res + xy[0]
     y = y * res + xy[1]
     verts = zip(x.tolist(), y.tolist())
@@ -590,7 +590,7 @@ def Pol2Cart(th, r):
 
 def StrikeDip(n, e, u):
     """
-    Finds strike and dip of plane given normal vector having components n, e, 
+    Finds strike and dip of plane given normal vector having components n, e,
     and u.
 
     Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.

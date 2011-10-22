@@ -92,8 +92,8 @@ class Client(object):
                  name_service="dhiserv.iris.washington.edu:6371/NameService",
                  debug=False):
         """
-        Initialize Fissures/DHI client. 
-        
+        Initialize Fissures/DHI client.
+
         :param network_dc: Tuple containing dns and NetworkDC name.
         :param seismogram_dc: Tuple containing dns and DataCenter name.
         :param event_dc: Tuple containing dns and EventDC name.
@@ -253,7 +253,7 @@ class Client(object):
             # loop over data chunks
             data = []
             for chunk in sei.data.encoded_values:
-                # swap byte order in decompression routine if necessary 
+                # swap byte order in decompression routine if necessary
                 # src/IfTimeSeries.idl:52: FALSE = big endian format -
                 swapflag = (self.byteorder != chunk.byte_order)
                 compression = chunk.compression
@@ -375,7 +375,7 @@ class Client(object):
                               (-131.03999328613281-467.29000854492188j),
                               (-131.03999328613281+467.29000854492188j)],
                     'gain': 60077000.0})
-        
+
         Useful links:
         http://www.seis.sc.edu/software/simple/
         http://www.seis.sc.edu/downloads/simple/simple-1.0.tar.gz
@@ -426,7 +426,7 @@ class Client(object):
                   max_results=500, **kwargs):
         """
         NOTE: THIS METHOD IS NOT WORKING AT THE MOMENT.
-        
+
         :type area_type: String
         :param area_type: One of "global", "box" or "circle". Additional kwargs
                 need to be specified for "box" ('min_latitude', 'max_latitude',
@@ -504,7 +504,7 @@ class Client(object):
         """
         Compose Fissures name in CosNaming.NameComponent manner. Set the
         dns, interfaces and objects together.
-        
+
         >>> from obspy.fissures import Client
         >>> client = Client()
         >>> client._composeName(("/edu/iris/dmc", "IRIS_NetworkDC"),
@@ -533,9 +533,9 @@ class Client(object):
     def _getChannelObj(self, network, station, location, channel):
         """
         Return Fissures channel object.
-        
+
         Fissures channel object is requested from the clients network_dc.
-        
+
         :param network: Network id, 2 char; e.g. "GE"
         :param station: Station id, 5 char; e.g. "APE"
         :param location: Location id, 2 char; e.g. "  "
@@ -558,10 +558,10 @@ class Client(object):
     def _getSeisObj(self, channel_obj, starttime, endtime):
         """
         Return Fissures seismogram object.
-        
+
         Fissures seismogram object is requested from the clients
         network_dc. This actually contains the data.
-        
+
         :param channel_obj: Fissures channel object
         :param starttime: UTCDateTime object of starttime
         :param endtime: UTCDateTime object of endtime
@@ -579,9 +579,9 @@ class Client(object):
     def _getStationObj(self, network, station, datetime):
         """
         Return Fissures station object.
-        
+
         Fissures station object is requested from the clients network_dc.
-        
+
         :param network: Network id, 2 char; e.g. "GE"
         :param station: Station id, 5 char; e.g. "APE"
         :type datetime: String (understood by

@@ -8,11 +8,11 @@ from obspy.core import UTCDateTime
 class Blockette010(Blockette):
     """
     Blockette 010: Volume Identifier Blockette.
-        
-    This is the normal header blockette for station or event oriented network 
+
+    This is the normal header blockette for station or event oriented network
     volumes. Include it once at the beginning of each logical volume or sub-
     volume.
-    
+
     Sample:
     010009502.1121992,001,00:00:00.0000~1992,002,00:00:00.0000~1993,029~
     IRIS _ DMC~Data for 1992,001~

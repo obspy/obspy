@@ -10,7 +10,7 @@ from obspy.xseed.utils import formatRESP, LookupCode
 class Blockette041(Blockette):
     """
     Blockette 041: FIR Dictionary Blockette.
-    
+
     The FIR blockette is used to specify FIR (Finite Impulse Response)
     digital filter coefficients. It is an alternative to blockette [44] when
     specifying FIR filters. The blockette recognizes the various forms of

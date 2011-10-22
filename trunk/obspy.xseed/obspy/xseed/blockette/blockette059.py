@@ -5,8 +5,9 @@ from obspy.xseed.fields import Integer, VariableString
 
 
 class Blockette059(Blockette):
-    """Blockette 059: Channel Comment Blockette.
-        
+    """
+    Blockette 059: Channel Comment Blockette.
+
     Sample:
     05900351989,001~1989,004~4410000000
     """

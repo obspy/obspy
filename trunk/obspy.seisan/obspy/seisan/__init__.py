@@ -34,8 +34,8 @@ The file format will be determined automatically. Each trace (multiple channels
 are mapped to multiple traces) will have a stats attribute containing the usual
 information.
 
->>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
-             network: 
+>>> print(st[0].stats)  # doctest: +NORMALIZE_WHITESPACE
+             network:
              station: KONO
             location: 0
              channel: B0Z

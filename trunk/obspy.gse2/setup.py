@@ -67,8 +67,8 @@ setup(
 
     This module contains Python wrappers for gse_functions - The GSE2 library
     of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
-    Currently CM6 compressed GSE2 files are supported, this should be 
-    sufficient for most cases. Gse_functions are written in C and interfaced 
+    Currently CM6 compressed GSE2 files are supported, this should be
+    sufficient for most cases. Gse_functions are written in C and interfaced
     via Python ctypes.
 
     For more information visit http://www.obspy.org.

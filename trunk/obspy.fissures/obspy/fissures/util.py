@@ -55,7 +55,7 @@ def poleZeroFilter2PAZ(filter):
 def utcdatetime2Fissures(utc_datetime):
     """
     Convert datetime instance to fissures time object
-    
+
     :type utc_datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param utc_datetime: Time
     :return: Time as :class:`~obspy.fissures.idl.Fissures.Time` object

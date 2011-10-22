@@ -25,13 +25,13 @@ B061F08     Number of numerators:                  %s
 class Blockette061(Blockette):
     """
     Blockette 061: FIR Response Blockette.
-    
-    The FIR blockette is used to specify FIR (Finite Impulse Response) digital 
-    filter coefficients. It is an alternative to blockette [54] when 
-    specifying FIR filters. The blockette recognizes the various forms of 
-    filter symmetry and can exploit them to reduce the number of factors 
-    specified to the blockette. In July 2007, the FDSN adopted a convention 
-    that requires the coefficients to be listed in forward time order. 
+
+    The FIR blockette is used to specify FIR (Finite Impulse Response) digital
+    filter coefficients. It is an alternative to blockette [54] when
+    specifying FIR filters. The blockette recognizes the various forms of
+    filter symmetry and can exploit them to reduce the number of factors
+    specified to the blockette. In July 2007, the FDSN adopted a convention
+    that requires the coefficients to be listed in forward time order.
     As a reference, minimum-phase filters (which are asymmetric) should be
     written with the largest values near the beginning of the coefficient list.
     """

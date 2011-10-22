@@ -26,7 +26,7 @@ class MopadTestCase(unittest.TestCase):
     def test_Beach(self):
         """
         Tests to plot mopad beachballs as collection into an existing axis
-        object. The moment tensor values are taken form the 
+        object. The moment tensor values are taken form the
         test_Beachball unit test. See that test for more information about
         the parameters.
         """

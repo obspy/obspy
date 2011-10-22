@@ -157,7 +157,7 @@ class BeachballTestCase(unittest.TestCase):
 
     def test_MT2Plane(self):
         """
-        Tests MT2Plane. 
+        Tests MT2Plane.
         """
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
         np = MT2Plane(mt)
@@ -186,7 +186,7 @@ class BeachballTestCase(unittest.TestCase):
     def test_Beach(self):
         """
         Tests to plot beachballs as collection into an existing axis
-        object. The moment tensor values are taken form the 
+        object. The moment tensor values are taken form the
         test_Beachball unit test. See that test for more information about
         the parameters.
         """

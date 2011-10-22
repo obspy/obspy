@@ -26,16 +26,16 @@ B057F08     Correction applied (seconds):          %s
 class Blockette057(Blockette):
     """
     Blockette 057: Decimation Blockette.
-    
-    Many digital filtration schemes process a high sample rate data stream; 
-    filter; then decimate, to produce the desired output. Use this blockette 
-    to describe the decimation phase of the stage. You would usually place it 
-    between a Response (Coefficients) Blockette [54] and the Sensitivity/Gain 
+
+    Many digital filtration schemes process a high sample rate data stream;
+    filter; then decimate, to produce the desired output. Use this blockette
+    to describe the decimation phase of the stage. You would usually place it
+    between a Response (Coefficients) Blockette [54] and the Sensitivity/Gain
     Blockette [58] phases of the filtration stage of the channel. Include
-    this blockette with non-decimated stages because you must still specify 
-    the time delay. (In this case, the decimation factor is 1 and the offset 
+    this blockette with non-decimated stages because you must still specify
+    the time delay. (In this case, the decimation factor is 1 and the offset
     value is 0.)
-    
+
     Sample:
     057005132 .0000E+02    1    0 0.0000E+00 0.0000E+00
     """

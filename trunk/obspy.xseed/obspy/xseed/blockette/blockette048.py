@@ -8,7 +8,7 @@ from obspy.xseed.utils import formatRESP
 class Blockette048(Blockette):
     """
     Blockette 048: Channel Sensitivity/Gain Dictionary Blockette.
-    
+
     See Channel Sensitivity/Gain Blockette [58] for more information.
     """
 

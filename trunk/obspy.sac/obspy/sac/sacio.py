@@ -24,7 +24,7 @@ from obspy.core.util import gps2DistAzimuth
 
 # we put here everything but the time, they are going to stats.starttime
 # left SAC attributes, right trace attributes, see also
-# http://www.iris.edu/KB/questions/13/SAC+file+format 
+# http://www.iris.edu/KB/questions/13/SAC+file+format
 convert_dict = {'npts': 'npts',
                 'delta': 'delta',
                 'kcmpnm': 'channel',
@@ -355,7 +355,7 @@ class SacIO(object):
     def GetHvalue(self, item):
         """
         Read SAC-header variable.
-        
+
         :param item: header variable name (e.g. 'npts' or 'delta')
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -364,12 +364,12 @@ class SacIO(object):
         100
 
         This is equivalent to:
-        
+
         >>> SacIO().GetHvalueFromFile('test.sac','npts') # doctest: +SKIP
         100
 
         Or:
-        
+
         >>> tr = SacIO('test.sac') # doctest: +SKIP
         >>> tr.npts # doctest: +SKIP
         100
@@ -399,7 +399,7 @@ class SacIO(object):
         Assign new value to SAC-header variable.
 
         :param item: SAC-header variable name
-        :param value: numeric or string value to be assigned to header 
+        :param value: numeric or string value to be assigned to header
                       variable.
 
         >>> from obspy.sac import SacIO
@@ -443,7 +443,6 @@ class SacIO(object):
         Test for a valid SAC file using arrays.
 
         :param f: filename (Sac binary).
-        
         """
         npts = self.GetHvalue('npts')
         if lenchk:
@@ -476,9 +475,8 @@ class SacIO(object):
         >>> tr.ReadSacHeader('test.sac') # doctest: +SKIP
 
         This is equivalent to:
-        
-        >>> tr = SacIO('test.sac', headonly=True)  # doctest: +SKIP
 
+        >>> tr = SacIO('test.sac', headonly=True)  # doctest: +SKIP
         """
         #### check if file exists
         try:
@@ -572,7 +570,6 @@ class SacIO(object):
         The header is split into three arrays - floats, ints, and strings and
         the data points are returned in the array seis
 
-        
         :param f: filename (SAC binary)
 
         >>> from obspy.sac import SacIO # doctest: +SKIP
@@ -580,9 +577,8 @@ class SacIO(object):
         >>> tr.ReadSacFile('test.sac') # doctest: +SKIP
 
         This is equivalent to:
-        
-        >>> tr = SacIO('test.sac')  # doctest: +SKIP
 
+        >>> tr = SacIO('test.sac')  # doctest: +SKIP
         """
         try:
             #### open the file
@@ -659,8 +655,8 @@ class SacIO(object):
         100
 
         This is equivalent to:
-        
-        >>> tr = SacIO('testxy.sac',alpha=True) # doctest: +SKIP 
+
+        >>> tr = SacIO('testxy.sac',alpha=True)  # doctest: +SKIP
 
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
@@ -721,8 +717,8 @@ class SacIO(object):
         100
 
         This is equivalent to:
-        
-        >>> tr = SacIO('testxy.sac',alpha=True) # doctest: +SKIP 
+
+        >>> tr = SacIO('testxy.sac',alpha=True)  # doctest: +SKIP
 
         Reading only the header portion of alphanumeric SAC-files is currently
         not supported.
@@ -892,9 +888,9 @@ class SacIO(object):
         :param: None
         :return: None
 
-        >>> from obspy.sac import SacIO # doctest: +SKIP
-        >>> t = SacIO('test.sac') # doctest: +SKIP
-        >>> t.ListStdValues() # doctest: +SKIP
+        >>> from obspy.sac import SacIO  # doctest: +SKIP
+        >>> t = SacIO('test.sac')  # doctest: +SKIP
+        >>> t.ListStdValues()  # doctest: +SKIP +NORMALIZE_WHITESPACE
         <BLANKLINE>
         Reference Time = 07/18/1978 (199) 8:0:0.0
         Npts  =  100
@@ -905,9 +901,9 @@ class SacIO(object):
         Mean  =  8.7539462e-08
         Max   =  1
         Header Version =  6
-        Station =  STA     
-        Channel =  Q       
-        Event       =  FUNCGEN: SINE   
+        Station =  STA
+        Channel =  Q
+        Event       =  FUNCGEN: SINE
 
         If no header values are defined (i.e. all are equal 12345) than this
         function won't do anything.
@@ -1019,13 +1015,12 @@ class SacIO(object):
 
         :param f: filename (SAC binary)
         :rtype: boolean (True or False)
-        
+
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> SacIO().IsValidSacFile('test.sac') # doctest: +SKIP
         True
         >>> SacIO().IsValidSacFile('testxy.sac') # doctest: +SKIP
         False
-
         """
         #
         #  Read in the Header
@@ -1069,13 +1064,12 @@ class SacIO(object):
 
         :param file: filename (SAC ascii)
         :rtype: boolean (True or False)
-        
+
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> SacIO().IsValidXYSacFile('testxy.sac') # doctest: +SKIP
         True
         >>> SacIO().IsValidXYSacFile('test.sac') # doctest: +SKIP
         False
-
         """
         #
         #  Read in the Header
@@ -1188,7 +1182,7 @@ class SacIO(object):
 
         :param: None
         :return: None
-        
+
         >>> from obspy.sac import SacIO # doctest: +SKIP
         >>> t = SacIO('test.sac') # doctest: +SKIP
         >>> t.swap_byte_order() # doctest: +SKIP
@@ -1283,11 +1277,11 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     pole-zero files CONSTANT is defined as:
     digitizer_gain*seismometer_gain*A0. This means that it does not
     have explicit information on the digitizer gain and seismometer
-    gain which we therefore set to 1.0. 
+    gain which we therefore set to 1.0.
 
     Attaches to a trace a paz AttribDict containing poles zeros and gain.
 
-    :param tr: An ObsPy trace object 
+    :param tr: An ObsPy trace object
     :param paz_file: path to pazfile or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero
@@ -1295,7 +1289,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
                   transfer function by removing one 0,0j zero
     :param torad: change to radians
     :param tohz: change to Hertz
-    
+
     >>> tr = obspy.core.Trace()
     >>> import StringIO
     >>> f = StringIO.StringIO("""ZEROS 3
@@ -1426,10 +1420,10 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     you have to determine yourself if the given response is for velocity
     or displacement and if the values are given in rad or Hz. This is
     still experimental code (see also documentation for obspy.sac.attach_paz function).
-    
+
     Attaches to a trace a paz AttribDict containing poles, zeros, and gain.
 
-    :param tr: An ObsPy trace object 
+    :param tr: An ObsPy trace object
     :param resp_file: path to RESP-file or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero

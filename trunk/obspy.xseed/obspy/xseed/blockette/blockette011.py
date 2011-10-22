@@ -7,11 +7,11 @@ from obspy.xseed.fields import Integer, FixedString, Loop
 class Blockette011(Blockette):
     """
     Blockette 011: Volume Station Header Index Blockette.
-    
-    This is the index to the Station Identifier Blockettes [50] that appear 
-    later in the volume. This blockette refers to each station described in 
+
+    This is the index to the Station Identifier Blockettes [50] that appear
+    later in the volume. This blockette refers to each station described in
     the station header section.
-    
+
     Sample:
     0110054004AAK  000003ANMO 000007ANTO 000010BJI  000012
     """
