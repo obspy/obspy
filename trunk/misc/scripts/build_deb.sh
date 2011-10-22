@@ -15,17 +15,19 @@
 #
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
-CURDIR=`pwd`
-DEBDIR=$CURDIR/packages
-DIR=$CURDIR/../..
-TAGSDIR=$CURDIR/tags
+CODENAME=`lsb_release -cs`
+
+BASEDIR=`pwd`
+PACKAGEDIR=$BASEDIR/packages
+DIR=$BASEDIR/../..
+TAGSDIR=$BASEDIR/tags
 
 FTPHOST=obspy.org
 FTPUSER=obspy
 
 # deactivate, else each time all packages are removed
-rm -rf $DEBDIR $TAGSDIR
-mkdir -p $DEBDIR
+rm -rf $PACKAGEDIR $TAGSDIR
+mkdir -p $PACKAGEDIR
 
 # download tags
 svn checkout --quiet https://svn.obspy.org/tags $TAGSDIR
@@ -87,7 +89,7 @@ wq
 EOF
         # build the package
         fakeroot ./debian/rules clean build binary
-        mv ../python-${MODULE/./-}_*.deb $DEBDIR
+        mv ../python-${MODULE/./-}_*.deb $PACKAGEDIR
     done
 done
 
@@ -97,14 +99,14 @@ done
 if [ -z "$NOT_EQUIVS" ]; then
     cd $DIR/misc
     equivs-build ./debian/control
-    mv python-obspy_*.deb $DEBDIR
+    mv python-obspy_*.deb $PACKAGEDIR
 fi
 
 #
 # run lintian to verify the packages
 #
 for MODULE in $MODULES; do
-    PACKAGE=`ls $DEBDIR/python-obspy-${MODULE#obspy.}_*.deb`
+    PACKAGE=`ls $PACKAGEDIR/python-obspy-${MODULE#obspy.}_*.deb`
     echo $PACKAGE
     #lintian -i $PACKAGE # verbose output
     lintian $PACKAGE
@@ -113,13 +115,13 @@ done
 #
 # upload built packages
 #
-cd $DEBDIR
+cd $PACKAGEDIR
 echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
 read FTPPASSWD
-ftp -i -n -v $FTPHOST &> ../ftp.log << EOF
+ftp -i -n -v $FTPHOST &> $BASEDIR/ftp.log << EOF
 user $FTPUSER $FTPPASSWD
 binary
-cd debian/packages
+cd debian/packages/$CODENAME
 mput *.deb
 bye
 EOF
