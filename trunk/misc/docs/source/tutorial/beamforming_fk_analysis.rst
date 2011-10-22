@@ -40,7 +40,7 @@ The output will be stored in ``out``.
     kwargs = dict(
         # slowness grid: X min, X max, Y min, Y max, Slow Step
         sll_x=-3.0, slm_x=3.0, sll_y=-3.0, slm_y=3.0, sl_s=0.03,
-        # sliding window propertieds
+        # sliding window properties
         win_len=1.0, win_frac=0.05,
         # frequency properties
         frqlow=1.0, frqhigh=8.0, prewhiten=0,
