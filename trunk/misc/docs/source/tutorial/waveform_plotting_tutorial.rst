@@ -93,76 +93,10 @@ setting the ``type`` parameter to ``'dayplot'``:
 
 .. plot:: source/tutorial/waveform_plotting_tutorial_4.py
 
-------------
-Plot Options
-------------
+--------------------
+Plot & Color Options
+--------------------
 
-Various options are available to change the appearance of the waveform:
-
-   ``outfile``
-      Output file string. Also used to automatically determine the output
-      format. Supported file formats depend on your matplotlib backend. Most
-      backends support png, pdf, ps, eps and svg. Defaults to ``None``.
-   ``format``
-      Format of the graph picture. If no ``format`` is given, the ``outfile``
-      parameter will be used to try to automatically determine the output
-      format. If the output format can not be detected, it defaults to png
-      output. If no ``outfile`` is specified but a ``format`` is, then a binary
-      imagestring will be returned. Defaults to ``None``.
-   ``size``
-      Size tupel in pixel for the output file. This corresponds to the
-      resolution of the graph for vector formats. Defaults to ``(800, 250)``
-      pixel.
-   ``starttime``
-      Starttime of the graph as a datetime object. If not set, the graph will
-      be plotted from the beginning. Defaults to ``False``.
-   ``endtime``
-      Endtime of the graph as a datetime object. If not set, the graph will be
-      plotted until the end. Defaults to ``False``.
-   ``dpi``
-      Dots per inch of the output file. This also affects the size of most
-      elements in the graph (text, linewidth, ...). Defaults to ``100``.
-   ``color``
-      Color of the graph. Defaults to ``'k'`` (black).
-   ``bgcolor``
-      Background color of the graph. Defaults to ``'w'`` (white).
-   ``transparent``
-      Make all backgrounds transparent (``True`` or ``False``). This will
-      overwrite the ``bgcolor`` parameter. Defaults to ``False``.
-   ``minmaxlist``
-      A list containing minimum, maximum and timestamp values. If none is
-      supplied, it will be created automatically. Useful for caching.
-      Defaults to ``False``.
-   ``number_of_ticks``
-      Number of the ticks on the time scale to display. Defaults to ``5``.
-   ``tick_format``
-      Format of the time ticks according to strftime methods. Defaults to
-      ``'%H:%M:%S'``.
-   ``tick_rotation``
-      Number of degrees of rotation for ticks on the time axis. Ticks with big
-      rotations might be cut off depending on the ``tick_format``.
-      Defaults to ``0``. 
-   ``handle``
-      Whether or not to return the matplotlib figure instance after the plot has
-      been created. Defaults to False.
-   ``type``
-      Type may be set to ``'dayplot'`` in order to create a one-day plot for a
-      single Trace.
-
--------------
-Color Options
--------------
-
-Colors can be specified as defined in the :mod:`matplotlib.colors`
-documentation.
-
-Short Version: For all color values, you can either use:
-
-* legit `HTML color names <http://www.w3.org/TR/css3-color/#html4>`_, e.g.
-  ``'blue'``,
-* HTML hex strings, e.g. ``'#EE00FF'``,
-* pass an string of a R, G, B tuple, where each of the component is a float
-  value in the range of 0 to 1, e.g. ``'(1, 0.25, 0.5)'``, or
-* use a single letters for the basic built-in colors, such as ``'b'``
-  (blue), ``'g'`` (green), ``'r'`` (red), ``'c'`` (cyan), ``'m'`` (magenta),
-  ``'y'`` (yellow), ``'k'`` (black), ``'w'`` (white).
+Various options are available to change the appearance of the waveform plot.
+Please see :meth:`~obspy.core.stream.Stream.plot` method for all possible
+options.

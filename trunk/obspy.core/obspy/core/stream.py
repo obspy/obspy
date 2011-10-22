@@ -879,28 +879,32 @@ class Stream(object):
             the seismogram at 0 seconds. ``'normal'`` will produce a standard
             plot.
             Defaults to ``'normal'``.
-        :param vertical_scaling_range: Only used if ``type='dayplot'``.
-            Determines how each line is scaled in its given space. Every line
-            will be centered around its mean value and then clamped to fit its
-            given space. This argument is the range in data units that will be
-            used to clamp the data. If the range is smaller than the actual
-            range, the lines' data may overshoot to other lines which is
-            usually a desired effect. Larger ranges will result in a vertical
-            padding.
+
+        **Dayplot parameters**
+
+        The following parameters are only available if ``type='dayplot'`` is
+        set. 
+
+        :param vertical_scaling_range: Determines how each line is scaled in
+            its given space. Every line will be centered around its mean value
+            and then clamped to fit its given space. This argument is the range
+            in data units that will be used to clamp the data. If the range is
+            smaller than the actual range, the lines' data may overshoot to
+            other lines which is usually a desired effect. Larger ranges will
+            result in a vertical padding.
             If ``0``, the actual range of the data will be used and no
             overshooting or additional padding will occur.
             If ``None`` the range will be chosen to be the 99.5-percentile of
             the actual range - so some values will overshoot.
             Defaults to None.
-        :param interval: Only used if ``type='dayplot'``. This defines the
-            interval length in minutes for one line.
+        :param interval: This defines the interval length in minutes for one
+            line.
         :param time_offset: Only used if ``type='dayplot'``. The dayplot will
             have two vertical scales. One showing UTC time and the other a user
             defined timezone. This argument specifies the offset of the other
             time scale in hours relative to UTC time.
             Defaults to the current offset of the system time to UTC time.
-        :param timezone: Only used if ``type='dayplot'``. Defines the name of
-            the user defined time scale.
+        :param timezone: Defines the name of the user defined time scale.
             Defaults to ``'local time'``.
 
         .. rubric:: Color Options

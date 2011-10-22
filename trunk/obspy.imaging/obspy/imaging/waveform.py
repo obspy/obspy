@@ -37,6 +37,12 @@ class WaveformPlotting(object):
     Class that provides several solutions for plotting large and small waveform
     data sets.
 
+    .. warning::
+        This class should NOT be used directly, instead use the
+        :meth:`~obspy.core.stream.Stream.plot` method of the 
+        ObsPy :class:`~obspy.core.stream.Stream` or
+        :class:`~obspy.core.trace.Trace` objects.
+
     It uses matplotlib to plot the waveforms.
     """
 

@@ -653,7 +653,9 @@ class Trace(object):
         """
         Creates a simple graph of the current trace.
 
-        For more info see :meth:`~obspy.core.stream.Stream.plot`.
+        Various options are available to change the appearance of the waveform
+        plot. Please see :meth:`~obspy.core.stream.Stream.plot` method for all
+        possible options.
 
         .. rubric:: Example
 
