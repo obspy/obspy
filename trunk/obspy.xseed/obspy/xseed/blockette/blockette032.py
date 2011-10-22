@@ -12,7 +12,7 @@ class Blockette032(Blockette):
     the hypocenter and magnitude information. This blockette is used in event
     oriented network volumes.
     """
-    id= 32
+    id = 32
     name = "Cited Source Dictionary"
     fields = [
         Integer(3, "Source lookup code", 2),

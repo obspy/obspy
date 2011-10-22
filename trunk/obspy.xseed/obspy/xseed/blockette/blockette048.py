@@ -25,7 +25,7 @@ class Blockette048(Blockette):
             Float(8, "Sensitivity for calibration", 12, mask='%+1.5e'),
             Float(9, "Frequency of calibration sensitivity", 12,
                   mask='%+1.5e'),
-            VariableString(10, "Time of above calibration", 1, 22 , 'T')
+            VariableString(10, "Time of above calibration", 1, 22, 'T')
         ])
     ]
 
@@ -34,10 +34,12 @@ class Blockette048(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                  +---------------------------------------+                  +\n' + \
-        '#\t\t+                  |   Channel Sensitivity,%6s ch %s   |                  +\n'\
-                    % (station, channel) + \
-        '#\t\t+                  +---------------------------------------+                  +\n' + \
+        '#\t\t+                  +---------------------------------------+' + \
+        '                  +\n' + \
+        '#\t\t+                  |   Channel Sensitivity,' + \
+        '%6s ch %s   |                  +\n' % (station, channel) + \
+        '#\t\t+                  +---------------------------------------+' + \
+        '                  +\n' + \
         '#\t\t\n' + \
         'B048F05     Sensitivity:                           %s\n' \
                     % formatRESP(self.sensitivity_gain, 6) + \

@@ -75,13 +75,13 @@ class Blockette060(Blockette):
         # Loop over all stages.
         counter = 2
         for _i in xrange(number_of_stages):
-            number_of_responses = int(new_data[counter + 2 : counter + 4])
+            number_of_responses = int(new_data[counter + 2:counter + 4])
             self.stages.append([])
             # Start inner loop
             counter += 4
             for _j in xrange(number_of_responses):
                 # Append to last list.
-                self.stages[-1].append(int(new_data[counter: counter + 4]))
+                self.stages[-1].append(int(new_data[counter:counter + 4]))
                 counter += 4
 
     def getSEED(self, *args, **kwargs):
@@ -158,10 +158,12 @@ class Blockette060(Blockette):
         dict_blockettes = [41, 43, 44, 45, 46, 47, 48]
         for _i in xrange(len(self.stages)):
             string += \
-            '#\t\t+            +--------------------------------------------------+             +\n' + \
-            '#\t\t+            |   Response Reference Information,%6s ch %s   |             +\n'\
-                        % (station, channel) + \
-            '#\t\t+            +--------------------------------------------------+             +\n' + \
+            '#\t\t+            +----------------------------------' + \
+            '----------------+             +\n' + \
+            '#\t\t+            |   Response Reference Information,' + \
+            '%6s ch %s   |             +\n' % (station, channel) + \
+            '#\t\t+            +----------------------------------' + \
+            '----------------+             +\n' + \
             '#\t\t\n' + \
             'B060F03     Number of Stages:                      %s\n' \
                     % len(self.stages) + \
@@ -179,7 +181,8 @@ class Blockette060(Blockette):
                                 blockette.response_lookup_key == response_key:
                         try:
                             string += \
-                                blockette.getRESP(station, channel, abbreviations)
+                                blockette.getRESP(station, channel,
+                                                  abbreviations)
                             found_abbrev = True
                         except AttributeError:
                             msg = 'RESP output not implemented for ' + \

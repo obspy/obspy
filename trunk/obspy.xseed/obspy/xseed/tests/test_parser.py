@@ -132,7 +132,7 @@ class ParserTestCase(unittest.TestCase):
         b054 = "0540960A0400300300000039"
         nr = ""
         for i in range(0, 78):
-            nr = nr + "+1.000%02dE-03" % i #  960 chars
+            nr = nr + "+1.000%02dE-03" % i  # 960 chars
         blockette = Blockette054(strict=True, compact=True)
         blockette.parseSEED(b054 + nr)
         self.assertEquals(b054 + nr, blockette.getSEED())
@@ -151,15 +151,15 @@ class ParserTestCase(unittest.TestCase):
             blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
         data = "000001V " + b010 + (' ' * 206)
-        data += "000002S " + b054 + nr[0:224] #  256-8-24 = 224
-        data += "000003S*" + nr[224:472] # 256-8 = 248
+        data += "000002S " + b054 + nr[0:224]  # 256-8-24 = 224
+        data += "000003S*" + nr[224:472]  # 256-8 = 248
         data += "000004S*" + nr[472:720]
-        data += "000005S*" + nr[720:] + b051 + ' ' * 5 #  5 spaces left
+        data += "000005S*" + nr[720:] + b051 + ' ' * 5  # 5 spaces left
         self.assertEqual(len(data), 256 * 5)
-        data += "000006S " + b054 + nr[0:224] #  256-8-24 = 224
-        data += "000007S*" + nr[224:472] #  256-8 = 248
+        data += "000006S " + b054 + nr[0:224]  # 256-8-24 = 224
+        data += "000007S*" + nr[224:472]  # 256-8 = 248
         data += "000008S*" + nr[472:720]
-        data += "000009S*" + nr[720:] + ' ' * 32 #  32 spaces left
+        data += "000009S*" + nr[720:] + ' ' * 32  # 32 spaces left
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=False)
@@ -345,16 +345,16 @@ class ParserTestCase(unittest.TestCase):
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j,
-                  - 6.32511E+02 + 0.00000E+00j],
+                  -6.32511E+02 + 0.00000E+00j],
                  [+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j]]
         poles = [[-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
-                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
+                  -3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j],
                  [-3.58123E-02 - 4.44766E-02j, -3.58123E-02 + 4.44766E-02j,
-                  - 5.13245E+02 + 0.00000E+00j, -6.14791E+04 + 0.00000E+00j],
+                  -5.13245E+02 + 0.00000E+00j, -6.14791E+04 + 0.00000E+00j],
                  [-1.23413E-02 + 1.23413E-02j, -1.23413E-02 - 1.23413E-02j,
-                  - 3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j]]
+                  -3.91757E+01 + 4.91234E+01j, -3.91757E+01 - 4.91234E+01j]]
         sensitivity = [+4.92360E+08, +2.20419E+06, +9.84720E+08]
-        seismometer_gain = [+2.29145E+03 , +1.02583E+01 , +2.29145E+03]
+        seismometer_gain = [+2.29145E+03, +1.02583E+01, +2.29145E+03]
         for i, channel in enumerate(['BHZ', 'BLZ', 'LHZ']):
             paz = sp.getPAZ(channel)
             self.assertEqual(paz['gain'], gain[i])

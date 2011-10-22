@@ -15,7 +15,7 @@ class Blockette031(Blockette):
     Sample:
     03100720750Stime correction does not include leap second, (-1000ms).~000
     """
-    id= 31
+    id = 31
     name = "Comment Description"
     fields = [
         Integer(3, "Comment code key", 4),

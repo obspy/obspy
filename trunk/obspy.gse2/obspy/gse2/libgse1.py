@@ -10,8 +10,11 @@
 """
 Low-level module internally used for handling GSE1 files
 
-:license: GNU Lesser General Public License, Version 3
-(http://www.gnu.org/copyleft/lesser.html)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from obspy.core import UTCDateTime

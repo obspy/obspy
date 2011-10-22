@@ -34,4 +34,3 @@ class Blockette050(Blockette):
         FixedString(15, "Update flag", 1),
         FixedString(16, "Network Code", 2, 'ULN', version=2.3)
     ]
-

@@ -17,8 +17,11 @@ interfaced via python-ctypes.
 
 See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
-:license: GNU Lesser General Public License, Version 3
-(http://www.gnu.org/copyleft/lesser.html)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 import os

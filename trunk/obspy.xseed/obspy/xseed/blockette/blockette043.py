@@ -19,8 +19,8 @@ class Blockette043(Blockette):
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
         FixedString(5, "Response type", 1, 'U'),
-        Integer(6, "Stage signal input units", 3, xpath = 34),
-        Integer(7, "Stage signal output units", 3, xpath = 34),
+        Integer(6, "Stage signal input units", 3, xpath=34),
+        Integer(7, "Stage signal output units", 3, xpath=34),
         Float(8, "A0 normalization factor", 12, mask='%+1.5e'),
         Float(9, "Normalization frequency", 12, mask='%+1.5e'),
         Integer(10, "Number of complex zeros", 3),
@@ -53,22 +53,26 @@ class Blockette043(Blockette):
         Returns RESP string.
         """
         # Field five needs some extra parsing.
-        field_five_dict = {'A' : 'A [Laplace Transform (Rad/sec)]',
-                            'B' : 'B [Analog (Hz)]',
-                            'C' : 'C [Composite]',
-                            'D' : 'D [Digital (Z-transform)]'}
+        field_five_dict = {'A': 'A [Laplace Transform (Rad/sec)]',
+                           'B': 'B [Analog (Hz)]',
+                           'C': 'C [Composite]',
+                           'D': 'D [Digital (Z-transform)]'}
         string = \
-        '#\t\t+               +--------------------------------------------+                +\n' + \
-        '#\t\t+               |   Response (Poles & Zeros),%6s ch %s   |                +\n'\
-                    %(station, channel) + \
-        '#\t\t+               +--------------------------------------------+                +\n' + \
+        '#\t\t+               +-----------------------------------------' + \
+        '---+                +\n' + \
+        '#\t\t+               |   Response (Poles & Zeros),' + \
+        '%6s ch %s   |                +\n' % (station, channel) + \
+        '#\t\t+               +-----------------------------------------' + \
+        '---+                +\n' + \
         '#\t\t\n' + \
         'B043F05     Response type:                         %s\n' \
             % field_five_dict[self.response_type] + \
         'B043F06     Response in units lookup:              %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_signal_input_units) +\
+            % Blockette34Lookup(abbreviations,
+                                self.stage_signal_input_units) + \
         'B043F07     Response out units lookup:             %s\n' \
-            % Blockette34Lookup(abbreviations, self.stage_signal_output_units)+\
+            % Blockette34Lookup(abbreviations,
+                                self.stage_signal_output_units) + \
         'B043F08     A0 normalization factor:               %G\n'\
             % self.A0_normalization_factor + \
         'B043F09     Normalization frequency:               %G\n'\

@@ -425,7 +425,7 @@ class Trace(object):
         Adds another Trace object to current trace.
 
         :type method: ``0`` or ``1``, optional
-        :param method : Method to handle overlaps of traces. Defaults to ``0``.
+        :param method: Method to handle overlaps of traces. Defaults to ``0``.
             See the table given in the notes section below for further details.
         :type fill_value: int, float or ``'latest'``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces

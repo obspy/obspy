@@ -34,8 +34,8 @@ class MinMaxAmplitudeFeature(object):
 
         This may take a while to calculate - use a moderate looping interval.
 
-        Example
-        -------
+        .. rubric:: Example
+
         >>> from obspy.core import Trace
         >>> import numpy as np
         >>> tr = Trace(data=np.arange(-5,5))

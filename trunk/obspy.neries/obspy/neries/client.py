@@ -113,9 +113,9 @@ class Client(object):
         :param user: The user name used for identification with the Web
             service. This entry in form of a email address is required for
             using the following methods:
-                * :meth:`~saveWaveform`
-                * :meth:`~getWaveform`
-                * :meth:`~getInventory`
+            * :meth:`~obspy.neries.client.Client.saveWaveform`
+            * :meth:`~obspy.neries.client.Client.getWaveform`
+            * :meth:`~obspy.neries.client.Client.getInventory`
             Defaults to ``''``.
         :type password: str, optional
         :param password: A password used for authentication with the Web

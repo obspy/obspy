@@ -73,10 +73,10 @@ class Blockette053(Blockette):
         Returns RESP string.
         """
         # Field three needs some extra parsing.
-        field_three_dict = {'A' : 'A [Laplace Transform (Rad/sec)]',
-                            'B' : 'B [Analog (Hz)]',
-                            'C' : 'C [Composite]',
-                            'D' : 'D [Digital (Z-transform)]'}
+        field_three_dict = {'A': 'A [Laplace Transform (Rad/sec)]',
+                            'B': 'B [Analog (Hz)]',
+                            'C': 'C [Composite]',
+                            'D': 'D [Digital (Z-transform)]'}
         out = RESP % (station, channel,
                       field_three_dict[self.transfer_function_types],
                       self.stage_sequence_number,

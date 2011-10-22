@@ -64,21 +64,23 @@ class Blockette062(Blockette):
         Returns RESP string.
         """
         # Field three needs some extra parsing.
-        field_three_dict = {'A' : 'A [Laplace Transform (Rad/sec)]',
-                            'B' : 'B [Analog (Hz)]',
-                            'C' : 'C [Composite]',
-                            'D' : 'D [Digital (Z-transform)]',
-                            'P' : 'P [Polynomial]'}
+        field_three_dict = {'A': 'A [Laplace Transform (Rad/sec)]',
+                            'B': 'B [Analog (Hz)]',
+                            'C': 'C [Composite]',
+                            'D': 'D [Digital (Z-transform)]',
+                            'P': 'P [Polynomial]'}
         # Frequency too!
-        frequency_dict = {'A' : 'A [rad/sec]',
-                          'B' : 'B [Hz]'}
+        frequency_dict = {'A': 'A [rad/sec]',
+                          'B': 'B [Hz]'}
         # Polynomial Approximation too.
-        polynomial_dict = {'M' : 'M [MacLaurin]'}
+        polynomial_dict = {'M': 'M [MacLaurin]'}
         string = \
-        '#\t\t+              +---------------------------------------+                      +\n' + \
-        '#\t\t+              |   Polynomial response,%6s ch %s   |                      +\n'\
-                    % (station, channel) + \
-        '#\t\t+              +---------------------------------------+                      +\n' + \
+        '#\t\t+              +-----------------------' + \
+        '----------------+                      +\n' + \
+        '#\t\t+              |   Polynomial response,' + \
+        '%6s ch %s   |                      +\n' % (station, channel) + \
+        '#\t\t+              +-----------------------' + \
+        '----------------+                      +\n' + \
         '#\t\t\n' + \
         'B062F03     Transfer function type:                %s\n' \
             % field_three_dict[self.transfer_function_type] + \

@@ -19,8 +19,8 @@ class Blockette044(Blockette):
         Integer(3, "Response Lookup Key", 4),
         VariableString(4, "Response Name", 1, 25, 'UN_'),
         FixedString(5, "Response type", 1, 'U'),
-        Integer(6, "Signal input units", 3, xpath = 34),
-        Integer(7, "Signal output units", 3, xpath = 34),
+        Integer(6, "Signal input units", 3, xpath=34),
+        Integer(7, "Signal output units", 3, xpath=34),
         Integer(8, "Number of numerators", 4),
         # REPEAT fields 9 - 10 for the Number of numerators:
         Loop('Numerators', "Number of numerators", [
@@ -47,10 +47,12 @@ class Blockette044(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+               +-------------------------------------------+                 +\n' + \
-        '#\t\t+               |   Response (Coefficients),%6s ch %s   |                 +\n'\
-                    %(station, channel) + \
-        '#\t\t+               +-------------------------------------------+                 +\n' + \
+        '#\t\t+               +----------------------------------------' + \
+        '---+                 +\n' + \
+        '#\t\t+               |   Response (Coefficients),' + \
+        '%6s ch %s   |                 +\n' % (station, channel) + \
+        '#\t\t+               +----------------------------------------' + \
+        '---+                 +\n' + \
         '#\t\t\n' + \
         'B044F05     Response type:                         %s\n' \
                 % self.response_type + \

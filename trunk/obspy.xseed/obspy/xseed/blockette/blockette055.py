@@ -21,8 +21,8 @@ class Blockette055(Blockette):
     name = "Response list"
     fields = [
         Integer(3, "Stage sequence number", 2),
-        Integer(4, "Stage input units", 3, xpath = 34),
-        Integer(5, "Stage output units", 3, xpath = 34),
+        Integer(4, "Stage input units", 3, xpath=34),
+        Integer(5, "Stage output units", 3, xpath=34),
         Integer(6, "Number of responses listed", 4),
         # REPEAT fields 7 — 11 for the Number of responses listed:
         Loop('Response', "Number of responses listed", [
@@ -46,10 +46,12 @@ class Blockette055(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                     +---------------------------------+                     +\n' + \
-        '#\t\t+                     |   Response List,%6s ch %s   |                     +\n'\
-                    %(station, channel) + \
-        '#\t\t+                     +---------------------------------+                     +\n' + \
+        '#\t\t+                     +---------------------------------+' + \
+        '                     +\n' + \
+        '#\t\t+                     |   Response List,%6s ch %s   |' + \
+        '                     +\n' % (station, channel) + \
+        '#\t\t+                     +---------------------------------+' + \
+        '                     +\n' + \
         '#\t\t\n' + \
         'B055F03     Stage sequence number:                 %s\n' \
                 % self.stage_sequence_number + \
@@ -62,21 +64,22 @@ class Blockette055(Blockette):
         if self.number_of_responses_listed:
             string += \
                 '#\t\tResponses:\n' + \
-                '#\t\t  frequency\t amplitude\t amp error\t    phase\t phase error\n'
+                '#\t\t  frequency\t amplitude\t amp error\t    ' + \
+                'phase\t phase error\n'
             if self.number_of_responses_listed > 1:
                 for _i in xrange(self.number_of_responses_listed):
-                    string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' \
-                        %(formatRESP(self.frequency[_i], 6),
-                          formatRESP(self.amplitude[_i], 6),
-                          formatRESP(self.amplitude_error[_i], 6),
-                          formatRESP(self.phase_angle[_i], 6),
-                          formatRESP(self.phase_error[_i], 6))
+                    string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
+                        (formatRESP(self.frequency[_i], 6),
+                         formatRESP(self.amplitude[_i], 6),
+                         formatRESP(self.amplitude_error[_i], 6),
+                         formatRESP(self.phase_angle[_i], 6),
+                         formatRESP(self.phase_error[_i], 6))
             else:
-                string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' \
-                    %(formatRESP(self.frequency, 6),
-                      formatRESP(self.amplitude, 6),
-                      formatRESP(self.amplitude_error, 6),
-                      formatRESP(self.phase_angle, 6),
-                      formatRESP(self.phase_error, 6))
+                string += 'B055F07-11  %s\t%s\t%s\t%s\t%s\n' % \
+                    (formatRESP(self.frequency, 6),
+                     formatRESP(self.amplitude, 6),
+                     formatRESP(self.amplitude_error, 6),
+                     formatRESP(self.phase_angle, 6),
+                     formatRESP(self.phase_error, 6))
         string += '#\t\t\n'
         return string

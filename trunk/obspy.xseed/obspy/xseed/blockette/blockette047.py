@@ -4,6 +4,7 @@ from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString
 from obspy.xseed.utils import formatRESP
 
+
 class Blockette047(Blockette):
     """
     Blockette 047: Decimation Dictionary Blockette.
@@ -30,10 +31,12 @@ class Blockette047(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                      +------------------------------+                       +\n' + \
-        '#\t\t+                      |   Decimation,%6s ch %s   |                       +\n'\
-                    % (station, channel) + \
-        '#\t\t+                      +------------------------------+                       +\n' + \
+        '#\t\t+                      +------------------------------+' + \
+        '                       +\n' + \
+        '#\t\t+                      |   Decimation,' + \
+        '%6s ch %s   |                       +\n' % (station, channel) + \
+        '#\t\t+                      +------------------------------+' + \
+        '                       +\n' + \
         '#\t\t\n' + \
         'B047F05     Response input sample rate:            %s\n' \
                     % formatRESP(self.input_sample_rate, 6) + \

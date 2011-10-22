@@ -78,18 +78,18 @@ def compareSEED(seed1, seed2):
     recnums = len(seed1) / 4096
     new_seed1 = ''
     for _i in xrange(recnums):
-        cur_record = seed1[_i * 4096 + 8: (_i + 1) * 4096].strip()
+        cur_record = seed1[_i * 4096 + 8:(_i + 1) * 4096].strip()
         if cur_record == '':
             continue
-        new_seed1 += seed1[_i * 4096 : (_i + 1) * 4096]
+        new_seed1 += seed1[_i * 4096:(_i + 1) * 4096]
     seed1 = new_seed1
     recnums = len(seed2) / 4096
     new_seed2 = ''
     for _i in xrange(recnums):
-        cur_record = seed2[_i * 4096 + 8: (_i + 1) * 4096].strip()
+        cur_record = seed2[_i * 4096 + 8:(_i + 1) * 4096].strip()
         if cur_record == '':
             continue
-        new_seed2 += seed2[_i * 4096 : (_i + 1) * 4096]
+        new_seed2 += seed2[_i * 4096:(_i + 1) * 4096]
     seed2 = new_seed2
     # length should be the same
     if len(seed1) != len(seed2):

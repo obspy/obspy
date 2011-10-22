@@ -10,10 +10,12 @@ import numpy as np
 
 def isGSE2(filename):
     """
-    Checks whether a file is GSE2 or not. Returns True or False.
+    Checks whether a file is GSE2 or not.
 
-    :type filename : string
-    :param filename : GSE2 file to be checked.
+    :type filename: string
+    :param filename: GSE2 file to be checked.
+    :rtype: bool
+    :return: ``True`` if a GSE2 file.
     """
     # Open file.
     try:
@@ -49,23 +51,25 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     Reads a GSE2 file and returns a Stream object.
 
     GSE2 files containing multiple WID2 entries/traces are supported.
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    :type filename : string
-    :param filename : GSE2 file to be read.
-    :type headonly : boolean, optional
-    :param headonly : If True read only head of GSE2 file.
-    :type verify_chksum : boolean, optional
-    :param verify_chksum : If True verify Checksum and raise Exception if
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :type filename: string
+    :param filename: GSE2 file to be read.
+    :type headonly: boolean, optional
+    :param headonly: If True read only head of GSE2 file.
+    :type verify_chksum: boolean, optional
+    :param verify_chksum: If True verify Checksum and raise Exception if
         it is not correct.
-    :rtype:`~obspy.core.stream.Stream`
+    :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object containing header and data.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
+    .. rubric:: Example
+
+    >>> from obspy.core import read  # doctest: +SKIP
+    >>> st = read("loc_RJOB20050831023349.z")  # doctest: +SKIP
     """
     traces = []
     # read GSE2 file
@@ -111,9 +115,10 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     """
     Write GSE2 file from a Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
     :type stream: :class:`~obspy.core.stream.Stream`
     :param stream: The ObsPy Stream object to write.
@@ -157,10 +162,12 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
 
 def isGSE1(filename):
     """
-    Checks whether a file is GSE1 or not. Returns True or False.
+    Checks whether a file is GSE1 or not.
 
     :type filename: string
     :param filename: GSE1 file to be checked.
+    :rtype: bool
+    :return: ``True`` if a GSE1 file.
     """
     # Open file.
     try:
@@ -180,8 +187,10 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
     Reads a GSE1 file and returns a Stream object.
 
     GSE1 files containing multiple WID1 entries/traces are supported.
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: string
     :type param: GSE2 file to be read.
@@ -192,6 +201,8 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
         it is not correct.
     :rtype: :class:`~obspy.core.stream.Stream`
     :returns: Stream object containing header and data.
+
+    .. rubric:: Example
 
     >>> from obspy.core import read # doctest: +SKIP
     >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP

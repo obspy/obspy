@@ -34,7 +34,7 @@ HEADER_INFO = {
     'S': {'name': 'Station Control Header',
           'blockettes': [50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62]}
 }
-RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]#
+RESP_BLOCKETTES = [53, 54, 55, 56, 57, 58, 60, 61, 62]
 
 XSEED_VERSIONS = ['1.0', '1.1']
 
@@ -122,7 +122,8 @@ class Parser(object):
         General parser method for XML-SEED and Dataless SEED files.
 
         :type data: Filename, URL, Basestring or StringIO object.
-        :param data: Filename, URL or XSEED/SEED string as file pointer or StringIO.
+        :param data: Filename, URL or XSEED/SEED string as file pointer or
+            StringIO.
         """
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
@@ -234,7 +235,6 @@ class Parser(object):
                 result[id] = tostring(cdoc, pretty_print=True,
                                       xml_declaration=True, encoding='UTF-8')
             return result
-
 
     def writeXSEED(self, filename, *args, **kwargs):
         """
@@ -585,7 +585,7 @@ class Parser(object):
         if self.debug:
             print("RECORD LENGTH: %d" % (self.record_length))
         # Set all temporary attributes.
-        self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
+        self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Jump back to beginning.
         data.seek(0)
         # Read the first record.
@@ -632,7 +632,7 @@ class Parser(object):
         xseed_version = root.get('version')
         headers = root.getchildren()
         # Set all temporary attributes.
-        self.temp = {'volume' : [], 'abbreviations' : [], 'stations' : []}
+        self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Parse volume which is assumed to be the first header. Only parse
         # blockette 10 and discard the rest.
         self.temp['volume'].append(\
@@ -660,8 +660,8 @@ class Parser(object):
         """
         blkt52 = blockettes[0]
         # The first blockette in the list always has to be Blockette 52.
-        channel_info = {'Location' : blkt52.location_identifier,
-                        'Channel' : blkt52.channel_identifier,
+        channel_info = {'Location': blkt52.location_identifier,
+                        'Channel': blkt52.channel_identifier,
                         'Start date': blkt52.start_date,
                         'End date': blkt52.end_date}
         # Set location and end date default values or convert end time..
@@ -675,11 +675,11 @@ class Parser(object):
         channel_info['Start date'] = channel_info['Start date'].formatSEED()
         # Write Blockette 52 stuff.
         resp.write(\
-                'B052F03     Location:    %s\n' % channel_info['Location'] + \
-                'B052F04     Channel:     %s\n' % channel_info['Channel'] + \
-                'B052F22     Start date:  %s\n' % channel_info['Start date'] + \
-                'B052F23     End date:    %s\n' % channel_info['End date'] + \
-                '#\t\t=======================================\n')
+            'B052F03     Location:    %s\n' % channel_info['Location'] + \
+            'B052F04     Channel:     %s\n' % channel_info['Channel'] + \
+            'B052F22     Start date:  %s\n' % channel_info['Start date'] + \
+            'B052F23     End date:    %s\n' % channel_info['End date'] + \
+            '#\t\t=======================================\n')
         # Write all other blockettes. Currently now sorting takes place. This
         # is just an experiment to see how rdseed does it. The Blockettes
         # might need to be sorted.
@@ -835,8 +835,8 @@ class Parser(object):
             self.stations.extend(self.temp['stations'])
             del self.temp
         else:
-            msg = 'Merging is an experimental feature and still contains a ' + \
-                  'lot of errors!'
+            msg = 'Merging is an experimental feature and still contains ' + \
+                  'a lot of errors!'
             warnings.warn(msg, UserWarning)
             # XXX: Sanity check for multiple Blockettes. Remove duplicates.
             # self._removeDuplicateAbbreviations()
@@ -863,7 +863,7 @@ class Parser(object):
                 if not blkt_done:
                     self._updateTemporaryStations(id, cur_index)
                     # Append abbreviation.
-                    setattr(blkt, INDEX_FIELDS[id] , cur_index)
+                    setattr(blkt, INDEX_FIELDS[id], cur_index)
                     self.abbreviations.append(blkt)
             # Update the stations.
             self.stations.extend(self.temp['stations'])
@@ -957,12 +957,13 @@ class Parser(object):
                                                 record_type=record_type)
                 blockette_obj.parseSEED(data, blockette_length)
                 root_attribute.append(blockette_obj)
-                self.blockettes.setdefault(blockette_id, []).append(blockette_obj)
+                self.blockettes.setdefault(blockette_id,
+                                           []).append(blockette_obj)
             elif blockette_id != 0:
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
         # check if everything is parsed
-        if data.len!=data.tell():
+        if data.len != data.tell():
             warnings.warn("There exist unparsed elements!")
 
     def _createBlockettes11and12(self, blockette12=False):

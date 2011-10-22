@@ -36,11 +36,11 @@ class Blockette058(Blockette):
         # REPEAT fields 7 — 9 for the Number of history values:
         Loop('History', "Number of history values", [
             Float(7, "Sensitivity for calibration", 12, mask='%+1.5e'),
-            Float(8, "Frequency of calibration sensitivity", 12, mask='%+1.5e'),
-            VariableString(9, "Time of above calibration", 1, 22 , 'T')
+            Float(8, "Frequency of calibration sensitivity", 12,
+                  mask='%+1.5e'),
+            VariableString(9, "Time of above calibration", 1, 22, 'T')
         ])
     ]
-
 
     def getRESP(self, station, channel, abbreviations):
         """
@@ -50,16 +50,20 @@ class Blockette058(Blockette):
         blkt_type = self.stage_sequence_number
         if blkt_type != 0:
             string = \
-            '#\t\t+                  +---------------------------------------+                  +\n' + \
-            '#\t\t+                  |       Channel Gain,%6s ch %s      |                  +\n'\
-                        % (station, channel) + \
-            '#\t\t+                  +---------------------------------------+                  +\n'
+            '#\t\t+                  +-------------------------------' + \
+            '--------+                  +\n' + \
+            '#\t\t+                  |       Channel Gain,' + \
+            '%6s ch %s      |                  +\n' % (station, channel) + \
+            '#\t\t+                  +-------------------------------' + \
+            '--------+                  +\n'
         else:
             string = \
-            '#\t\t+                  +---------------------------------------+                  +\n' + \
-            '#\t\t+                  |   Channel Sensitivity,%6s ch %s   |                  +\n'\
-                        % (station, channel) + \
-            '#\t\t+                  +---------------------------------------+                  +\n'
+            '#\t\t+                  +--------------------------------' + \
+            '-------+                  +\n' + \
+            '#\t\t+                  |   Channel Sensitivity,' + \
+            '%6s ch %s   |                  +\n' % (station, channel) + \
+            '#\t\t+                  +--------------------------------' + \
+            '-------+                  +\n'
         string += '#\t\t\n' + \
         'B058F03     Stage sequence number:                 %s\n' \
                     % blkt_type

@@ -36,8 +36,8 @@ class Blockette041(Blockette):
     def parseSEED(self, data, expected_length=0):
         """
         If number of FIR coefficients are larger than maximal blockette size of
-        9999 chars a follow up blockette with the same blockette id and response
-        lookup key is expected - this is checked here.
+        9999 chars a follow up blockette with the same blockette id and
+        response lookup key is expected - this is checked here.
         """
         # convert to stream for test issues
         if isinstance(data, basestring):
@@ -99,10 +99,12 @@ class Blockette041(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                     +--------------------------------+                      +\n' + \
-        '#\t\t+                     |   FIR response,%6s ch %s   |                      +\n'\
-                    % (station, channel) + \
-        '#\t\t+                     +--------------------------------+                      +\n' + \
+        '#\t\t+                     +--------------------------------+' + \
+        '                      +\n' + \
+        '#\t\t+                     |   FIR response,' + \
+        '%6s ch %s   |                      +\n' % (station, channel) + \
+        '#\t\t+                     +--------------------------------+' + \
+        '                      +\n' + \
         '#\t\t\n' + \
         'B041F05     Symmetry type:                         %s\n' \
                 % self.symmetry_code + \

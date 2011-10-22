@@ -13,8 +13,11 @@ Python routines for reading GSE pole and zero (PAZ) files.
 The read in PAZ information can be used with
 :mod:`~obspy.signal` for instrument correction.
 
-:license: GNU Lesser General Public License, Version 3
-(http://www.gnu.org/copyleft/lesser.html)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 import doctest
