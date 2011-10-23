@@ -12,9 +12,9 @@ Decryption class of ArcLink/WebDC client for ObsPy.
 """
 
 try:
-    from M2Crypto import EVP, util
+    from M2Crypto import EVP
     hasM2Crypto = True
-except:
+except ImportError:
     hasM2Crypto = False
 
 

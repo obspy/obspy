@@ -14,7 +14,7 @@ import unittest
 try:
     from M2Crypto.EVP import EVPError
     hasM2Crypto = True
-except:
+except ImportError:
     hasM2Crypto = False
 
 
