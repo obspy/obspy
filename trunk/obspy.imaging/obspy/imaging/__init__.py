@@ -27,7 +27,7 @@ Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy.core import read
 >>> st = read()
->>> print(st)  # doctest: +NORMALIZE_WHITESPACE
+>>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
 BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
