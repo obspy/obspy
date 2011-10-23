@@ -2,16 +2,17 @@ Source: python-obspy-sac
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.7
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
+ python-setuptools (>= 0.6)
+Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.sac
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.sac
 Homepage: http://www.obspy.org
 
 Package: python-obspy-sac
 Architecture: all
-Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (>= 0.6), python-obspy-core
+Depends: python (>= 2.5), python (<< 3), ${python:Depends},
+ python-numpy (>= 1:1.1), python-obspy-core
 Description: Read & Write Seismograms, Format SAC
  .
  Python methods for reading and writing seismograms to SAC.

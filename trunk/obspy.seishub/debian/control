@@ -2,17 +2,18 @@ Source: python-obspy-seishub
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.7
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
+ python-setuptools (>= 0.6)
+Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.seishub
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.seishub
 Homepage: http://www.obspy.org
 
 Package: python-obspy-seishub
 Architecture: all
-Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (>= 0.6), python-lxml (>= 2.1),
- python-matplotlib (>= 0.98.1), python-obspy-core, python-obspy-mseed
+Depends: python (>= 2.5), python (<< 3), ${python:Depends},
+ python-numpy (>= 1:1.1), python-lxml (>= 2.1), python-matplotlib (>= 0.98.1),
+ python-obspy-core, python-obspy-mseed
 Description: SeisHub database client for ObsPy
  .
  For more information visit http://www.obspy.org.

@@ -2,16 +2,17 @@ Source: python-obspy-segy
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5)
-Standards-Version: 0.4.5
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
+ python-setuptools (>= 0.6)
+Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.segy
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.segy
 Homepage: http://www.obspy.org
 
 Package: python-obspy-segy
 Architecture: any
-Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (>= 0.6), ${shlibs:Depends}, python-obspy-core
+Depends: python (>= 2.5), python (<< 3), ${python:Depends},
+ python-numpy (>= 1:1.1), ${shlibs:Depends}, python-obspy-core
 Description: SEG Y and SU read and write support for ObsPy
  .
  The obspy.segy package contains methods in order to read and write seismogram
