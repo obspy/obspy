@@ -26,7 +26,7 @@ FTPHOST=obspy.org
 FTPUSER=obspy
 
 # deactivate, else each time all packages are removed
-rm -rf $PACKAGEDIR #$TAGSDIR
+rm -rf $PACKAGEDIR $TAGSDIR
 mkdir -p $PACKAGEDIR
 
 # download tags
