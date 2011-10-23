@@ -2,10 +2,10 @@
 #-------------------------------------------------------------------
 # Filename: build_deb.sh
 #  Purpose: Build Debian packages for ObsPy 
-#   Author: Moritz Beyreuther
+#   Author: Moritz Beyreuther, Tobias Megies
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2011 Moritz Beyreuther
+# Copyright (C) 2011 ObsPy Development Team
 #---------------------------------------------------------------------
 
 # Must be executed in the scripts directory
@@ -26,7 +26,7 @@ FTPHOST=obspy.org
 FTPUSER=obspy
 
 # deactivate, else each time all packages are removed
-rm -rf $PACKAGEDIR $TAGSDIR
+rm -rf $PACKAGEDIR #$TAGSDIR
 mkdir -p $PACKAGEDIR
 
 # download tags
@@ -65,42 +65,46 @@ wq
 EOL
         fi
         # get version number, the debian version
-        # has to be increased manually.
-        VERSION=`cat ${MODULE/./\/}/VERSION.txt`
+        # has to be increased manually if necessary.
+        VERSION=$TAG
         DEBVERSION=1
+        DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
         # the commented code shows how to update the changelog
         # information, however we do not do it as it hard to
         # automatize it for all packages in common
         # dch --newversion ${VERSION}-$DEBVERSION "New release" 
         # just write a changelog template with only updated version info
     cat >debian/changelog << EOF
-python-${MODULE/./-} (${VERSION}-${DEBVERSION}) unstable; urgency=low
+python-${MODULE/./-} (${VERSION}-${DEBVERSION}~${CODENAME}) unstable; urgency=low
 
   * This changelog file is overwritten for every release, only the version
     is not kept up to date. Visit www.obspy.org for more information about
     the age and the contents of the version given above.
 
- -- ObsPy Development Team <devs@obspy.org>  Thu, 20 Oct 2011 10:07:58 +0200
+ -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
         # update also Standards-Version: 0.3.3
         ex debian/control << EOF
-g/Standards-Version/s/[0-9.]\+/$VERSION/
+g/Standards-Version/s/[x0-9.]\+/$VERSION/
 wq
 EOF
         # build the package
         fakeroot ./debian/rules clean build binary
-        mv ../python-${MODULE/./-}_*.deb $PACKAGEDIR
+        mv ../python-${MODULE/./-}_*.deb $PACKAGEDIR/
     done
 done
 
 #
 # Build namespace package if NOT_EQUIVS is non zero
 #
-if [ -z "$NOT_EQUIVS" ]; then
-    cd $DIR/misc
+#if [ -z "$NOT_EQUIVS" ]; then
+    cd $BASEDIR/..
+    svn revert ./debian/control
     equivs-build ./debian/control
-    mv python-obspy_*.deb $PACKAGEDIR
-fi
+    FILENAME=`ls python-obspy_*.deb`
+    NEW_FILENAME=`echo $FILENAME | sed "s#\([0-9]\)_#\1-${DEBVERSION}~${CODENAME}_#"`
+    mv $FILENAME $PACKAGEDIR/$NEW_FILENAME
+#fi
 
 #
 # run lintian to verify the packages
@@ -112,16 +116,16 @@ for MODULE in $MODULES; do
     lintian $PACKAGE
 done
 
-#
-# upload built packages
-#
-cd $PACKAGEDIR
-echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
-read FTPPASSWD
-ftp -i -n -v $FTPHOST &> $BASEDIR/ftp.log << EOF
-user $FTPUSER $FTPPASSWD
-binary
-cd debian/packages/$CODENAME
-mput *.deb
-bye
-EOF
+####
+#### upload built packages
+####
+###cd $PACKAGEDIR
+###echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
+###read FTPPASSWD
+###ftp -i -n -v $FTPHOST &> $BASEDIR/ftp.log << EOF
+###user $FTPUSER $FTPPASSWD
+###binary
+###cd debian/packages
+###mput *.deb
+###bye
+###EOF
