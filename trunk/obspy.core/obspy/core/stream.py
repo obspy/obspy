@@ -883,7 +883,7 @@ class Stream(object):
         **Dayplot parameters**
 
         The following parameters are only available if ``type='dayplot'`` is
-        set. 
+        set.
 
         :param vertical_scaling_range: Determines how each line is scaled in
             its given space. Every line will be centered around its mean value

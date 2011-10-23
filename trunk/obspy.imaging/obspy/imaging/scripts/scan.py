@@ -60,16 +60,19 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                                  1.0 / (24 * 3600 * tr.stats.sampling_rate))
     return (counter + 1)
 
+
 def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
                     verbose=False, ignore_links=False):
     if ignore_links and os.path.islink(path):
         print("Ignoring symlink: %s" % (path))
         return counter
     if os.path.isfile(path):
-        counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter, format, verbose)
+        counter = parse_file_to_dict(data_dict, samp_int_dict, path, counter,
+                                     format, verbose)
     elif os.path.isdir(path):
         for file in (os.path.join(path, file) for file in os.listdir(path)):
-            counter = recursive_parse(data_dict, samp_int_dict, file, counter, format, verbose, ignore_links)
+            counter = recursive_parse(data_dict, samp_int_dict, file, counter,
+                                      format, verbose, ignore_links)
     else:
         print("Problem with filename/dirname: %s" % (path))
     return counter
@@ -121,7 +124,6 @@ def main():
         for time in times:
             ax.axvline(time, color='k')
 
-    #
     # Generate dictionary containing nested lists of start and end times per
     # station
     data = {}
@@ -134,18 +136,18 @@ def main():
     if not data:
         print("No waveform data found.")
         return
-    #
+
     # Loop throught this dictionary
     ids = data.keys()
     ids = sorted(ids)
     for _i, _id in enumerate(ids):
         data[_id].sort()
         startend = np.array(data[_id])
-        offset = np.ones(len(startend)) * _i #generate list of y values
+        offset = np.ones(len(startend)) * _i  # generate list of y values
         ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
         ax.hlines(offset, startend[:, 0], startend[:, 1])
         # find the gaps
-        diffs = startend[1:, 0] - startend[:-1, 1] #currend.start - last.end
+        diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gaps = startend[diffs > 1.8 * samp_int[_id], 1]
         if len(gaps) > 0:
             offset = offset[:len(gaps)]
@@ -156,7 +158,7 @@ def main():
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(ids)
-    fig.autofmt_xdate() #rotate date
+    fig.autofmt_xdate()  # rotate date
     show()
     sys.stdout.write('\n')
 

@@ -27,11 +27,11 @@ Examples files may be retrieved via http://examples.obspy.org.
 
 >>> from obspy.core import read
 >>> st = read()
->>> print(st)
+>>> print(st)  # doctest: +NORMALIZE_WHITESPACE
 3 Trace(s) in Stream:
-BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
-BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - 2009-08-24T00:20:32.990000Z | 100.0 Hz, 3000 samples
+BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 >>> st.plot(color='gray', tick_format='%I:%M %p',
 ...         starttime=st[0].stats.starttime,
 ...         endtime=st[0].stats.starttime+20)
@@ -97,11 +97,11 @@ Draws a beach ball diagram of an earthquake focal mechanism.
 .. rubric:: Examples
 
 (1) The focal mechanism can be given by 3 (strike, dip, and rake) components.
-    The strike is of the first plane, clockwise relative to north. The dip is of
-    the first plane, defined clockwise and perpendicular to strike, relative to
-    horizontal such that 0 is horizontal and 90 is vertical. The rake is of the
-    first focal plane solution. 90 moves the hanging wall up-dip (thrust), 0
-    moves it in the strike direction (left-lateral), -90 moves it down-dip
+    The strike is of the first plane, clockwise relative to north. The dip is
+    of the first plane, defined clockwise and perpendicular to strike, relative
+    to horizontal such that 0 is horizontal and 90 is vertical. The rake is of
+    the first focal plane solution. 90 moves the hanging wall up-dip (thrust),
+    0 moves it in the strike direction (left-lateral), -90 moves it down-dip
     (normal), and 180 moves it opposite to strike (right-lateral).
 
     >>> from obspy.imaging.beachball import Beachball
@@ -115,8 +115,8 @@ Draws a beach ball diagram of an earthquake focal mechanism.
         np1 = [150, 87, 1]
         Beachball(np1)
 
-(2) The focal mechanism can also be specified using the 6 independent components
-    of the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
+(2) The focal mechanism can also be specified using the 6 independent
+    components of the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
 
     >>> from obspy.imaging.beachball import Beachball
     >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]

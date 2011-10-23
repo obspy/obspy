@@ -53,7 +53,6 @@ class MopadTestCase(unittest.TestCase):
               [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
               [150, 87, 1]]
 
-
         # Initialize figure
         fig = plt.figure(1, figsize=(3, 3), dpi=100)
         ax = fig.add_subplot(111, aspect='equal')

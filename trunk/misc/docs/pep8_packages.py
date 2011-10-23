@@ -7,8 +7,8 @@ import os
 import sys
 from StringIO import StringIO
 
-paths = obspy.__path__
-modules = [p.split(os.sep)[-2] for p in obspy.__path__]
+paths = [p for p in obspy.__path__ if 'fissures' not in p]
+modules = [p.split(os.sep)[-2] for p in paths]
 
 
 try:

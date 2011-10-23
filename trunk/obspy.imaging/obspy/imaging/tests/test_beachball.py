@@ -27,19 +27,19 @@ class BeachballTestCase(unittest.TestCase):
         """
         Create beachball examples in tests/output directory.
         """
-        # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-sumatra-mt.png'))
         np1 = [274, 13, 55]
         Beachball(np1, outfile=os.path.join(self.path, 'bb-sumatra-np1.png'))
         np2 = [130, 79, 98]
         Beachball(np2, outfile=os.path.join(self.path, 'bb-sumatra-np2.png'))
-        # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/19950128062621/index.html
+        #
         np1 = [264.98, 45.00, -159.99]
         Beachball(np1, outfile=os.path.join(self.path, 'bb-19950128-np1.png'))
         np2 = [160.55, 76.00, -46.78]
         Beachball(np2, outfile=os.path.join(self.path, 'bb-19950128-np2.png'))
-        # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/20090102141713/index.html
+        #
         mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-20090102-mt.png'))
         np1 = [235, 80, 35]
@@ -61,27 +61,27 @@ class BeachballTestCase(unittest.TestCase):
         # Lars
         mt = [1, -1, 0, 0, 0, -1]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-lars.png'))
-        # @see: http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
+        # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
         np1 = [179, 55, -78]
         Beachball(np1, outfile=os.path.join(self.path, 'bb-geiyo-np1.png'))
-        # @see: http://iisee.kenken.go.jp/staff/yagi/eq/east_honshu20030726/east_honshu20030726.html
+        #
         np1 = [10, 42.5, 90]
         Beachball(np1, outfile=os.path.join(self.path, 'bb-honshu-np1.png'))
         np2 = [10, 42.5, 92]
         Beachball(np2, outfile=os.path.join(self.path, 'bb-honshu-np2.png'))
-        # @see: http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
+        # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
         np1 = [150, 87, 1]
         Beachball(np1, outfile=os.path.join(self.path, 'bb-tottori-np1.png'))
-        # @see: http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
+        # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
         mt = [0.99, -2.00, 1.01, 0.92, 0.48, 0.15]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-20040905_1-mt.png'))
-        # @see: http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
+        # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
         mt = [5.24, -6.77, 1.53, 0.81, 1.49, -0.05]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-20040905_0-mt.png'))
-        # @see: http://iisee.kenken.go.jp/staff/thara/miyagi.htm
+        # http://iisee.kenken.go.jp/staff/thara/miyagi.htm
         mt = [16.578, -7.987, -8.592, -5.515, -29.732, 7.517]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-miyagi-mt.png'))
-        # @see: http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
+        # http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
         Beachball(mt, outfile=os.path.join(self.path, 'bb-chile-mt.png'))
 
@@ -127,7 +127,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Test AuxPlane function - all values are taken from MatLab.
         """
-        # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         s1 = 132.18005257215460
         d1 = 84.240987194376590
         r1 = 98.963372641038790
@@ -135,7 +135,7 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(s2, 254.64386091007400)
         self.assertAlmostEqual(d2, 10.641291652406172)
         self.assertAlmostEqual(r2, 32.915578422454380)
-        # @see: http://www.eas.slu.edu/Earthquake_Center/MECH.NA/19950128062621/index.html
+        #
         s1 = 160.55
         d1 = 76.00
         r1 = -46.78
@@ -169,7 +169,7 @@ class BeachballTestCase(unittest.TestCase):
         """
         Tests MT2Axes.
         """
-        # @see: http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
+        # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = MomentTensor((0.91, -0.89, -0.02, 1.78, -1.55, 0.47), 0)
         (T, N, P) = MT2Axes(mt)
         self.assertAlmostEqual(T.val, 2.52461359)

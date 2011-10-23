@@ -68,7 +68,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param xy: Origin position of the beach ball as tuple.
     :param width: Symbol size of beach ball.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param zorder: Set zorder. Artists with lower zorder values are drawn first.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn
+        first.
     """
     mt = None
     np1 = None
@@ -100,9 +101,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     else:
         colors, p = plotDC(np1, size=size, xy=xy, width=width)
 
-
     if nofill:
-        #XXX not tested with plotMT
+        # XXX: not tested with plotMT
         col = collections.PatchCollection([p[1]], match_original=False)
         col.set_facecolor('none')
     else:
@@ -366,7 +366,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             xp1[i] = x[i]
             yp1[i] = y[i]
         if azi[0][0] - azi[0][1] > np.pi:
-            azi[0][0] -= np.pi * 2.;
+            azi[0][0] -= np.pi * 2.
         elif azi[0][1] - azi[0][0] > np.pi:
             azi[0][0] += np.pi * 2.
         if azi[0][0] < azi[0][1]:
@@ -401,9 +401,9 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
             while az > azi[1][0]:
                 si = np.sin(az)
                 co = np.cos(az)
-                xp2[i] = x0 + radius_size * si;
+                xp2[i] = x0 + radius_size * si
                 i += 1
-                yp2[i] = y0 + radius_size * co;
+                yp2[i] = y0 + radius_size * co
                 az -= D2R
         else:
             az = azi[1][1] + D2R
@@ -498,9 +498,9 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     :param ax: axis object of a matplotlib figure
     :param np1: :class:`~NodalPlane`
 
-    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
-
-    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    Adapted from MATLAB script
+    `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
+    written by Andy Michael and Oliver Boyd.
     """
     S1 = np1.strike
     D1 = np1.dip
@@ -568,6 +568,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     collect.append(xy2patch(Y, X, res, xy))
     return ['b', 'w'], collect
 
+
 def xy2patch(x, y, res, xy):
     # transform into the Path coordinate system
     x = x * res + xy[0]
@@ -593,9 +594,9 @@ def StrikeDip(n, e, u):
     Finds strike and dip of plane given normal vector having components n, e,
     and u.
 
-    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
-
-    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    Adapted from MATLAB script
+    `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
+    written by Andy Michael and Oliver Boyd.
     """
     r2d = 180 / np.pi
     if u < 0:
@@ -618,9 +619,9 @@ def AuxPlane(s1, d1, r1):
     """
     Get Strike and dip of second plane.
 
-    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
-
-    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    Adapted from MATLAB script
+    `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
+    written by Andy Michael and Oliver Boyd.
     """
     r2d = 180 / np.pi
 
@@ -633,9 +634,9 @@ def AuxPlane(s1, d1, r1):
     sl3 = np.sin(z3) * np.sin(z2)
     (strike, dip) = StrikeDip(sl2, sl1, sl3)
 
-    n1 = np.sin(z) * np.sin(z2) # normal vector to plane 1
+    n1 = np.sin(z) * np.sin(z2)  # normal vector to plane 1
     n2 = np.cos(z) * np.sin(z2)
-    h1 = -sl2 # strike vector of plane 2
+    h1 = -sl2  # strike vector of plane 2
     h2 = sl1
     # note h3=0 always so we leave it out
     # n3 = np.cos(z2)
@@ -658,9 +659,9 @@ def MT2Plane(mt):
     :param mt: :class:`~MomentTensor`
     :return: :class:`~NodalPlane`
 
-    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
-
-    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    Adapted from MATLAB script
+    `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
+    written by Andy Michael and Oliver Boyd.
     """
     (d, v) = np.linalg.eig(mt.mt)
     D = np.array([d[1], d[0], d[2]])
@@ -689,9 +690,9 @@ def TDL(AN, BN):
     """
     Helper function for MT2Plane.
 
-    Adapted from MATLAB script `bb.m`_ written by Andy Michael and Oliver Boyd.
-
-    .. _`bb.m`: http://www.ceri.memphis.edu/people/olboyd/Software/Software.html
+    Adapted from MATLAB script
+    `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
+    written by Andy Michael and Oliver Boyd.
     """
     XN = AN[0]
     YN = AN[1]
@@ -775,9 +776,8 @@ def MT2Axes(mt):
     :param mt: :class:`~MomentTensor`
     :return: tuple of :class:`~PrincipalAxis` T, N and P
 
-    Adapted from ps_tensor / utilmeca.c / `Generic Mapping Tools (GMT)`_.
-
-    .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
+    Adapted from ps_tensor / utilmeca.c /
+    `Generic Mapping Tools (GMT) <http://gmt.soest.hawaii.edu>`_.
     """
     (D, V) = np.linalg.eigh(mt.mt)
     pl = np.arcsin(-V[0])

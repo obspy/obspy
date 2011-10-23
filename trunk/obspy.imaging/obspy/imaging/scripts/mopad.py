@@ -158,7 +158,6 @@ class MomentTensor:
         'debug' enables output on the shell at the intermediate steps.
         """
 
-
         source_mechanism = M
         self._original_M = M[:]
 
@@ -171,7 +170,6 @@ class MomentTensor:
 
         # bring M to symmetric matrix form
         self._M = self._setup_M(source_mechanism)
-
 
         # transform M into NED system for internal calculations
         self._rotate_2_NED()
@@ -256,14 +254,14 @@ class MomentTensor:
             M = mech
             new_M = N.matrix([M[0], M[3], M[4],
                               M[3], M[1], M[5],
-                              M[4], M[5], M[2] ]).reshape(3, 3)
+                              M[4], M[5], M[2]]).reshape(3, 3)
 
-            if len(mech) == 7 :
+            if len(mech) == 7:
                 new_M *= M[6]
 
         # if given as strike, dip, rake, conventions from Jost & Herrmann hold
         # resulting matrix is in NED-basis:
-        if len(mech) == 3 or len(mech) == 4 :
+        if len(mech) == 3 or len(mech) == 4:
             try:
                 [float(val) for val in mech]
             except:
@@ -287,7 +285,7 @@ class MomentTensor:
 
             new_M = N.matrix([moms[0], moms[3], moms[4],
                               moms[3], moms[1], moms[5],
-                              moms[4], moms[5], moms[2] ]).reshape(3, 3)
+                              moms[4], moms[5], moms[2]]).reshape(3, 3)
 
             if len(mech) == 4:
                 new_M *= mech[3]
@@ -390,11 +388,11 @@ class MomentTensor:
 
         # eigenvalues in ascending order:
         eigenw = N.real(N.take(eigenw1, N.argsort(abs(eigenwtot))))
-        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenwtot)) , 1))
+        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenwtot)), 1))
 
         # eigenvalues in ascending order in absolute value!!:
         eigenw_devi = N.real(N.take(eigenw1, N.argsort(abs(eigenw1))))
-        eigenv_devi = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)) , 1))
+        eigenv_devi = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)), 1))
 
         M0_devi = max(abs(eigenw_devi))
 
@@ -463,7 +461,7 @@ class MomentTensor:
 
         # eigenvalues in ascending order of their absolute values:
         eigenw = N.real(N.take(eigenw1, N.argsort(abs(eigenw1))))
-        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)) , 1))
+        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)), 1))
 
         M0_devi = max(abs(eigenw))
 
@@ -533,7 +531,7 @@ class MomentTensor:
 
         # eigenvalues in ascending order of their absolute values:
         eigenw = N.real(N.take(eigenw1, N.argsort(abs(eigenw1))))
-        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)) , 1))
+        eigenv = N.real(N.take(eigenv1, N.argsort(abs(eigenw1)), 1))
 
         # named according to Jost & Herrmann:
         a1 = eigenv[:, 0]
@@ -568,7 +566,6 @@ class MomentTensor:
 
         M_iso_percentage = int(M0_iso / M0 * 100)
         self._iso_percentage = M_iso_percentage
-
 
         # self._seismic_moment   = N.sqrt(1./2*N.sum(eigenw**2) )
         self._seismic_moment = M0
@@ -611,7 +608,7 @@ class MomentTensor:
 
         # print 'order',EW_order
 
-        if 1:#self._plot_isotropic_part:
+        if 1:  # self._plot_isotropic_part:
             trace_M = N.trace(M)
             if abs(trace_M) < epsilon:
                 trace_M = 0
@@ -665,7 +662,6 @@ class MomentTensor:
             symmetry_around_tension = 0
             # logger.debug( 'IMPLOSION - symmetry around pressure axis \n\n')
             clr = 1
-
         # explosion
         elif   EW1 > 0 and EW2 > 0 and EW3 > 0:
             symmetry_around_tension = 1
@@ -673,102 +669,95 @@ class MomentTensor:
                 symmetry_around_tension = 0
             # logger.debug( 'EXPLOSION - symmetry around tension axis \n\n')
             clr = -1
-
         # net-implosion
-        elif  EW2 < 0 and  sum([EW1, EW2, EW3]) < 0 :
+        elif  EW2 < 0 and  sum([EW1, EW2, EW3]) < 0:
             if  abs(EW1_devi) < abs(EW3_devi):
                 symmetry_around_tension = 1
                 clr = 1
             else:
                 symmetry_around_tension = 1
                 clr = 1
-
         # net-implosion
-        elif  EW2_devi >= 0  and sum([EW1, EW2, EW3]) < 0 :
+        elif  EW2_devi >= 0  and sum([EW1, EW2, EW3]) < 0:
             symmetry_around_tension = 0
             clr = -1
             if  abs(EW1_devi) < abs(EW3_devi):
                 symmetry_around_tension = 1
                 clr = 1
-
         # net-explosion
-        elif  EW2_devi < 0 and sum([EW1, EW2, EW3]) > 0 :
+        elif  EW2_devi < 0 and sum([EW1, EW2, EW3]) > 0:
             symmetry_around_tension = 1
             clr = 1
             if  abs(EW1_devi) > abs(EW3_devi):
                 symmetry_around_tension = 0
                 clr = -1
-
         # net-explosion
-        elif  EW2_devi >= 0 and sum([EW1, EW2, EW3]) > 0 :
+        elif  EW2_devi >= 0 and sum([EW1, EW2, EW3]) > 0:
             symmetry_around_tension = 0
             clr = -1
 #           if abs(trace_M_devi)< epsilon:
 #               if  abs(EW1_devi) < abs(EW3_devi):
 #           symmetry_around_tension = 1
 #           clr = 1
-
+#
 #             if EW2_devi < 0:
 #                 symmetry_around_tension = 1
 #                 clr = 1
-
-
+#
+#
 #             if EW1_devi < 0 and EW2_devi < 0 and  EW3_devi > 0:
 #                 symmetry_around_tension = 1
 #                 clr = 1
-
         else:
             pass
-
 #         # pure deviatoric movement
 #         if trace_M == 0 and  EW[2] == abs(EW[0]):
 #             print 'shear'
 #             print EW
 #             #print EW1
 #             #exit()
-
+#
 #             if EW[2] != abs(EW[0]):
 #                 print 'CLVD'
-
+#
 #                 if EW[2] < abs(EW[0]):
 #                     print 'symmetry around tension ( red)'
-
+#
 #                     symmetry_around_tension = 0
 #                     clr = 1
 #                 else:
 #                     print 'symmetry around pressure (white)'
-
+#
 #                     symmetry_around_tension = 0
 #                     clr = -1
-
-
+#
+#
 #                 if EW[2] > abs( EW[0]):
 #                     symmetry_around_tension = 0
-
+#
 #                     clr = -1
-
-
+#
+#
 #             # elif abs(EW3) == EW1 and EW[0] > EW[2]:
 # #                 symmetry_around_tension = 0
 # #                 #logger.debug( 'SIGMA AXIS = tension\n')
 # #                 clr = 1
-
+#
 #             else:
 #                 symmetry_around_tension = 1
 #                 #logger.debug( 'SIGMA AXIS = tension\n')
 #                 clr = -1
-
-
+#
+#
 # #         elif trace_M == 0:
 # #             symmetry_around_tension = 1
 # #             if
-
+#
 # #             print 'detmat', det_mat
 # #             if det_mat > 0:
 # #                 symmetry_around_tension = 0
 # #                 clr = 1
 # #                 pass
-
         if abs(EW1_devi) < abs(EW3_devi):
             symmetry_around_tension = 1
             clr = 1
@@ -954,8 +943,10 @@ class MomentTensor:
             enodes = exs
         enodess = rotmat * enodes
         cos_alpha = float((ez.T * ezs))
-        if cos_alpha > 1.: cos_alpha = 1.
-        if cos_alpha < -1.: cos_alpha = -1.
+        if cos_alpha > 1.:
+            cos_alpha = 1.
+        if cos_alpha < -1.:
+            cos_alpha = -1.
         alpha = N.arccos(cos_alpha)
         beta = N.mod(N.arctan2(enodes[1, 0], enodes[0, 0]), N.pi * 2.)
         gamma = N.mod(-N.arctan2(enodess[1, 0], enodess[0, 0]), N.pi * 2.)
@@ -1000,10 +991,14 @@ class MomentTensor:
         # Choose to look at such that beta is in the range [0,180)
 
         # This should prevent some problems, when dip is close to 90 degrees:
-        if abs(alpha - 0.5 * pi) < 1e-10: alpha = 0.5 * pi
-        if abs(beta - pi) < 1e-10: beta = pi
-        if abs(beta - 2.*pi) < 1e-10: beta = 0.
-        if abs(beta) < 1e-10: beta = 0.
+        if abs(alpha - 0.5 * pi) < 1e-10:
+            alpha = 0.5 * pi
+        if abs(beta - pi) < 1e-10:
+            beta = pi
+        if abs(beta - 2. * pi) < 1e-10:
+            beta = 0.
+        if abs(beta) < 1e-10:
+            beta = 0.
 
         if alpha == 0.5 * pi and beta >= pi:
             gamma = -gamma
@@ -1100,10 +1095,10 @@ class MomentTensor:
                 raise MTError(' !! ')
 
             if N.shape(vectors)[0] == 3:
-                for ii in xrange(N.shape(vectors)[1]) :
+                for ii in xrange(N.shape(vectors)[1]):
                     lo_vectors.append(vectors[:, ii])
             else:
-                for ii in xrange(N.shape(vectors)[0]) :
+                for ii in xrange(N.shape(vectors)[0]):
                     lo_vectors.append(vectors[:, ii].transpose())
 
         lo_vecs_to_show = []
@@ -1130,7 +1125,7 @@ class MomentTensor:
                 else:
                     lo_vecs_to_show.append(NED2NWU(vec))
 
-        if len(lo_vecs_to_show) == 1 :
+        if len(lo_vecs_to_show) == 1:
             return lo_vecs_to_show[0]
         else:
             if fancy:
@@ -1283,7 +1278,8 @@ class MomentTensor:
         """
         if style == 'f':
             print '\n Deviatoric part in %s-coordinates: ' % (system)
-        return  self._matrix_w_style_and_system(self._deviatoric, system, style)
+        return  self._matrix_w_style_and_system(self._deviatoric, system,
+                                                style)
 
     def get_DC(self, system='NED', style='n'):
         """
@@ -1511,7 +1507,8 @@ class MomentTensor:
         """
         if style == 'f':
             print '\n rotation matrix in %s -coordinates: ' % (system)
-        return  self._matrix_w_style_and_system(self._rotation_matrix, system, style)
+        return  self._matrix_w_style_and_system(self._rotation_matrix, system,
+                                                style)
 
     def get_fps(self, **kwargs):
         """
@@ -1577,7 +1574,7 @@ def _puzzle_basis_transformation(mat_tup_arr_vec, in_basis, out_basis):
         if out_basis == 'XYZ':
             transformed_in = NWU2XYZ(mat_tup_arr_vec)
 
-    if len(mat_tup_arr_vec) == 3 and N.prod(N.shape(mat_tup_arr_vec)) != 9 :
+    if len(mat_tup_arr_vec) == 3 and N.prod(N.shape(mat_tup_arr_vec)) != 9:
         tmp_array = N.array([0, 0, 0])
         tmp_array[:] = transformed_in
         return tmp_array
@@ -1922,14 +1919,14 @@ def fancy_matrix(m_in):
                 out += "  | %5.2F %5.2F %5.2F  |   x  %F\n" % \
                     (m[1, 0], m[1, 1], m[1, 2], norm_factor)
                 out += "  \\ %5.2F %5.2F %5.2F /\n" % \
-                    (m[2, 0] , m[2, 1], m[2, 2])
+                    (m[2, 0], m[2, 1], m[2, 2])
                 return out
     except:
         pass
 
     return "\n  / %5.2F %5.2F %5.2F \\\n" % (m[0, 0], m[0, 1], m[0, 2]) + \
            "  | %5.2F %5.2F %5.2F  | \n" % (m[1, 0], m[1, 1], m[1, 2]) + \
-           "  \\ %5.2F %5.2F %5.2F /\n" % (m[2, 0] , m[2, 1], m[2, 2])
+           "  \\ %5.2F %5.2F %5.2F /\n" % (m[2, 0], m[2, 1], m[2, 2])
 
 
 def fancy_vector(v):
@@ -2152,7 +2149,7 @@ class BeachBall:
         self._add_2_GMT_string(GMT_EVs_FH, EV_2_plot, tension_colour)
         GMT_EVs_FH.flush()
 
-        if self._plot_clr_order > 0 :
+        if self._plot_clr_order > 0:
             self._add_2_GMT_string(GMT_string_FH, US, pressure_colour)
             self._add_2_GMT_string(GMT_string_FH, neg_nodalline,
                                    tension_colour)
@@ -2163,7 +2160,7 @@ class BeachBall:
             if self._plot_curve_in_curve != 0:
                 self._add_2_GMT_string(GMT_string_FH, US, tension_colour)
 
-                if self._plot_curve_in_curve < 1 :
+                if self._plot_curve_in_curve < 1:
                     self._add_2_GMT_string(GMT_string_FH, neg_nodalline,
                                            pressure_colour)
                     self._add_2_GMT_string(GMT_string_FH, pos_nodalline,
@@ -2185,7 +2182,7 @@ class BeachBall:
 
             if self._plot_curve_in_curve != 0:
                 self._add_2_GMT_string(GMT_string_FH, US, pressure_colour)
-                if self._plot_curve_in_curve < 1 :
+                if self._plot_curve_in_curve < 1:
                     self._add_2_GMT_string(GMT_string_FH, neg_nodalline,
                                            tension_colour)
                     self._add_2_GMT_string(GMT_string_FH, pos_nodalline,
@@ -2205,8 +2202,7 @@ class BeachBall:
         self._add_2_GMT_string(GMT_linestring_FH, pos_nodalline,
                                tension_colour)
 
-
-        if self._GMT_2fps :
+        if self._GMT_2fps:
             self._add_2_GMT_string(GMT_linestring_FH, FP1_2_plot,
                                    tension_colour)
             self._add_2_GMT_string(GMT_linestring_FH, FP2_2_plot,
@@ -2276,7 +2272,7 @@ class BeachBall:
         tension_colour = self._plot_tension_colour
         pressure_colour = self._plot_pressure_colour
 
-        if self._plot_clr_order > 0 :
+        if self._plot_clr_order > 0:
             if self._plot_fill_flag:
 
                 alpha = self._plot_fill_alpha * self._plot_total_alpha
@@ -2334,7 +2330,7 @@ class BeachBall:
                 if self._plot_curve_in_curve != 0:
                     ax.fill(self._outer_circle[0, :], self._outer_circle[1, :],
                             fc=pressure_colour, alpha=alpha)
-                    if self._plot_curve_in_curve < 0 :
+                    if self._plot_curve_in_curve < 0:
                         ax.fill(curve_neg_2_plot[0, :], curve_neg_2_plot[1, :],
                                 fc=tension_colour, alpha=alpha)
                         ax.fill(curve_pos_2_plot[0, :], curve_pos_2_plot[1, :],
@@ -2354,19 +2350,19 @@ class BeachBall:
                         lw=self._plot_princ_axes_lw, alpha=alpha)
                 ax.plot([EV_2_plot[0, 3]], [EV_2_plot[1, 3]], 'gv',
                         ms=self._plot_princ_axes_symsize,
-                        lw=self._plot_princ_axes_lw , alpha=alpha)
+                        lw=self._plot_princ_axes_lw, alpha=alpha)
                 ax.plot([EV_2_plot[0, 1]], [EV_2_plot[1, 1]], 'b^',
                         ms=self._plot_princ_axes_symsize,
-                        lw=self._plot_princ_axes_lw , alpha=alpha)
+                        lw=self._plot_princ_axes_lw, alpha=alpha)
                 ax.plot([EV_2_plot[0, 4]], [EV_2_plot[1, 4]], 'bv',
                         ms=self._plot_princ_axes_symsize,
-                        lw=self._plot_princ_axes_lw , alpha=alpha)
+                        lw=self._plot_princ_axes_lw, alpha=alpha)
                 ax.plot([EV_2_plot[0, 2]], [EV_2_plot[1, 2]], 'm^',
                         ms=self._plot_princ_axes_symsize,
-                        lw=self._plot_princ_axes_lw , alpha=alpha)
+                        lw=self._plot_princ_axes_lw, alpha=alpha)
                 ax.plot([EV_2_plot[0, 5]], [EV_2_plot[1, 5]], 'mv',
                         ms=self._plot_princ_axes_symsize,
-                        lw=self._plot_princ_axes_lw , alpha=alpha)
+                        lw=self._plot_princ_axes_lw, alpha=alpha)
 
         self._plot_nodalline_colour = 'y'
 
@@ -2396,7 +2392,7 @@ class BeachBall:
                         alpha=self._plot_faultplane_alpha * \
                         self._plot_total_alpha, ms=5)
 
-        elif self._plot_show_faultplanes :
+        elif self._plot_show_faultplanes:
             ax.plot(FP1_2_plot[0, :], FP1_2_plot[1, :], '+',
                     c=self._plot_faultplane_colour,
                     lw=self._plot_faultplane_width,
@@ -2410,7 +2406,8 @@ class BeachBall:
         else:
             pass
 
-        #if isotropic part shall be displayed, fill the circle completely with the appropriate colour
+        # if isotropic part shall be displayed, fill the circle completely with
+        # the appropriate colour
         if self._pure_isotropic:
             if abs(N.trace(self._M)) > epsilon:
                 if self._plot_clr_order < 0:
@@ -2420,7 +2417,7 @@ class BeachBall:
                     ax.fill(self._outer_circle[0, :], self._outer_circle[1, :],
                             fc=pressure_colour, alpha=1, zorder=100)
 
-        #plot NED basis vectors
+        # plot NED basis vectors
         if self._plot_show_basis_axes:
             plot_size_in_points = self._plot_size * 2.54 * 72
             points_per_unit = plot_size_in_points / 2.
@@ -2528,7 +2525,7 @@ class BeachBall:
 
         P.thetagrids(t_angles, labels=t_labels)
 
-        ax.plot(self._phi_curve, r_hor   , color='r', lw=3)
+        ax.plot(self._phi_curve, r_hor, color='r', lw=3)
         ax.plot(self._phi_curve, r_hor_FP, color='b', lw=1.5)
         ax.set_rmax(1.0)
         P.grid(True)
@@ -2637,7 +2634,7 @@ class BeachBall:
                 kw = key[1:]
             else:
                 kw = key
-            if '_' + kw in dir(self) :
+            if '_' + kw in dir(self):
                 setattr(self, '_' + kw, kwargs[key])
         if kwargs.get('plot_only_lines', False):
             setattr(self, '_plot_fill_flag', False)
@@ -2837,7 +2834,7 @@ class BeachBall:
             EWh = EWh_tmp.copy()
             EWs = EWs_tmp.copy()
 
-            if trace_m != 0 :
+            if trace_m != 0:
                 if (self._plot_clr_order > 0 and EWn_tmp >= 0 and \
                     abs(EWs_tmp) > abs(EWh_tmp)) or (self._plot_clr_order < 0 \
                     and EWn_tmp <= 0 and abs(EWs_tmp) > abs(EWh_tmp)):
@@ -2858,14 +2855,14 @@ class BeachBall:
             EWn = 0
         norm_factor = max(N.abs([EWh, EWn, EWs]))
 
-        [EWh, EWn, EWs] = [xx / norm_factor  for xx in [EWh, EWn, EWs] ]
+        [EWh, EWn, EWs] = [xx / norm_factor for xx in [EWh, EWn, EWs]]
 
         RHS = -EWs / (EWn * N.cos(phi) ** 2 + EWh * N.sin(phi) ** 2)
 #         for i,grad in enumerate(phi):
 #             if abs(360-grad) < 1 or abs(0-grad) < 1 or abs(90-grad) < 1 :
 #                 RHS[i] -= 0.5
 
-        if N.all([N.sign(xx) >= 0 for xx in RHS ]):
+        if N.all([N.sign(xx) >= 0 for xx in RHS]):
             alpha = N.arctan(N.sqrt(RHS)) * rad2deg
         else:
             alpha = phi.copy()
@@ -2906,9 +2903,9 @@ class BeachBall:
 
         for ii in xrange(n_curve_points):
             pos_vec_in_EV_basis = N.array([H_values[ii], N_values[ii],
-                                           S_values_positive[ii] ]).transpose()
+                                           S_values_positive[ii]]).transpose()
             neg_vec_in_EV_basis = N.array([H_values[ii], N_values[ii],
-                                           S_values_negative[ii] ]).transpose()
+                                           S_values_negative[ii]]).transpose()
             line_tuple_pos[:, ii] = N.dot(chng_basis, pos_vec_in_EV_basis)
             line_tuple_neg[:, ii] = N.dot(chng_basis, neg_vec_in_EV_basis)
 
@@ -2931,7 +2928,6 @@ class BeachBall:
         EVs_orig_neg = N.dot(chng_basis, EVh)
         all_EV[:, 5] = -EVs.transpose()  # _orig_neg.transpose()
 
-
         # basis vectors:
         all_BV = N.zeros((3, 6))
         all_BV[:, 0] = N.array((1, 0, 0))
@@ -2952,9 +2948,9 @@ class BeachBall:
 
         for ii in xrange(midpoint_idx):
             FP1_vec = N.array([H_values_FP[ii], N_values_FP[ii],
-                               S_values_positive_FP[ii] ]).transpose()
+                               S_values_positive_FP[ii]]).transpose()
             FP2_vec = N.array([H_values_FP[ii], N_values_FP[ii],
-                               S_values_negative_FP[ii] ]).transpose()
+                               S_values_negative_FP[ii]]).transpose()
             FP1[:, ii] = N.dot(chng_basis, FP1_vec)
             FP2[:, ii] = N.dot(chng_basis, FP2_vec)
 
@@ -2962,9 +2958,9 @@ class BeachBall:
             ii = n_curve_points - jj - 1
 
             FP1_vec = N.array([H_values_FP[ii], N_values_FP[ii],
-                               S_values_negative_FP[ii] ]).transpose()
+                               S_values_negative_FP[ii]]).transpose()
             FP2_vec = N.array([H_values_FP[ii], N_values_FP[ii],
-                               S_values_positive_FP[ii] ]).transpose()
+                               S_values_positive_FP[ii]]).transpose()
             FP1[:, ii] = N.dot(chng_basis, FP1_vec)
             FP2[:, ii] = N.dot(chng_basis, FP2_vec)
 
@@ -3016,16 +3012,16 @@ class BeachBall:
         new_azimuth = self._plot_viewpoint[2]
 
         s_lat = N.sin(new_latitude / rad2deg)
-        if abs(s_lat) < epsilon :
+        if abs(s_lat) < epsilon:
             s_lat = 0
         c_lat = N.cos(new_latitude / rad2deg)
-        if abs(c_lat) < epsilon :
+        if abs(c_lat) < epsilon:
             c_lat = 0
         s_lon = N.sin(new_longitude / rad2deg)
-        if abs(s_lon) < epsilon :
+        if abs(s_lon) < epsilon:
             s_lon = 0
         c_lon = N.cos(new_longitude / rad2deg)
-        if abs(c_lon) < epsilon :
+        if abs(c_lon) < epsilon:
             c_lon = 0
         # assume input basis as NED!!!
 
@@ -3038,7 +3034,7 @@ class BeachBall:
         # new " down' " is given by the negative position vector, so pointing
         # inwards to the centre point
         # down_prime = - ( N.array( ( s_lat, c_lat*c_lon, -c_lat*s_lon ) ) )
-        down_prime = -(N.array((s_lat, c_lat * s_lon , -c_lat * c_lon)))
+        down_prime = -(N.array((s_lat, c_lat * s_lon, -c_lat * c_lon)))
 
         #normalise:
         down_prime /= N.sqrt(N.dot(down_prime, down_prime))
@@ -3055,7 +3051,7 @@ class BeachBall:
         # check for poles:
         if N.abs(len_north_prime_not_normalised) < epsilon:
             # case: north pole
-            if s_lat > 0 :
+            if s_lat > 0:
                 north_prime = N.array((0., 0., 1.))
             # case: south pole
             else:
@@ -3567,11 +3563,11 @@ class BeachBall:
                                  sorted_curve[1, 2]) % (2 * pi))
 
         angle_diff_23 = (angle_point_3 - angle_point_2)
-        if angle_diff_23 > pi :
+        if angle_diff_23 > pi:
             angle_diff_23 = (-angle_diff_23) % (2 * pi)
 
         angle_diff_12 = (angle_point_2 - angle_point_1)
-        if angle_diff_12 > pi :
+        if angle_diff_12 > pi:
             angle_diff_12 = (-angle_diff_12) % (2 * pi)
 
         if abs(angle_diff_12) > abs(angle_diff_23):
@@ -3654,10 +3650,14 @@ class BeachBall:
         completely. If so, the order of colours is re-adapted,
         assuring the correct order when doing the overlay plotting.
         """
-        lo_points_in_pos_curve = list(self._nodalline_positive_final.transpose())
-        lo_points_in_pos_curve_array = self._nodalline_positive_final.transpose()
-        lo_points_in_neg_curve = list(self._nodalline_negative_final.transpose())
-        lo_points_in_neg_curve_array = self._nodalline_negative_final.transpose()
+        lo_points_in_pos_curve = \
+            list(self._nodalline_positive_final.transpose())
+        lo_points_in_pos_curve_array = \
+            self._nodalline_positive_final.transpose()
+        lo_points_in_neg_curve = \
+            list(self._nodalline_negative_final.transpose())
+        lo_points_in_neg_curve_array = \
+            self._nodalline_negative_final.transpose()
 
         # check, if negative curve completely within positive curve
         mask_neg_in_pos = 0
@@ -3857,7 +3857,7 @@ class BeachBall:
         pressure_colour = self._plot_pressure_colour
 
         if self._plot_fill_flag:
-            if self._plot_clr_order > 0 :
+            if self._plot_clr_order > 0:
                 alpha = self._plot_fill_alpha * self._plot_total_alpha
 
                 ax.fill(US[0, :], US[1, :], fc=pressure_colour, alpha=alpha)
@@ -3870,7 +3870,7 @@ class BeachBall:
                     ax.fill(US[0, :], US[1, :], fc=tension_colour,
                             alpha=alpha)
 
-                    if self._plot_curve_in_curve < 1 :
+                    if self._plot_curve_in_curve < 1:
                         ax.fill(neg_nodalline[0, :], neg_nodalline[1, :],
                                 fc=pressure_colour, alpha=alpha)
                         ax.fill(pos_nodalline[0, :], pos_nodalline[1, :],
@@ -3908,7 +3908,7 @@ class BeachBall:
                     ax.fill(US[0, :], US[1, :], fc=pressure_colour,
                             alpha=alpha)
 
-                    if self._plot_curve_in_curve < 1 :
+                    if self._plot_curve_in_curve < 1:
                         ax.fill(neg_nodalline[0, :], neg_nodalline[1, :],
                                 fc=tension_colour, alpha=alpha)
                         ax.fill(pos_nodalline[0, :], pos_nodalline[1, :],
@@ -4153,8 +4153,8 @@ def main():
                     if kwargs_dict['fancy_conversion']:
                         print '\n  Moment tensor in basis  %s:\n ' % \
                             (kwargs_dict['in_system'].upper())
-                        print fancy_matrix(MT.get_M(system=\
-                            kwargs_dict['in_system'].upper()))
+                        print fancy_matrix(MT.get_M(
+                            system=kwargs_dict['in_system'].upper()))
                         print
                         print '\n Moment tensor in basis  %s:\n ' % \
                             (kwargs_dict['out_system'].upper())
@@ -4162,15 +4162,15 @@ def main():
                     else:
                         return M_converted[0, 0], M_converted[1, 1], \
                                M_converted[2, 2], M_converted[0, 1], \
-                               M_converted[0, 2] , M_converted[1, 2]
+                               M_converted[0, 2], M_converted[1, 2]
                 else:
                     M_converted = _puzzle_basis_transformation(MT.get_M(),\
                         'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
                         print '\n  Moment tensor in basis  %s:\n ' % \
                             (kwargs_dict['in_system'].upper())
-                        print fancy_matrix(MT.get_M(system=\
-                            kwargs_dict['in_system'].upper()))
+                        print fancy_matrix(MT.get_M(
+                            system=kwargs_dict['in_system'].upper()))
                         print
                         print '\n Moment tensor in basis  %s:\n ' % \
                             (kwargs_dict['out_system'].upper())
@@ -4210,7 +4210,7 @@ def main():
                 else:
                     return M_converted[0, 0], M_converted[1, 1], \
                            M_converted[2, 2], M_converted[0, 1], \
-                           M_converted[0, 2] , M_converted[1, 2]
+                           M_converted[0, 2], M_converted[1, 2]
             else:
                 print 'this try is meaningless - read the possible',
                 print 'choices!\n(perhaps you want option "-v"(convert a',
@@ -4447,16 +4447,16 @@ def main():
             if hasattr(options, ao):
                 temp_dict[ao] = getattr(options, ao)
 
-        consistent_kwargs_dict ['in_system'] = 'NED'
+        consistent_kwargs_dict['in_system'] = 'NED'
         if temp_dict['decomp_in_system']:
             if  temp_dict['decomp_in_system'].upper() in lo_allowed_systems:
-                consistent_kwargs_dict ['in_system'] = \
+                consistent_kwargs_dict['in_system'] = \
                     temp_dict['decomp_in_system'].upper()
 
-        consistent_kwargs_dict ['decomp_out_system'] = 'NED'
+        consistent_kwargs_dict['decomp_out_system'] = 'NED'
         if temp_dict['decomp_out_system']:
             if  temp_dict['decomp_out_system'].upper() in lo_allowed_systems:
-                consistent_kwargs_dict ['decomp_out_system'] = \
+                consistent_kwargs_dict['decomp_out_system'] = \
                     temp_dict['decomp_out_system'].upper()
 
         consistent_kwargs_dict['decomposition_key'] = 20
@@ -4552,9 +4552,8 @@ def main():
         consistent_kwargs_dict['in_system'] = 'NED'
         consistent_kwargs_dict = temp_dict
 
-        if not consistent_kwargs_dict.has_key('out_system'):
+        if 'out_system' not in consistent_kwargs_dict:
             consistent_kwargs_dict['out_system'] = 'NED'
-
 
         if  (temp_dict['type_conversion'] and temp_dict['vector_conversion']):
             print 'decide for ONE option of "-t" OR "-v" '
@@ -4566,7 +4565,6 @@ def main():
             print 'argument of -t must be "sdr" or "T" '
             optparser.print_help()
             sys.exit(-1)
-
 
         if (temp_dict['basis_conversion']):
             for arg in temp_dict['basis_conversion']:
@@ -4634,7 +4632,6 @@ def main():
                 if not shortname:
                     shortname = 'dummy_shortname'
 
-
                 if extension[1:].lower() in lo_possible_formats:
                     consistent_kwargs_dict['plot_outfile_format'] = \
                         extension[1:].lower()
@@ -4642,12 +4639,12 @@ def main():
                     if shortname.endswith('.'):
                         consistent_kwargs_dict['plot_outfile'] = \
                             op.realpath(op.abspath(op.join(os.curdir, \
-                            filepath,shortname + extension[1:].lower())))
-
+                            filepath, shortname + extension[1:].lower())))
                     else:
                         consistent_kwargs_dict['plot_outfile'] = \
                             op.realpath(op.abspath(op.join(os.curdir, \
-                            filepath, shortname + '.' + extension[1:].lower())))
+                            filepath, shortname + '.' + \
+                            extension[1:].lower())))
                 else:
                     if filename.endswith('.'):
                         consistent_kwargs_dict['plot_outfile'] = \
@@ -4739,7 +4736,7 @@ def main():
         if temp_dict['plot_pressure_colour']:
             try:
                 sec_colour_raw = temp_dict['plot_pressure_colour'].split(',')
-                if len(sec_colour_raw) == 1 :
+                if len(sec_colour_raw) == 1:
                     if sec_colour_raw[0].lower()[0] in list('bgrcmykw'):
                         consistent_kwargs_dict['plot_pressure_colour'] = \
                             sec_colour_raw[0].lower()[0]
@@ -4963,16 +4960,17 @@ def main():
         if temp_dict['plot_input_system']:
             lo_allowed_systems = ['XYZ', 'NED', 'USE', 'NWU']
             try:
-                if temp_dict['plot_input_system'][:3].upper() in lo_allowed_systems:
-                    consistent_kwargs_dict['in_system'] = \
-                        temp_dict['plot_input_system'][:3].upper()
+                tpis = temp_dict['plot_input_system'][:3].upper()
+                if tpis in lo_allowed_systems:
+                    consistent_kwargs_dict['in_system'] = tpis
                 else:
                     raise
             except:
                 pass
 
         if temp_dict['plot_isotropic_part']:
-            consistent_kwargs_dict['plot_isotropic_part'] = temp_dict['plot_isotropic_part']
+            consistent_kwargs_dict['plot_isotropic_part'] = \
+                temp_dict['plot_isotropic_part']
 
         return consistent_kwargs_dict
 
@@ -5239,7 +5237,7 @@ def main():
             help='if source mechanism is given as tensor in another ' + \
                 'system than NED (USE, XYZ,NWU) ')
         group_type.add_option('-I', '--show_isotropic_part',
-            dest='plot_isotropic_part', action='store_true',default=False,
+            dest='plot_isotropic_part', action='store_true', default=False,
             help='key, if isotropic part shall be considered for ' + \
                 'plotting [%default]')
 
@@ -5253,26 +5251,25 @@ def main():
         parser_plot.add_option_group(group_app)
 
         _do_parsers['plot'] = parser_plot
-
+#
 #         ## save
-
+#
 #         desc_save="""Saves a beachball diagram of the provided mechanism
 #         without plotting.
-
-
+#
+#
 #         Several styles and configurations are available. Same options
 #         as for 'plot' are available, the saving-option '-S' is set by
 #         default.
-
+#
 #         """
-
-
+#
+#
 #         parser_save              = parser_plot
 # #         parser_save.description  = desc_save
 # #         parser_save.usage        = "\n\n        elk_mopad save M [options]"
-
+#
 #         _do_parsers['save']      = parser_save
-
 
         # decompose
         desc_decomp = """Returns a decomposition of the input moment tensor.\n
@@ -5281,7 +5278,6 @@ def main():
         Herrmann). Either the complete decomposition or only parts are
         returned; in- and output basis systema can be chosen. The
         'fancy' option is available for better human reading.
-
         """
 
         parser_decompose = OptionParser(

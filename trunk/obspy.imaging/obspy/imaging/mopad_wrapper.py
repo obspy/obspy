@@ -40,28 +40,6 @@ KWARG_MAP = {
     'format': ['plot_outfile_format'],
     'nofill': ['plot_only_lines']
 }
-#  state of mopads kwargs dict before plotting after following command:
-#python mopad.py p 10,10,10 -f bla.png -s 0.5 -a 0.5 -l 3 r 0.4 -n 2 b 0.8 -w b -r g -q 72
-# ipdb> kwargs_dict
-# Out[0]:
-#{'plot_aux_plot_size': 1.9685039370078741,
-# 'plot_full_sphere': False,
-# 'plot_nodalline': True,
-# 'plot_nodalline_alpha': 0.80000000000000004,
-# 'plot_nodalline_colour': 'b',
-# 'plot_nodalline_width': 2.0,
-# 'plot_outerline': True,
-# 'plot_outerline_alpha': 0.40000000000000002,
-# 'plot_outerline_colour': 'r',
-# 'plot_outerline_width': 3.0,
-# 'plot_outfile': '/home/megies/obspy/branches/obspy.imaging/bla.png',
-# 'plot_outfile_format': 'png',
-# 'plot_pa_plot': False,
-# 'plot_pressure_colour': 'b',
-# 'plot_save_plot': True,
-# 'plot_size': 1.9685039370078741,
-# 'plot_tension_colour': 'g',
-# 'plot_total_alpha': 0.5}
 
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
@@ -96,7 +74,8 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param xy: Origin position of the beach ball as tuple.
     :param width: Symbol size of beach ball.
     :param nofill: Do not fill the beach ball, but only plot the planes.
-    :param zorder: Set zorder. Artists with lower zorder values are drawn first.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn
+        first.
     :param mopad_basis: The system which may be chosen as 'NED' (North, East
         Down), 'USE' (Up, South, East), 'NWU' (North, West, Up) or 'XYZ'. 'USE'
         mimics the ObsPy Beachball behaviour.
@@ -126,13 +105,13 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     # set the color of the three parts
     fc = [None, None, None]
-    if bb._plot_clr_order > 0 :
+    if bb._plot_clr_order > 0:
         fc[0] = pressure_colour
         fc[1] = tension_colour
         fc[2] = tension_colour
         if bb._plot_curve_in_curve != 0:
             fc[0] = tension_colour
-            if bb._plot_curve_in_curve < 1 :
+            if bb._plot_curve_in_curve < 1:
                 fc[1] = pressure_colour
                 fc[2] = tension_colour
             else:
@@ -145,7 +124,7 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
         fc[2] = pressure_colour
         if bb._plot_curve_in_curve != 0:
             fc[0] = pressure_colour
-            if bb._plot_curve_in_curve < 1 :
+            if bb._plot_curve_in_curve < 1:
                 fc[1] = tension_colour
                 fc[2] = pressure_colour
             else:
@@ -155,14 +134,14 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
     if bb._pure_isotropic:
         if abs(np.trace(bb._M)) > epsilon:
-            # use the circle as the upperst layer
+            # use the circle as the most upper layer
             coll = [coll[0]]
             if bb._plot_clr_order < 0:
                 fc = [tension_colour]
             else:
                 fc = [pressure_colour]
 
-    # transfrom the patches to a path collection and set
+    # transform the patches to a path collection and set
     # the appropriate attributes
     collection = collections.PatchCollection(coll, match_original=False)
     collection.set_facecolors(fc)
@@ -206,7 +185,6 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
         # 100.0 is matplotlibs default dpi for savefig
         mopad_kwargs[key] = mopad_kwargs[key] / 100.0 * 2.54
     # use nofill kwarg
-
 
     mt = mopad_MomentTensor(fm, mopad_basis)
     bb = mopad_BeachBall(mt)
