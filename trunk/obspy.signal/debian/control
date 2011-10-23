@@ -11,7 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-signal
 Architecture: any
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (> 0.6), ${shlibs:Depends}, python-scipy, python-obspy-core
+ python-setuptools (>= 0.6), ${shlibs:Depends}, python-scipy, python-obspy-core
 Description: Python signal processing routines for seismology
  .
  Capabilities include filtering, triggering, rotation, instrument

@@ -11,7 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-gse2
 Architecture: any
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (> 0.6), ${shlibs:Depends}, python-obspy-core
+ python-setuptools (>= 0.6), ${shlibs:Depends}, python-obspy-core
 Description: Read & write seismograms, Format GSE2
  .
  This module contains Python wrappers for gse_functions - The GSE2 library

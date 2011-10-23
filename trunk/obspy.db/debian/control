@@ -11,7 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-db
 Architecture: all
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (> 0.6), python-sqlalchemy,
+ python-setuptools (>= 0.6), python-sqlalchemy,
  python-obspy-core, python-obspy-mseed
 Description: A waveform database for ObsPy
  For more information visit http://www.obspy.org.

@@ -11,7 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-sac
 Architecture: all
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (> 0.6), python-obspy-core
+ python-setuptools (>= 0.6), python-obspy-core
 Description: Read & Write Seismograms, Format SAC
  .
  Python methods for reading and writing seismograms to SAC.

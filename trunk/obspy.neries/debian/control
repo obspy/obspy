@@ -11,7 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-neries
 Architecture: all
 Depends: python (>= 2.5), python-support (>= 0.7.1), python-numpy (>= 1:1.1), 
- python-setuptools (> 0.6), python-lxml (>= 2.1), python-simplejson (>=1.9),
+ python-setuptools (>= 0.6), python-lxml (>= 2.1), python-simplejson (>=1.9),
  python-obspy-core
 Description: NERIES web service client for ObsPy
  .
