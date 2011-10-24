@@ -9,6 +9,9 @@
 #---------------------------------------------------------------------
 
 # Must be executed in the scripts directory
+METAPACKAGE_VERSION=0.5.0
+DEBVERSION=1
+DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
 #
 # Setting PATH to correct python distribution, avoid to use virtualenv
@@ -64,11 +67,9 @@ g/ distribute_setup/d
 wq
 EOL
         fi
-        # get version number, the debian version
+        # get version number from the tag, the debian version
         # has to be increased manually if necessary.
         VERSION=$TAG
-        DEBVERSION=1
-        DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
         # the commented code shows how to update the changelog
         # information, however we do not do it as it hard to
         # automatize it for all packages in common
@@ -100,10 +101,14 @@ done
 #if [ -z "$NOT_EQUIVS" ]; then
     cd $BASEDIR/..
     svn revert ./debian/control
+    ex ./debian/control << EOF
+g/Standards-Version/s/[x0-9.]\+/$VERSION/
+g/^Version/s/[x0-9.]\+/${METAPACKAGE_VERSION}-${DEBVERSION}\~${CODENAME}/
+wq
+EOF
     equivs-build ./debian/control
     FILENAME=`ls python-obspy_*.deb`
-    NEW_FILENAME=`echo $FILENAME | sed "s#\([0-9]\)_#\1-${DEBVERSION}~${CODENAME}_#"`
-    mv $FILENAME $PACKAGEDIR/$NEW_FILENAME
+    mv $FILENAME $PACKAGEDIR
 #fi
 
 #
