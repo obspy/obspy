@@ -14,7 +14,6 @@ Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-obspy-core
 Description: Read & write seismograms, Format MiniSeed
- .
  This module contains Python wrappers for libmseed - The MiniSeed
  library of Chad Trabant. Libmseed is written in C and interfaced via
  Python ctypes.

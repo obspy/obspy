@@ -14,7 +14,6 @@ Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-obspy-core
 Description: Read & write seismograms, Format WAV
- .
  Python methods in order to read and write seismograms to WAV audio
  files. The data are squeezed to audible frequencies.
  .

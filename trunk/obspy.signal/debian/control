@@ -14,7 +14,6 @@ Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-scipy, python-obspy-core
 Description: Python signal processing routines for seismology
- .
  Capabilities include filtering, triggering, rotation, instrument
  correction and coordinate transformations.
  .

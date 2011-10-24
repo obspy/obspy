@@ -14,7 +14,6 @@ Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-obspy-core
 Description: Read & write seismograms, Format GSE2
- .
  This module contains Python wrappers for gse_functions - The GSE2 library
  of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
  Currently CM6 compressed GSE2 files are supported, this should be 

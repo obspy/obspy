@@ -15,5 +15,4 @@ Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-lxml (>= 2.1), python-obspy-core,
  python-obspy-mseed
 Description: ArcLink/WebDC request client for of ObsPy
- .
  For more information visit http://www.obspy.org.

@@ -14,8 +14,7 @@ Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-matplotlib (>= 0.98.1),
  python-obspy-core
-Description: Travel time calculation tool for ObsPy.
- .
+Description: Travel time calculation tool for ObsPy
  The obspy.taup package contains Python wrappers for iaspei-tau - a travel time
  library by Arthur Snoke (http://www.iris.edu/software/downloads/processing/).
  The library iaspei-tau is written in Fortran and interfaced via Python ctypes.

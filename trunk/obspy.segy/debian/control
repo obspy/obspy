@@ -14,7 +14,6 @@ Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-obspy-core
 Description: SEG Y and SU read and write support for ObsPy
- .
  The obspy.segy package contains methods in order to read and write seismogram
  files in the SEG Y (rev. 1) and SU (Seismic Unix) format.
  .

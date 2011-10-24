@@ -14,7 +14,6 @@ Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-obspy-core
 Description: Support plug-in for Seismic Handler
- .
  This modules provides facilities to:
  - Import and export seismogram files in the Q format.
  - Import and export seismogram files in the ASC format.
