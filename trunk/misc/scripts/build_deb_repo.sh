@@ -50,7 +50,7 @@ Contents: . .gz
 
 Origin: ObsPy Developer Team
 Label: ObsPy Apt Repository
-Suite: old-stable
+Suite: oldstable
 Codename: lenny
 Version: 5.0
 Architectures: amd64 i386
