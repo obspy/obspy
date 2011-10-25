@@ -24,7 +24,8 @@ class PsdTestCase(unittest.TestCase):
     def test_obspy_psd_vs_pitsa(self):
         """
         Test to compare results of PITSA's psd routine to the
-        `matplotlib.mlab.psd`_ routine wrapped in :func:`obspy.signal.psd.psd`.
+        :func:`matplotlib.mlab.psd` routine wrapped in
+        :func:`obspy.signal.psd.psd`.
         The test works on 8192 samples long gaussian noise with a standard
         deviation of 0.1 generated with PITSA, sampling rate for processing in
         PITSA was 100.0 Hz, length of nfft 512 samples. The overlap in PITSA
@@ -34,8 +35,6 @@ class PsdTestCase(unittest.TestCase):
         It seems that PITSA has one frequency entry more, i.e. the psd is one
         point longer. I dont know were this can come from, for now this last
         sample in the psd is ignored.
-
-        .. _`matplotlib.mlab.psd`: http://matplotlib.sourceforge.net/api/mlab_api.html#matplotlib.mlab.psd
         """
         SAMPLING_RATE = 100.0
         NFFT = 512

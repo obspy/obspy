@@ -48,8 +48,10 @@ if MATPLOTLIB_VERSION == None:
 
     def detrend_none():
         pass
+
     def window_hanning():
         pass
+
 else:
     # Import matplotlib routines. These are no official dependency of
     # obspy.signal so an import error should really only be raised if any
@@ -94,36 +96,34 @@ PPSD_STRIDE = 1800  # psds are calculated overlapping, moving 0.5h ahead
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         noverlap=0):
     """
-    Wrapper for `matplotlib.mlab.psd`_.
+    Wrapper for :func:`matplotlib.mlab.psd`.
 
     Always returns a onesided psd (positive frequencies only), corrects for
     this fact by scaling with a factor of 2. Also, always normalizes to dB/Hz
     by dividing with sampling rate.
 
-    This wrapper is intended to intercept changes in `mlab.psd`'s default
-    behavior which changes with matplotlib version 0.98.4:
+    This wrapper is intended to intercept changes in
+    :func:`matplotlib.mlab.psd` default behavior which changes with
+    matplotlib version 0.98.4:
 
-      - http://matplotlib.sourceforge.net/
-                users/whats_new.html#psd-amplitude-scaling
-      - http://matplotlib.sourceforge.net/_static/CHANGELOG
-                (entries on 2009-05-18 and 2008-11-11)
-      - http://matplotlib.svn.sourceforge.net/
-                viewvc/matplotlib?view=revision&revision=6518
-      - http://matplotlib.sourceforge.net/
-                api/api_changes.html#changes-for-0-98-x
+    * http://matplotlib.sourceforge.net/users/whats_new.html\
+#psd-amplitude-scaling
+    * http://matplotlib.sourceforge.net/_static/CHANGELOG
+      (entries on 2009-05-18 and 2008-11-11)
+    * http://matplotlib.svn.sourceforge.net/viewvc/matplotlib\
+?view=revision&revision=6518
+    * http://matplotlib.sourceforge.net/api/api_changes.html#changes-for-0-98-x
 
-    :note:
-        For details on all arguments see `matplotlib.mlab.psd`_.
+    .. note::
+        For details on all arguments see :func:`matplotlib.mlab.psd`.
 
-    :note:
-        When using `window=welch_taper` (`obspy.signal.psd.welch_taper`) and
-        `detrend=detrend_linear` (`matplotlib.mlab.detrend_linear`) the psd
-        function delivers practically the same results as PITSA.
+    .. note::
+        When using `window=welch_taper` (:func:`obspy.signal.psd.welch_taper`)
+        and `detrend=detrend_linear` (:func:`matplotlib.mlab.detrend_linear`)
+        the psd function delivers practically the same results as PITSA.
         Only DC and the first 3-4 lowest non-DC frequencies deviate very
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
-
-    .. _`matplotlib.mlab.psd`: http://matplotlib.sourceforge.net/api/mlab_api.html#matplotlib.mlab.psd
     """
     # check if matplotlib is available, no official dependency for obspy.signal
     if MATPLOTLIB_VERSION is None:
