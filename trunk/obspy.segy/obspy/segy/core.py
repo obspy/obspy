@@ -155,7 +155,7 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
     <obspy.core.stream.Stream object at 0x...>
     >>> print(st)
     1 Trace(s) in Stream:
-    Seq. No. in line:    1 | 2009-06-22T14:47:37.0 ... | 500.0 Hz, 2001 samples
+    Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - ... 2001 samples
     """
     # Read file to the internal segy representation.
     segy_object = readSEGYrev1(filename, endian=byteorder,
@@ -461,7 +461,7 @@ def readSU(filename, byteorder=None, unpack_trace_headers=False):
     <obspy.core.stream.Stream object at 0x...>
     >>> print(st)  #doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    ... | 2005-12-19T15:07:54.000000Z ... 55.999750Z | 4000.0 Hz, 8000 samples
+    ... | 2005-12-19T15:07:54.000000Z - ... | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
     su_object = readSUFile(filename, endian=byteorder,

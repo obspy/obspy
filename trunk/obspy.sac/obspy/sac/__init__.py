@@ -19,7 +19,7 @@ Similiar to reading any other waveform data format using obspy.core:
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-.STA..Q | 1978-07-18T08:00:10.000000Z - 1978-07-18T ... | 1.0 Hz, 100 samples
+.STA..Q | 1978-07-18T08:00:10.000000Z - ... | 1.0 Hz, 100 samples
 
 The format will be determined automatically. As SAC-files can contain only one
 data trace (as opposed to Mini-SEED or GSE2), the length of 'st' will be one.
