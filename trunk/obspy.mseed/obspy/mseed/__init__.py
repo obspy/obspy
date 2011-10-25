@@ -18,9 +18,9 @@ Similar to reading any other waveform data format using obspy.core:
 >>> st = read("/path/to/test.mseed")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
->>> print(st)
+>>> print(st)  #doctest: +ELLIPSIS
 1 Trace(s) in Stream:
-NL.HGN.00.BHZ | 2003-05-29T02:13:22.043400Z - 2003-05-29T02:18:20.693400Z | 40.0 Hz, 11947 samples
+NL.HGN.00.BHZ | 2003-05-29T02:13:22.043400Z - ... | 40.0 Hz, 11947 samples
 
 The format will be determined automatically.
 
@@ -41,7 +41,8 @@ dataquality.
             npts: 11947
            calib: 1.0
          _format: MSEED
-           mseed: AttribDict({'dataquality': 'R', 'record_length': 4096, 'encoding': 'STEIM2', 'byteorder': '>'})
+           mseed: AttribDict({'dataquality': 'R', 'record_length': 4096,
+                              'encoding': 'STEIM2', 'byteorder': '>'})
 
 The actual data is stored as numpy.ndarray in the data attribute of each trace.
 

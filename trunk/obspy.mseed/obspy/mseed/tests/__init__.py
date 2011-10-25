@@ -5,6 +5,7 @@ from obspy.core.util import add_doctests, add_unittests
 
 MODULE_NAME = "obspy.mseed"
 
+
 def suite():
     suite = unittest.TestSuite()
     add_doctests(suite, MODULE_NAME)

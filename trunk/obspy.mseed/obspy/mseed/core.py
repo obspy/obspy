@@ -275,7 +275,8 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
                     hasattr(trace.stats.mseed, 'encoding'):
                 mseed_encoding = stats.mseed.encoding
                 # Check if the encoding is valid.
-                if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
+                if isinstance(mseed_encoding, int) and \
+                        mseed_encoding in ENCODINGS:
                     enc = mseed_encoding
                 elif isinstance(mseed_encoding, basestring) and \
                         mseed_encoding in encoding_strings:

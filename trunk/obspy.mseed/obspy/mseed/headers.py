@@ -43,7 +43,8 @@ if not clibmseed:
 # Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
 # ctypes.c_int for earlier versions.
 #
-#http://svn.python.org/projects/ctypes/trunk/ctypeslib/ctypeslib/contrib/pythonhdr.py
+# http://svn.python.org/projects/ctypes/trunk/
+#           ctypeslib/ctypeslib/contrib/pythonhdr.py
 if hasattr(C.pythonapi, 'Py_InitModule4'):
     Py_ssize_t = C.c_int
 elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
@@ -54,7 +55,7 @@ else:
 
 # expected data types for libmseed id: (numpy, ctypes)
 DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
-SAMPLESIZES = {'a':1, 'i':4, 'f':4, 'd':8}
+SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 
 # allowed encodings:
 # SEED id: SEED name, SEED sampletype a, i, f or d, default numpy type)}
@@ -254,6 +255,7 @@ class blkt_1000_s(C.Structure):
         ('reserved', C.c_ubyte),
     ]
 
+
 # Blockette 1001, Data Extension (without header)
 class blkt_1001_s(C.Structure):
     _fields_ = [
@@ -284,21 +286,21 @@ class blkt_link_s(C.Structure):
 
 # incomplete type has to be defined this way
 blkt_link_s._fields_ = [
-    ('blkt_type', C.c_ushort), # Blockette type
-    ('next_blkt', C.c_ushort), # Offset to next blockette
-    ('blktdata', C.POINTER(None)), # Blockette data
-    ('blktdatalen', C.c_ushort), # Length of blockette data in bytes
-    ('next', C.POINTER(blkt_link_s)),
-]
+    ('blkt_type', C.c_ushort),  # Blockette type
+    ('next_blkt', C.c_ushort),  # Offset to next blockette
+    ('blktdata', C.POINTER(None)),  # Blockette data
+    ('blktdatalen', C.c_ushort),  # Length of blockette data in bytes
+    ('next', C.POINTER(blkt_link_s))]
 BlktLink = blkt_link_s
+
 
 class StreamState_s(C.Structure):
     _fields_ = [
-        ('packedrecords', C.c_longlong), # Count of packed records
-        ('packedsamples', C.c_longlong), # Count of packed samples
-        ('lastintsample', C.c_int), # Value of last integer sample packed
-        ('comphistory', C.c_byte), # Control use of lastintsample for compression history
-    ]
+        ('packedrecords', C.c_longlong),  # Count of packed records
+        ('packedsamples', C.c_longlong),  # Count of packed samples
+        ('lastintsample', C.c_int),  # Value of last integer sample packed
+        # Control use of lastintsample for compression history
+        ('comphistory', C.c_byte)]
 StreamState = StreamState_s
 
 
@@ -306,72 +308,74 @@ class MSRecord_s(C.Structure):
     pass
 
 MSRecord_s._fields_ = [
-    ('record', C.POINTER(C.c_char)), # Mini-SEED record
-    ('reclen', C.c_int), # Length of Mini-SEED record in bytes
+    ('record', C.POINTER(C.c_char)),  # Mini-SEED record
+    ('reclen', C.c_int),  # Length of Mini-SEED record in bytes
     # Pointers to SEED data record structures
-    ('fsdh', C.POINTER(fsdh_s)), # Fixed Section of Data Header
-    ('blkts', C.POINTER(BlktLink)), # Root of blockette chain
-    ('Blkt100', C.POINTER(blkt_100_s)), # Blockette 100, if present
-    ('Blkt1000', C.POINTER(blkt_1000_s)), # Blockette 1000, if present
-    ('Blkt1001', C.POINTER(blkt_1001_s)), # Blockette 1001, if present
+    ('fsdh', C.POINTER(fsdh_s)),  # Fixed Section of Data Header
+    ('blkts', C.POINTER(BlktLink)),  # Root of blockette chain
+    ('Blkt100', C.POINTER(blkt_100_s)),  # Blockette 100, if present
+    ('Blkt1000', C.POINTER(blkt_1000_s)),  # Blockette 1000, if present
+    ('Blkt1001', C.POINTER(blkt_1001_s)),  # Blockette 1001, if present
     # Common header fields in accessible form
-    ('sequence_number', C.c_int), # SEED record sequence number
-    ('network', C.c_char * 11), # Network designation, NULL terminated
-    ('station', C.c_char * 11), # Station designation, NULL terminated
-    ('location', C.c_char * 11), # Location designation, NULL terminated
-    ('channel', C.c_char * 11), # Channel designation, NULL terminated
-    ('dataquality', C.c_char), # Data quality indicator
-    ('starttime', C.c_longlong), # Record start time, corrected (first sample)
-    ('samprate', C.c_double), # Nominal sample rate (Hz)
-    ('samplecnt', C.c_int), # Number of samples in record
-    ('encoding', C.c_byte), # Data encoding format
-    ('byteorder', C.c_byte), # Byte order of record
+    ('sequence_number', C.c_int),  # SEED record sequence number
+    ('network', C.c_char * 11),  # Network designation, NULL terminated
+    ('station', C.c_char * 11),  # Station designation, NULL terminated
+    ('location', C.c_char * 11),  # Location designation, NULL terminated
+    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
+    ('dataquality', C.c_char),  # Data quality indicator
+    ('starttime', C.c_longlong),  # Record start time, corrected (first sample)
+    ('samprate', C.c_double),  # Nominal sample rate (Hz)
+    ('samplecnt', C.c_int),  # Number of samples in record
+    ('encoding', C.c_byte),  # Data encoding format
+    ('byteorder', C.c_byte),  # Byte order of record
     # Data sample fields
-    ('datasamples', C.c_void_p), # Data samples, 'numsamples' of type 'sampletype'
-    ('numsamples', C.c_int), # Number of data samples in datasamples
-    ('sampletype', C.c_char), # Sample type code: a, i, f, d
+    # Data samples, 'numsamples' of type 'sampletype'
+    ('datasamples', C.c_void_p),
+    ('numsamples', C.c_int),  # Number of data samples in datasamples
+    ('sampletype', C.c_char),  # Sample type code: a, i, f, d
     # Stream oriented state information
-    ('ststate', C.POINTER(StreamState)), # Stream processing state information
-]
+    ('ststate', C.POINTER(StreamState))]  # Stream processing state information
 
 MSRecord = MSRecord_s
+
 
 class MSTrace_s(C.Structure):
     pass
 
 MSTrace_s._fields_ = [
-    ('network', C.c_char * 11), # Network designation, NULL terminated
-    ('station', C.c_char * 11), # Station designation, NULL terminated
-    ('location', C.c_char * 11), # Location designation, NULL terminated
-    ('channel', C.c_char * 11), # Channel designation, NULL terminated
-    ('dataquality', C.c_char), # Data quality indicator
-    ('type', C.c_char), # MSTrace type code
-    ('starttime', C.c_longlong), # Time of first sample
-    ('endtime', C.c_longlong), # Time of last sample
-    ('samprate', C.c_double), # Nominal sample rate (Hz)
-    ('samplecnt', C.c_int), # Number of samples in trace coverage
-    ('datasamples', C.c_void_p), # Data samples, 'numsamples' of type 'sampletype'
-    ('numsamples', C.c_int), # Number of data samples in datasamples
-    ('sampletype', C.c_char), # Sample type code: a, i, f, d
-    ('prvtptr', C.c_void_p), # Private pointer for general use
-    ('ststate', C.POINTER(StreamState)), # Stream processing state information
-    ('next', C.POINTER(MSTrace_s)), # Pointer to next trace
-]
+    ('network', C.c_char * 11),  # Network designation, NULL terminated
+    ('station', C.c_char * 11),  # Station designation, NULL terminated
+    ('location', C.c_char * 11),  # Location designation, NULL terminated
+    ('channel', C.c_char * 11),  # Channel designation, NULL terminated
+    ('dataquality', C.c_char),  # Data quality indicator
+    ('type', C.c_char),  # MSTrace type code
+    ('starttime', C.c_longlong),  # Time of first sample
+    ('endtime', C.c_longlong),  # Time of last sample
+    ('samprate', C.c_double),  # Nominal sample rate (Hz)
+    ('samplecnt', C.c_int),  # Number of samples in trace coverage
+    # Data samples, 'numsamples' of type 'sampletype'
+    ('datasamples', C.c_void_p),
+    ('numsamples', C.c_int),  # Number of data samples in datasamples
+    ('sampletype', C.c_char),  # Sample type code: a, i, f, d
+    ('prvtptr', C.c_void_p),  # Private pointer for general use
+    ('ststate', C.POINTER(StreamState)),  # Stream processing state information
+    ('next', C.POINTER(MSTrace_s))]  # Pointer to next trace
 MSTrace = MSTrace_s
+
 
 class MSTraceGroup_s(C.Structure):
     pass
 
 MSTraceGroup_s._fields_ = [
-    ('numtraces', C.c_int), # Number of MSTraces in the trace chain
-    ('traces', C.POINTER(MSTrace_s)), # Root of the trace chain
-]
+    ('numtraces', C.c_int),  # Number of MSTraces in the trace chain
+    ('traces', C.POINTER(MSTrace_s))]  # Root of the trace chain
 MSTraceGroup = MSTraceGroup_s
 
 
 # Define the high precision time tick interval as 1/modulus seconds */
 # Default modulus of 1000000 defines tick interval as a microsecond */
 HPTMODULUS = 1000000.0
+
 
 # Reading Mini-SEED records from files
 class MSFileParam_s(C.Structure):
@@ -387,29 +391,27 @@ MSFileParam_s._fields_ = [
   ('packhdroffset', C.c_long),
   ('filepos', C.c_long),
   ('filesize', C.c_long),
-  ('recordcount', C.c_int),
-]
+  ('recordcount', C.c_int)]
 MSFileParam = MSFileParam_s
+
 
 class U_DIFF(C.Union):
     """
     Union for Steim objects.
     """
     _fields_ = [
-        ("byte", C.c_int8 * 4), # 4 1-byte differences.
-        ("hw", C.c_int16 * 2), # 2 halfword differences.
-        ("fw", C.c_int32), # 1 fullword difference.
-    ]
+        ("byte", C.c_int8 * 4),  # 4 1-byte differences.
+        ("hw", C.c_int16 * 2),  # 2 halfword differences.
+        ("fw", C.c_int32)]  # 1 fullword difference.
+
 
 class FRAME(C.Structure):
     """
     Frame in a seed data record.
     """
     _fields_ = [
-        ("ctrl", C.c_uint32), # control word for frame.
-        ("w", U_DIFF * 14), # compressed data.
-    ]
-
+        ("ctrl", C.c_uint32),  # control word for frame.
+        ("w", U_DIFF * 14)]  # compressed data.
 
 # Declare function of libmseed library, argument parsing
 clibmseed.mst_init.argtypes = [C.POINTER(MSTrace)]
@@ -469,13 +471,14 @@ clibmseed.msr_unpack_steim2.restype = C.c_int
 
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely differenct to C.c_char_p which is a string
-clibmseed.mst_packgroup.argtypes = [ C.POINTER(MSTraceGroup),
+clibmseed.mst_packgroup.argtypes = [C.POINTER(MSTraceGroup),
     C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
     C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int),
     C.c_short, C.c_short, C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
 
-clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord), C.POINTER(C.c_char),
+clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),
+                                       C.POINTER(C.c_char),
                                        C.c_int, C.c_int, C.c_int]
 clibmseed.msr_addblockette.restype = C.POINTER(BlktLink)
 

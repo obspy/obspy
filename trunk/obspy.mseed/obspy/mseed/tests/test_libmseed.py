@@ -9,7 +9,8 @@ from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import LibMSEED
-from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS, MSRecord
+from obspy.mseed.headers import PyFile_FromFile, HPTMODULUS, ENCODINGS, \
+        MSRecord
 from obspy.mseed.libmseed import clibmseed, _MSStruct
 import copy
 import ctypes as C
@@ -45,14 +46,13 @@ class LibMSEEDTestCase(unittest.TestCase):
         # These values are created using the Linux "date -u -d @TIMESTRING"
         # command. These values are assumed to be correct.
         timesdict = {
-            1234567890 : UTCDateTime(2009, 2, 13, 23, 31, 30),
-            1111111111 : UTCDateTime(2005, 3, 18, 1, 58, 31),
-            1212121212 : UTCDateTime(2008, 5, 30, 4, 20, 12),
-            1313131313 : UTCDateTime(2011, 8, 12, 6, 41, 53),
-            100000 : UTCDateTime(1970, 1, 2, 3, 46, 40),
-            100000.111112 : UTCDateTime(1970, 1, 2, 3, 46, 40, 111112),
-            200000000 : UTCDateTime(1976, 5, 3, 19, 33, 20)
-        }
+            1234567890: UTCDateTime(2009, 2, 13, 23, 31, 30),
+            1111111111: UTCDateTime(2005, 3, 18, 1, 58, 31),
+            1212121212: UTCDateTime(2008, 5, 30, 4, 20, 12),
+            1313131313: UTCDateTime(2011, 8, 12, 6, 41, 53),
+            100000: UTCDateTime(1970, 1, 2, 3, 46, 40),
+            100000.111112: UTCDateTime(1970, 1, 2, 3, 46, 40, 111112),
+            200000000: UTCDateTime(1976, 5, 3, 19, 33, 20)}
         mseed = LibMSEED()
         # Loop over timesdict.
         for ts, dt in timesdict.iteritems():
@@ -64,7 +64,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertEqual(now, mseed._convertMSTimeToDatetime(
                               mseed._convertDatetimeToMSTime(now)))
         # Some random date.
-        random.seed(815) # make test reproducable
+        random.seed(815)  # make test reproducable
         timestring = random.randint(0, 2000000) * 1e6
         self.assertEqual(timestring, mseed._convertDatetimeToMSTime(
                         mseed._convertMSTimeToDatetime(timestring)))
@@ -475,9 +475,9 @@ class LibMSEEDTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
         self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
         self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
-        args.append(1) # 10 argument function
+        args.append(1)  # 10 argument function
         self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
-        args = ['hallo'] # one argument functions
+        args = ['hallo']  # one argument functions
         self.assertRaises(ArgumentError, cl.msr_starttime, *args)
         self.assertRaises(ArgumentError, cl.msr_endtime, *args)
         self.assertRaises(ArgumentError, cl.mst_init, *args)
@@ -503,7 +503,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         ms.offset = ms.filePosFromRecNum(-1)
         ms.read(-1, 0, 1, 0)
         self.assertEqual(end, clibmseed.msr_endtime(ms.msr))
-        del ms # for valgrind
+        del ms  # for valgrind
 
     def test_unpackSteim2(self):
         """
@@ -512,7 +512,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         """
         mseed = LibMSEED()
         steim2_file = os.path.join(self.path, 'steim2.mseed')
-        data_string = open(steim2_file, 'rb').read()[128:] #128 Bytes header
+        data_string = open(steim2_file, 'rb').read()[128:]  # 128 Bytes header
         data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap,
                                    verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim2_file)[0][1]
@@ -526,7 +526,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = LibMSEED()
         steim1_file = os.path.join(self.path,
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
-        data_string = open(steim1_file, 'rb').read()[64:] #64 Bytes header
+        data_string = open(steim1_file, 'rb').read()[64:]  # 64 Bytes header
         data = mseed.unpack_steim1(data_string, 412, swapflag=self.swap,
                                    verbose=0)
         data_record = mseed.readMSTracesViaRecords(steim1_file)[0][1]
@@ -540,7 +540,7 @@ class LibMSEEDTestCase(unittest.TestCase):
         mseed = LibMSEED()
         file = os.path.join(self.path, "brokenlastrecord.mseed")
         # independent reading of the data
-        data_string = open(file, 'rb').read()[128:] #128 Bytes header
+        data_string = open(file, 'rb').read()[128:]  # 128 Bytes header
         data = mseed.unpack_steim2(data_string, 5980, swapflag=self.swap,
                                    verbose=0)
         # test readMSTraces
@@ -601,7 +601,6 @@ class LibMSEEDTestCase(unittest.TestCase):
         np.testing.assert_array_equal(data, trace_list[0][1])
         np.testing.assert_array_equal(data, trace_list2[0][1])
 
-
     def test_msrParse(self):
         """
         Demonstrates how to actually read an msr_record from an
@@ -616,8 +615,9 @@ class LibMSEEDTestCase(unittest.TestCase):
                               'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         pyobj = np.fromfile(msfile, dtype='b')
 
-        errcode = clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
-                                      len(pyobj), C.pointer(msr), -1, 1, 1)
+        errcode = \
+                clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
+                len(pyobj), C.pointer(msr), -1, 1, 1)
         self.assertEquals(errcode, 0)
         chain = msr.contents
         header = LibMSEED()._convertMSRToDict(chain)
@@ -641,17 +641,20 @@ class LibMSEEDTestCase(unittest.TestCase):
         __libmseed__ = LibMSEED()
         # 1
         file = os.path.join(self.path, 'steim2.mseed')
-        traces =__libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        traces = __libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10,
+                                          endtime=UTCDateTime())
         self.assertEqual(traces, [])
-        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        traces = __libmseed__.readMSTracesViaRecords(file,
+                starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         self.assertEqual(traces, [])
         # 2
         file = os.path.join(self.path, 'fullseed.mseed')
-        traces =__libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        traces = __libmseed__.readMSTraces(file, starttime=UTCDateTime() - 10,
+                                           endtime=UTCDateTime())
         self.assertEqual(traces, [])
-        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        traces = __libmseed__.readMSTracesViaRecords(file,
+                starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         self.assertEqual(traces, [])
-
 
     def test_readMSTracesViaRecords_MultipleIds(self):
         """
@@ -677,18 +680,20 @@ class LibMSEEDTestCase(unittest.TestCase):
         # Thus reading a small time window in between should contain at least
         # some samples.
         __libmseed__ = LibMSEED()
-        starttime = UTCDateTime(2008,1,1,0,0,10)
+        starttime = UTCDateTime(2008, 1, 1, 0, 0, 10)
         endtime = starttime + 5
-        file = os.path.join(self.path, 'constructedFileToTestReadViaRecords.mseed')
+        file = os.path.join(self.path,
+                            'constructedFileToTestReadViaRecords.mseed')
         # Some samples should be in the time window. Use the working read
         # method to confirm this
-        traces =__libmseed__.readMSTraces(file, starttime=starttime,
+        traces = __libmseed__.readMSTraces(file, starttime=starttime,
                                           endtime=endtime)
         self.assertEqual(len(traces), 1)
         samplecount = traces[0][0]['samplecnt']
         self.assertEqual(samplecount, 1648)
         # The second one will not work.
-        traces =__libmseed__.readMSTracesViaRecords(file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        traces = __libmseed__.readMSTracesViaRecords(file,
+                starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         self.assertEqual(len(traces), 1)
         samplecount = traces[0][0]['samplecnt']
         self.assertEqual(samplecount, 1648)
