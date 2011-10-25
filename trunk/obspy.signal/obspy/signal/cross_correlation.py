@@ -85,8 +85,8 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     # python layer right here.
     # see ticket #249 and src/xcorr.c lines 43-57
     if min(len(tr1), len(tr2)) - 2 * shift_len <= 0:
-        msg = "shift_len too large. The underlying C code would silently use " \
-              "shift_len/2 which we want to avoid."
+        msg = "shift_len too large. The underlying C code would silently " + \
+              "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
 
     # 2009-10-11 Moritz

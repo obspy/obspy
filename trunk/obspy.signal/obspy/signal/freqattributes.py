@@ -102,7 +102,7 @@ def cfrequency(data, fs, smoothie, fk):
     nfft = util.nextpow2(data.shape[1])
     freq = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
                           1. / float(nfft / float(fs)))
-    freqaxis = freq[0:nfft / 2 ]
+    freqaxis = freq[0:nfft / 2]
     cfreq = np.zeros(data.shape[0])
     if (np.size(data.shape) > 1):
         i = 0
@@ -112,8 +112,9 @@ def cfrequency(data, fs, smoothie, fk):
             cfreq[i] = np.sqrt(np.sum(pow(freqaxis, 2) * Px) / (sum(Px)))
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
-        cfreq_add = np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
-                              [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
+        cfreq_add = \
+                np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
+                [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
         dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
         return cfreq, dcfreq
@@ -156,8 +157,9 @@ def bwith(data, fs, smoothie, fk):
             [mdist_ind, _mindist] = min(enumerate(minfc), key=itemgetter(1))
             bwith[i] = freqaxis[mdist_ind]
             i = i + 1
-        bwith_add = np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
-                              [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
+        bwith_add = \
+                np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
+                [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
         dbwith = signal.lfilter(fk, 1, bwith_add)
         dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
         bwith = util.smooth(bwith, smoothie)
@@ -256,7 +258,7 @@ def logbankm(p, n, fs, w):
     mx = b4 + 1
     #x = np.array([[c],[r]], dtype=[('x', 'float'), ('y', 'float')])
     #ind=np.argsort(x, order=('x','y'))
-    help = np.append([c], [r] , axis=0)
+    help = np.append([c], [r], axis=0)
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
     elif (w == 'Hamming'):
@@ -295,7 +297,7 @@ def logcep(data, fs, nc, p, n, w):
     ath = np.sqrt(pth)
     #h1 = np.transpose(np.array([[ath] * int(b + 1 - a)]))
     #h2 = m * abs(f[a - 1:b, :])
-    y = np.log(np.maximum (m * abs(f[a - 1:b, :]), ath))
+    y = np.log(np.maximum(m * abs(f[a - 1:b, :]), ath))
     z = util.rdct(y)
     z = z[1:, :]
     #nc = nc + 1

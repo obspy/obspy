@@ -136,7 +136,6 @@ class PolarizationTestCase(unittest.TestCase):
         self.assertEqual(rms < 1.0e-5, True)
 
 
-
 def suite():
     return unittest.makeSuite(PolarizationTestCase, 'test')
 

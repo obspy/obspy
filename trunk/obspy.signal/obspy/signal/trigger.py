@@ -52,7 +52,8 @@ def recStalta(a, nsta, nlta):
     a = np.require(a, 'float64', ['C_CONTIGUOUS'])
     ndat = len(a)
     charfct = np.empty(ndat, dtype='float64')
-    clibsignal.recstalta(a, charfct, ndat, nsta, nlta) # do not use pointer here
+    # do not use pointer here:
+    clibsignal.recstalta(a, charfct, ndat, nsta, nlta)
     return charfct
 
 
@@ -83,7 +84,7 @@ def recStaltaPy(a, nsta, nlta):
     csta = 1. / nsta
     clta = 1. / nlta
     sta = 0.
-    lta = 1e-99 # avoid zero devision
+    lta = 1e-99  # avoid zero devision
     charfct = [0.0] * len(a)
     icsta = 1 - csta
     iclta = 1 - clta
@@ -123,27 +124,27 @@ def carlStaTrig(a, nsta, nlta, ratio, quiet):
     star = np.zeros(len(a), dtype='float64')
     ltar = np.zeros(len(a), dtype='float64')
     pad_sta = np.zeros(nsta)
-    pad_lta = np.zeros(nlta) # avoid for 0 division 0/1=0
+    pad_lta = np.zeros(nlta)  # avoid for 0 division 0/1=0
     #
     # compute the short time average (STA)
-    for i in xrange(nsta): # window size to smooth over
+    for i in xrange(nsta):  # window size to smooth over
         sta += np.concatenate((pad_sta, a[i:m - nsta + i]))
     sta /= nsta
     #
     # compute the long time average (LTA), 8 sec average over sta
-    for i in xrange(nlta): # window size to smooth over
+    for i in xrange(nlta):  # window size to smooth over
         lta += np.concatenate((pad_lta, sta[i:m - nlta + i]))
     lta /= nlta
-    lta = np.concatenate((np.zeros(1), lta))[:m] #XXX ???
+    lta = np.concatenate((np.zeros(1), lta))[:m]  # XXX ???
     #
     # compute star, average of abs diff between trace and lta
-    for i in xrange(nsta): # window size to smooth over
+    for i in xrange(nsta):  # window size to smooth over
         star += np.concatenate((pad_sta,
                                abs(a[i:m - nsta + i] - lta[i:m - nsta + i])))
     star /= nsta
     #
     # compute ltar, 8 sec average over star
-    for i in xrange(nlta): # window size to smooth over
+    for i in xrange(nlta):  # window size to smooth over
         ltar += np.concatenate((pad_lta, star[i:m - nlta + i]))
     ltar /= nlta
     #
@@ -178,14 +179,14 @@ def classicStaLta(a, nsta, nlta):
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
     # once.
-    for i in xrange(nsta): # window size to smooth over
+    for i in xrange(nsta):  # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     sta = sta / nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
-    pad_lta = np.ones(nlta) # avoid for 0 division 0/1=0
-    for i in xrange(nlta): # window size to smooth over
+    pad_lta = np.ones(nlta)  # avoid for 0 division 0/1=0
+    for i in xrange(nlta):  # window size to smooth over
         lta = lta + np.concatenate((pad_lta, a[i:m - nlta + i] ** 2))
     lta = lta / nlta
     #
@@ -234,7 +235,7 @@ def zdetect(a, nsta):
     sta = np.zeros(len(a), dtype='float64')
     # Standard Sta
     pad_sta = np.zeros(nsta)
-    for i in xrange(nsta): # window size to smooth over
+    for i in xrange(nsta):  # window size to smooth over
         sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
     a_mean = np.mean(sta)
     a_std = np.std(sta)
@@ -396,7 +397,7 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     a = np.require(a, 'float32', ['C_CONTIGUOUS'])
     b = np.require(b, 'float32', ['C_CONTIGUOUS'])
     c = np.require(c, 'float32', ['C_CONTIGUOUS'])
-    s_pick = C.c_int(s_pick) # pick S phase also
+    s_pick = C.c_int(s_pick)  # pick S phase also
     ptime = C.c_float()
     stime = C.c_float()
     args = (len(a), samp_rate, f1, f2,

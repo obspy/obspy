@@ -25,6 +25,7 @@ import numpy as np
 
 libgse2 = False
 
+
 def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
                 save_data=True):
     """
@@ -155,7 +156,7 @@ def _calcresp(calfile, nfft, sampfreq):
             raise ImportError(msg)
     # calculate transfer function
     poles, zeros, scale_fac = libgse2.readPaz(calfile)
-    h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0/sampfreq,
+    h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
                          nfft, freq=True, pitsa=False)
     return h, f
 

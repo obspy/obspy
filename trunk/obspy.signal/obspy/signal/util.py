@@ -68,10 +68,9 @@ for erlib_name in erlib_names:
     else:
         break
 if not clibevresp:
-    msg = 'Could not load shared library for obspy.signal.invsim.evalresp\n\n %s' % (e)
+    msg = 'Could not load shared library for ' + \
+          'obspy.signal.invsim.evalresp\n\n %s' % (e)
     raise ImportError(msg)
-
-
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
@@ -112,7 +111,7 @@ def utlLonLat(orig_lon, orig_lat, x, y):
 
     >>> utlLonLat(12.0, 48.0, 0.0, 0.0)
     (12.0, 48.0)
-    >>> lon, lat = utlLonLat(12.0, 48.0, 73.904141685064957, 111.19082623047636)
+    >>> lon, lat = utlLonLat(12.0, 48.0, 73.9041, 111.1908)
     >>> print("%.4f, %.4f" % (lon, lat))
     13.0000, 49.0000
 
@@ -149,6 +148,7 @@ def nextpow2(i):
     buf = M.ceil(M.log(i) / M.log(2))
     return int(M.pow(2, buf))
 
+
 def prevpow2(i):
     """
     Find the previous power of two
@@ -160,6 +160,7 @@ def prevpow2(i):
     """
     # do not use numpy here, math is much faster for single values
     return int(M.pow(2, M.floor(M.log(i, 2))))
+
 
 def nearestPow2(x):
     """
@@ -223,7 +224,7 @@ def smooth(x, smoothie):
         if (len(x) > 1 and len(x) < size_x):
             #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
             #                     [x[(len(x)-1),:]]*smoothie,axis=0)
-            out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
+            out_add = (np.append([x[0, :]] * int(smoothie), x, axis=0))
             help = np.transpose(out_add)
             out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
             out = np.transpose(out)

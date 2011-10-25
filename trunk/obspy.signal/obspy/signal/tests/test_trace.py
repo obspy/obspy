@@ -3,6 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from obspy.core import UTCDateTime, Trace, read
+from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
 import unittest
 
 
@@ -15,18 +16,15 @@ class TraceTestCase(unittest.TestCase):
         Tests if calling simulate of trace gives the same result as using
         seisSim manually.
         """
-        # skip test if obspy.signal is not installed
-        try:
-            from obspy.signal import seisSim
-        except ImportError:
-            return
         tr = read()[0]
         paz_sts2 = {'poles': [-0.037004 + 0.037016j, -0.037004 - 0.037016j,
-                              - 251.33 + 0j, -131.04 - 467.29j, -131.04 + 467.29j],
+                              - 251.33 + 0j, -131.04 - 467.29j,
+                              - 131.04 + 467.29j],
                     'zeros': [0j, 0j],
                     'gain': 60077000.0,
                     'sensitivity': 2516778400.0}
-        paz_le3d1s = {'poles': [-4.440 + 4.440j, -4.440 - 4.440j, -1.083 + 0.0j],
+        paz_le3d1s = {'poles': [-4.440 + 4.440j, -4.440 - 4.440j,
+                                - 1.083 + 0.0j],
                       'zeros': [0.0 + 0.0j, 0.0 + 0.0j, 0.0 + 0.0j],
                       'gain': 0.4,
                       'sensitivity': 1.0}
@@ -59,10 +57,6 @@ class TraceTestCase(unittest.TestCase):
             - is a TypeError properly raised?
             - after all bad filter calls, is the trace still unchanged?
         """
-        try:
-            from obspy.signal import bandpass, bandstop, lowpass, highpass
-        except ImportError:
-            return
         # create two test Traces
         traces = []
         np.random.seed(815)
@@ -132,11 +126,6 @@ class TraceTestCase(unittest.TestCase):
         """
         Tests the downsample method of the Trace object.
         """
-        # skip test if obspy.signal is not installed
-        try:
-            import obspy.signal #@UnusedImport
-        except ImportError:
-            return
         # create test Trace
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)

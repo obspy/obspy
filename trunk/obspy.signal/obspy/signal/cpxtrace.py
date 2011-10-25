@@ -91,7 +91,7 @@ def normEnvelope(data, fs, smoothie, fk):
             # (dA/dt) / 2*PI*smooth(A)*fs/2
             t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
             # Integral within window
-            t_ = cumtrapz(t_, dx=1./fs)
+            t_ = cumtrapz(t_, dx=(1. / fs))
             t_ = np.concatenate((t_[0:1], t_))
             Anorm[i] = ((np.exp(np.mean(t_))) - 1) * 100
             i = i + 1
@@ -113,7 +113,7 @@ def normEnvelope(data, fs, smoothie, fk):
         # (dA/dt) / 2*PI*smooth(A)*fs/2
         t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
         # Integral within window
-        t_ = cumtrapz(t_, dx=1./fs)
+        t_ = cumtrapz(t_, dx=(1.0 / fs))
         t_ = np.concatenate((t_[0:1], t_))
         Anorm = ((np.exp(np.mean(t_))) - 1) * 100
         return Anorm

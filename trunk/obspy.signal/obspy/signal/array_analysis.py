@@ -216,10 +216,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         coordinate system. x3 must point either UP or DOWN.
 
     """
-
-
     # start the code -------------------------------------------------
-
     # This assumes that all stations and components have the same number of
     # time samples, nt
     [nt, Na] = np.shape(ts1)
@@ -245,7 +242,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         raise ValueError('Station number > Na in subarray')
 
     # extract the stations of the subarray to be used
-    subarraycoords = array_coords[subarray , :]
+    subarraycoords = array_coords[subarray, :]
 
     # count number of subarray stations: Nplus1 and number of station
     # offsets: N
@@ -259,9 +256,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         msg = 'For a 3-station array the problem is even-determined'
         warnings.warn(msg)
 
-
     # ------------------- NOW SOME SEISMOLOGY!! --------------------------
-
     # constants
     eta = 1 - 2 * vs ** 2 / vp ** 2
 
@@ -275,8 +270,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     z3t = np.zeros(3)
     # fill up A
     for i in xrange(N):
-        ss = subarraycoords[i + 1, :] - subarraycoords[0, :]
-        A[3 * i:3 * i + 3, :] = np.c_[np.r_[ss, z3t], np.r_[z3t, ss], \
+        ss = subarraycoords[(i + 1), :] - subarraycoords[0, :]
+        A[(3 * i):(3 * i + 3), :] = np.c_[np.r_[ss, z3t], np.r_[z3t, ss], \
             np.array([-eta * ss[2], \
             0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
@@ -303,18 +298,17 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # check dimension is okay
         if np.size(sigmau) != Na:
             raise ValueError('sigmau must have %s elements' % Na)
-        junk = (np.c_[sigmau, sigmau, sigmau]) ** 2; # matrix of variances
+        junk = (np.c_[sigmau, sigmau, sigmau]) ** 2  # matrix of variances
         Cu = np.diag(np.reshape(junk[subarray, :], (3 * Nplus1)))
     elif sigmau.shape == (Na, 3):
-        Cu = np.diag(np.reshape(((sigmau[subarray, :])**2).transpose(), \
-            (3 * Nplus1)))
+        Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(), \
+                (3 * Nplus1)))
     else:
         raise ValueError('sigmau has the wrong dimensions')
 
     # Cd is the covariance matrix of the displ differences
     # dim(Cd) is (3*N) * (3*N)
     Cd = np.dot(np.dot(D, Cu), D.T)
-
 
     #---------------------------------------------------------
     # form generalized inverse matrix g.  dim(g) is 6 x (3*N)
@@ -350,7 +344,6 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # other matrices
     udif = np.empty((3, N))
     udif.fill(np.NaN)
-
 
     #---------------------------------------------------------------
     # here we define 4x6 Be and 3x6 Bw matrices.  these map the solution
@@ -468,10 +461,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         u31 = -ptilde[2]
         u32 = -ptilde[5]
         u33 = -eta * (ptilde[0] + ptilde[4])
-        uij_vector = np.r_[ptilde, u31, u32, u33 ]
+        uij_vector = np.r_[ptilde, u31, u32, u33]
         #
         # calculate predicted data
-        pred = np.dot(A, ptilde) # 9/8/92.I.3(9) and 8/26/92.I.3.T bottom
+        pred = np.dot(A, ptilde)  # 9/8/92.I.3(9) and 8/26/92.I.3.T bottom
         #
         # calculate  residuals (misfits concatenated for all stations)
         misfit = pred - data
@@ -516,7 +509,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         # Calculate tilt and torsion
         ts_w1[itime] = w[0]
         ts_w2[itime] = w[1]
-        ts_w3[itime] = w[2] # torsion in radians
+        ts_w3[itime] = w[2]  # torsion in radians
         ts_tilt[itime] = np.sqrt(w[0] ** 2 + w[1] ** 2)
             # 7/21/06.II.6(19), amount of tilt in radians
 
@@ -773,7 +766,8 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
         baz = azimut - np.sign(azimut) * 180
         if power > semb_thres and 1. / slow > vel_thres:
-            res.append(np.array([newstart.timestamp, power, abspow, baz, slow]))
+            res.append(np.array([newstart.timestamp, power, abspow, baz,
+                                 slow]))
             if verbose:
                 print(newstart, (newstart + (nsamp / df)), res[-1][1:])
         if (newstart + (nsamp + nstep) / df) > etime:
@@ -867,8 +861,8 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
                               C.cast(trace, C.POINTER(C.c_void_p)), ntrace,
                               C.byref(stat_tshift_table), C.byref(abspow),
                               C.byref(power), C.byref(ix), C.byref(iy), flow,
-                              fhigh, digfreq, nsamp, nstat, prewhiten, grdpts_x,
-                              grdpts_y, nfft)
+                              fhigh, digfreq, nsamp, nstat, prewhiten,
+                              grdpts_x, grdpts_y, nfft)
 
     if errcode == 0:
         pass
@@ -879,7 +873,8 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     return abspow.value, power.value, ix.value, iy.value
 
 
-def get_geometry(stream, coordsys='lonlat', return_center=False, verbose=False):
+def get_geometry(stream, coordsys='lonlat', return_center=False,
+                 verbose=False):
     """
     Method to calculate the array geometry and the center coordinates in km
 
@@ -955,7 +950,7 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    nstat = len(geometry) #last index are center coordinates
+    nstat = len(geometry)  # last index are center coordinates
 
     time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
     for k in xrange(grdpts_x):
@@ -999,8 +994,8 @@ def get_spoint(stream, stime, etime):
         if frac > stream[i].stats.delta * 0.25:
             msg = "Difference in start times exceeds 25% of samp rate"
             warnings.warn(msg)
-        spoint[i] += offset;
-        diffend = stream[i].stats.endtime - eearliest;
+        spoint[i] += offset
+        diffend = stream[i].stats.endtime - eearliest
         frac, ddummy = math.modf(diffend)
         epoint[i] = int(ddummy)
         epoint[i] += negoffset

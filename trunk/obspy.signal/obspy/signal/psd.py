@@ -45,8 +45,11 @@ if MATPLOTLIB_VERSION == None:
     # of psd() look like it should with two functions as default values for
     # kwargs although matplotlib might not be present and the routines
     # therefore not usable
-    def detrend_none(): pass
-    def window_hanning(): pass
+
+    def detrend_none():
+        pass
+    def window_hanning():
+        pass
 else:
     # Import matplotlib routines. These are no official dependency of
     # obspy.signal so an import error should really only be raised if any
@@ -84,11 +87,12 @@ CDICT = {'red': ((0.0, 1.0, 1.0),
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
 # do not change these variables, otherwise results may differ from PQLX!
-PPSD_LENGTH = 3600 # psds are calculated on 1h long segments
-PPSD_STRIDE = 1800 # psds are calculated overlapping, moving 0.5h ahead
+PPSD_LENGTH = 3600  # psds are calculated on 1h long segments
+PPSD_STRIDE = 1800  # psds are calculated overlapping, moving 0.5h ahead
 
 
-def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning, noverlap=0):
+def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
+        noverlap=0):
     """
     Wrapper for `matplotlib.mlab.psd`_.
 
@@ -162,6 +166,7 @@ def fft_taper(data):
     data *= cosTaper(len(data), 0.2)
     return data
 
+
 def welch_taper(data):
     """
     Applies a welch window to data. See
@@ -170,6 +175,7 @@ def welch_taper(data):
     """
     data *= welch_window(len(data))
     return data
+
 
 def welch_window(N):
     """
@@ -216,7 +222,8 @@ class PPSD():
         Jon Peterson
         Observations and modeling of seismic background noise
         USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+        http://ehp3-earthquake.wr.usgs.gov/
+        regional/asl/pubs/files/ofr93-322.pdf
 
     Basic Usage
     -----------
@@ -363,7 +370,8 @@ class PPSD():
         Should be able to do it without a dummy psd..
         """
         dummy = np.ones(self.len)
-        spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate, noverlap=self.nlap)
+        spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
+                              noverlap=self.nlap)
 
         # leave out first entry (offset)
         freq = freq[1:]
@@ -371,7 +379,8 @@ class PPSD():
         per = 1.0 / freq[::-1]
         self.freq = freq
         self.per = per
-        # calculate left/rigth edge of first period bin, width of bin is one octave
+        # calculate left/rigth edge of first period bin,
+        # width of bin is one octave
         per_left = per[0] / 2
         per_right = 2 * per_left
         # calculate center period of first period bin
@@ -439,7 +448,8 @@ class PPSD():
 
         :type stream: :class:`~obspy.core.stream.Stream`
         """
-        self.times_data += [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
+        self.times_data += \
+                [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
 
     def __check_time_present(self, utcdatetime):
         """
@@ -451,7 +461,8 @@ class PPSD():
         insert this piece of data.
         """
         index1 = bisect.bisect_left(self.times_used, utcdatetime)
-        index2 = bisect.bisect_right(self.times_used, utcdatetime + PPSD_LENGTH)
+        index2 = bisect.bisect_right(self.times_used,
+                                     utcdatetime + PPSD_LENGTH)
         if index1 != index2:
             return True
         else:
@@ -499,7 +510,8 @@ class PPSD():
                     msg = msg % t1
                     warnings.warn(msg)
                 else:
-                    # throw warnings if trace length is different than one hour..!?!
+                    # throw warnings if trace length is different
+                    # than one hour..!?!
                     slice = tr.slice(t1, t1 + PPSD_LENGTH)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
@@ -509,7 +521,7 @@ class PPSD():
                         if verbose:
                             print t1
                         changed = True
-                t1 += PPSD_STRIDE # advance half an hour
+                t1 += PPSD_STRIDE  # advance half an hour
 
             # enforce time limits, pad zeros if gaps
             #tr.trim(t, t+PPSD_LENGTH, pad=True)
@@ -540,7 +552,8 @@ class PPSD():
         # if trace has a masked array we fill in zeros
         try:
             tr.data[tr.data.mask] = 0.0
-        # if its no masked array, we get an AttributeError and have nothing to do
+        # if it is no masked array, we get an AttributeError
+        # and have nothing to do
         except AttributeError:
             pass
 
@@ -583,28 +596,6 @@ class PPSD():
                          detrend=mlab.detrend_linear, window=fft_taper,
                          noverlap=self.nlap)
 
-        # convert to acceleration
-        #try:
-        #    paz['zeros'].remove(0j)
-        #except ValueError:
-        #    msg = "No zero at 0j to remove from PAZ in order to convert to acceleration."
-        #    raise Exception(msg)
-
-        # remove instrument response
-        #import ipdb;ipdb.set_trace()
-        #freq_response = pazToFreqResp(paz['poles'], paz['zeros'], paz['gain'], delta, nfft)
-        #XXX  alternative version with sanity check if frequencies match:
-        #XXX resp_amp, resp_freq = pazToFreqResp(paz['poles'], paz['zeros'],paz['gain'], delta, nfft * 2, freq=True)
-        #XXX np.testing.assert_array_equal(freq, resp_freq)
-        #water_level = 600.0
-        #specInv(freq_response, water_level)
-        #freq_response = (freq_response.real * freq_response.real) * (freq_response.imag * freq_response.imag)
-        #freq_response /= paz['sensitivity']**2
-        #spec *= freq_response
-        #XXX freq_response = np.sqrt(freq_response.real**2 + freq_response.imag**2)
-        #XXX spec *= freq_response
-        #XXX spec *= freq_response
-
         # leave out first entry (offset)
         spec = spec[1:]
 
@@ -617,12 +608,15 @@ class PPSD():
 
         spec_octaves = []
         # do this for the whole period range and append the values to our lists
-        for per_left, per_right in zip(self.per_octaves_left, self.per_octaves_right):
-            spec_center = spec[(per_left <= self.per) & (self.per <= per_right)].mean()
+        for per_left, per_right in zip(self.per_octaves_left,
+                                       self.per_octaves_right):
+            specs = spec[(per_left <= self.per) & (self.per <= per_right)]
+            spec_center = specs.mean()
             spec_octaves.append(spec_center)
         spec_octaves = np.array(spec_octaves)
 
-        hist, self.xedges, self.yedges = np.histogram2d(self.per_octaves, spec_octaves, bins=(self.period_bins, self.spec_bins))
+        hist, self.xedges, self.yedges = np.histogram2d(self.per_octaves,
+                spec_octaves, bins=(self.period_bins, self.spec_bins))
 
         try:
             # we have to make sure manually that the bins are always the same!
@@ -760,8 +754,8 @@ class PPSD():
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date, self.times_used[-1].date,
-                         len(self.times_used))
+        title = title % (self.id, self.times_used[0].date,
+                         self.times_used[-1].date, len(self.times_used))
         ax.set_title(title)
 
         if show_coverage:
@@ -793,8 +787,8 @@ class PPSD():
         self.__plot_coverage(ax)
         fig.autofmt_xdate()
         title = "%s   %s -- %s  (%i segments)"
-        title = title % (self.id, self.times_used[0].date, self.times_used[-1].date,
-                         len(self.times_used))
+        title = title % (self.id, self.times_used[0].date,
+                         self.times_used[-1].date, len(self.times_used))
         ax.set_title(title)
 
         plt.draw()
@@ -840,12 +834,14 @@ def get_NLNM():
         Jon Peterson
         Observations and modeling of seismic background noise
         USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+        http://ehp3-earthquake.wr.usgs.gov/
+        regional/asl/pubs/files/ofr93-322.pdf
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
     nlnm = data['low_noise']
     return (periods, nlnm)
+
 
 def get_NHNM():
     """
@@ -855,7 +851,8 @@ def get_NHNM():
         Jon Peterson
         Observations and modeling of seismic background noise
         USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+        http://ehp3-earthquake.wr.usgs.gov/
+        regional/asl/pubs/files/ofr93-322.pdf
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']

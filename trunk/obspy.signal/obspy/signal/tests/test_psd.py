@@ -64,7 +64,6 @@ class PsdTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(psd_obspy[5:], psd_pitsa[5:],
                                              decimal=6)
 
-
     def test_welch_window_vs_pitsa(self):
         """
         Test that the helper function to generate the welch window delivers the
@@ -79,7 +78,6 @@ class PsdTestCase(unittest.TestCase):
             window_pitsa = np.load(file)
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
-
 
     def test_PPSD(self):
         """
@@ -113,7 +111,8 @@ class PsdTestCase(unittest.TestCase):
         st = Stream([tr])
         paz = {'gain': 60077000.0,
                'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
-                         (-251.33 + 0j), (-131.04 - 467.29j), (-131.04 + 467.29j)],
+                         (-251.33 + 0j), (-131.04 - 467.29j),
+                         (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
         ppsd = PPSD(tr.stats, paz)

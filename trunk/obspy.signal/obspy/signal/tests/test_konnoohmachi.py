@@ -137,7 +137,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
                                            normalize=True)
         # The normalized and not normalized should not be the same. That the
         # normalizing works has been tested before.
-        self.assertFalse(np.all(smoothed_3==smoothed_4))
+        self.assertFalse(np.all(smoothed_3 == smoothed_4))
         # Input dtype should be output dtype.
         self.assertEqual(smoothed_3.dtype, np.float64)
 

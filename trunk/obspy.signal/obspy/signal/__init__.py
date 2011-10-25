@@ -100,7 +100,8 @@ Again, there are convenience methods implemented on
             'sensitivity': 2516778400.0,
             'zeros': [0j, 0j]}
     df = tr.stats.sampling_rate
-    tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
+    tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+                      water_level=60.0)
     st.plot()
 
 Trigger
@@ -148,7 +149,8 @@ The following example demonstrates a recursive Sta/Lta triggering:
     tr.filter("bandpass", freqmin=1, freqmax=20)
     sta = 0.5
     lta = 4
-    cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate), int(lta * tr.stats.sampling_rate))
+    cft = recStalta(tr.data, int(sta * tr.stats.sampling_rate),
+                    int(lta * tr.stats.sampling_rate))
     thrOn = 4
     thrOff = 0.7
     plot_trigger(tr, cft, thrOn, thrOff)
@@ -190,7 +192,8 @@ from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
 # import the depreciated ones
 from filter import bandpassZPHSH, bandstopZPHSH, lowpassZPHSH, highpassZPHSH
-from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, gps2DistAzimuth
+from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
+        gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
         delayedStaLta, zdetect, triggerOnset, pkBaer, arPick
 from seismometer import PAZ_WOOD_ANDERSON

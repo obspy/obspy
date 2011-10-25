@@ -66,8 +66,7 @@ def cosTaper(npts, p=0.1):
     return np.concatenate((
         0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, frac))),
         np.ones(npts - 2 * frac),
-        0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))
-        ), axis=0)
+        0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))), axis=0)
 
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
@@ -107,8 +106,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
 
     class c_complex(C.Structure):
         _fields_ = [("real", C.c_double),
-                    ("imag", C.c_double)
-                    ]
+                    ("imag", C.c_double)]
 
     class response(C.Structure):
         pass
@@ -120,13 +118,12 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
                          ("rvec", C.POINTER(c_complex)),
                          ("nfreqs", C.c_int),
                          ("freqs", C.POINTER(C.c_double)),
-                         ("next", C.POINTER(response))
-                        ]
+                         ("next", C.POINTER(response))]
 
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    freqs = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
+    freqs = np.arange(0, fy + fy / n, fy / n)  #arange should includes fy/n
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
@@ -161,8 +158,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         C.c_int,
         C.c_int,
         C.c_int,
-        C.c_int
-    ]
+        C.c_int]
     res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                             freqs, nfreqs, rtyp, vbs, start_stage,
                             stop_stage, stdio_flag, C.c_int(0))
@@ -199,7 +195,7 @@ def cornFreq2Paz(fc, damp=0.707):
     """
     poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
-    return {'poles':poles, 'zeros':[0j, 0j], 'gain':1, 'sensitivity': 1.0}
+    return {'poles': poles, 'zeros':[0j, 0j], 'gain':1, 'sensitivity': 1.0}
 
 
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
@@ -241,9 +237,9 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
         a = [1.0]
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    f = np.arange(0, fy + fy / n, fy / n) #arange should includes fy/n
+    f = np.arange(0, fy + fy / n, fy / n)  #arange should includes fy/n
     _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
-    if pitsa: # like in PITSA paz2Freq (insdeconv.c) last line
+    if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
         h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
     if freq:
@@ -283,7 +279,7 @@ def specInv(spec, wlev):
     found = len(idx[0])
     # Now invert the spectrum for values where sqrt_len is greater than
     # 0.0, see PITSA spr_sinv.c for details
-    sqrt_len = np.abs(spec) # Find length of new scaled spec
+    sqrt_len = np.abs(spec)  # Find length of new scaled spec
     inn = np.where(sqrt_len > 0.0)
     spec[inn] = 1.0 / spec[inn]
     # For numerical stability, set all zero length to zero, do not invert
@@ -468,11 +464,11 @@ def paz2AmpValueOfFreqResp(paz, freq):
     >>> print(round(amp, 7))
     0.2830262
     """
-    jw = complex(0, 2 * np.pi * freq) #angular frequency
+    jw = complex(0, 2 * np.pi * freq)  #angular frequency
     fac = complex(1, 0)
-    for zero in paz['zeros']: #numerator
+    for zero in paz['zeros']:  #numerator
         fac *= jw - zero
-    for pole in paz['poles']: #denumerator
+    for pole in paz['poles']:  #denominator
         fac /= jw - pole
     return abs(fac) * paz['gain']
 
@@ -530,6 +526,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                 0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
+
 def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     """
     Convert amplitude in counts measured of instrument with given Poles and
@@ -545,11 +542,11 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     """
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     freq = 1.0 / (2 * timespan)
-    wa_ampl = amplitude / 2.0 #half peak to peak amplitude
+    wa_ampl = amplitude / 2.0  #half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
             WOODANDERSON['sensitivity']
-    wa_ampl *= 1000 #convert to mm
+    wa_ampl *= 1000  #convert to mm
     return wa_ampl
 
 

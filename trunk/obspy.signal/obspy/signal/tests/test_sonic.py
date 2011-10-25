@@ -18,12 +18,12 @@ class SonicTestCase(unittest.TestCase):
 #        for i in xrange(100):
         np.random.seed(2348)
 
-        geometry = np.array([[   0.0, 0.0, 0.0],
-                             [  -5.0, 7.0, 0.0],
-                             [   5.0, 7.0, 0.0],
-                             [  10.0, 0.0, 0.0],
-                             [   5.0, -7.0, 0.0],
-                             [  -5.0, -7.0, 0.0],
+        geometry = np.array([[0.0, 0.0, 0.0],
+                             [-5.0, 7.0, 0.0],
+                             [5.0, 7.0, 0.0],
+                             [10.0, 0.0, 0.0],
+                             [5.0, -7.0, 0.0],
+                             [-5.0, -7.0, 0.0],
                              [-10.0, 0.0, 0.0]])
 
         geometry /= 100      # in km
@@ -47,7 +47,8 @@ class SonicTestCase(unittest.TestCase):
         trl = list()
         for i in xrange(len(geometry)):
             tr = Trace(coherent_wave[-min_dt + dt[i]:-max_dt + dt[i]].copy())
-                #+ amp / SNR * np.random.randn(length - abs(min_dt) - abs(max_dt)))
+                # + amp / SNR * \
+                # np.random.randn(length - abs(min_dt) - abs(max_dt)))
             tr.stats.sampling_rate = df
             tr.stats.coordinates = AttribDict()
             tr.stats.coordinates.x = geometry[i, 0]
@@ -88,20 +89,20 @@ class SonicTestCase(unittest.TestCase):
         # slowness ~= 1.3
         np.testing.assert_almost_equal(out[:, 4].mean(), 1.26491106407)
 
-
     def test_array_transff_freqslowness(self):
 
-        coords = np.array([[  10., 60., 0.],
-                           [ 200., 50., 0.],
+        coords = np.array([[10., 60., 0.],
+                           [200., 50., 0.],
                            [-120., 170., 0.],
                            [-100., -150., 0.],
-                           [  30., -220., 0.]])
+                           [30., -220., 0.]])
 
         coords /= 1000.
 
         coordsll = np.zeros(coords.shape)
         for i in np.arange(len(coords)):
-            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0], coords[i, 1])
+            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0],
+                                                       coords[i, 1])
 
         slim = 40.
         fmin = 1.
@@ -111,41 +112,42 @@ class SonicTestCase(unittest.TestCase):
         sstep = slim / 2.
 
         transff = array_transff_freqslowness(coords, slim, sstep, fmin, fmax,
-            fstep, coordsys='xy')
+                fstep, coordsys='xy')
 
-        transffll = array_transff_freqslowness(coordsll, slim, sstep, fmin, fmax,
-            fstep, coordsys='lonlat')
+        transffll = array_transff_freqslowness(coordsll, slim, sstep, fmin,
+                fmax, fstep, coordsys='lonlat')
 
         transffth = np.array(
             [[0.41915119, 0.33333333, 0.32339525, 0.24751548, 0.67660475],
              [0.25248452, 0.41418215, 0.34327141, 0.65672859, 0.33333333],
-             [0.24751548, 0.25248452, 1.        , 0.25248452, 0.24751548],
+             [0.24751548, 0.25248452, 1.00000000, 0.25248452, 0.24751548],
              [0.33333333, 0.65672859, 0.34327141, 0.41418215, 0.25248452],
              [0.67660475, 0.24751548, 0.32339525, 0.33333333, 0.41915119]])
 
         np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
         np.testing.assert_array_almost_equal(transffll, transffth, decimal=6)
 
-
     def test_array_transff_wavenumber(self):
 
-        coords = np.array([[  10., 60., 0.],
-                           [ 200., 50., 0.],
+        coords = np.array([[10., 60., 0.],
+                           [200., 50., 0.],
                            [-120., 170., 0.],
                            [-100., -150., 0.],
-                           [  30., -220., 0.]])
+                           [30., -220., 0.]])
 
         coords /= 1000.
 
         coordsll = np.zeros(coords.shape)
         for i in np.arange(len(coords)):
-            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0], coords[i, 1])
+            coordsll[i, 0], coordsll[i, 1] = utlLonLat(0., 0., coords[i, 0],
+                                                       coords[i, 1])
 
         klim = 40.
         kstep = klim / 2.
 
         transff = array_transff_wavenumber(coords, klim, kstep, coordsys='xy')
-        transffll = array_transff_wavenumber(coordsll, klim, kstep, coordsys='lonlat')
+        transffll = array_transff_wavenumber(coordsll, klim, kstep,
+                                             coordsys='lonlat')
 
         transffth = np.array(
             [[3.13360360e-01, 4.23775796e-02, 6.73650243e-01,
@@ -161,6 +163,7 @@ class SonicTestCase(unittest.TestCase):
 
         np.testing.assert_array_almost_equal(transff, transffth, decimal=6)
         np.testing.assert_array_almost_equal(transffll, transffth, decimal=6)
+
 
 def suite():
     return unittest.makeSuite(SonicTestCase, 'test')

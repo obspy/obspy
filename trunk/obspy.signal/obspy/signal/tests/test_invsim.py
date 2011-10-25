@@ -16,47 +16,37 @@ import unittest
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
 # zero less than pitsa (remove 1/w in frequency domain)
-PAZ_WOOD_ANDERSON = {
-    'poles': [-6.2832 - 4.7124j,
-              - 6.2832 + 4.7124j],
-    'zeros': [0.0 + 0.0j] * 1,
-    'gain': 1. / 2.25
-}
+PAZ_WOOD_ANDERSON = {'poles': [-6.2832 - 4.7124j,
+                               - 6.2832 + 4.7124j],
+                     'zeros': [0.0 + 0.0j] * 1,
+                     'gain': 1. / 2.25}
 
-PAZ_WWSSN_SP = {
-    'poles': [-4.0093 - 4.0093j,
-              - 4.0093 + 4.0093j,
-              - 4.6077 - 6.9967j,
-              - 4.6077 + 6.9967j],
-    'zeros': [0.0 + 0.0j] * 2,
-    'gain': 1. / 1.0413
-}
+PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
+                          - 4.0093 + 4.0093j,
+                          - 4.6077 - 6.9967j,
+                          - 4.6077 + 6.9967j],
+                'zeros': [0.0 + 0.0j] * 2,
+                'gain': 1. / 1.0413}
 
-PAZ_WWSSN_LP = {
-    'poles': [-0.4189 + 0.0j,
-              - 0.4189 + 0.0j,
-              - 0.0628 + 0.0j,
-              - 0.0628 + 0.0j],
-    'zeros': [0.0 + 0.0j] * 2,
-    'gain': 1. / 0.0271
-}
+PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
+                          - 0.4189 + 0.0j,
+                          - 0.0628 + 0.0j,
+                          - 0.0628 + 0.0j],
+                'zeros': [0.0 + 0.0j] * 2,
+                'gain': 1. / 0.0271}
 
-PAZ_KIRNOS = {
-    'poles': [-0.1257 - 0.2177j,
-              - 0.1257 + 0.2177j,
-              - 83.4473 + 0.0j,
-              - 0.3285 + 0.0j],
-    'zeros': [0.0 + 0.0j] * 2,
-    'gain': 1. / 1.61
-}
+PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
+                        - 0.1257 + 0.2177j,
+                        - 83.4473 + 0.0j,
+                        - 0.3285 + 0.0j],
+              'zeros': [0.0 + 0.0j] * 2,
+              'gain': 1. / 1.61}
 
-INSTRUMENTS = {
-    'None': None,
-    'kirnos': PAZ_KIRNOS,
-    'wood_anderson': PAZ_WOOD_ANDERSON,
-    'wwssn_lp': PAZ_WWSSN_LP,
-    'wwssn_sp': PAZ_WWSSN_SP
-}
+INSTRUMENTS = {'None': None,
+               'kirnos': PAZ_KIRNOS,
+               'wood_anderson': PAZ_WOOD_ANDERSON,
+               'wwssn_lp': PAZ_WWSSN_LP,
+               'wwssn_sp': PAZ_WWSSN_SP}
 
 
 class InvSimTestCase(unittest.TestCase):
@@ -80,13 +70,11 @@ class InvSimTestCase(unittest.TestCase):
 
         # paz of test file
         samp_rate = 200.0
-        PAZ_LE3D = {
-            'poles': [-4.21000 + 4.66000j,
-                      - 4.21000 - 4.66000j,
-                      - 2.105000 + 0.00000j],
-            'zeros': [0.0 + 0.0j] * 3,
-            'gain' : 0.4
-        }
+        PAZ_LE3D = {'poles': [-4.21 + 4.66j,
+                              - 4.21 - 4.66j,
+                              - 2.105 + 0.0j],
+                    'zeros': [0.0 + 0.0j] * 3,
+                    'gain': 0.4}
 
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
@@ -116,12 +104,10 @@ class InvSimTestCase(unittest.TestCase):
 
         # paz of test file
         samp_rate = 200.0
-        PAZ_STS2 = {
-            'poles': [-0.03736 - 0.03617j,
-                      - 0.03736 + 0.03617j],
-            'zeros': [0.0 + 0.0j] * 2,
-            'gain' : 1.5
-        }
+        PAZ_STS2 = {'poles': [-0.03736 - 0.03617j,
+                              - 0.03736 + 0.03617j],
+                    'zeros': [0.0 + 0.0j] * 2,
+                    'gain': 1.5}
 
         for id, paz in INSTRUMENTS.iteritems():
             # simulate instrument
@@ -166,14 +152,14 @@ class InvSimTestCase(unittest.TestCase):
         # Generate the stream from data verify it
         st = Stream([Trace(header=stats, data=srl_data)])
         st.verify()
-        one_hertz = cornFreq2Paz(1.0) # 1Hz instrument
-        #2 Correct for frequency response of the instrument
+        one_hertz = cornFreq2Paz(1.0)  # 1Hz instrument
+        # 2 Correct for frequency response of the instrument
         res = seisSim(st[0].data.astype("float32"),
                       st[0].stats.sampling_rate,
                       paz_remove=paz, paz_simulate=one_hertz, zero_mean=False)
         # correct for overall sensitivity, nm/s
         res *= 1e9 / paz["sensitivity"]
-        #3 Apply lowpass at 10Hz
+        # 3 Apply lowpass at 10Hz
         res = lowpass(res, 10, df=st[0].stats.sampling_rate,
         corners=4)
         # test versus saved result
@@ -243,8 +229,8 @@ class InvSimTestCase(unittest.TestCase):
         #    print >>cd1, "rmean"
         #    print >>cd1, "rtrend"
         #    print >>cd1, "taper type cosine width 0.03"
-        #    print >>cd1, "transfer from polezero subtype %s to none freqlimits\
-        #    %f %f %f %f"%(pzf,fl1,fl2,fl3,fl4)
+        #    print >>cd1, "transfer from polezero subtype %s to none \
+        #    freqlimits %f %f %f %f" % (pzf, fl1, fl2, fl3, fl4)
         #    print >>cd1, "w over ./data/KARC_corrected.sac"
         #    print >>cd1, "quit"
         #    cd1.close()
@@ -259,8 +245,9 @@ class InvSimTestCase(unittest.TestCase):
         tr = Trace(data, stats)
 
         attach_paz(tr, pzf, tovel=False)
-        tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=tr.stats.paz,
-                          remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4))
+        tr.data = seisSim(tr.data, tr.stats.sampling_rate,
+                          paz_remove=tr.stats.paz, remove_sensitivity=False,
+                          pre_filt=(fl1, fl2, fl3, fl4))
         data = np.loadtxt(testsacf)
         stats = {'network': 'KA', 'delta': 0.99999988079072466,
                  'station': 'KARC', 'location': 'S1',
@@ -280,8 +267,8 @@ class InvSimTestCase(unittest.TestCase):
     def test_evalrespsac_vs_obspy(self):
         """
         Compare results from removing instrument response using
-        evalresp in SAC and ObsPy. Visual inspection shows that the traces are pretty
-        much identical but differences remain (rms ~ 0.042). Haven't
+        evalresp in SAC and ObsPy. Visual inspection shows that the traces are
+        pretty much identical but differences remain (rms ~ 0.042). Haven't
         found the cause for those, yet.
         """
         evalrespf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC_resp.asc.gz')
@@ -302,14 +289,15 @@ class InvSimTestCase(unittest.TestCase):
         fl3 = 30.
         fl4 = 35.
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        seedresp = {'filename':respf, 'date':date, 'units':'VEL'}
+        seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
         tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
-                          remove_sensitivity=False, pre_filt=(fl1, fl2, fl3, fl4),
-                          seedresp=seedresp)
+                          remove_sensitivity=False,
+                          pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp)
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0041)
+
 
 def suite():
     return unittest.makeSuite(InvSimTestCase, 'test')

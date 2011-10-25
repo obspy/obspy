@@ -56,10 +56,10 @@ def sonogram(data, fs, fc1, nofb, no_win):
     z = np.zeros([len(c[:, 1]), nofb])
     z_tot = np.zeros(len(c[:, 1]))
     hob = np.zeros([no_win, nofb])
-    for k in range (no_win):
-        for j in range (len(c[1, :])):
+    for k in range(no_win):
+        for j in range(len(c[1, :])):
             z_tot[k] = z_tot[k] + pow(np.abs(c[k, j]), 2)
-        for i in range (nofb):
+        for i in range(nofb):
             start = int(round(fmin[i] * nfft * 1. / float(fs), 0))
             end = int(round(fmax[i] * nfft * 1. / float(fs), 0)) + 1
             for j in range(start, end):

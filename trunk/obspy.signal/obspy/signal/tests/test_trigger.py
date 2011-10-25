@@ -101,7 +101,8 @@ class TriggerTestCase(unittest.TestCase):
         picks = triggerOnset(cft, 1.5, 1.0, max_len=50)
         np.testing.assert_array_equal(picks, on_of)
         # check that max_len_delete drops the picks
-        picks_del = triggerOnset(cft, 1.5, 1.0, max_len=50, max_len_delete=True)
+        picks_del = triggerOnset(cft, 1.5, 1.0, max_len=50,
+                                 max_len_delete=True)
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests

@@ -14,13 +14,13 @@ class ArrayTestCase(unittest.TestCase):
     Test cases for array_analysis functions.
     """
     def setUp(self):
-        self.array_coords = np.array([[   0.0, 0.0, 0.0],
-                                      [  -5.0, 7.0, 0.0],
-                                      [   5.0, 7.0, 0.0],
-                                      [  10.0, 0.0, 0.0],
-                                      [   5.0, -7.0, 0.0],
-                                      [  -5.0, -7.0, 0.0],
-                                      [ -10.0, 0.0, 0.0]])
+        self.array_coords = np.array([[0.0, 0.0, 0.0],
+                                      [-5.0, 7.0, 0.0],
+                                      [5.0, 7.0, 0.0],
+                                      [10.0, 0.0, 0.0],
+                                      [5.0, -7.0, 0.0],
+                                      [-5.0, -7.0, 0.0],
+                                      [-10.0, 0.0, 0.0]])
         self.subarray = np.array([0, 1, 2, 3, 4, 5, 6])
         self.ts1 = np.empty((1000, 7)) * np.NaN
         self.ts2 = np.empty((1000, 7)) * np.NaN
@@ -71,7 +71,6 @@ class ArrayTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
                 decimal=12)
 
-
     def test_array_dilation(self):
         # tests function array_rotation_strain with synthetic data with pure
         # dilation and no rotation or shear strain
@@ -103,7 +102,7 @@ class ArrayTestCase(unittest.TestCase):
         # see Spudich et al, 1995, (A2)
         np.testing.assert_array_almost_equal(dilation * (2 - 2 * eta),
                 out['ts_d'], decimal=12)
-        np.testing.assert_array_almost_equal(dilation * 2 , out['ts_dh'],
+        np.testing.assert_array_almost_equal(dilation * 2, out['ts_dh'],
                 decimal=12)
         np.testing.assert_array_almost_equal(abs(dilation * .5 * (1 + \
                 2 * eta)), out['ts_s'], decimal=12)
@@ -117,7 +116,6 @@ class ArrayTestCase(unittest.TestCase):
                 decimal=15)
         np.testing.assert_array_almost_equal(np.zeros(1000), out['ts_M'],
                 decimal=12)
-
 
     def test_array_horizontal_shear(self):
         # tests function array_rotation_strain with synthetic data with pure

@@ -266,7 +266,9 @@ def remezFIR(data, freqmin, freqmax, samp_rate):
     # remez. You have to leave some space for the transition in frequency
     # response to occur, otherwise the call to remez will complain.
     #
-    # SRC: # http://episteme.arstechnica.com/eve/forums/a/tpc/f/6330927813/m/175006289731
+    # Source:
+    # http://episteme.arstechnica.com/
+    #         eve/forums/a/tpc/f/6330927813/m/175006289731
     # See also:
     # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592174
     # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592172

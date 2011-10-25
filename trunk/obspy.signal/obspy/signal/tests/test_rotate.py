@@ -167,6 +167,7 @@ class RotateTestCase(unittest.TestCase):
         res = gps2DistAzimuth(0, 0, 0, 180)
         self.assertEqual(res, (20004314.5, 0.0, 0.0))
 
+
 def suite():
     return unittest.makeSuite(RotateTestCase, 'test')
 

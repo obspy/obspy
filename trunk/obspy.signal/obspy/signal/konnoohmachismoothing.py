@@ -119,7 +119,7 @@ def calculateSmoothingMatrix(frequencies, bandwidth=40.0, normalize=False):
     sm_matrix = np.empty((len(frequencies), len(frequencies)),
                          frequencies.dtype)
     for _i, freq in enumerate(frequencies):
-        sm_matrix[_i,:] = konnoOhmachiSmoothingWindow(frequencies, freq,
+        sm_matrix[_i, :] = konnoOhmachiSmoothingWindow(frequencies, freq,
                                               bandwidth, normalize=normalize)
     return sm_matrix
 
@@ -204,8 +204,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         new_spec = np.empty(spectra.shape, spectra.dtype)
         # Separate case for just one spectrum.
         if len(new_spec.shape) == 1:
-            # Disable numpy warnings due to possible divisions by zero/logarithms
-            # of zero.
+            # Disable numpy warnings due to possible divisions by
+            # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
             for _i in xrange(len(frequencies)):
@@ -215,8 +215,8 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             np.seterr(**temp)
         # Reuse smoothing window if more than one spectrum.
         else:
-            # Disable numpy warnings due to possible divisions by zero/logarithms
-            # of zero.
+            # Disable numpy warnings due to possible divisions by
+            # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
             for _i in xrange(len(frequencies)):
