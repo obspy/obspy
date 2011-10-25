@@ -123,7 +123,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    freqs = np.arange(0, fy + fy / n, fy / n)  #arange should includes fy/n
+    freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
@@ -195,7 +195,7 @@ def cornFreq2Paz(fc, damp=0.707):
     """
     poles = [-(damp + M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc]
     poles.append(-(damp - M.sqrt(1 - damp ** 2) * 1j) * 2 * np.pi * fc)
-    return {'poles': poles, 'zeros':[0j, 0j], 'gain':1, 'sensitivity': 1.0}
+    return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
@@ -237,7 +237,7 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
         a = [1.0]
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    f = np.arange(0, fy + fy / n, fy / n)  #arange should includes fy/n
+    f = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
     _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
     if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
         h = np.conj(h)
@@ -464,11 +464,11 @@ def paz2AmpValueOfFreqResp(paz, freq):
     >>> print(round(amp, 7))
     0.2830262
     """
-    jw = complex(0, 2 * np.pi * freq)  #angular frequency
+    jw = complex(0, 2 * np.pi * freq)  # angular frequency
     fac = complex(1, 0)
-    for zero in paz['zeros']:  #numerator
+    for zero in paz['zeros']:  # numerator
         fac *= jw - zero
-    for pole in paz['poles']:  #denominator
+    for pole in paz['poles']:  # denominator
         fac /= jw - pole
     return abs(fac) * paz['gain']
 
@@ -542,11 +542,11 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     """
     # analog to pitsa/plt/RCS/plt_wave.c,v, lines 4881-4891
     freq = 1.0 / (2 * timespan)
-    wa_ampl = amplitude / 2.0  #half peak to peak amplitude
+    wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
             WOODANDERSON['sensitivity']
-    wa_ampl *= 1000  #convert to mm
+    wa_ampl *= 1000  # convert to mm
     return wa_ampl
 
 
