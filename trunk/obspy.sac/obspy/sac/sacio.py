@@ -297,7 +297,7 @@ class SacIO(object):
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24, dtype='|S8')
-        self.hs[:] = '-12345   ' # setting default value
+        self.hs[:] = '-12345   '  # setting default value
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
@@ -323,8 +323,10 @@ class SacIO(object):
         else:
             reftime = starttime - begin
         # if there are any micro-seconds, use begin to store them
-        millisecond = reftime.microsecond // 1000                # integer arithmetic
-        microsecond = (reftime.microsecond - millisecond * 1000) # integer arithmetic
+        # integer arithmetic
+        millisecond = reftime.microsecond // 1000
+        # integer arithmetic
+        microsecond = (reftime.microsecond - millisecond * 1000)
         if microsecond != 0:
             begin += microsecond * 1e-6
         # set a few values that are required to create a valid SAC-file
@@ -375,7 +377,7 @@ class SacIO(object):
         100
 
         """
-        key = item.lower() # convert the item to lower case
+        key = item.lower()  # convert the item to lower case
         if key in FDICT:
             index = FDICT[key]
             return(self.hf[index])
@@ -389,7 +391,7 @@ class SacIO(object):
             elif index == 1:
                 myarray = self.hs[1] + self.hs[2]
             else:
-                myarray = self.hs[index + 1] # extra 1 is from item #2
+                myarray = self.hs[index + 1]  # extra 1 is from item #2
             return myarray
         else:
             raise SacError("Cannot find header entry for: ", item)
@@ -412,7 +414,7 @@ class SacIO(object):
 
 
         """
-        key = item.lower() # convert the item to lower case
+        key = item.lower()  # convert the item to lower case
         #
         if key in FDICT:
             index = FDICT[key]
@@ -450,7 +452,7 @@ class SacIO(object):
                 raise SacError("Number of points in header and " + \
                                "length of trace inconsistent!")
         if fsize:
-            st = os.stat(name) #file's size = st[6]
+            st = os.stat(name)  # file's size = st[6]
             sizecheck = st[6] - (632 + 4 * int(npts))
             # size check info
             if sizecheck != 0:
@@ -552,8 +554,8 @@ class SacIO(object):
         except IOError:
             warnings.warn("No such file:" + fname, category=Warning)
         else:
-            f = open(fname, 'rb+') # open file for modification
-            f.seek(0, 0) # set pointer to the file beginning
+            f = open(fname, 'rb+')  # open file for modification
+            f.seek(0, 0)  # set pointer to the file beginning
             try:
                 # write the header
                 self.hf.tofile(f)
@@ -684,7 +686,7 @@ class SacIO(object):
             # resulting in a total length of 192 characters
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                f.readline() # strip the newline
+                f.readline()  # strip the newline
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
@@ -746,7 +748,7 @@ class SacIO(object):
             # resulting in a total length of 192 characters
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
-                f.readline() # strip the newline
+                f.readline()  # strip the newline
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
@@ -860,14 +862,14 @@ class SacIO(object):
                 msg = "Cannot write SAC-buffer to file: "
                 raise SacIOError(msg, ofname, e)
 
-    def PrintIValue(self, label='=', value= -12345):
+    def PrintIValue(self, label='=', value=-12345):
         """
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
             print(label, value)
 
-    def PrintFValue(self, label='=', value= -12345.0):
+    def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
@@ -881,7 +883,7 @@ class SacIO(object):
         if value.find('-12345') == -1:
             print(label, value)
 
-    def ListStdValues(self): # h is a header list, s is a float list
+    def ListStdValues(self):  # h is a header list, s is a float list
         """
         Convenience function for printing common header values.
 
@@ -914,8 +916,10 @@ class SacIO(object):
         try:
             nzyear = self.GetHvalue('nzyear')
             nzjday = self.GetHvalue('nzjday')
-            month = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mon
-            date = time.strptime(`nzyear` + " " + `nzjday`, "%Y %j").tm_mday
+            month = time.strptime(repr(nzyear) + " " + repr(nzjday),
+                                  "%Y %j").tm_mon
+            date = time.strptime(repr(nzyear) + " " + repr(nzjday),
+                                 "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
             print(pattern % (month, date,
                              self.GetHvalue('nzyear'),
@@ -1213,9 +1217,10 @@ class SacIO(object):
 
     def get_obspy_header(self):
         """
-        Return a dictionary that can be used as a header in creating a new obspy
-        trace object.
-        Currently most likely an Exception will be raised if no SAC file was read beforehand!
+        Return a dictionary that can be used as a header in creating a new
+        :class:`~obspy.core.trace.Trace` object.
+        Currently most likely an Exception will be raised if no SAC file was
+        read beforehand!
         """
         header = {}
         # convert common header types of the ObsPy trace object
@@ -1227,7 +1232,8 @@ class SacIO(object):
                     value = ''
             # fix for issue #156
             if i == 'delta':
-                header['sampling_rate'] = np.float32(1.0) / np.float32(self.hf[0])
+                header['sampling_rate'] = \
+                        np.float32(1.0) / np.float32(self.hf[0])
             else:
                 header[j] = value
         if header['calib'] == -12345.0:
@@ -1241,8 +1247,8 @@ class SacIO(object):
         # always add the begin time (if it's defined) to get the given
         # SAC reference time, no matter which iztype is given
         # note that the B and E times should not be in the SAC_EXTRA
-        # dictionary, as they would overwrite the self.fromarray which sets them
-        # according to the starttime, npts and delta.
+        # dictionary, as they would overwrite the self.fromarray which sets
+        # them according to the starttime, npts and delta.
         header['sac']['b'] = float(self.GetHvalue('b'))
         header['sac']['e'] = float(self.GetHvalue('e'))
         return header
@@ -1281,7 +1287,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
     Attaches to a trace a paz AttribDict containing poles zeros and gain.
 
-    :param tr: An ObsPy trace object
+    :param tr: An ObsPy :class:`~obspy.core.trace.Trace` object
     :param paz_file: path to pazfile or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero
@@ -1316,16 +1322,19 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
     while True:
         line = paz_file.readline()
-        if not line: break
+        if not line:
+            break
         ### lines starting with * are comments
-        if line.startswith('*'): continue
+        if line.startswith('*'):
+            continue
         if line.find('ZEROS') != -1:
             a = line.split()
             noz = int(a[1])
             for _k in xrange(noz):
                 line = paz_file.readline()
                 a = line.split()
-                if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or line.startswith('*') or not line:
+                if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or \
+                   line.startswith('*') or not line:
                     while len(zeros) < noz:
                         zeros.append(complex(0, 0j))
                     break
@@ -1338,7 +1347,8 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
             for _k in xrange(nop):
                 line = paz_file.readline()
                 a = line.split()
-                if line.find('CONSTANT') != -1  or line.find('ZEROS') != -1 or line.startswith('*') or not line:
+                if line.find('CONSTANT') != -1 or line.find('ZEROS') != -1 or \
+                   line.startswith('*') or not line:
                     while len(poles) < nop:
                         poles.append(complex(0, 0j))
                     break
@@ -1381,7 +1391,8 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         # where the former is in Hz and the latter in radians,
         # there gains seem to be unaffected by this.
         # According to this document:
-        # http://www.le.ac.uk/seis-uk/downloads/seisuk_instrument_resp_removal.pdf
+        # http://www.le.ac.uk/
+        #         seis-uk/downloads/seisuk_instrument_resp_removal.pdf
         # the gain should also be converted when changing from
         # hertz to radians or vice versa. However, the rdseed programs
         # does not do this. I'm not entirely sure at this stage which one is
@@ -1411,6 +1422,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.zeros = zeros
     tr.stats.paz.gain = constant
 
+
 def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
                tohz=False):
     """
@@ -1419,11 +1431,11 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     the script obspy-dataless2resp or the rdseed program. At the moment,
     you have to determine yourself if the given response is for velocity
     or displacement and if the values are given in rad or Hz. This is
-    still experimental code (see also documentation for obspy.sac.attach_paz function).
-
+    still experimental code (see also documentation for
+    :func:`obspy.sac.sacio.attach_paz`).
     Attaches to a trace a paz AttribDict containing poles, zeros, and gain.
 
-    :param tr: An ObsPy trace object
+    :param tr: An ObsPy :class:`~obspy.core.trace.Trace` object
     :param resp_file: path to RESP-file or file pointer
     :param todisp: change a velocity transfer function to a displacement
                    transfer function by adding another zero
@@ -1433,8 +1445,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> tr = obspy.core.Trace()
-    >>> respfile = os.path.join(os.path.dirname(__file__),'tests','data','RESP.NZ.CRLZ.10.HHZ')
-    >>> attach_resp(tr,respfile,torad=True,todisp=False)
+    >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
+    ...                         'RESP.NZ.CRLZ.10.HHZ')
+    >>> attach_resp(tr, respfile, torad=True, todisp=False)
     >>> print tr.stats.paz.keys()
     ['digitizer_gain', 'seismometer_gain', 'zeros', 'gain', 't_shift', 'poles']
     >>> print tr.stats.paz.poles  # doctest: +SKIP
@@ -1456,7 +1469,8 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     zeros = []
     while True:
         line = resp_file.readline()
-        if not line: break
+        if not line:
+            break
         if line.startswith(a0_pat):
             a0 = float(line.split(':')[1])
         if line.startswith(sens_pat):

@@ -13,7 +13,6 @@ import string
 import struct
 
 
-
 def isSAC(filename):
     """
     Checks whether a file is SAC or not. Returns True or False.
