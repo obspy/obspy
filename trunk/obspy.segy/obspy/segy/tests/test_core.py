@@ -270,10 +270,10 @@ class SEGYCoreTestCase(unittest.TestCase):
     def test_readingUsingCore(self):
         """
         This tests checks whether or not all necessary information is read
-        during reading with core. It actually just assumes the internal SEGYFile
-        object, which is thoroughly tested in obspy.segy.tests.test_segy, is
-        correct and compared all values to it. This seems to be the easiest way
-        to test everything.
+        during reading with core. It actually just assumes the internal
+        SEGYFile object, which is thoroughly tested in
+        obspy.segy.tests.test_segy, is correct and compared all values to it.
+        This seems to be the easiest way to test everything.
         """
         for file, _ in self.files.iteritems():
             file = os.path.join(self.path, file)
@@ -392,10 +392,10 @@ class SEGYCoreTestCase(unittest.TestCase):
 
     def test_largeSampleRateIntervalRaises(self):
         """
-        SEG Y supports a sample interval from 1 to 65535 microseconds in steps of 1
-        microsecond. Larger intervals cannot be supported due to the definition of
-        the SEG Y format. Therefore the smallest possible sampling rate is ~ 15.26
-        Hz.
+        SEG Y supports a sample interval from 1 to 65535 microseconds in steps
+        of 1 microsecond. Larger intervals cannot be supported due to the
+        definition of the SEG Y format. Therefore the smallest possible
+        sampling rate is ~ 15.26 Hz.
         """
         outfile = NamedTemporaryFile().name
         # Test for SEG Y.
@@ -525,8 +525,6 @@ class SEGYCoreTestCase(unittest.TestCase):
         year, julday, hour, minute, second = unpack('<5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
-
-
 
 
 def suite():

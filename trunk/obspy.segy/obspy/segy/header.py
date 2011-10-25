@@ -18,7 +18,8 @@ BINARY_FILE_HEADER_FORMAT = [
     [2, 'sample_interval_in_microseconds', True],
     [2, 'sample_interval_in_microseconds_of_original_field_recording', False],
     [2, 'number_of_samples_per_data_trace', True],
-    [2, 'number_of_samples_per_data_trace_for_original_field_recording', False],
+    [2, 'number_of_samples_per_data_trace_for_original_field_recording',
+     False],
     [2, 'data_sample_format_code', True],
     [2, 'ensemble_fold', False],
     [2, 'trace_sorting_code', False],
@@ -41,8 +42,7 @@ BINARY_FILE_HEADER_FORMAT = [
     [2, 'seg_y_format_revision_number', True],
     [2, 'fixed_length_trace_flag', True],
     [2, 'number_of_3200_byte_ext_file_header_records_following', True],
-    [94, 'unassigned_2', False]
-]
+    [94, 'unassigned_2', False]]
 
 # The format of the 240 byte long trace header.
 TRACE_HEADER_FORMAT = [
@@ -57,11 +57,11 @@ TRACE_HEADER_FORMAT = [
     [4, 'trace_number_within_the_ensemble', False, 24],
     [2, 'trace_identification_code', False, 28],
     [2, 'number_of_vertically_summed_traces_yielding_this_trace', False, 30],
-    [2, 'number_of_horizontally_stacked_traces_yielding_this_trace', False, 32],
+    [2, 'number_of_horizontally_stacked_traces_yielding_this_trace', False,
+     32],
     [2, 'data_use', False, 34],
-    [4,
-     'distance_from_center_of_the_source_point_to_the_center_of_the_receiver_group',
-    False, 36],
+    [4, 'distance_from_center_of_the_source_point_to_' + \
+     'the_center_of_the_receiver_group', False, 36],
     [4, 'receiver_group_elevation', False, 40],
     [4, 'surface_elevation_at_source', False, 44],
     [4, 'source_depth_below_surface', False, 48],
@@ -124,7 +124,8 @@ TRACE_HEADER_FORMAT = [
     [4, 'x_coordinate_of_ensemble_position_of_this_trace', False, 180],
     [4, 'y_coordinate_of_ensemble_position_of_this_trace', False, 184],
     [4, 'for_3d_poststack_data_this_field_is_for_in_line_number', False, 188],
-    [4, 'for_3d_poststack_data_this_field_is_for_cross_line_number', False, 192],
+    [4, 'for_3d_poststack_data_this_field_is_for_cross_line_number', False,
+     192],
     [4, 'shotpoint_number', False, 196],
     [2, 'scalar_to_be_applied_to_the_shotpoint_number', False, 200],
     [2, 'trace_value_measurement_unit', False, 202],
@@ -156,8 +157,7 @@ TRACE_HEADER_FORMAT = [
     [4, 'source_measurement_mantissa', False, 224],
     [2, 'source_measurement_exponent', False, 228],
     [2, 'source_measurement_unit', False, 230],
-    [8, 'unassigned', False, 232]
-]
+    [8, 'unassigned', False, 232]]
 
 TRACE_HEADER_KEYS = [_i[1] for _i in TRACE_HEADER_FORMAT]
 
@@ -206,5 +206,4 @@ ENDIAN = {
     'big': '>',
     'little': '<',
     '>': '>',
-    '<': '<'
-}
+    '<': '<'}

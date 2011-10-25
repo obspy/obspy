@@ -155,7 +155,7 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
     <obspy.core.stream.Stream object at 0x...>
     >>> print(st)
     1 Trace(s) in Stream:
-    Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - 2009-06-22T14:47:41.000000Z | 500.0 Hz, 2001 samples
+    Seq. No. in line:    1 | 2009-06-22T14:47:37.0 ... | 500.0 Hz, 2001 samples
     """
     # Read file to the internal segy representation.
     segy_object = readSEGYrev1(filename, endian=byteorder,
@@ -202,7 +202,8 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
             # Add the trace header as a new lazy attrib dictionary.
-            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header, tr.header.endian)
+            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header,
+                                               tr.header.endian)
         trace.stats.segy.trace_header = header
         # The sampling rate should be set for every trace. It is a sample
         # interval in microseconds. The only sanity check is that is should be
@@ -458,9 +459,9 @@ def readSU(filename, byteorder=None, unpack_trace_headers=False):
     >>> st = read("/path/to/1.su_first_trace")
     >>> st #doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
-    >>> print(st)
+    >>> print(st)  #doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    ... | 2005-12-19T15:07:54.000000Z - 2005-12-19T15:07:55.999750Z | 4000.0 Hz, 8000 samples
+    ... | 2005-12-19T15:07:54.000000Z ... 55.999750Z | 4000.0 Hz, 8000 samples
     """
     # Read file to the internal segy representation.
     su_object = readSUFile(filename, endian=byteorder,
@@ -488,7 +489,8 @@ def readSU(filename, byteorder=None, unpack_trace_headers=False):
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
             # Add the trace header as a new lazy attrib dictionary.
-            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header, tr.header.endian)
+            header = LazyTraceHeaderAttribDict(tr.header.unpacked_header,
+                                               tr.header.endian)
         trace.stats.su.trace_header = header
         # Also set the endianness.
         trace.stats.su.endian = endian
@@ -551,8 +553,8 @@ def writeSU(stream, filename, byteorder=None):
         # Check the sample interval.
         if trace.stats.delta > MAX_INTERVAL_IN_SECONDS:
             msg = """
-            Seismic Unix supports a maximum interval of %s seconds in between two
-            samples (trace.stats.delta value).
+            Seismic Unix supports a maximum interval of %s seconds in between
+            two samples (trace.stats.delta value).
             """.strip()
             msg = msg % MAX_INTERVAL_IN_SECONDS
             raise SEGYSampleIntervalError(msg)
@@ -645,6 +647,7 @@ def segy_trace__str__(self, *args, **kwargs):
     if np.ma.count_masked(self.data):
         out += ' (masked)'
     return out % (self.stats)
+
 
 class LazyTraceHeaderAttribDict(AttribDict):
     """

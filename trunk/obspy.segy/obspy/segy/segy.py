@@ -34,6 +34,7 @@ class SEGYTraceHeaderTooSmallError(SEGYError):
     """
     pass
 
+
 class SEGYTraceReadingError(SEGYError):
     """
     Raised if there is not enough data left in the file to unpack the data
@@ -69,9 +70,9 @@ class SEGYFile(object):
             to 'ASCII'.
 
         :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the memory
-            usage and the performance. They can be unpacked on-the-fly after being
-            read. Defaults to False.
+            be unpacked during reading the file. Has a huge impact on the
+            memory usage and the performance. They can be unpacked on-the-fly
+            after being read. Defaults to False.
         """
         if file is None:
             self._createEmptySEGYFileObject()
@@ -281,9 +282,9 @@ class SEGYFile(object):
         to the end of the file.
 
         :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the memory
-            usage and the performance. They can be unpacked on-the-fly after being
-            read. Defaults to False.
+            be unpacked during reading the file. Has a huge impact on the
+            memory usage and the performance. They can be unpacked on-the-fly
+            after being read. Defaults to False.
         """
         self.traces = []
         # Determine the filesize once.
@@ -351,7 +352,8 @@ class SEGYBinaryFileHeader(object):
         """
         final_str = ["Binary File Header:"]
         for item in BINARY_FILE_HEADER_FORMAT:
-            final_str.append("\t%s: %s" %(item[1], str(getattr(self, item[1]))))
+            final_str.append("\t%s: %s" % (item[1],
+                                           str(getattr(self, item[1]))))
         return "\n".join(final_str)
 
     def write(self, file, endian=None):
@@ -416,9 +418,9 @@ class SEGYTrace(object):
         :param big_endian: Bool. True means the header is encoded in big endian
             and False corresponds to a little endian header.
         :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the memory
-            usage and the performance. They can be unpacked on-the-fly after being
-            read. Defaults to False.
+            be unpacked during reading the file. Has a huge impact on the
+            memory usage and the performance. They can be unpacked on-the-fly
+            after being read. Defaults to False.
         :param filesize: Integer. Filesize of the file. If not given it will be
             determined using fstat which is slow.
         """
@@ -443,9 +445,9 @@ class SEGYTrace(object):
         self.file.
 
         :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the memory
-            usage and the performance. They can be unpacked on-the-fly after being
-            read. Defaults to False.
+            be unpacked during reading the file. Has a huge impact on the
+            memory usage and the performance. They can be unpacked on-the-fly
+            after being read. Defaults to False.
         """
         trace_header = self.file.read(240)
         # Check if it is smaller than 240 byte.
@@ -529,9 +531,9 @@ class SEGYTraceHeader(object):
         :param big_endian: Bool. True means the header is encoded in big endian
             and False corresponds to a little endian header.
         :param unpack_headers: Bool. Determines whether or not all headers will
-            be unpacked during reading the file. Has a huge impact on the memory
-            usage and the performance. They can be unpacked on-the-fly after being
-            read. Defaults to False.
+            be unpacked during reading the file. Has a huge impact on the
+            memory usage and the performance. They can be unpacked on-the-fly
+            after being read. Defaults to False.
         """
         self.endian = endian
         if header is None:
@@ -602,7 +604,6 @@ class SEGYTraceHeader(object):
             # Should not happen.
             else:
                 raise Exception
-
 
     def __getattr__(self, name):
         """

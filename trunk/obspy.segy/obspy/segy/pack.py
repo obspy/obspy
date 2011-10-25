@@ -23,6 +23,7 @@ if BYTEORDER == 'little':
 else:
     BYTEORDER = '>'
 
+
 class WrongDtypeException(Exception):
     pass
 
@@ -159,6 +160,7 @@ def pack_4byte_IEEE(file, data, endian='>'):
         data = data.byteswap()
     # Write the file.
     file.write(data.tostring())
+
 
 def pack_1byte_Integer(file, data, endian='>'):
     raise NotImplementedError
