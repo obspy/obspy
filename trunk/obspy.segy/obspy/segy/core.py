@@ -151,9 +151,9 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
     -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/00001034.sgy_first_trace")
-    >>> st #doctest: +ELLIPSIS
+    >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
-    >>> print(st)
+    >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
     Seq. No. in line:    1 | 2009-06-22T14:47:37.000000Z - ... 2001 samples
     """

@@ -234,8 +234,8 @@ class SEGYFile(object):
         if len(set([len(tr.data) for tr in self.traces])) != 1:
             self.binary_file_header.fixed_length_trace_flag = 0
         # Extended textual headers are not supported by ObsPy so far.
-        self.binary_file_header.number_of_3200_byte_ext_file_header_records_following\
-        = 0
+        self.binary_file_header.\
+        number_of_3200_byte_ext_file_header_records_following = 0
         # Enforce the encoding
         if data_encoding:
             self.binary_file_header.data_sample_format_code = data_encoding

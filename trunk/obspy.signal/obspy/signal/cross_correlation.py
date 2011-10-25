@@ -58,21 +58,21 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
 
-    :note: As shift_len gets higher the window supporting the cross
-           correlation actually gets smaller. So with shift_len=0 you get
-           the correlation coefficient of both traces as a whole without
-           any shift applied. As the xcorr function works in time domain
-           and does not zero pad at all, with higher shifts allowed the
-           window of support gets smaller so that the moving windows
-           shifted against each other do not run out of the timeseries
-           bounds at high time shifts. Of course there are other
-           possibilities to do cross correlations e.g. in frequency
-           domain.
-           Also see exchange in `ObsPy-users mailing list`_ and in this
-           `ticket`_.
+    .. note::
+       As shift_len gets higher the window supporting the cross correlation
+       actually gets smaller. So with shift_len=0 you get the correlation
+       coefficient of both traces as a whole without any shift applied. As the
+       xcorr function works in time domain and does not zero pad at all, with
+       higher shifts allowed the window of support gets smaller so that the
+       moving windows shifted against each other do not run out of the
+       timeseries bounds at high time shifts. Of course there are other
+       possibilities to do cross correlations e.g. in frequency domain.
 
-    .. _`ObsPy-users mailing list`: http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html
-    .. _`ticket`: https://obspy.org/ticket/249
+    ..seealso::
+        `ObsPy-users mailing list
+       <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
+       and
+       `ticket #249 <https://obspy.org/ticket/249>`_.
     """
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
