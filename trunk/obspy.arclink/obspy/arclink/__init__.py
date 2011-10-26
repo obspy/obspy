@@ -76,7 +76,7 @@ example above.
 
     >>> t = UTCDateTime(2009, 1, 1)
     >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
-    >>> paz  #doctest: +NORMALIZE_WHITESPACE +SKIP
+    >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
     {'STS-2/N/g=1500': {
         'poles': [(-0.037004000000000002+0.037016j),
                   (-0.037004000000000002-0.037016j),
@@ -92,7 +92,7 @@ example above.
 
     >>> t = UTCDateTime(2009, 1, 1)
     >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
-    ...                     t, t + 1, format="SEED") #doctest: +SKIP
+    ...                     t, t + 1, format="SEED")  # doctest: +SKIP
 
 (3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes the requested
     waveform unmodified into your local file system. Here we request a Full
@@ -100,7 +100,7 @@ example above.
 
     >>> t = UTCDateTime(2009, 1, 1, 12, 0)
     >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
-    ...                     t, t + 20, format='FSEED') #doctest: +SKIP
+    ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
 
 (4) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory
     data.
@@ -108,11 +108,11 @@ example above.
     >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
     ...                           permanent=True, min_longitude=12,
     ...                           max_longitude=12.2) #doctest: +SKIP
-    >>> inv.keys() #doctest: +SKIP
+    >>> inv.keys()  # doctest: +SKIP
     ['BW.MROB', 'BW.MANZ..EHZ', 'BW', 'BW.MANZ', 'BW.MROB..EHZ']
-    >>> inv['BW'] #doctest: +SKIP
+    >>> inv['BW']  # doctest: +SKIP
     AttribDict({'description': 'BayernNetz', 'region': 'Germany', ...
-    >>> inv['BW.MROB'] #doctest: +SKIP
+    >>> inv['BW.MROB']  # doctest: +SKIP
     AttribDict({'code': 'MROB', 'description': 'Rosenbuehl, Bavaria', ...
 
 Further Resources
@@ -123,9 +123,12 @@ Further Resources
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
   * https://svn.obspy.org/trunk/obspy.arclink/docs/protocol.txt
 
-* `Short introduction`_ to the ArcLink protocol
-* Latest `ArcLink server`_ package
-* SeismoLink_: a SOAP Web service on top of the ArcLink network
+* `Short introduction <http://www.webdc.eu/webdc_sum.html>`_ to the ArcLink
+  protocol
+* Latest `ArcLink server
+  <ftp://ftp.gfz-potsdam.de/pub/home/st/GEOFON/software/SeisComP/ArcLink/>`_
+* `SeismoLink <http://neriesdataportalblog.freeflux.net/webservices/>`_: a SOAP
+  Web service on top of the ArcLink network
 
 .. _GEOFON:
         http://geofon.gfz-potsdam.de
@@ -143,12 +146,6 @@ Further Resources
         http://www.gfz-potsdam.de
 .. _IPGP:
         http://www.ipgp.fr
-.. _`Short introduction`:
-        http://www.webdc.eu/webdc_sum.html
-.. _`ArcLink server`:
-        ftp://ftp.gfz-potsdam.de/pub/home/st/GEOFON/software/SeisComP/ArcLink/
-.. _SeismoLink:
-        http://neriesdataportalblog.freeflux.net/webservices/
 .. _`GNU Lesser General Public License, Version 3`:
         http://www.gnu.org/copyleft/lesser.html
 """

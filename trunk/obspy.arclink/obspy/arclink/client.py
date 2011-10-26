@@ -80,7 +80,7 @@ class Client(object):
     The following ArcLink servers may be accessed via ObsPy (partly restricted
     access only):
 
-    * WebDC servers: webdc.eu:18001, webdc:18002
+    * WebDC servers: webdc.eu:18001, webdc.eu:18002
     * ODC Server:  bhlsa03.knmi.nl:18001
     * INGV Server: eida.rm.ingv.it:18001
     * IPGP Server: geosrt2.ipgp.fr:18001
@@ -98,7 +98,7 @@ class Client(object):
         """
         Initializes an ArcLink client.
 
-        See :mod:`obspy.arclink` for all parameters.
+        See :mod:`obspy.arclink.Client` for all parameters.
         """
         self.user = user
         self.password = password
@@ -372,6 +372,24 @@ class Client(object):
         :type route: bool, optional
         :param route: Enables ArcLink routing (default is ``True``).
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> t = UTCDateTime("2009-08-20 04:03:12")
+        >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+        >>> st.plot() #doctest: +SKIP
+
+        .. plot::
+        
+            from obspy.core import UTCDateTime
+            from obspy.arclink.client import Client
+            client = Client("webdc.eu", 18001, 'test@obspy.org')
+            t = UTCDateTime("2009-08-20 04:03:12")
+            st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+            st.plot() #doctest: +SKIP
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -454,6 +472,15 @@ class Client(object):
         :param unpack: Unpack compressed waveform files before storing to disk.
             Default is ``True``.
         :return: None
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> t = UTCDateTime(2009, 1, 1, 12, 0)
+        >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
+        ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
         # check parameters
         is_name = isinstance(filename, basestring)
@@ -761,6 +788,24 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :return: Dictionary containing PAZ information.
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> t = UTCDateTime(2009, 1, 1)
+        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
+        >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
+        {'STS-2/N/g=1500': {
+            'poles': [(-0.037004000000000002+0.037016j),
+                      (-0.037004000000000002-0.037016j),
+                      (-251.33000000000001+0j),
+                      (-131.03999999999999-467.29000000000002j),
+                      (-131.03999999999999+467.29000000000002j)],
+            'sensitivity': 2516778600.0,
+            'zeros': [0j, 0j],
+            'gain': 60077000.0}}
         """
         result = self.getInventory(network=network, station=station,
                                    location=location, channel=channel,
@@ -803,6 +848,15 @@ class Client(object):
         :param format: Output format. Currently only Dataless SEED is
             supported.
         :return: None
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> t = UTCDateTime(2009, 1, 1)
+        >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
+        ...                     t, t + 1, format="SEED")  # doctest: +SKIP
         """
         # request type
         rtype = 'REQUEST RESPONSE format=%s' % format
@@ -867,6 +921,20 @@ class Client(object):
         :param modified_after: Returns only data modified after given date.
             Default is ``None``, returning all available data.
         :return: Dictionary of inventory information.
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
+        ...                           permanent=True, min_longitude=12,
+        ...                           max_longitude=12.2) #doctest: +SKIP
+        >>> inv.keys()  # doctest: +SKIP
+        ['BW.MROB', 'BW.MANZ..EHZ', 'BW', 'BW.MANZ', 'BW.MROB..EHZ']
+        >>> inv['BW']  # doctest: +SKIP
+        AttribDict({'description': 'BayernNetz', 'region': 'Germany', ...
+        >>> inv['BW.MROB']  # doctest: +SKIP
+        AttribDict({'code': 'MROB', 'description': 'Rosenbuehl, Bavaria', ...
         """
         # request type
         rtype = 'REQUEST INVENTORY '
