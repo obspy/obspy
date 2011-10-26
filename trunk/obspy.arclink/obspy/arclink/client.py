@@ -98,7 +98,7 @@ class Client(object):
         """
         Initializes an ArcLink client.
 
-        See :mod:`obspy.arclink.Client` for all parameters.
+        See :class:`obspy.arclink.client.Client` for all parameters.
         """
         self.user = user
         self.password = password
@@ -383,7 +383,7 @@ class Client(object):
         >>> st.plot() #doctest: +SKIP
 
         .. plot::
-        
+
             from obspy.core import UTCDateTime
             from obspy.arclink.client import Client
             client = Client("webdc.eu", 18001, 'test@obspy.org')
