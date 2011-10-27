@@ -44,7 +44,7 @@ LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'signal', 'processing', 'filter', 'trigger',
             'instrument correction', 'picker', 'instrument simulation',
             'features', 'envelope', 'hob']
-INSTALL_REQUIRES = ['obspy.core', 'scipy']
+INSTALL_REQUIRES = ['obspy.core', 'scipy']  # +numpy!?
 ENTRY_POINTS = {}
 
 

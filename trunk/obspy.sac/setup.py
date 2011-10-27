@@ -51,7 +51,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'setuptools',
-        'obspy.core',
+        'obspy.core',  # +numpy!?
     ],
     download_url="https://svn.obspy.org/trunk/obspy.sac#egg=obspy.sac-dev",
     include_package_data=True,

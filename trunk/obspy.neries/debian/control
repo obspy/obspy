@@ -12,8 +12,8 @@ Homepage: http://www.obspy.org
 Package: python-obspy-neries
 Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
- python-numpy (>= 1:1.1), python-lxml (>= 2.1), python-simplejson (>=1.9),
- python-obspy-core
+ python-numpy (>= 1:1.1), python (>= 2.6) | python-simplejson (>=1.9),
+ python-obspy-core, python-suds
 Description: NERIES web service client for ObsPy
  The obspy.neries package contains a client for the Seismic Data Portal
  (http://www.seismicportal.eu) which was developed under the European

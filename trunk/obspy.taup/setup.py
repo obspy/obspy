@@ -42,7 +42,7 @@ AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'taup', 'travel time', 'iapsei-tau']
-INSTALL_REQUIRES = ['obspy.core']
+INSTALL_REQUIRES = ['obspy.core']  # +matplotlib!?
 ENTRY_POINTS = {}
 
 

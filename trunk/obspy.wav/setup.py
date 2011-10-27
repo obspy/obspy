@@ -37,7 +37,7 @@ AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'seismogram', 'WAV']
-INSTALL_REQUIRES = ['obspy.core']
+INSTALL_REQUIRES = ['obspy.core']  # +numpy!?
 ENTRY_POINTS = {
     'obspy.plugin.waveform': [
         'WAV = obspy.wav.core',

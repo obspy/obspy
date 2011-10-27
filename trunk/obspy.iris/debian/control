@@ -12,8 +12,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-iris
 Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
- python-numpy (>= 1:1.1), python-lxml (>= 2.1), python-obspy-core,
- python-obspy-mseed
+ python-numpy (>= 1:1.1), python-obspy-core, python-obspy-mseed
 Description: IRIS web service client for ObsPy
  The obspy.iris package contains a client for the DMC Web Services provided by
  IRIS (http://www.iris.edu/ws/). 
