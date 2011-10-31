@@ -37,7 +37,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     The format of the waveform file will be automatically detected if not
     given. Allowed formats mainly depend on ObsPy packages installed. See the
-    `Supported Formats` section below.
+    `Supported Formats`_ section below.
 
     This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
@@ -45,12 +45,13 @@ def read(pathname_or_url=None, format=None, headonly=False,
 
     :type pathname_or_url: string, optional
     :param pathname_or_url: String containing a file name or a URL. Wildcards
-        are allowed for a file name. If this attribute is omitted, a Stream
-        object with an example data set will be created.
+        are allowed for a file name. If this attribute is omitted, a
+        :class:`~obspy.core.stream.Stream` object with an example data set will
+        be created.
     :type format: string, optional
     :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
         ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
-        the `Supported Formats` section below for a full list of supported
+        the `Supported Formats`_ section below for a full list of supported
         formats. If format is set to ``None`` it will be automatically detected
         which results in a slightly slower reading. If you specify a format no
         further format checking is done.
@@ -65,7 +66,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :param nearest_sample: Only applied if `starttime` or `endtime` is given.
         Select nearest sample or the one containing the specified time. For
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
-    :return: A ObsPy :class:`~obspy.core.stream.Stream` object.
+    :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
 
     .. rubric:: Basic Usage
 
@@ -73,7 +74,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :func:`~obspy.core.stream.read`. For a quick start you may omit all
     arguments and ObsPy will create and return a basic example seismogram.
     Further usages of the :func:`~obspy.core.stream.read` function can
-    be seen in the `Further Examples` section underneath.
+    be seen in the `Further Examples`_ section underneath.
 
     >>> from obspy.core import read
     >>> st = read()
@@ -83,7 +84,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
     BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 
-    .. rubric:: Supported Formats
+    .. rubric:: _`Supported Formats`
 
     Additional ObsPy modules extend the functionality of the
     :func:`~obspy.core.stream.read` function. The following table summarizes
@@ -91,11 +92,11 @@ def read(pathname_or_url=None, format=None, headonly=False,
     reflects the order of the autodetection routine if no format option is
     specified.
 
-    Please refer to the `Linked Function Call` of each module for any extra
+    Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
     =======  ===================  ====================================
-    Format   Required Module      Linked Function Call
+    Format   Required Module      _`Linked Function Call`
     =======  ===================  ====================================
     MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.readMSEED`
     SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.readSAC`
@@ -117,7 +118,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :class:`~obspy.core.stream.Stream` object can be used to export the data
     to the file system.
 
-    .. rubric:: Further Examples
+    .. rubric:: _`Further Examples`
 
     Example waveform files may be retrieved via http://examples.obspy.org.
 
@@ -318,10 +319,12 @@ def _createExampleStream(headonly=False):
 
 class Stream(object):
     """
-    List like object of multiple ObsPy trace objects.
+    List like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
+    objects.
 
     :type traces: list of :class:`~obspy.core.trace.Trace`, optional
-    :param traces: Initial list of ObsPy Trace objects.
+    :param traces: Initial list of ObsPy :class:`~obspy.core.trace.Trace`
+        objects.
 
     .. rubric:: Basic Usage
 
@@ -1831,7 +1834,8 @@ class Stream(object):
 
     def copy(self):
         """
-        Returns a deepcopy of the stream.
+        Returns a `deep copy <http://docs.python.org/library/copy.html>`_
+        of the stream.
 
         :rtype: :class:`~obspy.core.stream.Stream`
         :return: Copy of current stream.

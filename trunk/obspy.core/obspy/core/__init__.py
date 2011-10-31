@@ -13,8 +13,10 @@
 obspy.core - Core classes of ObsPy
 ==================================
 
-This package contains common methods and classes for ObsPy. It includes Stream,
-Trace, UTCDateTime, Stats classes and methods for reading seismogram files.
+This package contains common methods and classes for ObsPy. It includes the
+:class:`~obspy.core.stream.Stream`, :class:`~obspy.core.trace.Trace`,
+:class:`~obspy.core.utcdatetime.UTCDateTime`, :class:`~obspy.core.trace.Stats`
+classes and methods for reading seismogram files.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -32,10 +34,11 @@ Streams are list-like objects which contain multiple
 :class:`~obspy.core.trace.Trace` objects, i.e. gap-less continuous time series
 and related header/meta information.
 
-Each Trace object has the attribute ``data`` pointing to a NumPy_ ndarray of
-the actual time series and the attribute ``stats`` which contains all meta
-information in a dict-like :class:`~obspy.core.trace.Stats` object. Both
-attributes ``starttime`` and ``endtime`` of the Stats object are
+Each Trace object has the attribute ``data`` pointing to a NumPy_
+:class:`~numpy.ndarray` of the actual time series and the attribute ``stats``
+which contains all meta information in a dict-like
+:class:`~obspy.core.trace.Stats` object. Both attributes ``starttime`` and
+``endtime`` of the Stats object are
 :class:`~obspy.core.utcdatetime.UTCDateTime` objects.
 
 Example

@@ -34,7 +34,7 @@ class Stats(AttribDict):
     :type header: dict or :class:`~obspy.core.trace.Stats`, optional
     :param header: Dictionary containing meta information of a single
         :class:`~obspy.core.trace.Trace` object. Possible keywords are
-        summarized in the following *Default Attributes* section.
+        summarized in the following `Default Attributes`_ section.
 
     .. rubric:: Basic Usage
 
@@ -46,7 +46,7 @@ class Stats(AttribDict):
     >>> stats.station
     'MANZ'
 
-    .. rubric:: Default Attributes
+    .. rubric:: _`Default Attributes`
 
     ``sampling_rate`` : float, optional
         Sampling rate in hertz (default value is 1.0).
@@ -230,14 +230,16 @@ class Trace(object):
     """
     An object containing data of a continuous series, such as a seismic trace.
 
-    :type data: numpy.array or ma.masked_array
-    :param data: NumPy array of data samples
+    :type data: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
+    :param data: Array of data samples
     :type header: dict or :class:`~obspy.core.trace.Stats`
     :param header: Dictionary containing header fields
 
     :var id: A SEED compatible identifier of the trace.
     :var stats: A container :class:`~obspy.core.trace.Stats` for additional
         header information of the trace.
+    :var data: Data samples in a :class:`~numpy.ndarray` or
+        :class:`~numpy.ma.MaskedArray`
 
     .. rubric:: Supported Operations
 
