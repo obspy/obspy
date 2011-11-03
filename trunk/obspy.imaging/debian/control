@@ -2,8 +2,7 @@ Source: python-obspy-imaging
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
- python-setuptools (>= 0.6)
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1)
 Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.imaging
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.imaging
@@ -12,6 +11,7 @@ Homepage: http://www.obspy.org
 Package: python-obspy-imaging
 Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
- python-numpy (>= 1:1.1), python-matplotlib (>= 0.98.1), python-obspy-core
+ python-numpy (>= 1:1.1), python-matplotlib (>= 0.98.1), python-obspy-core,
+ python-setuptools (>= 0.6)
 Description: Provides tools for displaying features used in seismology
  For more information visit http://www.obspy.org.

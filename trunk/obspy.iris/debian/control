@@ -2,8 +2,7 @@ Source: python-obspy-iris
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
- python-setuptools (>= 0.6)
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1)
 Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.iris
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.iris
@@ -12,7 +11,8 @@ Homepage: http://www.obspy.org
 Package: python-obspy-iris
 Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
- python-numpy (>= 1:1.1), python-obspy-core, python-obspy-mseed
+ python-numpy (>= 1:1.1), python-obspy-core, python-obspy-mseed,
+ python-setuptools (>= 0.6)
 Description: IRIS web service client for ObsPy
  The obspy.iris package contains a client for the DMC Web Services provided by
  IRIS (http://www.iris.edu/ws/). 

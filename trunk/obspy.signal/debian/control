@@ -3,7 +3,7 @@ Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5), gcc, python (>= 2.5),
- python-support (>= 0.7.1), python-setuptools (>= 0.6)
+ python-support (>= 0.7.1)
 Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.signal
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.signal
@@ -12,7 +12,8 @@ Homepage: http://www.obspy.org
 Package: python-obspy-signal
 Architecture: any
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
- python-numpy (>= 1:1.1), ${shlibs:Depends}, python-scipy, python-obspy-core
+ python-numpy (>= 1:1.1), ${shlibs:Depends}, python-scipy, python-obspy-core,
+ python-setuptools (>= 0.6)
 Description: Python signal processing routines for seismology
  Capabilities include filtering, triggering, rotation, instrument
  correction and coordinate transformations.
