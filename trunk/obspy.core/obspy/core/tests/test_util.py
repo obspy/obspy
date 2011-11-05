@@ -6,7 +6,7 @@ import unittest
 
 # checking for geographiclib
 try:
-    import geographiclib
+    import geographiclib  # @UnusedImport
     HAS_GEOGRAPHICLIB = True
 except ImportError:
     HAS_GEOGRAPHICLIB = False
@@ -115,6 +115,50 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(ValueError, gps2DistAzimuth, -91, 0, 0, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, 0, 0, 91, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, 0, 0, -91, 0)
+
+    @skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib not installed')
+    def test_gps2DistAzimuth(self):
+        """
+        Test gps2DistAzimuth() method with test data from Geocentric Datum of
+        Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
+        """
+        # test data:
+        #Point 1: Flinders Peak, Point 2: Buninyong
+        lat1 = -(37 + (57 / 60.) + (3.72030 / 3600.))
+        lon1 = 144 + (25 / 60.) + (29.52440 / 3600.)
+        lat2 = -(37 + (39 / 60.) + (10.15610 / 3600.))
+        lon2 = 143 + (55 / 60.) + (35.38390 / 3600.)
+        dist = 54972.271
+        alpha12 = 306 + (52 / 60.) + (5.37 / 3600.)
+        alpha21 = 127 + (10 / 60.) + (25.07 / 3600.)
+
+        #calculate result
+        calc_dist, calc_alpha12, calc_alpha21 = gps2DistAzimuth(lat1, lon1,
+                                                                lat2, lon2)
+
+        #calculate deviations from test data
+        dist_err_rel = abs(dist - calc_dist) / dist
+        alpha12_err = abs(alpha12 - calc_alpha12)
+        alpha21_err = abs(alpha21 - calc_alpha21)
+
+        self.assertEqual(dist_err_rel < 1.0e-5, True)
+        self.assertEqual(alpha12_err < 1.0e-5, True)
+        self.assertEqual(alpha21_err < 1.0e-5, True)
+
+        #calculate result with +- 360 for lon values
+        dist, alpha12, alpha21 = gps2DistAzimuth(lat1, lon1 + 360,
+                                                 lat2, lon2 - 720)
+        self.assertAlmostEqual(dist, calc_dist)
+        self.assertAlmostEqual(alpha12, calc_alpha12)
+        self.assertAlmostEqual(alpha21, calc_alpha21)
+
+    @skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib not installed')
+    def test_gps2DistAzimuthBUG150(self):
+        """
+        Test case for #150
+        """
+        res = gps2DistAzimuth(0, 0, 0, 180)
+        self.assertEqual(res, (20004314.5, 0.0, 0.0))
 
 
 def suite():
