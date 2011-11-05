@@ -19,13 +19,21 @@ The following example shows how to highpass a seismogram at 1.0Hz.
 In the example only the first trace is processed to see the changes in
 comparison with the other traces in the plot.
 
-:Note: The filter takes the data explicitly as argument (i.e. a
-       numpy.ndarray) and therefore the sampling_rate needs to be also
-       specified. It returns the filtered data.
-       For :class:`~obspy.core.stream.Stream` and
-       :class:`~obspy.core.trace.Trace` objects simply use their respective
-       filtering methods :meth:`obspy.core.stream.Stream.filter()` and
-       :meth:`obspy.core.trace.Trace.filter`.
+.. warning::
+
+    Before filtering you should make sure that data is demeaned/detrended, e.g.
+    using :func:`~obspy.signal.invsim.detrend`. Otherwise there can be massive
+    artifacts from filtering.
+
+.. note::
+    
+    The filter takes the data explicitly as argument (i.e. an
+    :class:`~numpy.ndarray`) and therefore the `sampling_rate` needs to be also
+    specified. It returns the filtered data.  For
+    :class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace`
+    objects simply use their respective filtering methods
+    :meth:`~obspy.core.stream.Stream.filter` and
+    :meth:`~obspy.core.trace.Trace.filter`.
 
 >>> from obspy.core import read
 >>> import obspy.signal
@@ -115,11 +123,11 @@ M. Bear. The implementation is based on these articles:
     Moore, S., & Trujillo, J., 1998. A comparison of
     selected trigger algorithms for automated global seismic phase and event
     detection, Bulletin of the Seismological
-    Society of America, 88, 95—106.
+    Society of America, 88, 95-106.
 
 .. note:: Baer, M. & Kradolfer, U., 1987. An automatic phase picker for
     local and teleseismic events, Bulletin of the
-    Seismological Society of America, 77, 1437—1445.
+    Seismological Society of America, 77, 1437-1445.
 
 
 The following example demonstrates a recursive Sta/Lta triggering:
