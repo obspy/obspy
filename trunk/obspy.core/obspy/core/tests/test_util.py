@@ -100,7 +100,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(ValueError, calcVincentyInverse, 0, 0, 91, 0)
         self.assertRaises(ValueError, calcVincentyInverse, 0, 0, -91, 0)
 
-    @skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib not installed')
+    @skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
     def test_gps2DistAzimuthWithGeographiclib(self):
         """
         Testing gps2DistAzimuth function using the module geographiclib.
@@ -109,7 +109,7 @@ class UtilTestCase(unittest.TestCase):
         self.assertAlmostEquals(gps2DistAzimuth(15.26804251, 2.93007342,
                                                 -14.80522806, -177.2299081),
                                 (19951425.048688546, 8.65553241932755,
-                                 171.36325485132306))
+                                 351.36325485132306))
         # out of bounds
         self.assertRaises(ValueError, gps2DistAzimuth, 91, 0, 0, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, -91, 0, 0, 0)

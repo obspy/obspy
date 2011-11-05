@@ -921,7 +921,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         # try using geographiclib
         from geographiclib.geodesic import Geodesic
         result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
-        return (result['s12'], result['azi1'], result['azi2'])
+        return (result['s12'], result['azi1'], result['azi2'] + 180)
     except ImportError:
         pass
     try:
