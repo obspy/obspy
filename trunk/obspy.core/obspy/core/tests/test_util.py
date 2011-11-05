@@ -116,11 +116,10 @@ class UtilTestCase(unittest.TestCase):
         self.assertRaises(ValueError, gps2DistAzimuth, 0, 0, 91, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, 0, 0, -91, 0)
 
-    @skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib not installed')
-    def test_gps2DistAzimuth(self):
+    def test_calcVincentyInverse2(self):
         """
-        Test gps2DistAzimuth() method with test data from Geocentric Datum of
-        Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
+        Test calcVincentyInverse() method with test data from Geocentric Datum
+        of Australia. (see http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf)
         """
         # test data:
         #Point 1: Flinders Peak, Point 2: Buninyong
@@ -133,8 +132,8 @@ class UtilTestCase(unittest.TestCase):
         alpha21 = 127 + (10 / 60.) + (25.07 / 3600.)
 
         #calculate result
-        calc_dist, calc_alpha12, calc_alpha21 = gps2DistAzimuth(lat1, lon1,
-                                                                lat2, lon2)
+        calc_dist, calc_alpha12, calc_alpha21 = calcVincentyInverse(lat1, lon1,
+                                                                    lat2, lon2)
 
         #calculate deviations from test data
         dist_err_rel = abs(dist - calc_dist) / dist
@@ -146,13 +145,14 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(alpha21_err < 1.0e-5, True)
 
         #calculate result with +- 360 for lon values
-        dist, alpha12, alpha21 = gps2DistAzimuth(lat1, lon1 + 360,
-                                                 lat2, lon2 - 720)
+        dist, alpha12, alpha21 = calcVincentyInverse(lat1, lon1 + 360,
+                                                     lat2, lon2 - 720)
         self.assertAlmostEqual(dist, calc_dist)
         self.assertAlmostEqual(alpha12, calc_alpha12)
         self.assertAlmostEqual(alpha21, calc_alpha21)
 
-    @skipIf(HAS_GEOGRAPHICLIB, 'Module geographiclib not installed')
+    @skipIf(HAS_GEOGRAPHICLIB,
+            'Module geographiclib is installed, not using calcVincentyInverse')
     def test_gps2DistAzimuthBUG150(self):
         """
         Test case for #150
