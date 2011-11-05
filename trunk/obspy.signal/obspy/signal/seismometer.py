@@ -15,22 +15,44 @@ The seismometer is represented as a dictionary containing the fields:
 
 Currently contained seismometers::
 
-    PAZ_WOOD_ANDERSON
-
-Note, there is only one zero and two poles. That is when simulating the
-Wood Anderson, the signal is automatically integrated (most probably to
-meter)
+* PAZ_WOOD_ANDERSON
+* PAZ_WWSSN_SP
+* PAZ_WWSSN_LP
+* PAZ_KIRNOS
 """
 
-# Im Wood-Anderson
-# findet aber keine Umrechnung statt, es gibt Länge (displacement) als
-# Länge (Ausschlag der "Nadel" (Lichtstrahl auf Photoplatte)) wieder aus.
-# D.h. diese 2800 sind einfach ein Vergrößerungsfaktor, deine Einheit
-# kommt aus dem, worauf du vorher dein anderes Seismometer runtergerechnet
-# hast. (thanks to Christian Sippl)
-PAZ_WOOD_ANDERSON = {
-    'poles': [-6.2832 - 4.7124j,
-              - 6.2832 + 4.7124j],
-    'zeros': [0.0 + 0.0j] * 1,
-    'gain': 2800
-}
+# Seismometers defined as in Pitsa with one zero less. The corrected
+# signals are in velocity, thus must be integrated to offset and take one
+# zero less than pitsa (remove 1/w in frequency domain)
+
+PAZ_WOOD_ANDERSON = {'poles': [-6.2832 - 4.7124j,
+                               -6.2832 + 4.7124j],
+                     'zeros': [0.0 + 0.0j] * 1,
+                     'gain': 1. / 2.25}
+
+PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
+                          -4.0093 + 4.0093j,
+                          -4.6077 - 6.9967j,
+                          -4.6077 + 6.9967j],
+                'zeros': [0.0 + 0.0j] * 2,
+                'gain': 1. / 1.0413}
+
+PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
+                          -0.4189 + 0.0j,
+                          -0.0628 + 0.0j,
+                          -0.0628 + 0.0j],
+                'zeros': [0.0 + 0.0j] * 2,
+                'gain': 1. / 0.0271}
+
+PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
+                        -0.1257 + 0.2177j,
+                        -83.4473 + 0.0j,
+                        -0.3285 + 0.0j],
+              'zeros': [0.0 + 0.0j] * 2,
+              'gain': 1. / 1.61}
+
+INSTRUMENTS = {'None': None,
+               'kirnos': PAZ_KIRNOS,
+               'wood_anderson': PAZ_WOOD_ANDERSON,
+               'wwssn_lp': PAZ_WWSSN_LP,
+               'wwssn_sp': PAZ_WWSSN_SP}

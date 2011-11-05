@@ -26,7 +26,7 @@ comparison with the other traces in the plot.
     artifacts from filtering.
 
 .. note::
-    
+
     The filter takes the data explicitly as argument (i.e. an
     :class:`~numpy.ndarray`) and therefore the `sampling_rate` needs to be also
     specified. It returns the filtered data.  For
@@ -202,7 +202,6 @@ from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
         gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
         delayedStaLta, zdetect, triggerOnset, pkBaer, arPick
-from seismometer import PAZ_WOOD_ANDERSON
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
