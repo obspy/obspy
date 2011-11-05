@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, calcVincentyInverse
 import unittest
 
 
@@ -63,6 +63,34 @@ class UtilTestCase(unittest.TestCase):
         self.assertFalse('test2' in ad)
         self.assertFalse('test2' in ad.__dict__)
         self.assertFalse(hasattr(ad, 'test2'))
+
+    def test_calcVincentyInverse(self):
+        """
+        Tests for the Vincenty's Inverse formulae.
+        """
+        # the following will raise StopIteration exceptions because of two
+        # nearly antipodal points
+        self.assertRaises(StopIteration, calcVincentyInverse,
+                          15.26804251, 2.93007342, -14.80522806, -177.2299081)
+        self.assertRaises(StopIteration, calcVincentyInverse,
+                          27.3562106, 72.2382356, -27.55995499, -107.78571981)
+        self.assertRaises(StopIteration, calcVincentyInverse,
+                          27.4675551, 17.28133229, -27.65771704, -162.65420626)
+        self.assertRaises(StopIteration, calcVincentyInverse,
+                          27.4675551, 17.28133229, -27.65771704, -162.65420626)
+        self.assertRaises(StopIteration, calcVincentyInverse, 0, 0, 0, 13)
+        # working examples
+        self.assertAlmostEquals(calcVincentyInverse(0, 0.2, 0, 20),
+                                (2204125.9174282863, 90.0, 270.0))
+        self.assertAlmostEquals(calcVincentyInverse(0, 0, 0, 10),
+                                (1113194.9077920639, 90.0, 270.0))
+        self.assertAlmostEquals(calcVincentyInverse(0, 0, 0, 17),
+                                (1892431.3432465086, 90.0, 270.0))
+        # out of bounds
+        self.assertRaises(ValueError, calcVincentyInverse, 91, 0, 0, 0)
+        self.assertRaises(ValueError, calcVincentyInverse, -91, 0, 0, 0)
+        self.assertRaises(ValueError, calcVincentyInverse, 0, 0, 91, 0)
+        self.assertRaises(ValueError, calcVincentyInverse, 0, 0, -91, 0)
 
 
 def suite():
