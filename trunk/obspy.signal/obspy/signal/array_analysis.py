@@ -781,10 +781,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     elif timestamp == 'mlabday':
         # 719162 == hours between 1970 and 0001
         res[:, 0] = res[:, 0] / (24. * 3600) + 719162
-    elif timestamp == 'mlabhour':
-        msg = "Deprecated, use 'mlabday' instead"
-        warnings.warn(msg, DeprecationWarning)
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
     else:
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)

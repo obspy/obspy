@@ -4,7 +4,7 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-# Copyright (C) 2008-2010 Conny Hammer
+# Copyright (C) 2008-2011 Conny Hammer
 #-------------------------------------------------------------------
 """
 Half Octave Bands
@@ -23,7 +23,7 @@ import util
 
 def sonogram(data, fs, fc1, nofb, no_win):
     """
-    Sonogram of a signal:
+    Sonogram of a signal.
 
     Computes the sonogram of the given data which can be windowed or not.
     The sonogram is determined by the power in half octave bands of the given
@@ -32,12 +32,13 @@ def sonogram(data, fs, fc1, nofb, no_win):
     If data are windowed the analytic signal and the envelope of each window
     is returned.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make envelope of.
     :param fs: Sampling frequency in Hz.
     :param fc1: Center frequency of lowest half octave band.
     :param nofb: Number of half octave bands.
     :param no_win: Number of data windows.
-    :return hob: Half octave bands.
+    :return: Half octave bands.
     """
     fc = np.zeros([nofb])
     fmin = np.zeros([nofb])

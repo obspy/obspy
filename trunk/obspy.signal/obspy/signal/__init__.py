@@ -24,8 +24,8 @@ comparison with the other traces in the plot.
        specified. It returns the filtered data.
        For :class:`~obspy.core.stream.Stream` and
        :class:`~obspy.core.trace.Trace` objects simply use their respective
-       filtering methods :meth:`~obspy.core.stream.Stream.filter()` and
-       :meth:`~obspy.core.trace.Trace.filter`.
+       filtering methods :meth:`obspy.core.stream.Stream.filter()` and
+       :meth:`obspy.core.trace.Trace.filter`.
 
 >>> from obspy.core import read
 >>> import obspy.signal
@@ -190,8 +190,6 @@ cpxtrace analysis, ...), please also check the tutorial.**
 from obspy.core.util import _getVersionString
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
-# import the depreciated ones
-from filter import bandpassZPHSH, bandstopZPHSH, lowpassZPHSH, highpassZPHSH
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
         gps2DistAzimuth
 from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \

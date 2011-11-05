@@ -15,7 +15,7 @@ import math as M
 import numpy as np
 import os
 import platform
-from obspy.core.util import deprecated
+
 
 # Import shared libsignal depending on the platform.
 # create library names
@@ -286,16 +286,6 @@ def az2baz2az(angle):
     else:
         raise ValueError("Input (back)azimuth out of bounds: %s" % angle)
     return new_angle
-
-
-# XXX Making sure that the functions that got transferred to submodule xcorr.py
-# can still be imported from obspy.signal.util.
-# Showing a DeprecationWarning if they are used.
-_xcorr = __import__("obspy.signal.cross_correlation", fromlist="obspy")
-msg = "Deprecated import. Please import directly from 'obspy.signal' instead."
-xcorr = deprecated(_xcorr.xcorr, msg)
-xcorr_3C = deprecated(_xcorr.xcorr_3C, msg)
-xcorr_max = deprecated(_xcorr.xcorr_max, msg)
 
 
 if __name__ == '__main__':

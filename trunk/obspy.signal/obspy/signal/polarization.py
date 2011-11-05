@@ -4,7 +4,7 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-# Copyright (C) 2008-2010 Conny Hammer
+# Copyright (C) 2008-2011 Conny Hammer
 #-------------------------------------------------------------------
 """
 Polarization Analysis
@@ -16,29 +16,28 @@ Polarization Analysis
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import numpy as np
 from scipy import signal
+import numpy as np
 
 
 def eigval(datax, datay, dataz, fk, normf=1):
     """
-    Polarization attributes of a signal:
+    Polarization attributes of a signal.
 
     Computes the rectilinearity, the planarity and the eigenvalues of the given
     data which can be windowed or not.
 
-    :param datax: Data of x component, type numpy.ndarray.
-    :param datay: Data of y component, type numpy.ndarray.
-    :param dataz: Data of z component, type numpy.ndarray.
+    :type datax: :class:`~numpy.ndarray`
+    :param datax: Data of x component.
+    :type datay: :class:`~numpy.ndarray`
+    :param datay: Data of y component.
+    :type dataz: :class:`~numpy.ndarray`
+    :param dataz: Data of z component.
     :param normf: Factor for normalization.
-    :return leigenv1: Smallest eigenvalue.
-    :return leigenv2: Intermediate eigenvalue.
-    :return leigenv3: Largest eigenvalue.
-    :return rect: Rectilinearity.
-    :return plan: Planarity.
-    :return dleigenv: Time derivative of eigenvalues.
-    :return drect: Time derivative of rectilinearity.
-    :return dplan: Time derivative of planarity.
+    :return: **leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect,
+        dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
+        eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
+        time derivative of rectilinearity, Time derivative of planarity.
     """
     covmat = np.zeros([3, 3])
     leigenv1 = np.zeros(datax.shape[0], dtype='float64')
@@ -58,7 +57,7 @@ def eigval(datax, datay, dataz, fk, normf=1):
         covmat[1][2] = covmat[2][1] = np.cov(dataz[i, :], datay[i, :],
                                              rowvar=False)[0, 1]
         covmat[2][2] = np.cov(dataz[i, :], rowvar=False)
-        eigvec, eigenval, v = (np.linalg.svd(covmat))
+        _eigvec, eigenval, _v = (np.linalg.svd(covmat))
         eigenv = np.sort(eigenval)
         leigenv1[i] = eigenv[0]
         leigenv2[i] = eigenv[1]

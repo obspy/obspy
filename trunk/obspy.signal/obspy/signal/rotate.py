@@ -17,9 +17,6 @@ Various Seismogram Rotation Functions
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-
-import warnings
-import numpy as np
 from math import pi, sin, cos
 from obspy.core.util import deprecated
 
@@ -52,7 +49,7 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
     Rotates all components of a seismogram.
 
     The components will be rotated from ZNE (Z, North, East, left-handed) to
-    LQT (eg. ray coordinate system, rigth-handed). The rotation angles are
+    LQT (e.g. ray coordinate system, right-handed). The rotation angles are
     given as the back-azimuth and inclination.
 
     The transformation consists of 3 steps::

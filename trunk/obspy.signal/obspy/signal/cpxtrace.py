@@ -4,7 +4,7 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-# Copyright (C) 2008-2010 Conny Hammer
+# Copyright (C) 2008-2011 Conny Hammer
 #-------------------------------------------------------------------
 """
 Complex Trace Analysis
@@ -34,9 +34,10 @@ def envelope(data):
     If data are windowed the analytic signal and the envelope of each
     window is returned.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
-    :return A_cpx: Analytic signal of input data.
-    :return A_abs: Envelope of input data.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make envelope of.
+    :return: **A_cpx, A_abs** - Analytic signal of input data, Envelope of
+        input data.
     """
     nfft = util.nextpow2(data.shape[size(data.shape) - 1])
     A_cpx = np.zeros((data.shape), dtype='complex64')
@@ -65,12 +66,13 @@ def normEnvelope(data, fs, smoothie, fk):
     The time derivative of the normalized envelope is returned if input data
     are windowed only.
 
-    :param data: Data to make normalized envelope of, type numpy.ndarray.
-    :params fs: Sampling frequency.
-    :params smoothie: Window length for moving average.
-    :params fk: Filter coefficients for computing time derivative.
-    :return Anorm: Normalized envelope of input data.
-    :return dAnorm: Time derivative of normalized envelope.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make normalized envelope of.
+    :param fs: Sampling frequency.
+    :param smoothie: Window length for moving average.
+    :param fk: Filter coefficients for computing time derivative.
+    :return: **Anorm[, dAnorm]** - Normalized envelope of input data, Time
+        derivative of normalized envelope (windowed only).
     """
     x = envelope(data)
     fs = float(fs)
@@ -130,10 +132,11 @@ def centroid(data, fk):
     The time derivative of the centroid time is returned if input data are
     windowed only.
 
-    :param data: Data to determine centroid time of, type numpy.ndarray.
-    :params fk: Filter coefficients for computing time derivative.
-    :return centroid: Centroid time input data.
-    :return dcentroid: Time derivative of centroid time.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to determine centroid time of.
+    :param fk: Filter coefficients for computing time derivative.
+    :return: **centroid[, dcentroid]** - Centroid time input data, Time
+        derivative of centroid time (windowed only).
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):
@@ -179,12 +182,12 @@ def instFreq(data, fs, fk):
     windowed or not. The instantaneous frequency is determined by the time
     derivative of the analytic signal of the input data.
 
-    :param data: Data to determine instantaneous frequency of, type
-        numpy.ndarray.
-    :params fs: Sampling frequency.
-    :params fk: Filter coefficients for computing time derivative.
-    :return omega: Instantaneous frequency of input data.
-    :return domega: Time derivative of instantaneous frequency.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to determine instantaneous frequency of.
+    :param fs: Sampling frequency.
+    :param fk: Filter coefficients for computing time derivative.
+    :return: **omega[, domega]** - Instantaneous frequency of input data, Time
+        derivative of instantaneous frequency (windowed only).
     """
     x = envelope(data)
     if (size(x[0].shape) > 1):
@@ -234,12 +237,12 @@ def instBwith(data, fs, fk):
     windowed or not. The instantaneous bandwidth is determined by the time
     derivative of the envelope normalized by the envelope of the input data.
 
-    :param data: Data to determine instantaneous bandwidth of, type
-        numpy.ndarray.
-    :params fs: Sampling frequency.
-    :params fk: Filter coefficients for computing time derivative.
-    :return sigma: Instantaneous bandwidth of input data.
-    :return dsigma: Time derivative of instantaneous bandwidth.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to determine instantaneous bandwidth of.
+    :param fs: Sampling frequency.
+    :param fk: Filter coefficients for computing time derivative.
+    :return: **sigma[, dsigma]** - Instantaneous bandwidth of input data, Time
+        derivative of instantaneous bandwidth (windowed only).
     """
     x = envelope(data)
     if (size(x[1].shape) > 1):

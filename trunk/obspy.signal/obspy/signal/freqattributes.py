@@ -4,7 +4,7 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-# Copyright (C) 2008-2010 Conny Hammer
+# Copyright (C) 2008-2011 Conny Hammer
 #------------------------------------------------------------------
 """
 Frequency Attributes
@@ -32,12 +32,15 @@ def mper(data, win, Nfft, n1=0, n2=0):
 
     The modified periodogram of the given signal is returned.
 
-    :param data: Data to make spectrum of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make spectrum of.
     :param win: Window to multiply with given signal.
     :param Nfft: Number of points for FFT.
-    :param n1: Starting index.
-    :param n2: Ending index.
-    :return Px: Spectrum.
+    :type n1: int, optional
+    :param n1: Starting index, defaults to ``0``.
+    :type n2: int, optional
+    :param n2: Ending index, defaults to ``0``.
+    :return: Spectrum.
     """
     if (n2 == 0):
         n2 = len(data)
@@ -59,12 +62,15 @@ def welch(data, win, Nfft, L=0, over=0):
 
     Welch's estimate of the power spectrum is returned using a linear scale.
 
-    :param data: Data to make spectrum of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make spectrum of.
     :param win: Window to multiply with given signal.
     :param Nfft: Number of points for FFT.
-    :param L: Length of windows to be averaged.
-    :param over: Overlap of windows to be averaged.
-    :return Px: Spectrum.
+    :type L: int, optional
+    :param L: Length of windows to be averaged, defaults to ``0``.
+    :type over: int, optional
+    :param over: Overlap of windows to be averaged, defaults to ``0``.
+    :return: Spectrum.
     """
     if (L == 0):
         L = len(data)
@@ -82,7 +88,7 @@ def welch(data, win, Nfft, L=0, over=0):
 
 def cfrequency(data, fs, smoothie, fk):
     """
-    Central frequency of a signal
+    Central frequency of a signal.
 
     Computes the central frequency of the given data which can be windowed or
     not. The central frequency is a measure of the frequency where the
@@ -91,13 +97,13 @@ def cfrequency(data, fs, smoothie, fk):
 
     The central frequency is returned.
 
-    :param data: Data to estimate central frequency from,type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to estimate central frequency from.
     :param fs: Sampling frequency in Hz.
     :param smoothie: Factor for smoothing the result.
     :param fk: Filter coefficients for computing time derivative.
-    :return cfreq: Central frequency.
-    :return dcfreq: Time derivative of center frequency, only returned if
-         data are windowed.
+    :return: **cfreq[, dcfreq]** - Central frequency, Time derivative of center
+        frequency (windowed only).
     """
     nfft = util.nextpow2(data.shape[1])
     freq = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
@@ -127,7 +133,7 @@ def cfrequency(data, fs, smoothie, fk):
 
 def bwith(data, fs, smoothie, fk):
     """
-    Bandwith of a signal.
+    Bandwidth of a signal.
 
     Computes the bandwidth of the given data which can be windowed or not.
     The bandwidth corresponds to the level where the power of the spectrum is
@@ -136,13 +142,13 @@ def bwith(data, fs, smoothie, fk):
 
     If data are windowed the bandwidth of each window is returned.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make envelope of.
     :param fs: Sampling frequency in Hz.
     :param smoothie: Factor for smoothing the result.
     :param fk: Filter coefficients for computing time derivative.
-    :return bwith: Bandwith.
-    :return dbwithd: Time derivative of predominant period, only returned if
-         data are windowed.
+    :return: **bwith[, dbwithd]** - Bandwidth, Time derivative of predominant
+        period (windowed only).
     """
     nfft = util.nextpow2(data.shape[1])
     freqaxis = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
@@ -182,13 +188,13 @@ def domperiod(data, fs, smoothie, fk):
 
     If data are windowed the predominant period of each window is returned.
 
-    :param data: Data to determine predominant period of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to determine predominant period of.
     :param fs: Sampling frequency in Hz.
     :param smoothie: Factor for smoothing the result.
     :param fk: Filter coefficients for computing time derivative.
-    :return dperiod: Predominant period.
-    :return ddperiod: Time derivative of predominant period, only returned if
-         data are windowed.
+    :return: **dperiod[, ddperiod]** - Predominant period, Time derivative of
+        predominant period (windowed only).
     """
     nfft = 1024
     #nfft = util.nextpow2(data.shape[1])
@@ -229,9 +235,9 @@ def logbankm(p, n, fs, w):
     :param n: Length of fft.
     :param fs: Sampling frequency in Hz.
     :param w: Window function.
-    :return xx: Matrix containing the filterbank amplitudes.
-    :return mn: The lowest fft bin with a non-zero coefficient.
-    :return mx: The highest fft bin with a non-zero coefficient.
+    :return: **xx, yy, zz** - Matrix containing the filterbank amplitudes,
+        Lowest fft bin with a non-zero coefficient, Highest fft bin with a
+        non-zero coefficient.
     """
     # alternative to avoid above problems: low end of the lowest filter
     # corresponds to maximum frequency resolution
@@ -280,13 +286,15 @@ def logcep(data, fs, nc, p, n, w):
     If data are windowed the analytic signal and the envelope of each window is
     returned.
 
-    :param data: Data to make envelope of, type numpy.ndarray.
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data to make envelope of.
     :param fs: Sampling frequency in Hz.
     :param nc: number of cepstral coefficients.
     :param p: Number of filters in filterbank.
-    :param no_win: Number of data windows.
-    :return z: Cepstral coefficients.
+    :param n: Number of data windows.
+    :return: Cepstral coefficients.
     """
+    # XXX: argument n is never used within function!!!
     dataT = np.transpose(data)
     nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)

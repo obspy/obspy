@@ -4,7 +4,7 @@
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Moritz Beyreuther, Tobias Megies
+# Copyright (C) 2008-2011 Moritz Beyreuther, Tobias Megies
 #-------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.
@@ -16,25 +16,15 @@ Signal processing routines based on cross correlation techniques.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import ctypes as C
-import numpy as np
-
 from obspy.core import Trace, Stream
 from obspy.signal.util import clibsignal
+import ctypes as C
+import numpy as np
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
     """
     Cross correlation of tr1 and tr2 in the time domain using window_len.
-    Supports ndarrays (float32) and Trace objects.
-
-    >>> tr1 = np.random.randn(10000).astype('float32')
-    >>> tr2 = tr1.copy()
-    >>> a, b = xcorr(tr1, tr2, 1000)
-    >>> a
-    0
-    >>> round(b, 7)
-    1.0
 
     ::
 
@@ -45,17 +35,17 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         |<-shift_len/2->|   <- region of support ->     |<-shift_len/2->|
 
 
-    :type tr1: numpy ndarray float32 or obspy.core.Trace
+    :type tr1: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param tr1: Trace 1
-    :type tr2: numpy ndarray float32 or obspy.core.Trace
+    :type tr2: :class:`~numpy.ndarray`, :class:`~obspy.core.trace.Trace`
     :param tr2: Trace 2 to correlate with trace 1
-    :type shift_len: Int
+    :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type full_xcorr: Bool
-    :param full_xcorr: If True, the complete xcorr function will be
-        returned as numpy.ndarray
-    :return: (index, value, fct) index of maximum xcorr value and the value
-        itself. The complete xcorr function is returned only if
+    :type full_xcorr: bool
+    :param full_xcorr: If ``True``, the complete xcorr function will be
+        returned as :class:`~numpy.ndarray`
+    :return: **index, value[, fct]** - Index of maximum xcorr value and the
+        value itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
 
     .. note::
@@ -68,11 +58,21 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
        timeseries bounds at high time shifts. Of course there are other
        possibilities to do cross correlations e.g. in frequency domain.
 
-    ..seealso::
+    .. seealso::
         `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
        and
        `ticket #249 <https://obspy.org/ticket/249>`_.
+
+    .. rubric:: Example
+
+    >>> tr1 = np.random.randn(10000).astype('float32')
+    >>> tr2 = tr1.copy()
+    >>> a, b = xcorr(tr1, tr2, 1000)
+    >>> a
+    0
+    >>> round(b, 7)
+    1.0
     """
     # if we get Trace objects, use their data arrays
     for tr in [tr1, tr2]:
@@ -89,7 +89,6 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
               "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
 
-    # 2009-10-11 Moritz
     clibsignal.X_corr.argtypes = [
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
         np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
@@ -121,27 +120,28 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
     Calculates the cross correlation on each of the specified components
     separately, stacks them together and estimates the maximum and shift of
     maximum on the stack.
-    Basically the same as :func:`~obspy.signal.util.xcorr` but for (normally)
-    three components, please also take a look at the documentation of that
-    function. Useful e.g. for estimation of waveform similarity on a three
-    component seismogram.
 
-    :type st1: obspy.core.Stream
+    Basically the same as :func:`~obspy.signal.cross_correlation.xcorr` but
+    for (normally) three components, please also take a look at the
+    documentation of that function. Useful e.g. for estimation of waveform
+    similarity on a three component seismogram.
+
+    :type st1: :class:`~obspy.core.stream.Stream`
     :param st1: Stream 1, containing one trace for Z, N, E component (other
-            component_id codes are ignored)
-    :type st2: obspy.core.Stream
+        component_id codes are ignored)
+    :type st2: :class:`~obspy.core.stream.Stream`
     :param st2: Stream 2, containing one trace for Z, N, E component (other
-            component_id codes are ignored)
-    :type shift_len: Int
+        component_id codes are ignored)
+    :type shift_len: int
     :param shift_len: Total length of samples to shift for cross correlation.
-    :type components: List of Strings
+    :type components: List of strings
     :param components: List of components to use in cross-correlation, defaults
-            to ["Z", "N", "E"].
-    :type full_xcorr: Bool
-    :param full_xcorr: If True, the complete xcorr function will be
-        returned as numpy.ndarray
-    :return: (index, value, fct) index of maximum xcorr value and the value
-        itself. The complete xcorr function is returned only if
+        to ``['Z', 'N', 'E']``.
+    :type full_xcorr: bool
+    :param full_xcorr: If ``True``, the complete xcorr function will be
+        returned as :class:`~numpy.ndarray`.
+    :return: **index, value[, fct]** - index of maximum xcorr value and the
+        value itself. The complete xcorr function is returned only if
         ``full_xcorr=True``.
     """
     streams = [st1, st2]
@@ -159,7 +159,6 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
                  for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
-
     corp = np.zeros(2 * shift_len + 1, dtype='float64', order='C')
 
     for component in components:
@@ -182,6 +181,14 @@ def xcorr_max(fct, abs_max=True):
     """
     Return shift and value of maximum xcorr function
 
+    :type fct: :class:`~numpy.ndarray`
+    :param fct: xcorr function e.g. returned bei xcorr
+    :type abs_max: bool
+    :param abs_max: determines if the absolute maximum should be used.
+    :return: **shift, value** - Shift and value of maximum xcorr.
+
+    .. rubric:: Example
+
     >>> fct = np.zeros(101)
     >>> fct[50] = -1.0
     >>> xcorr_max(fct)
@@ -197,12 +204,6 @@ def xcorr_max(fct, abs_max=True):
     (-10.0, -1.0)
     >>> xcorr_max(fct, abs_max=False)
     (10.0, 0.5)
-
-    :type fct: numpy.ndarray
-    :param fct: xcorr function e.g. returned bei xcorr
-    :type abs_max: boolean
-    :param abs_max: determines if the absolute maximum should be used.
-    :return: (shift, value) Shift and value of maximum xcorr
     """
     value = fct.max()
     if abs_max:
