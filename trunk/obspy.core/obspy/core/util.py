@@ -756,10 +756,9 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
         negative for western hemisphere)
     :return: (Great circle distance in m, azimuth A->B in degrees,
         azimuth B->A in degrees)
-    :exception:
-        This method may have no solution between two nearly antipodal points;
-        an iteration limit traps this case and a ``StopIteration`` exception
-        will be raised.
+    :raises: This method may have no solution between two nearly antipodal
+        points; an iteration limit traps this case and a ``StopIteration``
+        exception will be raised.
 
     .. note::
         This code is based on an implementation incorporated in
@@ -768,8 +767,9 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
         (basemap-0.9.5/lib/matplotlib/toolkits/basemap/greatcircle.py)
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
-        http://www.icsm.gov.au/gda/gdatm/index.html
-        http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
+
+        * http://www.icsm.gov.au/gda/gdatm/index.html
+        * http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
 
         It states::
 
@@ -827,13 +827,13 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
     U2 = atan(TanU2)
 
     dlon = lon2 - lon1
-    last_dlon = -4000000.0                # an impossible value
+    last_dlon = -4000000.0  # an impossible value
     omega = dlon
 
-    # Iterate until there is no significant change in dlon or iterlimit has
-    # been reached
+    # Iterate until no significant change in dlon or iterlimit has been
+    # reached (http://www.movable-type.co.uk/scripts/latlong-vincenty.html)
+    iterlimit = 100
     try:
-        iterlimit = 100
         while (last_dlon < -3000000.0 or dlon != 0 and
                abs((last_dlon - dlon) / dlon) > 1.0e-9):
             sqr_sin_sigma = pow(cos(U2) * sin(dlon), 2) + \
@@ -843,25 +843,28 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
             sigma = atan2(Sin_sigma, Cos_sigma)
             Sin_alpha = cos(U1) * cos(U2) * sin(dlon) / sin(sigma)
             alpha = asin(Sin_alpha)
-            Cos2sigma_m = cos(sigma) - (2 * sin(U1) * sin(U2) / pow(cos(alpha), 2))
+            Cos2sigma_m = cos(sigma) - \
+                (2 * sin(U1) * sin(U2) / pow(cos(alpha), 2))
             C = (f / 16) * pow(cos(alpha), 2) * \
                 (4 + f * (4 - 3 * pow(cos(alpha), 2)))
             last_dlon = dlon
-            dlon = omega + (1 - C) * f * sin(alpha) * (sigma + C * sin(sigma) * \
-                (Cos2sigma_m + C * cos(sigma) * (-1 + 2 * pow(Cos2sigma_m, 2))))
-    
+            dlon = omega + (1 - C) * f * sin(alpha) * (sigma + C * \
+                sin(sigma) * (Cos2sigma_m + C * cos(sigma) * (-1 + 2 * \
+                pow(Cos2sigma_m, 2))))
+
             u2 = pow(cos(alpha), 2) * (a * a - b * b) / (b * b)
             A = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
             B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
-            delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) * (Cos_sigma * \
-                (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) * Cos2sigma_m * \
-                (-3 + 4 * sqr_sin_sigma) * (-3 + 4 * pow(Cos2sigma_m, 2))))
-    
+            delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) * \
+                (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) * \
+                Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) * (-3 + 4 * \
+                pow(Cos2sigma_m, 2))))
+
             dist = b * A * (sigma - delta_sigma)
-            alpha12 = atan2((cos(U2) * sin(dlon)),
-                            (cos(U1) * sin(U2) - sin(U1) * cos(U2) * cos(dlon)))
-            alpha21 = atan2((cos(U1) * sin(dlon)),
-                            (-sin(U1) * cos(U2) + cos(U1) * sin(U2) * cos(dlon)))
+            alpha12 = atan2((cos(U2) * sin(dlon)), (cos(U1) * sin(U2) - \
+                sin(U1) * cos(U2) * cos(dlon)))
+            alpha21 = atan2((cos(U1) * sin(dlon)), (-sin(U1) * cos(U2) + \
+                cos(U1) * sin(U2) * cos(dlon)))
             iterlimit -= 1
             if iterlimit < 0:
                 # iteration limit reached
@@ -906,9 +909,21 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         azimuth B->A in degrees)
 
     .. note::
-        Currently the Vincenty's Inverse formulae is used which has known
-        limitations for two nearly antipodal points.
+        This function will check if you have installed the Python module
+        `geographiclib <http://geographiclib.sf.net>`_ - a very fast module
+        for converting between geographic, UTM, UPS, MGRS, and geocentric
+        coordinates, for geoid calculations, and for solving geodesic problems.
+        Otherwise the locally implemented Vincenty's Inverse formulae
+        (:func:`~obspy.core.util.calcVincentyInverse`) is used which has known
+        limitations for two nearly antipodal points and is ca. 4x slower.
     """
+    try:
+        # try using geographiclib
+        from geographiclib.geodesic import Geodesic
+        result = Geodesic.WGS84.Inverse(lat1, lon1, lat2, lon2)
+        return (result['s12'], result['azi1'], result['azi2'])
+    except ImportError:
+        pass
     try:
         values = calcVincentyInverse(lat1, lon1, lat2, lon2)
         if np.alltrue(np.isnan(values)):
@@ -916,8 +931,9 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         return values
     except StopIteration:
         msg = "Catching unstable calculation on antipodes. " + \
-              "Currently the Vincenty's Inverse formulae is used which " + \
-              "has known limitations for two nearly antipodal points."
+              "The currently used Vincenty's Inverse formulae " + \
+              "has known limitations for two nearly antipodal points. " + \
+              "Install the Python module 'geographiclib' to solve this issue."
         warnings.warn(msg)
         return (20004314.5, 0.0, 0.0)
     except ValueError, e:
