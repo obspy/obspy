@@ -1125,7 +1125,7 @@ class Trace(object):
                             "lowpass": signal.lowpass,
                             "highpass": signal.highpass}
 
-        #make type string comparison case insensitive
+        # make type string comparison case insensitive
         type = type.lower()
 
         if type not in filter_functions:
@@ -1206,7 +1206,7 @@ class Trace(object):
                              'delayedstalta': signal.delayedStaLta,
                              'zdetect': signal.zdetect}
 
-        #make type string comparison case insensitive
+        # make type string comparison case insensitive
         type = type.lower()
 
         if type not in trigger_functions:
@@ -1357,72 +1357,88 @@ class Trace(object):
         """
         return self.data.std()
 
-    def differentiate(self, method='gradient'):
-        """  
+    def differentiate(self, type='gradient'):
+        """
         Method to differentiate the trace with respect to time.
 
-        :type method: string, optional
-        :param method: method to use for differentiation
+        :type type: ``'gradient'``, optional
+        :param type: Method to use for differentiation. Defaults to
+            ``'gradient'``. See the `Supported Methods`_ section below for
+            further details.
 
-        method == "gradient": use numpy.gradient, numpy docu says:
+        .. rubric:: _`Supported Methods`
+
+        ``'gradient'``
             The gradient is computed using central differences in the interior
             and first differences at the boundaries. The returned gradient
-            hence has the same shape as the input array.
+            hence has the same shape as the input array. (uses
+            :func:`numpy.gradient`)
         """
         # including method option for future implementation of fourier domain
         # differentiation
-        if method not in ['gradient']:
-            msg = "differentiation method '%s' does not exist" % method
-            raise ValueError(msg)
-
-        if method == 'gradient':
+        type = type.lower()
+        if type == 'gradient':
             self.data = np.gradient(self.data, self.stats.delta)
-        
+        else:
+            msg = "differentiation method '%s' does not exist" % type
+            raise ValueError(msg)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
-        proc_info = "differentiate:method:%s" % method
+        proc_info = "differentiate:%s" % type
         self.stats['processing'].append(proc_info)
 
-    def integrate(self, method='cumtrapz'):
-        """  
+    def integrate(self, type='cumtrapz'):
+        """
         Method to integrate the trace with respect to time.
 
-        :type method: string, optional
-        :param method: method to use for integration
+        :type type: ``'gradient'``, optional
+        :param type: Method to use for integration. Defaults to
+            ``'cumtrapz'``. See the `Supported Methods`_ section below for
+            further details.
 
-        method == "cumtrapz": use scipy.integrate.cumtrapz, scipy docu says:
-            Important: result has one sample less then the input! 
+        .. rubric:: _`Supported Methods`
+
+        ``'cumtrapz'``
+            Uses :func:`scipy.integrate.cumtrapz`, scipy docu says:
+            Important: result has one sample less then the input!
         """
         # including method option for future implementation of fourier domain
         # integration
-        if method not in ['cumtrapz']:
-            msg = "integration method '%s' does not exist" % method
-            raise ValueError(msg)
-
-        if method == 'cumtrapz':
+        type = type.lower()
+        if type == 'cumtrapz':
             import scipy.integrate
-            self.data = scipy.integrate.cumtrapz(self.data, dx=self.stats.delta)
-
+            self.data = scipy.integrate.cumtrapz(self.data,
+                                                 dx=self.stats.delta)
+        else:
+            msg = "integration method '%s' does not exist" % type
+            raise ValueError(msg)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
-        proc_info = "integrate:method:%s" % method
+        proc_info = "integrate:%s" % type
         self.stats['processing'].append(proc_info)
 
-    def detrend(self, method='simple'):
-        """  
+    def detrend(self, type='simple'):
+        """
         Method to remove a linear trend from the trace.
 
-        :type method: string, optional
-        :param method: method to use for detrending
+        :type type: ``'linear'``, ``'constant'`` or ``'simple'``, optional
+        :param type: Method to use for detrending. Defaults to ``'simple'``.
+            See the `Supported Methods`_ section below for further details.
 
-        method == "LS": use scipy.signal.detrend, i. e. fitting a linear
-            function to the trace with least squares and subtracting it.
-            
-        method == "simple": use method from obspy.signal.invsim, i. e.
-            subtracting a linear function defined by first/last sample of the
-            trace
+        .. rubric:: _`Supported Methods`
+
+        ``'simple'``
+            Subtracts a linear function defined by first/last sample of the
+            trace (uses :func:`obspy.signal.invsim.detrend`).
+
+        ``'linear'``
+            Fitting a linear function to the trace with least squares and
+            subtracting it (uses :func:`scipy.signal.detrend`).
+
+        ``'constant'``
+            Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
         """
         global signal
         if not signal:
@@ -1432,21 +1448,20 @@ class Trace(object):
                 msg = "Error during import from obspy.signal. Please make " + \
                       "sure obspy.signal is installed properly."
                 raise ImportError(msg)
-        
-        if method not in ['simple', 'LS']:
-            msg = "detrending method '%s' does not exist" % method
-            raise ValueError(msg)
-        
-        if method == 'simple':
+        # detrend
+        type = type.lower()
+        if type == 'simple':
             signal.invsim.detrend(self.data)
-        elif method == 'LS':
+        elif type in ['linear', 'constant']:
             from scipy.signal import detrend as scipy_detrend
-            self.data = scipy_detrend(self.data)
-        
+            self.data = scipy_detrend(self.data, type=type)
+        else:
+            msg = "detrending method '%s' does not exist" % type
+            raise ValueError(msg)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
-        proc_info = "detrend:method:%s" % method
+        proc_info = "detrend:%s" % type
         self.stats['processing'].append(proc_info)
 
     def normalize(self, norm=None):

@@ -856,7 +856,7 @@ class TraceTestCase(unittest.TestCase):
         st.merge()
         out = st[0].__str__()
         self.assertTrue(out.endswith('(masked)'))
-    
+
     def test_detrend(self):
         """
         Test detrend method of trace
@@ -865,26 +865,26 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data.copy())
 
-        tr.detrend(method='simple')
+        tr.detrend(type='simple')
         np.testing.assert_array_almost_equal(tr.data, np.zeros(10))
 
         tr.data = data.copy()
-        tr.detrend(method='LS')
+        tr.detrend(type='linear')
         np.testing.assert_array_almost_equal(tr.data, np.zeros(10))
 
         data = np.zeros(10)
         data[3:7] = 1.
-        
+
         tr.data = data.copy()
-        tr.detrend(method='simple')
+        tr.detrend(type='simple')
         np.testing.assert_almost_equal(tr.data[0], 0.)
         np.testing.assert_almost_equal(tr.data[-1], 0.)
 
         tr.data = data.copy()
-        tr.detrend(method='LS')
+        tr.detrend(type='linear')
         np.testing.assert_almost_equal(tr.data[0], -0.4)
         np.testing.assert_almost_equal(tr.data[-1], -0.4)
-    
+
     def test_differentiate(self):
         """
         Test differentiation method of trace
@@ -893,7 +893,7 @@ class TraceTestCase(unittest.TestCase):
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.differentiate(method='gradient')
+        tr.differentiate(type='gradient')
         np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
 
     def test_integrate(self):
@@ -903,7 +903,7 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(101) * 0.01
         tr = Trace(data=data)
         tr.stats.delta = 0.1
-        tr.integrate(method='cumtrapz')
+        tr.integrate(type='cumtrapz')
         np.testing.assert_almost_equal(tr.data[-1], 0.1)
 
 

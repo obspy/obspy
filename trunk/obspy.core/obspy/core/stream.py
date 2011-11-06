@@ -1539,11 +1539,15 @@ class Stream(object):
         are performed in one go in the frequency domain, otherwise only the
         specified step is performed.
 
-        Processing is performed in place on the actual data array.
-        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing`` of every trace.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: Example
 
@@ -1587,9 +1591,7 @@ class Stream(object):
     @interceptDict
     def filter(self, type, **options):
         """
-        Filters the data of all traces in the Stream. This is performed in
-        place on the actual data arrays. The raw data is not accessible anymore
-        afterwards.
+        Filters the data of all traces in the Stream.
 
         :type type: str
         :param type: String that specifies which filter is applied (e.g.
@@ -1598,10 +1600,15 @@ class Stream(object):
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
-        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``stats.processing`` of every trace.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: Example
 
@@ -1624,9 +1631,7 @@ class Stream(object):
     @interceptDict
     def trigger(self, type, **options):
         """
-        Runs a triggering algorithm on all traces in the stream. This is
-        performed in place on the actual data arrays. The raw data
-        is not accessible anymore afterwards.
+        Runs a triggering algorithm on all traces in the stream.
 
         :param type: String that specifies which trigger is applied (e.g.
             ``'recStalta'``).
@@ -1638,10 +1643,15 @@ class Stream(object):
             (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
             seconds average, respectively)
 
-        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``stats.processing`` of every trace.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: Example
 
@@ -1691,18 +1701,20 @@ class Stream(object):
         abort downsampling in case of changing endtimes set
         ``strict_length=True``.
 
-        This operation is performed in place on the actual data arrays. The raw
-        data is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
-        to make a copy of your trace.
+        .. note::
 
-        This also makes an entry with information on the applied processing
-        in ``stats.processing`` of every trace.
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
 
-        For the example we switch off the automatic pre-filtering so that
-        the effect of the downsampling routine becomes clearer:
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: Example
+
+        For the example we switch off the automatic pre-filtering so that
+        the effect of the downsampling routine becomes clearer.
 
         >>> from obspy.core import Trace, Stream
         >>> tr = Trace(data=np.arange(10))
@@ -1741,56 +1753,87 @@ class Stream(object):
         """
         return [tr.max() for tr in self]
 
-    def differentiate(self, method='gradient'):
-        """  
-        Method to differentiate the trace with respect to time. See
-        :meth:`~obspy.core.trace.Trace.differentiate`.
+    def differentiate(self, type='gradient'):
+        """
+        Method to differentiate all traces with respect to time.
 
-        :type method: string, optional
-        :param method: method to use for differentiation
+        :type type: ``'gradient'``, optional
+        :param type: Method to use for differentiation. Defaults to
+            ``'gradient'``. See the `Supported Methods`_ section below for
+            further details.
 
-        method == "gradient": use numpy.gradient, numpy docu says:
+        .. rubric:: _`Supported Methods`
+
+        ``'gradient'``
             The gradient is computed using central differences in the interior
             and first differences at the boundaries. The returned gradient
-            hence has the same shape as the input array.
+            hence has the same shape as the input array. (uses
+            :func:`numpy.gradient`)
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.differentiate(method=method)
-        return
+            tr.differentiate(type=type)
 
-    def integrate(self, method='cumtrapz'):
-        """  
-        Method to integrate the trace with respect to time. See
-        :meth:`~obspy.core.trace.Trace.integrate`.
+    def integrate(self, type='cumtrapz'):
+        """
+        Method to integrate all traces with respect to time.
 
-        :type method: string, optional
-        :param method: method to use for integration
+        :type type: ``'gradient'``, optional
+        :param type: Method to use for integration. Defaults to
+            ``'cumtrapz'``. See the `Supported Methods`_ section below for
+            further details.
 
-        method == "cumtrapz": use scipy.integrate.cumtrapz, scipy docu says:
-            Important: result has one sample less then the input! 
+        .. rubric:: _`Supported Methods`
+
+        ``'cumtrapz'``
+            Uses :func:`scipy.integrate.cumtrapz`, scipy docu says:
+            Important: result has one sample less then the input!
         """
         for tr in self:
-            tr.integrate(method=method)
-        return
+            tr.integrate(type=type)
 
-    def detrend(self, method='simple'):
-        """  
-        Method to remove a linear trend from the all traces in the stream. See
-        :meth:`~obspy.core.trace.Trace.detrend`.
+    def detrend(self, type='simple'):
+        """
+        Method to remove a linear trend from all traces.
 
-        :type method: string, optional
-        :param method: method to use for detrending
+        :type type: ``'linear'``, ``'constant'`` or ``'simple'``, optional
+        :param type: Method to use for detrending. Defaults to ``'simple'``.
+            See the `Supported Methods`_ section below for further details.
 
-        method == "LS": use scipy.signal.detrend, i. e. fitting a linear
-            function to the trace with least squares and subtracting it.
-            
-        method == "simple": use method from obspy.signal.invsim, i. e.
-            subtracting a linear function defined by first/last sample of the
-            trace
+        .. rubric:: _`Supported Methods`
+
+        ``'simple'``
+            Subtracts a linear function defined by first/last sample of the
+            trace (uses :func:`obspy.signal.invsim.detrend`).
+
+        ``'linear'``
+            Fitting a linear function to the trace with least squares and
+            subtracting it (uses :func:`scipy.signal.detrend`).
+
+        ``'constant'``
+            Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
         """
         for tr in self:
-            tr.detrend(method=method)
-        return
+            tr.detrend(type=type)
 
     def std(self):
         """
@@ -1825,14 +1868,17 @@ class Stream(object):
                 respect to the global maximum of all traces in the stream
                 instead of normalizing every trace separately.
 
-        This operation is performed in place on the actual data arrays. The raw
-        data is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.stream.Stream.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``stats.processing`` of every trace.
+        If ``data.dtype`` of a trace was integer it is changing to float.
 
-        Note: If ``data.dtype`` of a trace was integer it is changing to float.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: Example
 
