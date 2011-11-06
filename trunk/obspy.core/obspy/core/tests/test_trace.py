@@ -856,6 +856,34 @@ class TraceTestCase(unittest.TestCase):
         st.merge()
         out = st[0].__str__()
         self.assertTrue(out.endswith('(masked)'))
+    
+    def test_detrend(self):
+        """
+        Test detrend method of trace
+        """
+        t = np.arange(10)
+        data = 0.1 * t + 1.
+        tr = Trace(data=data.copy())
+
+        tr.detrend(method='simple')
+        np.testing.assert_array_almost_equal(tr.data, np.zeros(10))
+
+        tr.data = data.copy()
+        tr.detrend(method='LS')
+        np.testing.assert_array_almost_equal(tr.data, np.zeros(10))
+
+        data = np.zeros(10)
+        data[3:7] = 1.
+        
+        tr.data = data.copy()
+        tr.detrend(method='simple')
+        np.testing.assert_almost_equal(tr.data[0], 0.)
+        np.testing.assert_almost_equal(tr.data[-1], 0.)
+
+        tr.data = data.copy()
+        tr.detrend(method='LS')
+        np.testing.assert_almost_equal(tr.data[0], -0.4)
+        np.testing.assert_almost_equal(tr.data[-1], -0.4)
 
 
 def suite():

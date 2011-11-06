@@ -1357,6 +1357,45 @@ class Trace(object):
         """
         return self.data.std()
 
+    def detrend(self, method='simple'):
+        """  
+        Method to remove a linear trend from the trace.
+
+        :type method: string, optional
+        :param method: method to use for detrending
+
+        method == "LS": use scipy.signal.detrend, i. e. fitting a linear
+            function to the trace with least squares and subtracting it.
+            
+        method == "simple": use method from obspy.signal.invsim, i. e.
+            subtracting a linear function defined by first/last sample of the
+            trace
+        """
+        global signal
+        if not signal:
+            try:
+                import obspy.signal as signal
+            except ImportError:
+                msg = "Error during import from obspy.signal. Please make " + \
+                      "sure obspy.signal is installed properly."
+                raise ImportError(msg)
+        
+        if method not in ['simple', 'LS']:
+            msg = "detrending method '%s' does not exis" % method
+            raise ValueError(msg)
+        
+        if method == 'simple':
+            signal.invsim.detrend(self.data)
+        elif method == 'LS':
+            from scipy.signal import detrend as scipy_detrend
+            self.data = scipy_detrend(self.data)
+        
+        # add processing information to the stats dictionary
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        proc_info = "detrend:method:%s" % method
+        self.stats['processing'].append(proc_info)
+
     def normalize(self, norm=None):
         """
         Method to normalize the trace to its absolute maximum.
