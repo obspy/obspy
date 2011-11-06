@@ -1758,6 +1758,21 @@ class Stream(object):
             tr.differentiate(method=method)
         return
 
+    def integrate(self, method='cumtrapz'):
+        """  
+        Method to integrate the trace with respect to time. See
+        :meth:`~obspy.core.trace.Trace.integrate`.
+
+        :type method: string, optional
+        :param method: method to use for integration
+
+        method == "cumtrapz": use scipy.integrate.cumtrapz, scipy docu says:
+            Important: result has one sample less then the input! 
+        """
+        for tr in self:
+            tr.integrate(method=method)
+        return
+
     def detrend(self, method='simple'):
         """  
         Method to remove a linear trend from the all traces in the stream. See

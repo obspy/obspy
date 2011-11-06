@@ -1379,7 +1379,25 @@ class StreamTestCase(unittest.TestCase):
             st = Stream([trA, trB])
             st._cleanup()
             self.assertTrue(st == Stream([trA, trB]))
+    
+    def test_integrate_differentiate(self):
+        """
+        Test integration and differentiation methods of stram
+        """
+        st1 = read()
+        st2 = read()
 
+        st1.filter('lowpass', freq=1.0)
+        st2.filter('lowpass', freq=1.0)
+
+        st1.differentiate()
+        st1.integrate()
+        st2.integrate()
+        st2.differentiate()
+
+        np.testing.assert_array_almost_equal(st1[0].data[:-1], 
+                st2[0].data[:-1], decimal=5)
+        
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

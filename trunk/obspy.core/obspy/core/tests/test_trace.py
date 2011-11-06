@@ -887,14 +887,24 @@ class TraceTestCase(unittest.TestCase):
     
     def test_differentiate(self):
         """
-        Test detrend method of trace
+        Test differentiation method of trace
         """
         t = np.linspace(0., 1., 11)
         data = 0.1 * t + 1.
         tr = Trace(data=data)
         tr.stats.delta = 0.1
         tr.differentiate(method='gradient')
-        np.testing.assert_almost_equal(tr.data, np.ones(11) * 0.1)
+        np.testing.assert_array_almost_equal(tr.data, np.ones(11) * 0.1)
+
+    def test_integrate(self):
+        """
+        Test integration method of trace
+        """
+        data = np.ones(101) * 0.01
+        tr = Trace(data=data)
+        tr.stats.delta = 0.1
+        tr.integrate(method='cumtrapz')
+        np.testing.assert_almost_equal(tr.data[-1], 0.1)
 
 
 def suite():

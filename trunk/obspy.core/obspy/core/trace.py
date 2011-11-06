@@ -1384,6 +1384,32 @@ class Trace(object):
         proc_info = "differentiate:method:%s" % method
         self.stats['processing'].append(proc_info)
 
+    def integrate(self, method='cumtrapz'):
+        """  
+        Method to integrate the trace with respect to time.
+
+        :type method: string, optional
+        :param method: method to use for integration
+
+        method == "cumtrapz": use scipy.integrate.cumtrapz, scipy docu says:
+            Important: result has one sample less then the input! 
+        """
+        # including method option for future implementation of fourier domain
+        # integration
+        if method not in ['cumtrapz']:
+            msg = "integration method '%s' does not exist" % method
+            raise ValueError(msg)
+
+        if method == 'cumtrapz':
+            import scipy.integrate
+            self.data = scipy.integrate.cumtrapz(self.data, dx=self.stats.delta)
+
+        # add processing information to the stats dictionary
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        proc_info = "integrate:method:%s" % method
+        self.stats['processing'].append(proc_info)
+
     def detrend(self, method='simple'):
         """  
         Method to remove a linear trend from the trace.
