@@ -1741,6 +1741,25 @@ class Stream(object):
         """
         return [tr.max() for tr in self]
 
+    def detrend(self, method='simple'):
+        """  
+        Method to remove a linear trend from the all traces in the stream. See
+        :meth:`~obspy.core.trace.Trace.detrend`.
+
+        :type method: string, optional
+        :param method: method to use for detrending
+
+        method == "LS": use scipy.signal.detrend, i. e. fitting a linear
+            function to the trace with least squares and subtracting it.
+            
+        method == "simple": use method from obspy.signal.invsim, i. e.
+            subtracting a linear function defined by first/last sample of the
+            trace
+        """
+        for tr in self:
+            tr.detrend(method=method)
+        return
+
     def std(self):
         """
         Method to get the standard deviations of amplitudes in all trace in the
