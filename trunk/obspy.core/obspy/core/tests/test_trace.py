@@ -884,6 +884,17 @@ class TraceTestCase(unittest.TestCase):
         tr.detrend(method='LS')
         np.testing.assert_almost_equal(tr.data[0], -0.4)
         np.testing.assert_almost_equal(tr.data[-1], -0.4)
+    
+    def test_differentiate(self):
+        """
+        Test detrend method of trace
+        """
+        t = np.linspace(0., 1., 11)
+        data = 0.1 * t + 1.
+        tr = Trace(data=data)
+        tr.stats.delta = 0.1
+        tr.differentiate(method='gradient')
+        np.testing.assert_almost_equal(tr.data, np.ones(11) * 0.1)
 
 
 def suite():

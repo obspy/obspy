@@ -1357,6 +1357,33 @@ class Trace(object):
         """
         return self.data.std()
 
+    def differentiate(self, method='gradient'):
+        """  
+        Method to differentiate the trace with respect to time.
+
+        :type method: string, optional
+        :param method: method to use for differentiation
+
+        method == "gradient": use numpy.gradient, numpy docu says:
+            The gradient is computed using central differences in the interior
+            and first differences at the boundaries. The returned gradient
+            hence has the same shape as the input array.
+        """
+        # including method option for future implementation of fourier domain
+        # differentiation
+        if method not in ['gradient']:
+            msg = "differentiation method '%s' does not exist" % method
+            raise ValueError(msg)
+
+        if method == 'gradient':
+            self.data = np.gradient(self.data, self.stats.delta)
+        
+        # add processing information to the stats dictionary
+        if 'processing' not in self.stats:
+            self.stats['processing'] = []
+        proc_info = "differentiate:method:%s" % method
+        self.stats['processing'].append(proc_info)
+
     def detrend(self, method='simple'):
         """  
         Method to remove a linear trend from the trace.
@@ -1381,7 +1408,7 @@ class Trace(object):
                 raise ImportError(msg)
         
         if method not in ['simple', 'LS']:
-            msg = "detrending method '%s' does not exis" % method
+            msg = "detrending method '%s' does not exist" % method
             raise ValueError(msg)
         
         if method == 'simple':

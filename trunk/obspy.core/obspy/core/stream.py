@@ -1741,6 +1741,23 @@ class Stream(object):
         """
         return [tr.max() for tr in self]
 
+    def differentiate(self, method='gradient'):
+        """  
+        Method to differentiate the trace with respect to time. See
+        :meth:`~obspy.core.trace.Trace.differentiate`.
+
+        :type method: string, optional
+        :param method: method to use for differentiation
+
+        method == "gradient": use numpy.gradient, numpy docu says:
+            The gradient is computed using central differences in the interior
+            and first differences at the boundaries. The returned gradient
+            hence has the same shape as the input array.
+        """
+        for tr in self:
+            tr.differentiate(method=method)
+        return
+
     def detrend(self, method='simple'):
         """  
         Method to remove a linear trend from the all traces in the stream. See
