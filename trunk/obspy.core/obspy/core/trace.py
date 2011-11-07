@@ -1392,7 +1392,7 @@ class Trace(object):
         """
         Method to integrate the trace with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: ``'cumtrapz'``, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
@@ -1400,8 +1400,9 @@ class Trace(object):
         .. rubric:: _`Supported Methods`
 
         ``'cumtrapz'``
-            Uses :func:`scipy.integrate.cumtrapz`, scipy docu says:
-            Important: result has one sample less then the input!
+            Cumulatively integrate using the composite trapezoidal rule (uses
+            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
+            the input!
         """
         # including method option for future implementation of fourier domain
         # integration
@@ -1423,7 +1424,8 @@ class Trace(object):
         """
         Method to remove a linear trend from the trace.
 
-        :type type: ``'linear'``, ``'constant'`` or ``'simple'``, optional
+        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
+            optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
 
@@ -1437,7 +1439,7 @@ class Trace(object):
             Fitting a linear function to the trace with least squares and
             subtracting it (uses :func:`scipy.signal.detrend`).
 
-        ``'constant'``
+        ``'constant'`` or ``'demean'``
             Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
         """
         global signal
@@ -1452,7 +1454,9 @@ class Trace(object):
         type = type.lower()
         if type == 'simple':
             signal.invsim.detrend(self.data)
-        elif type in ['linear', 'constant']:
+        elif type in ['linear', 'constant', 'demean']:
+            if type == 'demean':
+                type = 'constant'
             from scipy.signal import detrend as scipy_detrend
             self.data = scipy_detrend(self.data, type=type)
         else:

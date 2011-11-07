@@ -1545,7 +1545,6 @@ class Stream(object):
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
             copy of your trace.
-
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1606,7 +1605,6 @@ class Stream(object):
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
             copy of your trace.
-
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1649,7 +1647,6 @@ class Stream(object):
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
             copy of your trace.
-
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1707,7 +1704,6 @@ class Stream(object):
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
             copy of your trace.
-
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1762,6 +1758,15 @@ class Stream(object):
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
 
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
+
         .. rubric:: _`Supported Methods`
 
         ``'gradient'``
@@ -1769,16 +1774,6 @@ class Stream(object):
             and first differences at the boundaries. The returned gradient
             hence has the same shape as the input array. (uses
             :func:`numpy.gradient`)
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
-
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of every trace.
         """
         for tr in self:
             tr.differentiate(type=type)
@@ -1787,16 +1782,26 @@ class Stream(object):
         """
         Method to integrate all traces with respect to time.
 
-        :type type: ``'gradient'``, optional
+        :type type: ``'cumtrapz'``, optional
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
 
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
+
         .. rubric:: _`Supported Methods`
 
         ``'cumtrapz'``
-            Uses :func:`scipy.integrate.cumtrapz`, scipy docu says:
-            Important: result has one sample less then the input!
+            Cumulatively integrate using the composite trapezoidal rule (uses
+            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
+            the input!
         """
         for tr in self:
             tr.integrate(type=type)
@@ -1805,9 +1810,19 @@ class Stream(object):
         """
         Method to remove a linear trend from all traces.
 
-        :type type: ``'linear'``, ``'constant'`` or ``'simple'``, optional
+        :type type: ``'linear'``, ``'constant'``, ``'demean'`` or ``'simple'``,
+            optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
+            copy of your trace.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
 
         .. rubric:: _`Supported Methods`
 
@@ -1819,18 +1834,8 @@ class Stream(object):
             Fitting a linear function to the trace with least squares and
             subtracting it (uses :func:`scipy.signal.detrend`).
 
-        ``'constant'``
+        ``'constant'`` or ``'demean'``
             Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
-
-        .. note::
-
-            This operation is performed in place on the actual data arrays. The
-            raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
-
-            This also makes an entry with information on the applied processing
-            in ``stats.processing`` of every trace.
         """
         for tr in self:
             tr.detrend(type=type)
@@ -1876,7 +1881,6 @@ class Stream(object):
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
             copy of your trace.
-
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
