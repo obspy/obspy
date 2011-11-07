@@ -792,13 +792,18 @@ class Client(object):
         # sanity checking geographical bounding areas
         rectangular = (minlat, minlon, maxlat, maxlon)
         circular = (lon, lat, minradius, maxradius)
+        # helper variables to check the user's selection
+        any_rectangular = any([value != None for value in rectangular])
+        any_circular = any([value != None for value in circular])
+        all_rectangular = all([value != None for value in rectangular])
+        all_circular = all([value != None for value in circular])
         # not both can be specified at the same time
-        if any(rectangular) and any(circular):
+        if any_rectangular and any_circular:
             msg = "Rectangular and circular bounding areas can not be combined"
             raise ValueError(msg)
         # check and setup rectangular box criteria
-        if any(rectangular):
-            if not all(rectangular):
+        if any_rectangular:
+            if not all_rectangular:
                 msg = "Missing constraints for rectangular bounding box"
                 raise ValueError(msg)
             kwargs['minlat'] = str(minlat)
@@ -806,8 +811,8 @@ class Client(object):
             kwargs['maxlat'] = str(maxlat)
             kwargs['maxlon'] = str(maxlon)
         # check and setup circular box criteria
-        if any(circular):
-            if not all(circular):
+        if any_circular:
+            if not all_circular:
                 msg = "Missing constraints for circular bounding area"
                 raise ValueError(msg)
             kwargs['lat'] = str(lat)
