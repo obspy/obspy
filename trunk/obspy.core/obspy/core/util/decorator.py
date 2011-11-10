@@ -59,36 +59,6 @@ def deprecated_keywords(keywords):
     return fdec
 
 
-def interceptDict(func):
-    """
-    This is a decorator to intercept convenience method calls of the old,
-    deprecated style (e.g. trace.filter("lowpass", {'freq': 10})).
-
-    For the convenience functions on trace/stream the options that got passed
-    on had to be specified as a dictionary in the first implementation and
-    now are expected to be given as kwargs directly.
-    So we do:
-
-    * throw a DeprecationWarning
-    * make the correct call
-    """
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        # function itself is first arg so len(args) == 3 means we got 2 args...
-        if len(args) == 3 and isinstance(args[2], dict):
-            msg = "Using a dictionary to pass on filter options will be " + \
-                  "removed in the future. Please specify all options as " + \
-                  "kwargs."
-            warnings.warn(msg, DeprecationWarning)
-            kwargs = args[2]
-            args = args[:-1]
-        return func(*args, **kwargs)
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
-
-
 def skip(reason):
     """
     Unconditionally skip a test.

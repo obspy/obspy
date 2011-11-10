@@ -10,7 +10,7 @@ Module for handling ObsPy Trace objects.
 """
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk, interceptDict
+from obspy.core.util import AttribDict, createEmptyDataChunk
 import math
 import numpy as np
 import warnings
@@ -1074,7 +1074,6 @@ class Trace(object):
                     (paz_simulate, simulate_sensitivity)
             self.stats['processing'].append(proc_info)
 
-    @interceptDict
     def filter(self, type, **options):
         """
         Filters the data of the current trace.
@@ -1145,7 +1144,6 @@ class Trace(object):
         proc_info = "filter:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
 
-    @interceptDict
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.

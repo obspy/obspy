@@ -11,8 +11,8 @@ Module for handling ObsPy Stream objects.
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _getPlugins, interceptDict, \
-    getExampleFile, getEntryPoints, uncompressFile
+from obspy.core.util import NamedTemporaryFile, _getPlugins, getExampleFile, \
+    getEntryPoints, uncompressFile
 from pkg_resources import load_entry_point
 import copy
 import fnmatch
@@ -1587,7 +1587,6 @@ class Stream(object):
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return
 
-    @interceptDict
     def filter(self, type, **options):
         """
         Filters the data of all traces in the Stream.
@@ -1626,7 +1625,6 @@ class Stream(object):
             tr.filter(type, **options)
         return
 
-    @interceptDict
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on all traces in the stream.
