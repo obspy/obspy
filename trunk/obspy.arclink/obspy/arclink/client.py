@@ -21,8 +21,8 @@ import time
 import warnings
 
 
-DCID_KEY_FILE = os.path.join(os.getenv('HOME'), 'dcidpasswords.txt')
-MAX_REQUESTS = 100
+DCID_KEY_FILE = os.path.join(os.getenv('HOME') or '', 'dcidpasswords.txt')
+MAX_REQUESTS = 50
 
 _ROUTING_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Routing/1.0/"
 _ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
@@ -47,7 +47,7 @@ class Client(object):
     :param port: Port of the remote ArcLink server (default port is ``18001``).
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
-        ``20`` seconds). This works only for Python >= 2.6.x.
+        ``20`` seconds).
     :type user: str, optional
     :param user: The user name is used for identification with the ArcLink
         server. This entry is also used for usage statistics within the data
@@ -85,9 +85,6 @@ class Client(object):
     * INGV Server: eida.rm.ingv.it:18001
     * IPGP Server: geosrt2.ipgp.fr:18001
     """
-    #: Timeout value for a status request
-    status_timeout = 3
-
     #: Delay in seconds between each status request
     status_delay = 0.5
 
@@ -106,6 +103,7 @@ class Client(object):
         self.command_delay = command_delay
         self.init_host = host
         self.init_port = port
+        self.timeout = timeout
         self.dcid_keys = dcid_keys
         # timeout exists only for Python >= 2.6
         if sys.hexversion < 0x02060000:
@@ -154,10 +152,11 @@ class Client(object):
             print('>>> ' + buffer)
 
     def _readln(self, value=''):
-        line = self._client.read_until(value + '\r\n', self.status_timeout)
+        line = self._client.read_until(value + '\r\n', self.timeout)
         line = line.strip()
         if value not in line:
-            print "TIMEOUT!!! %s" % value
+            msg = "Timeout waiting for expected %s, got %s"
+            raise ArcLinkException(msg % (value, line))
         if self.debug:
             print('... ' + line)
         return line
@@ -245,7 +244,7 @@ class Client(object):
             except:
                 if 'ERROR' in status:
                     self._bye()
-                    raise ArcLinkException('Error in request')
+                    raise ArcLinkException('Error requesting status id')
                 pass
             else:
                 break
