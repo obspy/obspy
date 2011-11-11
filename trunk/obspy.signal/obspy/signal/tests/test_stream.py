@@ -74,7 +74,7 @@ class StreamTestCase(unittest.TestCase):
             st_bkp = streams_bkp[j]
             for filt_type, filt_ops in filters:
                 st = deepcopy(streams_bkp[j])
-                st.filter(filt_type, filt_ops)
+                st.filter(filt_type, **filt_ops)
                 # test if all traces were filtered as expected
                 for i, tr in enumerate(st):
                     data_filt = filter_map[filt_type](st_bkp[i].data,
@@ -84,7 +84,7 @@ class StreamTestCase(unittest.TestCase):
                     self.assertEqual(len(tr.stats.processing), 1)
                     self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
                             (filt_type, filt_ops))
-                st.filter(filt_type, filt_ops)
+                st.filter(filt_type, **filt_ops)
                 for i, tr in enumerate(st):
                     self.assertTrue('processing' in tr.stats)
                     self.assertEqual(len(tr.stats.processing), 2)
@@ -96,19 +96,22 @@ class StreamTestCase(unittest.TestCase):
         st = streams[0]
         st_bkp = streams_bkp[0]
         bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
-                ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
-                ['bandstop', {}],
                 ['bandstop', [1, 2, 3, 4, 5]],
                 ['bandstop', None],
                 ['bandstop', 3],
-                ['bandstop', 'XXX'],
+                ['bandstop', 'XXX']]
+        for filt_type, filt_ops in bad_filters:
+            self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
+        bad_filters = [['bandpass', {'freqmin': 1., 'XXX': 20.}],
+                ['bandstop', {'freqmin': 5, 'freqmax': "XXX", 'corners': 6}],
+                ['bandstop', {}],
                 ['bandpass', {'freqmin': 5, 'corners': 6}],
                 ['bandpass', {'freqmin': 5, 'freqmax': 20., 'df': 100.}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(TypeError, st.filter, filt_type, filt_ops)
+            self.assertRaises(TypeError, st.filter, filt_type, **filt_ops)
         bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(ValueError, st.filter, filt_type, filt_ops)
+            self.assertRaises(ValueError, st.filter, filt_type, **filt_ops)
         # test if stream is unchanged after all these bad tests
         for i, tr in enumerate(st):
             np.testing.assert_array_equal(tr.data, st_bkp[i].data)

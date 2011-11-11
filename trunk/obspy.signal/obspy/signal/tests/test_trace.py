@@ -83,7 +83,7 @@ class TraceTestCase(unittest.TestCase):
         for i, tr in enumerate(traces):
             for filt_type, filt_ops in filters:
                 tr = deepcopy(traces_bkp[i])
-                tr.filter(filt_type, filt_ops)
+                tr.filter(filt_type, **filt_ops)
                 # test if trace was filtered as expected
                 data_filt = filter_map[filt_type](traces_bkp[i].data,
                         df=traces_bkp[i].stats.sampling_rate, **filt_ops)
@@ -93,7 +93,7 @@ class TraceTestCase(unittest.TestCase):
                 self.assertEqual(tr.stats.processing[0], "filter:%s:%s" % \
                         (filt_type, filt_ops))
                 # another filter run
-                tr.filter(filt_type, filt_ops)
+                tr.filter(filt_type, **filt_ops)
                 data_filt = filter_map[filt_type](data_filt,
                         df=traces_bkp[i].stats.sampling_rate, **filt_ops)
                 np.testing.assert_array_equal(tr.data, data_filt)
@@ -117,7 +117,7 @@ class TraceTestCase(unittest.TestCase):
             self.assertRaises(TypeError, tr.filter, filt_type, filt_ops)
         bad_filters = [['XXX', {'freqmin': 5, 'freqmax': 20., 'corners': 6}]]
         for filt_type, filt_ops in bad_filters:
-            self.assertRaises(ValueError, tr.filter, filt_type, filt_ops)
+            self.assertRaises(ValueError, tr.filter, filt_type, **filt_ops)
         # test if trace is unchanged after all these bad tests
         np.testing.assert_array_equal(tr.data, traces_bkp[0].data)
         self.assertEqual(tr.stats, traces_bkp[0].stats)
@@ -150,7 +150,7 @@ class TraceTestCase(unittest.TestCase):
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()
         tr.downsample(4)
-        tr2.filter('lowpass', {'freq': tr2.stats.sampling_rate * 0.4 / 4})
+        tr2.filter('lowpass', freq=tr2.stats.sampling_rate * 0.4 / 4)
         tr2.downsample(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)
         self.assertEqual(tr.stats, tr2.stats)

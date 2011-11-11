@@ -55,7 +55,7 @@ class SonicTestCase(unittest.TestCase):
             tr.stats.coordinates.y = geometry[i, 1]
             tr.stats.coordinates.elevation = geometry[i, 2]
             # lowpass random signal to f_nyquist / 2
-            tr.filter("lowpass", {'freq': df / 4.})
+            tr.filter("lowpass", freq=df / 4.)
             trl.append(tr)
 
         st = Stream(trl)
