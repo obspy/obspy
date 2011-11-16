@@ -290,6 +290,20 @@ class ClientTestCase(unittest.TestCase):
                             orderby='magnitude')
         self.assertEqual(doc1, doc2)
 
+    def test_availability(self):
+        """
+        Tests availability of waveform data at the DMC.
+        """
+        client = Client()
+        # GE network
+        result = client.availability(network='GE')
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('GE BOAB -- BHE' in result)
+        # unknown network results in empty string
+        dt = UTCDateTime(2011, 11, 16)
+        result = client.availability(network='XX', starttime=dt,
+                                     endtime=dt + 10)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

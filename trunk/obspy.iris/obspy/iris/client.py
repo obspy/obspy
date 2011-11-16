@@ -823,7 +823,13 @@ class Client(object):
         if not kwargs['output'] in ("bulk", "xml"):
             msg = "kwarg output must be either 'bulk' or 'xml'."
             raise ValueError(msg)
-        data = self._fetch(url, **kwargs)
+        try:
+            data = self._fetch(url, **kwargs)
+        except HTTPError, e:
+            if e.code==404 and e.msg=='Not Found':
+                data = ''
+            else:
+                raise
         return self._toFileOrData(filename, data)
 
     def sacpz(self, network="*", station="*", location="*", channel="*",
