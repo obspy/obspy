@@ -65,6 +65,21 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1.su_first_trace')
         self.assertEqual(isSU(file), True)
 
+    def test_readHeadOnly(self):
+        """
+        Tests headonly flag on readSEGY and readSU functions.
+        """
+        # readSEGY
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        st = readSEGY(file, headonly=True)
+        self.assertEquals(st[0].stats.npts, 8000)
+        self.assertEquals(len(st[0].data), 0)
+        # readSU
+        file = os.path.join(self.path, '1.su_first_trace')
+        st = readSU(file, headonly=True)
+        self.assertEquals(st[0].stats.npts, 8000)
+        self.assertEquals(len(st[0].data), 0)
+
     def test_enforcingTextualHeaderEncodingWhileReading(self):
         """
         Tests whether or not the enforcing of the encoding of the textual file

@@ -49,13 +49,12 @@ class SEGYSampleIntervalError(SEGYError):
 
 def isSEGY(filename):
     """
-    Checks whether a file is a SEGY file or not. Returns True or False.
+    Checks whether or not the given file is a SEG Y file.
 
-    Parameters
-    ----------
-
-    filename : string
-        Name of the SEGY file to be checked.
+    :type filename: str
+    :param filename: SEG Y file to be checked.
+    :rtype: bool
+    :return: ``True`` if a SEG Y file.
     """
     # This is a very weak test. It tests two things: First if the data sample
     # format code is valid. This is also used to determine the endianness. This
@@ -114,41 +113,39 @@ def isSEGY(filename):
     return True
 
 
-def readSEGY(filename, byteorder=None, textual_header_encoding=None,
-             unpack_trace_headers=False):
+def readSEGY(filename, headonly=False, byteorder=None,
+             textual_header_encoding=None, unpack_trace_headers=False):
     """
-    Reads a SEGY file and returns an ObsPy Stream object.
+    Reads a SEG Y file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        SEG Y rev1 file to be read.
-    endian : string
-        Determines the endianness of the file. Either '>' for big endian or '<'
-        for little endian. If it is None, obspy.segy will try to autodetect the
-        endianness. The endianness is always valid for the whole file.
-    textual_header_encoding :
-        The encoding of the textual header.  Either 'EBCDIC', 'ASCII' or None.
-        If it is None, autodetection will be attempted.
-    unpack_trace_headers : bool
-        Determines whether or not all trace header values will be unpacked
-        during reading. If False it will greatly enhance performance and
-        especially memory usage with large files. The header values can still
-        be accessed and will be calculated on the fly but tab completion will
-        no longer work. Look in the headers.py for a list of all possible trace
-        header values.
-        Defaults to False.
+    :type filename: str
+    :param filename: SEG Y rev1 file to be read.
+    :type headonly: boolean, optional
+    :param headonly: If set to True, read only the header and omit the waveform
+        data.
+    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :param byteorder: Determines the endianness of the file. Either ``'>'`` for
+        big endian or ``'<'`` for little endian. If it is ``None``, it will try
+        to autodetect the endianness. The endianness is always valid for the
+        whole file. Defaults to ``None``.
+    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
+    :param textual_header_encoding: The encoding of the textual header. If it
+        is ``None``, autodetection will be attempted. Defaults to ``None``.
+    :type unpack_trace_headers: bool, optional
+    :param unpack_trace_headers: Determines whether or not all trace header
+        values will be unpacked during reading. If ``False`` it will greatly
+        enhance performance and especially memory usage with large files. The
+        header values can still be accessed and will be calculated on the fly
+        but tab completion will no longer work. Look in the headers.py for a
+        list of all possible trace header values. Defaults to ``False``.
+    :returns: A ObsPy :class:`~obspy.core.stream.Stream` object.
 
-    Returns
-    -------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric:: Example
 
-    Basic Usage
-    -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/00001034.sgy_first_trace")
     >>> st  # doctest: +ELLIPSIS
@@ -191,7 +188,11 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
         # object.
         trace = Trace()
         stream.append(trace)
-        trace.data = tr.data
+        # skip data if headonly is set
+        if headonly:
+            trace.stats.npts = len(tr.data)
+        else:
+            trace.data = tr.data
         trace.stats.segy = AttribDict()
         # If all values will be unpacked create a normal dictionary.
         if unpack_trace_headers:
@@ -229,11 +230,51 @@ def readSEGY(filename, byteorder=None, textual_header_encoding=None,
 def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
               textual_header_encoding=None):
     """
-    Writes a SEGY file from given ObsPy Stream object.
+    Writes a SEG Y file from given ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the ObsPy
-    :meth:`~obspy.core.stream.Stream.write` method of an ObsPy Stream object,
-    call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
+
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of file to write.
+    :type data_encoding: int
+    :param data_encoding: The data encoding is an integer with the following
+        currently supported meaning:
+
+            ``1``
+                4 byte IBM floating points (float32)
+            ``2``
+                4 byte Integers (int32)
+            ``3``
+                2 byte Integer (int16)
+            ``5``
+                4 byte IEEE floating points (float32)
+
+        The value in the brackets is the necessary dtype of the data. ObsPy
+        will now automatically convert the data because data might change/loose
+        precision during the conversion so the user has to take care of the
+        correct dtype.
+
+        If it is ``None``, the value of the first Trace will be used for all
+        consecutive Traces. If it is None for the first Trace, 1 (IBM floating
+        point numbers) will be used. Different data encodings for different
+        traces are currently not supported because these will most likely not
+        be readable by other software.
+    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :param byteorder: Determines the endianness of the file. Either ``'>'`` for
+        big endian or ``'<'`` for little endian. If is ``None``, it will either
+        be the endianness of the first Trace or if that is also not set, it
+        will be big endian. A mix between little and big endian for the headers
+        and traces is currently not supported.
+    :type textual_header_encoding: ``'EBCDIC'``, ``'ASCII'`` or ``None``
+    :param textual_header_encoding: The encoding of the textual header. If it
+        is ``None``, the textual_file_header_encoding attribute in the
+        stats.segy dictionary of the first Trace is used and if that is not
+        set, ASCII will be used.
 
     This function will automatically set the data encoding field of the binary
     file header so the user does not need to worry about it.
@@ -247,44 +288,6 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     microsecond. Larger intervals cannot be supported due to the definition of
     the SEG Y format. Therefore the smallest possible sampling rate is ~ 15.26
     Hz. Please keep that in mind.
-
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        Name of SEGY file to be written.
-    data_encoding : int
-        The data encoding is an integer with the following currently supported
-        meaning.
-
-        1: 4 byte IBM floating points (float32)
-        2: 4 byte Integers (int32)
-        3: 2 byte Integer (int16)
-        5: 4 byte IEEE floating points (float32)
-
-        The value in the brackets is the necessary dtype of the data. ObsPy
-        will now automatically convert the data because data might change/loose
-        precision during the conversion so the user has to take care of the
-        correct dtype.
-
-        If it is None, the value of the first Trace will be used for all
-        consecutive Traces. If it is None for the first Trace, 1 (IBM floating
-        point numbers) will be used. Different data encodings for different
-        traces are currently not supported because these will most likely not
-        be readable by other software.
-    byteorder : string
-        Either '<' (little endian), '>' (big endian), or None
-
-        If is None, it will either be the endianness of the first Trace or if
-        that is also not set, it will be big endian. A mix between little and
-        big endian for the headers and traces is currently not supported.
-    textual_header_encoding : string
-        The encoding of the textual header. Either 'EBCDIC', 'ASCII' or None.
-
-        If it is None, the textual_file_header_encoding attribute in the
-        stats.segy dictionary of the first Trace is used and if that is not
-        set, ASCII will be used.
     """
     # Some sanity checks to catch invalid arguments/keyword arguments.
     if data_encoding is not None and data_encoding not in VALID_FORMATS:
@@ -384,7 +387,6 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
             if hasattr(this_trace_header, item):
                 setattr(new_trace_header, item,
                         getattr(this_trace_header, item))
-#print this_trace_header.trace_sequence_number_within_line
         starttime = trace.stats.starttime
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
@@ -413,8 +415,16 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
 
 def isSU(filename):
     """
-    Checks whether or not the given file is a Seismic Unix file. This test is
-    rather shaky because there is no real identifier in a Seismic Unix file.
+    Checks whether or not the given file is a Seismic Unix (SU) file.
+
+    :type filename: str
+    :param filename: Seismic Unix file to be checked.
+    :rtype: bool
+    :return: ``True`` if a Seismic Unix file.
+
+    .. note::
+        This test is rather shaky because there is no reliable identifier in a
+        Seismic Unix file.
     """
     with open(filename, 'rb') as f:
         stat = autodetectEndianAndSanityCheckSU(f)
@@ -424,37 +434,36 @@ def isSU(filename):
         return True
 
 
-def readSU(filename, byteorder=None, unpack_trace_headers=False):
+def readSU(filename, headonly=False, byteorder=None,
+           unpack_trace_headers=False):
     """
-    Reads a SU file and returns an ObsPy Stream object.
+    Reads a Seismic Unix (SU) file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        SEG Y rev1 file to be read.
-    endian : string
-        Determines the endianness of the file. Either '>' for big endian or '<'
-        for little endian. If it is None, obspy.segy will try to autodetect the
-        endianness. The endianness is always valid for the whole file.
-    unpack_trace_headers : bool
-        Determines whether or not all trace header values will be unpacked
-        during reading. If False it will greatly enhance performance and
-        especially memory usage with large files. The header values can still
-        be accessed and will be calculated on the fly but tab completion will
-        no longer work. Look in the headers.py for a list of all possible trace
-        header values.
-        Defaults to False.
+    :type filename: str
+    :param filename: SU file to be read.
+    :type headonly: boolean, optional
+    :param headonly: If set to True, read only the header and omit the waveform
+        data.
+    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :param byteorder: Determines the endianness of the file. Either ``'>'`` for
+        big endian or ``'<'`` for little endian. If it is ``None``, it will try
+        to autodetect the endianness. The endianness is always valid for the
+        whole file. Defaults to ``None``.
+    :type unpack_trace_headers: bool, optional
+    :param unpack_trace_headers: Determines whether or not all trace header
+        values will be unpacked during reading. If ``False`` it will greatly
+        enhance performance and especially memory usage with large files. The
+        header values can still be accessed and will be calculated on the fly
+        but tab completion will no longer work. Look in the headers.py for a
+        list of all possible trace header values. Defaults to ``False``.
+    :returns: A ObsPy :class:`~obspy.core.stream.Stream` object.
 
-    Returns
-    -------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric:: Example
 
-    Basic Usage
-    -----------
     >>> from obspy.core import read
     >>> st = read("/path/to/1.su_first_trace")
     >>> st #doctest: +ELLIPSIS
@@ -478,7 +487,11 @@ def readSU(filename, byteorder=None, unpack_trace_headers=False):
         # object.
         trace = Trace()
         stream.append(trace)
-        trace.data = tr.data
+        # skip data if headonly is set
+        if headonly:
+            trace.stats.npts = len(tr.data)
+        else:
+            trace.data = tr.data
         trace.stats.su = AttribDict()
         # If all values will be unpacked create a normal dictionary.
         if unpack_trace_headers:
@@ -519,27 +532,26 @@ def readSU(filename, byteorder=None, unpack_trace_headers=False):
 
 def writeSU(stream, filename, byteorder=None):
     """
-    Writes a SU file from given ObsPy Stream object.
+    Writes a Seismic Unix (SU) file from given ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the ObsPy
-    :meth:`~obspy.core.stream.Stream.write` method of an ObsPy Stream object,
-    call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
+
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of file to write.
+    :type byteorder: ``'<'``, ``'>'``, or ``None``
+    :param byteorder: Determines the endianness of the file. Either ``'>'`` for
+        big endian or ``'<'`` for little endian. If is ``None``, it will either
+        be the endianness of the first Trace or if that is also not set, it
+        will be big endian. A mix between little and big endian for the headers
+        and traces is currently not supported.
 
     This function will automatically set the data encoding field of the binary
     file header so the user does not need to worry about it.
-
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        Name of SEGY file to be written.
-    byteorder : string
-        Either '<' (little endian), '>' (big endian), or None
-
-        If is None, it will either be the endianness of the first Trace or if
-        that is also not set, it will be big endian. A mix between little and
-        big endian for the headers and traces is currently not supported.
     """
     # Check that the dtype for every Trace is correct.
     for trace in stream:
@@ -612,7 +624,7 @@ def writeSU(stream, filename, byteorder=None):
     su_file.write(filename, endian=byteorder)
 
 
-def segy_trace__str__(self, *args, **kwargs):
+def _segy_trace__str__(self, *args, **kwargs):
     """
     Monkey patch for the __str__ method of the Trace object. SEGY object do not
     have network, station, channel codes. It just prints the trace sequence
@@ -651,8 +663,9 @@ def segy_trace__str__(self, *args, **kwargs):
 
 class LazyTraceHeaderAttribDict(AttribDict):
     """
-    This version of AttribDict will unpack the Header values on the fly. This
-    saves a huge amount of memory. The disadvantage is that it is no more
+    This version of AttribDict will unpack header values only if needed.
+
+    This saves a huge amount of memory. The disadvantage is that it is no more
     possible to use tab completion in e.g. ipython.
 
     This version is used for the SEGY/SU trace headers.
@@ -701,4 +714,4 @@ if __name__ == '__main__':
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', segy_trace__str__)
+setattr(Trace, '__str__', _segy_trace__str__)
