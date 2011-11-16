@@ -1456,7 +1456,12 @@ class Trace(object):
             if type == 'demean':
                 type = 'constant'
             from scipy.signal import detrend as scipy_detrend
-            self.data = scipy_detrend(self.data, type=type)
+            try:
+                self.data = scipy_detrend(self.data, type=type)
+            except ValueError as e:
+                msg = e.message
+                msg = msg + ' in trace: %s' % self.__str__()
+                raise ValueError(msg)
         else:
             msg = "detrending method '%s' does not exist" % type
             raise ValueError(msg)
