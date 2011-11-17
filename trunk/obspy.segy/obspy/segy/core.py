@@ -190,7 +190,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
         stream.append(trace)
         # skip data if headonly is set
         if headonly:
-            trace.stats.npts = len(tr.data)
+            trace.stats.npts = tr.npts
         else:
             trace.data = tr.data
         trace.stats.segy = AttribDict()
@@ -489,7 +489,7 @@ def readSU(filename, headonly=False, byteorder=None,
         stream.append(trace)
         # skip data if headonly is set
         if headonly:
-            trace.stats.npts = len(tr.data)
+            trace.stats.npts = tr.npts
         else:
             trace.data = tr.data
         trace.stats.su = AttribDict()
