@@ -99,14 +99,18 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
-            {'BW...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+            {'BW...': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+                        'host': 'webdc.eu', 'end': None, 'port': 18002},
+                       {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
                         'port': 18001}]})
         #3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
-            {'BW...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+            {'BW...': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+                        'host': 'webdc.eu', 'end': None, 'port': 18002},
+                       {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
                         'port': 18001}]})
         #4 - BW network via bhlsa04.knmi.nl:18002
