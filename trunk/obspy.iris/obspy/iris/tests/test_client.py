@@ -296,9 +296,10 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # GE network
+        dt = UTCDateTime("2011-11-13T07:00:00")
         result = client.availability(network='GE')
         self.assertTrue(isinstance(result, basestring))
-        self.assertTrue('GE BOAB -- BHE' in result)
+        self.assertTrue('GE DAG -- BHE' in result)
         # unknown network results in empty string
         dt = UTCDateTime(2011, 11, 16)
         result = client.availability(network='XX', starttime=dt,

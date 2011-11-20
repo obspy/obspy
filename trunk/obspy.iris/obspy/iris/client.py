@@ -469,6 +469,7 @@ class Client(object):
           <EndDate>2500-12-12T23:59:59</EndDate>
           <Description>Global Seismograph Network ...</Description>
           <TotalNumberStations>91</TotalNumberStations>
+          <SelectedNumberStations>0</SelectedNumberStations>
          </Network>
         </StaMessage>
         """
