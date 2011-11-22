@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.taup import __path__
-from util import flibtaup as lib
+from obspy.taup.util import flibtaup as lib
 import ctypes as C
 import math
 import numpy as np
