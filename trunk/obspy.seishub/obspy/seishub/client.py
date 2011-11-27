@@ -70,7 +70,7 @@ class Client(object):
     BW.RTPI..EHZ | 2009-09-03T00:00:00.000000Z - ... | 250.0 Hz, 5001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
-                 user="admin", password="admin", timeout=10):
+                 user="admin", password="admin", timeout=10, debug=False):
         """
         Initializes the SeisHub Web service client.
 
@@ -86,12 +86,15 @@ class Client(object):
         :type timeout: int, optional
         :param timeout: Seconds before a connection timeout is raised (default
             is 10 seconds). Available only for Python >= 2.6.x.
+        :type debug: boolean, optional
+        :param debug: Enables verbose output.
         """
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
         self.station = _StationMapperClient(self)
         self.event = _EventMapperClient(self)
         self.timeout = timeout
+        self.debug = debug
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -149,6 +152,8 @@ class Client(object):
                 params[str(key)] = str(value)
         # replace special characters
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
+        if self.debug:
+            print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
         try:
             if sys.hexversion < 0x02060000:
