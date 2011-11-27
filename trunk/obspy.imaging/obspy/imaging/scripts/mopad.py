@@ -411,7 +411,7 @@ class MomentTensor:
             M_DC_percentage = int(round((1 - 2 * abs(F)) * 100, 6))
         except ValueError:
             # this should only occur in the pure isotropic case
-            M_DC_percentage = N.NaN
+            M_DC_percentage = 0.
 
         # according to Bowers & Hudson:
         M0 = M0_iso + M0_devi
