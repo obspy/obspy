@@ -124,7 +124,7 @@ class Client(object):
         :param timeout: Seconds before a connection timeout is raised (default
             is 10 seconds). Available only for Python >= 2.6.x.
         :type debug: boolean, optional
-        :param debug: Enables verbose output..
+        :param debug: Enables verbose output.
         :type user_agent: str, optional
         :param user_agent: Sets an client identification string which may be
             used on server side for statistical analysis (default contains the
