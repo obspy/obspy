@@ -3731,10 +3731,10 @@ class BeachBall:
         possible_crossings = \
             ((ypi <= y) & (y < ypj)) | ((ypj <= y) & (y < ypi))
 
-        xpi = xpi.take(possible_crossings)
-        ypi = ypi.take(possible_crossings)
-        xpj = xpj.take(possible_crossings)
-        ypj = ypj.take(possible_crossings)
+        xpi = xpi[possible_crossings]
+        ypi = ypi[possible_crossings]
+        xpj = xpj[possible_crossings]
+        ypj = ypj[possible_crossings]
 
         crossings = x < (xpj - xpi) * (y - ypi) / (ypj - ypi) + xpi
 
