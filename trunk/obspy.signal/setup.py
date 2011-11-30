@@ -91,6 +91,7 @@ def setupLibSignal():
                       export_symbols=symbols)
     return lib
 
+
 def setupLibEvalResp():
     """
     Prepare building of evalresp extension library.

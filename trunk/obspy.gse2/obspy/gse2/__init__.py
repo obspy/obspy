@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-obspy.gse2 - GSE2 read and write support
-========================================
-This module provides read and write support for GSE2 CM6 compressed
-waveform data and header info. Most methods are based on the C library
-GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
-See: http://www.orfeus-eu.org/Software/softwarelib.html#gse.
+obspy.gse2- GSE2/GSE1 read and write support for ObsPy
+======================================================
+This module provides read and write support for GSE2 CM6 compressed as well as
+GSE1 ASCII waveform data and header info. Most methods are based on the C
+library GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
 
-:copyright: The ObsPy Development Team (devs@obspy.org) & Stefan Stange
+.. seealso:: http://www.orfeus-eu.org/Software/softwarelib.html#gse.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org) & Stefan Stange
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)

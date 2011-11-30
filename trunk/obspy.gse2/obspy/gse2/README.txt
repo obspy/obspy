@@ -3,43 +3,32 @@ package obspy.gse2
 
 Copyright
 ---------
-    GNU General Public License (GPL)
+GNU Lesser General Public License, Version 3 (LGPLv3)
 
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
-
-    Copyright (c) 2009-2010 by:
-        * Moritz Beyreuther
-        * Stefan Stange
-        * Robert Barsch
+Copyright (c) 2009-2011 by:
+    * Moritz Beyreuther
+    * Stefan Stange
+    * Robert Barsch
 
 
 Overview
 --------
-    obspy.gse2 - Read & write seismograms, Format GSE2.
+GSE2 and GSE1 read and write support for ObsPy.
 
-    This module contains Python wrappers for gse_functions - The GSE2 library
-    of Stefan Stange (http://www.orfeus-eu.org/Software/softwarelib.html#gse).
-    Currently CM6 compressed GSE2 files are supported, this should be 
-    sufficient for most cases. Gse_functions are written in C and interfaced 
-    via Python ctypes.
+This module provides read and write support for GSE2 CM6 compressed as well as
+GSE1 ASCII waveform data and header info. Most methods are based on the C
+library GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
 
-    For more information visit http://www.obspy.org.
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see Beyreuther et al. 2010, Megies et al. 2011).
+The goal of the ObsPy project is to facilitate rapid application development
+for seismology.
+
+For more information visit http://www.obspy.org.
 
 
 Dependencies
 ------------
-    * setuptools
-    * obspy.core
+* obspy.core

@@ -20,7 +20,7 @@ VERSION = open(os.path.join("obspy", "fissures", "VERSION.txt")).read()
 setup(
     name='obspy.fissures',
     version=VERSION,
-    description="DHI/Fissures request client for of ObsPy.",
+    description="DHI/Fissures request client for ObsPy.",
     long_description="""
     obspy.fissures - DHI/Fissures request client for of ObsPy
 
