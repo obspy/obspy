@@ -10,7 +10,6 @@ easy_install -N -U obspy.seishub==dev
 easy_install -N -U obspy.signal==dev
 easy_install -N -U obspy.wav==dev
 easy_install -N -U obspy.xseed==dev
-easy_install -N -U obspy.fissures==dev
 easy_install -N -U obspy.segy==dev
 easy_install -N -U obspy.iris==dev
 easy_install -N -U obspy.neries==dev

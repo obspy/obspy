@@ -1,6 +1,6 @@
 #!/bin/bash
 
-PACKAGES="core arclink fissures gse2 imaging mseed sac seisan seishub \
+PACKAGES="core arclink gse2 imaging mseed sac seisan seishub \
 signal wav xseed segy iris neries db taup"
 
 cd ../..
