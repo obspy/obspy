@@ -594,18 +594,26 @@ class ClientTestCase(unittest.TestCase):
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 getPAZ=True, getCoordinates=False)
         self.assertEqual(len(st), 3)
+        self.assertTrue('paz' in st[0].stats)
+        self.assertTrue('coordinates' not in st[0].stats)
         # 2
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 getPAZ=False, getCoordinates=True)
         self.assertEqual(len(st), 3)
+        self.assertTrue('paz' not in st[0].stats)
+        self.assertTrue('coordinates' in st[0].stats)
         # 3
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 getPAZ=False, getCoordinates=False)
         self.assertEqual(len(st), 3)
+        self.assertTrue('paz' not in st[0].stats)
+        self.assertTrue('coordinates' not in st[0].stats)
         # 4
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
                                 getPAZ=True, getCoordinates=True)
         self.assertEqual(len(st), 3)
+        self.assertTrue('paz' in st[0].stats)
+        self.assertTrue('coordinates' in st[0].stats)
 
 
 def suite():
