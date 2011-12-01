@@ -405,9 +405,8 @@ class Client(object):
             pass
         # trim stream
         stream.trim(starttime, endtime)
-        # fetch metadata
-        # fetching PAZ with wildcards: one call per channel
-        if getPAZ:
+        # fetching PAZ or coordinates: one call per channel
+        if getPAZ or getCoordinates:
             for tr in stream:
                 cha = tr.stats.channel
                 # XXX should add a check like metadata_check in seishub.client
@@ -415,17 +414,10 @@ class Client(object):
                                             starttime, endtime, getPAZ=getPAZ,
                                             getCoordinates=getCoordinates,
                                             route=False)
-                tr.stats['paz'] = deepcopy(metadata['paz'])
-        if getCoordinates:
-            # reuse metadata fetched for PAZ or else fetch it
-            metadata = locals().get('metadata')
-            if not metadata:
-                metadata = self.getMetadata(network, station, location, cha,
-                                            starttime, endtime, getPAZ=getPAZ,
-                                            getCoordinates=getCoordinates,
-                                            route=False)
-            for tr in stream:
-                tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
+                if getPAZ:
+                    tr.stats['paz'] = deepcopy(metadata['paz'])
+                if getCoordinates:
+                    tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,

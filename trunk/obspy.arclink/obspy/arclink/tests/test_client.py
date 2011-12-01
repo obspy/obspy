@@ -16,10 +16,11 @@ import operator
 
 class ClientTestCase(unittest.TestCase):
     """
-    Test cases for L{obspy.arclink.client.Client}.
+    Test cases for obspy.arclink.client.Client.
     """
     def test_getWaveform(self):
         """
+        Tests getWaveform method.
         """
         # example 1
         client = Client()
@@ -582,6 +583,29 @@ class ClientTestCase(unittest.TestCase):
                           str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
+
+    def test_issue311(self):
+        """
+        Testing issue #311.
+        """
+        client = Client("webdc.eu", 18001, user='test@obspy.org')
+        t = UTCDateTime("2009-08-20 04:03:12")
+        # 1
+        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                getPAZ=True, getCoordinates=False)
+        self.assertEqual(len(st), 3)
+        # 2
+        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                getPAZ=False, getCoordinates=True)
+        self.assertEqual(len(st), 3)
+        # 3
+        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                getPAZ=False, getCoordinates=False)
+        self.assertEqual(len(st), 3)
+        # 4
+        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
+                                getPAZ=True, getCoordinates=True)
+        self.assertEqual(len(st), 3)
 
 
 def suite():
