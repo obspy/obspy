@@ -4,6 +4,7 @@
 The audio wav.core test suite.
 """
 
+from __future__ import division
 from obspy.core import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
 import os
@@ -66,6 +67,21 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr3.stats, tr.stats)
         np.testing.assert_array_equal(tr3.data[:13], testdata)
         os.remove(testfile)
+
+    def test_rescaleOnWrite(self):
+        """
+        Read and Write files via L{obspy.Trace}
+        """
+        testfile = NamedTemporaryFile().name
+        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
+        tr = read(self.file, format='WAV')[0]
+        for width in (1, 2, 4):
+            tr.write(testfile, format='WAV', framerate=7000, width=width, rescale=True)
+            tr2 = read(testfile, format='WAV')[0]
+            maxint = 2**(8*width-1) - 1
+            self.assertEqual(maxint, abs(tr2.data).max())
+            np.testing.assert_array_equal(tr2.data,
+                np.require(tr.data/abs(tr.data).max()*maxint, dtype='int32'))
 
     def test_writeStreamViaObsPy(self):
         """

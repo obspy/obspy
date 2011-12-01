@@ -17,10 +17,20 @@ WAV bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import division
 from obspy.core import Trace, Stream
 import numpy as np
 import os
 import wave
+
+
+# WAVE data format is unsigned char up to 8bit, and signed int
+# for the remaining.
+width2dtype = {
+    1: '<u1',  # unsigned char
+    2: '<i2',  # signed short int
+    4: '<i4',  # signed int (int32)
+}
 
 
 def isWAV(filename):
@@ -80,22 +90,15 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
         return Stream([Trace(header=header)])
-    # WAVE data format is unsigned char up to 8bit, and signed int
-    # for the remaining.
-    if width == 1:
-        fmt = '<u1'  # unsigned char
-    elif width == 2:
-        fmt = '<i2'  # signed short int
-    elif width == 4:
-        fmt = '<i4'  # signed int (int32)
-    else:
+    if width not in width2dtype.keys():
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
-    data = np.fromstring(fh.readframes(length), dtype=fmt)
+    data = np.fromstring(fh.readframes(length), dtype=width2dtype[width])
     fh.close()
     return Stream([Trace(header=header, data=data)])
 
 
-def writeWAV(stream, filename, framerate=7000, **kwargs):  # @UnusedVariable
+def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
+             **kwargs):  # @UnusedVariable
     """
     Writes a audio WAV file from given ObsPy Stream object. The seismogram is
     squeezed to audible frequencies.
@@ -115,9 +118,15 @@ def writeWAV(stream, filename, framerate=7000, **kwargs):  # @UnusedVariable
     :type framerate: int, optional
     :param framerate: Sample rate of WAV file to use. This this will squeeze
         the seismogram (default is 7000).
+    :type rescale: bool, optional
+    :param rescale: Maximum to maximal representable number
+    :type width: int, optimal
+    :param width: dtype to write, 1 for '<u1', 2 for '<i2' or 4 for '<i4'.
     """
     i = 0
     base, ext = os.path.splitext(filename)
+    if width not in width2dtype.keys():
+        raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
         # write WAV file
         if len(stream) >= 2:
@@ -125,10 +134,14 @@ def writeWAV(stream, filename, framerate=7000, **kwargs):  # @UnusedVariable
         w = wave.open(filename, 'wb')
         trace.stats.npts = len(trace.data)
         # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-        w.setparams((1, 4, framerate, trace.stats.npts, 'NONE',
+        w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
                      'not compressed'))
-        trace.data = np.require(trace.data, '<i4')
-        w.writeframes(trace.data.tostring())
+        data = trace.data
+        if rescale:
+            # optimal scale, account for +/- and the zero
+            data = (2**(width*8-1)-1) * data.astype('f8') / abs(data).max()
+        data = np.require(data, dtype=width2dtype[width])
+        w.writeframes(data.tostring())
         w.close()
         i += 1
 
