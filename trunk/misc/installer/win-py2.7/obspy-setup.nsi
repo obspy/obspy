@@ -334,6 +334,8 @@ Function InstallObsPy
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.taup"'
     DetailPrint "Running easy_install.exe -U obspy.sh"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.sh"'
+    DetailPrint "Running easy_install.exe -U obspy.neries"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.neries"'
 FunctionEnd
 
 
