@@ -11,27 +11,30 @@ RequestExecutionLevel admin
 # Download URLs
 !define PYTHON_WIN32 "http://www.obspy.org/www/files/python-2.7.2.msi"
 !define PYTHON_WIN64 "http://www.obspy.org/www/files/python-2.7.2.amd64.msi"
+!define PYWIN32_WIN32 "http://www.obspy.org/www/files/pywin32-216.win32-py2.7.exe"
+!define PYWIN32_WIN64 "http://www.obspy.org/www/files/pywin32-216.win-amd64-py2.7.exe"
+!define PYWIN32_FILE "pywin32-216-python2.7.exe"
 !define DISTRIBUTE_URL "http://python-distribute.org/distribute_setup.py"
 !define DISTRIBUTE_FILE "distribute_setup.py"
 !define NUMPY_WIN32 "http://www.obspy.org/www/files/numpy-MKL-1.6.1.win32-py2.7.exe"
 !define NUMPY_WIN64 "http://www.obspy.org/www/files/numpy-MKL-1.6.1.win-amd64-py2.7.exe"
 !define NUMPY_FILE "numpy-1.6.1-python2.7.exe"
-!define SCIPY_WIN32 "http://www.obspy.org/www/files/scipy-0.9.0.win32-py2.7.exe"
-!define SCIPY_WIN64 "http://www.obspy.org/www/files/scipy-0.9.0.win-amd64-py2.7.exe"
-!define SCIPY_FILE "scipy-0.9.0-python2.7.exe"
-!define MATPLOTLIB_WIN32 "http://www.obspy.org/www/files/matplotlib-1.0.1.win32-py2.7.exe"
-!define MATPLOTLIB_WIN64 "http://www.obspy.org/www/files/matplotlib-1.0.1.win-amd64-py2.7.exe"
-!define MATPLOTLIB_FILE "matplotlib-1.0.1-python2.7.exe"
-!define LXML_WIN32 "http://www.obspy.org/www/files/lxml-2.3.win32-py2.7.exe"
-!define LXML_WIN64 "http://www.obspy.org/www/files/lxml-2.3.win-amd64-py2.7.exe"
-!define LXML_FILE "lxml-2.3-python2.7.exe"
-!define PYQT_WIN32 "http://www.obspy.org/www/files/PyQt-Py2.7-x32-gpl-4.8.4-1.exe"
-!define PYQT_WIN64 "http://www.obspy.org/www/files/PyQt-Py2.7-x64-gpl-4.8.4-1.exe"
-!define PYQT_FILE "pyqt-4.8.4.1-python2.7.exe"
+!define SCIPY_WIN32 "http://www.obspy.org/www/files/scipy-0.10.0.win32-py2.7.exe"
+!define SCIPY_WIN64 "http://www.obspy.org/www/files/scipy-0.10.0.win-amd64-py2.7.exe"
+!define SCIPY_FILE "scipy-0.10.0-python2.7.exe"
+!define MATPLOTLIB_WIN32 "http://www.obspy.org/www/files/matplotlib-1.1.0.win32-py2.7.exe"
+!define MATPLOTLIB_WIN64 "http://www.obspy.org/www/files/matplotlib-1.1.0.win-amd64-py2.7.exe"
+!define MATPLOTLIB_FILE "matplotlib-1.1.0-python2.7.exe"
+!define LXML_WIN32 "http://www.obspy.org/www/files/lxml-2.3.2.win32-py2.7.exe"
+!define LXML_WIN64 "http://www.obspy.org/www/files/lxml-2.3.2.win-amd64-py2.7.exe"
+!define LXML_FILE "lxml-2.3.2-python2.7.exe"
+!define PYQT_WIN32 "http://www.obspy.org/www/files/PyQt-Py2.7-x32-gpl-4.8.6-1.exe"
+!define PYQT_WIN64 "http://www.obspy.org/www/files/PyQt-Py2.7-x64-gpl-4.8.6-1.exe"
+!define PYQT_FILE "pyqt-4.8.6-1-python2.7.exe"
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2
+!define VERSION 2.7.2-2
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
 
@@ -68,12 +71,12 @@ Var PythonDirectory
 !insertmacro MUI_LANGUAGE German
 
 # Installer attributes
-OutFile setup.exe
+OutFile obspy-setup.exe
 InstallDir $PROFILE\ObsPy
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 2.7.2.0
+VIProductVersion 2.7.2.2
 VIAddVersionKey ProductName ObsPy
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -112,11 +115,10 @@ Function InstallPython
             StrCmp $R0 "success" +3
             MessageBox MB_OK "Download failed: $R0"
             Quit
-        ExecWait $2
-        Delete $2
+        ExecWait '"msiexec" /i $2'
         # set Python directory
         ReadRegStr $2 HKLM "SOFTWARE\Python\PythonCore\2.7\InstallPath\" ""
-        MessageBox MB_OK $2
+        DetailPrint "Python has been installed at $2"
         strcpy $PythonDirectory $2
     ${EndIf}
 FunctionEnd
@@ -140,6 +142,29 @@ Function InstallDependencies
         DetailPrint "Running python ${DISTRIBUTE_FILE}"
         nsExec::Exec '"$PythonDirectory\python.exe" "$2"'
         Delete "$TEMP\distribute_setup.py"
+    ${EndIf}
+    #
+    # PyWin32 (needed for long filenames by virtualenv)
+    #
+    nsExec::Exec '"$PythonDirectory\python.exe" -c "import win32com"'
+    Pop $R0
+    ${If} $R0 == 0
+        DetailPrint "PyWin32 already installed."
+    ${Else}
+        strcpy $2 "$TEMP\${PYWIN32_FILE}"
+        ${If} ${RunningX64}
+            DetailPrint "Downloading ${PYWIN32_WIN64}"
+            nsisdl::download /TIMEOUT=30000 ${PYWIN32_WIN64} $2
+        ${Else}
+            DetailPrint "Downloading ${PYWIN32_WIN32}"
+            nsisdl::download /TIMEOUT=30000 ${PYWIN32_WIN32} $2
+        ${EndIf}
+        Pop $R0 ;Get the return value
+            StrCmp $R0 "success" +3
+            MessageBox MB_OK "Download failed: $R0"
+            Quit
+        ExecWait $2
+        Delete $2
     ${EndIf}
     #
     # NumPy
@@ -259,7 +284,7 @@ Function InstallDependencies
     ${EndIf}
     # create virtualenv
     DetailPrint "Creating virtual environment"
-    nsExec::Exec '"$PythonDirectory\Scripts\virtualenv.exe" --distribute "$INSTDIR"'
+    nsExec::Exec '"$PythonDirectory\Scripts\virtualenv.exe" --system-site-packages --distribute "$INSTDIR"'
     # pyreadline
     DetailPrint "Running easy_install.exe pyreadline"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pyreadline"'
@@ -274,10 +299,11 @@ Function InstallDependencies
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pygments"'
     # pyzmq
     DetailPrint "Running easy_install.exe pyzmq"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pyzmq"'
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pyzmq==2.1.4"'
 FunctionEnd
 
 Function InstallObsPy
+    # installation of all ObsPy modules
     DetailPrint "Running easy_install.exe -U obspy.core"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.core"'
     DetailPrint "Running easy_install.exe -U obspy.gse2"
@@ -320,13 +346,14 @@ Section -Main SEC0000
     Call InstallDependencies
     Call InstallObsPy
     SetOutPath $SMPROGRAMS\$StartMenuGroup
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk" http://www.obspy.org
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk" http://tutorial.obspy.org
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk" http://examples.obspy.org
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Buildbot.lnk" http://tests.obspy.org
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk" "cmd" "/K $INSTDIR/Scripts/ipython qtconsole --colors=linux --pylab=inline"
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk" "cmd" "/K $INSTDIR/Scripts/activate.bat"
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk" "cmd" "/K obspy-runtests"
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk" http://www.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk" http://tutorial.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk" http://gallery.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk" http://examples.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk" http://tests.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk" "cmd" '/K "$INSTDIR\Scripts\ipython" qtconsole --colors=linux --pylab=inline' "$INSTDIR\Scripts\python.exe" 0
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk" "cmd" '/K "$INSTDIR\Scripts\activate.bat"'
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk" "cmd" '/K "$INSTDIR\Scripts\obspy-runtests"' "$WINDIR\System32\SHELL32.dll" 152
     WriteRegStr HKLM "${REGKEY}\Components" Main 1
 SectionEnd
 
@@ -365,8 +392,9 @@ done${UNSECTION_ID}:
 Section /o -un.Main UNSEC0000
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Buildbot.lnk"
+    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk"
     Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk"
