@@ -319,8 +319,7 @@ def _createExampleStream(headonly=False):
 
 class Stream(object):
     """
-    List like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
-    objects.
+    List like object of multiple ObsPy Trace objects.
 
     :type traces: list of :class:`~obspy.core.trace.Trace`, optional
     :param traces: Initial list of ObsPy :class:`~obspy.core.trace.Trace`
