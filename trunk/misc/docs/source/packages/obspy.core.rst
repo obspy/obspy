@@ -26,8 +26,12 @@
        trace
        stream
        utcdatetime
-       util
        ascii
+       util.attribdict
+       util.base
+       util.decorator
+       util.geodetics
+       util.misc
 
     .. comment to end block
 

@@ -187,8 +187,8 @@ For more examples check out the `triggering page`_ in the `Tutorial`_. For
 automated use and network coincidence there are some example scripts in the
 `svn repository`_.
 
-.. _`triggering page`: http://www.obspy.org/wiki/TriggerTutorial
-.. _`Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
+.. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
+.. _`Tutorial`: http://tutorial.obspy.org
 .. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
 
 **There are many more functions available (rotation, pazToFreqResp,

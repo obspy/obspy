@@ -106,7 +106,7 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
 @deprecated
 def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """
-    DEPRECATED. Use :func:`obspy.core.util.calcVincentyInverse`
+    DEPRECATED. Use :func:`obspy.core.util.geodetics.calcVincentyInverse`
     instead.
     """
     from obspy.core.util import calcVincentyInverse
@@ -116,7 +116,7 @@ def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
 @deprecated
 def gps2DistAzimuth(lat1, lon1, lat2, lon2):
     """
-    DEPRECATED. Use :func:`obspy.core.util.gps2DistAzimuth` instead.
+    DEPRECATED. Use :func:`obspy.core.util.geodetics.gps2DistAzimuth` instead.
     """
     from obspy.core.util import gps2DistAzimuth
     return gps2DistAzimuth(lat1, lon1, lat2, lon2)

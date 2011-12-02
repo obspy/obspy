@@ -37,9 +37,9 @@ def calcVincentyInverse(lat1, lon1, lat2, lon2):
 
     .. note::
         This code is based on an implementation incorporated in
-        Matplotlib Basemap Toolkit 0.9.5
-        http://sourceforge.net/projects/matplotlib/files/
-        (basemap-0.9.5/lib/matplotlib/toolkits/basemap/greatcircle.py)
+        Matplotlib Basemap Toolkit 0.9.5 http://sourceforge.net/projects/\
+matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
+        (matplotlib/toolkits/basemap/greatcircle.py)
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
 
@@ -189,8 +189,9 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         for converting between geographic, UTM, UPS, MGRS, and geocentric
         coordinates, for geoid calculations, and for solving geodesic problems.
         Otherwise the locally implemented Vincenty's Inverse formulae
-        (:func:`~obspy.core.util.calcVincentyInverse`) is used which has known
-        limitations for two nearly antipodal points and is ca. 4x slower.
+        (:func:`obspy.core.util.geodetics.calcVincentyInverse`) is used which
+        has known limitations for two nearly antipodal points and is ca. 4x
+        slower.
     """
     try:
         # try using geographiclib

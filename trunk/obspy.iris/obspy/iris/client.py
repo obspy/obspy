@@ -827,7 +827,7 @@ class Client(object):
         try:
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
-            if e.code==404 and e.msg=='Not Found':
+            if e.code == 404 and e.msg == 'Not Found':
                 data = ''
             else:
                 raise
