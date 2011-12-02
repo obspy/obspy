@@ -698,6 +698,27 @@ class LibMSEEDTestCase(unittest.TestCase):
         samplecount = traces[0][0]['samplecnt']
         self.assertEqual(samplecount, 1648)
 
+    def test_blkt_link_field(self):
+        """
+        Tests issue #312.
+        """
+        filename = os.path.join(self.path,
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        # start and endtime
+        ms = _MSStruct(filename)
+        ms.read(-1, 0, 1, 0)
+        blkt_link = ms.msr.contents.blkts.contents
+        # The first blockette usually begins after 48 bytes. In the test file
+        # it does.
+        self.assertEqual(blkt_link.blktoffset, 48)
+        # The first blockette is blockette 1000 in this file.
+        self.assertEqual(blkt_link.blkt_type, 1000)
+        # Only one blockette.
+        self.assertEqual(blkt_link.next_blkt, 0)
+        # Blockette data is 8 bytes - 4 bytes for the blockette header.
+        self.assertEqual(blkt_link.blktdatalen, 4)
+        del ms
+
 
 def suite():
     return unittest.makeSuite(LibMSEEDTestCase, 'test')
