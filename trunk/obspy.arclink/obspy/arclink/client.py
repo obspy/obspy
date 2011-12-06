@@ -264,6 +264,8 @@ class Client(object):
                 _old_xml_doc = xml_doc
             # if we hit MAX_REQUESTS equal status break the loop
             if _loops > MAX_REQUESTS:
+                msg = 'MAX_REQUESTS exceeded - breaking current request loop'
+                warnings.warn(msg, UserWarning)
                 break
             # wait a bit
             time.sleep(self.status_delay)

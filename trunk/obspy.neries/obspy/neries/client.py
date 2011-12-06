@@ -15,12 +15,14 @@ from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
+from suds.xsd.sxbase import SchemaObject
 import functools
 import os
 import platform
 import sys
 import urllib
 import urllib2
+import warnings
 try:
     import json
     if not getattr(json, "loads", None):
@@ -52,11 +54,11 @@ VERSION = _getVersionString("obspy.neries")
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
                                                    platform.platform(),
                                                    platform.python_version())
+MAX_REQUESTS = 50
 
 
 # monkey patching SUDS
 # ses also https://fedorahosted.org/suds/ticket/292
-from suds.xsd.sxbase import SchemaObject
 
 
 def _namespace(self, prefix=None):
@@ -703,11 +705,18 @@ class Client(object):
         if not request_ids:
             return
         # check status using request ids
+        _loops = 0
         while True:
             response = client.service.checkStatus(usertoken, request_ids)
             status = [r.ReadyFlag for r in response.RoutedRequest]
+            # if we hit MAX_REQUESTS break the loop
+            if _loops > MAX_REQUESTS:
+                msg = 'MAX_REQUESTS exceeded - breaking current request loop'
+                warnings.warn(msg, UserWarning)
+                break
             if "false" in status:
                 # retry until all are set to 'true'
+                _loops += 1
                 continue
             break
         # keep only request ids which are fulfilled and have 'status = OK'
