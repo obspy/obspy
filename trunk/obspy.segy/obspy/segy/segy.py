@@ -74,7 +74,7 @@ class SEGYFile(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
 
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers. Defaults to False.
         """
@@ -290,7 +290,7 @@ class SEGYFile(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
 
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers. Defaults to False.
         """
@@ -434,7 +434,7 @@ class SEGYTrace(object):
             after being read. Defaults to False.
         :param filesize: Integer. Filesize of the file. If not given it will be
             determined using fstat which is slow.
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers. Defaults to False.
         """
@@ -465,7 +465,7 @@ class SEGYTrace(object):
             be unpacked during reading the file. Has a huge impact on the
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers. Defaults to False.
         """
@@ -694,7 +694,7 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines wheather or not the actual data records
+    :param headonly: Bool. Determines whether or not the actual data records
         will be unpacked. Useful if one is just interested in the headers.
         Defaults to False.
     """
@@ -728,7 +728,7 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines wheather or not the actual data records
+    :param headonly: Bool. Determines whether or not the actual data records
         will be unpacked. Useful if one is just interested in the headers.
         Defaults to False.
     """
@@ -756,7 +756,7 @@ class SUFile(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read.
             Defaults to False.
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers.  Defaults to False.
         """
@@ -810,7 +810,7 @@ class SUFile(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read.
             Defaults to False.
-        :param headonly: Bool. Determines wheather or not the actual data
+        :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers.  Defaults to False.
         """
@@ -864,7 +864,7 @@ def readSU(file, endian=None, unpack_headers=False, headonly=False):
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines wheather or not the actual data records
+    :param headonly: Bool. Determines whether or not the actual data records
         will be unpacked. Useful if one is just interested in the headers.
         Defaults to False.
     """
@@ -892,7 +892,7 @@ def _readSU(file, endian=None, unpack_headers=False, headonly=False):
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines wheather or not the actual data records
+    :param headonly: Bool. Determines whether or not the actual data records
         will be unpacked. Useful if one is just interested in the headers.
         Defaults to False.
     """
@@ -929,7 +929,7 @@ def autodetectEndianAndSanityCheckSU(file):
     file.seek(114, 0)
     sample_count = file.read(2)
     interval = file.read(2)
-    # Jump to the beginning of the year fiels.
+    # Jump to the beginning of the year fields.
     file.seek(156, 0)
     year = file.read(2)
     jul_day = file.read(2)
@@ -991,6 +991,6 @@ def autodetectEndianAndSanityCheckSU(file):
         # something else should be checked. Currently it is not.
         msg = """
             Both possible byteorders passed all sanity checks. Please contact
-            the ObsPy developers so they can implement additinal tests.
+            the ObsPy developers so they can implement additional tests.
             """.strip()
         raise Exception(msg)
