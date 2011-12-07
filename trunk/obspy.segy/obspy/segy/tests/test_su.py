@@ -116,7 +116,8 @@ class SUTestCase(unittest.TestCase):
         # 1
         file = os.path.join(self.path, '1.su_first_trace')
         data = open(file, 'rb').read()
-        readSU(StringIO(data))
+        st = readSU(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 8000)
 
 
 def suite():

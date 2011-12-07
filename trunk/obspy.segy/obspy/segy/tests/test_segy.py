@@ -538,23 +538,28 @@ class SEGYTestCase(unittest.TestCase):
         # 1
         file = os.path.join(self.path, 'example.y_first_trace')
         data = open(file, 'rb').read()
-        readSEGY(StringIO(data))
+        st = readSEGY(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         data = open(file, 'rb').read()
-        readSEGY(StringIO(data))
+        st = readSEGY(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
         data = open(file, 'rb').read()
-        readSEGY(StringIO(data))
+        st = readSEGY(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
         data = open(file, 'rb').read()
-        readSEGY(StringIO(data))
+        st = readSEGY(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
         data = open(file, 'rb').read()
-        readSEGY(StringIO(data))
+        st = readSEGY(StringIO(data))
+        self.assertEqual(len(st.traces[0].data), 512)
 
 
 def rms(x, y):
