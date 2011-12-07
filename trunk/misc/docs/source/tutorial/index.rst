@@ -37,3 +37,4 @@ will give you a good idea of the library’s flavor and style.
    array_response_function
    continuous_wavelet_transform
    visualize_data_availability_of_local_waveform_archive
+   travel_time_plot

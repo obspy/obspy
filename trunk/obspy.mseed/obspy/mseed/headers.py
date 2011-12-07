@@ -267,7 +267,7 @@ class blkt_1001_s(C.Structure):
 blkt_1001 = blkt_1001_s
 
 
-#Blockette 2000, Opaque Data (without header)
+# Blockette 2000, Opaque Data (without header)
 class blkt_2000_s(C.Structure):
     _fields_ = [
         ('length', C.c_ushort),
@@ -286,7 +286,7 @@ class blkt_link_s(C.Structure):
 
 # incomplete type has to be defined this way
 blkt_link_s._fields_ = [
-    ('blktoffset', C.c_ushort), # Blockette offset
+    ('blktoffset', C.c_ushort),  # Blockette offset
     ('blkt_type', C.c_ushort),  # Blockette type
     ('next_blkt', C.c_ushort),  # Offset to next blockette
     ('blktdata', C.POINTER(None)),  # Blockette data

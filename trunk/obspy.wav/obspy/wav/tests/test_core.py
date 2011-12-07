@@ -76,12 +76,13 @@ class CoreTestCase(unittest.TestCase):
         self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
         tr = read(self.file, format='WAV')[0]
         for width in (1, 2, 4):
-            tr.write(testfile, format='WAV', framerate=7000, width=width, rescale=True)
+            tr.write(testfile, format='WAV', framerate=7000, width=width,
+                     rescale=True)
             tr2 = read(testfile, format='WAV')[0]
-            maxint = 2**(8*width-1) - 1
+            maxint = 2 ** (8 * width - 1) - 1
             self.assertEqual(maxint, abs(tr2.data).max())
-            np.testing.assert_array_equal(tr2.data,
-                np.require(tr.data/abs(tr.data).max()*maxint, dtype='int32'))
+            np.testing.assert_array_equal(tr2.data, np.require(tr.data /\
+                abs(tr.data).max() * maxint, dtype='int32'))
 
     def test_writeStreamViaObsPy(self):
         """

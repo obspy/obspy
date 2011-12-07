@@ -1005,6 +1005,10 @@ class Stream(object):
         """
         Print gap/overlap list summary information of the Stream object.
 
+        All given keyword arguments are passed to
+        :meth:`~obspy.core.stream.Stream.getGaps` and its result is printed
+        in a human readable form.
+
         .. rubric:: Example
 
         Our example stream has no gaps:
@@ -1221,6 +1225,7 @@ class Stream(object):
              nearest_sample=True, fill_value=None):
         """
         Cuts all traces of this Stream object to given start and end time.
+
         If nearest_sample=True the closest sample point of the first trace
         is the select, the remaining traces are trimmed according to that
         sample point.

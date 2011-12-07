@@ -6,7 +6,7 @@ from obspy.signal import cornFreq2Paz, seisSim
 
 # Retrieve data via ArcLink
 # please provide a valid email address for the keyword user
-client = Client(host="webdc.eu", port=18001, user="test@obspy.de")
+client = Client(user="test@obspy.de")
 t = UTCDateTime("2009-08-24 00:20:03")
 st = client.getWaveform('BW', 'RJOB', '', 'EHZ', t, t + 30)
 paz = client.getPAZ('BW', 'RJOB', '', 'EHZ', t, t + 30)

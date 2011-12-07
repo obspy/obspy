@@ -125,3 +125,8 @@ Gallery
     :width: 300px
     :target: tutorial/continuous_wavelet_transform.html
     :alt: Continuous Wavelet Transform
+
+.. plot:: source/tutorial/travel_time_plot.py
+    :width: 300px
+    :target: tutorial/travel_time_plot.html
+    :alt: Travel Time Plot

@@ -8,9 +8,10 @@ file. The correct meta information ``starttime``, the ``sampling_rate``,
 ``station`` name and so forth are also encoded (Note: Only the ones given are
 allowed by the MiniSEED standard). Converting arbitrary ASCII to MiniSEED is
 extremely helpful if you want to send log messages, output of meteorologic
-stations or anything else via the seedlink protocol.
+stations or anything else via the SeedLink_ protocol.
 
 .. include:: anything_to_miniseed.py
    :literal:
 
 .. _MiniSEED: http://www.iris.washington.edu/manuals/SEEDManual_V2.4.pdf
+.. _SeedLink: http://www.iris.edu/data/dmc-seedlink.htm

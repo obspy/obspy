@@ -44,7 +44,7 @@ class Client(object):
     :param host: Host name of the remote ArcLink server (default host is
         ``'webdc.eu'``).
     :type port: int, optional
-    :param port: Port of the remote ArcLink server (default port is ``18001``).
+    :param port: Port of the remote ArcLink server (default port is ``18002``).
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
         ``20`` seconds).

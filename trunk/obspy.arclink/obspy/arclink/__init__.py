@@ -30,26 +30,26 @@ Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
 Basic Usage
 -----------
 The example illustrates how to request and plot 18 seconds of all three
-broadband channels (``"BH*"``) of station Fürstenfeldbruck (``"FUR"``) of the
-German Regional network (``"GR"``) for an seismic event around
-2009-08-20 06:35:00 (UTC).
-
->>> from obspy.core import UTCDateTime
->>> from obspy.arclink.client import Client
->>> client = Client("webdc.eu", 18001, user='test@obspy.org')
->>> t = UTCDateTime("2009-08-20 04:03:12")
->>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
->>> st.plot() #doctest: +SKIP
+short period channels (``"BH*"``) of station Jochberg/Hochstaufen (``"RJOB"``)
+of the Bavarian network (``"BW"``) for an seismic event around
+2009-08-20 04:03:12 (UTC).
 
 .. note::
-    The client needs to open port 18001 to the host webdc.eu via TCP/IP in
-    order to download the requested data. Please make sure that no firewall is
-    blocking access to this server/port combination.
+    The default client needs to open port 18002 to the host webdc.eu via TCP/IP
+    in order to download the requested data. Please make sure that no firewall
+    is blocking access to this server/port combination.
 
 .. note::
     The ``user`` keyword in the following example is used for identification
     with the ArcLink server as well as for usage statistics within the data
     center, so please provide a meaningful user id such as your email address.
+
+>>> from obspy.core import UTCDateTime
+>>> from obspy.arclink.client import Client
+>>> client = Client(user='test@obspy.org')
+>>> t = UTCDateTime("2009-08-20 04:03:12")
+>>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+>>> st.plot()  # doctest: +SKIP
 
 Waveform data fetched from an ArcLink node is converted into an ObsPy
 :class:`~obspy.core.stream.Stream` object. The seismogram is truncated by the
@@ -61,10 +61,10 @@ the waveform data. The output of the script above is shown in the next picture.
 
     from obspy.core import UTCDateTime
     from obspy.arclink.client import Client
-    client = Client("webdc.eu", 18001, 'test@obspy.org')
+    client = Client(user='test@obspy.org')
     t = UTCDateTime("2009-08-20 04:03:12")
     st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
-    st.plot() #doctest: +SKIP
+    st.plot()  # doctest: +SKIP
 
 Further Examples
 ----------------
