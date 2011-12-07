@@ -4,8 +4,9 @@ The obspy.segy Seismic Unix test suite.
 """
 
 from __future__ import with_statement
-from obspy.segy.segy import readSU, SEGYTraceReadingError
 from obspy.core.util import NamedTemporaryFile
+from obspy.segy.segy import readSU, SEGYTraceReadingError
+from StringIO import StringIO
 import numpy as np
 import os
 import unittest
@@ -107,6 +108,15 @@ class SUTestCase(unittest.TestCase):
         correct_data = np.require(np.load(data_file).ravel(), 'float32')
         # Compare both.
         np.testing.assert_array_equal(correct_data, data)
+
+    def test_readStringIO(self):
+        """
+        Tests reading from StringIO instances.
+        """
+        # 1
+        file = os.path.join(self.path, '1.su_first_trace')
+        data = open(file, 'rb').read()
+        readSU(StringIO(data))
 
 
 def suite():

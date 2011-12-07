@@ -5,11 +5,11 @@ The obspy.segy test suite.
 
 from __future__ import with_statement
 from StringIO import StringIO
-from obspy.segy.segy import readSEGY
+from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
-from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile
-from obspy.core.util import NamedTemporaryFile
+from obspy.segy.segy import SEGYBinaryFileHeader, SEGYTraceHeader, SEGYFile, \
+    readSEGY
 from obspy.segy.tests.header import FILES, DTYPES
 import numpy as np
 import os
@@ -530,6 +530,31 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.source_measurement_mantissa, 0)
         self.assertEqual(header.source_measurement_exponent, 0)
         self.assertEqual(header.source_measurement_unit, 0)
+
+    def test_readStringIO(self):
+        """
+        Tests reading from StringIO instances.
+        """
+        # 1
+        file = os.path.join(self.path, 'example.y_first_trace')
+        data = open(file, 'rb').read()
+        readSEGY(StringIO(data))
+        # 2
+        file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
+        data = open(file, 'rb').read()
+        readSEGY(StringIO(data))
+        # 3
+        file = os.path.join(self.path, '1.sgy_first_trace')
+        data = open(file, 'rb').read()
+        readSEGY(StringIO(data))
+        # 4
+        file = os.path.join(self.path, '00001034.sgy_first_trace')
+        data = open(file, 'rb').read()
+        readSEGY(StringIO(data))
+        # 5
+        file = os.path.join(self.path, 'planes.segy_first_trace')
+        data = open(file, 'rb').read()
+        readSEGY(StringIO(data))
 
 
 def rms(x, y):

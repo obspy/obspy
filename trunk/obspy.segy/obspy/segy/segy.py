@@ -7,18 +7,18 @@
 #
 # Copyright (C) 2010 Lion Krischer
 #---------------------------------------------------------------------
-"""
-Routines to read and write SEG Y rev 1 encoded seismic data files.
-"""
-
 from __future__ import with_statement
 from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
+from struct import pack, unpack
+import StringIO
 import numpy as np
 import os
-from struct import pack, unpack
+"""
+Routines to read and write SEG Y rev 1 encoded seismic data files.
+"""
 
 
 class SEGYError(Exception):
@@ -296,7 +296,10 @@ class SEGYFile(object):
         """
         self.traces = []
         # Determine the filesize once.
-        filesize = os.fstat(self.file.fileno())[6]
+        if isinstance(self.file, StringIO.StringIO):
+            filesize = self.file.len
+        else:
+            filesize = os.fstat(self.file.fileno())[6]
         # Big loop to read all data traces.
         while True:
             # Read and as soon as the trace header is too small abort.
@@ -446,7 +449,10 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            self.filesize = os.fstat(self.file.fileno())[6]
+            if isinstance(self.file, StringIO.StringIO):
+                self.filesize = self.file.len
+            else:
+                self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
         self._readTrace(unpack_headers=unpack_headers, headonly=headonly)
 
@@ -909,7 +915,10 @@ def autodetectEndianAndSanityCheckSU(file):
     the Trace header.
     """
     pos = file.tell()
-    size = os.fstat(file.fileno())[6]
+    if isinstance(file, StringIO.StringIO):
+        size = file.len
+    else:
+        size = os.fstat(file.fileno())[6]
     if size < 244:
         return False
     # Also has to be a multiple of 4 in length because every header is 400 long
