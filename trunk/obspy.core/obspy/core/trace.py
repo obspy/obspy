@@ -555,8 +555,8 @@ class Trace(object):
         elif fill_value == "interpolate":
             fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
-        delta = int(math.floor(round((rt.stats.starttime - \
-                                      lt.stats.endtime) * sr, 7))) - 1
+        delta = (rt.stats.starttime - lt.stats.endtime) * sr - 1.0
+        delta = int(round(delta))
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = self.__class__(header=deepcopy(lt.stats))
