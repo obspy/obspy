@@ -368,22 +368,25 @@ class Stream(object):
         :returns: New Stream object containing references to the traces of the
             original streams
 
-        .. rubric:: Example
+        .. rubric:: Examples
 
-        >>> st1 = Stream([Trace(), Trace(), Trace()])
-        >>> len(st1)
-        3
-        >>> st2 = Stream([Trace(), Trace()])
-        >>> len(st2)
-        2
+        1. Adding two Streams
 
-        >>> stream = st1 + st2  # adding two Streams
-        >>> len(stream)
-        5
+            >>> st1 = Stream([Trace(), Trace(), Trace()])
+            >>> len(st1)
+            3
+            >>> st2 = Stream([Trace(), Trace()])
+            >>> len(st2)
+            2
+            >>> stream = st1 + st2  # 
+            >>> len(stream)
+            5
 
-        >>> stream2 = st1 + Trace()  # adding Stream and Trace
-        >>> len(stream2)
-        4
+        2. Adding Stream and Trace
+
+            >>> stream2 = st1 + Trace()
+            >>> len(stream2)
+            4
         """
         if isinstance(other, Trace):
             other = Stream([other])

@@ -428,7 +428,7 @@ class Trace(object):
 
         :type method: ``0`` or ``1``, optional
         :param method: Method to handle overlaps of traces. Defaults to ``0``.
-            See the table given in the notes section below for further details.
+            See the `Handling Overlaps`_ section below for further details.
         :type fill_value: int, float or ``'latest'``, optional
         :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
             will be converted to NumPy masked arrays if no value is given and
@@ -436,6 +436,7 @@ class Trace(object):
             use the latest value before the gap. If keyword ``'interpolate'``
             is provided, missing values are linearly interpolated (not
             changing the data type e.g. of integer valued traces).
+            See the `Handling Gaps`_ section below for further details.
         :type interpolation_samples: int, optional
         :param interpolation_samples: Used only for ``method=1``. It specifies
             the number of samples which are used to interpolate between
@@ -452,7 +453,7 @@ class Trace(object):
 
         Sampling rate, data type and trace.id of both traces must match.
 
-        .. rubric:: Notes
+        .. rubric:: _`Handling Overlaps`
 
         ======  ===============================================================
         Method  Description
@@ -474,7 +475,7 @@ class Trace(object):
                 ``interpolation_samples`` specifies the number of samples used
                 to linearly interpolate between the two traces in order to
                 prevent steps. Note that if there are gaps inside, the
-                returned array is still a masked array, only if fill_value
+                returned array is still a masked array, only if ``fill_value``
                 is set, the returned array is a normal array and gaps are
                 filled with fill value.
 
@@ -501,31 +502,33 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
-
-                Traces with gaps::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAA----FFFF
-
-                Traces with gaps and given ``fill_value=0``::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAA0000FFFF
-
-                Traces with gaps and given ``fill_value='latest'``::
-
-                    Trace 1: ABCD
-                    Trace 2:         FFFF
-                    1 + 2  : ABCDDDDDFFFF
-
-                Traces with gaps and given ``fill_value='interpolate'``::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAABCDEFFFF
         ======  ===============================================================
+
+        .. rubric:: _`Handling gaps`
+
+        1. Traces with gaps and ``fill_value=None`` (default)::
+
+            Trace 1: AAAA
+            Trace 2:         FFFF
+            1 + 2  : AAAA----FFFF
+
+        2. Traces with gaps and given ``fill_value=0``::
+
+            Trace 1: AAAA
+            Trace 2:         FFFF
+            1 + 2  : AAAA0000FFFF
+
+        3. Traces with gaps and given ``fill_value='latest'``::
+
+            Trace 1: ABCD
+            Trace 2:         FFFF
+            1 + 2  : ABCDDDDDFFFF
+
+        4. Traces with gaps and given ``fill_value='interpolate'``::
+
+            Trace 1: AAAA
+            Trace 2:         FFFF
+            1 + 2  : AAAABCDEFFFF
         """
         if sanity_checks:
             if not isinstance(trace, Trace):

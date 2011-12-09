@@ -906,6 +906,37 @@ class TraceTestCase(unittest.TestCase):
         tr.integrate(type='cumtrapz')
         np.testing.assert_almost_equal(tr.data[-1], 0.1)
 
+    def test_issue317(self):
+        """
+        Tests times after breaking a stream into parts and merging it again.
+        """
+        # create a sample trace
+        org_trace = Trace(data=np.arange(22487))
+        org_trace.stats.starttime = UTCDateTime(2004, 12, 26, 1, 2, 52, 326000)
+        org_trace.stats.delta = 1.000001072884757
+        num_pakets = 10
+        # break org_trace into set of contiguous packet data
+        traces = []
+        packet_length = int(np.size(org_trace.data) / num_pakets)
+        delta_time = org_trace.stats.delta
+        tstart = org_trace.stats.starttime
+        tend = tstart + delta_time * float(packet_length - 1)
+        for i in range(num_pakets):
+            tr = Trace(org_trace.data, org_trace.stats)
+            tr = tr.slice(tstart, tend)
+            traces.append(tr)
+            tstart = tr.stats.endtime + delta_time
+            tend = tstart + delta_time * float(packet_length - 1)
+        # reconstruct original trace by adding together packet traces
+        sum_trace = Trace(traces[0].data, traces[0].stats)
+        for i in range(len(traces)):
+            sum_trace = sum_trace.__add__(traces[i], method=0,
+                                          interpolation_samples=0,
+                                          fill_value='latest',
+                                          sanity_checks=True)
+            # endtime of each added segment should be equal to sum_trace
+            self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
