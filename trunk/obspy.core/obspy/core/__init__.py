@@ -16,7 +16,8 @@ obspy.core - Core classes of ObsPy
 This package contains common methods and classes for ObsPy. It includes the
 :class:`~obspy.core.stream.Stream`, :class:`~obspy.core.trace.Trace`,
 :class:`~obspy.core.utcdatetime.UTCDateTime`, :class:`~obspy.core.trace.Stats`
-classes and methods for reading seismogram files.
+classes and methods for :func:`reading <obspy.core.stream.read>` seismogram
+files.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)

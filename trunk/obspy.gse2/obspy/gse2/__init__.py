@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-obspy.gse2- GSE2/GSE1 read and write support for ObsPy
-======================================================
+obspy.gse2 - GSE2/GSE1 read and write support for ObsPy
+=======================================================
 This module provides read and write support for GSE2 CM6 compressed as well as
-GSE1 ASCII waveform data and header info. Most methods are based on the C
-library GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
+GSE1 CM6/INT waveform data and header info. Most methods are based on the C
+library `GSE_UTI <ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/>`_
+of Stefan Stange, which is interfaced via Python :mod:`ctypes`.
 
-.. seealso:: http://www.orfeus-eu.org/Software/softwarelib.html#gse.
+.. seealso:: ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/\
+gse2001.pdf.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Stefan Stange
@@ -16,7 +18,7 @@ library GSE_UTI of Stefan Stange, which is interfaced via Python ctypes.
 
 Reading
 -------
-Similiar to reading any other waveform data format using obspy.core:
+Similar to reading any other waveform data format using :mod:`obspy.core`:
 
 >>> from obspy.core import read
 >>> st = read("/path/to/loc_RJOB20050831023349.z")
@@ -24,8 +26,8 @@ Similiar to reading any other waveform data format using obspy.core:
 You can also specify the following keyword arguments that change the
 behavior of reading the file:
 
-* headonly=True: Read only the header part, not the data part
-* verify_chksum=False: Do not verify the checksum of the GSE2 file. This is
+* ``headonly=True``: Read only the header part, not the actual data
+* ``verify_chksum=False``: Do not verify the checksum of the GSE2 file. This is
   very useful if the program, which wrote the checksum, calculated it in a
   wrong way.
 
@@ -37,9 +39,9 @@ behavior of reading the file:
 | 200.0 Hz, 12000 samples
 
 The format will be determined automatically. Each trace (multiple 'WID2'
-entries are mapped to multiple traces) will have a stats attribute
+entries are mapped to multiple traces) will have a ``stats`` attribute
 containing the usual information. When reading a GSE2 file it will have one
-additional attribute: 'gse2'. This attribute contains all GSE2 specific
+additional attribute named ``gse2``. This attribute contains all GSE2 specific
 attributes:
 
 >>> print(st[0].stats) #doctest: +NORMALIZE_WHITESPACE
@@ -58,14 +60,17 @@ attributes:
                               'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
                               'calper': 1.0})
 
-The data are available via the data attribute.
+The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
+of each trace.
 
 >>> print(st[0].data)
 [ 12 -10  16 ...,   8   0 -40]
 
 Writing
 -------
-Writing is also done in the usual way:
+You may export the data to the file system using the
+:meth:`~obspy.core.stream.Stream.write` method of an existing
+:class:`~obspy.core.stream.Stream` object :
 
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """

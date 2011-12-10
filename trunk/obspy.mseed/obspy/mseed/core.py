@@ -14,12 +14,12 @@ import platform
 
 def isMSEED(filename):
     """
-    Returns true if the file is a Mini-SEED file and false otherwise.
+    Checks whether a file is Mini-SEED or not.
 
-    Parameters
-    ----------
-    filename : string
-        Mini-SEED file to be checked.
+    :type filename: string
+    :param filename: Mini-SEED file to be checked.
+    :rtype: bool
+    :return: ``True`` if a Mini-SEED file.
     """
     __libmseed__ = LibMSEED()
     return __libmseed__.isMSEED(filename)
@@ -29,48 +29,48 @@ def readMSEED(filename, headonly=False, starttime=None, endtime=None,
               readMSInfo=True, reclen=-1, quality=False,
               **kwargs):  # @UnusedVariable
     """
-    Reads a given Mini-SEED file and returns an Stream object.
+    Reads a Mini-SEED file and returns a Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        Mini-SEED file to be read.
-    headonly : bool, optional
-        If set to True, read only the head. This is most useful for
-        scanning available data in huge (temporary) data sets.
-    starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        Specify the starttime to read. The remaining records are not
-        extracted. Providing a starttime usually results into faster reading.
-        Under windows this only works if all the file's records have the same
-        id and are chronologically ordered.
-    endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        See description of starttime.
-    readMSInfo : bool, optional
-        If True the byteorder, record length and the encoding of the file will
-        be read and stored in the Stream object. Only the very first record of
-        the file will be read and all following records are assumed to be the
-        same. Defaults to True.
-    reclen : int, optional
-        Record length in bytes of Mini-SEED file to read. This option might
-        be usefull if blockette 10 is missing and thus read cannot
+    :type filename: string
+    :param filename: Mini-SEED file to be read.
+    :type headonly: boolean, optional
+    :param headonly: If True read only head of Mini-SEED file.
+    :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    :param starrttime: Specify the starttime to read. The remaining records are
+        not extracted. Providing a starttime usually results into faster
+        reading. Under Windows this only works if all the file's records have
+        the same id and are chronologically ordered. Defaults to ``None``.
+    :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+    :param endtime: See description of starttime.
+    :type readMSInfo: bool, optional
+    :param readMSInfo: If ``True`` the byteorder, record length and the
+        encoding of the file will be read and stored in the Stream object. Only
+        the very first record of the file will be read and all following
+        records are assumed to be the same. Defaults to ``True``.
+    :type reclen: int, optional
+    :param reclen: Record length in bytes of Mini-SEED file to read. This
+        option might be usefull if blockette 10 is missing and thus read cannot
         determine the reclen automatically.
-    quality : bool, optional
-        Determines whether quality information is being read or not. Has a big
-        impact on performance so only use when necessary (takes ~ 700 %
-        longer). Two attributes will be written to each Trace's stats.mseed
-        object: data_quality_flags_count counts the bits in field 14 of the
-        fixed header for each Mini-SEED record. timing_quality is a
-        `numpy.array` which contains all timing qualities found in Blockette
-        1001 in the order of appearance. If no Blockette 1001 is found it will
-        be an empty array.
+    :type quality: bool, optional
+    :param quality: Determines whether quality information is being read or
+        not. Has a big impact on performance so only use when necessary
+        (takes ~ 700 % longer). Two attributes will be written to each Trace's
+        ``stats.mseed`` object: (1) ``data_quality_flags_count`` counts the
+        bits in field 14 of the fixed header for each Mini-SEED record and (2)
+        ``timing_quality`` is a :class:`~numpy.ndarray` which contains all
+        timing qualities found in Blockette 1001 in the order of appearance. If
+        no Blockette 1001 is found it will be an empty array.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :returns: Stream object containing header and data.
 
-    Example
-    -------
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("test.mseed") # doctest: +SKIP
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read("/path/to/test.mseed")
     """
     __libmseed__ = LibMSEED()
     # Read fileformat information if necessary.
@@ -147,38 +147,42 @@ def writeMSEED(stream, filename, encoding=None, **kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
-    All kwargs are passed directly to obspy.mseed.writeMSTraces.
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
 
-    Parameters
-    ----------
-    stream_object : :class:`~obspy.core.stream.Stream`
-        A Stream object. Data in stream object must be of type int32.
-        NOTE: They are automatically adapted if necessary
-    filename : string
-        Name of the output file
-    reclen : int, optional
-        Should be set to the desired data record length in bytes
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: string
+    :param filename: Name of file to write.
+    :type reclen: int, optional
+    :param reclen: Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
-        between (and including) 8 to 20. -1 defaults to 4096
-    encoding : int or string, optional
-        Should be set to one of the following supported
-        Mini-SEED data encoding formats: ASCII (0)*, INT16 (1), INT32 (3),
-        FLOAT32 (4)*, FLOAT64 (5)*, STEIM1 (10) and STEIM2 (11)*. Default
-        data types a marked with an asterisk. Currently INT24 (2) is not
-        supported due to lacking NumPy support.
-    byteorder : [ 0 or '<' | '1 or '>' | -1], optional
-        Must be either 0 or '<' for LSBF or little-endian, 1 or
-        '>' for MBF or big-endian. -1 defaults to big-endian (1)
-    flush : int, optional
-        If it is not zero all of the data will be packed into
+        between (and including) 8 to 20. Defaults to ``4096``.
+    :type encoding: int or string, optional
+    :param encoding: Should be set to one of the following supported
+        Mini-SEED data encoding formats: ``ASCII`` (``0``)*, ``INT16`` (``1``),
+        ``INT32`` (``3``), ``FLOAT32`` (``4``)*, ``FLOAT64`` (``5``)*,
+        ``STEIM1`` (``10``) and ``STEIM2`` (``11``)*. Default data types a
+        marked with an asterisk. Currently ``INT24`` (``2``) is not supported
+        due to lacking NumPy support.
+    :type byteorder: ``0``, ``'<'``, ``1``, ``'>'`` or ``-1``, optional
+    :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MBF or big-endian. The value ``-1``
+        defaults to big-endian (``1``).
+    :type flush: int, optional
+    :param flush: If it is not zero all of the data will be packed into
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
-    verbose : int, optional
-        Controls verbosity, a value of zero will result in no diagnostic
-        output.
+    :type verbose: int, optional
+    :param verbose: Controls verbosity, a value of zero will result in no
+        diagnostic output. Defaults to ``0``.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write('filename.mseed', format='MSEED') #doctest: +SKIP
     """
     # Write all fileformat descriptions that might occur in the
     # trace.stats.mseed dictionary to the kwargs if they do not exists yet.

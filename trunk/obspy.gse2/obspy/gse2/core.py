@@ -68,8 +68,8 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read  # doctest: +SKIP
-    >>> st = read("loc_RJOB20050831023349.z")  # doctest: +SKIP
+    >>> from obspy.core import read
+    >>> st = read("/path/to/loc_RJOB20050831023349.z")
     """
     traces = []
     # read GSE2 file
@@ -128,6 +128,12 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     :param inplace: If True, do compression not on a copy of the data but
         on the data itself - note this will change the data values and make
         them therefore unusable!
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write('filename.gse', format='GSE2') #doctest: +SKIP
     """
     #
     # Translate the common (renamed) entries
@@ -204,8 +210,8 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("loc_RJOB20050831023349.z") # doctest: +SKIP
+    >>> from obspy.core import read
+    >>> st = read("/path/to/y2000.gse")
     """
     traces = []
     # read GSE1 file

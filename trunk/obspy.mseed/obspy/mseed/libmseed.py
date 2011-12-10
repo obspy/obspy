@@ -8,122 +8,7 @@
 # Copyright (C) 2008-2010 Lion Krischer, Robert Barsch, Moritz Beyreuther
 #---------------------------------------------------------------------
 """
-Low-level module internally used for handling MiniSEED files
-
-Contains wrappers for libmseed - The MiniSEED library. The C library is
-interfaced via Python ctypes. Currently only supports MiniSEED files with
-integer data values.
-
-
-GNU General Public License (GPL)
-
-This program is free software; you can redistribute it and/or
-modify it under the terms of the GNU General Public License
-as published by the Free Software Foundation; either version 2
-of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-02110-1301, USA.
-
-Selected examples of Methods in obspy.mseed.libmseed
-----------------------------------------------------
-All of the following methods can only be accessed with an instance of the
-libmseed class.
-
->>> from obspy.mseed.libmseed import LibMSEED
->>> mseed = LibMSEED()
->>> mseed #doctest: +ELLIPSIS
-<obspy.mseed.libmseed.LibMSEED object at 0x...>
-
-isMSEED
-^^^^^^^
-Tests whether a file is a MiniSEED file or not. Returns True on success or
-False otherwise.
-
-This method only reads the first seven bytes of the file and checks whether it
-is a MiniSEED or fullSEED file. It also is true for fullSEED files because
-libmseed can read the data part of fullSEED files. If the method finds a
-fullSEED file it also checks if it has a data part and returns False otherwise.
-Thus it cannot be used to validate a MiniSEED or SEED file.
-
-Parameters:
-    * filename = MiniSEED file.
-
-(The first lines are just to get the absolute path of the test file)
-
->>> from obspy.core.util import getExampleFile
->>> filename = getExampleFile("test.mseed")
->>> mseed.isMSEED(filename)
-True
-
-getDataQualityFlagsCount
-^^^^^^^^^^^^^^^^^^^^^^^^
-Counts all data quality flags of the given MiniSEED file. This method will
-count all set data quality flag bits in the fixed section of the data header in
-a MiniSEED file and returns the total count for each flag type.
-
-Data quality flags:
-
-========  =================================================
-Bit       Description
-========  =================================================
-[Bit 0]   Amplifier saturation detected (station dependent)
-[Bit 1]   Digitizer clipping detected
-[Bit 2]   Spikes detected
-[Bit 3]   Glitches detected
-[Bit 4]   Missing/padded data present
-[Bit 5]   Telemetry synchronization error
-[Bit 6]   A digital filter may be charging
-[Bit 7]   Time tag is questionable
-========  =================================================
-
-This will only work correctly if each record in the file has the same record
-length.
-
-Parameters:
-    * filename = MiniSEED file.
-
-(The first line are just to get the absolute path of the test file)
-
->>> filename = getExampleFile("qualityflags.mseed")
->>> mseed.getDataQualityFlagsCount(filename)
-[9, 8, 7, 6, 5, 4, 3, 2]
-
-getTimingQuality
-^^^^^^^^^^^^^^^^
-Reads timing quality and returns a dictionary containing statistics about it.
-This method will read the timing quality in Blockette 1001 for each record in
-the file if available and return the following statistics:
-Minima, maxima, average, median and upper and lower quantile. It is probably
-pretty safe to set the first_record parameter to True because the timing
-quality is a vendor specific value and thus it will probably be set for each
-record or for none.
-
-Parameters:
-* filename = MiniSEED file.
-* first_record: Determines whether all records are assumed to either have a
-  timing quality in Blockette 1001 or not depending on whether the first
-  records has one. If True and the first records does not have a timing quality
-  it will not parse the whole file. If False is will parse the whole file
-  anyway and search for a timing quality in each record. Defaults to True.
-* rl_autodetection: Determines the auto-detection of the record lengths in the
-  file. If 0 only the length of the first record is detected automatically. All
-  subsequent records are then assumed to have the same record length. If -1 the
-  length of each record is automatically detected. Defaults to -1.
-
-(The first line are just to get the absolute path of the test file)
-
->>> filename = getExampleFile("timingquality.mseed")
->>> mseed.getTimingQuality(filename) #doctest: +NORMALIZE_WHITESPACE
-{'min': 0.0, 'max': 100.0, 'average': 50.0, 'median': 50.0,
- 'upper_quantile': 75.0, 'lower_quantile': 25.0}
+Low-level module internally used for handling Mini-SEED files
 """
 
 from obspy.core import UTCDateTime
@@ -144,25 +29,34 @@ MS_NOERROR = 0
 
 class LibMSEED(object):
     """
-    Class for handling MiniSEED files.
+    Class for handling Mini-SEED files.
     """
 
     def isMSEED(self, filename):
         """
-        Tests whether a file is a MiniSEED file or not.
+        Tests whether a file is a Mini-SEED file or not.
 
-        Returns True on success or False otherwise.
+        :param filename: Mini-SEED file.
+        :return: Returns ``True`` on success or ``False`` otherwise.
 
         This method only reads the first seven bytes of the file and checks
-        whether its a MiniSEED or fullSEED file.
+        whether its a Mini-SEED or full SEED file.
 
-        It also is true for fullSEED files because libmseed can read the data
-        part of fullSEED files. If the method finds a fullSEED file it also
+        It also is true for full SEED files because libmseed can read the data
+        part of full SEED files. If the method finds a full SEED file it also
         checks if it has a data part and returns False otherwise.
 
-        Thus it cannot be used to validate a MiniSEED or SEED file.
+        Thus it cannot be used to validate a Mini-SEED or SEED file.
 
-        :param filename: MiniSEED file.
+        .. rubric:: Example
+
+        >>> from obspy.core.util import getExampleFile  # needed to get the \
+absolute path of test file
+        >>> filename = getExampleFile("test.mseed")
+        >>> from obspy.mseed.libmseed import LibMSEED
+        >>> libmseed = LibMSEED()
+        >>> libmseed.isMSEED(filename)
+        True
         """
         fp = open(filename, 'rb')
         header = fp.read(7)
@@ -220,25 +114,25 @@ class LibMSEED(object):
                                skipnotdata=1, verbose=0, starttime=None,
                                endtime=None, quality=False):
         """
-        Read MiniSEED file. Returns a list with header informations and data
+        Read Mini-SEED file. Returns a list with header informations and data
         for each trace in the file.
 
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
         containing the data values as a NumPy array.
 
-        :param filename: Name of MiniSEED file.
+        :param filename: Name of Mini-SEED file.
         :param reclen, dataflag, skipnotdata, verbose: These are passed
             directly to the ms_readmsr.
         :param quality: Read quality information or not. Defaults to false.
-        :param starttime : :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional Specify the starttime to read. The remaining records
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Specify the starttime to read. The remaining records
             are not extracted. Providing a starttime usually results into
             faster reading.  Under windows this only works if all the
             file's records have the same id and are chronologically
             ordered.
-        :param endtime : :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-            See description of starttime.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: See description of starttime.
         """
         # Open file handler necessary for reading quality informations.
         if quality:
@@ -356,14 +250,14 @@ class LibMSEED(object):
                      dataflag=1, skipnotdata=1, dataquality=1, verbose=0,
                      starttime=None, endtime=None):
         """
-        Read MiniSEED file. Returns a list with header informations and data
+        Read Mini-SEED file. Returns a list with header informations and data
         for each trace in the file.
 
         The list returned contains a list for each trace in the file with the
         lists first element being a header dictionary and its second element
         containing the data values as a NumPy array.
 
-        :param filename: Name of MiniSEED file.
+        :param filename: Name of Mini-SEED file.
         :param reclen: Directly to the readFileToTraceGroup method.
         :param timetol: Directly to the readFileToTraceGroup method.
         :param sampratetol: Directly to the readFileToTraceGroup method.
@@ -374,7 +268,7 @@ class LibMSEED(object):
         """
         # Create empty list that will contain all traces.
         trace_list = []
-        # Creates MSTraceGroup Structure and feed it with the MiniSEED data.
+        # Creates MSTraceGroup Structure and feed it with the Mini-SEED data.
         mstg = self.readFileToTraceGroup(str(filename), reclen=reclen,
                                          timetol=timetol,
                                          sampratetol=sampratetol,
@@ -413,7 +307,7 @@ class LibMSEED(object):
     def writeMSTraces(self, trace_list, outfile, reclen=-1, encoding=-1,
                       byteorder=-1, flush=-1, verbose=0):
         """
-        Write MiniSEED file from trace_list
+        Write Mini-SEED file from trace_list
 
         :param trace_list: List containing header informations and data.
         :param outfile: Name of the output file
@@ -422,7 +316,7 @@ class LibMSEED(object):
             between (and including) 8 to 20. -1 defaults to 4096
         :type encoding: Integer
         :param encoding: should be set to one of the following supported
-            MiniSEED data encoding formats: ASCII (0), INT16 (1),
+            Mini-SEED data encoding formats: ASCII (0), INT16 (1),
             INT32 (3), FLOAT32 (4), FLOAT64 (5), STEIM1 (10)
             and STEIM2 (11). Defaults to STEIM2 (11)
         :param byteorder: must be either 0 (LSBF or little-endian) or 1 (MBF or
@@ -505,9 +399,9 @@ class LibMSEED(object):
                              dataquality=1, verbose=0, starttime=None,
                              endtime=None):
         """
-        Reads MiniSEED data from file. Returns MSTraceGroup structure.
+        Reads Mini-SEED data from file. Returns MSTraceGroup structure.
 
-        :param filename: Name of MiniSEED file.
+        :param filename: Name of Mini-SEED file.
         :param reclen: If reclen is 0 the length of the first record is auto-
             detected. All subsequent records are then expected to have the
             same record length. If reclen is negative the length of every
@@ -548,7 +442,7 @@ class LibMSEED(object):
 
     def getStartAndEndTime(self, filename):
         """
-        Returns the start- and endtime of a MiniSEED file as a tuple
+        Returns the start- and endtime of a Mini-SEED file as a tuple
         containing two datetime objects.
         Method using ms_readmsr_r
 
@@ -559,7 +453,7 @@ class LibMSEED(object):
         The returned endtime is the time of the last datasample and not the
         time that the last sample covers.
 
-        :param filename: MiniSEED file string.
+        :param filename: Mini-SEED file string.
         """
         # Get the starttime
         ms = _MSStruct(filename)
@@ -577,7 +471,7 @@ class LibMSEED(object):
         Returns trace header information of a given file without reading
         the data part.
 
-        :param filename: Name of MiniSEED file.
+        :param filename: Name of Mini-SEED file.
         :param reclen: Directly to the readFileToTraceGroup method.
         :param timetol: Directly to the readFileToTraceGroup method.
         :param sampratetol: Directly to the readFileToTraceGroup method.
@@ -626,27 +520,40 @@ class LibMSEED(object):
 
     def getDataQualityFlagsCount(self, filename):
         """
-        Counts all data quality flags of the given MiniSEED file.
+        Counts all data quality flags of the given Mini-SEED file.
+
+        :param filename: Mini-SEED file name.
+        :return: List of all flag counts.
 
         This method will count all set data quality flag bits in the fixed
-        section of the data header in a MiniSEED file and returns the total
-        count for each flag type.
+        section of the data header in a Mini-SEED file and returns the total
+        count for each flag type. This will only work correctly if each record
+        in the file has the same record length.
 
-        Data quality flags
-         - [Bit 0] Amplifier saturation detected (station dependent)
-         - [Bit 1] Digitizer clipping detected
-         - [Bit 2] Spikes detected
-         - [Bit 3] Glitches detected
-         - [Bit 4] Missing/padded data present
-         - [Bit 5] Telemetry synchronization error
-         - [Bit 6] A digital filter may be charging
-         - [Bit 7] Time tag is questionable
+        .. rubric:: Data quality flags
 
-        This will only work correctly if each record in the file has the same
-        record length.
+        ========  =================================================
+        Bit       Description
+        ========  =================================================
+        [Bit 0]   Amplifier saturation detected (station dependent)
+        [Bit 1]   Digitizer clipping detected
+        [Bit 2]   Spikes detected
+        [Bit 3]   Glitches detected
+        [Bit 4]   Missing/padded data present
+        [Bit 5]   Telemetry synchronization error
+        [Bit 6]   A digital filter may be charging
+        [Bit 7]   Time tag is questionable
+        ========  =================================================
 
-        :param filename: MiniSEED file name.
-        :return: List of all flag counts.
+        .. rubric:: Example
+
+        >>> from obspy.core.util import getExampleFile  # needed to get the \
+absolute path of test file
+        >>> filename = getExampleFile("qualityflags.mseed")
+        >>> from obspy.mseed.libmseed import LibMSEED
+        >>> libmseed = LibMSEED()
+        >>> libmseed.getDataQualityFlagsCount(filename)
+        [9, 8, 7, 6, 5, 4, 3, 2]
         """
         # Open the file.
         mseedfile = open(filename, 'rb')
@@ -677,8 +584,20 @@ class LibMSEED(object):
     def getTimingQuality(self, filename, first_record=True,
                          rl_autodetection=-1):
         """
-        Reads timing quality and returns a dictionary containing statistics
-        about it.
+        Reads timing quality and returns statistics about it.
+
+        :param filename: Mini-SEED file to be parsed.
+        :param first_record: Determines whether all records are assumed to
+            either have a timing quality in Blockette 1001 or not depending on
+            whether the first records has one. If True and the first records
+            does not have a timing quality it will not parse the whole file. If
+            False is will parse the whole file anyway and search for a timing
+            quality in each record. Defaults to True.
+        :param rl_autodetection: Determines the auto-detection of the record
+            lengths in the file. If 0 only the length of the first record is
+            detected automatically. All subsequent records are then assumed
+            to have the same record length. If -1 the length of each record
+            is automatically detected. Defaults to -1.
 
         This method will read the timing quality in Blockette 1001 for each
         record in the file if available and return the following statistics:
@@ -696,18 +615,16 @@ class LibMSEED(object):
         The median is calculating by either taking the middle value or, with an
         even numbers of values, the average between the two middle values.
 
-        :param filename: Mini-SEED file to be parsed.
-        :param first_record: Determines whether all records are assumed to
-            either have a timing quality in Blockette 1001 or not depending on
-            whether the first records has one. If True and the first records
-            does not have a timing quality it will not parse the whole file. If
-            False is will parse the whole file anyway and search for a timing
-            quality in each record. Defaults to True.
-        :param rl_autodetection: Determines the auto-detection of the record
-            lengths in the file. If 0 only the length of the first record is
-            detected automatically. All subsequent records are then assumed
-            to have the same record length. If -1 the length of each record
-            is automatically detected. Defaults to -1.
+        .. rubric:: Example
+
+        >>> from obspy.core.util import getExampleFile  # needed to get the \
+absolute path of test file
+        >>> filename = getExampleFile("timingquality.mseed")
+        >>> from obspy.mseed.libmseed import LibMSEED
+        >>> libmseed = LibMSEED()
+        >>> libmseed.getTimingQuality(filename) #doctest: +NORMALIZE_WHITESPACE
+        {'min': 0.0, 'max': 100.0, 'average': 50.0, 'median': 50.0,
+         'upper_quantile': 75.0, 'lower_quantile': 25.0}
         """
         # Get some information about the file.
         fp = open(filename, 'rb')
@@ -753,7 +670,7 @@ class LibMSEED(object):
         """
         Return start and end byte position from mseed file.
 
-        The method takes a MiniSEED file and tries to match it as good as
+        The method takes a Mini-SEED file and tries to match it as good as
         possible to the supplied time range. It will simply return the byte
         position of records that are within the time range. The byte
         position of the record that covers the start time will be the first
@@ -769,7 +686,7 @@ class LibMSEED(object):
 
         :return: Byte position of beginning and total length of bytes
 
-        :param filename: File string of the MiniSEED file to be cut.
+        :param filename: File string of the Mini-SEED file to be cut.
         :param starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         :param endtime: :class:`~obspy.core.utcdatetime.UTCDateTime` object.
         """
