@@ -209,10 +209,7 @@ class Stats(AttribDict):
         if self.npts == 0:
             timediff = 0
         else:
-            try:
-                timediff = (self.npts - 1) * delta
-            except ZeroDivisionError:
-                timediff = 0
+            timediff = (self.npts - 1) * delta
         self.__dict__['endtime'] = self.starttime + timediff
 
     def setEndtime(self, value):  # @UnusedVariable
