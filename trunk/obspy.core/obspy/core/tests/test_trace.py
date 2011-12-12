@@ -912,8 +912,9 @@ class TraceTestCase(unittest.TestCase):
         """
         # create a sample trace
         org_trace = Trace(data=np.arange(22487))
-        org_trace.stats.starttime = UTCDateTime(2004, 12, 26, 1, 2, 52, 326000)
-        org_trace.stats.delta = 1.000001072884757
+        org_trace.stats.starttime = UTCDateTime()
+        #org_trace.stats.delta = 1.000001072884757
+        org_trace.stats.sampling_rate = 0.999998927116
         num_pakets = 10
         # break org_trace into set of contiguous packet data
         traces = []
@@ -928,13 +929,32 @@ class TraceTestCase(unittest.TestCase):
             tstart = tr.stats.endtime + delta_time
             tend = tstart + delta_time * float(packet_length - 1)
         # reconstruct original trace by adding together packet traces
-        sum_trace = Trace(traces[0].data, traces[0].stats)
-        for i in range(len(traces)):
-            sum_trace = sum_trace.__add__(traces[i], method=0,
+        sum_trace = traces[0].copy()
+        npts = traces[0].stats.npts
+        for i in range(1, len(traces)):
+            sum_trace = sum_trace.__add__(traces[i].copy(), method=0,
                                           interpolation_samples=0,
                                           fill_value='latest',
                                           sanity_checks=True)
-            # endtime of each added segment should be equal to sum_trace
+            # check npts
+            self.assertEquals(traces[i].stats.npts, npts)
+            self.assertEquals(sum_trace.stats.npts, (i + 1) * npts)
+            # check data
+            np.testing.assert_array_equal(traces[i].data,
+                                          np.arange(i * npts, (i + 1) * npts))
+            np.testing.assert_array_equal(sum_trace.data,
+                                          np.arange(0, (i + 1) * npts))
+            # check delta
+            self.assertEquals(traces[i].stats.delta, org_trace.stats.delta)
+            self.assertEquals(sum_trace.stats.delta, org_trace.stats.delta)
+            # check sampling rates
+            self.assertEquals(traces[i].stats.sampling_rate,
+                              org_trace.stats.sampling_rate)
+            self.assertEquals(sum_trace.stats.sampling_rate,
+                              org_trace.stats.sampling_rate)
+            # check endtimes
+            #print traces[i].stats.endtime, sum_trace.stats.endtime,
+            #print traces[i].stats.endtime - sum_trace.stats.endtime
             self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
 
 
