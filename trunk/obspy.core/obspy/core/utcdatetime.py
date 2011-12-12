@@ -357,6 +357,21 @@ class UTCDateTime(datetime.datetime):
 
     timestamp = property(getTimeStamp)
 
+    def __float__(self):
+        """
+        Returns UTC timestamp in seconds.
+
+        :rtype: float
+        :return: Timestamp in seconds
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 123456)
+        >>> float(dt)
+        1222864235.123456
+        """
+        return self.getTimeStamp()
+
     def getDateTime(self):
         """
         Returns a Python datetime object from the current UTCDateTime object.

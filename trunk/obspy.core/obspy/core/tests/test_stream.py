@@ -1380,7 +1380,7 @@ class StreamTestCase(unittest.TestCase):
             st._cleanup()
             self.assertTrue(st == Stream([trA, trB]))
 
-    def test_integrate_differentiate(self):
+    def test_integrateAndDifferentiate(self):
         """
         Test integration and differentiation methods of stream
         """

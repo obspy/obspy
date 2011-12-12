@@ -207,14 +207,13 @@ class Stats(AttribDict):
         super(Stats, self).__setitem__('delta', delta)
         # set endtime
         if self.npts == 0:
-            delta = 0
+            timediff = 0
         else:
             try:
-                delta = (self.npts - 1) / float(self.sampling_rate)
+                timediff = (self.npts - 1) * delta
             except ZeroDivisionError:
-                delta = 0
-        endtime = self.starttime + delta
-        self.__dict__['endtime'] = endtime
+                timediff = 0
+        self.__dict__['endtime'] = self.starttime + timediff
 
     def setEndtime(self, value):  # @UnusedVariable
         msg = "Attribute \"endtime\" in Stats object is read only!"
@@ -558,8 +557,8 @@ class Trace(object):
         elif fill_value == "interpolate":
             fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
-        delta = (rt.stats.starttime - lt.stats.endtime) * sr - 1.0
-        delta = int(round(delta))
+        delta = (rt.stats.starttime - lt.stats.endtime) * sr
+        delta = int(round(delta)) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = self.__class__(header=deepcopy(lt.stats))
@@ -616,6 +615,7 @@ class Trace(object):
             else:
                 raise NotImplementedError
         elif delta == 0:
+            # exact fit - merge both traces
             data = [lt.data, rt.data]
         else:
             # gap
