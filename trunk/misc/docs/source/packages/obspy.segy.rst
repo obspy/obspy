@@ -15,5 +15,6 @@
        header
        pack
        unpack
+       benchmark
 
     .. comment to end block
