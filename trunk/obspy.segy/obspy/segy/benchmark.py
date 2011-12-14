@@ -4,6 +4,7 @@ from obspy.segy.segy import SUFile, readSU
 import StringIO
 import math
 import matplotlib.pylab as plt
+import matplotlib.cm as cm
 import numpy as np
 import os
 
@@ -178,7 +179,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
             if '\n' in title:
                 title, subtitle = title.split('\n', 1)
                 _fig.suptitle(title, y=0.97)
-                _fig.suptitle(subtitle, y=0.93, fontsize='small')
+                _fig.suptitle(subtitle, y=0.935, fontsize='x-small')
             else:
                 _fig.suptitle(title, y=0.95)
     else:
@@ -187,11 +188,18 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     # get current axis
     ax = _fig.gca()
 
-    # set labels - eitehr file names or stream numbers
+    # labels - either file names or stream numbers
     try:
         labels = [os.path.basename(trace.file.name) for trace in streams]
     except:
         labels = ['Stream #'+str(i) for i in range(len(streams))]
+
+    # colors - either auto generated or use a preset
+    if len(streams) > 5:
+        colors = cm.get_cmap('hsv', len(streams))
+        colors = [colors[i] for i in len(streams)]
+    else:
+        colors = ['grey', 'red', 'green', 'blue', 'black']
 
     # set first min and max
     min_y = np.Inf
@@ -200,6 +208,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
 
     # plot
     for _i, st in enumerate(streams):
+        color = colors[_i]
         legend = True
         for _j, tr in enumerate(st.traces):
             # calculating offset for each trace
@@ -222,9 +231,9 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
                 max_x = max(x)
             # plot, add labels only at new streams
             if legend:
-                ax.plot(x, y, label=labels[_i], lw=0.5)
+                ax.plot(x, y, color=color, label=labels[_i], lw=0.5)
             else:
-                ax.plot(x, y, lw=0.5)
+                ax.plot(x, y, color=color, lw=0.5)
             legend = False
 
     # limit offset axis
@@ -256,7 +265,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
         try:
             leg = plt.gca().get_legend()
             ltext = leg.get_texts()
-            plt.setp(ltext, fontsize='small')
+            plt.setp(ltext, fontsize='x-small')
         except:
             pass
 
