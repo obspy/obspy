@@ -110,14 +110,18 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     """
     if not sufiles:
         return
+
+    # ensure we have SUFile objects
     streams = []
     for sufile in sufiles:
         if isinstance(sufile, SUFile):
             streams.append(sufile)
         else:
             streams.append(readSU(sufile))
+
     # get delta from first trace only and assume it for all traces
     delta = streams[0].traces[0].header.sample_interval_in_ms_for_this_trace
+
     # trim to smallest trace
     if trim_to_smallest_trace:
         # search smallest trace
@@ -129,6 +133,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
         for st in streams:
             for tr in st.traces:
                 tr.data = tr.data[0:npts]
+
     # get offsets
     offsets = []
     for st in streams:
@@ -182,14 +187,19 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     # get current axis
     ax = _fig.gca()
 
-    colors = ['grey', 'red', 'green', 'blue', 'black']
-    labels = [os.path.basename(trace.file.name) for trace in streams]
+    # set labels - eitehr file names or stream numbers
+    try:
+        labels = [os.path.basename(trace.file.name) for trace in streams]
+    except:
+        labels = ['Stream #'+str(i) for i in range(len(streams))]
+
     # set first min and max
     min_y = np.Inf
     max_y = -np.Inf
     max_x = -np.Inf
+
+    # plot
     for _i, st in enumerate(streams):
-        color = colors[_i]
         legend = True
         for _j, tr in enumerate(st.traces):
             # calculating offset for each trace
@@ -212,9 +222,9 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
                 max_x = max(x)
             # plot, add labels only at new streams
             if legend:
-                ax.plot(x, y, color=color, label=labels[_i], lw=0.5)
+                ax.plot(x, y, label=labels[_i], lw=0.5)
             else:
-                ax.plot(x, y, color=color, lw=0.5)
+                ax.plot(x, y, lw=0.5)
             legend = False
 
     # limit offset axis
