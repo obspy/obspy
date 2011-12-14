@@ -96,7 +96,9 @@ def uncompressFile(func):
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
     def wrapped_func(filename, *args, **kwargs):
-        if isinstance(filename, basestring) and not os.path.exists(filename):
+        if not isinstance(filename, basestring):
+            return func(filename, *args, **kwargs)
+        elif not os.path.exists(filename):
             msg = "File not found '%s'" % (filename)
             raise IOError(msg)
         # check if we got a compressed file

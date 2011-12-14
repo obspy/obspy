@@ -4,6 +4,7 @@ from obspy.core import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
 from pkg_resources import load_entry_point
+import StringIO
 import numpy as np
 import os
 import threading
@@ -33,7 +34,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             self.assertFalse(False, isFormat(tmpfile))
         os.remove(tmpfile)
 
-    def test_readAndWriteAllInstalledWaveformPlugins(self):
+    def test_readAndWrite(self):
         """
         Tests read and write methods for all installed waveform plug-ins.
         """
@@ -73,6 +74,19 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     st = read(outfile, format=format)
                     self.assertEquals(len(st), 1)
                     self.assertEquals(st[0].stats._format, format)
+                    # read in using a StringIO instances, skip Q files as it 
+                    # needs multiple files
+                    if format not in ['Q']:
+                        # without format
+                        temp = StringIO.StringIO(open(outfile, 'rb').read())
+                        st = read(temp)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
+                        # with format
+                        temp = StringIO.StringIO(open(outfile, 'rb').read())
+                        st = read(temp, format=format)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
                     # check byte order
                     self.assertEquals(st[0].data.dtype.byteorder, '=')
                     # check meta data
@@ -99,13 +113,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         os.remove(outfile[:-4] + '.QBN')
                         os.remove(outfile[:-4])
 
-    def test_false_positives(self):
+    def test_isFormat(self):
         """
-        Tests all isFORMAT methods against all data test files from the other
+        Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
-        formats_ep = _getPlugins('obspy.plugin.waveform',
-                                 'readFormat')
+        formats_ep = _getPlugins('obspy.plugin.waveform', 'isFormat')
         formats = formats_ep.values()
         # Collect all false positives.
         false_positives = []
@@ -149,7 +162,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                               false_positives])
             raise Exception(msg)
 
-    def test_read_thread_safe(self):
+    def test_readThreadSafe(self):
         """
         Tests for race conditions. Reading n_threads (currently 30) times
         the same waveform file in parallel and compare the results which must
@@ -183,13 +196,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
             n_threads = 10
             streams = []
 
-            def test_function(streams):
+            def testFunction(streams):
                 st = read(outfile, format=format)
                 streams.append(st)
             # Read the ten files at one and save the output in the just created
             # class.
             for _i in xrange(n_threads):
-                thread = threading.Thread(target=test_function,
+                thread = threading.Thread(target=testFunction,
                                           args=(streams,))
                 thread.start()
             # Loop until all threads are finished.
@@ -213,9 +226,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 os.remove(outfile[:-4] + '.QBN')
                 os.remove(outfile[:-4])
 
-    def test_issue193_noncontiguous(self):
+    def test_issue193(self):
         """
-        Test if non-contiguous array is written correctly.
+        Test for issue #193: if non-contiguous array is written correctly.
         """
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method

@@ -14,6 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, getExampleFile, \
     getEntryPoints, uncompressFile
 from pkg_resources import load_entry_point
+import StringIO
 import copy
 import fnmatch
 import math
@@ -43,7 +44,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: string, optional
+    :type pathname_or_url: string or StringIO.StringIO, optional
     :param pathname_or_url: String containing a file name or a URL. Wildcards
         are allowed for a file name. If this attribute is omitted, a
         :class:`~obspy.core.stream.Stream` object with an example data set will
@@ -180,17 +181,34 @@ def read(pathname_or_url=None, format=None, headonly=False,
             pass
     # create stream
     st = Stream()
-    if "://" in pathname_or_url:
+    if isinstance(pathname_or_url, StringIO.StringIO):
+        # StringIO
+        pathname_or_url.seek(0)
+        try:
+            # first try reading directly
+            stream = _read(pathname_or_url, format, headonly, **kwargs)
+            st.extend(stream.traces)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            fh = NamedTemporaryFile()
+            fh.write(pathname_or_url.read())
+            fh.close()
+            st.extend(_read(fh.name, format, headonly, **kwargs).traces)
+            os.remove(fh.name)
+        pathname_or_url.seek(0)
+    elif "://" in pathname_or_url:
+        # some URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        # some URL
         fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
         fh.close()
         st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         os.remove(fh.name)
     else:
-        # file name
+        # some file name
         pathname = pathname_or_url
         for file in iglob(pathname):
             st.extend(_read(file, format, headonly, **kwargs).traces)
@@ -228,14 +246,6 @@ def _read(filename, format=None, headonly=False, **kwargs):
     if isinstance(filename, basestring) and not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
-#XXX: not used in trunk
-#    # Hack to make StringIO reading work.
-#    # XXX: Needs to be unified for all modules, e.g. maybe a module property
-#    # whether nor not it can read memory files.
-#    elif hasattr(filename, 'read') and hasattr(filename, 'tell') and \
-#         hasattr(filename, 'seek') and (format.upper() == 'MSEED' or \
-#         format is None):
-#        format = 'MSEED'
     # go through all known formats
     format_ep = None
     if not format:
@@ -378,7 +388,7 @@ class Stream(object):
             >>> st2 = Stream([Trace(), Trace()])
             >>> len(st2)
             2
-            >>> stream = st1 + st2  # 
+            >>> stream = st1 + st2
             >>> len(stream)
             5
 
