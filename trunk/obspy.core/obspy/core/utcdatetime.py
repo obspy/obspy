@@ -10,9 +10,13 @@ Module containing a UTC-based datetime class.
 """
 from calendar import timegm
 import datetime
+import time
 
 
-class UTCDateTime(datetime.datetime):
+TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+
+
+class UTCDateTime:
     """
     A UTC-based datetime object.
 
@@ -140,8 +144,9 @@ class UTCDateTime(datetime.datetime):
 
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
-
-    def __new__(cls, *args, **kwargs):
+    timestamp = 0.0
+#
+    def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
@@ -150,30 +155,36 @@ class UTCDateTime(datetime.datetime):
         if iso8601:
             kwargs.pop('iso8601')
         if len(args) == 0 and len(kwargs) == 0:
-            dt = datetime.datetime.utcnow()
-            return UTCDateTime._new(cls, dt)
+            # use current time if no time is given
+            self.timestamp = time.time()
+            return
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             # check types
-            if type(value) in [int, long, float]:
+            if isinstance(value, int) or isinstance(value, long) or \
+               isinstance(value, float) or isinstance(value, UTCDateTime):
                 # got a timestamp
-                dt = datetime.datetime.utcfromtimestamp(value)
-                return UTCDateTime._new(cls, dt)
+                self.timestamp = float(value)
+                return
             elif isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
-                return UTCDateTime._new(cls, value)
+                self.fromDateTime(value)
+                return
             elif isinstance(value, datetime.date):
                 # got a Python datetime.date object
-                return datetime.datetime.__new__(cls, value.year, value.month,
-                                                 value.day)
+                dt = datetime.datetime(value.year, value.month, value.day)
+                self.fromDateTime(dt)
+                return
             elif isinstance(value, basestring):
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
-                        dt = UTCDateTime._parseISO8601(value)
-                        return UTCDateTime._new(cls, dt)
+                        dt = self._parseISO8601(value)
+                        self.timestamp = timegm(dt.timetuple())
+                        self.timestamp += dt.microsecond / 1.0e6
+                        return
                     except:
                         if iso8601:
                             raise
@@ -222,10 +233,12 @@ class UTCDateTime(datetime.datetime):
                 # argument is not a digit by now, it must be a binary string
                 # and we pass it to datetime.datetime,
                 if not ''.join(parts).isdigit():
-                    return datetime.datetime.__new__(cls, *args, **kwargs)
+                    dt = datetime.datetime(*args, **kwargs)
+                    self.fromDateTime(dt)
+                    return 
                 dt = datetime.datetime.strptime(value, pattern)
-                dt = UTCDateTime(dt) + ms
-                return UTCDateTime._new(cls, dt)
+                self.fromDateTime(dt, ms)
+                return
         # check for ordinal/julian date kwargs
         if 'julday' in kwargs:
             if 'year' in kwargs:
@@ -250,16 +263,13 @@ class UTCDateTime(datetime.datetime):
             kwargs['microsecond'] = int(args[5] % 1 * 1000000)
             kwargs['second'] = int(args[5])
             args = args[0:5]
-        return datetime.datetime.__new__(cls, *args, **kwargs)
+        dt = datetime.datetime(*args, **kwargs)
+        self.fromDateTime(dt)
 
-    @staticmethod
-    def _new(cls, dt):
+    def fromDateTime(self, dt, ms=0):
         """
-        I'm just a small helper method to create readable source code.
         """
-        return datetime.datetime.__new__(cls, dt.year, dt.month, dt.day,
-                                         dt.hour, dt.minute, dt.second,
-                                         dt.microsecond)
+        self.timestamp = (dt - TIMESTAMP0).total_seconds() + ms
 
     @staticmethod
     def _parseISO8601(value):
@@ -353,9 +363,7 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getTimeStamp()
         1222864235.123456
         """
-        return float(timegm(self.timetuple())) + self.microsecond / 1.0e6
-
-    timestamp = property(getTimeStamp)
+        return self.timestamp
 
     def __float__(self):
         """
@@ -370,7 +378,7 @@ class UTCDateTime(datetime.datetime):
         >>> float(dt)
         1222864235.123456
         """
-        return self.getTimeStamp()
+        return self.timestamp
 
     def getDateTime(self):
         """
@@ -385,8 +393,7 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getDateTime()
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        return datetime.datetime(self.year, self.month, self.day, self.hour,
-                                 self.minute, self.second, self.microsecond)
+        return datetime.datetime.utcfromtimestamp(self.timestamp)
 
     datetime = property(getDateTime)
 
@@ -403,9 +410,30 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getDate()
         datetime.date(2008, 10, 1)
         """
-        return datetime.date(self.year, self.month, self.day)
+        return self.getDateTime().date()
 
     date = property(getDate)
+
+    def getYear(self):
+        """
+        """
+        return self.getDateTime().year
+
+    year = property(getYear)
+
+    def getMonth(self):
+        """
+        """
+        return self.getDateTime().month
+
+    month = property(getMonth)
+
+    def getDay(self):
+        """
+        """
+        return self.getDateTime().day
+
+    day = property(getDay)
 
     def getTime(self):
         """
@@ -420,10 +448,37 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getTime()
         datetime.time(12, 30, 35, 45020)
         """
-        return datetime.time(self.hour, self.minute, self.second,
-                             self.microsecond)
+        return self.getDateTime().time()
 
     time = property(getTime)
+
+    def getHour(self):
+        """
+        """
+        return self.getDateTime().hour
+
+    hour = property(getHour)
+
+    def getMinute(self):
+        """
+        """
+        return self.getDateTime().minute
+
+    minute = property(getMinute)
+
+    def getSecond(self):
+        """
+        """
+        return self.getDateTime().second
+
+    second = property(getSecond)
+
+    def getMicrosecond(self):
+        """
+        """
+        return self.getDateTime().microsecond
+
+    microsecond = property(getMicrosecond)
 
     def getJulday(self):
         """
@@ -438,13 +493,15 @@ class UTCDateTime(datetime.datetime):
         >>> dt.getJulday()
         275
         """
-        try:
-            return int(self.strftime("%j"))
-        except:
-            # calculate it
-            return (self.date - UTCDateTime(self.year, 1, 1).date).days + 1
+        return self.getDateTime().timetuple().tm_yday
 
     julday = property(getJulday)
+
+    def timetuple(self):
+        """
+        Return a time.struct_time such as returned by time.localtime().
+        """
+        return time.gmtime(self.timestamp)
 
     def __add__(self, value):
         """
@@ -464,21 +521,11 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(1970, 1, 1, 0, 0) + 1.123456
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
         """
-        try:
-            frac = value % 1.0
-        except:
-            dt = datetime.datetime.__add__(self, value)
-            return self.__class__(dt)
-        if frac == 0.0:
-            td = datetime.timedelta(seconds=int(value))
-            dt = datetime.datetime.__add__(self, td)
-            return self.__class__(dt)
-        else:
-            sec = int(value)
-            msec = int(round((value - sec) * 1000000))
-            td = datetime.timedelta(seconds=sec, microseconds=msec)
-            dt = datetime.datetime.__add__(self, td)
-            return self.__class__(dt)
+        if isinstance(value, UTCDateTime):
+            value = value.timestamp
+        elif isinstance(value, datetime.timedelta):
+            value = value.total_seconds()
+        return UTCDateTime(self.timestamp + value)
 
     def __sub__(self, value):
         """
@@ -502,21 +549,11 @@ class UTCDateTime(datetime.datetime):
         >>> UTCDateTime(1970, 1, 2, 0, 0) - UTCDateTime(1970, 1, 1, 0, 0)
         86400.0
         """
-        if isinstance(value, int):
-            td = datetime.timedelta(seconds=value)
-            dt = datetime.datetime.__sub__(self, td)
-            return self.__class__(dt)
-        elif isinstance(value, float):
-            sec = int(value)
-            msec = int(round((value - sec) * 1000000))
-            td = datetime.timedelta(seconds=sec, microseconds=msec)
-            dt = datetime.datetime.__sub__(self, td)
-            return self.__class__(dt)
-        elif isinstance(value, UTCDateTime):
-            return round(self.timestamp - value.timestamp, 6)
-        else:
-            dt = datetime.datetime.__sub__(self, value)
-            return self.__class__(dt)
+        if isinstance(value, UTCDateTime):
+            return round(self.timestamp, 6) - round(value.timestamp, 6)
+        elif isinstance(value, datetime.timedelta):
+            value = value.total_seconds()
+        return UTCDateTime(self.timestamp - value)
 
     def __str__(self):
         """
@@ -530,10 +567,50 @@ class UTCDateTime(datetime.datetime):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        text = datetime.datetime.__str__(self)
+        text = str(self.getDateTime())
         if not '.' in text:
             text += '.000000'
         return text.replace(' ', 'T') + 'Z'
+
+    def __eq__(self, other):
+        """
+        """
+        return round(self.timestamp, 6) == round(float(other), 6)
+
+    def __ne__(self, other):
+        """
+        """
+        return not self.__eq__(other)
+
+    def __lt__(self, other):
+        """
+        """
+        return round(self.timestamp - float(other), 6) < 0
+
+    def __le__(self, other):
+        """
+        """
+        return round(self.timestamp - float(other), 6) <= 0
+
+    def __gt__(self, other):
+        """
+        """
+        return round(self.timestamp - float(other), 6) > 0
+
+    def __ge__(self, other):
+        """
+        """
+        return round(self.timestamp - float(other), 6) >= 0
+
+    def __repr__(self):
+        """
+        """
+        return 'UTCDateTime' + self.getDateTime().__repr__()[17:]
+
+    def strftime(self, format):
+        """
+        """
+        return self.getDateTime().strftime(format)
 
     def formatFissures(self):
         """

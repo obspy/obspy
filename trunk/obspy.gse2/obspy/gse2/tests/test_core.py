@@ -40,7 +40,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.gse2.get('hang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
         self.assertEqual(tr.stats.gse2.get('instype'), '      ')
-        self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
+        self.assertAlmostEqual(tr.stats.starttime, 1125455629.849998, 6)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
 
     def test_readHeadViaObsPy(self):
@@ -58,7 +58,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertAlmostEqual(tr.stats.get('calib'), 9.49e-02)
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
-        self.assertEqual(tr.stats.starttime.timestamp, 1125455629.849998)
+        self.assertAlmostEqual(tr.stats.starttime, 1125455629.849998, 6)
         self.assertEqual(str(tr.data), '[]')
 
     def test_readAndWriteViaObsPy(self):

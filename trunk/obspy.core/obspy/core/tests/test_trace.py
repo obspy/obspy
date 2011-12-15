@@ -913,7 +913,6 @@ class TraceTestCase(unittest.TestCase):
         # create a sample trace
         org_trace = Trace(data=np.arange(22487))
         org_trace.stats.starttime = UTCDateTime()
-        #org_trace.stats.delta = 1.000001072884757
         org_trace.stats.sampling_rate = 0.999998927116
         num_pakets = 10
         # break org_trace into set of contiguous packet data
@@ -953,8 +952,6 @@ class TraceTestCase(unittest.TestCase):
             self.assertEquals(sum_trace.stats.sampling_rate,
                               org_trace.stats.sampling_rate)
             # check endtimes
-            #print traces[i].stats.endtime, sum_trace.stats.endtime,
-            #print traces[i].stats.endtime - sum_trace.stats.endtime
             self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
 
 

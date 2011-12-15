@@ -60,7 +60,7 @@ class LibMSEEDTestCase(unittest.TestCase):
             self.assertEqual(ts * 1000000L, mseed._convertDatetimeToMSTime(dt))
         # Additional sanity tests.
         # Today.
-        now = UTCDateTime.now()
+        now = UTCDateTime()
         self.assertEqual(now, mseed._convertMSTimeToDatetime(
                               mseed._convertDatetimeToMSTime(now)))
         # Some random date.

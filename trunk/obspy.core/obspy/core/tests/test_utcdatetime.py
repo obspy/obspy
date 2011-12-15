@@ -14,7 +14,8 @@ except ImportError:
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
 try:  # pragma: no cover
-    UTCDateTime(-1)
+    # this will fail at Win OS
+    UTCDateTime(-44000).getDateTime()
 except:  # pragma: no cover
     NO_NEGATIVE_TIMESTAMPS = True
 
@@ -297,7 +298,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         #4
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 999999)
         end = UTCDateTime(2000, 1, 1, 0, 0, 1, 1)
-        self.assertAlmostEquals(end - start, 0.000002)
+        self.assertAlmostEquals(end - start, 0.000002, 6)
 
     @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_negativeTimestamp(self):
@@ -384,7 +385,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         result2 = time + (-res)
         result3 = time - res
         self.assertAlmostEquals(result2 - result3, 0.0)
-        self.assertAlmostEquals(result1.timestamp, result2.timestamp)
+        self.assertAlmostEquals(result1.timestamp, result2.timestamp, 6)
 
     def test_issue159(self):
         """
@@ -426,6 +427,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(ValueError, UTCDateTime, "2010-02-13T99999")
         self.assertRaises(TypeError, UTCDateTime, "2010-02-13T02:09:09.XXXXX")
 
+    @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
     def test_issue168(self):
         """
         Couldn't calculate julday before 1900.

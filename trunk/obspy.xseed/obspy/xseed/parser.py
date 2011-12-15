@@ -494,7 +494,7 @@ class Parser(object):
                     station_id = "%s.%s" % (blockette.network_code,
                                             blockette.station_call_letters)
                     start = blockette.start_effective_date
-                    if start == "":
+                    if not start:
                         msg = "Missing start effective date in Station " + \
                               "Identifier Blockette (50) for station " + \
                               "%s" % station_id
