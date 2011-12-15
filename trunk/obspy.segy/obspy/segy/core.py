@@ -528,9 +528,19 @@ def readSU(filename, headonly=False, byteorder=None,
         # If the year is not zero, calculate the start time. The end time is
         # then calculated from the start time and the sampling rate.
         # 99 is often used as a placeholder.
-        if tr_header.year_data_recorded > 0 and \
-           tr_header.year_data_recorded != 99:
+        if tr_header.year_data_recorded > 0:
             year = tr_header.year_data_recorded
+            # The SEG Y rev 0 standard specifies the year to be a 4 digit
+            # number.  Before that it was unclear if it should be a 2 or 4
+            # digit number. Old or wrong software might still write 2 digit
+            # years. Every number <30 will be mapped to 2000-2029 and every
+            # number between 30 and 99 will be mapped to 1930-1999.
+            if year < 100:
+                if year < 30:
+                    year += 2000
+                else:
+                    year += 1900
+            julday = tr_header.day_of_year
             julday = tr_header.day_of_year
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
