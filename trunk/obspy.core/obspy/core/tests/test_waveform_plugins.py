@@ -74,7 +74,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     st = read(outfile, format=format)
                     self.assertEquals(len(st), 1)
                     self.assertEquals(st[0].stats._format, format)
-                    # read in using a StringIO instances, skip Q files as it 
+                    # read in using a StringIO instances, skip Q files as it
                     # needs multiple files
                     if format not in ['Q']:
                         # without format

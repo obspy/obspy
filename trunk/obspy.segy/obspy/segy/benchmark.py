@@ -192,7 +192,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     try:
         labels = [os.path.basename(trace.file.name) for trace in streams]
     except:
-        labels = ['Stream #'+str(i) for i in range(len(streams))]
+        labels = ['Stream #' + str(i) for i in range(len(streams))]
 
     # colors - either auto generated or use a preset
     if len(streams) > 5:
@@ -216,12 +216,6 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
             # create x and y arrays
             y = (tr.data) + offset
             x = np.arange(len(tr.data)) * delta / 1000000.
-            # test if in image
-            if clip_partial_traces:
-                if ymin is not None and min(y) < ymin:
-                    continue
-                if ymax is not None and max(y) > ymax:
-                    continue
             # get boundaries
             if max(y) > max_y:
                 max_y = max(y)
@@ -229,6 +223,12 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
                 min_y = min(y)
             if max(x) > max_x:
                 max_x = max(x)
+            # test if in image
+            if clip_partial_traces:
+                if ymin is not None and min(y) < ymin:
+                    continue
+                if ymax is not None and max(y) > ymax:
+                    continue
             # plot, add labels only at new streams
             if legend:
                 ax.plot(x, y, color=color, label=labels[_i], lw=0.5)
