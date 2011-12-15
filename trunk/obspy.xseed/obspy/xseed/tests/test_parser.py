@@ -29,7 +29,7 @@ class ParserTestCase(unittest.TestCase):
                 ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
-    def test_bug165(self):
+    def test_issue165(self):
         """
         Test cases related to #165:
          - number of poles or zeros can be 0
@@ -502,7 +502,7 @@ class ParserTestCase(unittest.TestCase):
 
     def test_issue298a(self):
         """
-        Test case for issue #298.
+        Test case for issue #298: blockette size exceeds 9999 bytes.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BHE.dataless")
         parser = Parser(file)
@@ -510,11 +510,18 @@ class ParserTestCase(unittest.TestCase):
 
     def test_issue298b(self):
         """
-        Second test case for issue #298.
+        Second test case for issue #298: blockette size exceeds 9999 bytes.
         """
         file = os.path.join(self.path, "AI.ESPZ._.BH_.dataless")
         parser = Parser(file)
         parser.getRESP()
+
+    def test_issue319(self):
+        """
+        Test case for issue #319: multiple abbreviation dictionaries.
+        """
+        filename = os.path.join(self.path, 'BN.LPW..BHE.dataless')
+        sp = Parser(filename)
 
 
 def suite():

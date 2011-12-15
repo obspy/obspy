@@ -930,7 +930,7 @@ class Parser(object):
             if len(self.temp['abbreviations']):
                 msg = 'More than one Abbreviation Dictionary Control ' + \
                       'Headers found!'
-                raise SEEDParserException(msg)
+                warnings.warn(msg, UserWarning)
             root_attribute = self.temp['abbreviations']
         # Loop over all blockettes in data.
         while blockette_id != 0:
