@@ -968,9 +968,9 @@ def autodetectEndianAndSanityCheckSU(file):
         # XXX: The arbitrary maximum of the sample interval is 10 seconds.
         if this_interval <= 0 or this_interval > 10E7:
             continue
-        # For some reason 99 is often used as a placeholder.
-        if this_year != 0 and (this_year >= 2030 or this_year < 1950) and \
-            this_year != 99:
+        # Some programs write two digit years.
+        if this_year != 0 and (this_year < 1930 or this_year >= 2030) and \
+            (this_year < 0 or this_year >=100):
             continue
         # 9999 is often used as a placeholder
         if (this_julday > 366 or this_julday < 0) and this_julday != 9999:
