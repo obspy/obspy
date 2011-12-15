@@ -982,9 +982,9 @@ class Client(object):
             raise Exception(msg)
         data = json.loads(data)
         results = {}
-        results['distance'] = data['DistanceAzimuth']['distance']
-        results['backazimuth'] = data['DistanceAzimuth']['backAzimuth']
-        results['azimuth'] = data['DistanceAzimuth']['azimuth']
+        results['distance'] = data['distance']
+        results['backazimuth'] = data['backAzimuth']
+        results['azimuth'] = data['azimuth']
         return results
 
     def flinnengdahl(self, lat, lon, rtype="both"):

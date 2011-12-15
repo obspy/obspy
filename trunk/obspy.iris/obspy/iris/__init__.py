@@ -17,7 +17,7 @@ Basic Usage
     :meth:`~obspy.iris.client.Client.getWaveform()` method is used to request
     and plot 60 minutes of the BHZ channel of station Albuquerque,
     New Mexico ("ANMO") of the Global Seismograph Network ("IU") for an seismic
-    event around 2010-02-27 06:30 (UTC).
+    event around 2010-02-27 06:45 (UTC).
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
@@ -31,7 +31,7 @@ Basic Usage
         from obspy.core import UTCDateTime
         from obspy.iris import Client
         client = Client()
-        t = UTCDateTime("2010-02-27T06:30:00.000")
+        t = UTCDateTime("2010-02-27T06:45:00.000")
         st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
         st.plot() #doctest: +SKIP
 
