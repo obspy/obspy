@@ -550,7 +550,6 @@ class SEGYCoreTestCase(unittest.TestCase):
         digit year >=30 <100 will be mapped to 1930-1999.
         """
         # Read two artificial test files and check the years.
-
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = readSEGY(filename)
         self.assertEqual(2011, st[0].stats.starttime.year)
@@ -563,7 +562,6 @@ class SEGYCoreTestCase(unittest.TestCase):
         Same test as testTwoDigitYearsSEGY just for Seismic Unix files.
         """
         # Read two artificial test files and check the years.
-
         filename = os.path.join(self.path, 'one_trace_year_11.su')
         st = readSU(filename)
         self.assertEqual(2011, st[0].stats.starttime.year)
