@@ -218,6 +218,16 @@ def readSEGY(filename, headonly=False, byteorder=None,
         # then calculated from the start time and the sampling rate.
         if tr_header.year_data_recorded > 0:
             year = tr_header.year_data_recorded
+            # The SEG Y rev 0 standard specifies the year to be a 4 digit
+            # number.  Before that it was unclear if it should be a 2 or 4
+            # digit number. Old or wrong software might still write 2 digit
+            # years. Every number <30 will be mapped to 2000-2029 and every
+            # number between 30 and 99 will be mapped to 1930-1999.
+            if year < 100:
+                if year < 30:
+                    year += 2000
+                else:
+                    year += 1900
             julday = tr_header.day_of_year
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
