@@ -145,12 +145,15 @@ class UTCDateTime(object):
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
-    _precision = 6
+
+
 
     def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
+        # _precision is a property, need to set it inside the init
+        self._precision = 6
         # iso8601 flag
         iso8601 = 'iso8601' in kwargs
         if iso8601:
@@ -625,7 +628,7 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        return round(self.timestamp - float(other), self._precision) == 0
+        return abs(self.timestamp - float(other)) < self._resolution
 
     def __ne__(self, other):
         """
@@ -635,22 +638,22 @@ class UTCDateTime(object):
     def __lt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) < 0
+        return (self.timestamp - float(other)) < -self._resolution
 
     def __le__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) <= 0
+        return (self.timestamp - float(other)) <= -self._resolution
 
     def __gt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) > 0
+        return (self.timestamp - float(other)) > self._resolution
 
     def __ge__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) >= 0
+        return (self.timestamp - float(other)) >= self._resolution
 
     def __repr__(self):
         """
@@ -775,6 +778,24 @@ class UTCDateTime(object):
                 (self.year, self.month, self.day, self.hour, self.minute,
                  self.second, self.microsecond // 1000)
 
+    def getPrecision(self):
+        return self.__precision
+
+    def setPrecision(self, value):
+        self.__precision = value
+        self.__resolution = 10**(-self.__precision)
+
+    _precision = property(getPrecision, setPrecision)
+
+    def getResolution(self):
+        return self.__resolution
+
+    def setResolution(self, value):
+        msg = "Attribute \"_resolution\" in UTCDateTime is read only, " + \
+            "_resolution can be set via _precision"
+        raise AttributeError(msg)
+
+    _resolution = property(getResolution, setResolution)
 
 if __name__ == '__main__':
     import doctest
