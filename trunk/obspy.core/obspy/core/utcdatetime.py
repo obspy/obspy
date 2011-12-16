@@ -16,7 +16,7 @@ import time
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
 
 
-class UTCDateTime:
+class UTCDateTime(object):
     """
     A UTC-based datetime object.
 
@@ -145,7 +145,7 @@ class UTCDateTime:
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
-#
+
     def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
@@ -524,9 +524,7 @@ class UTCDateTime:
         >>> UTCDateTime(1970, 1, 1, 0, 0) + 1.123456
         UTCDateTime(1970, 1, 1, 0, 0, 1, 123456)
         """
-        if isinstance(value, UTCDateTime):
-            value = value.timestamp
-        elif isinstance(value, datetime.timedelta):
+        if isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days * \
                 86400) * 1000000) / 1000000.0
