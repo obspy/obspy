@@ -269,7 +269,10 @@ class UTCDateTime:
     def fromDateTime(self, dt, ms=0):
         """
         """
-        self.timestamp = (dt - TIMESTAMP0).total_seconds() + ms
+        # see datetime.timedelta.total_seconds
+        td = (dt - TIMESTAMP0)
+        self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) * \
+                          1000000) / 1000000.0 + ms
 
     @staticmethod
     def _parseISO8601(value):
@@ -524,7 +527,9 @@ class UTCDateTime:
         if isinstance(value, UTCDateTime):
             value = value.timestamp
         elif isinstance(value, datetime.timedelta):
-            value = value.total_seconds()
+            # see datetime.timedelta.total_seconds
+            value = (value.microseconds + (value.seconds + value.days * \
+                86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp + value)
 
     def __sub__(self, value):
@@ -552,7 +557,9 @@ class UTCDateTime:
         if isinstance(value, UTCDateTime):
             return round(self.timestamp, 6) - round(value.timestamp, 6)
         elif isinstance(value, datetime.timedelta):
-            value = value.total_seconds()
+            # see datetime.timedelta.total_seconds
+            value = (value.microseconds + (value.seconds + value.days * \
+                86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp - value)
 
     def __str__(self):
