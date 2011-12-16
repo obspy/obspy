@@ -145,6 +145,7 @@ class UTCDateTime(object):
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
+    _precision = 6
 
     def __init__(self, *args, **kwargs):
         """
@@ -438,6 +439,13 @@ class UTCDateTime(object):
 
     day = property(getDay)
 
+    def getWeekday(self):
+        """
+        """
+        return self.getDateTime().weekday
+
+    weekday = property(getWeekday)
+
     def getTime(self):
         """
         Returns a Python time object from the current UTCDateTime object.
@@ -553,7 +561,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round(self.timestamp, 6) - round(value.timestamp, 6)
+            return round(self.timestamp - value.timestamp, self._precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days * \
@@ -577,10 +585,47 @@ class UTCDateTime(object):
             text += '.000000'
         return text.replace(' ', 'T') + 'Z'
 
+    def __unicode__(self):
+        """
+        Returns ISO8601 unicode representation from current UTCDateTime object.
+
+        :return: unicode
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> unicode(dt)
+        u'2008-10-01T12:30:35.045020Z'
+        """
+        text = unicode(self.getDateTime())
+        if not '.' in text:
+            text += '.000000'
+        return text.replace(' ', 'T') + 'Z'
+
     def __eq__(self, other):
         """
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000012)
+        >>> t2 = UTCDateTime(123.000000099)
+        >>> t1 == t2
+        True
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp == t2.timestamp
+        False
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1._precision = 11
+        >>> t1 == t2
+        False
         """
-        return round(self.timestamp, 6) == round(float(other), 6)
+        return round(self.timestamp - float(other), self._precision) == 0
 
     def __ne__(self, other):
         """
@@ -590,22 +635,22 @@ class UTCDateTime(object):
     def __lt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), 6) < 0
+        return round(self.timestamp - float(other), self._precision) < 0
 
     def __le__(self, other):
         """
         """
-        return round(self.timestamp - float(other), 6) <= 0
+        return round(self.timestamp - float(other), self._precision) <= 0
 
     def __gt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), 6) > 0
+        return round(self.timestamp - float(other), self._precision) > 0
 
     def __ge__(self, other):
         """
         """
-        return round(self.timestamp - float(other), 6) >= 0
+        return round(self.timestamp - float(other), self._precision) >= 0
 
     def __repr__(self):
         """
@@ -616,6 +661,31 @@ class UTCDateTime(object):
         """
         """
         return self.getDateTime().strftime(format)
+
+    def strptime(self, date_string, format):
+        """
+        """
+        return UTCDateTime(datetime.datetime.strptime(date_string, format))
+
+    def isoweekday(self):
+        """
+        Return the day of the week as an integer, where Monday is 1 and Sunday
+        is 7.
+        """
+        return self.getDateTime().isoweekday() 
+
+    def isocalendar(self):
+        """
+        Return a 3-tuple, (ISO year, ISO week number, ISO weekday).
+        """
+        return self.getDateTime().isocalendar() 
+
+    def isoformat(self, sep=None):
+        """
+        Return a string representing the date and time in ISO 8601 format,
+        YYYY-MM-DDTHH:MM:SS.mmmmmm or, if microsecond is 0, YYYY-MM-DDTHH:MM:SS
+        """
+        return self.getDateTime().isoformat(sep=sep)
 
     def formatFissures(self):
         """
