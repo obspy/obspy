@@ -680,7 +680,7 @@ class UTCDateTime(object):
         """
         return self.getDateTime().isocalendar() 
 
-    def isoformat(self, sep=None):
+    def isoformat(self, sep="T"):
         """
         Return a string representing the date and time in ISO 8601 format,
         YYYY-MM-DDTHH:MM:SS.mmmmmm or, if microsecond is 0, YYYY-MM-DDTHH:MM:SS
