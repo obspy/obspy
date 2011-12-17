@@ -658,6 +658,12 @@ class UTCDateTime(object):
         """
         return 'UTCDateTime' + self.getDateTime().__repr__()[17:]
 
+    def __abs__(self):
+        """
+        """
+        # needed for unittest.assertAlmostEqual tests on linux
+        return abs(self.timestamp)
+
     def strftime(self, format):
         """
         """
