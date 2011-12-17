@@ -470,6 +470,196 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2010-01-01")
         self.assertEquals(dt.formatSEED(compact=False), "2010,001")
 
+    def test_eq(self):
+        """
+        Tests __eq__ operators.
+        """
+        self.assertTrue(UTCDateTime(999) == UTCDateTime(999))
+        self.assertFalse(UTCDateTime(1) == UTCDateTime(999))
+        # w/ default precision of 6 digits
+        self.assertTrue(UTCDateTime(999.000001) == UTCDateTime(999.000001))
+        self.assertTrue(UTCDateTime(999.999999) == UTCDateTime(999.999999))
+        self.assertFalse(UTCDateTime(999.0000001) == UTCDateTime(999.0000009))
+        self.assertFalse(UTCDateTime(999.9999990) == UTCDateTime(999.9999999))
+        self.assertTrue(UTCDateTime(999.00000001) == UTCDateTime(999.00000009))
+        self.assertTrue(UTCDateTime(999.99999900) == UTCDateTime(999.99999909))
+        # w/ precision of 7 digits
+        self.assertFalse(UTCDateTime(999.00000001, precision=7) == \
+                         UTCDateTime(999.00000009, precision=7))
+        self.assertFalse(UTCDateTime(999.99999990, precision=7) == \
+                         UTCDateTime(999.99999999, precision=7))
+        self.assertTrue(UTCDateTime(999.000000001, precision=7) == \
+                        UTCDateTime(999.000000009, precision=7))
+        self.assertTrue(UTCDateTime(999.999999900, precision=7) == \
+                        UTCDateTime(999.999999909, precision=7))
+
+    def test_ne(self):
+        """
+        Tests __ne__ operators.
+        """
+        self.assertFalse(UTCDateTime(999) != UTCDateTime(999))
+        self.assertTrue(UTCDateTime(1) != UTCDateTime(999))
+        # w/ default precision of 6 digits
+        self.assertFalse(UTCDateTime(999.000001) != UTCDateTime(999.000001))
+        self.assertFalse(UTCDateTime(999.999999) != UTCDateTime(999.999999))
+        self.assertTrue(UTCDateTime(999.0000001) != UTCDateTime(999.0000009))
+        self.assertTrue(UTCDateTime(999.9999990) != UTCDateTime(999.9999999))
+        self.assertFalse(UTCDateTime(999.00000001) != UTCDateTime(999.00000009))
+        self.assertFalse(UTCDateTime(999.99999900) != UTCDateTime(999.99999909))
+        # w/ precision of 7 digits
+        self.assertTrue(UTCDateTime(999.00000001, precision=7) != \
+                        UTCDateTime(999.00000009, precision=7))
+        self.assertTrue(UTCDateTime(999.99999990, precision=7) != \
+                        UTCDateTime(999.99999999, precision=7))
+        self.assertFalse(UTCDateTime(999.000000001, precision=7) != \
+                         UTCDateTime(999.000000009, precision=7))
+        self.assertFalse(UTCDateTime(999.999999900, precision=7) != \
+                         UTCDateTime(999.999999909, precision=7))
+
+    def test_lt(self):
+        """
+        Tests __lt__ operators.
+        """
+        self.assertFalse(UTCDateTime(999) < UTCDateTime(999))
+        self.assertTrue(UTCDateTime(1) < UTCDateTime(999))
+        self.assertFalse(UTCDateTime(999) < UTCDateTime(1))
+        # w/ default precision of 6 digits
+        self.assertFalse(UTCDateTime(999.000001) < UTCDateTime(999.000001))
+        self.assertFalse(UTCDateTime(999.999999) < UTCDateTime(999.999999))
+        self.assertTrue(UTCDateTime(999.0000001) < UTCDateTime(999.0000009))
+        self.assertFalse(UTCDateTime(999.0000009) < UTCDateTime(999.0000001))
+        self.assertTrue(UTCDateTime(999.9999990) < UTCDateTime(999.9999999))
+        self.assertFalse(UTCDateTime(999.9999999) < UTCDateTime(999.9999990))
+        self.assertFalse(UTCDateTime(999.00000001) < UTCDateTime(999.00000009))
+        self.assertFalse(UTCDateTime(999.00000009) < UTCDateTime(999.00000001))
+        self.assertFalse(UTCDateTime(999.99999900) < UTCDateTime(999.99999909))
+        self.assertFalse(UTCDateTime(999.99999909) < UTCDateTime(999.99999900))
+        # w/ precision of 7 digits
+        self.assertTrue(UTCDateTime(999.00000001, precision=7) < \
+                        UTCDateTime(999.00000009, precision=7))
+        self.assertFalse(UTCDateTime(999.00000009, precision=7) < \
+                         UTCDateTime(999.00000001, precision=7))
+        self.assertTrue(UTCDateTime(999.99999990, precision=7) < \
+                        UTCDateTime(999.99999999, precision=7))
+        self.assertFalse(UTCDateTime(999.99999999, precision=7) < \
+                         UTCDateTime(999.99999990, precision=7))
+        self.assertFalse(UTCDateTime(999.000000001, precision=7) < \
+                         UTCDateTime(999.000000009, precision=7))
+        self.assertFalse(UTCDateTime(999.000000009, precision=7) < \
+                         UTCDateTime(999.000000001, precision=7))
+        self.assertFalse(UTCDateTime(999.999999900, precision=7) < \
+                         UTCDateTime(999.999999909, precision=7))
+        self.assertFalse(UTCDateTime(999.999999909, precision=7) < \
+                         UTCDateTime(999.999999900, precision=7))
+
+    def test_le(self):
+        """
+        Tests __le__ operators.
+        """
+        self.assertTrue(UTCDateTime(999) <= UTCDateTime(999))
+        self.assertTrue(UTCDateTime(1) <= UTCDateTime(999))
+        self.assertFalse(UTCDateTime(999) <= UTCDateTime(1))
+        # w/ default precision of 6 digits
+        self.assertTrue(UTCDateTime(999.000001) <= UTCDateTime(999.000001))
+        self.assertTrue(UTCDateTime(999.999999) <= UTCDateTime(999.999999))
+        self.assertTrue(UTCDateTime(999.0000001) <= UTCDateTime(999.0000009))
+        self.assertFalse(UTCDateTime(999.0000009) <= UTCDateTime(999.0000001))
+        self.assertTrue(UTCDateTime(999.9999990) <= UTCDateTime(999.9999999))
+        self.assertFalse(UTCDateTime(999.9999999) <= UTCDateTime(999.9999990))
+        self.assertTrue(UTCDateTime(999.00000001) <= UTCDateTime(999.00000009))
+        self.assertTrue(UTCDateTime(999.00000009) <= UTCDateTime(999.00000001))
+        self.assertTrue(UTCDateTime(999.99999900) <= UTCDateTime(999.99999909))
+        self.assertTrue(UTCDateTime(999.99999909) <= UTCDateTime(999.99999900))
+        # w/ precision of 7 digits
+        self.assertTrue(UTCDateTime(999.00000001, precision=7) <= \
+                        UTCDateTime(999.00000009, precision=7))
+        self.assertFalse(UTCDateTime(999.00000009, precision=7) <= \
+                         UTCDateTime(999.00000001, precision=7))
+        self.assertTrue(UTCDateTime(999.99999990, precision=7) <= \
+                        UTCDateTime(999.99999999, precision=7))
+        self.assertFalse(UTCDateTime(999.99999999, precision=7) <= \
+                         UTCDateTime(999.99999990, precision=7))
+        self.assertTrue(UTCDateTime(999.000000001, precision=7) <= \
+                        UTCDateTime(999.000000009, precision=7))
+        self.assertTrue(UTCDateTime(999.000000009, precision=7) <= \
+                        UTCDateTime(999.000000001, precision=7))
+        self.assertTrue(UTCDateTime(999.999999900, precision=7) <= \
+                        UTCDateTime(999.999999909, precision=7))
+        self.assertTrue(UTCDateTime(999.999999909, precision=7) <= \
+                        UTCDateTime(999.999999900, precision=7))
+
+    def test_gt(self):
+        """
+        Tests __gt__ operators.
+        """
+        self.assertFalse(UTCDateTime(999) > UTCDateTime(999))
+        self.assertFalse(UTCDateTime(1) > UTCDateTime(999))
+        self.assertTrue(UTCDateTime(999) > UTCDateTime(1))
+        # w/ default precision of 6 digits
+        self.assertFalse(UTCDateTime(999.000001) > UTCDateTime(999.000001))
+        self.assertFalse(UTCDateTime(999.999999) > UTCDateTime(999.999999))
+        self.assertFalse(UTCDateTime(999.0000001) > UTCDateTime(999.0000009))
+        self.assertTrue(UTCDateTime(999.0000009) > UTCDateTime(999.0000001))
+        self.assertFalse(UTCDateTime(999.9999990) > UTCDateTime(999.9999999))
+        self.assertTrue(UTCDateTime(999.9999999) > UTCDateTime(999.9999990))
+        self.assertFalse(UTCDateTime(999.00000001) > UTCDateTime(999.00000009))
+        self.assertFalse(UTCDateTime(999.00000009) > UTCDateTime(999.00000001))
+        self.assertFalse(UTCDateTime(999.99999900) > UTCDateTime(999.99999909))
+        self.assertFalse(UTCDateTime(999.99999909) > UTCDateTime(999.99999900))
+        # w/ precision of 7 digits
+        self.assertFalse(UTCDateTime(999.00000001, precision=7) > \
+                         UTCDateTime(999.00000009, precision=7))
+        self.assertTrue(UTCDateTime(999.00000009, precision=7) > \
+                        UTCDateTime(999.00000001, precision=7))
+        self.assertFalse(UTCDateTime(999.99999990, precision=7) > \
+                         UTCDateTime(999.99999999, precision=7))
+        self.assertTrue(UTCDateTime(999.99999999, precision=7) > \
+                        UTCDateTime(999.99999990, precision=7))
+        self.assertFalse(UTCDateTime(999.000000001, precision=7) > \
+                         UTCDateTime(999.000000009, precision=7))
+        self.assertFalse(UTCDateTime(999.000000009, precision=7) > \
+                         UTCDateTime(999.000000001, precision=7))
+        self.assertFalse(UTCDateTime(999.999999900, precision=7) > \
+                         UTCDateTime(999.999999909, precision=7))
+        self.assertFalse(UTCDateTime(999.999999909, precision=7) > \
+                         UTCDateTime(999.999999900, precision=7))
+
+    def test_ge(self):
+        """
+        Tests __ge__ operators.
+        """
+        self.assertTrue(UTCDateTime(999) >= UTCDateTime(999))
+        self.assertFalse(UTCDateTime(1) >= UTCDateTime(999))
+        self.assertTrue(UTCDateTime(999) >= UTCDateTime(1))
+        # w/ default precision of 6 digits
+        self.assertTrue(UTCDateTime(999.000001) >= UTCDateTime(999.000001))
+        self.assertTrue(UTCDateTime(999.999999) >= UTCDateTime(999.999999))
+        self.assertFalse(UTCDateTime(999.0000001) >= UTCDateTime(999.0000009))
+        self.assertTrue(UTCDateTime(999.0000009) >= UTCDateTime(999.0000001))
+        self.assertFalse(UTCDateTime(999.9999990) >= UTCDateTime(999.9999999))
+        self.assertTrue(UTCDateTime(999.9999999) >= UTCDateTime(999.9999990))
+        self.assertTrue(UTCDateTime(999.00000001) >= UTCDateTime(999.00000009))
+        self.assertTrue(UTCDateTime(999.00000009) >= UTCDateTime(999.00000001))
+        self.assertTrue(UTCDateTime(999.99999900) >= UTCDateTime(999.99999909))
+        self.assertTrue(UTCDateTime(999.99999909) >= UTCDateTime(999.99999900))
+        # w/ precision of 7 digits
+        self.assertFalse(UTCDateTime(999.00000001, precision=7) >= \
+                         UTCDateTime(999.00000009, precision=7))
+        self.assertTrue(UTCDateTime(999.00000009, precision=7) >= \
+                        UTCDateTime(999.00000001, precision=7))
+        self.assertFalse(UTCDateTime(999.99999990, precision=7) >= \
+                         UTCDateTime(999.99999999, precision=7))
+        self.assertTrue(UTCDateTime(999.99999999, precision=7) >= \
+                        UTCDateTime(999.99999990, precision=7))
+        self.assertTrue(UTCDateTime(999.000000001, precision=7) >= \
+                        UTCDateTime(999.000000009, precision=7))
+        self.assertTrue(UTCDateTime(999.000000009, precision=7) >= \
+                        UTCDateTime(999.000000001, precision=7))
+        self.assertTrue(UTCDateTime(999.999999900, precision=7) >= \
+                        UTCDateTime(999.999999909, precision=7))
+        self.assertTrue(UTCDateTime(999.999999909, precision=7) >= \
+                        UTCDateTime(999.999999900, precision=7))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
