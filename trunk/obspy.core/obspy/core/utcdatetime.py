@@ -151,7 +151,7 @@ class UTCDateTime(object):
         Creates a new UTCDateTime object.
         """
         # set default precision
-        self._precision = kwargs.pop('precision', 6)
+        self.precision = kwargs.pop('precision', 6)
         # iso8601 flag
         iso8601 = 'iso8601' in kwargs
         if iso8601:
@@ -562,7 +562,7 @@ class UTCDateTime(object):
         86400.0
         """
         if isinstance(value, UTCDateTime):
-            return round(self.timestamp - value.timestamp, self._precision)
+            return round(self.timestamp - value.timestamp, self.__precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
             value = (value.microseconds + (value.seconds + value.days * \
@@ -626,7 +626,7 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        return round(self.timestamp - float(other), self._precision) == 0
+        return round(self.timestamp - float(other), self.__precision) == 0
 
     def __ne__(self, other):
         """
@@ -636,22 +636,22 @@ class UTCDateTime(object):
     def __lt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) < 0
+        return round(self.timestamp - float(other), self.__precision) < 0
 
     def __le__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) <= 0
+        return round(self.timestamp - float(other), self.__precision) <= 0
 
     def __gt__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) > 0
+        return round(self.timestamp - float(other), self.__precision) > 0
 
     def __ge__(self, other):
         """
         """
-        return round(self.timestamp - float(other), self._precision) >= 0
+        return round(self.timestamp - float(other), self.__precision) >= 0
 
     def __repr__(self):
         """
@@ -782,7 +782,7 @@ class UTCDateTime(object):
     def setPrecision(self, value):
         self.__precision = int(value)
 
-    _precision = property(getPrecision, setPrecision)
+    precision = property(getPrecision, setPrecision)
 
 
 if __name__ == '__main__':
