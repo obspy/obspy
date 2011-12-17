@@ -1,0 +1,1 @@
+include obspy/seg2/tests/data/*
