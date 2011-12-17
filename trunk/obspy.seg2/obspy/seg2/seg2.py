@@ -23,6 +23,7 @@ class SEG2BaseError(Exception):
     """
     pass
 
+
 class SEG2InvalidFileError(SEG2BaseError):
     """
     Will be raised if something is not correct with the SEG-2 file.
@@ -142,8 +143,11 @@ class SEG2(object):
 
         # The rest of the header up to where the first trace pointer points is
         # a free form section.
-        self.parseFreeFormFileSection(self.file_pointer.read(\
-                         self.trace_pointers[0] - self.file_pointer.tell()))
+        self.stream.stats = AttribDict()
+        self.stream.stats.seg2 = AttribDict()
+        self.parseFreeForm(self.file_pointer.read(\
+                           self.trace_pointers[0] - self.file_pointer.tell()),
+                           self.stream.stats.seg2)
 
         # Get the time information from the file header.
         # XXX: Need some more generic date/time parsers.
@@ -194,8 +198,10 @@ class SEG2(object):
 
         # The rest of the trace block is free form.
         header = {}
-        header['seg2'] = self.parseFreeFormTraceSection(\
-                         self.file_pointer.read(size_of_this_block - 32))
+        header['seg2'] = AttribDict()
+        self.parseFreeForm(\
+                         self.file_pointer.read(size_of_this_block - 32),
+                          header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's starttime.
         header['starttime'] = deepcopy(self.starttime)
@@ -204,11 +210,13 @@ class SEG2(object):
                 number_of_samples_in_data_block * sample_size), dtype=dtype)
         return Trace(data=data, header=header)
 
-    def parseFreeFormFileSection(self, free_form):
+    def parseFreeForm(self, free_form_str, attrib_dict):
         """
+        Parse the free form section stored in free_form_str and save it in
+        attrib_dict.
         """
         # Separate the strings.
-        strings = free_form.split(self.string_terminator)
+        strings = free_form_str.split(self.string_terminator)
         # This is not fully according to the SEG-2 format specification (or
         # rather the specification only speaks about on offset of 2 bytes
         # between strings and a string_terminator between two free form
@@ -220,55 +228,22 @@ class SEG2(object):
         strings = [_i for _i in strings if len(_i) >= 3]
         # Every string has the structure OPTION<SPACE>VALUE. Write to
         # stream.stats attribute.
-        self.stream.stats = AttribDict()
-        self.stream.stats.seg2 = AttribDict()
         for string in strings:
             string = string.strip()
             string = string.split(' ')
             key = string[0].strip()
             value = ' '.join(string[1:]).strip()
-            setattr(self.stream.stats.seg2, key, value)
+            setattr(attrib_dict, key, value)
         # Parse the notes string again.
-        if hasattr(self.stream.stats.seg2, 'NOTE'):
-            notes = self.stream.stats.seg2.NOTE.split(self.line_terminator)
-            self.stream.stats.seg2.NOTE = AttribDict()
+        if hasattr(attrib_dict, 'NOTE'):
+            notes = attrib_dict.NOTE.split(self.line_terminator)
+            attrib_dict.NOTE = AttribDict()
             for note in notes:
                 note = note.strip()
                 note = note.split(' ')
                 key = note[0].strip()
                 value = ' '.join(note[1:]).strip()
-                setattr(self.stream.stats.seg2.NOTE, key, value)
-
-    def parseFreeFormTraceSection(self, free_form):
-        """
-        Very similar to unpacking the free form file header.
-
-        Returns an AttribDict that is intended to be the seg2 specific part of
-        a Trace's stats attributes.
-        """
-        seg2_stats = AttribDict()
-        strings = free_form.split(self.string_terminator)
-        strings = [_i for _i in strings if len(_i) >= 3]
-        # Every string has the structure OPTION<SPACE>VALUE. Write to
-        # trace.stats.seg2 attribute.
-        for string in strings:
-            string = string.strip()
-            string = string.split(' ')
-            key = string[0].strip()
-            value = ' '.join(string[1:]).strip()
-            setattr(seg2_stats, key, value)
-        # Parse the notes string again.
-        if hasattr(seg2_stats,'NOTE'):
-            notes = seg2_stats.NOTE.split(self.line_terminator)
-            seg2_stats.NOTE = AttribDict()
-            for note in notes:
-                note = note.strip()
-                note = note.split(' ')
-                key = note[0].strip()
-                value = ' '.join(note[1:]).strip()
-                setattr(seg2_stats.NOTE, key, value)
-        return seg2_stats
-
+                setattr(attrib_dict.NOTE, key, value)
 
 def isSEG2(filename):
     if isinstance(filename, basestring):
@@ -298,10 +273,10 @@ def isSEG2(filename):
         return False
     return True
 
-
 def readSEG2(filename):
     seg2 = SEG2()
     return seg2.readFile(filename)
 
 def writeSEG2(filename):
-    print 'Writing SEG-2 files is not implemented so far.'
+    msg = 'Writing SEG-2 files is not implemented so far.'
+    raise NotImplementedError(msg)
