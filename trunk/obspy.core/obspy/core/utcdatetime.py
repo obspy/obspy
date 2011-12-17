@@ -20,15 +20,18 @@ class UTCDateTime(object):
     """
     A UTC-based datetime object.
 
-    This class inherits from Python :class:`datetime.datetime` class and
-    refines the UTC time zone (Coordinated Universal Time) support. It features
-    the full `ISO8601:2004`_ specification and some additional string patterns
-    during object initialization.
+    This datetime class is based on the POSIX time, a system for describing
+    instants in time, defined as the number of seconds elapsed since midnight
+    Coordinated Universal Time (UTC) of Thursday, January 1, 1970. Using a
+    single float timestamp allows higher precision as the default Python
+    :class:`datetime.datetime` class. It features the full `ISO8601:2004`_
+    specification and some additional string patterns during object
+    initialization.
 
     :type args: int, float, string, :class:`datetime.datetime`, optional
     :param args: The creation of a new `UTCDateTime` object depends from the
         given input parameters. All possible options are summarized in the
-        examples section underneath.
+        `Examples`_ section below.
     :type iso8601: boolean, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
@@ -47,7 +50,7 @@ class UTCDateTime(object):
         contain a negative number.
         See also: :meth:`~obspy.core.utcdatetime.UTCDateTime.__sub__`.
 
-    .. rubric:: Examples
+    .. rubric:: _`Examples`
 
     (1) Using a timestamp.
 
@@ -581,10 +584,10 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        text = str(self.getDateTime())
-        if not '.' in text:
+        text = self.getDateTime().isoformat('T')
+        if '.' not in text:
             text += '.000000'
-        return text.replace(' ', 'T') + 'Z'
+        return text + 'Z'
 
     def __unicode__(self):
         """
@@ -598,10 +601,7 @@ class UTCDateTime(object):
         >>> unicode(dt)
         u'2008-10-01T12:30:35.045020Z'
         """
-        text = unicode(self.getDateTime())
-        if not '.' in text:
-            text += '.000000'
-        return text.replace(' ', 'T') + 'Z'
+        return unicode(self.__str__())
 
     def __eq__(self, other):
         """
@@ -622,7 +622,7 @@ class UTCDateTime(object):
 
         Resetting the precision changes the behaviour of the operator
 
-        >>> t1._precision = 11
+        >>> t1.precision = 11
         >>> t1 == t2
         False
         """
@@ -667,6 +667,17 @@ class UTCDateTime(object):
         """
         """
         return UTCDateTime(datetime.datetime.strptime(date_string, format))
+
+    def ctime(self):
+        """
+        Return a string representing the date and time.
+
+        .. rubric:: Example
+
+        >>> UTCDateTime(2002, 12, 4, 20, 30, 40).ctime()
+        'Wed Dec  4 20:30:40 2002'
+        """
+        return self.getDateTime().ctime()
 
     def isoweekday(self):
         """
