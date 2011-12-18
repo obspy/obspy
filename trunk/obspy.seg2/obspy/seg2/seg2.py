@@ -17,6 +17,7 @@ import warnings
 from obspy.core import Trace, Stream, AttribDict, UTCDateTime
 from header import MONTHS
 
+
 class SEG2BaseError(Exception):
     """
     Base class for all SEG-2 specific errors.
@@ -245,6 +246,7 @@ class SEG2(object):
                 value = ' '.join(note[1:]).strip()
                 setattr(attrib_dict.NOTE, key, value)
 
+
 def isSEG2(filename):
     if isinstance(filename, basestring):
         is_filename = True
@@ -256,15 +258,17 @@ def isSEG2(filename):
     file_descriptor_block = file_pointer.read(4)
     if is_filename is True:
         file_pointer.close()
-
-    # Determine the endianness and check if the block id is valid.
-    if (unpack('B', file_descriptor_block[0])[0] == 0x55) and \
-       (unpack('B', file_descriptor_block[1])[0] == 0x3a):
-        endian = '<'
-    elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
-        (unpack('B', file_descriptor_block[1])[0] == 0x55):
-        endian = '>'
-    else:
+    try:
+        # Determine the endianness and check if the block id is valid.
+        if (unpack('B', file_descriptor_block[0])[0] == 0x55) and \
+           (unpack('B', file_descriptor_block[1])[0] == 0x3a):
+            endian = '<'
+        elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
+            (unpack('B', file_descriptor_block[1])[0] == 0x55):
+            endian = '>'
+        else:
+            return False
+    except:
         return False
     # Check the revision number.
     revision_number = unpack('%sH' % endian,
@@ -273,9 +277,11 @@ def isSEG2(filename):
         return False
     return True
 
+
 def readSEG2(filename):
     seg2 = SEG2()
     return seg2.readFile(filename)
+
 
 def writeSEG2(filename):
     msg = 'Writing SEG-2 files is not implemented so far.'

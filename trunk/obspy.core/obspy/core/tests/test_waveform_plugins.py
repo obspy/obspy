@@ -44,7 +44,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
-            if format in ['SEGY', 'SU']:
+            if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             for native_byteorder in ['<', '>']:
                 for byteorder in ['<', '>', '=']:
@@ -174,7 +174,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
-            if format in ['SEGY', 'SU']:
+            if format in ['SEGY', 'SU', 'SEG2']:
                 continue
 
             dt = np.dtype("int")
@@ -244,7 +244,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
-            if format in ['SEGY', 'SU']:
+            if format in ['SEGY', 'SU', 'SEG2']:
                 continue
             tempfile = NamedTemporaryFile().name
             tr.write(tempfile, format)
