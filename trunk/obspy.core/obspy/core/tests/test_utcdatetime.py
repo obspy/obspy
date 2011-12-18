@@ -24,7 +24,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.utcdatetime.UTCDateTime.
     """
-
     def test_fromString(self):
         """
         Tests initialization from a given time string not ISO8601 compatible.
@@ -312,8 +311,53 @@ class UTCDateTimeTestCase(unittest.TestCase):
         end = UTCDateTime(-1000.5)
         self.assertAlmostEquals(end - start, -1000.5)
 
+    def test_smallNegativeUTCDateTime(self):
+        """
+        Windows OS supports only negative timestamps ca. -43201
+        """
+        # 0
+        dt = UTCDateTime(0)
+        self.assertEquals(dt.timestamp, 0)
+        self.assertEquals(str(dt), "1970-01-01T00:00:00.000000Z")
+        dt = UTCDateTime("1970-01-01T00:00:00.000000Z")
+        self.assertEquals(dt.timestamp, 0)
+        self.assertEquals(str(dt), "1970-01-01T00:00:00.000000Z")
+        # -1
+        dt = UTCDateTime(-1)
+        self.assertEquals(dt.timestamp, -1)
+        self.assertEquals(str(dt), "1969-12-31T23:59:59.000000Z")
+        dt = UTCDateTime("1969-12-31T23:59:59.000000Z")
+        self.assertEquals(dt.timestamp, -1)
+        self.assertEquals(str(dt), "1969-12-31T23:59:59.000000Z")
+        # -1.000001
+        dt = UTCDateTime(-1.000001)
+        self.assertEquals(dt.timestamp, -1.000001)
+        self.assertEquals(str(dt), "1969-12-31T23:59:58.999999Z")
+        dt = UTCDateTime("1969-12-31T23:59:58.999999Z")
+        self.assertAlmostEquals(dt.timestamp, -1.000001, 6)
+        self.assertEquals(str(dt), "1969-12-31T23:59:58.999999Z")
+        # -0.000001
+        dt = UTCDateTime("1969-12-31T23:59:59.999999Z")
+        self.assertAlmostEquals(dt.timestamp, -0.000001, 6)
+        self.assertEquals(str(dt), "1969-12-31T23:59:59.999999Z")
+        dt = UTCDateTime(-0.000001)
+        self.assertAlmostEquals(dt.timestamp, -0.000001, 6)
+        self.assertEquals(str(dt), "1969-12-31T23:59:59.999999Z")
+        # -0.00000000001
+        dt = UTCDateTime(-0.00000000001)
+        self.assertEquals(dt.timestamp, -0.00000000001)
+        self.assertEquals(str(dt), "1970-01-01T00:00:00.000000Z")
+        #1
+        dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
+        self.assertEquals(dt.timestamp, -1000.1)
+        self.assertEquals(str(dt), "1969-12-31T23:43:19.900000Z")
+        #2
+        dt = UTCDateTime(-43199.123456)
+        self.assertAlmostEquals(dt.timestamp, -43199.123456, 6)
+        self.assertEquals(str(dt), "1969-12-31T12:00:00.876544Z")
+
     @skipIf(NO_NEGATIVE_TIMESTAMPS, 'times before 1970 are not supported')
-    def test_negativeUTCDateTime(self):
+    def test_bigNegativeUTCDateTime(self):
         #1
         dt = UTCDateTime("1969-12-31T23:43:19.900000Z")
         self.assertEquals(dt.timestamp, -1000.1)

@@ -8,7 +8,6 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from calendar import timegm
 import datetime
 import time
 
@@ -156,9 +155,8 @@ class UTCDateTime(object):
         # set default precision
         self.precision = kwargs.pop('precision', 6)
         # iso8601 flag
-        iso8601 = 'iso8601' in kwargs
-        if iso8601:
-            kwargs.pop('iso8601')
+        iso8601 = kwargs.pop('iso8601', False) == True
+        # check parameter
         if len(args) == 0 and len(kwargs) == 0:
             # use current time if no time is given
             self.timestamp = time.time()
@@ -186,9 +184,7 @@ class UTCDateTime(object):
                 # check for ISO8601 date string
                 if value.count("T") == 1 or iso8601:
                     try:
-                        dt = self._parseISO8601(value)
-                        self.timestamp = timegm(dt.timetuple())
-                        self.timestamp += dt.microsecond / 1.0e6
+                        self.timestamp = self._parseISO8601(value).timestamp
                         return
                     except:
                         if iso8601:
