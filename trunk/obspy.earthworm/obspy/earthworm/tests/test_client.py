@@ -9,6 +9,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import os
 import unittest
+from numpy import array
 
 
 class ClientTestCase(unittest.TestCase):
@@ -20,17 +21,18 @@ class ClientTestCase(unittest.TestCase):
         Tests getWaveform method.
         """
         client = Client("hood.ess.washington.edu", 16021)
-        start = UTCDateTime(2011, 12, 17, 21, 31, 55)
+        start = UTCDateTime() - 24 * 3600
         end = start + 30
         # example 1 -- 1 channel, cleanup
         stream = client.getWaveform('UW', 'LON', '', 'BHZ', start, end)
         self.assertEquals(len(stream), 1)
+        delta = stream[0].stats.delta
         trace = stream[0]
         self.assertTrue(len(trace) == 1201)
-        self.assertTrue(trace.stats.starttime == \
-                        UTCDateTime("2011-12-17T21:31:55.005000Z"))
-        self.assertTrue(trace.stats.endtime == \
-                        UTCDateTime("2011-12-17T21:32:25.005000Z"))
+        self.assertTrue(trace.stats.starttime >= start - delta)
+        self.assertTrue(trace.stats.starttime <= start + delta)
+        self.assertTrue(trace.stats.endtime >= end - delta)
+        self.assertTrue(trace.stats.endtime <= end + delta)
         self.assertEquals(trace.stats.network, 'UW')
         self.assertEquals(trace.stats.station, 'LON')
         self.assertEquals(trace.stats.location, '--')
@@ -39,16 +41,12 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('UW', 'LON', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertEquals(len(stream), 2)
-        self.assertTrue(len(stream[0]) == 848)
-        self.assertTrue(len(stream[1]) == 353)
-        self.assertTrue(stream[0].stats.starttime == \
-                        UTCDateTime("2011-12-17T21:31:55.005000Z"))
-        self.assertTrue(stream[0].stats.endtime == \
-                        UTCDateTime("2011-12-17T21:32:16.180000Z"))
-        self.assertTrue(stream[1].stats.starttime == \
-                        UTCDateTime("2011-12-17T21:32:16.205000Z"))
-        self.assertTrue(stream[1].stats.endtime == \
-                        UTCDateTime("2011-12-17T21:32:25.005000Z"))
+        summed_length = array([len(trace) for trace in stream]).sum()
+        self.assertTrue(summed_length == 1201)
+        self.assertTrue(stream[0].stats.starttime >= start - delta)
+        self.assertTrue(stream[0].stats.starttime <= start + delta)
+        self.assertTrue(stream[-1].stats.endtime >= end - delta)
+        self.assertTrue(stream[-1].stats.endtime <= end + delta)
         for trace in stream:
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'LON')
@@ -59,10 +57,10 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(len(stream), 3)
         for trace in stream:
             self.assertTrue(len(trace) == 1201)
-            self.assertTrue(trace.stats.starttime == \
-                            UTCDateTime("2011-12-17T21:31:55.005000Z"))
-            self.assertTrue(trace.stats.endtime == \
-                            UTCDateTime("2011-12-17T21:32:25.005000Z"))
+            self.assertTrue(trace.stats.starttime >= start - delta)
+            self.assertTrue(trace.stats.starttime <= start + delta)
+            self.assertTrue(trace.stats.endtime >= end - delta)
+            self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'LON')
             self.assertEquals(trace.stats.location, '--')
@@ -78,19 +76,20 @@ class ClientTestCase(unittest.TestCase):
         try:
             # initialize client
             client = Client("hood.ess.washington.edu", 16021)
-            start = UTCDateTime(2011, 12, 17, 21, 31, 55)
+            start = UTCDateTime() - 24 * 3600
             end = start + 30
             # example 1 -- 1 channel, cleanup (using SLIST to avoid dependencies)
             client.saveWaveform(testfile, 'UW', 'LON', '', 'BHZ', start, end,
                                 format="SLIST")
             stream = read(testfile)
             self.assertEquals(len(stream), 1)
+            delta = stream[0].stats.delta
             trace = stream[0]
             self.assertTrue(len(trace) == 1201)
-            self.assertTrue(trace.stats.starttime == \
-                            UTCDateTime("2011-12-17T21:31:55.005000Z"))
-            self.assertTrue(trace.stats.endtime == \
-                            UTCDateTime("2011-12-17T21:32:25.005000Z"))
+            self.assertTrue(trace.stats.starttime >= start - delta)
+            self.assertTrue(trace.stats.starttime <= start + delta)
+            self.assertTrue(trace.stats.endtime >= end - delta)
+            self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'LON')
             self.assertEquals(trace.stats.location, '--')
