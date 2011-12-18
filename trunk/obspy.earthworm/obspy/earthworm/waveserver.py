@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Earthworm WaveServer tools for ObsPy.
+Low-level Earthworm Wave Server tools.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress

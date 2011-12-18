@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Earthworm WaveServer client for ObsPy.
+Earthworm Wave Server client for ObsPy.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU General Public License (GPLv2)
     (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+
+.. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
 
 from obspy.core import Stream
@@ -15,9 +17,25 @@ from obspy.earthworm.waveserver import readWaveServerV
 
 class Client(object):
     """
-    A Earthworm WaveServer client.
+    A Earthworm Wave Server client.
+
+    :type host: str
+    :param host: Host name of the remote Earthworm WaveServer server.
+    :type port: int
+    :param port: Port of the remote Earthworm WaveServer server.
+    :type timeout: int, optional
+    :param timeout: Seconds before a connection timeout is raised (default is
+        ``None``).
+    :type debug: bool, optional
+    :param debug: Enables verbose output of the connection handling (default is
+        ``False``).
     """
     def __init__(self, host, port, timeout=None, debug=False):
+        """
+        Initializes a Earthworm WaveServer client.
+
+        See :class:`obspy.earthworm.client.Client` for all parameters.
+        """
         self.host = host
         self.port = port
         self.timeout = timeout
@@ -51,7 +69,7 @@ class Client(object):
         >>> from obspy.core import UTCDateTime
         >>> client = Client("hood.ess.washington.edu", 16021)
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 20)
+        >>> st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -60,7 +78,7 @@ class Client(object):
             from obspy.core import UTCDateTime
             client = Client("hood.ess.washington.edu", 16021)
             dt = UTCDateTime() - 2000  # now - 2000 seconds
-            st = client.getWaveform('UW', 'LON', '', 'BHZ', t, t + 20)
+            st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
             st.plot()
         """
         if location == '':
@@ -108,7 +126,7 @@ class Client(object):
         >>> client = Client("hood.ess.washington.edu", 16021)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('UW.LON..BHZ.mseed', 'UW', 'LON', '', 'BHZ',
-        ...                     t, t + 20, format='MSEED')  # doctest: +SKIP
+        ...                     t, t + 300, format='MSEED')  # doctest: +SKIP
         """
         st = self.getWaveform(network, station, location, channel, starttime,
                               endtime)

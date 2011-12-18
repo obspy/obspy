@@ -27,7 +27,7 @@ Copyright (c) 2011-2012 by:
 
 Overview
 --------
-Earthworm WaveServer client for ObsPy.
+Earthworm Wave Server client for ObsPy.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

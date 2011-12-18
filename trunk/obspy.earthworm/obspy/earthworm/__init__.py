@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.earthworm - Earthworm WaveServer client for ObsPy.
-========================================================
+obspy.earthworm - Earthworm Wave Server client for ObsPy.
+=========================================================
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Victor Kress
