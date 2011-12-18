@@ -42,7 +42,7 @@ class Client(object):
         self.debug = debug
 
     def getWaveform(self, network, station, location, channel, starttime,
-                    endtime):
+                    endtime, cleanup=True):
         """
         Retrieves waveform data from Earthworm Wave Server and returns an ObsPy
         Stream object.
@@ -62,6 +62,10 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
+        :type cleanup: bool
+        :param cleanup: Specifies whether perfectly aligned traces should be
+            merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
+            `method` -1 or :meth:`~obspy.core.stream.Stream._cleanup`.
 
         .. rubric:: Example
 
@@ -90,10 +94,12 @@ class Client(object):
         st = Stream()
         for tb in tbl:
             st.append(tb.getObspyTrace())
+        if cleanup:
+            st._cleanup()
         return st
 
     def saveWaveform(self, filename, network, station, location, channel,
-                     starttime, endtime, format="MSEED"):
+                     starttime, endtime, format="MSEED", cleanup=True):
         """
         Writes a retrieved waveform directly into a file.
 
@@ -117,6 +123,10 @@ class Client(object):
             ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``. See the Supported
             Formats section in method :meth:`~obspy.core.stream.Stream.write`
             for a full list of supported formats. Defaults to ``'MSEED'``.
+        :type cleanup: bool
+        :param cleanup: Specifies whether perfectly aligned traces should be
+            merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
+            `method` -1 or :meth:`~obspy.core.stream.Stream._cleanup`.
         :return: None
 
         .. rubric:: Example
@@ -129,7 +139,7 @@ class Client(object):
         ...                     t, t + 300, format='MSEED')  # doctest: +SKIP
         """
         st = self.getWaveform(network, station, location, channel, starttime,
-                              endtime)
+                              endtime, cleanup=cleanup)
         st.write(filename, format=format)
 
 
