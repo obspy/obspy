@@ -548,8 +548,10 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertFalse(UTCDateTime(999.999999) != UTCDateTime(999.999999))
         self.assertTrue(UTCDateTime(999.0000001) != UTCDateTime(999.0000009))
         self.assertTrue(UTCDateTime(999.9999990) != UTCDateTime(999.9999999))
-        self.assertFalse(UTCDateTime(999.00000001) != UTCDateTime(999.00000009))
-        self.assertFalse(UTCDateTime(999.99999900) != UTCDateTime(999.99999909))
+        self.assertFalse(UTCDateTime(999.00000001) != \
+                         UTCDateTime(999.00000009))
+        self.assertFalse(UTCDateTime(999.99999900) != \
+                         UTCDateTime(999.99999909))
         # w/ precision of 7 digits
         self.assertTrue(UTCDateTime(999.00000001, precision=7) != \
                         UTCDateTime(999.00000009, precision=7))
