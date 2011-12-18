@@ -26,6 +26,7 @@ The functionality is provided through the following packages:
    obspy.mseed
    obspy.sac
    obspy.seisan
+   obspy.seg2
    obspy.segy
    obspy.sh
    obspy.wav
@@ -38,6 +39,7 @@ The functionality is provided through the following packages:
 
    obspy.arclink
    obspy.db
+   obspy.earthworm
    obspy.iris
    obspy.neries
    obspy.seishub
