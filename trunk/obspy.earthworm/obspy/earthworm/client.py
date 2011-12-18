@@ -20,9 +20,9 @@ class Client(object):
     A Earthworm Wave Server client.
 
     :type host: str
-    :param host: Host name of the remote Earthworm WaveServer server.
+    :param host: Host name of the remote Earthworm Wave Server server.
     :type port: int
-    :param port: Port of the remote Earthworm WaveServer server.
+    :param port: Port of the remote Earthworm Wave Server server.
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
         ``None``).
@@ -32,7 +32,7 @@ class Client(object):
     """
     def __init__(self, host, port, timeout=None, debug=False):
         """
-        Initializes a Earthworm WaveServer client.
+        Initializes a Earthworm Wave Server client.
 
         See :class:`obspy.earthworm.client.Client` for all parameters.
         """
@@ -44,7 +44,7 @@ class Client(object):
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime):
         """
-        Retrieves waveform data from Earthworm WaveServer and returns an ObsPy
+        Retrieves waveform data from Earthworm Wave Server and returns an ObsPy
         Stream object.
 
         :type filename: str
@@ -111,12 +111,12 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'MSEED'``, optional
+        :type format: str, optional
         :param format: Output format. Depending on your ObsPy installation one
             of ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
             ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``. See the Supported
             Formats section in method :meth:`~obspy.core.stream.Stream.write`
-            for a full list of supported formats.
+            for a full list of supported formats. Defaults to ``'MSEED'``.
         :return: None
 
         .. rubric:: Example
