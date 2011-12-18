@@ -380,37 +380,39 @@ class ClientTestCase(unittest.TestCase):
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
-        # initialize client
-        client = Client("erde.geophysik.uni-muenchen.de", 18001)
-        start = UTCDateTime(2008, 1, 1)
-        end = start + 10
-        # MiniSEED
-        client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-        st = read(mseedfile)
-        # MiniSEED may not start with Volume Index Control Headers (V)
-        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
-        # ArcLink cuts on record base
-        self.assertTrue(st[0].stats.starttime <= start)
-        self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
-        os.remove(mseedfile)
-        # Full SEED
-        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                            format='FSEED')
-        st = read(fseedfile)
-        # Full SEED must start with Volume Index Control Headers (V)
-        self.assertEquals(open(fseedfile).read(8)[6], "V")
-        # ArcLink cuts on record base
-        self.assertTrue(st[0].stats.starttime <= start)
-        self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
-        os.remove(fseedfile)
+        try:
+            # initialize client
+            client = Client("erde.geophysik.uni-muenchen.de", 18001)
+            start = UTCDateTime(2008, 1, 1)
+            end = start + 10
+            # MiniSEED
+            client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            st = read(mseedfile)
+            # MiniSEED may not start with Volume Index Control Headers (V)
+            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            # ArcLink cuts on record base
+            self.assertTrue(st[0].stats.starttime <= start)
+            self.assertTrue(st[0].stats.endtime >= end)
+            self.assertEquals(st[0].stats.network, 'BW')
+            self.assertEquals(st[0].stats.station, 'MANZ')
+            self.assertEquals(st[0].stats.location, '')
+            self.assertEquals(st[0].stats.channel, 'EHZ')
+            # Full SEED
+            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                                format='FSEED')
+            st = read(fseedfile)
+            # Full SEED must start with Volume Index Control Headers (V)
+            self.assertEquals(open(fseedfile).read(8)[6], "V")
+            # ArcLink cuts on record base
+            self.assertTrue(st[0].stats.starttime <= start)
+            self.assertTrue(st[0].stats.endtime >= end)
+            self.assertEquals(st[0].stats.network, 'BW')
+            self.assertEquals(st[0].stats.station, 'MANZ')
+            self.assertEquals(st[0].stats.location, '')
+            self.assertEquals(st[0].stats.channel, 'EHZ')
+        finally:
+            os.remove(mseedfile)
+            os.remove(fseedfile)
 
     def test_getWaveformNoCompression(self):
         """
@@ -434,35 +436,37 @@ class ClientTestCase(unittest.TestCase):
         """
         mseedfile = NamedTemporaryFile().name
         fseedfile = NamedTemporaryFile().name
-        # initialize client
-        client = Client()
-        start = UTCDateTime(2008, 1, 1, 0, 0)
-        end = start + 1
-        # MiniSEED
-        client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                            compressed=False)
-        st = read(mseedfile)
-        # MiniSEED may not start with Volume Index Control Headers (V)
-        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
-        # ArcLink cuts on record base
-        self.assertEquals(st[0].stats.network, 'GE')
-        self.assertEquals(st[0].stats.station, 'APE')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'BHZ')
-        os.remove(mseedfile)
-        # Full SEED
-        client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                            format='FSEED')
-        st = read(fseedfile)
-        # Full SEED
-        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                            format='FSEED')
-        # ArcLink cuts on record base
-        self.assertEquals(st[0].stats.network, 'GE')
-        self.assertEquals(st[0].stats.station, 'APE')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'BHZ')
-        os.remove(fseedfile)
+        try:
+            # initialize client
+            client = Client()
+            start = UTCDateTime(2008, 1, 1, 0, 0)
+            end = start + 1
+            # MiniSEED
+            client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                                compressed=False)
+            st = read(mseedfile)
+            # MiniSEED may not start with Volume Index Control Headers (V)
+            self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+            # ArcLink cuts on record base
+            self.assertEquals(st[0].stats.network, 'GE')
+            self.assertEquals(st[0].stats.station, 'APE')
+            self.assertEquals(st[0].stats.location, '')
+            self.assertEquals(st[0].stats.channel, 'BHZ')
+            # Full SEED
+            client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                                format='FSEED')
+            st = read(fseedfile)
+            # Full SEED
+            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                                format='FSEED')
+            # ArcLink cuts on record base
+            self.assertEquals(st[0].stats.network, 'GE')
+            self.assertEquals(st[0].stats.station, 'APE')
+            self.assertEquals(st[0].stats.location, '')
+            self.assertEquals(st[0].stats.channel, 'BHZ')
+        finally:
+            os.remove(mseedfile)
+            os.remove(fseedfile)
 
     def test_saveWaveformCompressed(self):
         """
@@ -470,26 +474,28 @@ class ClientTestCase(unittest.TestCase):
         """
         mseedfile = NamedTemporaryFile(suffix='.bz2').name
         fseedfile = NamedTemporaryFile(suffix='.bz2').name
-        # initialize client
-        client = Client()
-        start = UTCDateTime(2008, 1, 1, 0, 0)
-        end = start + 1
-        # MiniSEED
-        client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                            unpack=False)
-        # check if compressed
-        self.assertEquals(open(mseedfile, 'rb').read(2), 'BZ')
-        # importing via read should work too
-        read(mseedfile)
-        os.remove(mseedfile)
-        # Full SEED
-        client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
-                            format="FSEED", unpack=False)
-        # check if compressed
-        self.assertEquals(open(fseedfile, 'rb').read(2), 'BZ')
-        # importing via read should work too
-        read(fseedfile)
-        os.remove(fseedfile)
+        try:
+            # initialize client
+            client = Client()
+            start = UTCDateTime(2008, 1, 1, 0, 0)
+            end = start + 1
+            # MiniSEED
+            client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                                unpack=False)
+            # check if compressed
+            self.assertEquals(open(mseedfile, 'rb').read(2), 'BZ')
+            # importing via read should work too
+            read(mseedfile)
+            # Full SEED
+            client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
+                                format="FSEED", unpack=False)
+            # check if compressed
+            self.assertEquals(open(fseedfile, 'rb').read(2), 'BZ')
+            # importing via read should work too
+            read(fseedfile)
+        finally:
+            os.remove(mseedfile)
+            os.remove(fseedfile)
 
     def test_getPAZ(self):
         """
@@ -541,13 +547,15 @@ class ClientTestCase(unittest.TestCase):
         Fetches and stores response information as Dataless SEED volume.
         """
         tempfile = NamedTemporaryFile().name
-        client = Client()
-        start = UTCDateTime(2008, 1, 1)
-        end = start + 1
-        # Dataless SEED
-        client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-        self.assertEquals(open(tempfile).read(8), "000001V ")
-        os.remove(tempfile)
+        try:
+            client = Client()
+            start = UTCDateTime(2008, 1, 1)
+            end = start + 1
+            # Dataless SEED
+            client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            self.assertEquals(open(tempfile).read(8), "000001V ")
+        finally:
+            os.remove(tempfile)
 
     def test_SRL(self):
         """
