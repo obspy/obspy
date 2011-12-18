@@ -4,7 +4,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.arclink"
+MODULE_NAME = "obspy.earthworm"
 
 
 def suite():
