@@ -118,6 +118,9 @@ class UTCDateTime(object):
         >>> UTCDateTime("19700101")
         UTCDateTime(1970, 1, 1, 0, 0)
 
+        >>> UTCDateTime("20110818_03:00:00")
+        UTCDateTime(2011, 8, 18, 3, 0)
+
     (4) Using multiple arguments in the following order: `year, month,
         day[, hour[, minute[, second[, microsecond]]]`. The year, month and day
         arguments are required.
@@ -191,6 +194,7 @@ class UTCDateTime(object):
                             raise
                 # try to apply some standard patterns
                 value = value.replace('T', ' ')
+                value = value.replace('_', ' ')
                 value = value.replace('-', ' ')
                 value = value.replace(':', ' ')
                 value = value.replace(',', ' ')
@@ -236,7 +240,7 @@ class UTCDateTime(object):
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
                     self.fromDateTime(dt)
-                    return 
+                    return
                 dt = datetime.datetime.strptime(value, pattern)
                 self.fromDateTime(dt, ms)
                 return
@@ -686,13 +690,13 @@ class UTCDateTime(object):
         Return the day of the week as an integer, where Monday is 1 and Sunday
         is 7.
         """
-        return self.getDateTime().isoweekday() 
+        return self.getDateTime().isoweekday()
 
     def isocalendar(self):
         """
         Return a 3-tuple, (ISO year, ISO week number, ISO weekday).
         """
-        return self.getDateTime().isocalendar() 
+        return self.getDateTime().isocalendar()
 
     def isoformat(self, sep="T"):
         """
