@@ -390,7 +390,7 @@ class Client(object):
             client = Client("webdc.eu", 18001, 'test@obspy.org')
             t = UTCDateTime("2009-08-20 04:03:12")
             st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
-            st.plot() #doctest: +SKIP
+            st.plot()
         """
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
@@ -472,7 +472,7 @@ class Client(object):
         >>> from obspy.core import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
-        >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
+        >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
         # check parameters
