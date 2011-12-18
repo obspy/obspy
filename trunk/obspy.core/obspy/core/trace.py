@@ -1296,8 +1296,16 @@ class Trace(object):
 
         # do automatic lowpass filtering
         if not no_filter:
-            low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
-            self.filter('lowpass', freq=low_corner)
+            # be sure filter still behaves good
+            if decimation_factor > 16:
+                msg = "Automatic filter design is unstable for decimation " + \
+                      "factors above 16. Manual decimation is necessary."
+                raise ArithmeticError(msg)
+            #low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
+            #self.filter('lowpass', freq=low_corner)
+            self.data = signal.filter.lowpassCheby2(self.data,
+                self.stats.sampling_rate * 0.5 / float(decimation_factor),
+                self.stats.sampling_rate, maxorder=12)
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure

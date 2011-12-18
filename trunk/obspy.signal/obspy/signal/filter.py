@@ -20,7 +20,8 @@ Various Seismogram Filtering Functions
 import warnings
 from numpy import array, where, fft
 from scipy.fftpack import hilbert
-from scipy.signal import iirfilter, lfilter, remez, convolve, get_window
+from scipy.signal import iirfilter, lfilter, remez, convolve, get_window, \
+    cheby2, cheb2ord
 
 
 def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
@@ -257,7 +258,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Data below this frequency pass.
-    :param samprate: Sampling rate in Hz.
+    :param samp_rate: Sampling rate in Hz.
     :param winlen: Window length for filter in samples, must be power of 2;
         Default 2048
     :return: Filtered data.
@@ -305,3 +306,30 @@ def integerDecimation(data, decimation_factor):
     # reshape and only use every decimation_factor-th sample
     data = array(data[::decimation_factor])
     return data
+
+
+def lowpassCheby2(data, freq, df, maxorder=12):
+    """
+    Cheby2-Lowpass Filter
+
+    Filter data by passing data only below a certain frequency.
+
+    :param data: Data to filter, type numpy.ndarray.
+    :param freq: The frequency above which signals are attenuated
+        with 95 dB
+    :param df: Sampling rate in Hz.
+    :param maxorder: Maximal order of the designed cheby2 filter
+    :return: Filtered data.
+    """
+    nyquist = df * 0.5
+    # rp - maximum ripple of passband, rs - attenuation of stopband
+    rp, rs, order = 1, 95, 1e99
+    ws = freq/df  # stop band frequency
+    wp = ws       # pass band frequency
+    while True:
+        if order <= maxorder:
+            break
+        wp = wp * 0.99
+        order, wn = cheb2ord(wp, ws, rp, rs, analog=0)
+    b, a = cheby2(order, rs, wn, btype='low', analog=0, output='ba')
+    return lfilter(b, a, data)
