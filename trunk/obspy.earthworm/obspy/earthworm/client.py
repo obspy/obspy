@@ -56,7 +56,9 @@ class Client(object):
         :type location: str
         :param location: Location code, e.g. ``''``.
         :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``.
+        :param channel: Channel code, e.g. ``'BHZ'``. Last character (i.e.
+            component) can be a wildcard ('?' or '*') to fetch `Z`, `N` and
+            `E` component.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -75,6 +77,8 @@ class Client(object):
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
         >>> st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
         >>> st.plot()  # doctest: +SKIP
+        >>> st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 300)
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -84,7 +88,18 @@ class Client(object):
             dt = UTCDateTime() - 2000  # now - 2000 seconds
             st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
             st.plot()
+            st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 300)
+            st.plot()
         """
+        # replace wildcards in last char of channel and fetch all 3 components
+        if channel[-1] in "?*":
+            st = Stream()
+            for comp in ("Z", "N", "E"):
+                channel_new = channel[:-1] + comp
+                st += self.getWaveform(network, station, location,
+                                       channel_new, starttime, endtime,
+                                       cleanup=cleanup)
+            return st
         if location == '':
             location = '--'
         scnl = (station, channel, network, location)
@@ -96,6 +111,7 @@ class Client(object):
             st.append(tb.getObspyTrace())
         if cleanup:
             st._cleanup()
+        st.trim(starttime, endtime)
         return st
 
     def saveWaveform(self, filename, network, station, location, channel,
@@ -112,7 +128,9 @@ class Client(object):
         :type location: str
         :param location: Location code, e.g. ``''``.
         :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``.
+        :param channel: Channel code, e.g. ``'BHZ'``. Last character (i.e.
+            component) can be a wildcard ('?' or '*') to fetch `Z`, `N` and
+            `E` component.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
