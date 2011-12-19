@@ -2,11 +2,10 @@
 !include "x64.nsh"
 
 
-
-
 Name ObsPy
 
 RequestExecutionLevel admin
+
 
 # Download URLs
 !define PYTHON_WIN32 "http://www.obspy.org/www/files/python-2.7.2.msi"
@@ -34,7 +33,7 @@ RequestExecutionLevel admin
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2-2
+!define VERSION 2.7.2-3
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
 
@@ -68,7 +67,6 @@ Var PythonDirectory
 
 # Installer languages
 !insertmacro MUI_LANGUAGE English
-!insertmacro MUI_LANGUAGE German
 
 # Installer attributes
 OutFile obspy-setup.exe
@@ -76,7 +74,7 @@ InstallDir $PROFILE\ObsPy
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 2.7.2.2
+VIProductVersion 2.7.2.3
 VIAddVersionKey ProductName ObsPy
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -124,6 +122,7 @@ Function InstallPython
 FunctionEnd
 
 Function InstallDependencies
+    DetailPrint "Installing dependencies ($PythonDirectory)"
     #
     # distribute
     #
@@ -274,23 +273,18 @@ Function InstallDependencies
         Delete $2
     ${EndIf}
     # virtualenv
-    nsExec::Exec '"$PythonDirectory\python.exe" -c "import virtualenv"'
-    Pop $R0
-    ${If} $R0 == 0
-        DetailPrint "virtualenv already installed."
-    ${Else}
-        DetailPrint "Running easy_install.exe virtualenv"
-        nsExec::Exec '"$PythonDirectory\Scripts\easy_install.exe" "virtualenv"'
-    ${EndIf}
+    DetailPrint "Running easy_install.exe -U virtualenv"
+    nsExec::Exec '"$PythonDirectory\Scripts\easy_install.exe" -U "virtualenv"'
     # create virtualenv
-    DetailPrint "Creating virtual environment"
+    DetailPrint "Creating virtual environment ($INSTDIR)"
     nsExec::Exec '"$PythonDirectory\Scripts\virtualenv.exe" --system-site-packages --distribute "$INSTDIR"'
+    DetailPrint "Installing further dependencies ($INSTDIR)"
     # pyreadline
     DetailPrint "Running easy_install.exe pyreadline"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pyreadline"'
     # ipython
-    DetailPrint "Running easy_install.exe ipython"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "ipython"'
+    DetailPrint "Running easy_install.exe -U ipython"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "ipython"'
     # ipdb
     DetailPrint "Running easy_install.exe ipdb"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "ipdb"'
@@ -298,11 +292,12 @@ Function InstallDependencies
     DetailPrint "Running easy_install.exe pygments"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pygments"'
     # pyzmq
-    DetailPrint "Running easy_install.exe pyzmq"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" "pyzmq==2.1.4"'
+    DetailPrint "Running easy_install.exe -U pyzmq"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "pyzmq"'
 FunctionEnd
 
 Function InstallObsPy
+    DetailPrint "Installing ObsPy ($INSTDIR)"
     # installation of all ObsPy modules
     DetailPrint "Running easy_install.exe -U obspy.core"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.core"'
@@ -340,7 +335,8 @@ FunctionEnd
 
 
 # Installer sections
-Section -Main SEC0000
+Section
+    SetShellVarContext all
     ${If} ${RunningX64}
         SetRegView 64
     ${EndIf}
@@ -353,13 +349,11 @@ Section -Main SEC0000
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk" http://gallery.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk" http://examples.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk" http://tests.obspy.org "" "$WINDIR\System32\SHELL32.dll" 13
-    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk" "cmd" '/K "$INSTDIR\Scripts\ipython" qtconsole --colors=linux --pylab=inline' "$INSTDIR\Scripts\python.exe" 0
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk" "cmd" '/K "$INSTDIR\Scripts\ipython"' "$INSTDIR\Scripts\python.exe" 0
+    CreateShortcut "$SMPROGRAMS\$StartMenuGroup\IPython Console (QT).lnk" "cmd" '/K "$INSTDIR\Scripts\ipython" qtconsole --colors=linux --pylab=inline' "$INSTDIR\Scripts\python.exe" 0
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk" "cmd" '/K "$INSTDIR\Scripts\activate.bat"'
     CreateShortcut "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk" "cmd" '/K "$INSTDIR\Scripts\obspy-runtests"' "$WINDIR\System32\SHELL32.dll" 152
     WriteRegStr HKLM "${REGKEY}\Components" Main 1
-SectionEnd
-
-Section -post SEC0001
     WriteRegStr HKLM "${REGKEY}" Path $INSTDIR
     SetOutPath $INSTDIR
     WriteUninstaller $INSTDIR\uninstall.exe
@@ -377,62 +371,31 @@ Section -post SEC0001
     WriteRegDWORD HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)" NoRepair 1
 SectionEnd
 
-# Macro for selecting uninstaller sections
-!macro SELECT_UNSECTION SECTION_NAME UNSECTION_ID
-    Push $R0
-    ReadRegStr $R0 HKLM "${REGKEY}\Components" "${SECTION_NAME}"
-    StrCmp $R0 1 0 next${UNSECTION_ID}
-    !insertmacro SelectSection "${UNSECTION_ID}"
-    GoTo done${UNSECTION_ID}
-next${UNSECTION_ID}:
-    !insertmacro UnselectSection "${UNSECTION_ID}"
-done${UNSECTION_ID}:
-    Pop $R0
-!macroend
 
 # Uninstaller sections
-Section /o -un.Main UNSEC0000
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk"
-
-    RmDir /r /REBOOTOK $INSTDIR
+Section uninstall
+    SetShellVarContext all
+    Delete "$SMPROGRAMS\$StartMenuGroup\ObsPy Homepage.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Tutorials.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Gallery.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Waveform Examples.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Buildbot Reports.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\IPython Console.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\IPython Console (QT).lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\ObsPy Shell.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Run Test Suite.lnk"
+    Delete "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
     DeleteRegValue HKLM "${REGKEY}\Components" Main
-    RmDir /r $INSTDIR
-SectionEnd
-
-
-Section -un.post UNSEC0001
     DeleteRegKey HKLM "SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\$(^Name)"
-    Delete /REBOOTOK "$SMPROGRAMS\$StartMenuGroup\Uninstall $(^Name).lnk"
-    Delete /REBOOTOK $INSTDIR\uninstall.exe
     DeleteRegValue HKLM "${REGKEY}" StartMenuGroup
     DeleteRegValue HKLM "${REGKEY}" Path
     DeleteRegKey /IfEmpty HKLM "${REGKEY}\Components"
     DeleteRegKey /IfEmpty HKLM "${REGKEY}"
-    RmDir /REBOOTOK $SMPROGRAMS\$StartMenuGroup
-    RmDir /REBOOTOK $INSTDIR
+    RMDir /r $SMPROGRAMS\$StartMenuGroup
+    RMDir /r $INSTDIR
     Push $R0
     StrCpy $R0 $StartMenuGroup 1
     StrCmp $R0 ">" no_smgroup
 no_smgroup:
     Pop $R0
 SectionEnd
-
-# Installer functions
-Function .onInit
-    InitPluginsDir
-FunctionEnd
-
-# Uninstaller functions
-Function un.onInit
-    ReadRegStr $INSTDIR HKLM "${REGKEY}" Path
-    !insertmacro MUI_STARTMENU_GETFOLDER Application $StartMenuGroup
-    !insertmacro SELECT_UNSECTION Main ${UNSEC0000}
-FunctionEnd
-
