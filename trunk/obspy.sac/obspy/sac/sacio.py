@@ -1420,6 +1420,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
+    # taken from obspy.gse2.paz:145
+    tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
+        tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant
 
 
@@ -1448,8 +1451,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')
     >>> attach_resp(tr, respfile, torad=True, todisp=False)
-    >>> print tr.stats.paz.keys()
-    ['digitizer_gain', 'seismometer_gain', 'zeros', 'gain', 't_shift', 'poles']
+    >>> print tr.stats.paz.keys()  # doctest: +NORMALIZE_WHITESPACE
+    ['sensitivity', 'digitizer_gain', 'seismometer_gain', 'zeros', 'gain',
+     't_shift', 'poles']
     >>> print tr.stats.paz.poles  # doctest: +SKIP
     [(-0.15931644664884559+0.15931644664884559j),
      (-0.15931644664884559-0.15931644664884559j),
@@ -1526,6 +1530,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
+    # taken from obspy.gse2.paz:145
+    tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
+        tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant
     tr.stats.paz.t_shift = t_shift
 
