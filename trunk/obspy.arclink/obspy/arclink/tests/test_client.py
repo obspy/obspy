@@ -85,7 +85,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(len(stream), 1)
         # getRouting with 0.1 delay
         results = client.getRouting('GR', 'FUR', start, end)
-        self.assertTrue('GR.FUR..' in results)
+        self.assertTrue('GR...' in results)
 
     def test_getRouting(self):
         """
@@ -101,19 +101,13 @@ class ClientTestCase(unittest.TestCase):
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
             {'BW...': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'webdc.eu', 'end': None, 'port': 18002},
-                       {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
-                        'port': 18001}]})
+                        'host': 'webdc.eu', 'end': None, 'port': 18002}]})
         #3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
             {'BW...': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'webdc.eu', 'end': None, 'port': 18002},
-                       {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
-                        'port': 18001}]})
+                        'host': 'webdc.eu', 'end': None, 'port': 18002}]})
         #4 - BW network via bhlsa04.knmi.nl:18002
         client = Client(host="bhlsa03.knmi.nl", port=18002)
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
@@ -325,7 +319,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.getWaveform, 'AA', 'AAAAA',
                           '', '*', start, end)
         # example 2
-        start = UTCDateTime(1908, 1, 1)
+        start = UTCDateTime(2200, 1, 1)
         end = start + 1
         self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
                           '', '*', start, end)
