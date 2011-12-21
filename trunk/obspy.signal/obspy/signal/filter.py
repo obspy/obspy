@@ -321,8 +321,8 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
         with 95 dB
     :param df: Sampling rate in Hz.
     :param maxorder: Maximal order of the designed cheby2 filter
-    :param by: Return the filter coefficients b, a instead of
-        filtering
+    :param ba: If True return the filter coefficients (b, a) instead of
+        filtering, if False return the filtered data
     :return: Filtered data.
     """
     nyquist = df * 0.5
