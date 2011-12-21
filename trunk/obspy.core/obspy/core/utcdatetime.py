@@ -167,8 +167,7 @@ class UTCDateTime(object):
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             # check types
-            if isinstance(value, int) or isinstance(value, long) or \
-               isinstance(value, float) or isinstance(value, UTCDateTime):
+            if hasattr(value, '__float__'):
                 # got a timestamp
                 self.timestamp = float(value)
                 return
