@@ -70,7 +70,7 @@ Basic Usage
     >>> from obspy.core import UTCDateTime
     >>> client = Client(user='test@obspy.org')
     >>> dt = UTCDateTime("2009-04-01T00:02:00")
-    >>> st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+60*10)
+    >>> st = client.getWaveform("BW", "MANZ", "", "EH*", dt, dt+60*10)
     >>> st.plot()  #doctest: +SKIP
 
     .. plot::
@@ -79,7 +79,7 @@ Basic Usage
         from obspy.neries import Client
         client = Client(user='test@obspy.org')
         dt = UTCDateTime("2009-04-01T00:02:00")
-        st = client.getWaveform("NL", "WIT", "", "BH*", dt, dt+60*10)
+        st = client.getWaveform("BW", "MANZ", "", "EH*", dt, dt+60*10)
         st.plot()
 
 (5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a
