@@ -24,7 +24,7 @@ class ClientTestCase(unittest.TestCase):
         """
         # example 1
         client = Client()
-        start = UTCDateTime(2008, 1, 1)
+        start = UTCDateTime(2010, 1, 1)
         end = start + 1
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
         self.assertEquals(len(stream), 3)
@@ -81,11 +81,11 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime(2010, 1, 1)
         end = start + 100
         # getWaveform with 0.1 delay
-        stream = client.getWaveform('BW', 'MANZ', '', 'EHE', start, end)
+        stream = client.getWaveform('GR', 'FUR', '', 'HHE', start, end)
         self.assertEquals(len(stream), 1)
         # getRouting with 0.1 delay
-        results = client.getRouting('BW', 'MANZ', start, end)
-        self.assertTrue('BW.MANZ..' in results)
+        results = client.getRouting('GR', 'FUR', start, end)
+        self.assertTrue('GR.FUR..' in results)
 
     def test_getRouting(self):
         """
@@ -236,8 +236,8 @@ class ClientTestCase(unittest.TestCase):
         """
         client = Client()
         # new schema
-        inventory = client.getInventory('CH', 'AIGLE')
-        self.assertTrue('CH.AIGLE..LHE' in inventory)
+        inventory = client.getInventory('CH', 'GRYON')
+        self.assertTrue('CH.GRYON..EHE' in inventory)
         # old schema
         inventory = client.getInventory('BW', 'MANZ')
         self.assertTrue('BW.MANZ..EHZ' in inventory)
@@ -262,7 +262,7 @@ class ClientTestCase(unittest.TestCase):
                           (-131.04 + 467.29j)],
                 'sensitivity': 2516778600.0,
                 'zeros': [0j, 0j],
-                'name': 'STS-2/N/g=1500',
+                'name': 'LMU:STS-2/N/g=1500',
                 'gain': 60077000.0}),
             'mseed': AttribDict({'dataquality': 'D',
                                  'record_length': 512,
@@ -325,7 +325,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.getWaveform, 'AA', 'AAAAA',
                           '', '*', start, end)
         # example 2
-        start = UTCDateTime(1008, 1, 1)
+        start = UTCDateTime(1908, 1, 1)
         end = start + 1
         self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
                           '', '*', start, end)
@@ -368,9 +368,9 @@ class ClientTestCase(unittest.TestCase):
             AttribDict({'remark': '', 'code': 'RWMO', 'elevation': 763.0,
                         'description': 'Wildenmoos, Bavaria',
                         'start': UTCDateTime(2006, 6, 4, 0, 0),
-                        'restricted': False, 'archive_net': 'BW',
+                        'restricted': False, 'archive_net': '',
                         'longitude': 12.729887, 'affiliation': '',
-                        'depth': 1.0, 'place': 'Wildenmoos, Bavaria',
+                        'depth': None, 'place': 'Wildenmoos, Bavaria',
                         'country': 'Germany', 'latitude': 47.744171999999999,
                         'end': None}) in result)
 
@@ -439,7 +439,7 @@ class ClientTestCase(unittest.TestCase):
         try:
             # initialize client
             client = Client()
-            start = UTCDateTime(2008, 1, 1, 0, 0)
+            start = UTCDateTime(2010, 1, 1, 0, 0)
             end = start + 1
             # MiniSEED
             client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
