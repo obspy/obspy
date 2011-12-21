@@ -308,28 +308,34 @@ def integerDecimation(data, decimation_factor):
     return data
 
 
-def lowpassCheby2(data, freq, df, maxorder=12):
+def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
     """
     Cheby2-Lowpass Filter
 
     Filter data by passing data only below a certain frequency.
+    The main purpose of this cheby2 filter is downsampling.
+    #318 shows some plots of this filter design itself.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: The frequency above which signals are attenuated
         with 95 dB
     :param df: Sampling rate in Hz.
     :param maxorder: Maximal order of the designed cheby2 filter
+    :param by: Return the filter coefficients b, a instead of
+        filtering
     :return: Filtered data.
     """
     nyquist = df * 0.5
     # rp - maximum ripple of passband, rs - attenuation of stopband
     rp, rs, order = 1, 95, 1e99
-    ws = freq/df  # stop band frequency
-    wp = ws       # pass band frequency
+    ws = freq/nyquist  # stop band frequency
+    wp = ws            # pass band frequency
     while True:
         if order <= maxorder:
             break
         wp = wp * 0.99
         order, wn = cheb2ord(wp, ws, rp, rs, analog=0)
     b, a = cheby2(order, rs, wn, btype='low', analog=0, output='ba')
+    if ba:
+        return b, a
     return lfilter(b, a, data)

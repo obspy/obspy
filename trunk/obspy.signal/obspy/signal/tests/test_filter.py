@@ -5,11 +5,12 @@ The Filter test suite.
 """
 
 from obspy.signal import bandpass, lowpass, highpass
-from obspy.signal.filter import envelope
+from obspy.signal.filter import envelope, lowpassCheby2
 import os
 import unittest
 import gzip
 import numpy as np
+import scipy.signal as sg
 
 
 class FilterTestCase(unittest.TestCase):
@@ -229,6 +230,24 @@ class FilterTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
+
+
+    def test_lowpassCheby2(self):
+        """
+        Check magnitudes of basic lowpass cheby2
+        """
+        df = 200  # Hz
+        b, a = lowpassCheby2(data=None, freq=50,
+            df=df, maxorder=12, ba=True)
+        nyquist = 200 * 0.5
+        # calculate frequency response
+        w, h = sg.freqz(b, a, int(nyquist))
+        freq = w/np.pi * nyquist
+        h_db = 20*np.log10(abs(h))
+        # be smaller than -95dB above lowpass frequency
+        self.assertTrue(h_db[freq > 50].max() < -95)
+        # be 0 (1dB ripple) before filter ramp
+        self.assertTrue(h_db[freq < 25].min() > -1)
 
 
 def suite():

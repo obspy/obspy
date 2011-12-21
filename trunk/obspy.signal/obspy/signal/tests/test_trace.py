@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 from obspy.core import UTCDateTime, Trace, read
 from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
+from obspy.signal.filter import lowpassCheby2
 import unittest
 
 
@@ -148,14 +149,14 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.processing,
                          ["downsample:integerDecimation:10"])
         # some tests with automatic prefiltering
-        # needs to be worked over with cheby2 filter design
-        # tr = tr_bkp.copy()
-        # tr2 = tr_bkp.copy()
-        # tr.downsample(4)
-        # tr2.filter('lowpass', freq=tr2.stats.sampling_rate * 0.4 / 4)
-        # tr2.downsample(4, no_filter=True)
-        # np.testing.assert_array_equal(tr.data, tr2.data)
-        # self.assertEqual(tr.stats, tr2.stats)
+        tr = tr_bkp.copy()
+        tr2 = tr_bkp.copy()
+        tr.downsample(4)
+        df = tr2.stats.sampling_rate
+        tr2.data = lowpassCheby2(data=tr2.data, freq=df*0.5/4.0,
+                                 df=df, maxorder=12, ba=False)
+        tr2.downsample(4, no_filter=True)
+        np.testing.assert_array_equal(tr.data, tr2.data)
 
 
 def suite():
