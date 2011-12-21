@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+%:
+	dh $@
+
+binary:
+	dh binary --until dh_shlibdeps
+	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
+	dh binary --after dh_shlibdeps
