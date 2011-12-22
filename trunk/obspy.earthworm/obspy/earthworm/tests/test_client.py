@@ -40,7 +40,7 @@ class ClientTestCase(unittest.TestCase):
         # example 2 -- 1 channel, no cleanup
         stream = client.getWaveform('UW', 'LON', '', 'BHZ', start, end,
                                     cleanup=False)
-        self.assertEquals(len(stream), 2)
+        self.assertTrue(len(stream) >= 2)
         summed_length = array([len(trace) for trace in stream]).sum()
         self.assertTrue(summed_length == 1201)
         self.assertTrue(stream[0].stats.starttime >= start - delta)
