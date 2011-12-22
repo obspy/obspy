@@ -328,8 +328,8 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
     nyquist = df * 0.5
     # rp - maximum ripple of passband, rs - attenuation of stopband
     rp, rs, order = 1, 95, 1e99
-    ws = freq/nyquist  # stop band frequency
-    wp = ws            # pass band frequency
+    ws = freq / nyquist  # stop band frequency
+    wp = ws              # pass band frequency
     while True:
         if order <= maxorder:
             break

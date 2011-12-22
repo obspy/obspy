@@ -139,8 +139,9 @@ class SEG2(object):
         self.trace_pointers = []
         for _i in xrange(number_of_traces):
             index = _i * 4
-            self.trace_pointers.append(unpack('%sL' % self.endian,
-                                  trace_pointer_sub_block[index:index+4])[0])
+            self.trace_pointers.append(
+                unpack('%sL' % self.endian,
+                       trace_pointer_sub_block[index:index + 4])[0])
 
         # The rest of the header up to where the first trace pointer points is
         # a free form section.

@@ -231,7 +231,6 @@ class FilterTestCase(unittest.TestCase):
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
 
-
     def test_lowpassCheby2(self):
         """
         Check magnitudes of basic lowpass cheby2
@@ -242,8 +241,8 @@ class FilterTestCase(unittest.TestCase):
         nyquist = 200 * 0.5
         # calculate frequency response
         w, h = sg.freqz(b, a, int(nyquist))
-        freq = w/np.pi * nyquist
-        h_db = 20*np.log10(abs(h))
+        freq = w / np.pi * nyquist
+        h_db = 20 * np.log10(abs(h))
         # be smaller than -95dB above lowpass frequency
         self.assertTrue(h_db[freq > 50].max() < -95)
         # be 0 (1dB ripple) before filter ramp

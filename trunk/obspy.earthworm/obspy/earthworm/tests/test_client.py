@@ -78,7 +78,7 @@ class ClientTestCase(unittest.TestCase):
             client = Client("hood.ess.washington.edu", 16021)
             start = UTCDateTime() - 24 * 3600
             end = start + 30
-            # example 1 -- 1 channel, cleanup (using SLIST to avoid dependencies)
+            # 1 channel, cleanup (using SLIST to avoid dependencies)
             client.saveWaveform(testfile, 'UW', 'LON', '', 'BHZ', start, end,
                                 format="SLIST")
             stream = read(testfile)

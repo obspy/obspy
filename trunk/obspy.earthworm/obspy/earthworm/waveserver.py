@@ -17,20 +17,20 @@ import numpy
 
 
 DATATYPE_KEY = {
-    't4':['f', '>', 4], 't8':['d', '>', 8],
-    's4':['i', '>', 4], 's2':['h', '>', 2],
-    'f4':['f', '<', 4], 'f8':['d', '<', 8],
-    'i4':['i', '<', 4], 'i2':['h', '<', 2]
+    't4': ['f', '>', 4], 't8': ['d', '>', 8],
+    's4': ['i', '>', 4], 's2': ['h', '>', 2],
+    'f4': ['f', '<', 4], 'f8': ['d', '<', 8],
+    'i4': ['i', '<', 4], 'i2': ['h', '<', 2]
 }
 RETURNFLAG_KEY = {
-    'F':'success',
-    'FR':'requested data right (later) than tank contents',
-    'FL':'requested data left (earlier) than tank contents',
-    'FG':'requested data lie in tank gap',
-    'FB':'syntax error in request',
-    'FC':'data tank corrupt',
-    'FN':'requested tank not found',
-    'FU':'unknown error'
+    'F': 'success',
+    'FR': 'requested data right (later) than tank contents',
+    'FL': 'requested data left (earlier) than tank contents',
+    'FG': 'requested data lie in tank gap',
+    'FB': 'syntax error in request',
+    'FC': 'data tank corrupt',
+    'FN': 'requested tank not found',
+    'FU': 'unknown error'
 }
 
 
@@ -195,9 +195,9 @@ def getMenu(server, port, scnl=None):
         if flag in ['FN', 'FC', 'FU']:
             print 'request returned %s - %s' % (flag, RETURNFLAG_KEY[flag])
             return []
-        if DATATYPE_KEY.has_key(tokens[7]):
+        if tokens[7] in DATATYPE_KEY:
             elen = 8  # length of return entry if location included
-        elif DATATYPE_KEY.has_key(tokens[6]):
+        elif tokens[6] in DATATYPE_KEY:
             elen = 7  # length of return entry if location omitted
         else:
             print 'no type token found in getMenu'
@@ -217,9 +217,9 @@ def getMenu(server, port, scnl=None):
 
 def readWaveServerV(server, port, scnl, start, end):
     """
-    Reads data for specified time interval 
-    and scnl on specified waveserverV.
-    returns list of tracebuf2 objects
+    Reads data for specified time interval and scnl on specified waveserverV.
+
+    Returns list of tracebuf2 objects
     """
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
@@ -287,4 +287,3 @@ def tracebufs2obspyStream(tbuflist):
 #    client = Client('hood.ess.washington.edu', 16021)
 #    st = client.getWaveform('UW', 'LON', '', 'BHZ', st, et)
 #    st.plot()
-

@@ -22,7 +22,8 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2']
-ALL_MODULES = DEFAULT_MODULES + ['arclink', 'seishub', 'iris', 'neries', 'db', 'earthworm']
+ALL_MODULES = DEFAULT_MODULES + \
+    ['arclink', 'seishub', 'iris', 'neries', 'db', 'earthworm']
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',

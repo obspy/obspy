@@ -970,7 +970,7 @@ def autodetectEndianAndSanityCheckSU(file):
             continue
         # Some programs write two digit years.
         if this_year != 0 and (this_year < 1930 or this_year >= 2030) and \
-            (this_year < 0 or this_year >=100):
+            (this_year < 0 or this_year >= 100):
             continue
         # 9999 is often used as a placeholder
         if (this_julday > 366 or this_julday < 0) and this_julday != 9999:
