@@ -35,6 +35,11 @@ class UTCDateTime(object):
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
 
+    .. versionchanged:: 0.5.1
+        UTCDateTime is no longer based on Python's datetime.datetime class
+        instead uses timestamp as a single floating point value which allows
+        higher precision.
+
     .. rubric:: Supported Operations
 
     ``UTCDateTime = UTCDateTime + delta``
