@@ -1,4 +1,15 @@
 # -*- coding: utf-8 -*-
+"""
+Functions to generate benchmark plots from given SU files.
+
+.. versionadded:: 0.5.1
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from obspy.segy.segy import SUFile, readSU
 import StringIO
@@ -34,6 +45,8 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
                   trim_to_smallest_trace=True):
     """
     Plot a benchmark plot from given SU files.
+
+    .. versionadded:: 0.5.1
 
     :type sufiles: List of SU file names or :class:`~obspy.segy.segy.SUFile`
         objects.
