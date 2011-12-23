@@ -315,7 +315,7 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type format: ``'RESP'``, ``'StationXML'`` or 'SACPZ', optional
+        :type format: ``'RESP'``, ``'StationXML'`` or ``'SACPZ'``, optional
         :param format: Output format. Defaults to ``'RESP'``.
         """
         kwargs = {}

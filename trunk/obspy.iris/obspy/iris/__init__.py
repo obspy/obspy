@@ -49,7 +49,7 @@ Basic Usage
 
 (3) The :meth:`~obspy.iris.client.Client.saveResponse()` method writes the
     response information into a file. You may choose one of the format
-    RESP or StationXML.
+    ``'RESP'``, ``'StationXML'`` or ``'SACPZ'``.
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime

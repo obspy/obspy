@@ -661,7 +661,7 @@ class Client(object):
         >>> from obspy.neries import Client
         >>> c = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2009-04-01T00:00:00")
-        >>> st = c.saveWaveform("outfile.fseed" "NL", "WIT", "", "BH*",
+        >>> st = c.saveWaveform("outfile.fseed", "NL", "WIT", "", "BH*",
         ...                     dt, dt+30, format="FSEED")  #doctest: +SKIP
         """
         # enable logging if debug option is set
