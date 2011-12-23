@@ -1132,15 +1132,32 @@ class Client(object):
         :returns: Returns either a NumPy :class:`~numpy.ndarray`, image string
             or nothing, depending on the ``output`` parameter.
 
-        .. rubric:: Example
+        .. rubric:: Examples
 
-        >>> from obspy.iris import Client
-        >>> client = Client()
-        >>> dt = UTCDateTime("2005-01-01")
-        >>> data = client.evalresp(network="IU", station="ANMO", location="00",
-        ...                        channel="BHZ", time=dt, output='fap')
-        >>> data[0]  # frequency, amplitude, phase of first point
-        array([  1.00000000e-05,   1.20280200e+04,   1.79200700e+02])
+        (1) Returning frequency, amplitude, phase of first point.
+
+            >>> from obspy.iris import Client
+            >>> client = Client()
+            >>> dt = UTCDateTime("2005-01-01")
+            >>> data = client.evalresp("IU", "ANMO", "00", "BHZ", dt,
+            ...                        output='fap')
+            >>> data[0]  # frequency, amplitude, phase of first point
+            array([  1.00000000e-05,   1.20280200e+04,   1.79200700e+02])
+
+        (2) Returning amplitude and phase plot.
+
+            >>> from obspy.iris import Client
+            >>> client = Client()
+            >>> dt = UTCDateTime("2005-01-01")
+            >>> client.evalresp("IU", "ANMO", "00", "BHZ", dt) # doctest: +SKIP
+
+            .. plot::
+            
+                from obspy.core import UTCDateTime
+                from obspy.iris import Client
+                client = Client()
+                dt = UTCDateTime("2005-01-01")
+                client.evalresp("IU", "ANMO", "00", "BHZ", dt)
         """
         url = '/evalresp/query'
         kwargs = {}
