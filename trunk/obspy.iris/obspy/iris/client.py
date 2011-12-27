@@ -1209,7 +1209,7 @@ class Client(object):
                 # delete temporary file
                 os.remove(tf.name)
                 # hide axes
-                plt.gca().axison = False
+                ax.axison = False
                 # show plot
                 plt.show()
             else:
