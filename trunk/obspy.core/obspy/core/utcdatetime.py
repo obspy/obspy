@@ -34,6 +34,9 @@ class UTCDateTime(object):
     :type iso8601: boolean, optional
     :param iso8601: Enforce `ISO8601:2004`_ detection. Works only with a string
         as first input argument.
+    :type precision: int, optional
+    :param precision: Sets the precision used by the rich comparison operators.
+        Defaults to ``6`` digits after the decimal point.
 
     .. versionchanged:: 0.5.1
         UTCDateTime is no longer based on Python's datetime.datetime class
@@ -609,6 +612,8 @@ class UTCDateTime(object):
 
     def __eq__(self, other):
         """
+        Rich comparison operator '=='.
+
         .. rubric: Example
 
         Comparing two UTCDateTime object will always compare timestamps rounded
@@ -634,26 +639,136 @@ class UTCDateTime(object):
 
     def __ne__(self, other):
         """
+        Rich comparison operator '!='.
+
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000012)
+        >>> t2 = UTCDateTime(123.000000099)
+        >>> t1 != t2
+        False
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp != t2.timestamp
+        True
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1.precision = 11
+        >>> t1 != t2
+        True
         """
         return not self.__eq__(other)
 
     def __lt__(self, other):
         """
+        Rich comparison operator '<'.
+
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000012)
+        >>> t2 = UTCDateTime(123.000000099)
+        >>> t1 < t2
+        False
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp < t2.timestamp
+        True
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1.precision = 11
+        >>> t1 < t2
+        True
         """
         return round(self.timestamp - float(other), self.__precision) < 0
 
     def __le__(self, other):
         """
+        Rich comparison operator '<='.
+
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000099)
+        >>> t2 = UTCDateTime(123.000000012)
+        >>> t1 <= t2
+        True
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp <= t2.timestamp
+        False
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1.precision = 11
+        >>> t1 <= t2
+        False
         """
         return round(self.timestamp - float(other), self.__precision) <= 0
 
     def __gt__(self, other):
         """
+        Rich comparison operator '>'.
+
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000099)
+        >>> t2 = UTCDateTime(123.000000012)
+        >>> t1 > t2
+        False
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp > t2.timestamp
+        True
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1.precision = 11
+        >>> t1 > t2
+        True
         """
         return round(self.timestamp - float(other), self.__precision) > 0
 
     def __ge__(self, other):
         """
+        Rich comparison operator '>='.
+
+        .. rubric: Example
+
+        Comparing two UTCDateTime object will always compare timestamps rounded
+        to a precision of 6 digits by default.
+
+        >>> t1 = UTCDateTime(123.000000012)
+        >>> t2 = UTCDateTime(123.000000099)
+        >>> t1 >= t2
+        True
+
+        But the actual timestamp differ
+
+        >>> t1.timestamp >= t2.timestamp
+        False
+
+        Resetting the precision changes the behaviour of the operator
+
+        >>> t1.precision = 11
+        >>> t1 >= t2
+        False
         """
         return round(self.timestamp - float(other), self.__precision) >= 0
 
@@ -664,17 +779,39 @@ class UTCDateTime(object):
 
     def __abs__(self):
         """
+        Returns absolute timestamp value of the current UTCDateTime object.
         """
         # needed for unittest.assertAlmostEqual tests on linux
         return abs(self.timestamp)
 
     def strftime(self, format):
         """
+        Return a string representing the date and time, controlled by an
+        explicit format string.
+
+        :type format: str
+        :param format: Format string.
+        :return: Formated string representing the date and time.
+
+        Format codes referring to hours, minutes or seconds will see 0 values.
+        See methods :meth:`~datetime.datetime.strftime()` and
+        :meth:`~datetime.datetime.strptime()` for more information.
         """
         return self.getDateTime().strftime(format)
 
     def strptime(self, date_string, format):
         """
+        Return a UTCDateTime corresponding to date_string, parsed according to
+        given format.
+
+        :type date_string: str
+        :param date_string: Date and time string.
+        :type format: str
+        :param format: Format string.
+        :return: :class:`~obspy.core.utcdatetime.UTCDateTime`
+
+        See methods :meth:`~datetime.datetime.strftime()` and
+        :meth:`~datetime.datetime.strptime()` for more information.
         """
         return UTCDateTime(datetime.datetime.strptime(date_string, format))
 
@@ -711,7 +848,7 @@ class UTCDateTime(object):
 
     def formatFissures(self):
         """
-        Returns string representation for the Fissures protocol.
+        Returns string representation for the IRIS Fissures protocol.
 
         :return: string
 
@@ -798,9 +935,57 @@ class UTCDateTime(object):
                  self.second, self.microsecond // 1000)
 
     def getPrecision(self):
+        """
+        Returns precision used by the rich comparison operators.
+
+        :return: int
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime()
+        >>> dt.precision
+        6
+        >>> dt.getPrecision()
+        6
+        """
         return self.__precision
 
-    def setPrecision(self, value):
+    def setPrecision(self, value=6):
+        """
+        Set precision used by the rich comparison operators.
+
+        :type value: int, optional
+        :param value: Precision value used by the rich comparison operators.
+            Defaults to ``6``.
+
+        .. rubric:: Example
+
+        (1) Default precision
+
+            >>> dt = UTCDateTime()
+            >>> dt.precision
+            6
+
+        (2) Set precision during initialization of UTCDateTime object.
+
+            >>> dt = UTCDateTime(precision=5)
+            >>> dt.precision
+            5
+
+        (3) Set precision for an existing UTCDateTime object.
+
+            >>> dt = UTCDateTime()
+            >>> dt.setPrecision(12)
+            >>> dt.precision
+            12
+
+            or
+
+            >>> dt = UTCDateTime()
+            >>> dt.precision = 7
+            >>> dt.precision
+            7
+        """
         self.__precision = int(value)
 
     precision = property(getPrecision, setPrecision)
