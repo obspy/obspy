@@ -237,7 +237,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
         plt.xlim(min_degree, max_degree)
     else:
         plt.xlim(min_degree, 180)
-    plt.legend()
+    plt.legend(numpoints=1)
     plt.show()
 
 
