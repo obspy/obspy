@@ -1202,8 +1202,9 @@ class Client(object):
                 fig = plt.figure()
                 # new axes using full window
                 ax = fig.add_axes([0, 0, 1, 1])
-                # load image
-                img = image.imread(tf.name, 'png')
+                # force matplotlib to use internal PNG reader. image.imread
+                # will use PIL if available
+                img = image._png.read_png(tf.name)
                 # add image to axis
                 ax.imshow(img)
                 # delete temporary file
