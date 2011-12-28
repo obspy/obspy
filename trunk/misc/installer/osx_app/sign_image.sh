@@ -9,4 +9,6 @@
 echo ======================================================================
 echo Signature of the image:
 openssl dgst -sha1 -binary < ObsPy.dmg | openssl dgst -dss1 -sign "$OBSPY_PRIVAT_KEY_PATH" | openssl enc -base64
+echo Size:
+stat -f %z ObsPy.dmg
 echo ======================================================================

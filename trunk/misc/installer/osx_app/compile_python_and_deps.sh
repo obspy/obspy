@@ -83,20 +83,22 @@ make PREFIX=$PREFIX PYTHON=$BINS/python -f make.osx fetch deps mpl_install
 cd ..
 
 # Install latest ObsPy version.
-$BINS/pip install obspy.core==dev
-$BINS/pip install obspy.arclink==dev
-$BINS/pip install obspy.fissures==dev
-$BINS/pip install obspy.gse2==dev
-$BINS/pip install obspy.imaging==dev
-$BINS/pip install obspy.iris==dev
-$BINS/pip install obspy.mseed==dev
-$BINS/pip install obspy.neries==dev
-$BINS/pip install obspy.sac==dev
+$BINS/pip install obspy.core==0.5.0
+$BINS/pip install obspy.arclink==0.5.0
+$BINS/pip install obspy.fissures==0.5.0
+$BINS/pip install obspy.gse2==0.5.0
+$BINS/pip install obspy.imaging==0.5.0
+$BINS/pip install obspy.iris==0.5.0
+$BINS/pip install obspy.mseed==0.5.0
+$BINS/pip install obspy.neries==0.5.0
+$BINS/pip install obspy.sac==0.5.0
+$BINS/pip install obspy.segy==0.5.0
+$BINS/pip install obspy.seisan==0.5.0
+$BINS/pip install obspy.seishub==0.5.0
+$BINS/pip install obspy.sh==0.5.0
+$BINS/pip install obspy.signal==0.5.0
+$BINS/pip install obspy.taup==0.5.0
+$BINS/pip install obspy.wav==0.5.0
+$BINS/pip install obspy.xseed==0.5.0
+$BINS/pip install obspy.earthworm==dev
 $BINS/pip install obspy.segy==dev
-$BINS/pip install obspy.seisan==dev
-$BINS/pip install obspy.seishub==dev
-$BINS/pip install obspy.sh==dev
-$BINS/pip install obspy.signal==dev
-$BINS/pip install obspy.taup==dev
-$BINS/pip install obspy.wav==dev
-$BINS/pip install obspy.xseed==dev
