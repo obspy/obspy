@@ -69,12 +69,12 @@ def recSTALTA(a, nsta, nlta):
 @deprecated
 def recStaltaPy(a, nsta, nlta):
     """
-    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTApy` instead.
+    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTAPy` instead.
     """
-    return recSTALTApy(a, nsta, nlta)
+    return recSTALTAPy(a, nsta, nlta)
 
 
-def recSTALTApy(a, nsta, nlta):
+def recSTALTAPy(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
