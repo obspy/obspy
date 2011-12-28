@@ -1,0 +1,51 @@
+.TH MST_INIT 3 2006/10/10 "Libmseed API"
+.SH DESCRIPTION
+Initializing and freeing MSTrace and MSTraceGroup structures
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSTrace      *\fBmst_init\fP ( MSTrace *" mst " );
+
+.BI "void        \fBmst_free\fP ( MSTrace **" ppmst " ); 
+
+.BI "MSTraceGroup *\fBmst_initgroup\fP ( MSTraceGroup *" mstg " );
+
+.BI "void        \fBmst_freegroup\fP ( MSTraceGroup **" ppmstg " ); 
+.fi
+
+.SH DESCRIPTION
+\fBmst_init\fP will initialize a MSTrace structure.  If the \fImst\fP
+parameter is NULL a new structure will be allocated.  If the \fImst\fP
+parameter is not NULL the structure will be cleared and any memory
+allocated for the MSTrace.datasamples and MSTrace.prvtptr members will
+be freed.
+
+\fBmst_free\fP will free all memory associated with a MSTrace structure
+and set the structure pointer (*\fIppmst\fP) to 0.  This includes any
+memory pointed to by the \fIprvtptr\fP member of the MSTrace structure.
+
+\fBmst_initgroup\fP will initialize a MSTraceGroup structure.  If the
+\fImstg\fP parameter is NULL a new structure will be allocated.  If
+the \fImstg\fP parameter is not NULL the structure will be cleared and
+any all associated MSTrace structures will be freed.
+
+\fBmst_freegroup\fP will free all memory associated with a MSTraceGroup
+structure and set the structure pointer (*\fIppmstg\fP) to 0.
+
+.SH RETURN VALUES
+\fBmst_init\fP returns a pointer to the MSTrace structure initialized on
+success or NULL on error.
+
+\fBmst_initgroup\fP returns a pointer to the MSTraceGroup structure
+initialized on success or NULL on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

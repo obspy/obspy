@@ -1,0 +1,79 @@
+.TH MSTL_PRINT 3 2008/11/21 "Libmseed API"
+.SH DESCRIPTION
+Printing of MSTrace information.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "void   \fBmstl_printtracelist\fP ( MSTraceList *" mstl ", flag " timeformat ","
+.BI "                             flag " details ", flag " gaps " );"
+
+.BI "void   \fBmstl_printsynclist\fP ( MSTraceList *" mstl ", char *" dccid ","
+.BI "                            flag " subsecond " );"
+
+.BI "void   \fBmstl_printgaplist\fP ( MSTraceList *" mstl ", flag " timeformat ","
+.BI "                           double *" mingap ", double *" maxgap " );"
+.fi
+
+.SH DESCRIPTION
+\fBmstl_printtracelist\fP prints a formatted list of the trace
+segments in the given MSTraceList.  If the \fIdetails\fP flag is
+greater than 0 the sample rate and sample count are printed for each
+trace.  If the \fIgaps\fP flag is greater than zero the time gap from
+the previous segment is printed.  All output is printed using
+\fBms_log(3)\fP at level 0.
+
+\fBmstl_printsynclist\fP prints a formatted list of the trace segments
+in the given MSTraceList similar to \fBmstl_printtracelist\fP but the
+format is a SYNC listing.  If a \fIdccid\fP string is supplied it will
+be used along with the current system date to create the SYNC header
+line.  If the \fIsubsecond\fP flag is true (non-zero) the time values
+in the SYNC lines will include full libmseed precision, otherwise they
+will be truncted to integer second values.
+
+\fBmstl_printgaplist\fP prints a formatted list of the gaps between
+trace segments in the given MSTraceList.  If \fImingap\fP or
+\fImaxgap\fP is not NULL their values will be enforced and only
+gaps/overlaps matching their implied criteria will be printed.
+
+The \fItimeformat\fP argument for both \fBmstl_printtracelist\fP and
+\fBmstl_printgaplist\fP controls the format of the resulting time
+strings.  Possible formats are:
+
+.nf
+0 : SEED time format (2005,146,00:00:00.000000)
+1 : ISO time format (2005-05-26T00:00:00.000000)
+2 : Epoch time, seconds since the epoch (1117065600.00000000)
+.fi
+
+Both \fBmstl_printtracelist\fP and \fBmstl_printgaplist\fP represent
+time overlaps as negative gaps.  For a single sample overlap the value
+of the gap is calculated as zero, this will be printed as "-0" or
+negative zero to indicate an overlap.
+
+.SH GAP/OVERLAP RULES
+The existence of gaps and overlaps is implicit in the structure of the
+MSTraceList, no special processing is done to detect gaps and overlaps
+in these routines.
+
+The value of a gap is calculated as the difference between the time of
+the last sample before the gap and the time of the first sample after
+the gap.  No sample 'coverage' time is included.
+
+The value of an overlap is calculated as the time between two samples
+which represent the maximum amount of timeseries overlap.
+
+When the traces in the MSTraceList include a small segment that is
+completely overlapped by another larger segment the gap/overlap value
+will not be correct for either the smaller segment or the segment
+following it.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

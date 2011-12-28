@@ -1,0 +1,52 @@
+.TH MS_FIND_RECLEN 3 2006/11/08 "Libmseed API"
+.SH DESCRIPTION
+Determine SEED record data length
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_find_reclen\fP ( const char *" recbuf ", int " recbuflen ",
+.BI "                            FILE " *fileptr " );
+.fi
+
+.SH DESCRIPTION
+\fBms_find_reclen\fP verifies that the specified \fIrecbuf\fP buffer
+contains a SEED data record by looking for data record signatures in
+the fixed section data header and determines the data record length by
+1) searching the buffer up to \fIrecbuflen\fP bytes for a Blockette
+1000 and, failing that, 2) if \fIfileptr\fP is not NULL reading the
+next 48 bytes from the file and looking for a data record signature
+(with detection of the next data record implying the length of the
+current record).  If data is read from \fIfileptr\fP the read position
+is returned to it's position prior to this function call.
+
+The MS_ISVALIDHEADER macro is used to verify that the buffer contains
+a valid SEED data record.  When searching for the next record header
+to determine record length one of the macros MS_ISVALIDHEADER or
+MS_ISVALIDBLANK must test positively for a record to be detected.
+Blank/noise records are records with a valid SEED sequence number
+followed by ASCII space characters to the end of the record.
+
+\fBms_find_reclen\fP will return 0 when it detects that the buffer
+contains a SEED data record but cannot determine the record length.
+This happens when no Blockette 1000 is not found within
+\fIrecbuflen\fP bytes and, assuming a valid \fIfileptr\fP is supplied,
+no record header is detected in the next 48 bytes of the file.  The
+idea is to then read more data from the file (i.e. the next larger,
+valid record length) and call \fBms_find_reclen\fP again and so on
+until the record length can be determined.
+
+.SH RETURN VALUES
+\fBms_find_reclen\fP returns the length of the Mini-SEED record in
+bytes or 0 if a data record was detected but the length could not be
+determined or -1 when no data record was detected.
+
+.SH SEE ALSO
+\fBms_readmsr(3)\fP, \fBms_readtraces(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -1,0 +1,22 @@
+
+Documentation of the libmseed interfaces can be found in the 'doc'
+directory.
+
+Unix: the Makefile should work for most systems, try 'make'.
+
+Win32: the Makefile.win is for Microsoft's nmake (e.g. 'nmake -f
+Makefile.win') and Makefile.wat is for Open Watcom's wmake
+(e.g. 'wmake -f Makefile.wat').
+
+
+msview.c:
+
+An example program that demonstrates basic usage of libmseed.  A
+Makefile is provided to build the program.  The example does not
+exercise all of the functionality of libmseed but should illustrate
+some of the basic ideas.
+
+msrepack.c:
+
+An example of using libmseed to build Mini-SEED records, this 
+program will repack input Mini-SEED data.

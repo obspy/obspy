@@ -1,0 +1,41 @@
+.TH MS_DOY2MD 3 2004/11/22 "Libmseed API"
+.SH DESCRIPTION
+Convert between day of year and month and day of month
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_doy2md\fP ( int " year ", int " jday ", int *" month ", int *" mday " );"
+
+.BI "int  \fBms_md2doy\fP ( int " year ", int " month ", int " mday ", int *" jday " );"
+.fi
+
+.SH DESCRIPTION
+\fBms_doy2md\fP calculates the \fImonth\fP and day of month
+(\fImday\fP) for a given \fIyear\fP and day of year (\fIjday\fP).
+
+\fBms_md2doy\fP calculates the day of year (\fIjday\fP) for a given
+\fIyear\fP, \fImonth\fP and day of month (\fImday\fP).
+
+For both routines the expected and resulting ranges for each value are:
+.sp
+.nf
+year  : 1900 - 2100
+jday  : 1 - 366
+month : 1 - 12
+mday  : 1 - 31
+.fi
+
+A day of year of 366 corresponds to the last day of a leap year.
+
+.SH RETURN VALUES
+\fBms_doy2md\fP returns 0 on success and -1 on error.
+
+\fBms_md2doy\fP returns 0 on success and -1 on error.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

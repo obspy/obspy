@@ -1,0 +1,36 @@
+.TH MSTL_INIT 3 2008/11/21 "Libmseed API"
+.SH DESCRIPTION
+Initializing and freeing MSTraceList structures
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MSTrace      *\fBmstl_init\fP ( MSTrace *" mstl " );"
+
+.BI "void          \fBmstl_free\fP ( MSTrace **" ppmstl ", flag " freeprvtptr " );"
+.fi
+
+.SH DESCRIPTION
+\fBmstl_init\fP will initialize a MSTraceList structure.  If the
+\fImstl\fP parameter is not NULL the structure will be cleared before
+being reallocated any memory allocated for assosiated MSTraceID and
+relate sub-structures will be freed.
+
+\fBmstl_free\fP will free all memory associated with a MSTraceList
+structure and set the structure pointer (*\fIppmstl\fP) to 0.  If the
+\fIfreeprvtptr\fP flag is true any memory pointed to by the
+\fIprvtptr\fP members of the MSTraceID or MSTraceSeg structures.
+
+.SH RETURN VALUES
+\fBmstl_init\fP returns a pointer to the MSTraceList structure
+initialized on success or NULL on error.
+
+.SH SEE ALSO
+\fBmstl_addmsr(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

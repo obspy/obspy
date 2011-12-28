@@ -1,0 +1,226 @@
+.TH MS_READMSR 3 2011/01/06 "Libmseed API"
+.SH DESCRIPTION
+Read Mini-SEED data from files
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int \fBms_readmsr\fP ( MSRecord **ppmsr, char *" msfile ", int " reclen ","
+.BI "                 off_t *" fpos ", int *" last ", flag " skipnotdata ","
+.BI "                 flag " dataflag ",flag " verbose " );"
+
+.BI "int \fBms_readmsr_r\fP ( MSFileParam **ppmsfp, MSRecord **ppmsr, char *" msfile ","
+.BI "                    int " reclen ", off_t *" fpos ", int *" last ","
+.BI "                    flag " skipnotdata ", flag " dataflag ",flag " verbose " );"
+
+.BI "int \fBms_readtraces\fP ( MSTraceGroup **ppmstg, char *" msfile ", int " reclen ", "
+.BI "                    double " timetol ", double " sampratetol ","
+.BI "                    flag " dataquality ", flag " skipnotdata ","
+.BI "                    flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtraces_timewin\fP ( MSTraceGroup **ppmstg, char *" msfile ","
+.BI "                    int " reclen ",  double " timetol ", double " sampratetol ","
+.BI "                    hptime_t " starttime ", hptime_t " endtime ","
+.BI "                    flag " dataquality ", flag " skipnotdata ","
+.BI "                    flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtraces_selection\fP ( MSTraceGroup **ppmstg, char *" msfile ","
+.BI "                    int " reclen ",  double " timetol ", double " sampratetol ","
+.BI "                    Selections *" selections ", flag " dataquality ","
+.BI "                    flag " skipnotdata ", flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist\fP ( MSTraceList **ppmstl, char *" msfile ", int " reclen ","
+.BI "                       double " timetol ", double " sampratetol ","
+.BI "                       flag " dataquality ", flag " skipnotdata ","
+.BI "                       flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist_timewin\fP ( MSTraceList **ppmstl, char *" msfile ","
+.BI "                       int " reclen ", double " timetol ", double " sampratetol ","
+.BI "                       hptime_t " starttime ", hptime_t " endtime ","
+.BI "                       flag " dataquality ", flag " skipnotdata ","
+.BI "                       flag " dataflag ", flag " verbose " );"
+
+.BI "int \fBms_readtracelist_selection\fP ( MSTraceList **ppmstl, char *" msfile ","
+.BI "                       int " reclen ", double " timetol ", double " sampratetol ","
+.BI "                       Selections *" selections ", flag " dataquality ","
+.BI "                       flag " skipnotdata ", flag " dataflag ", flag " verbose " );"
+.fi
+
+.SH DESCRIPTION
+Both \fBms_readmsr\fP and \fBms_readmsr_r\fP will open and read, with
+subsequent calls, all Mini-SEED records from a specified file.
+Standard input will be opened if \fImsfile\fP is "-" (dash).  As each
+record is read it is unpacked using \fBmsr_unpack(3)\fP.  If the
+MSRecord struct at \fI*ppmsr\fP has not been initialized it must be
+set to NULL and it will be initialize it automatically.
+
+The \fBms_readmsr\fP version is not thread safe.  The reentrant
+\fBms_readmsr_r\fP version is thread safe and can be used to read more
+than one file in parallel.  \fBms_readmsr_r\fP stores all static file
+reading parameters in a MSFileParam struct.  A pointer to this struct
+must be supplied by the caller (\fIppmsfp\fP), memory will be
+allocated on the initial call if the pointer is NULL.
+
+If \fIreclen\fP is 0 or negative the length of every record is
+automatically detected.  For auto length detection records are first
+searched for a Blockette 1000 and if none is found a search is
+conducted for the next valid record header (the existence of the next
+record or end-of-file implying the length of the current record).
+
+If the \fIfpos\fP pointer is not NULL the value will be set to the
+file position (offset from the beginning in bytes) from where the
+returned record was read.  As a special case, if \fIfpos\fP is not
+NULL and the value it points to is less than zero it will be
+interpreted as the (positive) offset in the file at which to begin
+reading data; this feauture does not work with packed files.
+
+If the \fIlast\fP pointer is not NULL the value will be set to 1 when
+the record at the end of the file is being returned, otherwise it will
+be 0.  This indicator will not be set when the last valid record in
+the file is followed by padding.
+
+If the \fIskipnotdata\fP flag is true (not 0) any data chunks read
+that do not have valid data record indicators (i.e. D, R, or Q) will
+be skipped.
+
+The \fIdataflag\fP argument is passed directly to \fBmsr_unpack(3)\fP
+and controls whether data samples are unpacked.
+
+After reading all the input records the controlling program should
+call it one last time with \fImsfile\fP set to NULL.  This will close
+the file and cleanup allocated memory.
+
+If \fBms_readmsr\fP or \fBms_readmsr_r\fP are called with a different
+file than the one they currently have open they will close the
+currently open file, open the new file and print an error message.
+Properly coded applications should reset the function when the end of
+file has been reached as described above and not rely on this
+behavior.
+
+The \fBms_readtraces\fP and \fBms_readtracelist\fP routines read all
+Mini-SEED records from a file using \fBms_readmsr_r\fP and adds each
+one to either a MSTraceGroup or MSTraceList using
+\fBmst_addmsrtogroup(3)\fP and \fBmstl_addmsr(3)\fP respectively.  The
+\fImsfile\fP, \fIreclen\fP, \fIskipnotdata\fP and \fIdataflag\fP
+arguments are passed directly to \fBms_readmsr_r\fP.  The
+\fItimetol\fP, \fIsampratetol\fP and \fIdataquality\fP arguments are
+passed directly to \fBmst_addmsrtogroup(3)\fP or \fBmstl_addmsr(3)\fP.
+If the pointer to the MSTraceGroup or MSTraceList struct has not been
+initialized it must be set to NULL and it will be initialize
+automatically.  The MSTraceGroup or MSTraceList structures may already
+contain entries and will be added to by these routines.  These
+routines are thread safe.
+
+The \fBms_readtraces_timewin\fP and \fBms_readtracelist_timewin\fP
+routines perform the same function as \fBms_readtraces\fP and
+\fBms_readtracelist\fP but will limit the data to records containing
+samples between the specified \fIstarttime\fP and \fIendtime\fP.
+
+The \fBms_readtraces_selection\fP and \fBms_readtracelist_selection\fP
+routines perform the same function as \fBms_readtraces\fP and
+\fBms_readtracelist\fP but will limit the data to records that match
+the specified \fIselections\fP.  Selections include criteria for
+source name and time window parameters, see \fBms_selection(3)\fP for
+more information.
+
+.SH RETURN VALUES
+On the sucessful read and parsing of a record \fBms_readmsr\fP and
+\fBms_readmsr_r\fP return MS_NOERROR and populate the MSRecord struct
+at \fI*ppmsr\fP.  Upon reaching the end of the input file these
+routines return MS_ENDOFFILE.  On error these routines return a
+libmseed error code (defined in libmseed.h)
+
+On the sucessful read and parsing of a file \fBms_readtraces\fP and
+\fBms_readtracelist\fP return MS_NOERROR and populate the MSTraceGroup
+or MSTraceList struct.  On error these routines return a libmseed
+error code (defined in libmseed.h)
+
+.SH PACKED FILES
+\fBms_readmsr\fP, \fBms_readtraces\fP and \fBms_readtracelist\fP will
+read packed Mini-SEED files.  Packed Mini-SEED is the indexed archive
+format used internally at the IRIS Data Management Center and probably
+not used anywhere else.
+
+.SH EXAMPLE
+Skeleton code for reading a file with \fBms_readmsr(3)\fP:
+
+.nf
+main() {
+  MSRecord *msr = NULL;
+  int retcode;
+
+  while ( (retcode = ms_readmsr (&msr, filename, 0, NULL, NULL, 1, 0, verbose)) == MS_NOERROR )
+    {
+       /* Do something with the record here, e.g. print */
+       msr_print (msr, verbose);
+    }
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Error reading input file %s: %s\\n", filename, ms_errorstr(retcode));
+
+  /* Cleanup memory and close file */
+  ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, verbose);
+}
+
+For reading a file with the thread safe \fBms_readmsr_r(3)\fP:
+
+.nf
+main() {
+  MSRecord *msr = NULL;
+  MSFileParam *msfp = NULL;
+  int retcode;
+
+  while ( (retcode = ms_readmsr_r (&msfp, &msr, filename, 0, NULL, NULL, 1, 0, verbose)) == MS_NOERROR )
+    {
+       /* Do something with the record here, e.g. print */
+       msr_print (msr, verbose);
+    }
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Error reading input file %s: %s\\n", filename, ms_errorstr(retcode));
+
+  /* Cleanup memory and close file */
+  ms_readmsr_r (&msfp, &msr, NULL, 0, NULL, NULL, 0, 0, verbose);
+}
+
+.fi
+For reading a file with \fBms_readtraces(3)\fP:
+.nf
+
+main() {
+  MSTraceList *mstl = NULL;
+  int retcode;
+
+  retcode = ms_readtracelist (&mstl, filename, 0, -1.0, -1.0, 0, 1, 0, verbose);
+
+  if ( retcode != MS_NOERROR )
+    ms_log (2, "Error reading input file %s: %s\\n", filename, ms_errorstr(retcode));
+
+  retcode = ms_readtracelist (&mstl, filename2, 0, -1.0, -1.0, 0, 1, 0, verbose);
+
+  if ( retcode != MS_NOERROR )
+    ms_log (2, "Error reading input file %s: %s\\n", filename2, ms_errorstr(retcode));
+
+  if ( ! mstl )
+    {
+      ms_log (2, "Error reading file\\n");
+      return -1;
+    }
+
+  /* Do something with the traces here, e.g. print */
+  mstl_printtracelist (mstl, 0, verbose, 0);
+
+  mstl_free (&mstl);
+}
+.fi
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_unpack(3)\fP, \fBmst_addmsrtogroup(3)\fP,
+\fBmstl_addmsr(3)\fP, \fBms_log(3)\fP and \fBms_errorstr(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

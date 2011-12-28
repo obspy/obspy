@@ -1,0 +1,86 @@
+.TH MS_SPLITSRCNAME 3 2009/12/19 "Libmseed API"
+.SH DESCRIPTION
+Split source names into the SEED naming nomenclature.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "char  *\fBms_splitsrcname\fP ( char *" srcname ", char *" net ", char * " sta ","
+.BI "                         char * " loc ", char *" chan ", char *" qual " );"
+.fi
+
+.SH DESCRIPTION
+The \fBms_splitsrcname\fP routine parses SEED channel naming
+components from a source name string in the following format:
+
+.nf
+"NET_STA_LOC_CHAN[_QUAL]"
+.fi
+
+The first four components are required to uniquely identify a SEED
+channel, generally these are always present in a \fIsrcname\fP.  The
+Quality code is normally optional in a source name.
+
+The arguments for the first four components (net, sta, loc & chan) are
+treated as strings but the quality code (qual) is treated as a pointer
+to a single character.
+
+Memory for the requested component strings must already be allocated.
+If a component pointer is NULL it will not be parsed from the string.
+
+Source names in the expected format are created, for example, by the
+\fBms_recsrcname(3)\fP, \fBmsr_srcname(3) and \fBmst_srcname(3)\fP
+routines.
+
+.SH LOCATION IDS AND SPACES
+The source name should never include spaces.  The fixed format nature
+of SEED data records leads to blank or unused location IDs represented
+by spaces, in a source name such blank location IDs should be
+collapsed to nothing in the resulting sources names.  A blank location
+ID is parsed from a source name as an empty string (not two spaces).
+
+.SH EXAMPLES
+This usage will result in net="IU", sta="ANMO", loc="00",
+chan="BHZ" and qual will remain unchanged (because it was not
+contained in the input srcname):
+.nf
+
+ms_splitsrcname("IU_ANMO_00_BHZ", net, sta, loc, chan, qual);
+
+.fi
+This usage will limit the parsing to only the network and station
+components with net="IU", sta="ANMO":
+.nf
+
+ms_splitsrcname("IU_ANMO_00_BHZ", net, sta, NULL, NULL, NULL);
+
+.fi
+The following usage illustrates a blank location ID and included
+quality code:
+.nf
+
+ms_splitsrcname("IU_ANMO__BHZ_Q", net, sta, loc, chan, qual);
+
+.fi
+The result is:
+.nf
+
+net = "IU"
+sta = "ANMO"
+loc = ""
+chan = "BHZ"
+qual = 'Q'
+.fi
+
+.SH RETURN VALUES
+Return 0 on success and -1 on error.
+
+.SH SEE ALSO
+\fBms_recsrcname(3)\fP, \fBmsr_srcname(3) and \fBmst_srcname(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

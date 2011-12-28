@@ -1,0 +1,46 @@
+.TH MSR_ADDBLOCKETTE 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Add a blockette to the blockette chain of an MSRecord structure
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "BlktLink  *\fBmsr_addblockette\fP ( MSRecord *" msr ", char *" blktdata ",
+.BI "                              int " length ", int " blkttype ", int " chainpos " );
+.fi
+
+.SH DESCRIPTION
+\fBmsr_addblockette\fP adds a blockette to a blockette chain of an
+MSRecord structure.  The \fIchainpos\fP value controls which end of
+the chain the blockette is added to.  If \fIchainpos\fP is 0 the
+blockette will be added to the end of the chain (last blockette),
+other wise it will be added to the beginning of the chain (first
+blockette). A blockette chain is composed of linked BlktLink
+structures.  A blockette chain for a given MSRecord structure begins
+at MSRecord.blkts.
+
+\fIblktdata\fP should be the blockette body (no blockette type and
+next header) of \fIlength\fP bytes and type \fIblkttype\fP.
+
+Data structures for all SEED 2.4 data blockette types are defined in
+\fBlibmseed.h\fP with these minor exceptions: Blockette 2000 (opaque
+data) is only partially represented as it has an unknown data
+structure by definition and Blockette 405 which depends on full SEED
+for a full data description.  It is highly recommended to use these
+provided data structures when adding blockettes as it allows the
+library to manipulate the blockette (swap byte order, etc.) and
+assures SEED 2.4 compatibility.
+
+.SH RETURN VALUE
+\fBmsr_addblockette\fP returns a pointer to the BlktLink structure
+added to the blockette chain on success or NULL on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_pack(3)\fP and \fBmsr_unpack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -1,0 +1,30 @@
+.TH MS_BIGENDIANHOST 3 2004/11/22 "Libmseed API"
+.SH DESCRIPTION
+Determine host computer byte order
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBms_bigendianhost\fP ();"
+.fi
+
+.SH DESCRIPTION
+\fBms_bigendianhost\fP is a run-time test of host computer byte order.
+It is assumed that there are only two possible byte orders: Most
+Significant Byte First (MSBF), i.e. big-endian, and Least Significant
+Byte First (LSBF), i.e. little-endian.  No middle-endian schemes are
+accounted for.
+
+Binary quantities in SEED are commonly big-endian, but it is not
+necessarily so.
+
+.SH RETURN VALUES
+\fBms_bigendianhost\fP returns 1 if the host is big-endian and 0 if
+the host is little-endian.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

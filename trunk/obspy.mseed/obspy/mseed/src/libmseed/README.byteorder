@@ -1,0 +1,62 @@
+
+                 -- Byte order handling in libmseed --
+
+The SEED 2.4 standard allows data only SEED (Mini-SEED) to be either
+in big (most significant byte first) or little (least significant byte
+first) endian byte order.  One exception is that Steim-1 and Steim-2
+data compression are only defined as big-endian, that said libmseed
+supports little-endian Steim compression schemes anyway.  While
+libmseed supports all four combinations of big and little endian header
+and data the surest way to avoid compatibility problems is to always 
+create big endian Mini-SEED records (header and data).
+
+
+Reading MiniSEED - how libmseed determines the byte order of a record:
+
+The byte order of a record header including blockettes is determined
+by checking if the record start year is a sane value (e.g. between 1920
+and 2020).  The byte order of encoded data samples is determined by the
+byte order flag in the Blockette 1000, if a Blockette 1000 is not
+present the byte order is assumed to be the same as the header.  To
+force the byte order determination of either the header or data section
+of a record the following environment variables can be set:
+
+UNPACK_HEADER_BYTEORDER
+UNPACK_DATA_BYTEORDER
+
+These variables should be set to either 0 (little endian) or 1 (big
+endian).  A programmatic equivalent of setting these environment
+variables is provided via the following macros:
+
+MS_UNPACKHEADERBYTEORDER(X)
+MS_UNPACKDATABYTEORDER(X)
+
+
+Writing MiniSEED - in what byte order libmseed creates records:
+
+Normally the byte order of MiniSEED created by libmseed is controlled
+via a flag in the API.  This byte order flag determines the ordering
+for both the header and data sections of a record.  To force the byte
+order of either the header or data section of a record the following
+environment variables can be set:
+
+PACK_HEADER_BYTEORDER
+PACK_DATA_BYTEORDER
+
+These variables should be set to either 0 (little endian) or 1 (big
+endian).  A programmatic equivalent of setting these environment
+variables is provided via the following macros:
+
+.nf
+MS_PACKHEADERBYTEORDER(X)
+MS_PACKDATABYTEORDER(X)
+.fi
+
+
+Note that some interpretations of the SEED 2.4 format imply that
+so-called little endian MiniSEED means that the record header is
+little endian but that the data section is big endian (as the only
+defined data encodings must be based on the SEED DDL which, in turn,
+must be defined in terms of big endian).  Libmseed will not create
+MiniSEED of this flavor by default but can be configured to do so by
+setting the environment variables described above appropriately.

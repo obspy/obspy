@@ -1,0 +1,120 @@
+.TH MSR_UNPACK 3 2007/03/24 "Libmseed API"
+.SH DESCRIPTION
+Unpacking of Mini-SEED records.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int \fBmsr_unpack\fP ( char *" record ", int " reclen ", MSRecord **" ppmsr ",
+.BI "                 flag " dataflag ", flag " verbose " );
+.fi
+
+.SH DESCRIPTION
+\fBmsr_unpack\fP will unpack a Mini-SEED data record and populate a
+MSRecord data structure, optionally unpacking data samples.  All
+multi-byte quantities will be byte-swapped to the host byte order.
+The MSRecord data structure is described in \fBms_intro(3)\fP.
+
+The \fIreclen\fP parameter specifies the length of the data record
+pointed to by \fIrecord\fP in bytes.
+
+If the \f*Ippmsr\fP pointer is NULL a new MSRecord will be allocated,
+if not the existing MSRecord will be reinitialized and reused
+destroying any previous contents.  The \fIppmsr\fP pointer itself must
+not be NULL.
+
+If the \fIdataflag\fP flag is not zero any data samples in the record
+will be unpacked/decompressed.  The following data encoding formats
+are supported: ASCII, INT16, INT32, FLOAT32, FLOAT64, STEIM1 and
+STEIM2.  The MSRecord.datasamples pointer will be set appropriately
+and the samples will be either ASCII, 32-bit integers, 32-bit floats
+or 64-bit floats with the same byte order as the host machine.
+MSRecord.numsamples will be set to the actual number of samples
+unpacked/decompressed.  MSRecord.sampletype will indicated the sample
+type as either 'a' (ASCII), 'i' (32-bit integers), 'f' (32-bit floats)
+or 'd' (64-bit doubles).  The size of each sample type in bytes is
+returned by the get_samplesize(3) lookup routine.
+
+The \fIverbose\fP flag controls verbosity, a value of zero will result
+in no diagnostic output.
+
+.SH UNPACKING OVERRIDES
+The following macros and environment variables effect the unpacking of
+Mini-SEED:
+
+.nf
+Macros:
+MS_UNPACKHEADERBYTEORDER(X)
+MS_UNPACKDATABYTEORDER(X)
+MS_UNPACKDATAFORMAT(X)
+MS_UNPACKDATAFORMATFALLBACK(X)
+
+Environment variables:
+UNPACK_HEADER_BYTEORDER
+UNPACK_DATA_BYTEORDER
+UNPACK_DATA_FORMAT
+UNPACK_DATA_FORMAT_FALLBACK
+.fi
+
+The UNPACK_HEADER_BYTEORDER and UNPACK_DATA_BYTEORDER macros and
+variables force the byte order of the header and data respectively.
+They could be set to either 0 (little endian) or 1 (big endian).  See
+\fBms_intro(3)\fP for a description of how libmseed determines a
+records byte order.
+
+The UNPACK_DATA_FORMAT macro and variable forces the encoding format,
+this should be set to any of the supported formats codes (i.e. 10 =
+Steim-1 compression).
+
+The UNPACK_DATA_FORMAT_FALLBACK macro and variable defines an encoding
+format that will be used when the SEED data record does not indicate
+the format, i.e. the record does not include a 1000 blockette.  By
+default the fallback encoding format is 10 (Steim-1 compression).  If
+this default is invoked and the byte order of the data is unspecified
+big endian byte order will be assumed.  If a data record does not
+include a 1000 blockette it is not Mini-SEED, the capability to read
+these records is included only to support legacy data.
+
+.SH RETURN VALUE
+
+On the sucessful parsing of a record \fBmsr_unpack\fP returns
+MS_NOERROR and populates the MSRecord struct at *ppmsr.  On error
+\fBmsr_unpack\fP returns a libmseed error code (defined in libmseed.h)
+
+.SH EXAMPLE
+Skeleton code for unpacking a Mini-SEED record with msr_unpack(3):
+
+.nf
+main() {
+  MSRecord *msr = NULL;
+  char *record;
+  int reclen;
+  int retcode;
+
+  record = recordptr;   /* pointer to Mini-SEED record */
+  reclen = 4096;        /* 4096 byte record length */
+
+  /* Unpack record header and data samples */
+  retcode = msr_unpack (record, reclen, &msr, 1, verbose);
+
+  if ( retcode != MS_NOERROR )
+    fprintf (stderr, "Error parsing record\\n");
+  else
+    printf ("Unpacked %d samples\n", msr->numsamples);
+
+  /* Print record information */
+  msr_print (msr, verbose);
+
+  msr_free (&msr);
+}
+.fi
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_pack(3)\fP and \fBmsr_print(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

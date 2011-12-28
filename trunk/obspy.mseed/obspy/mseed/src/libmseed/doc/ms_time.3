@@ -1,0 +1,188 @@
+.TH MS_TIME 3 2007/08/16 "Libmseed API"
+.SH DESCRIPTION
+Time conversion and string generation
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "MS_EPOCH2HPTIME(X) X * (hptime_t) HPTMODULUS"
+.BI "MS_HPTIME2EPOCH(X) X / HPTMODULUS"
+
+.BI "hptime_t \fBms_btime2hptime\fP ( BTime *" btime " );"
+
+.BI "char    *\fBms_btime2isotimestr\fP ( BTime *" btime ", char *" isotimestr " );"
+
+.BI "char    *\fBms_btime2mdtimestr\fP ( BTime *" btime ", char *" mdtimestr " );"
+
+.BI "char    *\fBms_btime2seedtimestr\fP ( BTime *" btime ", char *" seedtimestr " );"
+
+.BI "int      \fBms_hptime2btime\fP ( hptime_t " hptime ", BTime *" btime " );"
+
+.BI "char    *\fBms_hptime2isotimestr\fP ( hptime_t " hptime ", char *" isotimestr ","
+.BI "                                flag " subseconds " );"
+
+.BI "char    *\fBms_hptime2mdtimestr\fP ( hptime_t " hptime ", char *" mdtimestr ","
+.BI "                               flag " subseconds " );"
+
+.BI "char    *\fBms_hptime2seedtimestr\fP ( hptime_t " hptime ", char *" seedtimestr ","
+.BI "                                 flag " subseconds " );"
+
+.BI "hptime_t \fBms_time2hptime\fP ( int " year ", int " day ", int " hour ", int " min ","
+.BI "                          int " sec ", int " usec " );"
+
+.BI "hptime_t \fBms_seedtimestr2hptime\fP ( char *" seedtimestr " );"
+
+.BI "hptime_t \fBms_timestr2hptime\fP ( char *" timestr " );"
+.fi
+
+.SH DESCRIPTION
+These routines convert between various time formats.  Internally,
+libmseed represents time values as high precision epoch times
+(hptime), the number of ticks from the epoch: 00:00:00.00 1 January
+1970.  By default a tick is defined as a microsecond (0.000001
+seconds).  See \fBINTERNAL HPTIME\fP below for more details.  Also
+used is the SEED binary time represented by the following data
+structure (defined in libmseed.h):
+.sp
+.nf
+typedef struct btime_s
+{
+  uint16_t  year;     /* year with century                 */
+  uint16_t  day;      /* day, 1 - 366                      */
+  uint8_t   hour;     /* hour, 0 - 23                      */
+  uint8_t   min;      /* minute, 0 - 59                    */
+  uint8_t   sec;      /* second, 0 - 60 (60 = leap second) */
+  uint8_t   unused;   /* unused alignment byte             */
+  uint16_t  fract;    /* fractional seconds, 0 - 9999      */
+} BTime;
+.fi
+
+\fBMS_EPOCH2HPTIME\fP is a macro which converts a Unix/POSIX epoch
+time (elapsed seconds since 1 January 1970) to a hptime which are
+related by a simple scaling factor.
+
+\fBMS_HPTIME2EPOCH\fP is a macro which converts an hptime to a
+Unix/POSIX epoch time (elapsed seconds since 1 January 1970) which are
+related by a simple scaling factor.  The result can be cast to an
+integer, in which cast no rounding is performed and sub-second
+precision is truncated, or can be cast into a double to get a double
+precision epoch time.
+
+\fBms_btime2hptime\fP converts a \fIbtime\fP to a hptime.
+
+\fBms_btime2isotimestr\fP generates an ISO recommended format time
+string from a \fIbtime\fP.  Example: '2001-07-29T12:38:00.0000'.  The
+\fIisotimestr\fP must have enough room for 25 characters.  The
+resulting string will be NULL terminated.
+
+\fBms_btime2mdtimestr\fP generates a month-day formatted time string
+from a \fIbtime\fP.  Example: '2001-07-29 12:38:00.0000'.  The
+\fImdtimestr\fP must have enough room for 25 characters.  The
+resulting string will be NULL terminated.
+
+\fBms_btime2seedtimestr\fP generates a SEED format time string from a
+\fIbtime\fP.  Example: '2001,195,12:38:00.0000'.  The
+\fIseedtimestr\fP must have enough room for 23 characters.  The
+resulting string will be NULL terminated.
+
+\fBms_hptime2btime\fP converts a \fIhptime\fP to a \fIbtime\fP.  By
+default, hptime has microsecond precision whereas a BTime structure
+can only represent time to 0.0001 seconds.  The precision will be lost
+during this conversion, it will not be accounted for by rounding but
+will be truncated.  This behavior is by design.
+
+\fBms_hptime2isotimestr\fP generates an ISO recommended format time
+string from a \fIhptime\fP.  Example: '2001-07-29T12:38:00.000000'
+or '2001-07-29T12:38:00'.  The \fIisotimestr\fP must have enough room
+for 27 characters.  The \fIsubseconds\fP flag controls whether the
+sub-second precision is included or not.  The resulting string will be
+NULL terminated.
+
+\fBms_hptime2mdtimestr\fP generates a month-day formatted time string
+from a \fIhptime\fP.  Example: '2001-07-29 12:38:00.000000'
+or '2001-07-29 12:38:00'.  The \fIisotimestr\fP must have enough room
+for 27 characters.  The \fIsubseconds\fP flag controls whether the
+sub-second precision is included or not.  The resulting string will be
+NULL terminated.
+
+\fBms_hptime2seedtimestr\fP generates a SEED format time string from a
+\fIhptime\fP.  Example: '2001,195,12:38:00.000000'
+or '2001,195,12:38:00'.  The \fIseedtimestr\fP must have enough room
+for 25 characters.  The \fIsubseconds\fP flag controls whether the
+sub-second precision is included or not.  The resulting string will be
+NULL terminated.
+
+\fBms_time2hptime\fP converts the time represented by the specified
+\fIyear\fP, \fIday\fP, \fIhour\fP, \fImin\fP, \fIsec\fP and \fIusec\fP
+(microseconds) to an hptime.  The range expected for each value is as
+follows:
+.sp
+.nf
+year : 1900 - 2100
+day  : 1 - 366  (366 = last day of leap year)
+hour : 0 - 23
+min  : 0 - 59
+sec  : 0 - 60   (60 = leap second)
+usec : 0 - 999999
+.fi
+
+\fBms_seedtimestr2hptime\fP converts a SEED time string to a hptime.
+The time format expected is: "YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter
+can be a comma [,], colon [:] or period [.] except for the fractional
+seconds ("FFFFFF") which must begin with a period [.] if present.
+
+\fBms_timestr2hptime\fP converts a time string to a hptime.  The time
+format expected is: "YYYY[/MM/DD HH:MM:SS.FFFFFF]", the delimiter can be
+a dash [-], slash [/], colon [:], or period [.] and between the date
+and time a [T] or a space may be used.  The fractional seconds
+("FFFFFF") must begin with a period [.] if present.
+
+For both \fBms_seedtimestr2hptime\fP and \fBms_timestr2hptime\fP the
+input time string may be "short", in which case the vales omitted on
+the right hand side are assumed to be 0 (with the exception of month
+and day which are assumed to be 1).  The year is always required.
+
+.SH RETURN VALUES
+\fBms_btime2hptime\fP, \fBms_time2hptime\fP,
+\fBms_seedtimestr2hptime\fP and \fBms_timestr2hptime\fP return a
+hptime on success and HPTERROR on error.
+
+\fBms_btime2isotimestr\fP, \fBms_btime2mdtimestr\fP,
+\fBms_btime2seedtimestr\fP, \fBms_hptime2isotimestr\fP,
+\fBms_hptime2mdtimestr\fP and \fBms_hptime2seedtimestr\fP return a
+pointer to the resulting string or NULL on error.
+
+\fBms_hptime2btime\fP returns 0 on success and -1 on error.
+
+.SH INTERNAL HPTIME
+The time values internal to libmseed are defined as the number of
+ticks from the epoch: 00:00:00.00 1 January 1970 and often referred to
+as hptime.  By default a tick is defined as a microsecond (0.000001
+seconds).  The tick interval, and thus hptime precision, is controlled
+by the definition of HPTMODULUS in libmseed.h.  It is not recommended
+to change HPTMODULUS from the default value of 1000000.
+
+This epoch time system is similar to the Unix/POSIX epoch times except
+that the ticks are higher precision than the 1-second ticks used in
+POSIX.  An hptime can always be converted to a Unix/POSIX epoch time
+by dividing hptime by HPTMODULUS (reducing the hptime to second
+precision) and vise-versa, see the documentation for the
+MS_HPTIME2EPOCH and MS_EPOCH2HPTIME macros above.
+
+As long as the system's \fPgmtime\fP function supports negative epoch
+times the internal time routines will be able to represent times
+earlier than the epoch, i.e. times earlier than 1 January 1970.
+
+The hptime values are stored as 64-bit integers to allow high
+precision and avoid accumulation errors associated with floating point
+values.
+
+A special value defined as HPTERROR in libmseed.h is used to represent
+errors for routines returning hptime.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

@@ -1,0 +1,170 @@
+.TH MST_PACK 3 2007/08/16 "Libmseed API"
+.SH DESCRIPTION
+Packing of Mini-SEED records from MSTrace segments.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBmst_pack\fP ( MSTrace *" mst ","
+.BI "                void (*" record_handler ") (char *, int, void *),"
+.BI "                void *" handlerdata ", int " reclen ", flag " encoding ","
+.BI "                flag " byteorder ", int *" packedsamples ", flag " flush ","
+.BI "                flag " verbose ", MSRecord *" mstemplate " );"
+
+.BI "int  \fBmsr_packgroup\fP ( MSTraceGroup *" mstg ","
+.BI "                     void (*" record_handler ") (char *, int, void *),"
+.BI "                     void *" handlerdata ", int " reclen ", flag " encoding ","
+.BI "                     flag " byteorder ", int *" packedsamples ", flag " flush ","
+.BI "                     flag " verbose ", MSRecord *" mstemplate " );"
+.fi
+
+.SH DESCRIPTION
+\fBmst_pack\fP creates (packs) Mini-SEED data records from a MSTrace
+segment using the specified record length (\fIreclen\fP), Mini-SEED
+\fIencoding\fP and \fIbyteorder\fP.  Using \fImstemplate\fP as a
+template, the common header fields and blockettes are packed into a
+record header.  If no template will be used \fImstemplate\fP should be
+set to NULL.  A Blockette 1000 will be added if one is not present in
+the template.  The MSTrace.datasamples array and MSTrace.numsamples value
+will be adjusted (reduced) as samples are packed into data records.
+This routine will modify the record length, encoding format, byte
+order and sequence number of the MSRecord template.  The start time,
+sample rate, data array, number of samples and sample type of the
+MSRecord template are preserved.
+
+Default values will be used for any of the key characteristics of
+record length, encoding format and byte order that are -1.  The
+default values are: reclen = 4096 bytes, encoding = 11 (Steim2) and
+byteorder = 1 (MSBF or big-endian).
+
+\fIreclen\fP should be set to the desired data record length in bytes
+which must be expressible as 2 raised to the power of X where X is
+between (and including) 8 to 20.
+
+\fIencoding\fP should be set to one of the following supported
+Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1), DE_INT32
+(3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10) and DE_STEIM2
+(11).  The encoding aliases are defined in libmseed.h.
+MSTrace.sampletype should indicated the sample type as either 'a'
+(ASCII), 'i' (32-bit integers), 'f' (32-bit floats) or 'd' (64-bit
+doubles).
+
+The encoding format must be appropriate for the sample type of the
+MSTrace samples.  For example, Steim compression and integer encoding
+formats require integer samples and float encoding formats require the
+appropriate size floats as input.  As a counter example, float samples
+cannot be packed using Steim compression or integer encoding formats.
+
+\fIbyteorder\fP must be either 0 (LSBF or little-endian) or 1 (MBF or
+big-endian).
+
+Each time a complete record is packed it will be passed to the
+\fIrecord_handler()\fP function which expects three arguments: 1) a
+char * to the record buffer, 2) the length of the record in bytes and
+3) a void pointer supplied by the caller.  It is the responsibility of
+\fIrecord_handler()\fP to process the record, the memory will be
+re-used or freed when \fIrecord_handler()\fP returns.  This function
+pointer is required, there is no other way to access the packed
+records.
+
+The \fIhandlerdata\fP pointer will be passed as the 3rd argument to
+\fIrecord_handler()\fP.  This allows the caller to optionally pass
+data directly to the \fIrecord_handler()\fP.
+
+The integer pointed to by \fIpackedsamples\fP will be set to the total
+number of samples packed.
+
+If the \fIflush\fP flag is not zero all of the data will be packed
+into records, otherwise records will only be packed while there are
+enough data samples to completely fill a record.
+
+The \fIverbose\fP flag controls verbosity, a value of zero will result
+in no diagnostic output.
+
+\fBmst_packgroup\fP simply calls \fBmst_pack\fP for each MSTrace in the
+specified MSTraceGroup.  The integer pointed to by \fIpackedsamples\fP
+will be set to the total number of samples packed.
+
+.SH COMPRESSION HISTORY
+When the encoding format is Steim 1 or 2 compression contiguous
+records will be created including compression history.  Put simply,
+this means that the first difference in the compression series will be
+the difference between the first sample of the current record and the
+last sample of the previous record.  For the first record in a series
+(no previous record), a so-called cold start, the first difference
+will be zero.
+
+The compression history can be seeded by allocating the StreamState
+struct for the MSTrace and setting the \fBlastintsample\fP member to
+the integer sample value that preceded the first sample in the current
+series and setting the \fBcomphistory\fP flag to true (1).
+
+.SH RETURN VALUES
+\fBmst_pack\fP returns the number records created on success and -1 on
+error.
+
+\fBmst_packgroup\fP returns the total (for all MSTraces) number of
+record created on success and -1 on error.
+
+.SH CAVEATS
+When using a MSRecord template (\fImstemplate\fP) the dataquality
+member must be set to a valid value.  It is also advisable to set the
+network, station, location and channel indicators to appropriate
+values.  Unless these source indicators need to change they can simply
+be copied from the matching MSTrace members.
+
+.SH EXAMPLE
+Skeleton code for creating (packing) Mini-SEED records with
+mst_pack(3):
+
+.nf
+static void record_handler (char *record, int reclen, void *srcname) {
+  if ( fwrite(record, reclen, 1, outfile) != 1 )
+    {
+      ms_log (2, "Error writing %s to output file\n", (char *)srcname);
+    }
+}
+
+main() {
+  int psamples;
+  int precords;
+  MSTrace *mst;
+  char srcname[50];
+
+  mst = mst_init (NULL);
+
+  /* Populate MSTrace values */
+  strcpy (mst->network, "XX");
+  strcpy (mst->station, "TEST");
+  strcpy (mst->channel, "BHE");
+  mst->starttime = ms_seedtimestr2hptime ("2004,350,00:00:00.000000");
+  mst->samprate = 40.0;
+
+  /* The datasamples pointer and numsamples counter will be adjusted by
+     the packing routine, the datasamples array must be dynamic memory
+     allocated by the malloc() family of routines. */
+  mst->datasamples = dataptr; /* pointer to 32-bit integer data samples */  
+  mst->numsamples = 1234;
+  mst->sampletype = 'i';      /* declare type to be 32-bit integers */
+
+  mst_srcname (mst, srcname, 0);
+
+  /* Pack 4096 byte, big-endian records, using Steim-2 compression */
+  precords = mst_pack (mst, &record_handler, srcname, 4096, DE_STEIM2,
+                       1, &psamples, 1, verbose, NULL);
+
+  ms_log (0, "Packed %d samples into %d records\n", psamples, precords);
+
+  mst_free (&mst);
+}
+.fi
+
+.SH SEE ALSO
+\fBms_intro(3)\fP and \fBmsr_pack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

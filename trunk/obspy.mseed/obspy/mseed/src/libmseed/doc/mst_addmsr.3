@@ -1,0 +1,73 @@
+.TH MST_ADDMSR 3 2006/02/27 "Libmseed API"
+.SH DESCRIPTION
+Add time coverage and data samples to MSTrace structures
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int    *\fBmst_addmsr\fP ( MSTrace *" mst ", MSRecord *" msr ", flag " whence " );
+
+.BI "int     \fBmst_addspan\fP ( MSTrace *" mst ", hptime_t " starttime ", hptime_t " endtime ",
+.BI "                      void *" datasamples ", int " numsamples ",
+.BI "                      char " sampletype ",  flag " whence " );
+
+.BI "MSTrace  *\fBmst_addmsrtogroup\fP ( MSTraceGroup *" mstg ", MSRecord *" msr ",
+.BI "                              flag " dataquality ", double " timetol ",
+.BI "                              double " sampratetol " );
+
+.BI "MSTrace  *\fBmst_addtracetogroup\fP ( MSTraceGroup *" mstg ", MSTrace *" mst " );"
+.fi
+
+.SH DESCRIPTION
+These routines provides different ways of adding time coverage to
+MSTrace objects.  A common way to organize MSTrace objects is with a
+MSTraceGroup.  The \fBmst_addmsrtogroup\fP provides a convenient way to add
+MSRecord data to a MSTraceGroup, hiding many of the details of MSTrace
+matching and bookkeeping.
+
+\fBmst_addmsr\fP will add the time coverage from a MSRecord to a
+MSTrace.  The start or end time will be updated and data samples copied
+if they exist.  No checking is done to verify that the record matches
+the trace in any way.  If \fIwhence\fP is 1 the MSRecord coverage will
+be added at the end of the MSTrace.  If \fIwhence\fP is 2 the MSRecord
+coverage will be added at the beginning of the MSTrace.
+
+\fBmst_addspan\fP does the same thing as \fBmsr_addmsr\fP except that
+time coverage and data samples are explicitly provided.  See
+\fBms_time(3)\fP for a description of the high precision epoch time
+format needed for \fIstarttime\fP and \fIendtime\fP.  See the
+\fBWaveform Data\fP section of \fBms_intro(3)\fP for a description of
+data sample representation.
+
+\fBmst_addmsrtogroup\fP adds time coverage from the specified MSRecord
+to the first adjacent MSTrace found in the specified MSTraceGroup.  If
+the \fIdataquality\fP flag is true traces will be grouped by quality
+in addition to the source name identifiers.  \fBmst_findadjacent(3)\fP
+is used with the specified sample rate and time tolerances to find an
+adjacent trace, see \fBmst_findadjacent(3)\fP for further details.  If
+no adjacent MSTrace is found a new MSTrace will be added to the
+MSTraceGroup.
+
+\fBmst_addtracetogroup\fP adds a MSTrace structure to a MSTraceGroup
+structure.  The MSTrace is added at the end of the MSTrace chain.
+
+.SH RETURN VALUES
+\fBmst_addmsr\fP and \fBmst_addspan\fP return 0 on success and -1 on
+error.
+
+\fBmst_addmsrtogroup\fP returns a pointer to the MSTrace updated or 0 on
+error.
+
+\fBmst_addtracetogroup\fP returns a pointer to the MSTrace added or 0 on
+error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmst_init(3)\fP, \fBmst_findadjacent(3)\fP and
+\fBms_time(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

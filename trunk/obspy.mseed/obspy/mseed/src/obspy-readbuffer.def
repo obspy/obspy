@@ -1,0 +1,7 @@
+LIBRARY libmseed.dll
+EXPORTS
+   readMSEEDBuffer
+   lil_init
+   lrl_free
+   seg_free
+   lil_free

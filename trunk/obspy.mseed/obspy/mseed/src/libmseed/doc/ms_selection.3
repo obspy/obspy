@@ -1,0 +1,196 @@
+.TH MS_SELECTION 3 2010/01/15 "Libmseed API"
+.SH DESCRIPTION
+Routines to manage and use data selection lists.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "Selections *\fBms_matchselect\fP ( Selections *" selections ", char *" srcname ","
+.BI "                             hptime_t " starttime ", hptime_t " endtime ","
+.BI "                             SelectTime **" ppselecttime " );"
+
+.BI "Selections *\fBmsr_matchselect\fP ( Selections *" selections ", MSRecord *" msr ","
+.BI "                              SelectTime **" ppselecttime " );"
+
+.BI "int  \fBms_addselect\fP ( Selections **" ppselections ", char *" srcname ","
+.BI "                   hptime_t " starttime ", hptime_t " endtime " );"
+
+.BI "int  \fBms_addselect_comp\fP ( Selections **" ppselections ", char *" net ","
+.BI "                         char *" sta ", char *" loc ", char *" chan ", char *" qual ","
+.BI "                         hptime_t " starttime ", hptime_t " endtime " );"
+
+.BI "int  \fBms_readselectionsfile\fP ( Selections **" ppselections ", char *" filename " );"
+
+.BI "void \fBms_freeselections\fP ( Selections *" selections " );"
+
+.BI "void \fBms_printselections\fP ( Selections *" selections " );"
+.fi
+
+.SH DESCRIPTION
+These routines serve as a convienence facility for creating a list of
+data selections and using it to match data.  The selection criteria
+are the \fIsrcname\fP and optional start and end times.  The
+\fIsrcname\fP components in a selection may contain globbing
+characters for matching (wildcards, character range, etc.).  A
+\fIsrcname\fP is generally composed of network, station, location,
+channel and optional quality components; normally these are created
+with \fBmsr_srcname(3)\fP and \fBmst_srcname(3)\fP.
+
+\fBms_matchselect\fP checks for an entry in the \fPselections\fP list
+that matches the supplied \fIsrcname\fP and optionally \fIstarttime\fP
+and \fIendtime\fP.  The start and/or end times can be set to HTPERROR
+to mean "any" time.  A selection will match the specified time range
+if there is any overlap in time coverage.  If the \fIppselecttime\fP
+pointer is not NULL it will be set to the matching SelectTime entry.
+
+\fBmsr_matchselect\fP is a simple wrapper to call \fBms_matchselect\fP
+using the details from a specified MSRecord.
+
+\fBms_addselect\fP adds a selection entry to the \fIselections\fP list
+based on the \fsrcname\fP and the \fIstarttime\fP and \fIendtime\fP
+boundaries.  The source name components may contain globbing
+characters for matching including wildcards and character sets, see
+\fBSRCNAME MATCHING\fP below.  Note that the \fIppselections\fP is a
+pointer to a pointer, if the secondary pointer has not been allocated
+(i.e. the list is empty) the first entry will be created and the
+primary pointer updated.
+
+\fBms_addselect_comp\fP is a wrapper of \fBms_addselect\fP used to add
+a selection entry to the \fIselections\fP list.  The \fInet\fP,
+\fIsta\fP, \fIloc\fP, \fIchan\fP and \fIqual\fP source name components
+are used to create a \fIsrcname\fP.  The name components may contain
+globbing characters for matching including wildcards and character
+sets, see \fBSRCNAME MATCHING\fP below.  If a name component is not
+specified a wildard matching all entries will be subsituted,
+i.e. \fInet\fP==NULL will be interpreted to match all network codes.
+As a special case a \fIloc\fP value of "--" will be translated to and
+empty string to match the srcname representation of a blank
+(space-space) location ID.
+
+\fBms_readselectionsfile\fP reads a file containing a list of
+selections and adds them to the specified \fIselections\fP list.  As
+with \fBms_addselect\fP if the selections list is empty it will be
+created.  For more details see the \fBSELECTION FILE\fR section below.
+
+\fBms_freeselections\fP frees all memory associated with
+\fIselections\fP.
+
+\fBms_printselections\fP prints all of the entries in the
+\fIselections\fP list using the ms_log() facility.
+
+.SH RETURN VALUES
+The \fBms_matchselect\fP and \fBmsr_matchselect\fP routines return a
+pointer to the matching Selections entry on success and NULL when no
+match was found.  These routines will also set the \fIppselecttime\fP
+pointer to the matching SelectTime entry if supplied.
+
+\fBms_addselect\fP and \fBms_addselect_comp\fP return 0 on success and
+-1 on error.
+
+\fBms_readselectionsfile\fP returns the number of selections added to
+the list or -1 on error.
+
+.SH "SELECTION FILE"
+A selection file is used to match input data records based on network,
+station, location and channel information.  Optionally a quality and
+time range may also be specified for more refined selection.  The
+non-time fields may use the '*' wildcard to match multiple characters
+and the '?' wildcard to match single characters.  Character sets may
+also be used, for example '[ENZ]' will match either E, N or Z.
+The '#' character indicates the remaining portion of the line will be
+ignored.
+
+Example selection file entires (the first four fields are required)
+.nf
+#net sta  loc  chan  qual  start             end
+IU   ANMO *    BH?
+II   *    *    *     Q     
+IU   COLA 00   LH[ENZ] R
+IU   COLA 00   LHZ   *     2008,100,10,00,00 2008,100,10,30,00
+.fi
+
+.SH SRCNAME MATCHING
+Entries in a Selections list include a "source name" (srcname) string
+to represent matching paramters for network, station, location,
+channel and optionally the quality name components.  Each name
+component may contain globbing characters to match more than one
+unique srcname.
+
+.nf
+Valid glob patterns include:
+   *       matches zero or more characters
+   ?       matches any single character
+   [set]   matches any character in the set
+   [^set]  matches any character NOT in the set
+           where a set is a group of characters or ranges. a range
+           is written as two characters seperated with a hyphen:
+           a-z denotes all characters between a to z inclusive.
+   [-set]  set matches a literal hypen and any character in the set
+   []set]  matches a literal close bracket and any character in the set
+
+   char    matches itself except where char is '*' or '?' or '['
+   \char   matches char, including any pattern character
+
+ examples:
+   a*c             ac abc abbc ...
+   a?c             acc abc aXc ...
+   a[a-z]c         aac abc acc ...
+   a[-a-z]c        a-c aac abc ...
+.fi
+
+.SH EXAMPLE USAGE
+The primary intention of the Selections list facility is to limit data
+to a specific selection as it's read into a program.  This is
+illustrated below.
+
+.nf
+main() {
+  MSRecord *msr = NULL;
+  Selections *selections = NULL;
+  hptime_t starttime;
+  hptime_t endtime;
+  int retcode;
+
+  ms_addselect (&selections, "IU_*_*_LH?_?", HPTERROR, HPTERROR);
+
+  starttime = timestr2hptime ("2009/1/15 00:00:00.00");
+  endtime = timestr2hptime ("2009/1/31 23:59:59.99");
+  ms_addselect (&selections, "IU_ANMO_00_LH?_?", starttime, endtime);
+
+  while ( (retcode = ms_readmsr (&msr, filename, 0, NULL, NULL, 1, 0, verbose)) == MS_NOERROR )
+    {
+       /* Print details if data record matches selection criteria */
+       if ( msr_matchselect (selections, msr, NULL) )
+         {
+           msr_print (msr, verbose);
+         }
+    }
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Error reading input file %s: %s\\n",
+            filename, ms_errorstr(retcode));
+
+  /* Cleanup memory and close file */
+  ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, verbose);
+} /* End of main() */
+.fi
+
+The following two calls are equivalent:
+.nf
+  ms_addselect (&selections, "IU_ANMO_00_LH?_?", starttime, endtime);
+  ms_addselect_comp (&selections, "IU", "ANMO", "00", "LH?", "?", startime, endtime);
+.fi
+
+As a futher convienence usage of \fBms_readselectionsfile()\fP would
+allow the selections to be specified in a simple ASCII file and avoid
+the need to directly call \fBms_addselect()\fP.
+
+.SH SEE ALSO
+\fBmsr_srcname(3)\fP and \fBmst_srcname(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

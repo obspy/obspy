@@ -1,0 +1,125 @@
+.TH MS_LOG 3 2006/11/21
+.SH NAME
+ms_log and friends \- Central logging facility for libmseed
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+.sp
+.BI "int  \fBms_log\fP (int " level ", const char *" format ", ...);
+.sp
+.BI "int  \fBms_log_l\fP (MSLogParam *" logp ", int " level ", const char *" format ", ...);
+.sp
+.BI "void \fBms_loginit\fP (void (*" log_print ")(const char*), const char *" logprefix ",
+.BI "               void (*" diag_print ")(const char*), const char *" errprefix ");
+.sp
+.BI "MSLogParam * \fBms_loginit_l\fP (MSLogParam *" logp ",
+.BI "               void (*" log_print ")(const char*), const char *" logprefix ",
+.BI "               void (*" diag_print ")(const char*), const char *" errprefix ");
+.fi
+.SH DESCRIPTION
+The \fBms_log\fP functions are the central logging facility for
+all output from libmseed functions.  They are also intended to be used
+by libmseed based programs if desired.
+
+Three message levels are recognized:
+ 0  : Normal log messgaes, printed using log_print with logprefix
+ 1  : Diagnostic messages, printed using diag_print with logprefix
+ 2+ : Error messages, printed using diag_print with errprefix
+
+It is the task of the \fBms_log\fP functions to format a message using
+\fBprintf\fP conventions and pass the formatted string to the
+appropriate printing function (\fIlog_print\fP or \fIdiag_print\fP)
+
+\fBms_log\fP will process messages using the global logging
+parameters.
+
+\fBms_log_l\fP is a reentrant version of \fBms_log\fP.  It will use
+the logging parameters specified in the supplied MSLogParam struct.
+If \fBlogp\fP is NULL global parameters will be used, this would be
+equivalent to a call to ms_log().  This is intended for use only when
+complicated logging schemes are desired, e.g. in a threaded
+application.  Note that it is not possible to set thread specific
+logging parameters for the internal library functions because global
+parameters are used.
+
+The \fBms_loginit\fP functions are used to set the log and error
+printing functions and the log and error message prefixes used by the
+\fBms_log\fP functions.
+
+\fBms_loginit\fP will operate on the global logging parameters.
+
+\fBms_loginit_l\fP is a reentrant version of \fBms_loginit\fP.  It
+will initialize or change the logging parameters specified in the
+MSLogParam struct.  If \fIlogp\fP is NULL a new MSLogParam struct will
+be allocated.  A pointer to the created or re-initialized MSLogParam
+struct will be returned.  The returned pointer is suitable for use with
+\fBms_log_l\fP.
+
+Use NULL for the print function pointers or the prefixes if they
+should not be changed from previously set or default values.
+
+The default values for the logging parameters are:
+  log_print  = fprintf  (printing to standard out)
+  log_prefix = ""
+  diag_print = fprintf  (printing to standard error)
+  err_prefix = "error: "
+
+By setting the printing functions it is possible to re-direct all of
+the output from these logging routines.  This is useful when the
+libmseed based software is embedded in a system with it's own logging
+facilities.
+
+Most of the libmseed internal messages are logged at either the
+diagnostic or error level.
+
+.SH RETURN VALUES
+\fBms_log\fP and \fBms_log_l\fP return the number of characters
+formatted on success, and a negative value on error.
+
+\fBms_loginit_l\fP returns a pointer to the MSLogParam struct that it
+operated on.  If the input MSLogParam struct is NULL a new struct will
+be allocated with \fBmalloc()\bP.
+
+.SH EXAMPLE
+Unless a complicated logging scheme is needed most uses of this
+logging facility will be limited to the ms_loginit and ms_log
+functions.
+
+An example of setting the printing functions:
+
+.nf
+#include <libmseed.h>
+
+void log_print (const char *message);
+void diag_print (const char *message);
+
+main () {
+  ms_loginit (&log_print, "LOG: ", &diag_print, "ERR: ");
+
+  /* Normal log message, "LOG: " will be prefixed */
+  ms_log (0, "Normal log message for %s\n", argv[0]);
+
+  /* Diognostic message, "LOG: " will be prefixed */
+  ms_log (1, "Diagnositc message for %s\n", argv[0]);
+
+  /* Error message, "ERR: " will be prefixed */
+  ms_log (2, "Error message for %s\n", argv[0]);
+}
+
+void log_print (const char *message) {
+  /* Send message to external log message facility */
+  send_log(message);
+}
+
+void diag_print (const char *message) {
+  /* Send message to external error message facility */
+  send_error(message);
+}
+.fi
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

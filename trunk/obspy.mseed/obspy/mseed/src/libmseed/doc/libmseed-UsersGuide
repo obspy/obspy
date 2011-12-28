@@ -1,0 +1,460 @@
+
+                        An introduction to libmseed
+
+
+ -- Introduction --
+
+The Mini-SEED library provides a framework for manipulation of SEED
+data records including the unpacking and packing of data records.
+Functionality is also included for managing waveform data as
+continuous traces.  All structures of SEED 2.4 data records are
+supported with the following exceptions: Blockette 2000 opaque data
+which has an unknown data structure by definition and Blockette 405
+which depends on full SEED (SEED including full ASCII headers) for a
+full data description.
+
+The primary purpose of the library is to hide the details of Mini-SEED
+in order to allow rapid development of Mini-SEED reading/writing
+software.  The framework allows everything from manipulation of
+Mini-SEED on a record-by-record basis to reading of Mini-SEED into
+continuous trace segments to packing of large continuous traces using
+a record template.
+
+Certain common tasks have, through library design, been streamlined,
+for example: reading Mini-SEED records from a file, adding data from
+unpacked records to a group of traces or packing a group of continuous
+traces into Mini-SEED records.
+
+The following data encoding formats are supported for both unpacking
+and packing: ASCII, INT16, INT32, FLOAT32, FLOAT64, STEIM1 and STEIM2.
+The INT and FLOAT encodings each have two versions for quantities with
+a different number of bits of representation.  The STEIM decompression
+produces 32-bit integers; likewise the compression routines require
+32-bit integers as input.  The following data encoding formats are
+supported for unpacking only: GEOSCOPE (24-bit, 16/3 and 16/4 gain
+ranged), CDSN, SRO and DWWSSN.
+
+
+ -- Data Records --
+
+A Mini-SEED record is represented in the library using the data
+structure given below.  This structure is used for both unpacking and
+packing of Mini-SEED records.  When unpacking with msr_unpack(3) this
+structure is populated.  When packing with msr_pack(3) this structure
+is used as a template for the resulting data records and as a source
+of samples to be packed.
+
+Blockettes following the fixed section of the header are contained in
+the blockette chain of BlktLink structures.  Shortcut pointers to
+commonly used blockettes are maintained for types 100, 1000 and 1001.
+
+Many common header fields which are not easily accessible/usable in
+the raw header are available directly from the structure.  When this
+structure is used as a packing template, these common header fields
+are packed into the appropriate place in the fixed section or
+blockette.  As examples, the ASCII stream identifiers (network,
+station, location and channel) are available as NULL terminated
+strings, the start time is available as a high precision epoch time
+(see ms_time(3)) and the sample rate is available as a double
+precision floating point value.
+
+The MSRecord data structure:
+
+typedef struct MSRecord_s {
+  char           *record;            /* Mini-SEED record */
+  int32_t         reclen;            /* Length of Mini-SEED record in bytes */
+  
+  /* Pointers to SEED data record structures */
+  struct fsdh_s      *fsdh;          /* Fixed Section of Data Header */
+  struct BlktLink    *blkts;         /* Root of blockette chain */
+  struct blkt_100_s  *Blkt100;       /* Blockette 100, if present */
+  struct blkt_1000_s *Blkt1000;      /* Blockette 1000, if present */
+  struct blkt_1001_s *Blkt1001;      /* Blockette 1001, if present */
+  
+  /* Common header fields in accessible form */
+  int32_t         sequence_number;   /* SEED record sequence number */
+  char            dataquality;       /* Data quality indicator */
+  char            network[11];       /* Network designation, NULL terminated */
+  char            station[11];       /* Station designation, NULL terminated */
+  char            location[11];      /* Location designation, NULL terminated */
+  char            channel[11];       /* Channel designation, NULL terminated */
+  hptime_t        starttime;         /* Record start time, corrected (first sample) */
+  double          samprate;          /* Nominal sample rate (Hz) */
+  int64_t         samplecnt;         /* Number of samples in record */
+  int8_t          encoding;          /* Data encoding format */
+  int8_t          byteorder;         /* Byte order of record */
+  
+  /* Data sample fields */
+  void           *datasamples;       /* Data samples, 'numsamples' of type 'sampletype'*/
+  int64_t         numsamples;        /* Number of data samples in datasamples */
+  char            sampletype;        /* Sample type code: a, i, f, d */
+
+  /* Stream oriented state information */
+  StreamState    *ststate;           /* Stream processing state information */
+}
+MSRecord;
+
+Explanation of fields:
+
+record:
+  Pointer to the Mini-SEED record which was unpacked into the MSRecord.
+
+reclen:
+  When unpacking this is the record length in bytes of the record
+  pointed to by the 'record' pointer.  When packing this is the length
+  of records to pack.
+
+fsdh:
+  A pointer to the Fixed Section of the Data Header, all appropriate
+  multi-byte quantities are in host byte order.
+
+blkts:
+  The root of the blockette chain.  The chain is constructed from
+  linked BlktLink structures.  All appropriate multi-byte quantities
+  in the blockettes are in host byte order.  The msr_addblockette(3)
+  routine can be used to add blockettes to this chain.  The BlktLink
+  structure and SEED blockette structures are defined in libmseed.h.
+
+Blkt100:
+Blkt1000:
+Blkt1001:
+  Shortcut pointers to common blockettes in the blockette chain.  If a
+  given blockette does not exist in the blockette chain the shortcut
+  pointer will be 0.  If more than one of these blockette types exist
+  in the chain this pointer will point to the last one.
+
+sequence_number:
+  SEED record sequence number, should be between 0 and 999999.
+
+dataquality:
+  Data record indicator, should be 'D', 'R', 'Q' or 'M'.
+
+network:
+station:
+location:
+channel:
+  SEED stream identifiers as NULL terminated strings.
+
+starttime:
+  Record start time, the time of the first sample, as a high precision
+  epoch time (seed ms_time(3)).  This time can be converted using the
+  various ms_hptime2<X> functions.
+
+samprate:
+  The sample rate in samples per second in double precision.  During
+  unpacking this value will be set to the sample rate given in the 100
+  blockette if it is present, otherwise the sample rate derived from
+  the factor and multiplier in the fixed section of the header.  In a
+  packing template this value will be used to derive a factor and
+  multiplier for the fixed section of the header and will be written
+  into 100 blockettes if any are in the blockette chain.
+
+samplecnt:
+  The sample count, i.e. number of data samples in the record.
+
+encoding:
+  The SEED data sample encoding format.  During packing this dictates
+  what format will be used to pack the data samples.  Supported
+  packing formats are 0 (DE_ASCII), 1 (DE_INT16), 3 (DE_INT32),
+  4 (DE_FLOAT32), 5 (DE_FLOAT64), 10 (DE_STEIM1) and 11 (DE_STEIM2).
+
+byteorder:
+  Byte order of multi-byte quantities in the record.  A value of 0
+  indicates little endian and a value of 1 indicates big endian.
+  During packing this dictates the byte order of the final records.
+
+datasamples:
+  A pointer to the unpacked data samples.  If no data samples were
+  unpacked this will be 0.  The 'numsamples' field indicates how many
+  samples are in this array and the 'sampletype' field indicates what
+  type of samples they are.
+
+numsamples:
+  The number of samples pointed to by the 'datasamples' pointer.
+
+sampletype:
+  The type of samples pointed to by the 'datasamples' pointer.
+  Supported types are 'a' (ASCII), 'i' (integer), 'f' (float) and
+  'd' (double).  The size of each sample type in bytes is returned
+  by the get_samplesize(3) lookup routine.
+
+ststate:
+  Pointer to a StreamState struct used internally to track stream
+  oriented state variables.  Memory for this only allocated when needed.
+
+ -- Traces --
+
+In order to manage continuous trace segments the library provides a
+couple of different mechanisms: Trace Groups and Trace Lists.
+
+Initially only Trace Groups were implimented and later Trace Lists
+were added, from a general standpoint they do the same thing.  The
+Trace Lists are more efficient and slightly more complicated in their
+structure.  Either can be used for most tasks, but there are more
+utilities functions for Trace Groups.
+
+The TraceGroup functionality is centered around the MSTrace data
+structure and a MSTraceGroup data structure in which MSTrace
+structures can be grouped.  While a MSTrace structure is normally used
+to hold trace information and associated data samples it can also be
+used without data samples as a means to keep trace of data coverage
+without actual samples.
+
+Numerous routines are provided for basic management of MSTrace
+structures, including the creation of new MSTrace structures, adding
+data from Mini-SEED data structures to MSTrace structures, printing
+trace information, etc.
+
+The MSTraceGroup data structure acts as a very simple place to begin a
+chain of MSTrace structures and keep track of the number of traces.
+
+The MSTrace and MSTraceGroup data structures:
+
+typedef struct MSTrace_s {
+  char            network[11];     /* Network designation, NULL terminated */
+  char            station[11];     /* Station designation, NULL terminated */
+  char            location[11];    /* Location designation, NULL terminated */
+  char            channel[11];     /* Channel designation, NULL terminated */
+  char            dataquality;     /* Data quality indicator */
+  char            type;            /* MSTrace type code */
+  hptime_t        starttime;       /* Time of first sample */
+  hptime_t        endtime;         /* Time of last sample */
+  double          samprate;        /* Nominal sample rate (Hz) */
+  int64_t         samplecnt;       /* Number of samples in trace coverage */
+  void           *datasamples;     /* Data samples, 'numsamples' of type 'sampletype'*/
+  int64_t         numsamples;      /* Number of data samples in datasamples */
+  char            sampletype;      /* Sample type code: a, i, f, d */
+  void           *prvtptr;         /* Private pointer for general use */
+  StreamState    *ststate;         /* Stream processing state information */
+  struct MSTrace_s *next;          /* Pointer to next trace */
+}
+MSTrace;
+
+typedef struct MSTraceGroup_s {
+  int32_t           numtraces;     /* Number of MSTraces in the trace chain */
+  struct MSTrace_s *traces;        /* Root of the trace chain */
+}
+MSTraceGroup;
+
+Explanation of fields:
+
+dataquality:
+  A SEED data quality indicator, either 'D', 'R', 'Q' or 'M'.   This value
+  will be (binary) 0 when the quality is unknown or mixed.
+
+network:
+station:
+location:
+channel:
+  MSTrace identifiers as NULL terminated strings.
+
+type:
+  A single character trace type indicator.  This field is not used by
+  libmseed but could be used for application specific trace
+  identification.
+
+starttime:
+  MSTrace start time, the time of the first sample, as a high precision
+  epoch time (see ms_time(3)).  This time can be converted using the
+  various ms_hptime2<X> functions.
+
+endtime:
+  MSTrace end time, the time of the last sample, as a high precision
+  epoch time (see ms_time(3)).  This time can be converted using the
+  various ms_hptime2<X> functions.
+
+samprate:
+  The sample rate in samples per second in double precision.
+
+samplecnt:
+  The sample count, i.e. number of data samples in the trace.
+
+datasamples:
+  A pointer to the data samples.  If no data samples are included this
+  will be 0.  The 'numsamples' field indicates how many samples are in
+  this array and the 'sampletype' field indicates what type of samples
+  they are.
+
+numsamples:
+  The number of samples pointed to by the 'datasamples' pointer.
+
+sampletype:
+  The type of samples pointed to by the 'datasamples' pointer.
+  Supported types are 'a' (ASCII), 'i' (integer), 'f' (float) and
+  'd' (double).  The size of each sample type in bytes is returned
+  by the get_samplesize(3) lookup routine.
+
+prvtptr:
+  A private pointer for general use.  This pointer is not used by
+  libmseed and can safely be used by the calling program.
+
+ststate:
+  Pointer to a StreamState struct used internally to track stream
+  oriented state variables.  Memory for this only allocated when needed.
+
+next:
+  A pointer to the next MSTrace structure.  The value will be 0 for the
+  last link in a chain of MSTrace structures.
+
+
+ -- Log Messages --
+
+All of the log and diagnostic messages emitted by the library functions
+use the same interface.  The output from this interface can be controlled.
+This is useful when the library will be embedded in a larger system with
+a custom logging facility.  See the man page for more details.
+
+  ms_log() : the central logging facility.  Behavior is controlled by the
+        settings specified with ms_loginit().
+
+  ms_loginit() : set the functions and prefixes used for log,
+        diagnostic and error messages.
+
+The default destination for log messages is standard output (stdout),
+while all diagnostic (including error) messages go to standard error
+(stderr).  Most of the internal messages emmited by the library are
+considered diagnostic and will, by default, go to standard error.
+
+The default prefix for log and diagnostic messages is nothing. The
+default prefix for diagnostic error messages is "error: ".
+
+There are reentrant versions of these functions that operate directly
+on a logging parameter MSLogParam struct.  These are intended for use
+in threaded programs or where a complex logging scheme is desired.
+See the man pages for more details.
+
+
+ -- Waveform Data --
+
+Waveform data samples are managed by libmseed in a couple of different
+formats depending on how they are unpacked or will be packed.  An
+array of samples is completely represented by an array of sample
+values, the number of samples and a sample type.  The number of
+samples is always the actual number of sample values, not the number
+of bytes needed for storing the values.  Samples can be either ASCII,
+32-bit integer, 32-bit floats or 64-bit double precision floats.
+
+Sample types are identified by a type character:
+'a' - ASCII (8 bits)
+'i' - integer (32 bits)
+'f' - float (32 bits)
+'d' - double (64 bits)
+
+The size of each sample type in bytes is returned by the
+get_samplesize(3) lookup routine.
+
+
+ -- Common Usage --
+
+Example programs using libmseed are provided in the 'examples'
+directory of the source code distribution.
+
+One of the most common tasks is to read a file of Mini-SEED records
+and either perform some action based on the header values or apply
+some process to the data samples.  This task is greatly simplified by
+using the library functions ms_readmsr(3) and ms_readtraces(3).  The
+ms_readmsr(3) routine will open a specified file and return MSRecord
+structures for each Mini-SEED record it reads from the file.  The
+ms_readtraces(3) routine will do the same except add all the data read
+to a MSTraceGroup, this is ideal for quickly reading data for
+processing.  Both of these routines are able to automatically detect
+record length.
+
+If your application is not designed to read Mini-SEED from files the
+library also provides functions to detect and parse Mini-SEED records
+in memory buffers.  For more information see ms_detect(3) and
+msr_parse(3).
+
+
+Skeleton code for reading a file with ms_readmsr(3):
+
+main() {
+  MSRecord *msr = NULL;
+  int retcode;
+
+  while ( (retcode = msr_readmsr (&msr, filename, 0, NULL, NULL, 1, 0, verbose)) == MS_NOERROR )
+    {
+       /* Do something with the record here, e.g. print */
+       msr_print (msr, verbose);
+    }
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Cannot read %s: %s\n", filename, ms_errorstr(retcode));
+
+  /* Cleanup memory and close file */
+  ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0);
+}
+
+For reading two files with ms_readtraces(3):
+
+main() {
+  MSTraceGroup *mstg = NULL;
+  int retcode;
+
+  retcode = ms_readtraces (&mstg, filename, 0, -1.0, -1.0, 0, 1, 0, verbose);
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Cannot read %s: %s\n", filename, ms_errorstr(retcode));
+
+  retcode = ms_readtraces (&mstg, filename2, 0, -1.0, -1.0, 0, 1, 0, verbose);
+
+  if ( retcode != MS_ENDOFFILE )
+    ms_log (2, "Cannot read %s: %s\n", filename2, ms_errorstr(retcode));
+
+  if ( ! mstg )
+    {
+      fprintf (stderr, "Error reading file\\n");
+      return -1;
+    }
+
+  /* Do something with the traces here, e.g. print */
+  mst_printtracelist (mstg, 0, verbose, 0);
+
+  mst_freegroup (&mstg);
+}
+
+Another common task is to create (pack) Mini-SEED records. The library
+supports packing of Mini-SEED either from MSRecord structures, MSTrace
+structures or MSTraceGroup collections using, respectively, msr_pack(3),
+mst_pack(3) or mst_packgroup(3).  In each case the appropriate data
+structure and parameters are provided to the routine along with a
+function pointer to a routine that will be called each time a record
+is complete and should be disposed of.
+
+When packing Mini-SEED records the concept of a record header template
+is used, the template is always in the form of a MSRecord structure.
+This allows the calling program to dictate the contents, with a few
+exceptions, of the header in the final data records.
+
+Skeleton code for creating (packing) and writing Mini-SEED records to
+a file with mst_writemseed(3):
+
+main() {
+  int precords;
+  int verbose = 0;
+  char msfile = "output.mseed";
+  MSTrace *mst;
+
+  mst = mst_init (NULL);
+
+  /* Populate MSTrace values */
+  strcpy (mst->network, "XX");
+  strcpy (mst->station, "TEST");
+  strcpy (mst->channel, "BHE");
+  mst->starttime = ms_seedtimestr2hptime ("2004,350,00:00:00.000000");
+  mst->samprate = 40.0;
+
+  mst->datasamples = dataptr; /* pointer to 32-bit integer data samples */
+  mst->numsamples = 1234;
+  mst->sampletype = 'i';      /* declare type to be 32-bit integers */
+
+  /* Write 4096 byte, big-endian records, using Steim-2 compression */
+  precords = mst_writemseed (mst, msfile, 1, 4096, DE_STEIM2, 1, verbose);
+
+  ms_log (0, "Wrote %d records to %s\n", precords, msfile);
+
+  /* Disconnect datasamples pointer, otherwise mst_free() will free it */
+  mst->datasamples = NULL;
+
+  mst_free (&mst);
+}
