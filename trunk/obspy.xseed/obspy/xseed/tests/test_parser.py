@@ -2,21 +2,23 @@
 
 # With statement for Python 2.5. Necessary although not used in Python 2.5.
 from __future__ import with_statement
-
 from StringIO import StringIO
 from lxml import etree
-from obspy.core.util import NamedTemporaryFile
 from obspy.core import UTCDateTime
+from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
 from obspy.xseed.blockette.blockette054 import Blockette054
 from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
+import gzip
 import os
+import sys
 import unittest
 import warnings
-import gzip
+
 
 
 class ParserTestCase(unittest.TestCase):
@@ -29,6 +31,7 @@ class ParserTestCase(unittest.TestCase):
                 ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_issue165(self):
         """
         Test cases related to #165:
@@ -42,18 +45,14 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser()
         file = os.path.join(self.path, "bug165.dataless")
         t = UTCDateTime("2010-01-01T00:00:00")
-        if hasattr(warnings, 'catch_warnings'):
-            with warnings.catch_warnings(record=True) as w:
-                warnings.simplefilter("always")
-                # Trigger a warning.
-                parser.read(file)
-                self.assertEqual(len(w), 1)
-                self.assertTrue(issubclass(w[-1].category, UserWarning))
-                self.assertTrue('date' and 'required' in \
-                                        w[-1].message.message.lower())
-        else:
-            # Just raise the warning using Python 2.5.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            # Trigger a warning.
             parser.read(file)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            self.assertTrue('date' and 'required' in \
+                                    w[-1].message.message.lower())
         paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
         result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
                   'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),
@@ -120,6 +119,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(strict=True)
         parser.read(data)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_multipleContinuedStationControlHeader(self):
         """
         """
@@ -142,12 +142,8 @@ class ParserTestCase(unittest.TestCase):
         # Only suppress warnings starting with Python 2.6. This is necessary
         # because there is no suitable context manager for Python 2.5 that
         # can suppress warnings.
-        if hasattr(warnings, 'catch_warnings'):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                blockette.parseSEED(b051)
-        else:
-            # Just raise the warning using Python 2.5.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
             blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)
         data = "000001V " + b010 + (' ' * 206)
@@ -163,12 +159,8 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(len(data), 256 * 9)
         # read records
         parser = Parser(strict=False)
-        if hasattr(warnings, 'catch_warnings'):
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                parser.read(data)
-        else:
-            # Just raise the warning using Python 2.5.
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
             parser.read(data)
         # check results
         self.assertEquals(sorted(parser.blockettes.keys()), [10, 51, 54])
