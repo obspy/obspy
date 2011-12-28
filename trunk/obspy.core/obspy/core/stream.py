@@ -16,7 +16,6 @@ from obspy.core.util import NamedTemporaryFile, _getPlugins, getExampleFile, \
 from pkg_resources import load_entry_point
 import StringIO
 import copy
-import ctypes
 import fnmatch
 import math
 import numpy as np
@@ -182,18 +181,16 @@ def read(pathname_or_url=None, format=None, headonly=False,
             pass
     # create stream
     st = Stream()
-    if isinstance(pathname_or_url, StringIO.StringIO):
-        # StringIO
+    if not isinstance(pathname_or_url, basestring):
+        # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
             # first try reading directly
             stream = _read(pathname_or_url, format, headonly, **kwargs)
             st.extend(stream.traces)
-        except (TypeError, ctypes.ArgumentError):
+        except TypeError:
             # if this fails, create a temporary file which is read directly
             # from the file system
-            # XXX: ctypes.ArgumentError should be removed if new mseed branch
-            # is merged back to trunk!
             pathname_or_url.seek(0)
             fh = NamedTemporaryFile()
             fh.write(pathname_or_url.read())
