@@ -610,6 +610,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             if bool(ret_val) is False:
+                del mstg, msr
+                clibmseed.msr_free(msr)
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
@@ -619,8 +621,11 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                           trace_attr['byteorder'], C.byref(packedsamples),
                           flush, verbose, msr)
         if errcode == -1:
+            clibmseed.msr_free(msr)
+            del mstg, msr
             raise Exception('Error in mst_packgroup')
         # Deallocate any allocated memory.
+        clibmseed.msr_free(msr)
         clibmseed.msr_free(msr)
         del mstg, msr
     # Close if its a file handler.
