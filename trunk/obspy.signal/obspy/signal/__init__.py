@@ -200,8 +200,8 @@ from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
         gps2DistAzimuth
-from trigger import recStalta, recStaltaPy, carlStaTrig, classicStaLta, \
-        delayedStaLta, zdetect, triggerOnset, pkBaer, arPick
+from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
+        delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick
 from invsim import cosTaper, detrend, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
