@@ -620,8 +620,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                           flush, verbose, msr)
         if errcode == -1:
             raise Exception('Error in mst_packgroup')
-        # Deallocating msr is not necessary because no data is allocated. The
-        # memory management of mstg is handled by the class.
+        # Deallocate any allocated memory.
+        clibmseed.msr_free(msr)
         del mstg, msr
     # Close if its a file handler.
     if isinstance(f, file):

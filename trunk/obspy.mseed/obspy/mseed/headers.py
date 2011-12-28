@@ -673,6 +673,10 @@ clibmseed.readMSEEDBuffer.argtypes = [
 
 clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
 
+clibmseed.msr_free.argtypes = [C.POINTER(MSRecord)]
+clibmseed.msr_free.restype = None
+
+
 clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
 clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
