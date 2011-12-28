@@ -33,9 +33,14 @@ IRIS Web Services
 
 TODO - for now see :mod:`obspy.iris`
 
+---------------------
+Earthworm Wave Server
+---------------------
+
+TODO - for now see :mod:`obspy.earthworm`
+
 -------------------
 NERIES Web Services
 -------------------
 
 TODO - for now see :mod:`obspy.neries`
-
