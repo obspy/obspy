@@ -83,6 +83,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(maxint, abs(tr2.data).max())
             np.testing.assert_array_equal(tr2.data, np.require(tr.data /\
                 abs(tr.data).max() * maxint, dtype='int32'))
+            os.remove(testfile)
 
     def test_writeStreamViaObsPy(self):
         """
@@ -109,6 +110,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr31.stats, tr.stats)
         np.testing.assert_array_equal(tr30.data[:13], testdata)
         np.testing.assert_array_equal(tr31.data[:13], testdata // 2)
+        os.remove(testfile)
         os.remove(testfile0)
         os.remove(testfile1)
 
