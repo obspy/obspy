@@ -1175,7 +1175,7 @@ class Trace(object):
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)
         >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger("recStalta", sta=3, lta=10)
+        >>> tr.trigger("recstalta", sta=3, lta=10)
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1185,7 +1185,7 @@ class Trace(object):
             tr = st[0]
             tr.filter("highpass", freq=1.0)
             tr.plot()
-            tr.trigger('recStalta', sta=3, lta=10)
+            tr.trigger('recstalta', sta=3, lta=10)
             tr.plot()
         """
         global signal
@@ -1199,10 +1199,10 @@ class Trace(object):
 
         # dictionary to map given type-strings to trigger functions
         # (keys all lower case!!)
-        trigger_functions = {'recstalta': signal.recStalta,
-                             'carlstatrig': signal.classicStaLta,
-                             'delayedstalta': signal.delayedStaLta,
-                             'zdetect': signal.zdetect}
+        trigger_functions = {'recstalta': signal.trigger.recSTALTA,
+                             'carlstatrig': signal.trigger.classicSTALTA,
+                             'delayedstalta': signal.trigger.delayedSTALTA,
+                             'zdetect': signal.trigger.zDetect}
 
         # make type string comparison case insensitive
         type = type.lower()

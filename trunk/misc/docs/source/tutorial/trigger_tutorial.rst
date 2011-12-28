@@ -82,19 +82,18 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
     .. autosummary::
        :toctree: ../packages/autogen
 
-       ~obspy.signal.trigger.recStalta
-       ~obspy.signal.trigger.recStaltaPy
-       ~obspy.signal.trigger.carlStaTrig
-       ~obspy.signal.trigger.classicStaLta
-       ~obspy.signal.trigger.delayedStaLta
-       ~obspy.signal.trigger.zdetect
+       ~obspy.signal.trigger.recSTALTA
+       ~obspy.signal.trigger.carlSTATrig
+       ~obspy.signal.trigger.classicSTALTA
+       ~obspy.signal.trigger.delayedSTALTA
+       ~obspy.signal.trigger.zDetect
        ~obspy.signal.trigger.pkBaer
        ~obspy.signal.trigger.arPick
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
     >>> from obspy.signal.trigger import classicStaLta
-    >>> help(classicStaLta)  # doctest: +ELLIPSIS
+    >>> help(classicSTALTA)  # doctest: +ELLIPSIS
     Help on function classicStaLta in module obspy.signal.trigger ...
 
 The triggering itself mainly consists of the following two steps:
@@ -118,7 +117,7 @@ are the following:
 Classic Sta Lta
 ===============
 
-    >>> cft = classicStaLta(trace.data, int(5 * df), int(10 * df))
+    >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.5, 0.5)
 
 .. plot:: source/tutorial/trigger_tutorial_classic_sta_lta.py
@@ -126,7 +125,7 @@ Classic Sta Lta
 Z-Detect
 ========
 
-    >>> cft = zdetect(trace.data, int(10 * df))
+    >>> cft = zDetect(trace.data, int(10 * df))
     >>> plot_trigger(trace, cft, -0.4, -0.3)
 
 .. plot:: source/tutorial/trigger_tutorial_z_detect.py
@@ -134,7 +133,7 @@ Z-Detect
 Recursive Sta Lta
 =================
 
-    >>> cft = recStaltaPy(trace.data, int(5 * df), int(10 * df))
+    >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.2, 0.5)
 
 .. plot:: source/tutorial/trigger_tutorial_recursive_sta_lta.py
@@ -142,7 +141,7 @@ Recursive Sta Lta
 Carl-Sta-Trig
 =============
 
-    >>> cft = carlStaTrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
+    >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plot_trigger(trace, cft, 20.0, -20.0)
 
 .. plot:: source/tutorial/trigger_tutorial_carl_sta_trig.py
@@ -150,14 +149,14 @@ Carl-Sta-Trig
 Delayed Sta Lta
 ===============
 
-    >>> cft = delayedStaLta(trace.data, int(5 * df), int(10 * df))
+    >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 5, 10)
 
 .. plot:: source/tutorial/trigger_tutorial_delayed_sta_lta.py
 
-----------------
+---------------
 Picker Examples
-----------------
+---------------
 
 Baer Picker
 ===========

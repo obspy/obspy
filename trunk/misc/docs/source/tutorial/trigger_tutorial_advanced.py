@@ -1,6 +1,6 @@
 from obspy.core import UTCDateTime
 from obspy.arclink import Client
-from obspy.signal.trigger import recStaltaPy, triggerOnset
+from obspy.signal.trigger import recSTALTA, triggerOnset
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -14,7 +14,7 @@ tr = st[0]  # only one trace in MiniSEED volume
 df = tr.stats.sampling_rate
 
 # Characteristic function and trigger onsets
-cft = recStaltaPy(tr.data, 2.5 * df, 10. * df)
+cft = recSTALTA(tr.data, 2.5 * df, 10. * df)
 on_of = triggerOnset(cft, 3.5, 0.5)
 
 # Plotting the results
