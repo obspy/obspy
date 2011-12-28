@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy.core.util.decorator import skipIf
 import numpy as np
 import pickle
+import sys
 import unittest
+import warnings
 
 
 class StreamTestCase(unittest.TestCase):
@@ -1299,6 +1302,7 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_cleanup(self):
         """
         Test case for merging traces in the stream with method=-1. This only
@@ -1310,7 +1314,6 @@ class StreamTestCase(unittest.TestCase):
         end = tr1.stats.endtime
         dt = end - start
         delta = tr1.stats.delta
-
         # test traces that should be merged:
         ### contained traces with compatible data
         tr2 = tr1.slice(start, start + dt / 3)
@@ -1377,7 +1380,10 @@ class StreamTestCase(unittest.TestCase):
         for trB in [tr7, tr8, tr9, tr10, tr11, tr12, tr13]:
             trA = tr1.copy()
             st = Stream([trA, trB])
-            st._cleanup()
+            # ignore UserWarnings
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter('ignore', UserWarning)
+                st._cleanup()
             self.assertTrue(st == Stream([trA, trB]))
 
     def test_integrateAndDifferentiate(self):
