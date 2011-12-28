@@ -25,9 +25,18 @@ implemented. (see Withers et al. 1998 p. 98).
 from util import clibsignal
 import ctypes as C
 import numpy as np
+from obspy.core.util import deprecated
 
 
+@deprecated
 def recStalta(a, nsta, nlta):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTA` instead.
+    """
+    return recSTALTA(a, nsta, nlta)
+
+
+def recSTALTA(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
@@ -57,7 +66,15 @@ def recStalta(a, nsta, nlta):
     return charfct
 
 
+@deprecated
 def recStaltaPy(a, nsta, nlta):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTApy` instead.
+    """
+    return recSTALTApy(a, nsta, nlta)
+
+
+def recSTALTApy(a, nsta, nlta):
     """
     Recursive STA/LTA (see Withers et al. 1998 p. 98)
 
@@ -98,7 +115,15 @@ def recStaltaPy(a, nsta, nlta):
     return np.array(charfct)
 
 
+@deprecated
 def carlStaTrig(a, nsta, nlta, ratio, quiet):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.carlSTATrig` instead.
+    """
+    return carlSTATrig(a, nsta, nlta, ratio, quiet)
+
+
+def carlSTATrig(a, nsta, nlta, ratio, quiet):
     """
     Computes the carlStaTrig characteristic function
 
@@ -153,7 +178,15 @@ def carlStaTrig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
+@deprecated
 def classicStaLta(a, nsta, nlta):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.classicSTALTA` instead.
+    """
+    return classicSTALTA(a, nsta, nlta)
+
+
+def classicSTALTA(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
@@ -196,7 +229,15 @@ def classicStaLta(a, nsta, nlta):
     return sta / lta
 
 
+@deprecated
 def delayedStaLta(a, nsta, nlta):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.delayedSTALTA` instead.
+    """
+    return delayedSTALTA(a, nsta, nlta)
+
+
+def delayedSTALTA(a, nsta, nlta):
     """
     Delayed STA/LTA, (see Withers et al. 1998 p. 97)
 
@@ -223,7 +264,15 @@ def delayedStaLta(a, nsta, nlta):
     return sta / lta
 
 
+@deprecated
 def zdetect(a, nsta):
+    """
+    DEPRECATED. Use :func:`obspy.signal.trigger.zDetect` instead.
+    """
+    return zDetect(a, nsta)
+
+
+def zDetect(a, nsta):
     """
     Z-detector, (see Withers et al. 1998 p. 99)
 
