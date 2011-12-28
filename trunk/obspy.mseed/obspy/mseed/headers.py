@@ -9,6 +9,8 @@ import os
 import platform
 
 
+HPTERROR = -2145916800000000L
+
 # Import shared libmseed depending on the platform.
 # create library names
 lib_names = [
@@ -656,9 +658,9 @@ LinkedIDList._fields_ = [
     ]
 
 
-#####################################
+########################################
 # Done with the C structures defintions.
-#####################################
+########################################
 
 # Set the necessary arg- and restypes.
 clibmseed.readMSEEDBuffer.argtypes = [
@@ -674,18 +676,14 @@ clibmseed.readMSEEDBuffer.argtypes = [
 clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)
 
 clibmseed.msr_free.argtypes = [C.POINTER(C.POINTER(MSRecord))]
-clibmseed.msr_free.restype = None
-
+clibmseed.msr_free.restype = C.c_void_p
 
 clibmseed.mstl_init.restype = C.POINTER(MSTraceList)
 clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 
-clibmseed.lil_init.restype = C.POINTER(LinkedIDList)
 
 clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
-
-HPTERROR = -2145916800000000L
-
+clibmseed.lil_free.restype = C.c_void_p
 
 # Python callback functions for C
 def __PyFile_callback(_f):
