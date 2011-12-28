@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-obspy.signal - Signal Processing Routines for Seismology
-========================================================
+obspy.signal - Signal Processing Routines for ObsPy
+===================================================
 Capabilities include filtering, triggering, rotation, instrument
 correction and coordinate transformations.
 

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+obspy.taup - Travel time calculation tool
+"""
 
 from obspy.taup import __path__
 from obspy.taup.util import flibtaup as lib
