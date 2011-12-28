@@ -4,7 +4,7 @@ The obspy.signal.trigger test suite.
 """
 
 from ctypes import ArgumentError
-from obspy.signal import recStalta, recStaltaPy, triggerOnset, pkBaer, arPick
+from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, arPick
 from obspy.signal.util import clibsignal
 import numpy as np
 import unittest
@@ -23,31 +23,31 @@ class TriggerTestCase(unittest.TestCase):
         np.random.seed(815)
         self.data = np.random.randn(int(1e5))
 
-    def test_recStaltaC(self):
+    def test_recSTALTAC(self):
         """
-        Test case for ctypes version of recStalta
+        Test case for ctypes version of recSTALTA
         """
         nsta, nlta = 5, 10
-        c1 = recStalta(self.data, nsta, nlta)
+        c1 = recSTALTA(self.data, nsta, nlta)
         self.assertAlmostEquals(c1[99], 0.80810165)
         self.assertAlmostEquals(c1[100], 0.75939449)
         self.assertAlmostEquals(c1[101], 0.91763978)
         self.assertAlmostEquals(c1[102], 0.97465004)
 
-    def test_recStaltaPy(self):
+    def test_recSTALTAPy(self):
         """
-        Test case for python version of recStalta
+        Test case for python version of recSTALTA
         """
         nsta, nlta = 5, 10
-        c2 = recStaltaPy(self.data, nsta, nlta)
+        c2 = recSTALTAPy(self.data, nsta, nlta)
         self.assertAlmostEquals(c2[99], 0.80810165)
         self.assertAlmostEquals(c2[100], 0.75939449)
         self.assertAlmostEquals(c2[101], 0.91763978)
         self.assertAlmostEquals(c2[102], 0.97465004)
 
-    def test_recStaltaRaise(self):
+    def test_recSTALTARaise(self):
         """
-        Type checking recStalta
+        Type checking recSTALTA
         """
         ndat = 1
         charfct = np.empty(ndat, dtype='float64')
