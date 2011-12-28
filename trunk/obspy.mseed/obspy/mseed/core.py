@@ -271,6 +271,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
         currentID = lil.contents
     # Return stream if not traces are found.
     except ValueError:
+        clibmseed.lil_free(lil)
+        del lil
         return Stream()
 
     while True:

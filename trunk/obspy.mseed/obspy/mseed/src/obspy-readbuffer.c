@@ -186,6 +186,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedIDList * idListHead = NULL;
     LinkedIDList * idListCurrent = NULL;
     LinkedIDList * idListLast = NULL;
+    MSRecord *msr = NULL;
     ContinuousSegment * segmentCurrent = NULL;
     hptime_t lastgap;
     hptime_t hptimetol;
@@ -202,9 +203,10 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     //
     int record_count = 0;
     while (offset < buflen) {
-        MSRecord *msr = msr_init(NULL);
+        msr = msr_init(NULL);
         retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);
         if ( ! (retcode == MS_NOERROR)) {
+            msr_free(&msr);
             break;
         }
 
@@ -263,7 +265,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         if (unpack_data != 0) {
             retval = msr_unpack_data (msr, swapflag, verbose);
         }
-     
+
         if ( retval > 0 ) {
             msr->numsamples = retval;
         }
@@ -271,6 +273,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Add the record length for the next iteration
         offset += msr->reclen;
     }
+
     // Return empty id list if no records could be found.
     if (record_count == 0) {
         idListHead = lil_init();
@@ -288,13 +291,13 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // Start with the last id as it is most likely to be the correct one.
         idListCurrent = idListLast;
         while (idListCurrent != NULL) {
-            if (strcmp(idListCurrent->network, recordCurrent->record->network) == 0 && 
-                strcmp(idListCurrent->station, recordCurrent->record->station) == 0 && 
-                strcmp(idListCurrent->location, recordCurrent->record->location) == 0 && 
-                strcmp(idListCurrent->channel, recordCurrent->record->channel) == 0 && 
+            if (strcmp(idListCurrent->network, recordCurrent->record->network) == 0 &&
+                strcmp(idListCurrent->station, recordCurrent->record->station) == 0 &&
+                strcmp(idListCurrent->location, recordCurrent->record->location) == 0 &&
+                strcmp(idListCurrent->channel, recordCurrent->record->channel) == 0 &&
                 idListCurrent->dataquality == recordCurrent->record->dataquality) {
                 break;
-            } 
+            }
             else {
                 idListCurrent = idListCurrent->previous;
             }
@@ -325,11 +328,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // if records with the same id are in wrong order a new segment will be
         // created. This is on purpose.
         segmentCurrent = idListCurrent->lastSegment;
-        if (segmentCurrent != NULL) { 
+        if (segmentCurrent != NULL) {
             hptimetol = (hptime_t) (0.5 * segmentCurrent->hpdelta);
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
-        } 
+        }
         if ( segmentCurrent != NULL &&
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
@@ -398,7 +401,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                 data_offset += (long)datasize;
                 recordCurrent = recordCurrent->next;
             }
-      
+
             segmentCurrent = segmentCurrent->next;
         }
         idListCurrent = idListCurrent->next;
@@ -439,7 +442,7 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
   const char *dbuf;
   int32_t    *diffbuff;
   int32_t     x0, xn;
-  
+
   /* Sanity record length */
   if ( msr->reclen == -1 )
   {
@@ -468,15 +471,15 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
     default:
       samplesize = 0; break;
   }
-  
+
   /* Calculate buffer size needed for unpacked samples */
   unpacksize = msr->samplecnt * samplesize;
-  
+
   /* (Re)Allocate space for the unpacked data */
   if ( unpacksize > 0 )
     {
       msr->datasamples = realloc (msr->datasamples, unpacksize);
-      
+
       if ( msr->datasamples == NULL )
         {
           ms_log (2, "msr_unpack_data(%s): Cannot (re)allocate memory\n",
@@ -491,67 +494,67 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
       msr->datasamples = 0;
       msr->numsamples = 0;
     }
-  
+
   datasize = msr->reclen - msr->fsdh->data_offset;
   dbuf = msr->record + msr->fsdh->data_offset;
-  
+
   if ( verbose > 2 )
     ms_log (1, "%s: Unpacking %d samples\n",
             UNPACK_SRCNAME_2, msr->samplecnt);
-  
+
   /* Decide if this is a encoding that we can decode */
   switch (msr->encoding)
     {
-      
+
     case DE_ASCII:
       if ( verbose > 1 )
         ms_log (1, "%s: Found ASCII data\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr->samplecnt;
       memcpy (msr->datasamples, dbuf, nsamples);
-      msr->sampletype = 'a';      
+      msr->sampletype = 'a';
       break;
-      
+
     case DE_INT16:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking INT-16 data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_int_16 ((int16_t *)dbuf, msr->samplecnt,
                                     msr->samplecnt, msr->datasamples,
                                     swapflag);
       msr->sampletype = 'i';
       break;
-      
+
     case DE_INT32:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking INT-32 data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_int_32 ((int32_t *)dbuf, msr->samplecnt,
                                     msr->samplecnt, msr->datasamples,
                                     swapflag);
       msr->sampletype = 'i';
       break;
-      
+
     case DE_FLOAT32:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking FLOAT-32 data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_float_32 ((float *)dbuf, msr->samplecnt,
                                       msr->samplecnt, msr->datasamples,
                                       swapflag);
       msr->sampletype = 'f';
       break;
-      
+
     case DE_FLOAT64:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking FLOAT-64 data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_float_64 ((double *)dbuf, msr->samplecnt,
                                       msr->samplecnt, msr->datasamples,
                                       swapflag);
       msr->sampletype = 'd';
       break;
-      
+
     case DE_STEIM1:
       diffbuff = (int32_t *) malloc(unpacksize);
       if ( diffbuff == NULL )
@@ -560,17 +563,17 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
                   UNPACK_SRCNAME_2);
           return MS_GENERROR;
         }
-      
+
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking Steim-1 data frames\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_steim1 ((FRAME *)dbuf, datasize, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples, diffbuff, 
+                                    msr->samplecnt, msr->datasamples, diffbuff,
                                     &x0, &xn, swapflag, verbose);
       msr->sampletype = 'i';
       free (diffbuff);
       break;
-      
+
     case DE_STEIM2:
       diffbuff = (int32_t *) malloc(unpacksize);
       if ( diffbuff == NULL )
@@ -579,17 +582,17 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
                   UNPACK_SRCNAME_2);
           return MS_GENERROR;
         }
-      
+
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking Steim-2 data frames\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_steim2 ((FRAME *)dbuf, datasize, msr->samplecnt,
                                     msr->samplecnt, msr->datasamples, diffbuff,
                                     &x0, &xn, swapflag, verbose);
       msr->sampletype = 'i';
       free (diffbuff);
       break;
-      
+
     case DE_GEOSCOPE24:
     case DE_GEOSCOPE163:
     case DE_GEOSCOPE164:
@@ -605,45 +608,45 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
             ms_log (1, "%s: Unpacking GEOSCOPE 16bit gain ranged/4bit exponent data samples\n",
                     UNPACK_SRCNAME_2);
         }
-      
+
       nsamples = msr_unpack_geoscope (dbuf, msr->samplecnt, msr->samplecnt,
                                       msr->datasamples, msr->encoding, swapflag);
       msr->sampletype = 'f';
       break;
-      
+
     case DE_CDSN:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking CDSN encoded data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_cdsn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
                                   msr->datasamples, swapflag);
       msr->sampletype = 'i';
       break;
-      
+
     case DE_SRO:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking SRO encoded data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_sro ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
                                  msr->datasamples, swapflag);
       msr->sampletype = 'i';
       break;
-      
+
     case DE_DWWSSN:
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking DWWSSN encoded data samples\n", UNPACK_SRCNAME_2);
-      
+
       nsamples = msr_unpack_dwwssn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
                                     msr->datasamples, swapflag);
       msr->sampletype = 'i';
       break;
-      
+
     default:
       ms_log (2, "%s: Unsupported encoding format %d (%s)\n",
               UNPACK_SRCNAME_2, msr->encoding, (char *) ms_encodingstr(msr->encoding));
-      
+
       return MS_UNKNOWNFORMAT;
     }
-  
+
   return nsamples;
 } /* End of msr_unpack_data() */
