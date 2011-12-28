@@ -115,7 +115,7 @@ def readASC(filename, headonly=False):
     channels = []
     headers = {}
     data = StringIO()
-    for line in fh.xreadlines():
+    for line in fh:
         if line.isspace():
             # blank line
             # check if any data fetched yet
@@ -324,7 +324,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     traces = {}
     i = -1
     id = ''
-    for line in fh.xreadlines():
+    for line in fh:
         cid = int(line[0:2])
         if cid != id:
             id = cid

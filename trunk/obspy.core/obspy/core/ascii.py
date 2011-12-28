@@ -115,7 +115,7 @@ def readSLIST(filename, headonly=False):
     # read file and split text into channels
     headers = {}
     key = None
-    for line in fh.xreadlines():
+    for line in fh:
         if line.isspace():
             # blank line
             continue
@@ -188,7 +188,7 @@ def readTSPAIR(filename, headonly=False):
     # read file and split text into channels
     headers = {}
     key = None
-    for line in fh.xreadlines():
+    for line in fh:
         if line.isspace():
             # blank line
             continue
