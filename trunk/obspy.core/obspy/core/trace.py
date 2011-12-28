@@ -1149,7 +1149,7 @@ class Trace(object):
         Runs a triggering algorithm on the data of the current trace.
 
         :param type: String that specifies which trigger is applied (e.g.
-            ``'recStalta'``).
+            ``'recstalta'``).
         :param options: Necessary keyword arguments for the respective trigger
             that will be passed on.
             (e.g. ``sta=3``, ``lta=10``)

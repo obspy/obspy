@@ -1650,7 +1650,7 @@ class Stream(object):
         Runs a triggering algorithm on all traces in the stream.
 
         :param type: String that specifies which trigger is applied (e.g.
-            ``'recStalta'``).
+            ``'recstalta'``).
         :param options: Necessary keyword arguments for the respective trigger
             that will be passed on.
             (e.g. ``sta=3``, ``lta=10``)
@@ -1674,7 +1674,7 @@ class Stream(object):
         >>> st = read()
         >>> st.filter("highpass", freq=1.0)
         >>> st.plot() # doctest: +SKIP
-        >>> st.trigger('recStalta', sta=3, lta=10)
+        >>> st.trigger('recstalta', sta=3, lta=10)
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
@@ -1683,7 +1683,7 @@ class Stream(object):
             st = read()
             st.filter("highpass", freq=1.0)
             st.plot()
-            st.trigger('recStalta', sta=3, lta=10)
+            st.trigger('recstalta', sta=3, lta=10)
             st.plot()
         """
         for tr in self:
