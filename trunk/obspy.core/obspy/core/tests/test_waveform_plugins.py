@@ -5,6 +5,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins
 from pkg_resources import load_entry_point
 import StringIO
+import cStringIO
 import numpy as np
 import os
 import threading
@@ -77,13 +78,33 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     # read in using a StringIO instances, skip Q files as it
                     # needs multiple files
                     if format not in ['Q']:
-                        # without format
+                        # file handler without format
+                        temp = open(outfile, 'rb')
+                        st = read(temp)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
+                        # file handler with format
+                        temp = open(outfile, 'rb')
+                        st = read(temp, format=format)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
+                        # StringIO without format
                         temp = StringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp)
                         self.assertEquals(len(st), 1)
                         self.assertEquals(st[0].stats._format, format)
-                        # with format
+                        # StringIO with format
                         temp = StringIO.StringIO(open(outfile, 'rb').read())
+                        st = read(temp, format=format)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
+                        # cStringIO without format
+                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
+                        st = read(temp)
+                        self.assertEquals(len(st), 1)
+                        self.assertEquals(st[0].stats._format, format)
+                        # cStringIO with format
+                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp, format=format)
                         self.assertEquals(len(st), 1)
                         self.assertEquals(st[0].stats._format, format)
