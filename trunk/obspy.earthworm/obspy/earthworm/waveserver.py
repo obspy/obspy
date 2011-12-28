@@ -263,27 +263,3 @@ def tracebufs2obspyStream(tbuflist):
     strm = Stream(tlist)
     return strm
 
-
-#if __name__ == '__main__': #test
-#    #srvr = 'pele.ess.washington.edu'
-#    #port = 16017
-#    srvr = 'hood.ess.washington.edu'
-#    port = 16021
-#    #scnl = ('GNW', 'EHZ', 'UW', '--')
-#    #scnl = ('ALKI', 'EHZ', 'UW', '--')
-#    st = UTCDateTime() - 2000
-#    et = st + 10
-#    # old
-#    scnl = ('LON', 'BHZ', 'UW', '--')  # in hood
-#    menu = getMenu(srvr, port, scnl)
-#    for m in menu:
-#        print m
-#    tbl = readWaveServerV(srvr, port, scnl, st, et)
-#    if tbl:
-#        strm = tracebufs2obspyStream(tbl)
-#        print str(strm)
-#        strm.plot()
-#    # new
-#    client = Client('hood.ess.washington.edu', 16021)
-#    st = client.getWaveform('UW', 'LON', '', 'BHZ', st, et)
-#    st.plot()
