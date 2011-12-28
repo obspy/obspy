@@ -481,10 +481,10 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2010-01-01")
         self.assertEquals(dt.julday, 1)
         #2
-        dt = UTCDateTime("1900-12-31")
+        dt = UTCDateTime("1905-12-31")
         self.assertEquals(dt.julday, 365)
         #3
-        dt = UTCDateTime("1899-12-31T23:59:59.999999Z")
+        dt = UTCDateTime("1906-12-31T23:59:59.999999Z")
         self.assertEquals(dt.julday, 365)
 
     def test_formatSEED(self):
