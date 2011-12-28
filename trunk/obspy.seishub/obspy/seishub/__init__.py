@@ -37,7 +37,7 @@ Advanced Examples
 >>> sorted(sta_ids)  # doctest: +SKIP
 ['ALTM', 'BGLD', 'BW01',..., 'WETR', 'ZUGS']
 
->>> cha_ids = client.waveform.getChannelIds(network='BW', station_id='MANZ')
+>>> cha_ids = client.waveform.getChannelIds(network='BW', station='MANZ')
 >>> sorted(cha_ids)
 ['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
 
