@@ -1152,7 +1152,7 @@ class Client(object):
             >>> client.evalresp("IU", "ANMO", "00", "BHZ", dt) # doctest: +SKIP
 
             .. plot::
-            
+
                 from obspy.core import UTCDateTime
                 from obspy.iris import Client
                 client = Client()

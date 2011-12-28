@@ -178,6 +178,8 @@ class Stats(AttribDict):
         else:
             super(Stats, self).__setitem__(key, value)
 
+    __setattr__ = __setitem__
+
     def __str__(self):
         """
         Return better readable string representation of Stats object.
@@ -192,8 +194,6 @@ class Stats(AttribDict):
         head.extend(["%16s: %s" % (key, dict_copy.pop(key)) \
                      for key in dict_copy.keys()])
         return "\n".join(head)
-
-    __setattr__ = __setitem__
 
     def _calculateDerivedValues(self):
         """
