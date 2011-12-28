@@ -288,7 +288,7 @@ def specInv(spec, wlev):
 
 
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
-            remove_sensitivity=False, simulate_sensitivity=False,
+            remove_sensitivity=True, simulate_sensitivity=True,
             water_level=600.0, zero_mean=True, taper=True,
             taper_fraction=0.05, pre_filt=None, seedresp=None, **kwargs):
     """
@@ -306,6 +306,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     thereby avoids artefacts due to amplification of frequencies outside of the
     instrument's passband (for a detailed discussion see
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
+
+    .. versionchanged:: 0.5.1
+        The default for `remove_sensitivity` and `simulate_sensitivity` was
+        changed to `True`. Old deprecated `kwargs` were removed: `paz`, `inst_sim`,
+        `no_inverse_filtering`
 
     :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
@@ -349,28 +354,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
     """
-    ###########################################################################
-    # Stay compatible with the old version
-    if 'paz' in kwargs:
-        paz_remove = kwargs['paz']
-        warnings.warn("Use paz_remove option instead of paz",
-                      DeprecationWarning)
-    if 'inst_sim' in kwargs:
-        paz_simulate = kwargs['inst_sim']
-        warnings.warn("Use paz_simulate option instead of inst_sim",
-                      DeprecationWarning)
-    if 'no_inverse_filtering' in kwargs:
-        if kwargs['no_inverse_filtering'] == True:
-            paz_remove = None
-        warnings.warn("Use paz_remove option instead no_inverse_filtering",
-                      DeprecationWarning)
-    if (paz_remove and not remove_sensitivity) or \
-       (paz_simulate and not simulate_sensitivity):
-        msg = "The default for correction of overall sensitivity will be " + \
-              "set to True in future releases."
-        warnings.warn(msg, DeprecationWarning)
-    ###########################################################################
-
     # Checking the types
     if not paz_remove and not paz_simulate and not seedresp:
         msg = "Neither inverse nor forward instrument simulation specified."

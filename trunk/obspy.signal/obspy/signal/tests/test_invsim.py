@@ -39,6 +39,7 @@ class InvSimTestCase(unittest.TestCase):
                               - 4.21 - 4.66j,
                               - 2.105 + 0.0j],
                     'zeros': [0.0 + 0.0j] * 3,
+                    'sensitivity': 1.0,
                     'gain': 0.4}
 
         for id, paz in INSTRUMENTS.iteritems():
@@ -72,6 +73,7 @@ class InvSimTestCase(unittest.TestCase):
         PAZ_STS2 = {'poles': [-0.03736 - 0.03617j,
                               - 0.03736 + 0.03617j],
                     'zeros': [0.0 + 0.0j] * 2,
+                    'sensitivity': 1.0,
                     'gain': 1.5}
 
         for id, paz in INSTRUMENTS.iteritems():
@@ -88,47 +90,6 @@ class InvSimTestCase(unittest.TestCase):
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
                          np.sum(data_pitsa ** 2))
             self.assertTrue(rms < 1e-04)
-
-    def test_SRLSeisSim(self):
-        """
-        Tests if example in ObsPy paper submitted to the Electronic
-        Seismologist section of SRL is still working. The test shouldn't be
-        changed because the reference gets wrong. Please do not change the
-        import for these test either.
-        """
-        paz = {'gain': 60077000.0,
-               'poles': [(-0.037004000000000002 + 0.037016j),
-                         (-0.037004000000000002 - 0.037016j),
-                         (-251.33000000000001 + 0j),
-                         (-131.03999999999999 - 467.29000000000002j),
-                         (-131.03999999999999 + 467.29000000000002j)],
-               'sensitivity': 2516778400.0,
-               'zeros': [0j, 0j]}
-
-        stats = {'network': 'BW', 'station': 'RJOB', 'sampling_rate': 200.0,
-                 'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3), 'npts': 6001,
-                 'channel': 'EHZ'}
-        f = gzip.open(os.path.join(self.path, 'srl.data.gz'))
-        srl_data = np.loadtxt(f)
-        f.close()
-        f = gzip.open(os.path.join(self.path, 'srl.res.gz'))
-        srl_res = np.loadtxt(f)
-        f.close()
-        # Generate the stream from data verify it
-        st = Stream([Trace(header=stats, data=srl_data)])
-        st.verify()
-        one_hertz = cornFreq2Paz(1.0)  # 1Hz instrument
-        # 2 Correct for frequency response of the instrument
-        res = seisSim(st[0].data.astype("float32"),
-                      st[0].stats.sampling_rate,
-                      paz_remove=paz, paz_simulate=one_hertz, zero_mean=False)
-        # correct for overall sensitivity, nm/s
-        res *= 1e9 / paz["sensitivity"]
-        # 3 Apply lowpass at 10Hz
-        res = lowpass(res, 10, df=st[0].stats.sampling_rate,
-        corners=4)
-        # test versus saved result
-        np.testing.assert_array_almost_equal(res, srl_res)
 
     def test_estimateMagnitude(self):
         """

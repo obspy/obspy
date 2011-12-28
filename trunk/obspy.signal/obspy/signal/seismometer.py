@@ -12,6 +12,8 @@ The seismometer is represented as a dictionary containing the fields:
 :ivar zeros: Zeros of the seismometer to simulate
 :type gain: Float
 :ivar gain: Gain factor of seismometer to simulate
+:type sensitivity: Float
+:ivar sensitivity: Overall sensitivity of seismometer to simulate
 
 Currently contained seismometers::
 
@@ -28,6 +30,7 @@ Currently contained seismometers::
 PAZ_WOOD_ANDERSON = {'poles': [-6.2832 - 4.7124j,
                                -6.2832 + 4.7124j],
                      'zeros': [0.0 + 0.0j] * 1,
+                     'sensitivity': 1.0,
                      'gain': 1. / 2.25}
 
 PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
@@ -35,6 +38,7 @@ PAZ_WWSSN_SP = {'poles': [-4.0093 - 4.0093j,
                           -4.6077 - 6.9967j,
                           -4.6077 + 6.9967j],
                 'zeros': [0.0 + 0.0j] * 2,
+                'sensitivity': 1.0,
                 'gain': 1. / 1.0413}
 
 PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
@@ -42,6 +46,7 @@ PAZ_WWSSN_LP = {'poles': [-0.4189 + 0.0j,
                           -0.0628 + 0.0j,
                           -0.0628 + 0.0j],
                 'zeros': [0.0 + 0.0j] * 2,
+                'sensitivity': 1.0,
                 'gain': 1. / 0.0271}
 
 PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
@@ -49,6 +54,7 @@ PAZ_KIRNOS = {'poles': [-0.1257 - 0.2177j,
                         -83.4473 + 0.0j,
                         -0.3285 + 0.0j],
               'zeros': [0.0 + 0.0j] * 2,
+              'sensitivity': 1.0,
               'gain': 1. / 1.61}
 
 INSTRUMENTS = {'None': None,
