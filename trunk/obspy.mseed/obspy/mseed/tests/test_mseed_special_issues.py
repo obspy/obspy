@@ -215,6 +215,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 encoding=10)
         os.remove(tempfile)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_writeWrongEncodingViaMseedStats(self):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
