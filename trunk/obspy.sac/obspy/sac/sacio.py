@@ -1254,15 +1254,6 @@ class SacIO(object):
         return header
 
 
-class ReadSac(SacIO):
-    """
-    DEPRECATED. Use :class:`~obspy.sac.sacio.SacIO` instead.
-    """
-    def __init__(self, *args, **kwargs):
-        warnings.warn("Use class obspy.sac.SacIO instead.", DeprecationWarning)
-        SacIO.__init__(self, *args, **kwargs)
-
-
 ############# UTILITIES ###################################################
 def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
                tohz=False):
