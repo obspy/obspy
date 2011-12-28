@@ -84,7 +84,7 @@ Basic Usage
 
 (5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a
     Taup Web service, an utility to compute arrival times using a few default
-    velocity models such as iasp91, ak135 or qdt.
+    velocity models such as ``'iasp91'``, ``'ak135'`` or ``'qdt'``.
 
     >>> client = Client()
     >>> locations = [(48.0, 12.0), (48.1, 12.0)]

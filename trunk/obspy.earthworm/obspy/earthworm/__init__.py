@@ -12,26 +12,24 @@ obspy.earthworm - Earthworm Wave Server client for ObsPy.
 Basic Usage
 -----------
 The example illustrates how to request and plot 30 seconds of all three
-short period channels (``"BH*"``) of station ``"LON"`` of the Pacific
-Northwest Seismic Network (http://www.pnsn.org/).
+broadband channels (``"BH*"``) of station Longmire Springs (``"LON"``) of
+the `Pacific Northwest Seismic Network <http://www.pnsn.org/>`_ (``"UW"``).
 
-        .. rubric:: Example
+>>> from obspy.earthworm import Client
+>>> from obspy.core import UTCDateTime
+>>> client = Client("hood.ess.washington.edu", 16021)
+>>> dt = UTCDateTime() - 2000  # now - 2000 seconds
+>>> st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 30)
+>>> st.plot()  # doctest: +SKIP
 
-        >>> from obspy.earthworm import Client
-        >>> from obspy.core import UTCDateTime
-        >>> client = Client("hood.ess.washington.edu", 16021)
-        >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 30)
-        >>> st.plot()  # doctest: +SKIP
+.. plot::
 
-        .. plot::
-
-            from obspy.earthworm import Client
-            from obspy.core import UTCDateTime
-            client = Client("hood.ess.washington.edu", 16021)
-            dt = UTCDateTime() - 2000
-            st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 30)
-            st.plot()
+    from obspy.earthworm import Client
+    from obspy.core import UTCDateTime
+    client = Client("hood.ess.washington.edu", 16021)
+    dt = UTCDateTime() - 2000
+    st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 30)
+    st.plot()
 """
 
 from obspy.core.util import _getVersionString
