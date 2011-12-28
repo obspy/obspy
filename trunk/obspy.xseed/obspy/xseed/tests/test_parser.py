@@ -45,6 +45,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser()
         file = os.path.join(self.path, "bug165.dataless")
         t = UTCDateTime("2010-01-01T00:00:00")
+        # raise UserWarning
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # Trigger a warning.
@@ -139,10 +140,8 @@ class ParserTestCase(unittest.TestCase):
         # create a blockette 051
         b051 = '05100271999,123~~0001000000'
         blockette = Blockette051(strict=False)
-        # Only suppress warnings starting with Python 2.6. This is necessary
-        # because there is no suitable context manager for Python 2.5 that
-        # can suppress warnings.
-        with warnings.catch_warnings():
+        # ignore user warning
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             blockette.parseSEED(b051)
         # combine data (each line equals 256 chars)

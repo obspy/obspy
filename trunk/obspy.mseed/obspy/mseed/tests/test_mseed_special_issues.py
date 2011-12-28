@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import util
-from obspy.mseed.headers import clibmseed, PyFile_FromFile
 from obspy.mseed.core import readMSEED, writeMSEED
+from obspy.mseed.headers import clibmseed, PyFile_FromFile
 from obspy.mseed.msstruct import _MSStruct
 from struct import unpack
 import ctypes as C
@@ -230,9 +230,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # Type is not consistent float32 cannot be compressed with STEIM1,
         # therefore a warning should be raised.
         self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
-        warnings.simplefilter('error', UserWarning)
-        self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
-        warnings.filters.pop()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
         os.remove(tempfile)
 
     def test_wrongRecordLengthAsArgument(self):
@@ -243,6 +243,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_readQualityInformationWarns(self):
         """
         Reading the quality information while reading the data files is no more
@@ -251,12 +252,13 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Similar functionality is included in obspy.mseed.util.
         """
         timingqual = os.path.join(self.path, 'data', 'timingquality.mseed')
-        warnings.simplefilter('error', DeprecationWarning)
-        # This should not raise a warning.
-        read(timingqual)
-        # This should warn.
-        self.assertRaises(DeprecationWarning, read, timingqual, quality=True)
-        warnings.filters.pop()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', DeprecationWarning)
+            # This should not raise a warning.
+            read(timingqual)
+            # This should warn.
+            self.assertRaises(DeprecationWarning, read, timingqual,
+                              quality=True)
 
     def test_issue160(self):
         """

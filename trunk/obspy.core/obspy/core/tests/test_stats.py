@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from obspy.core import Stats, Stream, Trace
 from obspy.core.util import AttribDict
+from obspy.core.util.decorator import skipIf
 import copy
 import pickle
+import sys
 import unittest
 import warnings
 
@@ -192,6 +194,7 @@ class StatsTestCase(unittest.TestCase):
         stats2 = pickle.loads(temp)
         self.assertEquals(stats, stats2)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_setCalib(self):
         """
         Test to prevent setting a calibration factor of 0
@@ -201,12 +204,12 @@ class StatsTestCase(unittest.TestCase):
         x.update({'calib': 1.23})
         self.assertTrue(x.calib, 1.23)
         # this raises UserWarning
-        warnings.simplefilter('error', UserWarning)
-        # 1
-        self.assertRaises(UserWarning, x.__setitem__, 'calib', 0)
-        # 2
-        self.assertRaises(UserWarning, x.update, {'calib': 0})
-        warnings.simplefilter('ignore', UserWarning)
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            # 1
+            self.assertRaises(UserWarning, x.__setitem__, 'calib', 0)
+            # 2
+            self.assertRaises(UserWarning, x.update, {'calib': 0})
         # calib value should nevertheless be set to 0
         self.assertTrue(x.calib, 0)
 
