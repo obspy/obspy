@@ -35,7 +35,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(trace.stats.endtime <= end + delta)
         self.assertEquals(trace.stats.network, 'UW')
         self.assertEquals(trace.stats.station, 'TUCA')
-        self.assertEquals(trace.stats.location, '--')
+        self.assertEquals(trace.stats.location, '')
         self.assertEquals(trace.stats.channel, 'BHZ')
         # example 2 -- 1 channel, no cleanup
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
@@ -50,7 +50,7 @@ class ClientTestCase(unittest.TestCase):
         for trace in stream:
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'TUCA')
-            self.assertEquals(trace.stats.location, '--')
+            self.assertEquals(trace.stats.location, '')
             self.assertEquals(trace.stats.channel, 'BHZ')
         # example 3 -- component wildcarded with '?'
         stream = client.getWaveform('UW', 'TUCA', '', 'BH?', start, end)
@@ -63,7 +63,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'TUCA')
-            self.assertEquals(trace.stats.location, '--')
+            self.assertEquals(trace.stats.location, '')
         self.assertEquals(stream[0].stats.channel, 'BHZ')
         self.assertEquals(stream[1].stats.channel, 'BHN')
         self.assertEquals(stream[2].stats.channel, 'BHE')
@@ -92,7 +92,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
             self.assertEquals(trace.stats.station, 'TUCA')
-            self.assertEquals(trace.stats.location, '--')
+            self.assertEquals(trace.stats.location, '')
             self.assertEquals(trace.stats.channel, 'BHZ')
         finally:
             os.remove(testfile)
