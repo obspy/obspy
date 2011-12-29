@@ -7,7 +7,9 @@ import unittest
 
 
 class FieldsTestCase(unittest.TestCase):
-
+    """
+    Fields test suite.
+    """
     def setUp(self):
         pass
 

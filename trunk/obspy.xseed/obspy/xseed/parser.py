@@ -84,6 +84,7 @@ class Parser(object):
         self.debug = debug
         self.strict = strict
         self.compact = compact
+        self._format = None
         # All parsed data is organized in volume, abbreviations and a list of
         # stations.
         self.volume = None
@@ -385,7 +386,7 @@ class Parser(object):
         """
         # parse blockettes if not SEED
         if self._format != 'SEED':
-            self._xseed2seed()
+            self.__init__(self.getSEED())
         channels = {}
         channel_ids_unsupported = []
         for station in self.stations:
@@ -486,7 +487,7 @@ class Parser(object):
         """
         # parse blockettes if not SEED
         if self._format != 'SEED':
-            self._xseed2seed()
+            self.__init__(self.getSEED())
         channels = {}
         for station in self.stations:
             for blockette in station:
@@ -1018,10 +1019,3 @@ class Parser(object):
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
-
-    def _xseed2seed(self):
-        """
-        Update blockette structure. Ugly writes as seed string and reads it
-        again.
-        """
-        self.__init__(self.getSEED())

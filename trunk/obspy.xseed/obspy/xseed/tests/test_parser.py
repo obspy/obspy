@@ -23,6 +23,7 @@ import warnings
 
 class ParserTestCase(unittest.TestCase):
     """
+    Parser test suite.
     """
     def setUp(self):
         # directory where the test files are located
@@ -45,7 +46,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser()
         file = os.path.join(self.path, "bug165.dataless")
         t = UTCDateTime("2010-01-01T00:00:00")
-        # raise UserWarning
+        # raises UserWarning
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             # Trigger a warning.
@@ -54,15 +55,16 @@ class ParserTestCase(unittest.TestCase):
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue('date' and 'required' in \
                                     w[-1].message.message.lower())
-        paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
-        result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
-                  'poles': [(-981 + 1009j), (-981 - 1009j), (-3290 + 1263j),
-                            (-3290 - 1263j)],
-                  'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
-                  'zeros': []}
-        self.assertEqual(paz, result)
-        self.assertRaises(SEEDParserException, parser.getPAZ,
-                          "NZ.DCZ.10.HHZ", t)
+            # Triggers a warning.
+            paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
+            result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
+                      'poles': [(-981 + 1009j), (-981 - 1009j),
+                                (-3290 + 1263j), (-3290 - 1263j)],
+                      'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
+                      'zeros': []}
+            self.assertEqual(paz, result)
+            self.assertRaises(SEEDParserException, parser.getPAZ,
+                              "NZ.DCZ.10.HHZ", t)
 
     def test_invalidStartHeader(self):
         """
@@ -291,6 +293,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_getPAZ(self):
         """
         Test extracting poles and zeros information
@@ -326,7 +329,10 @@ class ParserTestCase(unittest.TestCase):
         # Modify transfer_fuction_type on the fly
         for blk in sp.blockettes[53]:
             blk.transfer_function_types = 'X'
-        self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
+        with warnings.catch_warnings(record=True):
+            # parser will also warn that only LaPlacian transfer may be used
+            warnings.simplefilter("ignore")
+            self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
         #
         # And the same for yet another dataless file
         #
@@ -396,9 +402,9 @@ class ParserTestCase(unittest.TestCase):
 
     def test_getCoordinates(self):
         """
-        Test extracting coordinates for seed and xseed (including #146)
+        Test extracting coordinates for SEED and XSEED (including #146)
         """
-        # seed
+        # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
                   'longitude': 12.795714}
@@ -406,7 +412,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
-        # xseed
+        # XSEED
         sp2 = Parser(sp.getXSEED())
         paz = sp2.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
@@ -463,6 +469,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_missingRequiredDateTimes(self):
         """
         A warning should be raised if a blockette misses a required date.
@@ -473,18 +480,18 @@ class ParserTestCase(unittest.TestCase):
         blockette = Blockette010(strict=True)
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
         # If strict is false, a warning is raised. This is tested in
-        # test_bug165 due to some issues with the warning being raised only
-        # once.
-        blockette = Blockette010()
-        blockette.parseSEED(b010)
-        self.assertEquals(b010, blockette.getSEED())
-
+        # test_bug165.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("ignore", UserWarning)
+            blockette = Blockette010()
+            blockette.parseSEED(b010)
+            self.assertEquals(b010, blockette.getSEED())
         # blockette 10 - missing volume time
         b010 = "0100034 2.4082008,001~2038,001~~~~"
         # strict raises an exception
         blockette = Blockette010(strict=True)
         self.assertRaises(SEEDParserException, blockette.parseSEED, b010)
-        # non-strict warns
+        # non-strict
         blockette = Blockette010()
         # The warning cannot be tested due to being issued only once.
         # A similar case is tested in test_bug165.
@@ -507,12 +514,20 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(file)
         parser.getRESP()
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_issue319(self):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
         filename = os.path.join(self.path, 'BN.LPW..BHE.dataless')
-        sp = Parser(filename)
+        # raises a UserWarning: More than one Abbreviation Dictionary Control
+        # Headers found!
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error", UserWarning)
+            self.assertRaises(UserWarning, Parser, filename)
+            warnings.simplefilter("ignore", UserWarning)
+            parser = Parser(filename)
+            self.assertEquals(parser.version, 2.3)
 
 
 def suite():

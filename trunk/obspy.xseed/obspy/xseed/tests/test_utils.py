@@ -6,7 +6,9 @@ import unittest
 
 
 class UtilsTestCase(unittest.TestCase):
-
+    """
+    Utils test suite.
+    """
     def setUp(self):
         pass
 

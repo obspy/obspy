@@ -11,7 +11,7 @@ import unittest
 
 class BlocketteTestCase(unittest.TestCase):
     """
-    Test cases for all blockettes..
+    Test cases for all blockettes.
     """
     def setUp(self):
         # directory where the test files are located
