@@ -23,7 +23,6 @@ import math as M
 import numpy as np
 import scipy.signal
 import util
-import warnings
 from obspy.signal.util import clibevresp
 import ctypes as C
 
