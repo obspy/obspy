@@ -3,16 +3,6 @@
 
     .. comment to end block
 
-    Classes & Functions
-    -------------------
-    .. autosummary::
-       :toctree: autogen
-       :nosignatures:
-
-       libmseed.LibMSEED
-
-    .. comment to end block
-
     Modules
     -------
     .. autosummary::
@@ -20,6 +10,6 @@
        :nosignatures:
 
        core
-       libmseed
+       util
 
     .. comment to end block
