@@ -20,11 +20,11 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests getWaveform method.
         """
-        client = Client("hood.ess.washington.edu", 16021)
+        client = Client("pele.ess.washington.edu", 16017)
         start = UTCDateTime() - 24 * 3600
         end = start + 30
         # example 1 -- 1 channel, cleanup
-        stream = client.getWaveform('UW', 'LON', '', 'BHZ', start, end)
+        stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end)
         self.assertEquals(len(stream), 1)
         delta = stream[0].stats.delta
         trace = stream[0]
@@ -34,11 +34,11 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(trace.stats.endtime >= end - delta)
         self.assertTrue(trace.stats.endtime <= end + delta)
         self.assertEquals(trace.stats.network, 'UW')
-        self.assertEquals(trace.stats.station, 'LON')
+        self.assertEquals(trace.stats.station, 'TUCA')
         self.assertEquals(trace.stats.location, '--')
         self.assertEquals(trace.stats.channel, 'BHZ')
         # example 2 -- 1 channel, no cleanup
-        stream = client.getWaveform('UW', 'LON', '', 'BHZ', start, end,
+        stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
         summed_length = array([len(trace) for trace in stream]).sum()
@@ -49,11 +49,11 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(stream[-1].stats.endtime <= end + delta)
         for trace in stream:
             self.assertEquals(trace.stats.network, 'UW')
-            self.assertEquals(trace.stats.station, 'LON')
+            self.assertEquals(trace.stats.station, 'TUCA')
             self.assertEquals(trace.stats.location, '--')
             self.assertEquals(trace.stats.channel, 'BHZ')
         # example 3 -- component wildcarded with '?'
-        stream = client.getWaveform('UW', 'LON', '', 'BH?', start, end)
+        stream = client.getWaveform('UW', 'TUCA', '', 'BH?', start, end)
         self.assertEquals(len(stream), 3)
         for trace in stream:
             self.assertTrue(len(trace) == 1201)
@@ -62,7 +62,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(trace.stats.endtime >= end - delta)
             self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
-            self.assertEquals(trace.stats.station, 'LON')
+            self.assertEquals(trace.stats.station, 'TUCA')
             self.assertEquals(trace.stats.location, '--')
         self.assertEquals(stream[0].stats.channel, 'BHZ')
         self.assertEquals(stream[1].stats.channel, 'BHN')
@@ -75,11 +75,11 @@ class ClientTestCase(unittest.TestCase):
         testfile = NamedTemporaryFile().name
         try:
             # initialize client
-            client = Client("hood.ess.washington.edu", 16021)
+            client = Client("pele.ess.washington.edu", 16017)
             start = UTCDateTime() - 24 * 3600
             end = start + 30
             # 1 channel, cleanup (using SLIST to avoid dependencies)
-            client.saveWaveform(testfile, 'UW', 'LON', '', 'BHZ', start, end,
+            client.saveWaveform(testfile, 'UW', 'TUCA', '', 'BHZ', start, end,
                                 format="SLIST")
             stream = read(testfile)
             self.assertEquals(len(stream), 1)
@@ -91,7 +91,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertTrue(trace.stats.endtime >= end - delta)
             self.assertTrue(trace.stats.endtime <= end + delta)
             self.assertEquals(trace.stats.network, 'UW')
-            self.assertEquals(trace.stats.station, 'LON')
+            self.assertEquals(trace.stats.station, 'TUCA')
             self.assertEquals(trace.stats.location, '--')
             self.assertEquals(trace.stats.channel, 'BHZ')
         finally:

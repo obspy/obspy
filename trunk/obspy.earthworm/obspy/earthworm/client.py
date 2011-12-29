@@ -11,8 +11,9 @@ Earthworm Wave Server client for ObsPy.
 .. seealso:: http://www.isti2.com/ew/PROGRAMMER/wsv_protocol.html
 """
 
-from obspy.core import Stream
-from obspy.earthworm.waveserver import readWaveServerV
+from fnmatch import fnmatch
+from obspy.core import Stream, UTCDateTime
+from obspy.earthworm.waveserver import readWaveServerV, getMenu
 
 
 class Client(object):
@@ -52,9 +53,9 @@ class Client(object):
         :type network: str
         :param network: Network code, e.g. ``'UW'``.
         :type station: str
-        :param station: Station code, e.g. ``'LON'``.
+        :param station: Station code, e.g. ``'TUCA'``.
         :type location: str
-        :param location: Location code, e.g. ``''``.
+        :param location: Location code, e.g. ``'--'``.
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``. Last character (i.e.
             component) can be a wildcard ('?' or '*') to fetch `Z`, `N` and
@@ -73,22 +74,22 @@ class Client(object):
 
         >>> from obspy.earthworm import Client
         >>> from obspy.core import UTCDateTime
-        >>> client = Client("hood.ess.washington.edu", 16021)
+        >>> client = Client("pele.ess.washington.edu", 16017)
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
+        >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
-        >>> st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 300)
+        >>> st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
             from obspy.earthworm import Client
             from obspy.core import UTCDateTime
-            client = Client("hood.ess.washington.edu", 16021)
+            client = Client("pele.ess.washington.edu", 16017)
             dt = UTCDateTime() - 2000  # now - 2000 seconds
-            st = client.getWaveform('UW', 'LON', '', 'BHZ', dt, dt + 300)
+            st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
             st.plot()
-            st = client.getWaveform('UW', 'LON', '', 'BH*', dt, dt + 300)
+            st = client.getWaveform('UW', 'TUCA', '', 'BH*', dt, dt + 10)
             st.plot()
         """
         # replace wildcards in last char of channel and fetch all 3 components
@@ -124,7 +125,7 @@ class Client(object):
         :type network: str
         :param network: Network code, e.g. ``'UW'``.
         :type station: str
-        :param station: Station code, e.g. ``'LON'``.
+        :param station: Station code, e.g. ``'TUCA'``.
         :type location: str
         :param location: Location code, e.g. ``''``.
         :type channel: str
@@ -151,14 +152,76 @@ class Client(object):
 
         >>> from obspy.earthworm import Client
         >>> from obspy.core import UTCDateTime
-        >>> client = Client("hood.ess.washington.edu", 16021)
+        >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
-        >>> client.saveWaveform('UW.LON..BHZ.mseed', 'UW', 'LON', '', 'BHZ',
-        ...                     t, t + 300, format='MSEED')  # doctest: +SKIP
+        >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',
+        ...                     t, t + 10, format='MSEED')  # doctest: +SKIP
         """
         st = self.getWaveform(network, station, location, channel, starttime,
                               endtime, cleanup=cleanup)
         st.write(filename, format=format)
+
+    def availability(self, network="*", station="*", location="*",
+                     channel="*"):
+        """
+        Gets a list of data available on the server.
+
+        This method returns information about what time series data is
+        available on the server. The query can optionally be restricted to
+        specific network, station, channel and/or location criteria.
+
+        :type network: str
+        :param network: Network code, e.g. ``'UW'``, wildcards allowed.
+        :type station: str
+        :param station: Station code, e.g. ``'TUCA'``, wildcards allowed.
+        :type location: str
+        :param location: Location code, e.g. ``'--'``, wildcards allowed.
+            Use ``'--'`` for empty location codes.
+        :type channel: str
+        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
+        :rtype: list
+        :return: List of tuples with information on the available data. One
+            tuple consists of network, station, location, channel
+            (all strings), starttime and endtime
+            (both as :class:`~obspy.core.utcdatetime.UTCDateTime`).
+
+        .. rubric:: Example
+
+        >>> from obspy.earthworm import Client
+        >>> client = Client("pele.ess.washington.edu", 16017)
+        >>> response = client.availability(network="UW", station="TUCA",
+        ...         channel="BH*")
+        >>> print response  # doctest: +SKIP
+        [('UW',
+          'TUCA',
+          '--',
+          'BHE',
+          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
+          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
+         ('UW',
+          'TUCA',
+          '--',
+          'BHN',
+          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
+          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000)),
+         ('UW',
+          'TUCA',
+          '--',
+          'BHZ',
+          UTCDateTime(2011, 11, 27, 0, 0, 0, 525000),
+          UTCDateTime(2011, 12, 29, 20, 50, 31, 525000))]
+        """
+        # build up possibly wildcarded trace id pattern for query
+        pattern = ".".join((network, station, location, channel))
+        # get overview of all available data, winston wave servers can not
+        # restrict the query via network, station etc. so we do that manually
+        response = getMenu(self.host, self.port)
+        # reorder items and convert time info to UTCDateTime
+        response = [(x[3], x[1], x[4], x[2], UTCDateTime(x[5]),
+                     UTCDateTime(x[6])) for x in response]
+        # restrict results acording to user input
+        response = [x for x in response if fnmatch(".".join(x[:4]), pattern)]
+        return response
 
 
 if __name__ == '__main__':
