@@ -5,12 +5,15 @@ The psd test suite.
 """
 
 from __future__ import with_statement
-import os
-import unittest
-import numpy as np
 from obspy.core import Trace, Stream, UTCDateTime
+from obspy.core.util.decorator import skipIf
 from obspy.signal import PPSD, psd
 from obspy.signal.psd import welch_window, welch_taper
+import numpy as np
+import os
+import sys
+import unittest
+import warnings
 
 
 class PsdTestCase(unittest.TestCase):
@@ -78,6 +81,7 @@ class PsdTestCase(unittest.TestCase):
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_PPSD(self):
         """
         Test PPSD routine with some real data. Data was downsampled to 100Hz
@@ -123,9 +127,11 @@ class PsdTestCase(unittest.TestCase):
         self.assertEqual(ppsd.nlap, 49152)
         np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
         # add the same data a second time (which should do nothing at all) and
-        # test again
-        ppsd.add(st)
-        np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
+        # test again - but it will raise UserWarnings, which we omit for now
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            ppsd.add(st)
+            np.testing.assert_array_equal(ppsd.hist_stack, result_hist)
         # test the binning arrays
         binning = np.load(file_binning)
         np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])

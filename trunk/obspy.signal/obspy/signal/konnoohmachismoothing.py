@@ -223,7 +223,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
                 window = konnoOhmachiSmoothingWindow(frequencies,
                         frequencies[_i], bandwidth, normalize=normalize)
                 for _j, spec in enumerate(spectra):
-                    new_spec[_j, _i] = (window * spectra[_j]).sum()
+                    new_spec[_j, _i] = (window * spec).sum()
             np.seterr(**temp)
         # Eventually apply more than once.
         while count > 1:

@@ -370,8 +370,8 @@ class PPSD():
         Should be able to do it without a dummy psd..
         """
         dummy = np.ones(self.len)
-        spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
-                              noverlap=self.nlap)
+        _spec, freq = mlab.psd(dummy, self.nfft, self.sampling_rate,
+                               noverlap=self.nlap)
 
         # leave out first entry (offset)
         freq = freq[1:]
@@ -592,9 +592,9 @@ class PPSD():
 
         # use our own wrapper for mlab.psd to have consistent results on all
         # matplotlib versions
-        spec, freq = psd(tr.data, self.nfft, self.sampling_rate,
-                         detrend=mlab.detrend_linear, window=fft_taper,
-                         noverlap=self.nlap)
+        spec, _freq = psd(tr.data, self.nfft, self.sampling_rate,
+                          detrend=mlab.detrend_linear, window=fft_taper,
+                          noverlap=self.nlap)
 
         # leave out first entry (offset)
         spec = spec[1:]
@@ -802,7 +802,7 @@ class PPSD():
         """
         Helper function to plot coverage into given axes.
         """
-        fig = ax.figure
+        ax.figure
         ax.clear()
         ax.xaxis_date()
         ax.set_yticks([])
