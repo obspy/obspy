@@ -319,7 +319,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.core.stream.Stream.write` method of an
+        the :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
+        :class:`~obspy.core.stream.Stream` object.
 
     stream_object : :class:`~obspy.core.stream.Stream`
         A Stream object. Data in stream object must be of type int32.
