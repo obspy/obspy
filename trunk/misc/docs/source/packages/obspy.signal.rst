@@ -13,11 +13,11 @@
        ~trigger.arPick
        ~filter.bandpass
        ~filter.bandstop
-       ~trigger.carlStaTrig
-       ~trigger.classicStaLta
+       ~trigger.carlSTATrig
+       ~trigger.classicSTALTA
        ~invsim.cornFreq2Paz
        ~invsim.cosTaper
-       ~trigger.delayedStaLta
+       ~trigger.delayedSTALTA
        ~filter.envelope
        ~invsim.estimateMagnitude
        ~invsim.evalresp
@@ -28,14 +28,14 @@
        ~trigger.pkBaer
        ~psd.PPSD
        ~psd.psd
-       ~trigger.recStalta
+       ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
        ~invsim.seisSim
        ~array_analysis.sonic
        ~util.utlGeoKm
        ~util.utlLonLat
        ~cross_correlation.xcorr
-       ~trigger.zdetect
+       ~trigger.zDetect
 
     .. comment to end block
 

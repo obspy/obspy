@@ -14,7 +14,6 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, _getPlugins, getExampleFile, \
     getEntryPoints, uncompressFile
 from pkg_resources import load_entry_point
-import StringIO
 import copy
 import fnmatch
 import math
