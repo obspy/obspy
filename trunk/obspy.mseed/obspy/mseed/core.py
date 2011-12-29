@@ -132,8 +132,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
     >>> from cStringIO import StringIO
     >>> f = StringIO(mseed_data)  # doctest: +SKIP
     >>> selection = {'starttime': UTCDateTime(2010, 1, 1, 0, 0, 0),
-                     'endtime': UTCDateTime(2010, 1, 1, 1, 0, 0),
-                     'sourcename': 'BW.*.*.EHZ'}
+    ...              'endtime': UTCDateTime(2010, 1, 1, 1, 0, 0),
+    ...              'sourcename': 'BW.*.*.EHZ'}
     >>> st = readMSEED(f, selection)  # doctest: +SKIP
     """
     # Parse the headonly and reclen flags.

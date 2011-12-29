@@ -214,8 +214,19 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
 
 def getRecordInformation(file_or_file_object, offset=0):
     """
-    Wrapper around _getRecordInformation to be able to read files and file-like
-    objects.
+    Returns record information about given files and file-like object.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import getExampleFile
+    >>> filename = getExampleFile("test.mseed")
+    >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
+    {'record_length': 4096, 'data_quality_flags': 0, 'samp_rate': 40.0,
+     'byteorder': '>', 'encoding': 11, 'activity_flags': 0, 'excess_bytes': 0L,
+     'filesize': 8192L,
+     'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 5980,
+     'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
+     'number_of_records': 2L, 'io_and_clock_flags': 0}
     """
     if isinstance(file_or_file_object, basestring):
         with open(file_or_file_object, 'rb') as f:
@@ -232,17 +243,6 @@ def _getRecordInformation(file_object, offset=0):
 
     If offset is given, the MiniSEED record is assumed to start at current
     position + offset in file_object.
-
-    .. rubric:: Example
-
-    >>> from obspy.core.util import getExampleFile
-    >>> filename = getExampleFile("test.mseed")
-    >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'record_length': 4096, 'data_quality_flags': 0, 'samp_rate': 40.0,
-    'byteorder': '>', 'encoding': 11, 'activity_flags': 0, 'excess_bytes': 0,
-    'filesize': 8192, 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400),
-    'npts': 5980, 'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
-    'number_of_records': 2L, 'io_and_clock_flags': 0}
     """
     initial_position = file_object.tell()
     record_start = initial_position
