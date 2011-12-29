@@ -7,20 +7,26 @@
 #
 # Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
-"""
-Lowlevel module internally used for handling SAC files
-
-An object-oriented version of C. J. Ammon's SAC I/O module.
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
-"""
+from obspy.core import UTCDateTime, Trace
+from obspy.core.util import gps2DistAzimuth
 import numpy as np
+import obspy.core
 import os
 import string
 import time
 import warnings
-import obspy.core
-from obspy.core import UTCDateTime, Trace
-from obspy.core.util import gps2DistAzimuth
+"""
+Low-level module internally used for handling SAC files
+
+An object-oriented version of C. J. Ammon's SAC I/O module.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 
 # we put here everything but the time, they are going to stats.starttime
 # left SAC attributes, right trace attributes, see also
@@ -94,6 +100,33 @@ class SacIOError(Exception):
     Raised if the given SAC file can't be read.
     """
     pass
+
+
+def _isText(filename, blocksize=512):
+    """
+    Check if it is a text or a binary file.
+    """
+    # This should  always be true if a file is a text-file and only true for a
+    # binary file in rare occasions (see Recipe 173220 found on
+    # http://code.activestate.com/)
+    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
+    _null_trans = string.maketrans("", "")
+    s = open(filename).read(blocksize)
+    if "\0" in s:
+        return False
+
+    if not s:  # Empty files are considered text
+        return True
+
+    # Get the non-text characters (maps a character to itself then
+    # use the 'remove' option to get rid of the text characters.)
+    t = s.translate(_null_trans, text_characters)
+
+    # If more than 30% non-text characters, then
+    # this is considered a binary file
+    if len(t) / len(s) > 0.30:
+        return 0
+    return True
 
 
 class SacIO(object):
@@ -1038,30 +1071,6 @@ class SacIO(object):
         else:
             return True
 
-    def _istext_(self, filename, blocksize=512):
-        ### Find out if it is a text or a binary file. This should
-        ### always be true if a file is a text-file and only true for a
-        ### binary file in rare occasions (Recipe 173220 found on
-        ### http://code.activestate.com/
-        text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-        _null_trans = string.maketrans("", "")
-        s = open(filename, 'rb').read(blocksize)
-        if "\0" in s:
-            return 0
-
-        if not s:  # Empty files are considered text
-            return 1
-
-        # Get the non-text characters (maps a character to itself then
-        # use the 'remove' option to get rid of the text characters.)
-        t = s.translate(_null_trans, text_characters)
-
-        # If more than 30% non-text characters, then
-        # this is considered a binary file
-        if len(t) / len(s) > 0.30:
-            return 0
-        return 1
-
     def IsValidXYSacFile(self, filename):
         """
         Quick test for a valid SAC ascii file.
@@ -1078,7 +1087,7 @@ class SacIO(object):
         #
         #  Read in the Header
         #
-        if self._istext_(filename):
+        if _isText(filename):
             try:
                 self.ReadSacXY(filename)
             except:
@@ -1526,6 +1535,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         tr.stats.paz.seismometer_gain
     tr.stats.paz.gain = constant
     tr.stats.paz.t_shift = t_shift
+
 
 if __name__ == "__main__":
     import doctest

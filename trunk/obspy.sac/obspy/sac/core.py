@@ -2,25 +2,31 @@
 """
 SAC bindings to ObsPy core module.
 
-:copyright: The ObsPy Development Team (devs@obspy.org)
-:license: GNU Lesser General Public License, Version 3 (LGPLv3)
+:copyright:
+    The ObsPy Development Team (devs@obspy.org) & C. J. Ammon
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from obspy.core import Trace, Stream
-from obspy.sac.sacio import SacIO
+from obspy.sac.sacio import SacIO, _isText
 import os
-import string
 import struct
 
 
 def isSAC(filename):
     """
-    Checks whether a file is SAC or not. Returns True or False.
+    Checks whether a file is a SAC file or not.
 
-    Parameters
-    ----------
-    filename : string
-        SAC file to be checked.
+    :type filename: string
+    :param filename: SAC file to be checked.
+    :rtype: bool
+    :return: ``True`` if a SAC file.
+
+    .. rubric:: Example
+
+    >>> isSAC('/path/to/test.sac')  #doctest: +SKIP
     """
     try:
         f = open(filename, 'rb')
@@ -44,45 +50,24 @@ def isSAC(filename):
     return True
 
 
-def istext(filename, blocksize=512):
-    ### Find out if it is a text or a binary file. This should
-    ### always be true if a file is a text-file and only true for a
-    ### binary file in rare occasions (Recipe 173220 found on
-    ### http://code.activestate.com/
-    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-    _null_trans = string.maketrans("", "")
-    s = open(filename).read(blocksize)
-    if "\0" in s:
-        return 0
-
-    if not s:  # Empty files are considered text
-        return 1
-
-    # Get the non-text characters (maps a character to itself then
-    # use the 'remove' option to get rid of the text characters.)
-    t = s.translate(_null_trans, text_characters)
-
-    # If more than 30% non-text characters, then
-    # this is considered a binary file
-    if len(t) / len(s) > 0.30:
-        return 0
-    return 1
-
-
 def isSACXY(filename):
     """
-    Checks whether a file is alphanumeric SAC or not. Returns True or False.
+    Checks whether a file is alphanumeric SAC file or not.
 
-    Parameters
-    ----------
-    filename : string
-        SAC file to be checked.
+    :type filename: string
+    :param filename: Alphanumeric SAC file to be checked.
+    :rtype: bool
+    :return: ``True`` if a alphanumeric SAC file.
+
+    .. rubric:: Example
+
+    >>> isSACXY('/path/to/testxy.sac')  #doctest: +SKIP
     """
     ### First find out if it is a text or a binary file. This should
     ### always be true if a file is a text-file and only true for a
     ### binary file in rare occasions (Recipe 173220 found on
     ### http://code.activestate.com/
-    if not istext(filename, blocksize=512):
+    if not _isText(filename, blocksize=512):
         return False
     try:
         f = open(filename)
@@ -105,23 +90,22 @@ def readSACXY(filename, headonly=False, **kwargs):
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        Alphanumeric SAC file to be read.
+    :type filename: str
+    :param filename: Alphanumeric SAC file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric:: Example
 
-    Example
-    -------
     >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("sac_file") # doctest: +SKIP
+    >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
     t = SacIO()
     if headonly:
@@ -140,18 +124,23 @@ def readSACXY(filename, headonly=False, **kwargs):
 
 def writeSACXY(stream, filename, **kwargs):
     """
-    Writes an alphanumeric SAC file
+    Writes a alphanumeric SAC file.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        Alphanumeric SAC file to be written.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of file to write.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
     # Translate the common (renamed) entries
     base, ext = os.path.splitext(filename)
@@ -165,25 +154,24 @@ def writeSACXY(stream, filename, **kwargs):
 
 def readSAC(filename, headonly=False, **kwargs):
     """
-    Reads a SAC file and returns an ObsPy Stream object.
+    Reads an SAC file and returns an ObsPy Stream object.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
-    Parameters
-    ----------
-    filename : string
-        SAC file to be read.
+    :type filename: str
+    :param filename: SAC file to be read.
+    :type headonly: bool, optional
+    :param headonly: If set to True, read only the head. This is most useful
+        for scanning available data in huge (temporary) data sets.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
 
-    Returns
-    -------
-    :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
+    .. rubric:: Example
 
-    Example
-    -------
     >>> from obspy.core import read # doctest: +SKIP
-    >>> st = read("sac_file") # doctest: +SKIP
+    >>> st = read("/path/to/test.sac") # doctest: +SKIP
     """
     # read SAC file
     t = SacIO()
@@ -203,18 +191,23 @@ def readSAC(filename, headonly=False, **kwargs):
 
 def writeSAC(stream, filename, **kwargs):
     """
-    Writes a SAC file
+    Writes a SAC file.
 
-    This function should NOT be called directly, it registers via the
-    ObsPy :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-    Stream object, call this instead.
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    Parameters
-    ----------
-    stream : :class:`~obspy.core.stream.Stream`
-        A ObsPy Stream object.
-    filename : string
-        SAC file to be written.
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of file to write.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read
+    >>> st = read()
+    >>> st.write("test.sac", format="SAC")  #doctest: +SKIP
     """
     # Translate the common (renamed) entries
     base, ext = os.path.splitext(filename)

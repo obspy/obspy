@@ -100,20 +100,21 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
     :param mseed_object: Filename or open file like object that contains the
         binary MiniSEED data. Any object that provides a read() method will be
         considered to be a file like object.
-    :param starttime: UTCDateTime object
-        Only read data samples after or at the starttime.
-    :param endtime: UTCDateTime object
-        Only read data samples before or at the starttime.
-    :param sourcename: String
-        sourcename has to have the structure 'network.station.location.channel'
-        and can contain globbing characters
-        Defaults to None
-    readMSInfo : bool, optional
-        If True the byteorder, record length and the encoding of the file will
-        be read and stored in every Trace's stats.mseed AttribDict. These
-        stored attributes will also be used while writing a MiniSEED file. Only
-        the very first record of the file will be read and all following
-        records are assumed to be the same. Defaults to True.
+    :type starttime: UTCDateTime
+    :param starttime: Only read data samples after or at the starttime.
+    :type endtime: UTCDateTime
+    :param endtime: Only read data samples before or at the starttime.
+    :type sourcename: str
+    :param sourcename: Sourcename has to have the structure
+        'network.station.location.channel' and can contain globbing characters.
+        Defaults to ``None``.
+    :type readMSInfo: bool, optional
+    :param readMSInfo: If ``True`` the byteorder, record length and the
+        encoding of the file will be read and stored in every Trace's
+        stats.mseed AttribDict. These stored attributes will also be used while
+        writing a Mini-SEED file. Only the very first record of the file will
+        be read and all following records are assumed to be the same. Defaults
+        to ``True``.
     :param headonly: Determines whether or not to unpack the data or just
         read the headers.
     :param reclen: If it is None, it will be automatically determined for every
