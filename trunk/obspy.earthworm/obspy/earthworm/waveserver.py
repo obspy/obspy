@@ -103,10 +103,14 @@ class tracebuf2:
         Return class contents as obspy.Trace object
         """
         stat = Stats()
-        stat.network = self.net.replace('\x00', '')
-        stat.station = self.sta.replace('\x00', '')
-        stat.location = self.loc.replace('\x00', '')
-        stat.channel = self.chan.replace('\x00', '')
+        stat.network = self.net.split('\x00')[0]
+        stat.station = self.sta.split('\x00')[0]
+        location = self.loc.split('\x00')[0]
+        if location=='--':
+            stat.location = ''
+        else:
+            stat.location = location
+        stat.channel = self.chan.split('\x00')[0]
         stat.starttime = UTCDateTime(self.start)
         stat.sampling_rate = self.rate
         stat.npts = len(self.data)
