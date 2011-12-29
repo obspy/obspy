@@ -466,6 +466,51 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     return ptime.value, stime.value
 
 
+def plotTrigger(trace, cft, thr_on, thr_off, show=True):
+    """
+    Plot characteristic function of trigger along with waveform data and
+    trigger On/Off from given thresholds.
+
+    :type trace: :class:`~obspy.core.trace.Trace`
+    :param trace: waveform data
+    :type cft: :class:`numpy.ndarray`
+    :param cft: characteristic function as returned by a trigger in
+        :mod:`obspy.signal.trigger`
+    :type thr_on: float
+    :param thr_on: threshold for switching trigger on
+    :type thr_off: float
+    :param thr_off: threshold for switching trigger off
+    :type show: bool
+    :param show: Do not call `plt.show()` at end of routine. That way,
+        further modifications can be done to the figure before showing it.
+    """
+    import matplotlib.pyplot as plt
+    df = trace.stats.sampling_rate
+    npts = trace.stats.npts
+    t = np.arange(npts, dtype='float32') / df
+    fig = plt.figure()
+    ax1 = fig.add_subplot(211)
+    ax1.plot(t, trace.data, 'k')
+    ax2 = fig.add_subplot(212, sharex=ax1)
+    ax2.plot(t, cft, 'k')
+    onOff = np.array(triggerOnset(cft, thr_on, thr_off))
+    i, j = ax1.get_ylim()
+    try:
+        ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
+        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2,
+                   label="Trigger Off")
+        ax1.legend()
+    except IndexError:
+        pass
+    ax2.axhline(thr_on, color='red', lw=1, ls='--')
+    ax2.axhline(thr_off, color='blue', lw=1, ls='--')
+    ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
+    fig.suptitle(trace.id)
+    fig.canvas.draw()
+    if show:
+        plt.show()
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

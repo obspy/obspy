@@ -109,7 +109,7 @@ For all the examples, the commands to read in the data and to load the modules
 are the following:
 
     >>> from obspy.core import read
-    >>> from obspy.imaging.waveform import plot_trigger
+    >>> from obspy.signal.trigger import plotTrigger
     >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
 
@@ -118,7 +118,7 @@ Classic Sta Lta
 
     >>> from obspy.signal.trigger import classicSTALTA
     >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 1.5, 0.5)
+    >>> plotTrigger(trace, cft, 1.5, 0.5)
 
 .. plot:: source/tutorial/trigger_tutorial_classic_sta_lta.py
 
@@ -127,7 +127,7 @@ Z-Detect
 
     >>> from obspy.signal.trigger import zDetect
     >>> cft = zDetect(trace.data, int(10 * df))
-    >>> plot_trigger(trace, cft, -0.4, -0.3)
+    >>> plotTrigger(trace, cft, -0.4, -0.3)
 
 .. plot:: source/tutorial/trigger_tutorial_z_detect.py
 
@@ -136,7 +136,7 @@ Recursive Sta Lta
 
     >>> from obspy.signal.trigger import recSTALTA
     >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 1.2, 0.5)
+    >>> plotTrigger(trace, cft, 1.2, 0.5)
 
 .. plot:: source/tutorial/trigger_tutorial_recursive_sta_lta.py
 
@@ -145,7 +145,7 @@ Carl-Sta-Trig
 
     >>> from obspy.signal.trigger import carlSTATrig
     >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
-    >>> plot_trigger(trace, cft, 20.0, -20.0)
+    >>> plotTrigger(trace, cft, 20.0, -20.0)
 
 .. plot:: source/tutorial/trigger_tutorial_carl_sta_trig.py
 
@@ -154,7 +154,7 @@ Delayed Sta Lta
 
     >>> from obspy.signal.trigger import delayedSTALTA
     >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
-    >>> plot_trigger(trace, cft, 5, 10)
+    >>> plotTrigger(trace, cft, 5, 10)
 
 .. plot:: source/tutorial/trigger_tutorial_delayed_sta_lta.py
 

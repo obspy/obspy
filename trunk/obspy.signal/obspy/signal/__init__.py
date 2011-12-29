@@ -117,13 +117,12 @@ Trigger
 
 The :mod:`~obspy.signal.trigger` module provides various triggering algorithms,
 including different STA/LTA routines, Z-Detector, AR picker and the P-picker by
-M. Bear. The implementation is based on [Withers1998]_ and [Bear1987]_.
+M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 
-The following example demonstrates a recursive Sta/Lta triggering:
+The following example demonstrates a recursive STA/LTA triggering:
 
 >>> from obspy.core import read
->>> from obspy.signal import recSTALTA
->>> from obspy.imaging.waveform import plot_trigger
+>>> from obspy.signal import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)
@@ -133,13 +132,12 @@ The following example demonstrates a recursive Sta/Lta triggering:
 ...                 int(lta * tr.stats.sampling_rate))
 >>> thrOn = 4
 >>> thrOff = 0.7
->>> plot_trigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
+>>> plotTrigger(tr, cft, thrOn, thrOff) #doctest: +SKIP
 
 .. plot::
 
     from obspy.core import read
-    from obspy.signal import recSTALTA
-    from obspy.imaging.waveform import plot_trigger
+    from obspy.signal import recSTALTA, plotTrigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
@@ -147,9 +145,9 @@ The following example demonstrates a recursive Sta/Lta triggering:
     lta = 4
     cft = recSTALTA(tr.data, int(sta * tr.stats.sampling_rate),
                     int(lta * tr.stats.sampling_rate))
-    thrOn = 4
-    thrOff = 0.7
-    plot_trigger(tr, cft, thrOn, thrOff)
+    thr_on = 4
+    thr_off = 0.7
+    plotTrigger(tr, cft, thr_on, thr_off)
 
 There is also a convenience method implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`.
@@ -158,12 +156,11 @@ processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
 >>> tr.trigger("recstalta", sta=0.5, lta=4)
->>> tr.plot() #doctest: +SKIP
+>>> tr.plot()  # doctest: +SKIP
 
 .. plot::
 
     from obspy.core import read
-    from obspy.imaging.waveform import plot_trigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)

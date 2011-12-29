@@ -7,6 +7,20 @@
 #
 # Copyright (C) 2008-2011 Lion Krischer
 #---------------------------------------------------------------------
+from copy import deepcopy, copy
+from datetime import datetime
+from math import ceil
+from matplotlib.cm import hsv # @UnresolvedImport
+from matplotlib.dates import date2num, num2date
+from matplotlib.ticker import FuncFormatter
+from obspy.core import UTCDateTime, Stream, Trace
+from obspy.core.preview import mergePreviews
+from obspy.core.util import createEmptyDataChunk
+from obspy.core.util.decorator import deprecated
+import StringIO
+import matplotlib.pyplot as plt
+import numpy as np
+import warnings
 """
 Waveform plotting for obspy.Stream objects.
 
@@ -16,20 +30,6 @@ Waveform plotting for obspy.Stream objects.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
-
-from copy import deepcopy, copy
-from datetime import datetime
-from math import ceil
-from matplotlib.cm import hsv  # @UnresolvedImport
-from matplotlib.dates import date2num, num2date
-from matplotlib.ticker import FuncFormatter
-from obspy.core import UTCDateTime, Stream, Trace
-from obspy.core.util import createEmptyDataChunk
-from obspy.core.preview import mergePreviews
-import StringIO
-import matplotlib.pyplot as plt
-import numpy as np
-import warnings
 
 
 class WaveformPlotting(object):
@@ -851,139 +851,10 @@ class WaveformPlotting(object):
                               horizontalalignment='left')
 
 
-def _plot_list(streams):
-
-    def formatXTicklabels(x, pos):  # @UnusedVariable
-        """
-        Make a nice formatting for x axis ticklabels
-        """
-        # pos is the ticklabel index, None if hovering with the mouse
-        dt = UTCDateTime(num2date(x))
-        return str(dt).rstrip("0Z").replace("T", " ")
-
-    st = Stream()
-
-    # go through all streams and collect traces
-    for item in streams:
-        if isinstance(item, Stream):
-            for tr in item:
-                st.append(tr)
-        elif isinstance(item, Trace):
-            st.append(item)
-        else:
-            msg = "Some items in list could not be recognized and were " + \
-                  "ignored. Only Trace and Stream items are recognized " + \
-                  "as list items at the moment."
-            warnings.warn(msg)
-
-    # go through stream and compile unique lists of ids
-    comp_ids = list(set([tr.stats.channel[-1] for tr in st]))
-    # sort component ids
-    for comp in ["Z", "N", "E", "R", "T", "L", "Q", "T"][::-1]:
-        try:
-            comp_ids.remove(comp)
-            comp_ids.insert(0, comp)
-        except:
-            pass
-    sta_ids = ["%s.%s.%s" % (tr.stats.network, tr.stats.station,
-               tr.stats.location) for tr in st]
-    sta_ids = list(set(sta_ids))
-    num_plots = len(comp_ids)
-    num_lines = len(sta_ids)
-
-    # assign one color per network-station id
-    colors = {}
-    for i, sta_id in enumerate(sta_ids):
-        colors[sta_id] = hsv(float(i) / num_lines)
-    alpha = 2. / len(sta_ids)
-
-    # assign one subplot per component id
-    # the first one we do by hand to be able to sharex with it
-    fig = plt.figure()
-    axs = {}
-    ax0 = fig.add_subplot(num_plots, 1, 1)
-    axs[comp_ids[0]] = ax0
-    for i, comp_id in enumerate(comp_ids[1:]):
-        axs[comp_id] = fig.add_subplot(num_plots, 1, i + 2, sharex=ax0)
-
-    # plot every trace with respective color in respective subplot
-    for tr in st:
-        comp_id = tr.stats.channel[-1]
-        sta_id = "%s.%s.%s" % (tr.stats.network, tr.stats.station,
-                               tr.stats.location)
-        start = date2num(tr.stats.starttime)
-        end = date2num(tr.stats.endtime)
-        time = np.linspace(start, end, tr.stats.npts)
-        axs[comp_id].plot(time, tr.data, ls="-", marker="", c=colors[sta_id],
-                          alpha=alpha, label=sta_id)
-
-    # we have to group our axes for sharing x after the plotting commands,
-    # plot_date has problems otherwise.
-    # as we don't use plot_date anymore, we can do the sharex right at the
-    # initialization of the subplots above and dont need to work on the axes
-    # grouping low-level.
-    ax1 = fig.axes[-1]
-    #grouper = ax0._shared_x_axes
-    for comp_id, ax in axs.items():
-        #grouper.join(ax0, ax)
-        ax.text(0.02, 0.95, comp_id, color="b", fontsize=16, ha="left",
-                va="top", transform=ax.transAxes)
-        ax.xaxis.set_major_formatter(FuncFormatter(formatXTicklabels))
-        plt.setp(ax.get_xticklabels(), rotation=20,
-                 horizontalalignment="right")
-        plt.setp(ax.xaxis.get_ticklabels(), visible=False)
-    plt.setp(ax1.xaxis.get_ticklabels(), visible=True)
-    ax0.legend()
-
-    fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
-    plt.show()
-
-
+@deprecated
 def plot_trigger(trace, cft, thrOn, thrOff, show=True):
     """
-    Plot characteristic function of trigger along with waveform data and
-    trigger On/Off from given thresholds.
-
-    :type trace: :class:`~obspy.core.trace.Trace`
-    :param trace: waveform data
-    :type cft: :class:`numpy.ndarray`
-    :param cft: characteristic function as returned by a trigger in
-            :mod:`obspy.signal.trigger`
-    :type thrOn: float
-    :param thrOn: threshold for switching trigger on
-    :type thrOff: float
-    :param thrOff: threshold for switching trigger off
-    :type show: bool
-    :param show: Do not call `plt.show()` at end of routine. That way,
-            further modifications can be done to the figure before showing it.
+    DEPRECATED. Use :func:`obspy.signal.trigger.plotTrigger` instead.
     """
-    try:
-        from obspy.signal.trigger import triggerOnset
-    except ImportError:
-        msg = "Error during import from obspy.signal. Please make " + \
-              "sure obspy.signal is installed properly."
-        raise ImportError(msg)
-    df = trace.stats.sampling_rate
-    npts = trace.stats.npts
-    t = np.arange(npts, dtype='float32') / df
-    fig = plt.figure()
-    ax1 = fig.add_subplot(211)
-    ax1.plot(t, trace.data, 'k')
-    ax2 = fig.add_subplot(212, sharex=ax1)
-    ax2.plot(t, cft, 'k')
-    onOff = np.array(triggerOnset(cft, thrOn, thrOff))
-    i, j = ax1.get_ylim()
-    try:
-        ax1.vlines(onOff[:, 0] / df, i, j, color='r', lw=2, label="Trigger On")
-        ax1.vlines(onOff[:, 1] / df, i, j, color='b', lw=2,
-                   label="Trigger Off")
-        ax1.legend()
-    except IndexError:
-        pass
-    ax2.axhline(thrOn, color='red', lw=1, ls='--')
-    ax2.axhline(thrOff, color='blue', lw=1, ls='--')
-    ax2.set_xlabel("Time after %s [s]" % trace.stats.starttime.isoformat())
-    fig.suptitle(trace.id)
-    fig.canvas.draw()
-    if show:
-        plt.show()
+    from obspy.signal.trigger import plotTrigger
+    return plotTrigger(trace, cft, thrOn, thrOff, show=show)

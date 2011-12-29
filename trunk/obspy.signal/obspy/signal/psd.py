@@ -266,7 +266,7 @@ class PPSD():
 
     .. note::
 
-        It is safer (but a bit slower) to provide a 
+        It is safer (but a bit slower) to provide a
         :class:`~obspy.xseed.parser.Parser` instance with information from
         e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
