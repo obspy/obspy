@@ -29,10 +29,6 @@ Geofisica e Vulcanologia), and IPGP_ (Institut de Physique du Globe de Paris).
 
 Basic Usage
 -----------
-The example illustrates how to request and plot 18 seconds of all three
-short period channels (``"BH*"``) of station Jochberg/Hochstaufen (``"RJOB"``)
-of the Bavarian network (``"BW"``) for an seismic event around
-2009-08-20 04:03:12 (UTC).
 
 .. note::
     The default client needs to open port 18002 to the host webdc.eu via TCP/IP
@@ -40,40 +36,45 @@ of the Bavarian network (``"BW"``) for an seismic event around
     is blocking access to this server/port combination.
 
 .. note::
-    The ``user`` keyword in the following example is used for identification
+    The ``user`` keyword in the following examples is used for identification
     with the ArcLink server as well as for usage statistics within the data
-    center, so please provide a meaningful user id such as your email address.
+    center, so please provide a meaningful user id such as an email address.
 
->>> from obspy.core import UTCDateTime
->>> from obspy.arclink.client import Client
->>> client = Client(user='test@obspy.org')
->>> t = UTCDateTime("2009-08-20 04:03:12")
->>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
->>> st.plot()  # doctest: +SKIP
+(1) :meth:`~obspy.arclink.client.Client.getWaveform()`: The following example
+    illustrates how to request and plot 18 seconds of all three single band
+    channels (``"EH*"``) of station Jochberg/Hochstaufen (``"RJOB"``)
+    of the Bavarian network (``"BW"``) for an seismic event around
+    2009-08-20 04:03:12 (UTC).
 
-Waveform data fetched from an ArcLink node is converted into an ObsPy
-:class:`~obspy.core.stream.Stream` object. The seismogram is truncated by the
-ObsPy client to the actual requested time span, as ArcLink internally cuts SEED
-files for performance reasons on record base in order to avoid uncompressing
-the waveform data. The output of the script above is shown in the next picture.
+    >>> from obspy.core import UTCDateTime
+    >>> from obspy.arclink.client import Client
+    >>> client = Client(user='test@obspy.org')
+    >>> t = UTCDateTime("2009-08-20 04:03:12")
+    >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+    >>> st.plot()  # doctest: +SKIP
 
-.. plot::
+    Waveform data fetched from an ArcLink node is converted into an ObsPy
+    :class:`~obspy.core.stream.Stream` object. The seismogram is truncated by
+    the ObsPy client to the actual requested time span, as ArcLink internally
+    cuts SEED files for performance reasons on record base in order to avoid
+    uncompressing the waveform data. The output of the script above is shown in
+    the next picture.
 
-    from obspy.core import UTCDateTime
-    from obspy.arclink.client import Client
-    client = Client(user='test@obspy.org')
-    t = UTCDateTime("2009-08-20 04:03:12")
-    st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
-    st.plot()  # doctest: +SKIP
+    .. plot::
+    
+        from obspy.core import UTCDateTime
+        from obspy.arclink.client import Client
+        client = Client(user='test@obspy.org')
+        t = UTCDateTime("2009-08-20 04:03:12")
+        st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
+        st.plot()  # doctest: +SKIP
 
-Further Examples
-----------------
-The following methods are demonstrated using the initialized client from the
-example above.
-
-(1) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
+(2) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
     and sensitivity of a single channel for a certain time span.
 
+    >>> from obspy.core import UTCDateTime
+    >>> from obspy.arclink.client import Client
+    >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1)
     >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
     >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
@@ -87,24 +88,33 @@ example above.
         'zeros': [0j, 0j],
         'gain': 60077000.0}}
 
-(2) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
+(3) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
     information into a file.
 
+    >>> from obspy.core import UTCDateTime
+    >>> from obspy.arclink.client import Client
+    >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1)
     >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
     ...                     t, t + 1, format="SEED")  # doctest: +SKIP
 
-(3) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes the requested
+(4) :meth:`~obspy.arclink.client.Client.saveWaveform()`: Writes the requested
     waveform unmodified into your local file system. Here we request a Full
     SEED volume.
 
+    >>> from obspy.core import UTCDateTime
+    >>> from obspy.arclink.client import Client
+    >>> client = Client(user='test@obspy.org')
     >>> t = UTCDateTime(2009, 1, 1, 12, 0)
     >>> client.saveWaveform('BW.MANZ..EHZ.seed', 'BW', 'MANZ', '', '*',
     ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
 
-(4) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory
+(5) :meth:`~obspy.arclink.client.Client.getInventory()`: Request inventory
     data.
 
+    >>> from obspy.core import UTCDateTime
+    >>> from obspy.arclink.client import Client
+    >>> client = Client(user='test@obspy.org')
     >>> inv = client.getInventory('BW', 'M*', '*', 'EHZ', restricted=False,
     ...                           permanent=True, min_longitude=12,
     ...                           max_longitude=12.2) #doctest: +SKIP

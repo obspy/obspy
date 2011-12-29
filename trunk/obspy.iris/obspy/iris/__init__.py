@@ -13,11 +13,10 @@ IRIS (http://www.iris.edu/ws/).
 
 Basic Usage
 -----------
-(1) In the following example the
-    :meth:`~obspy.iris.client.Client.getWaveform()` method is used to request
-    and plot 60 minutes of the BHZ channel of station Albuquerque,
-    New Mexico ("ANMO") of the Global Seismograph Network ("IU") for an seismic
-    event around 2010-02-27 06:45 (UTC).
+(1) :meth:`~obspy.iris.client.Client.getWaveform()`: The following example
+    illustrates how to request and plot 60 minutes of the BHZ channel of
+    station Albuquerque, New Mexico (``"ANMO"``) of the Global Seismograph
+    Network (``"IU"``) for an seismic event around 2010-02-27 06:45 (UTC).
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
@@ -35,9 +34,9 @@ Basic Usage
         st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
         st.plot() #doctest: +SKIP
 
-(2) Alternatively you may save any requested waveform unmodified into your
-    local file system using the
-    :meth:`~obspy.iris.client.Client.saveWaveform()` method.
+(2) :meth:`~obspy.iris.client.Client.saveWaveform()`: Writes the requested
+    waveform unmodified into your local file system. Here we request a Full
+    SEED volume.
 
     >>> from obspy.iris import Client
     >>> from obspy.core import UTCDateTime
@@ -47,8 +46,8 @@ Basic Usage
     >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO',
     ...                     '00', 'BHZ', t1, t2) # doctest: +SKIP
 
-(3) The :meth:`~obspy.iris.client.Client.saveResponse()` method writes the
-    response information into a file. You may choose one of the format
+(3) :meth:`~obspy.iris.client.Client.saveResponse()`: Writes the response
+    information into a file. You may choose one of the format
     ``'RESP'``, ``'StationXML'`` or ``'SACPZ'``.
 
     >>> from obspy.iris import Client
@@ -58,8 +57,8 @@ Basic Usage
     >>> client.saveResponse('resp.txt', 'IU', 'ANMO', '', '*',
     ...                     t, t + 1, format="RESP") #doctest: +SKIP
 
-Direct Web service Interfaces
------------------------------
+Low-level Web service Interfaces
+--------------------------------
 
 Each of the following methods directly wrap a single Web service provided by
 IRIS (http://www.iris.edu/ws/):

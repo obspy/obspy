@@ -16,12 +16,12 @@ initiative by observatories and research institutes in and around Europe.
 
 Basic Usage
 -----------
-(1) The following example illustrates how to request all earthquakes of a
-    magnitude of >=9 in the year 2004 using the
-    :meth:`~obspy.neries.client.Client.getEvents()` method:
+(1) :meth:`~obspy.neries.client.Client.getEvents()`: The following example
+    illustrates how to request all earthquakes of a magnitude of >=9 in the
+    year 2004.
 
     >>> from obspy.neries import Client
-    >>> client = Client()
+    >>> client = Client(user='test@obspy.org')
     >>> events = client.getEvents(min_datetime="2004-01-01",
     ...                           max_datetime="2005-01-01",
     ...                           min_magnitude=9)
@@ -33,11 +33,11 @@ Basic Usage
       'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
       'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
 
-(2) In order to request only the latest 20 quakes you may call
-    :meth:`~obspy.neries.client.Client.getLatestEvents()`:
+(2) :meth:`~obspy.neries.client.Client.getLatestEvents()`: Returns only the
+    latest earthquakes.
 
     >>> from obspy.neries import Client
-    >>> client = Client()
+    >>> client = Client(user='test@obspy.org')
     >>> events = client.getLatestEvents(num=5, format='list')
     >>> len(events)
     5
@@ -47,12 +47,11 @@ Basic Usage
       'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
       'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
 
-(3) Additional information for each event may obtained using the
-    :meth:`~obspy.neries.client.Client.getEventDetail()` method with a
-    known event_id:
+(3) :meth:`~obspy.neries.client.Client.getEventDetail()`: Returns additional
+    information for each event by a given event_id.
 
     >>> from obspy.neries import Client
-    >>> client = Client()
+    >>> client = Client(user='test@obspy.org')
     >>> result = client.getEventDetail("20041226_0000148", 'list')
     >>> len(result)  # Number of calculated origins
     11
@@ -62,9 +61,9 @@ Basic Usage
      'depth': -10.0, 'magnitude': 9.3, 'magnitude_type': u'mw',
      'latitude': 3.498, 'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}
 
-(4) The :meth:`~obspy.neries.client.Client.getWaveform()` method wraps the
-    a NERIES Web service build on top of the ArcLink protocol. Here we give a
-    small example how to fetch and display waveforms.
+(4) :meth:`~obspy.neries.client.Client.getWaveform()`: Wraps a NERIES Web
+    service build on top of the ArcLink protocol. Here we give a small example
+    how to fetch and display waveforms.
 
     >>> from obspy.neries import Client
     >>> from obspy.core import UTCDateTime
@@ -75,18 +74,19 @@ Basic Usage
 
     .. plot::
 
-        from obspy.core import UTCDateTime
         from obspy.neries import Client
+        from obspy.core import UTCDateTime
         client = Client(user='test@obspy.org')
         dt = UTCDateTime("2009-04-01T00:02:00")
         st = client.getWaveform("BW", "MANZ", "", "EH*", dt, dt+60*10)
         st.plot()
 
-(5) The :meth:`~obspy.neries.client.Client.getTravelTimes()` method wraps a
-    Taup Web service, an utility to compute arrival times using a few default
-    velocity models such as ``'iasp91'``, ``'ak135'`` or ``'qdt'``.
+(5) :meth:`~obspy.neries.client.Client.getTravelTimes()`: Wraps a Taup Web
+    service, an utility to compute arrival times using a few default velocity
+    models such as ``'iasp91'``, ``'ak135'`` or ``'qdt'``.
 
-    >>> client = Client()
+    >>> from obspy.neries import Client
+    >>> client = Client(user='test@obspy.org')
     >>> locations = [(48.0, 12.0), (48.1, 12.0)]
     >>> result = client.getTravelTimes(latitude=20.0, longitude=20.0,
     ...                                depth=10.0, locations=locations,
