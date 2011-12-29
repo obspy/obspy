@@ -20,7 +20,6 @@ import unittest
 import warnings
 
 
-
 class ParserTestCase(unittest.TestCase):
     """
     Parser test suite.

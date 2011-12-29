@@ -685,6 +685,7 @@ clibmseed.mstl_free.argtypes = [C.POINTER(C.POINTER(MSTraceList)), C.c_int]
 clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
 clibmseed.lil_free.restype = C.c_void_p
 
+
 # Python callback functions for C
 def __PyFile_callback(_f):
     return 1

@@ -308,9 +308,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
 
     .. versionchanged:: 0.5.1
-        The default for `remove_sensitivity` and `simulate_sensitivity` was
-        changed to `True`. Old deprecated `kwargs` were removed: `paz`, `inst_sim`,
-        `no_inverse_filtering`
+        The default for `remove_sensitivity` and `simulate_sensitivity` has
+        been changed to ``True``. Old deprecated keyword arguments `paz`,
+        `inst_sim`, `no_inverse_filtering` have been removed.
 
     :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)

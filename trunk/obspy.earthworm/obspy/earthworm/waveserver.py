@@ -252,7 +252,6 @@ def readWaveServerV(server, port, scnl, start, end):
 
 def tracebufs2obspyStream(tbuflist):
     """
-    DEPRECATED
     Returns obspy.Stream object from input list of tracebuf2 objects
     """
     if not tbuflist:
@@ -262,4 +261,3 @@ def tracebufs2obspyStream(tbuflist):
         tlist.append(tb.getObspyTrace())
     strm = Stream(tlist)
     return strm
-
