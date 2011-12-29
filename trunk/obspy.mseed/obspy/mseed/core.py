@@ -129,12 +129,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
     The following example will read all EHZ channels from the BW network from
     the binary data in mseed_data. Only the first hour of 2010 will be read.
 
-    >> from cStringIO import StringIO
-    >> f = StringIO(mseed_data)
-    >> selection = {'starttime': UTCDateTime(2010, 1, 1, 0, 0, 0),
-                    'endtime': UTCDateTime(2010, 1, 1, 1, 0, 0),
-                    'sourcename': 'BW.*.*.EHZ'}
-    >> st = readMSEED(f, selection)
+    >>> from cStringIO import StringIO
+    >>> f = StringIO(mseed_data)  # doctest: +SKIP
+    >>> selection = {'starttime': UTCDateTime(2010, 1, 1, 0, 0, 0),
+                     'endtime': UTCDateTime(2010, 1, 1, 1, 0, 0),
+                     'sourcename': 'BW.*.*.EHZ'}
+    >>> st = readMSEED(f, selection)  # doctest: +SKIP
     """
     # Parse the headonly and reclen flags.
     if headonly is True:

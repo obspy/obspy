@@ -58,23 +58,21 @@ class SEGYFile(object):
     def __init__(self, file=None, endian=None, textual_header_encoding=None,
                  unpack_headers=False, headonly=False):
         """
+        Class that internally handles SEG Y files.
+
         :param file: A file like object with the file pointer set at the
             beginning of the SEG Y file. If file is None, an empty SEGYFile
             object will be initialized.
-
         :param endian: The endianness of the file. If None, autodetection will
             be used.
-
         :param textual_header_encoding: The encoding of the textual header.
             Either 'EBCDIC', 'ASCII' or None. If it is None, autodetection will
             be attempted. If it is None and file is also None, it will default
             to 'ASCII'.
-
         :param unpack_headers: Bool. Determines whether or not all headers will
             be unpacked during reading the file. Has a huge impact on the
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
-
         :param headonly: Bool. Determines whether or not the actual data
             records will be unpacked. Useful if one is just interested in the
             headers. Defaults to False.
@@ -415,17 +413,27 @@ class SEGYTrace(object):
     def __init__(self, file=None, data_encoding=4, endian='>',
                  unpack_headers=False, filesize=None, headonly=False):
         """
+        Convenience class that internally handles a single SEG Y trace.
+
         :param file: Open file like object with the file pointer of the
             beginning of a trace. If it is None, an empty trace will be
             created.
         :param data_encoding: The data sample format code as defined in the
             binary file header:
-                1: 4 byte IBM floating point
-                2: 4 byte Integer, two's complement
-                3: 2 byte Integer, two's complement
-                4: 4 byte Fixed point with gain
-                5: 4 byte IEEE floating point
-                8: 1 byte Integer, two's complement
+
+                1:
+                    4 byte IBM floating point
+                2:
+                    4 byte Integer, two's complement
+                3:
+                    2 byte Integer, two's complement
+                4:
+                    4 byte Fixed point with gain
+                5:
+                    4 byte IEEE floating point
+                8:
+                    1 byte Integer, two's complement
+
             Defaults to 4.
         :param big_endian: Bool. True means the header is encoded in big endian
             and False corresponds to a little endian header.
@@ -682,6 +690,8 @@ class SEGYTraceHeader(object):
 def readSEGY(file, endian=None, textual_header_encoding=None,
              unpack_headers=False, headonly=False):
     """
+    Reads a SEG Y file and returns a SEGYFile object.
+
     :param file: Open file like object or a string which will be assumed to be
         a filename.
     :param endian: String that determines the endianness of the file. Either
@@ -855,6 +865,8 @@ class SUFile(object):
 
 def readSU(file, endian=None, unpack_headers=False, headonly=False):
     """
+    Reads a Seismic Unix (SU) file and returns a SUFile object.
+
     :param file: Open file like object or a string which will be assumed to be
         a filename.
     :param endian: String that determines the endianness of the file. Either

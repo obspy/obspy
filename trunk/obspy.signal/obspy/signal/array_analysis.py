@@ -184,9 +184,7 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     this code assumes that ts1[j,:], ts2[j,:], and ts3[j,:] are all sampled
     SIMULTANEOUSLY.
 
-    Notes
-    -----
-    ::
+    .. rubric:: Notes
 
         Note On Specifying Input Array And Selecting Subarrays
 
@@ -599,20 +597,21 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     """
     Parrallelized Version of sonic. EXPERIMENTAL!
 
-    usage:
-        - multiprocessing on local machine only: just replace sonic by sonic_pp
-          and set njobs to number of cores in local machine
+    .. rubric:: Usage
 
-        - serveral machines:
-            1. goto clients and start workers (important to make sure it uses
-                the right python version with obspy installed):
+    - multiprocessing on local machine only: just replace sonic by sonic_pp
+      and set njobs to number of cores in local machine
 
-                python /usr/bin/ppserver -s <secret> -w <ncpus>
+    - serveral machines:
+        1. goto clients and start workers (important to make sure it uses
+            the right python version with obspy installed):
 
-            2. replace sonic by sonic_pp and set njobs, clientlist and secret:
+            python /usr/bin/ppserver -s <secret> -w <ncpus>
 
-                sonic_pp(..., njobs=njobs, pservers=('client1', 'client2',),
-                         secret=<secret>)
+        2. replace sonic by sonic_pp and set njobs, clientlist and secret:
+
+            sonic_pp(..., njobs=njobs, pservers=('client1', 'client2',),
+                     secret=<secret>)
     """
     import pp
 
@@ -1023,6 +1022,8 @@ def cosine_taper(ndat, fraction=0.1):
     :param fraction: Taper fraction. Default is 10% which tapers 5% from
         the beginning and 5% form the end
 
+    .. rubric:: Example
+
     >>> tap = cosine_taper(100, fraction=1.0)
     >>> buf = 0.5*(1+np.cos(np.linspace(np.pi, 3*np.pi, 100)))
     >>> abs(tap - buf).max() < 1e-2
@@ -1046,7 +1047,8 @@ def cosine_taper(ndat, fraction=0.1):
 
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
-    returns array transfer function as a function of wavenumber difference
+    Returns array transfer function as a function of wavenumber difference
+
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km
@@ -1055,7 +1057,6 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
         to use
     :param klim: either a float to use symmetric limits for wavenumber
         differences or the tupel (kxmin, kxmax, kymin, kymax)
-
     """
     coords = get_geometry(coords, coordsys)
     if isinstance(klim, float):
@@ -1092,8 +1093,9 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
 def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
                                coordsys='lonlat'):
     """
-    returns array transfer function as a function of slowness difference and
-    frequency
+    Returns array transfer function as a function of slowness difference and
+    frequency.
+
     :type coords: numpy.ndarray
     :param coords: coordinates of stations in longitude and latitude in degrees
         elevation in km, or x, y, z in km

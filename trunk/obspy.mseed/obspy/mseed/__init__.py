@@ -91,7 +91,7 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 512 byte do the following:
 
 >>> st.write('out.mseed', format='MSEED', reclen=512, encoding='STEIM1') \
-        #doctest: +SKIP
+        # doctest: +SKIP
 """
 
 from obspy.core.util import _getVersionString

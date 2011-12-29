@@ -19,6 +19,7 @@ if "%1" == "help" (
 	:help
 	echo.Please use `make ^<target^>` where ^<target^> is one of
 	echo.  html       to make standalone HTML files
+    echo.  html+log   to make standalone HTML files and log everything into an error.log file
 	echo.  dirhtml    to make HTML files named index.html in directories
 	echo.  singlehtml to make a single large HTML file
 	echo.  pickle     to make pickle files
@@ -75,6 +76,14 @@ if "%1" == "html" (
 	goto end
 )
 
+if "%1" == "html+log" (
+:html
+    %SPHINXBUILD% -b html %ALLSPHINXOPTS% %BUILDDIR%/html >error.log 2>&1
+    if errorlevel 1 exit /b 1
+    echo.
+    echo.Build finished. The HTML pages are in %BUILDDIR%/html.
+    goto end
+)
 if "%1" == "dirhtml" (
 	%SPHINXBUILD% -b dirhtml %ALLSPHINXOPTS% %BUILDDIR%/dirhtml
 	if errorlevel 1 exit /b 1

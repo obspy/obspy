@@ -39,6 +39,16 @@ def cosTaper(npts, p=0.1):
     """
     Cosine Taper.
 
+    :type npts: Int
+    :param npts: Number of points of cosine taper.
+    :type p: Float
+    :param p: Percent of cosine taper. Default is 10% which tapers 5% from
+        the beginning and 5% form the end
+    :rtype: float NumPy ndarray
+    :return: Cosine taper array/vector of length npts.
+
+    .. rubric:: Example
+
     >>> tap = cosTaper(100, 1.0)
     >>> tap2 = 0.5*(1+np.cos(np.linspace(np.pi,2*np.pi,50)))
     >>> (tap[0:50]==tap2).all()
@@ -48,14 +58,6 @@ def cosTaper(npts, p=0.1):
     >>> tap3 = cosTaper(npts, p)
     >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
     True
-
-    :type npts: Int
-    :param npts: Number of points of cosine taper.
-    :type p: Float
-    :param p: Percent of cosine taper. Default is 10% which tapers 5% from
-        the beginning and 5% form the end
-    :rtype: float NumPy ndarray
-    :return: Cosine taper array/vector of length npts.
     """
     if p == 0.0 or p == 1.0:
         frac = int(npts * p / 2.0)
@@ -203,17 +205,6 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
 
-    :note: In order to plot/calculate the phase you need to multiply the
-        complex part by -1. This results from the different definition of
-        the Fourier transform and the phase. The numpy.fft is defined as
-        A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
-        signal is defined A(jw) = | A(jw) | e^{j\phi}. That is in order to
-        calculate the phase the complex conjugate of the signal needs to be
-        taken. E.g. phi = angle(f,conj(h),deg=True)
-        As the range of phi is from -pi to pi you could add 2*pi to the
-        negative values in order to get a plot from [0, 2pi]:
-        where(phi<0,phi+2*pi,phi); plot(f,phi)
-
     :type poles: List of complex numbers
     :param poles: The poles of the transfer function
     :type zeros: List of complex numbers
@@ -227,6 +218,18 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
     :return: Frequency response of PAZ of length nfft
+
+    .. note::
+        In order to plot/calculate the phase you need to multiply the
+        complex part by -1. This results from the different definition of
+        the Fourier transform and the phase. The numpy.fft is defined as
+        A(jw) = \int_{-\inf}^{+\inf} a(t) e^{-jwt}; where as the analytic
+        signal is defined A(jw) = | A(jw) | e^{j\phi}. That is in order to
+        calculate the phase the complex conjugate of the signal needs to be
+        taken. E.g. phi = angle(f,conj(h),deg=True)
+        As the range of phi is from -pi to pi you could add 2*pi to the
+        negative values in order to get a plot from [0, 2pi]:
+        where(phi<0,phi+2*pi,phi); plot(f,phi)
     """
     n = nfft // 2
     b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
@@ -293,24 +296,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     """
     Simulate/Correct seismometer.
 
-    This function works in the frequency domain, where nfft is the next power
-    of len(data) to avoid wrap around effects during convolution. The inverse
-    of the frequency response of the seismometer (``paz_remove``) is
-    convolved with the spectrum of the data and with the frequency response
-    of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
-    taken before simulation. The data must be detrended (e.g.) zero mean
-    beforehand. If paz_simulate=None only the instrument correction is done.
-    In the latter case, a broadband filter can be applied to the data trace
-    using pre_filt. This restricts the signal to the valid frequency band and
-    thereby avoids artefacts due to amplification of frequencies outside of the
-    instrument's passband (for a detailed discussion see
-    *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
-
-    .. versionchanged:: 0.5.1
-        The default for `remove_sensitivity` and `simulate_sensitivity` has
-        been changed to ``True``. Old deprecated keyword arguments `paz`,
-        `inst_sim`, `no_inverse_filtering` have been removed.
-
     :type data: NumPy ndarray
     :param data: Seismogram, detrend before hand (e.g. zero mean)
     :type samp_rate: Float
@@ -350,8 +335,26 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 
+    This function works in the frequency domain, where nfft is the next power
+    of len(data) to avoid wrap around effects during convolution. The inverse
+    of the frequency response of the seismometer (``paz_remove``) is
+    convolved with the spectrum of the data and with the frequency response
+    of the seismometer to simulate (``paz_simulate``). A 5% cosine taper is
+    taken before simulation. The data must be detrended (e.g.) zero mean
+    beforehand. If paz_simulate=None only the instrument correction is done.
+    In the latter case, a broadband filter can be applied to the data trace
+    using pre_filt. This restricts the signal to the valid frequency band and
+    thereby avoids artefacts due to amplification of frequencies outside of the
+    instrument's passband (for a detailed discussion see
+    *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
+
     Pre-defined poles, zeros, gain dictionaries for instruments to simulate
     can be imported from obspy.signal.seismometer
+
+    .. versionchanged:: 0.5.1
+        The default for `remove_sensitivity` and `simulate_sensitivity` has
+        been changed to ``True``. Old deprecated keyword arguments `paz`,
+        `inst_sim`, `no_inverse_filtering` have been removed.
     """
     # Checking the types
     if not paz_remove and not paz_simulate and not seedresp:
@@ -433,11 +436,13 @@ def paz2AmpValueOfFreqResp(paz, freq):
     """
     Returns Amplitude at one frequency for the given poles and zeros
 
+    :param paz: Given poles and zeros
+    :param freq: Given frequency
+
     The amplitude of the freq is estimated according to "Of Poles and
     Zeros", Frank Scherbaum, p 43.
 
-    :param paz: Given poles and zeros
-    :param freq: Given frequency
+    .. rubric:: Example
 
     >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j], \
                'zeros': [0 + 0j, 0 + 0j], \
@@ -462,15 +467,18 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     Readings on two components can be used in magnitude estimation by providing
     lists for ``paz``, ``amplitude`` and ``timespan``.
 
-    Notes
-    -----
+    :param paz: PAZ of the instrument [m/s] or list of the same
+    :param amplitude: Peak to peak amplitude [counts] or list of the same
+    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
+    :param h_dist: Hypocentral distance [km]
+    :returns: Estimated local magnitude Ml
 
-    Magnitude estimation according to Bakun & Joyner, 1984, Eq. (3) page 1835.
-    Bakun, W. H. and W. B. Joyner: The Ml scale in central California,
-    Bull. Seismol. Soc. Am., 74, 1827-1843, 1984
+    .. note::
+        Magnitude estimation according to Bakun & Joyner, 1984, Eq. (3) page
+        1835. Bakun, W. H. and W. B. Joyner: The Ml scale in central
+        California, Bull. Seismol. Soc. Am., 74, 1827-1843, 1984
 
-    Basic Usage
-    -----------
+    .. rubric:: Example
 
     >>> paz = {'poles': [-4.444+4.444j, -4.444-4.444j, -1.083+0j], \
                'zeros': [0+0j, 0+0j, 0+0j], \
@@ -481,12 +489,6 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     >>> mag = estimateMagnitude([paz, paz], [3.34e6, 5e6], [0.065, 0.1], 0.255)
     >>> print(round(mag, 6))
     2.386788
-
-    :param paz: PAZ of the instrument [m/s] or list of the same
-    :param amplitude: Peak to peak amplitude [counts] or list of the same
-    :param timespan: Timespan of peak to peak amplitude [s] or list of the same
-    :param h_dist: Hypocentral distance [km]
-    :returns: Estimated local magnitude Ml
     """
     # convert input to lists
     if not isinstance(paz, list) and not isinstance(paz, tuple):

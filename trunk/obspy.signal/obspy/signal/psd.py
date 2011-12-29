@@ -225,8 +225,7 @@ class PPSD():
         http://ehp3-earthquake.wr.usgs.gov/
         regional/asl/pubs/files/ofr93-322.pdf
 
-    Basic Usage
-    -----------
+    .. rubric:: Basic Usage
 
     >>> from obspy.core import read
     >>> from obspy.signal import PPSD
