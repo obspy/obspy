@@ -10,9 +10,6 @@
 from copy import deepcopy, copy
 from datetime import datetime
 from math import ceil
-from matplotlib.cm import hsv # @UnresolvedImport
-from matplotlib.dates import date2num, num2date
-from matplotlib.ticker import FuncFormatter
 from obspy.core import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk
@@ -20,7 +17,6 @@ from obspy.core.util.decorator import deprecated
 import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
-import warnings
 """
 Waveform plotting for obspy.Stream objects.
 

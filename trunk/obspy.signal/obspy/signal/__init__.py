@@ -122,7 +122,7 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 The following example demonstrates a recursive STA/LTA triggering:
 
 >>> from obspy.core import read
->>> from obspy.signal import recSTALTA, plotTrigger
+>>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
 >>> tr.filter("bandpass", freqmin=1, freqmax=20)
@@ -137,7 +137,7 @@ The following example demonstrates a recursive STA/LTA triggering:
 .. plot::
 
     from obspy.core import read
-    from obspy.signal import recSTALTA, plotTrigger
+    from obspy.signal.trigger import recSTALTA, plotTrigger
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
