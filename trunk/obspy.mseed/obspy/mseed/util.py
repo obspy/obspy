@@ -18,7 +18,7 @@ def getStartAndEndTime(file_or_file_object):
 
     :type file_or_file_object: basestring or open file-like object.
     :param file_or_file_object: MiniSEED file name or open file-like object
-    containing a MiniSEED record.
+        containing a MiniSEED record.
     :return: tuple (start time of first record, end time of last record)
 
     This method will return the start time of the first record and the end time
@@ -38,12 +38,14 @@ def getStartAndEndTime(file_or_file_object):
 
     It also works with an open file pointer. The file pointer itself will not
     be changed.
+
     >>> f = open(filename, 'rb')
     >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
     And also with a MiniSEED file stored in a StringIO.
+
     >>> from StringIO import StringIO
     >>> file_object = StringIO(f.read())
     >>> f.seek(0, 0)
@@ -54,6 +56,7 @@ def getStartAndEndTime(file_or_file_object):
 
     If the file pointer does not point to the first record, the start time will
     refer to the record it points to.
+
     >>> f.seek(512, 1)
     >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
@@ -61,11 +64,11 @@ def getStartAndEndTime(file_or_file_object):
 
     If the file pointer does not point to the first record, the start time will
     refer to the record it points to.
+
     >>> file_object = StringIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
-
     >>> f.close()
     """
     # Get the starttime of the first record.
@@ -218,7 +221,7 @@ def getRecordInformation(file_or_file_object, offset=0):
         with open(file_or_file_object, 'rb') as f:
             info = _getRecordInformation(f, offset=offset)
     else:
-        info =  _getRecordInformation(file_or_file_object, offset=offset)
+        info = _getRecordInformation(file_or_file_object, offset=offset)
     return info
 
 

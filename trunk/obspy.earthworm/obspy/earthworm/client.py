@@ -66,8 +66,8 @@ class Client(object):
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
         :type cleanup: bool
         :param cleanup: Specifies whether perfectly aligned traces should be
-            merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
-            `method` -1 or :meth:`~obspy.core.stream.Stream._cleanup`.
+            merged or not. See :meth:`obspy.core.stream.Stream.merge` for
+            ``method=-1``.
 
         .. rubric:: Example
 

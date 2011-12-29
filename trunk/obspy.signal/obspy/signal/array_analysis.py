@@ -38,13 +38,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
       Spudich and Fletcher (Bull. Seismol. Soc. Am., 2008)  (SF08)
       Spudich and Fletcher (Bull. Seismol. Soc. Am., 2009). (SF09)
 
-
     This is a translation of the Matlab Code presented in (SF09) with
     small changes in details only. Output has been checked to be the same
     as the original Matlab Code.
 
     .. note::
-        ts_ below means "time series"
+        ts\_ below means "time series"
 
     :type vp: Float
     :param vp: P wave speed in the soil under the array (km/s)
@@ -78,13 +77,15 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     :param sigmau: standard deviation (NOT VARIANCE) of ground noise,
         corresponds to sigma-sub-u in S95 lines above eqn (A5).
         NOTE: This may be entered as a scalar, vector, or matrix!
-        - If sigmau is a scalar, it will be used for all components of all
+
+        * If sigmau is a scalar, it will be used for all components of all
           stations.
-        - If sigmau is a 1D array of length Na, sigmau[i] will be the noise
+        * If sigmau is a 1D array of length Na, sigmau[i] will be the noise
           assigned to all components of the station corresponding to
           array_coords[i,:]
-        - If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
+        * If sigmau is a 2D array of dimension  Na x 3, then sigmau[i,j] is
           used as the noise of station i, component j.
+
         In all cases, this routine assumes that the noise covariance between
         different stations and/or components is zero.
     :type subarray: numpy.ndarray
@@ -174,27 +175,26 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         |     vector p-tilde (from S95 eqn A5) as a function of time
         | **Cp:** 6x6 solution covariance matrix defined in SF08.
 
-    Warnings
-    --------
+    .. rubric:: Warnings
+
     This routine does not check to verify that your array is small
     enough to conform to the assumption that the array aperture is less
-    than 1/4 of the shortest seismic wavelength in the data.  See SF08
+    than 1/4 of the shortest seismic wavelength in the data. See SF08
     for a discussion of this assumption.
 
-    this code assumes that ts1[j,:], ts2[j,:], and ts3[j,:] are all sampled
+    This code assumes that ts1[j,:], ts2[j,:], and ts3[j,:] are all sampled
     SIMULTANEOUSLY.
 
     .. rubric:: Notes
 
-        Note On Specifying Input Array And Selecting Subarrays
+    (1) Note On Specifying Input Array And Selecting Subarrays
 
         This routine allows the user to input the coordinates and ground
         motion time series of all stations in a seismic array having Na
         stations and the user may select for analysis a subarray of Nplus1
         <= Na stations.
 
-
-        Discussion Of Physical Units Of Input And Output
+    (2) Discussion Of Physical Units Of Input And Output
 
         If the input seismograms are in units of displacement, the output
         strains and rotations will be in units of strain (unitless) and
@@ -207,12 +207,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         units of the seismograms.  For example, if the input seismograms
         are in units of m/s^2, array coordinates must be entered in m.
 
-
-        Note On Coordinate System
+    (3) Note On Coordinate System
 
         This routine assumes x1-x2-x3 is a RIGHT handed orthogonal
         coordinate system. x3 must point either UP or DOWN.
-
     """
     # start the code -------------------------------------------------
     # This assumes that all stations and components have the same number of
@@ -1000,7 +998,7 @@ def get_spoint(stream, stime, etime):
 
 def ndarray2ptr3D(ndarray):
     """
-    Construct *** pointer for ctypes from numpy.ndarray
+    Construct pointer for ctypes from numpy.ndarray
     """
     ptr = C.c_void_p
     dim1, dim2, _dim3 = ndarray.shape

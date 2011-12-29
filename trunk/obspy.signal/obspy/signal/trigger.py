@@ -38,7 +38,7 @@ def recStalta(a, nsta, nlta):
 
 def recSTALTA(a, nsta, nlta):
     """
-    Recursive STA/LTA (see Withers et al. 1998 p. 98)
+    Recursive STA/LTA.
 
     Fast version written in C.
 
@@ -51,6 +51,8 @@ def recSTALTA(a, nsta, nlta):
     :param nlta: Length of long time average window in samples
     :rtype: numpy.ndarray dtype float64
     :return: Characteristic function of recursive STA/LTA
+
+    .. seealso:: [Withers1998]_, p. 98
     """
     clibsignal.recstalta.argtypes = [
         np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
@@ -76,7 +78,7 @@ def recStaltaPy(a, nsta, nlta):
 
 def recSTALTAPy(a, nsta, nlta):
     """
-    Recursive STA/LTA (see Withers et al. 1998 p. 98)
+    Recursive STA/LTA.
 
     Bit slower version written in Python.
 
@@ -90,6 +92,8 @@ def recSTALTAPy(a, nsta, nlta):
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of recursive STA/LTA
+
+    .. seealso:: [Withers1998]_, p. 98
     """
     try:
         a = a.tolist()
@@ -125,7 +129,7 @@ def carlStaTrig(a, nsta, nlta, ratio, quiet):
 
 def carlSTATrig(a, nsta, nlta, ratio, quiet):
     """
-    Computes the carlStaTrig characteristic function
+    Computes the carlSTATrig characteristic function.
 
     eta = star - (ratio * ltar) - abs(sta - lta) - quiet
 
@@ -136,9 +140,9 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     :type nlta: Int
     :param nlta: Length of long time average window in samples
     :type ration: Float
-    :param ratio: as ratio gets smaller, carlStaTrig gets more sensitive
+    :param ratio: as ratio gets smaller, carlSTATrig gets more sensitive
     :type quiet: Float
-    :param quiet: as quiet gets smaller, carlStaTrig gets more sensitive
+    :param quiet: as quiet gets smaller, carlSTATrig gets more sensitive
     :rtype: NumPy ndarray
     :return: Characteristic function of CarlStaTrig
     """
@@ -239,7 +243,7 @@ def delayedStaLta(a, nsta, nlta):
 
 def delayedSTALTA(a, nsta, nlta):
     """
-    Delayed STA/LTA, (see Withers et al. 1998 p. 97)
+    Delayed STA/LTA.
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
@@ -249,6 +253,8 @@ def delayedSTALTA(a, nsta, nlta):
     :param nlta: Length of long time average window in samples
     :rtype: NumPy ndarray
     :return: Characteristic function of delayed STA/LTA
+
+    .. seealso:: [Withers1998]_, p. 97
     """
     m = len(a)
     #
@@ -274,9 +280,11 @@ def zdetect(a, nsta):
 
 def zDetect(a, nsta):
     """
-    Z-detector, (see Withers et al. 1998 p. 99)
+    Z-detector.
 
     :param nsta: Window length in Samples.
+
+    .. seealso:: [Withers1998]_, p. 99
     """
     m = len(a)
     #
@@ -370,10 +378,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
            p_dur):
     """
-    Wrapper for P-picker routine by M. Baer, Schweizer. Erdbebendienst
-
-    See paper by m. baer and u. kradolfer: an automatic phase picker for
-    local and teleseismic events bssa vol. 77,4 pp1437-1445
+    Wrapper for P-picker routine by M. Baer, Schweizer. Erdbebendienst.
 
     :param reltrc: timeseries as numpy.ndarray float32 data, possibly filtered
     :param samp_int: number of samples per second
@@ -388,7 +393,10 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
                   maximum amplitude is evaluated Originally set to 6 secs
     :return: (pptime, pfm) pptime sample number of parrival; pfm direction
              of first motion (U or D)
-    :note: currently the first sample is not take into account
+
+    .. note:: currently the first sample is not take into account
+
+    .. seealso:: [Baer1987]_
     """
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers

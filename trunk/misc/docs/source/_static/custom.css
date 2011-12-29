@@ -136,3 +136,9 @@ dd p {
 table.docutils td.field-body ul li ul li {
     list-style-type: square;
 }
+
+table.citation, table.citation td {
+  border: none !important;
+  background-color: transparent !important;
+  margin-bottom: 5px;
+}

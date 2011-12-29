@@ -244,29 +244,31 @@ class PPSD():
     >>> print ppsd.times
     []
 
-    Now we could add data to the probabilistic psd and plot it like..
+    Now we could add data to the probabilistic psd and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
     >>> print ppsd.times # doctest: +SKIP
     >>> ppsd.plot() # doctest: +SKIP
 
-    .. but the example stream is too short and does not contain enough data.
+    ... but the example stream is too short and does not contain enough data.
 
-    And/or we could save the ppsd data in a pickled file..
+    And/or we could save the ppsd data in a pickled file ...
 
     >>> ppsd.save("myfile.pkl") # doctest: +SKIP
 
-    .. that later can be loaded again using the `pickle` module in the Python
+    ... that later can be loaded again using the `pickle` module in the Python
     Standard Library, e.g. to add more data or plot it again.
 
     >>> import pickle
-    >>> ppsd = pickle.load("myfile.pkl") # doctest: +SKIP
+    >>> ppsd = pickle.load("myfile.pkl")  # doctest: +SKIP
 
     For a real world example see the `ObsPy Tutorial`_.
 
-    :note: It is safer (but a bit slower) to provide a
-           :class:`~obspy.xseed.parser.Parser` instance with information from
-           e.g. a Dataless SEED than to just provide a static PAZ dictionary.
+    .. note::
+
+        It is safer (but a bit slower) to provide a 
+        :class:`~obspy.xseed.parser.Parser` instance with information from
+        e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
     .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
     """

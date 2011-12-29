@@ -11,7 +11,7 @@ import platform
 
 HPTERROR = -2145916800000000L
 
-ENDIAN = {0 : '<', 1 : '>'}
+ENDIAN = {0: '<', 1: '>'}
 
 # Import shared libmseed depending on the platform.
 # create library names

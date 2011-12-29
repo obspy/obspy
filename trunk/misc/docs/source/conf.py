@@ -50,7 +50,7 @@ master_doc = 'contents'
 
 # General information about the project.
 project = u'ObsPy Documentation'
-copyright = u'2011, The ObsPy Development Team (devs@obspy.org)'
+copyright = u'2012, The ObsPy Development Team (devs@obspy.org)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the

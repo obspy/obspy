@@ -92,9 +92,9 @@ trigger routines defined in :mod:`obspy.signal.trigger`:
 
 Help for each function is available  HTML formatted or in the usual Python manner:
 
-    >>> from obspy.signal.trigger import classicStaLta
+    >>> from obspy.signal.trigger import classicSTALTA
     >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicStaLta in module obspy.signal.trigger ...
+    Help on function classicSTALTA in module obspy.signal.trigger ...
 
 The triggering itself mainly consists of the following two steps:
 
@@ -109,7 +109,6 @@ For all the examples, the commands to read in the data and to load the modules
 are the following:
 
     >>> from obspy.core import read
-    >>> from obspy.signal.trigger import *
     >>> from obspy.imaging.waveform import plot_trigger
     >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
@@ -117,6 +116,7 @@ are the following:
 Classic Sta Lta
 ===============
 
+    >>> from obspy.signal.trigger import classicSTALTA
     >>> cft = classicSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.5, 0.5)
 
@@ -125,6 +125,7 @@ Classic Sta Lta
 Z-Detect
 ========
 
+    >>> from obspy.signal.trigger import zDetect
     >>> cft = zDetect(trace.data, int(10 * df))
     >>> plot_trigger(trace, cft, -0.4, -0.3)
 
@@ -133,6 +134,7 @@ Z-Detect
 Recursive Sta Lta
 =================
 
+    >>> from obspy.signal.trigger import recSTALTA
     >>> cft = recSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 1.2, 0.5)
 
@@ -141,6 +143,7 @@ Recursive Sta Lta
 Carl-Sta-Trig
 =============
 
+    >>> from obspy.signal.trigger import carlSTATrig
     >>> cft = carlSTATrig(trace.data, int(5 * df), int(10 * df), 0.8, 0.8)
     >>> plot_trigger(trace, cft, 20.0, -20.0)
 
@@ -149,6 +152,7 @@ Carl-Sta-Trig
 Delayed Sta Lta
 ===============
 
+    >>> from obspy.signal.trigger import delayedSTALTA
     >>> cft = delayedSTALTA(trace.data, int(5 * df), int(10 * df))
     >>> plot_trigger(trace, cft, 5, 10)
 

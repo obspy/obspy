@@ -1006,14 +1006,16 @@ class Client(object):
         :returns: Returns Flinn-Engdahl region code or name or both, depending
             on the request type parameter ``rtype``.
 
-        .. rubric:: Example
+        .. rubric:: Examples
 
         >>> from obspy.iris import Client
         >>> client = Client()
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         683
+
         >>> client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
         'OREGON'
+
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
         (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
         """

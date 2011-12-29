@@ -644,7 +644,7 @@ def writeSU(stream, filename, byteorder=None):
     su_file.write(filename, endian=byteorder)
 
 
-def _segy_trace__str__(self, *args, **kwargs):
+def __segy_trace__str__(self, *args, **kwargs):
     """
     Monkey patch for the __str__ method of the Trace object. SEGY object do not
     have network, station, channel codes. It just prints the trace sequence
@@ -734,4 +734,4 @@ if __name__ == '__main__':
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
 setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', _segy_trace__str__)
+setattr(Trace, '__str__', __segy_trace__str__)
