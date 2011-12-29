@@ -157,26 +157,17 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
         'behaviour.'
         warnings.warn(msg, category=DeprecationWarning)
 
-    # XXX: Make work with StringIO, ...
-    # Read fileformat information if necessary.
+    # Parse some information about the file.
     if readMSInfo:
-        if type(mseed_object) is str:
-            info = util.getFileformatInformation(mseed_object)
-            # Better readability.
-            if 'reclen' in info:
-                info['record_length'] = info['reclen']
-                del info['reclen']
-            if 'encoding' in info:
-                info['encoding'] = ENCODINGS[info['encoding']][0]
-            if 'byteorder' in info:
-                if info['byteorder'] == 1:
-                    info['byteorder'] = '>'
-                else:
-                    info['byteorder'] = '<'
-        else:
-            msg = 'readMSInfo currently only enabled for real files.'
-            warnings.warn(msg)
-            readMSInfo = False
+        info = util.getRecordInformation(mseed_object)
+        info['encoding'] = ENCODINGS[info['encoding']][0]
+        # Only keep information relevant for the whole file.
+        info = {'encoding': info['encoding'],
+                'filesize': info['filesize'],
+                'encoding': info['encoding'],
+                'record_length': info['record_length'],
+                'byteorder': info['byteorder'],
+                'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
     if isinstance(mseed_object,  basestring):

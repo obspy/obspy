@@ -2,15 +2,391 @@
 """
 Mini-SEED specific utilities.
 """
+from __future__ import with_statement
 
-from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES
-from msstruct import _MSStruct
+from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
 import ctypes as C
 import numpy as np
-import os
+
+
+def getStartAndEndTime(file_or_file_object):
+    """
+    Returns the start- and endtime of a MiniSEED file or file-like object.
+
+    :type file_or_file_object: basestring or open file-like object.
+    :param file_or_file_object: MiniSEED file name or open file-like object
+    containing a MiniSEED record.
+    :return: tuple (start time of first record, end time of last record)
+
+    This method will return the start time of the first record and the end time
+    of the last record. Keep in mind that it will not return the correct result
+    if the records in the MiniSEED file do not have a chronological ordering.
+
+    The returned endtime is the time of the last data sample and not the
+    time that the last sample covers.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import getExampleFile
+    >>> filename = getExampleFile("BW.BGLD.__.EHE.D.2008.001.first_10_records")
+    >>> getStartAndEndTime(filename)  # doctest: +NORMALIZE_WHITESPACE
+        (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
+        UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
+
+    It also works with an open file pointer. The file pointer itself will not
+    be changed.
+    >>> f = open(filename, 'rb')
+    >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
+        (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
+        UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
+
+    And also with a MiniSEED file stored in a StringIO.
+    >>> from StringIO import StringIO
+    >>> file_object = StringIO(f.read())
+    >>> f.seek(0, 0)
+    >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
+        (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
+        UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
+    >>> file_object.close()
+
+    If the file pointer does not point to the first record, the start time will
+    refer to the record it points to.
+    >>> f.seek(512, 1)
+    >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
+        (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
+        UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
+
+    If the file pointer does not point to the first record, the start time will
+    refer to the record it points to.
+    >>> file_object = StringIO(f.read())
+    >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
+        (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
+        UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
+
+    >>> f.close()
+    """
+    # Get the starttime of the first record.
+    info = getRecordInformation(file_or_file_object)
+    starttime = info['starttime']
+    # Get the endtime of the last record.
+    info = getRecordInformation(file_or_file_object,
+               (info['number_of_records'] - 1) * info['record_length'])
+    endtime = info['endtime']
+    return starttime, endtime
+
+
+def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
+    """
+    Counts all data quality flags of the given Mini-SEED file and returns
+    statistics about the timing quality if applicable.
+
+    :type file_or_file_object: basestring or open file-like object.
+    :param file_or_file_object: MiniSEED file name or open file-like object
+        containing a MiniSEED record.
+
+    :return: Dictionary with information about the timing quality and the data
+        quality flags.
+
+    This method will count all set data quality flag bits in the fixed section
+    of the data header in a Mini-SEED file and returns the total count for each
+    flag type.
+    If the file has a Blockette 1001 statistics about the timing quality will
+    also be returned. See the doctests for more information.
+
+    .. rubric:: Data quality flags
+
+    ========  =================================================
+    Bit       Description
+    ========  =================================================
+    [Bit 0]   Amplifier saturation detected (station dependent)
+    [Bit 1]   Digitizer clipping detected
+    [Bit 2]   Spikes detected
+    [Bit 3]   Glitches detected
+    [Bit 4]   Missing/padded data present
+    [Bit 5]   Telemetry synchronization error
+    [Bit 6]   A digital filter may be charging
+    [Bit 7]   Time tag is questionable
+    ========  =================================================
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import getExampleFile
+    >>> filename = getExampleFile("qualityflags.mseed")
+    >>> getTimingQualityAndDataQualityFlagsCount(filename)
+    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+
+    Also works with file pointers and StringIOs.
+    >>> f = open(filename, 'rb')
+    >>> getTimingQualityAndDataQualityFlagsCount(f)
+    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+
+    >>> from StringIO import StringIO
+    >>> file_object = StringIO(f.read())
+    >>> f.close()
+    >>> getTimingQualityAndDataQualityFlagsCount(file_object)
+    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+
+    If the file pointer or StringIO position does not correspond to the first
+    record the omitted records will be skipped.
+    >>> file_object.seek(1024, 1)
+    >>> getTimingQualityAndDataQualityFlagsCount(file_object)
+    {'data_quality_flags': [8, 8, 7, 6, 5, 4, 3, 2]}
+    >>> file_object.close()
+
+
+    Reading a file with Blockette 1001 will return timing quality statistics.
+    The data quality flags will always exists because they are part of the
+    fixed MiniSEED header and therefore need to be in every MiniSEED file.
+    >>> filename = getExampleFile("timingquality.mseed")
+    >>> getTimingQualityAndDataQualityFlagsCount(filename) \
+        # doctest: +NORMALIZE_WHITESPACE
+    {'timing_quality_upper_quantile': 75.0,
+    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
+    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
+    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+
+    Also works with file pointers and StringIOs.
+    >>> f = open(filename, 'rb')
+    >>> getTimingQualityAndDataQualityFlagsCount(f) \
+        # doctest: +NORMALIZE_WHITESPACE
+    {'timing_quality_upper_quantile': 75.0,
+    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
+    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
+    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+
+    >>> file_object = StringIO(f.read())
+    >>> f.close()
+    >>> getTimingQualityAndDataQualityFlagsCount(file_object) \
+        # doctest: +NORMALIZE_WHITESPACE
+    {'timing_quality_upper_quantile': 75.0,
+    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
+    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
+    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> file_object.close()
+    """
+    # Read the first record to get a starting point and.
+    info = getRecordInformation(file_or_file_object)
+    # Keep track of the extracted information.
+    quality_count = [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality = []
+    offset = 0
+
+    # Loop over each record. A valid record needs to have a record length of at
+    # least 256 bytes.
+    while offset <= (info['filesize'] - 256):
+        this_info = getRecordInformation(file_or_file_object, offset)
+        # Add the timing quality.
+        if 'timing_quality' in this_info:
+            timing_quality.append(float(this_info['timing_quality']))
+        # Add the value of each bit to the quality_count.
+        for _i in xrange(8):
+            if (this_info['data_quality_flags'] & (1 << _i)) != 0:
+                quality_count[_i] += 1
+        offset += this_info['record_length']
+
+    # Collect the results in a dictionary.
+    result = {'data_quality_flags': quality_count}
+
+    # Parse of the timing quality list.
+    count = len(timing_quality)
+    timing_quality = sorted(timing_quality)
+    # If no timing_quality was collected just return an empty dictionary.
+    if count == 0:
+        return result
+    # Otherwise calculate some statistical values from the timing quality.
+    result['timing_quality_min'] = min(timing_quality)
+    result['timing_quality_max'] = max(timing_quality)
+    result['timing_quality_average'] = sum(timing_quality) / count
+    result['timing_quality_median'] = scoreatpercentile(timing_quality, 50,
+                                                        issorted=False)
+    result['timing_quality_lower_quantile'] = scoreatpercentile(timing_quality,
+                                                  25, issorted=False)
+    result['timing_quality_upper_quantile'] = scoreatpercentile(timing_quality,
+                                                  75, issorted=False)
+    return result
+
+
+def getRecordInformation(file_or_file_object, offset=0):
+    """
+    Wrapper around _getRecordInformation to be able to read files and file-like
+    objects.
+    """
+    if isinstance(file_or_file_object, basestring):
+        with open(file_or_file_object, 'rb') as f:
+            info = _getRecordInformation(f, offset=offset)
+    else:
+        info =  _getRecordInformation(file_or_file_object, offset=offset)
+    return info
+
+
+def _getRecordInformation(file_object, offset=0):
+    """
+    Takes the MiniSEED record stored in file_object at the current position and
+    returns some information about it.
+
+    If offset is given, the MiniSEED record is assumed to start at current
+    position + offset in file_object.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import getExampleFile
+    >>> filename = getExampleFile("test.mseed")
+    >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
+    {'record_length': 4096, 'data_quality_flags': 0, 'samp_rate': 40.0,
+    'byteorder': '>', 'encoding': 11, 'activity_flags': 0, 'excess_bytes': 0,
+    'filesize': 8192, 'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400),
+    'npts': 5980, 'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
+    'number_of_records': 2L, 'io_and_clock_flags': 0}
+    """
+    initial_position = file_object.tell()
+    record_start = initial_position
+
+    info = {}
+
+    # Apply the offset.
+    file_object.seek(offset, 1)
+    record_start += offset
+
+    # Get the size of the buffer.
+    file_object.seek(0, 2)
+    info['filesize'] = file_object.tell() - record_start
+    file_object.seek(record_start, 0)
+
+    # Figure out the byteorder.
+    file_object.seek(record_start + 20, 0)
+    # Get the year.
+    year = unpack('>H', file_object.read(2))[0]
+    if year >= 1900 and year <= 2050:
+        endian = '>'
+    else:
+        endian = '<'
+
+    # Seek back and read more information.
+    file_object.seek(record_start + 20, 0)
+    # Capital letters indicate unsigned quantities.
+    values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, file_object.read(28))
+    starttime = UTCDateTime(\
+            year=values[0], julday=values[1], hour=values[2], minute=values[3],
+            second=values[4], microsecond=values[5] * 100)
+    npts = values[6]
+    info['npts'] = npts
+    samp_rate_factor = values[7]
+    samp_rate_mult = values[8]
+    info['activity_flags'] = values[9]
+    # Bit 1 of the activity flags.
+    time_correction_applied = bool(info['activity_flags'] & 2)
+    info['io_and_clock_flags'] = values[10]
+    info['data_quality_flags'] = values[11]
+    time_correction = values[12]
+    blkt_offset = values[13]
+
+    # Correct the starttime if applicable.
+    if (time_correction_applied is False) and time_correction:
+        # Time correction is in units of 0.0001 seconds.
+        starttime += time_correction * 0.0001
+
+    # Calculate the sample rate according to the SEED manual.
+    if (samp_rate_factor > 0) and (samp_rate_mult) > 0:
+        samp_rate = float(samp_rate_factor * samp_rate_mult)
+    elif (samp_rate_factor > 0) and (samp_rate_mult) < 0:
+        samp_rate = -1.0 * float(samp_rate_factor) / float(samp_rate_mult)
+    elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
+        samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
+    elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
+        samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
+
+    info['samp_rate'] = samp_rate
+
+    # Traverse the blockettes and parse Blockettes 500, 1000 and/or 1001 if
+    # any of those is found.
+    while blkt_offset:
+        file_object.seek(record_start + blkt_offset, 0)
+        blkt_type, blkt_offset = unpack('%sHH' % endian, file_object.read(4))
+        # Parse in order of likeliness.
+        if blkt_type == 1000:
+            encoding, word_order, record_length = unpack('%sBBB' % endian,
+                                                  file_object.read(3))
+            if ENDIAN[word_order] != endian:
+                msg = 'Inconsistent word order.'
+                raise Exception(msg)
+            info['encoding'] = encoding
+            info['record_length'] = 2 ** record_length
+        elif blkt_type == 1001:
+            info['timing_quality'], mu_sec = unpack('%sBb' % endian,
+                                                    file_object.read(2))
+            starttime += float(mu_sec) / 1E6
+        elif blkt_type == 500:
+            file_object.seek(14, 1)
+            mu_sec = unpack('%sb' % endian, file_object.read(1))[0]
+            starttime += float(mu_sec) / 1E6
+
+    info['starttime'] = starttime
+    # Endtime is the time of the last sample.
+    info['endtime'] = starttime + (npts - 1) / samp_rate
+    info['byteorder'] = endian
+
+    info['number_of_records'] = long(info['filesize'] // \
+                                     info['record_length'])
+    info['excess_bytes'] = info['filesize'] % info['record_length']
+
+    # Reset file pointer.
+    file_object.seek(initial_position, 0)
+    return info
+
+
+def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
+    """
+    Takes a Ctypes array and its length and type and returns it as a
+    NumPy array.
+
+    This works by reference and no data is copied.
+
+    :param buffer: Ctypes c_void_p pointer to buffer.
+    :param buffer_elements: length of the whole buffer
+    :param sampletype: type of sample, on of "a", "i", "f", "d"
+    """
+    # Allocate NumPy array to move memory to
+    numpy_array = np.empty(buffer_elements, dtype=sampletype)
+    datptr = numpy_array.ctypes.get_data()
+    # Manually copy the contents of the C allocated memory area to
+    # the address of the previously created NumPy array
+    C.memmove(datptr, buffer, buffer_elements * SAMPLESIZES[sampletype])
+    return numpy_array
+
+
+def _convertMSRToDict(m):
+    """
+    Internal method used for setting header attributes.
+    """
+    h = {}
+    attributes = ('network', 'station', 'location', 'channel',
+                  'dataquality', 'starttime', 'samprate',
+                  'samplecnt', 'numsamples', 'sampletype')
+    # loop over attributes
+    for _i in attributes:
+        h[_i] = getattr(m, _i)
+    return h
+
+
+def _convertDatetimeToMSTime(dt):
+    """
+    Takes a obspy.util.UTCDateTime object and returns an epoch time in ms.
+
+    :param dt: obspy.util.UTCDateTime object.
+    """
+    return int(dt.timestamp * HPTMODULUS)
+
+
+def _convertMSTimeToDatetime(timestring):
+    """
+    Takes a Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
+
+    :param timestamp: Mini-SEED timestring (Epoch time string in ms).
+    """
+    return UTCDateTime(timestring / HPTMODULUS)
 
 
 def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
@@ -61,315 +437,6 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples
-
-
-def _readQuality(file, filepos, chain, tq, dq):
-    """
-    Reads all quality informations from a file and writes it to tq and dq.
-    """
-    # Seek to correct position.
-    file.seek(filepos, 0)
-    # Skip non data records.
-    data = file.read(39)
-    if data[6] == 'D':
-        # Read data quality byte.
-        data_quality_flags = data[38]
-        # Unpack the binary data.
-        data_quality_flags = unpack('B', data_quality_flags)[0]
-        # Add the value of each bit to the quality_count.
-        for _j in xrange(8):
-            if (data_quality_flags & (1 << _j)) != 0:
-                dq[_j] += 1
-    try:
-        # Get timing quality in blockette 1001.
-        tq.append(float(chain.Blkt1001.contents.timing_qual))
-    except:
-        pass
-
-
-def _ctypesArray2NumpyArray(buffer, buffer_elements, sampletype):
-    """
-    Takes a Ctypes array and its length and type and returns it as a
-    NumPy array.
-
-    This works by reference and no data is copied.
-
-    :param buffer: Ctypes c_void_p pointer to buffer.
-    :param buffer_elements: length of the whole buffer
-    :param sampletype: type of sample, on of "a", "i", "f", "d"
-    """
-    # Allocate NumPy array to move memory to
-    numpy_array = np.empty(buffer_elements, dtype=sampletype)
-    datptr = numpy_array.ctypes.get_data()
-    # Manually copy the contents of the C allocated memory area to
-    # the address of the previously created NumPy array
-    C.memmove(datptr, buffer, buffer_elements * SAMPLESIZES[sampletype])
-    return numpy_array
-
-
-def _convertDatetimeToMSTime(dt):
-    """
-    Takes obspy.util.UTCDateTime object and returns an epoch time in ms.
-
-    :param dt: obspy.util.UTCDateTime object.
-    """
-    return int(dt.timestamp * HPTMODULUS)
-
-
-def _convertMSTimeToDatetime(timestring):
-    """
-    Takes Mini-SEED timestamp and returns a obspy.util.UTCDateTime object.
-
-    :param timestamp: Mini-SEED timestring (Epoch time string in ms).
-    """
-    return UTCDateTime(timestring / HPTMODULUS)
-
-
-def getFileformatInformation(filename):
-    """
-    Reads the first record and returns information about the Mini-SEED file.
-
-    :type filename: str
-    :param filename: MiniSEED file name.
-    :return: Dictionary containing record length (``reclen``), ``encoding`` and
-        ``byteorder`` of the first record of given Mini-SEED file.
-
-    .. rubric:: Example
-
-    >>> from obspy.core.util import getExampleFile  # needed to get the \
-absolute path of test file
-    >>> filename = getExampleFile("test.mseed")
-    >>> getFileformatInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'reclen': 4096, 'encoding': 11, 'byteorder': 1}
-    """
-    # Create _MSStruct instance to read the file.
-    ms = _MSStruct(filename)
-    chain = ms.msr.contents
-    # Read all interesting attributes.
-    attribs = ['byteorder', 'encoding', 'reclen']
-    info = {}
-    for attr in attribs:
-        info[attr] = getattr(chain, attr)
-    # Will delete C pointers and structures.
-    del ms
-    return info
-
-
-def _getMSFileInfo(f, real_name):
-    """
-    Takes a Mini-SEED filename as an argument and returns a dictionary
-    with some basic information about the file. Also suiteable for Full
-    SEED.
-
-    :param f: File pointer of opened file in binary format
-    :param real_name: Realname of the file, needed for calculating size
-    """
-    # get size of file
-    info = {'filesize': os.path.getsize(real_name)}
-    pos = f.tell()
-    f.seek(0)
-    rec_buffer = f.read(512)
-    info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
-    # Calculate Number of Records
-    info['number_of_records'] = long(info['filesize'] // \
-                                     info['record_length'])
-    info['excess_bytes'] = info['filesize'] % info['record_length']
-    f.seek(pos)
-    return info
-
-
-def getStartAndEndTime(filename):
-    """
-    Returns the start- and endtime of a MiniSEED file.
-
-    :type filename: str
-    :param filename: MiniSEED file name.
-    :return: tuple (start time of first record, end time of last record)
-
-    This method returns the start- and endtime of a MiniSEED file as a tuple
-    containing two datetime objects. It only reads the first and the last
-    record. Thus it will only work correctly for files containing only one
-    trace with all records in the correct order.
-
-    The returned endtime is the time of the last datasample and not the
-    time that the last sample covers.
-
-    .. rubric:: Example
-
-    >>> from obspy.core.util import getExampleFile  # needed to get the \
-absolute path of test file
-    >>> filename = getExampleFile("BW.BGLD.__.EHE.D.2008.001.first_10_records")
-    >>> getStartAndEndTime(filename)  # doctest: +NORMALIZE_WHITESPACE
-    (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000), \
-UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
-    """
-    # Get the starttime
-    ms = _MSStruct(filename)
-    starttime = ms.getStart()
-    # Get the endtime
-    ms.offset = ms.filePosFromRecNum(record_number=-1)
-    endtime = ms.getEnd()
-    del ms  # for valgrind
-    return starttime, endtime
-
-
-def getTimingQuality(filename, first_record=True, rl_autodetection=-1):
-    """
-    Reads timing quality and returns statistics about it.
-
-    :type filename: str
-    :param filename: MiniSEED file name.
-    :param first_record: Determines whether all records are assumed to
-        either have a timing quality in Blockette 1001 or not depending on
-        whether the first records has one. If True and the first records
-        does not have a timing quality it will not parse the whole file. If
-        False is will parse the whole file anyway and search for a timing
-        quality in each record. Defaults to True.
-    :param rl_autodetection: Determines the auto-detection of the record
-        lengths in the file. If 0 only the length of the first record is
-        detected automatically. All subsequent records are then assumed
-        to have the same record length. If -1 the length of each record
-        is automatically detected. Defaults to -1.
-    :return: Dictionary of quality statistics.
-
-    This method will read the timing quality in Blockette 1001 for each
-    record in the file if available and return the following statistics:
-    Minima, maxima, average, median and upper and lower quantile.
-
-    It is probably pretty safe to set the first_record parameter to True
-    because the timing quality is a vendor specific value and thus it will
-    probably be set for each record or for none.
-
-    The method to calculate the quantiles uses a integer round outwards
-    policy: lower quantiles are rounded down (probability < 0.5), and upper
-    quantiles (probability > 0.5) are rounded up.
-    This gives no more than the requested probability in the tails, and at
-    least the requested probability in the central area.
-    The median is calculating by either taking the middle value or, with an
-    even numbers of values, the average between the two middle values.
-
-    .. rubric:: Example
-
-    >>> from obspy.core.util import getExampleFile  # needed to get the \
-absolute path of test file
-    >>> filename = getExampleFile("timingquality.mseed")
-    >>> getTimingQuality(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'min': 0.0, 'max': 100.0, 'average': 50.0, 'median': 50.0, \
-'upper_quantile': 75.0, 'lower_quantile': 25.0}
-    """
-    # Get some information about the file.
-    fp = open(filename, 'rb')
-    fileinfo = _getMSFileInfo(fp, filename)
-    fp.close()
-    ms = _MSStruct(filename, init_msrmsf=False)
-    # Create Timing Quality list.
-    data = []
-    # Loop over each record
-    for _i in xrange(fileinfo['number_of_records']):
-        # Loop over every record.
-        ms.read(rl_autodetection, 0, 0, 0)
-        # Enclose in try-except block because not all records need to
-        # have Blockette 1001.
-        try:
-            # Append timing quality to list.
-            tq = ms.msr.contents.Blkt1001.contents.timing_qual
-            data.append(float(tq))
-        except:
-            if first_record:
-                break
-    # Deallocate for debugging with valgrind
-    del ms
-    # Length of the list.
-    n = len(data)
-    data = sorted(data)
-    # Create new dictionary.
-    result = {}
-    # If no data was collected just return an empty list.
-    if n == 0:
-        return result
-    # Calculate some statistical values.
-    result['min'] = min(data)
-    result['max'] = max(data)
-    result['average'] = sum(data) / n
-    data = sorted(data)
-    result['median'] = scoreatpercentile(data, 50, issorted=False)
-    result['lower_quantile'] = scoreatpercentile(data, 25, issorted=False)
-    result['upper_quantile'] = scoreatpercentile(data, 75, issorted=False)
-    return result
-
-
-def getDataQualityFlagsCount(filename):
-    """
-    Counts all data quality flags of the given Mini-SEED file.
-
-    :type filename: str
-    :param filename: MiniSEED file name.
-    :return: List of all flag counts.
-
-    This method will count all set data quality flag bits in the fixed section
-    of the data header in a Mini-SEED file and returns the total count for each
-    flag type. This will only work correctly if each record in the file has the
-    same record length.
-
-    .. rubric:: Data quality flags
-
-    ========  =================================================
-    Bit       Description
-    ========  =================================================
-    [Bit 0]   Amplifier saturation detected (station dependent)
-    [Bit 1]   Digitizer clipping detected
-    [Bit 2]   Spikes detected
-    [Bit 3]   Glitches detected
-    [Bit 4]   Missing/padded data present
-    [Bit 5]   Telemetry synchronization error
-    [Bit 6]   A digital filter may be charging
-    [Bit 7]   Time tag is questionable
-    ========  =================================================
-
-    .. rubric:: Example
-
-    >>> from obspy.core.util import getExampleFile  # needed to get the \
-absolute path of test file
-    >>> filename = getExampleFile("qualityflags.mseed")
-    >>> getDataQualityFlagsCount(filename)
-    [9, 8, 7, 6, 5, 4, 3, 2]
-    """
-    # Open the file.
-    mseedfile = open(filename, 'rb')
-    # Get record length of the file.
-    info = _getMSFileInfo(mseedfile, filename)
-    # This will increase by one for each set quality bit.
-    quality_count = [0, 0, 0, 0, 0, 0, 0, 0]
-    record_length = info['record_length']
-    # Loop over all records.
-    for _i in xrange(info['number_of_records']):
-        # Skip non data records.
-        data = mseedfile.read(39)
-        if data[6] != 'D':
-            continue
-        # Read data quality byte.
-        data_quality_flags = data[38]
-        # Jump to next byte.
-        mseedfile.seek(record_length - 39, 1)
-        # Unpack the binary data.
-        data_quality_flags = unpack('B', data_quality_flags)[0]
-        # Add the value of each bit to the quality_count.
-        for _j in xrange(8):
-            if (data_quality_flags & (1 << _j)) != 0:
-                quality_count[_j] += 1
-    mseedfile.close()
-    return quality_count
-
-
-def _convertMSRToDict(m):
-    h = {}
-    attributes = ('network', 'station', 'location', 'channel',
-                  'dataquality', 'starttime', 'samprate',
-                  'samplecnt', 'numsamples', 'sampletype')
-    # loop over attributes
-    for _i in attributes:
-        h[_i] = getattr(m, _i)
-    return h
 
 
 if __name__ == '__main__':
