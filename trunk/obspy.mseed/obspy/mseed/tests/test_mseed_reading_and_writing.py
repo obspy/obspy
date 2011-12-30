@@ -136,9 +136,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                                   new_stream[0].data)
                     os.remove(temp_file)
 
-    def test_readingFileformatInformation(self):
+    def test_getRecordInformation(self):
         """
-        Tests the reading of Mini-SEED file format information.
+        Tests the reading of Mini-SEED record information.
         """
         # Build encoding strings.
         encoding_strings = {}
@@ -160,7 +160,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                  'int32_Steim2_bigEndian.mseed',
                  'int32_Steim2_littleEndian.mseed']
         for file in files:
-            info = util.getFileformatInformation(os.path.join(path, file))
+            info = util.getRecordInformation(os.path.join(path, file))
             if not 'ASCII' in file:
                 encoding = file.split('_')[1].upper()
                 byteorder = file.split('_')[2].split('.')[0]
@@ -168,21 +168,21 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 encoding = 'ASCII'
                 byteorder = file.split('_')[1].split('.')[0]
             if 'big' in byteorder:
-                byteorder = 1
+                byteorder = '>'
             else:
-                byteorder = 0
+                byteorder = '<'
             self.assertEqual(encoding_strings[encoding], info['encoding'])
             self.assertEqual(byteorder, info['byteorder'])
             # Also test the record length although it is equal for all files.
-            self.assertEqual(256, info['reclen'])
+            self.assertEqual(256, info['record_length'])
         # No really good test files for the record length so just two files
         # with known record lengths are tested.
-        info = util.getFileformatInformation(os.path.join(self.path, 'data',
-                                             'timingquality.mseed'))
-        self.assertEqual(info['reclen'], 512)
-        info = util.getFileformatInformation(os.path.join(self.path, 'data',
-                                             'steim2.mseed'))
-        self.assertEqual(info['reclen'], 4096)
+        info = util.getRecordInformation(os.path.join(self.path, 'data',
+                                        'timingquality.mseed'))
+        self.assertEqual(info['record_length'], 512)
+        info = util.getRecordInformation(os.path.join(self.path, 'data',
+                                         'steim2.mseed'))
+        self.assertEqual(info['record_length'], 4096)
 
     def test_readAndWriteFileWithGaps(self):
         """
@@ -421,10 +421,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Write it.
             tempfile = NamedTemporaryFile().name
             st.write(tempfile, format="MSEED", reclen=rec_len)
-            # Open the file.
-            file = open(tempfile, 'rb')
-            info = util._getMSFileInfo(file, tempfile)
-            file.close()
+            # Get additional header info 
+            info = util.getRecordInformation(tempfile)
             # Test reading the two files.
             temp_st = read(tempfile)
             np.testing.assert_array_equal(data, temp_st[0].data)
@@ -466,8 +464,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         stats = {'network': 'BW', 'station': 'TEST', 'location': 'A',
                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed': {'dataquality': 'D', 'record_length': 512,
-                           'encoding': 'STEIM2', 'byteorder': '>'}}
+                 'mseed': {'record_length': 512, 'encoding': 'STEIM2',
+                           'filesize': 512, 'dataquality': 'D',
+                           'number_of_records': 1, 'byteorder': '>'}}
         stats['starttime'] = UTCDateTime(2000, 1, 1)
         st = Stream([Trace(data=data, header=stats)])
         # Write it.
@@ -523,7 +522,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     stream.write(tempfile, format="MSEED")
                     # Open the file.
                     stream2 = read(tempfile)
-                    # Assert the stats.
+                    # remove file specific stats
+                    stream2[0].stats.mseed.pop('filesize')
+                    stream2[0].stats.mseed.pop('number_of_records')
+                    # compare stats
                     self.assertEqual(stream[0].stats.mseed,
                                      stream2[0].stats.mseed)
                     del stream

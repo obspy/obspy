@@ -81,7 +81,7 @@ def getStartAndEndTime(file_or_file_object):
     return starttime, endtime
 
 
-def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
+def getTimingAndDataQuality(file_or_file_object):
     """
     Counts all data quality flags of the given Mini-SEED file and returns
     statistics about the timing quality if applicable.
@@ -93,13 +93,11 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
     :return: Dictionary with information about the timing quality and the data
         quality flags.
 
+    .. rubric:: Data quality
+
     This method will count all set data quality flag bits in the fixed section
     of the data header in a Mini-SEED file and returns the total count for each
     flag type.
-    If the file has a Blockette 1001 statistics about the timing quality will
-    also be returned. See the doctests for more information.
-
-    .. rubric:: Data quality flags
 
     ========  =================================================
     Bit       Description
@@ -114,28 +112,44 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
     [Bit 7]   Time tag is questionable
     ========  =================================================
 
+    .. rubric:: Timing quality
+
+    If the file has a Blockette 1001 statistics about the timing quality will
+    also be returned. See the doctests for more information.
+
+    This method will read the timing quality in Blockette 1001 for each
+    record in the file if available and return the following statistics:
+    Minima, maxima, average, median and upper and lower quantile.
+    Quantiles are calculated using a integer round outwards policy: lower
+    quantiles are rounded down (probability < 0.5), and upper quantiles
+    (probability > 0.5) are rounded up.
+    This gives no more than the requested probability in the tails, and at
+    least the requested probability in the central area.
+    The median is calculating by either taking the middle value or, with an
+    even numbers of values, the average between the two middle values.
+
     .. rubric:: Example
 
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("qualityflags.mseed")
-    >>> getTimingQualityAndDataQualityFlagsCount(filename)
+    >>> getTimingAndDataQuality(filename)
     {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
 
     Also works with file pointers and StringIOs.
     >>> f = open(filename, 'rb')
-    >>> getTimingQualityAndDataQualityFlagsCount(f)
+    >>> getTimingAndDataQuality(f)
     {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
 
     >>> from StringIO import StringIO
     >>> file_object = StringIO(f.read())
     >>> f.close()
-    >>> getTimingQualityAndDataQualityFlagsCount(file_object)
+    >>> getTimingAndDataQuality(file_object)
     {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
 
     If the file pointer or StringIO position does not correspond to the first
     record the omitted records will be skipped.
     >>> file_object.seek(1024, 1)
-    >>> getTimingQualityAndDataQualityFlagsCount(file_object)
+    >>> getTimingAndDataQuality(file_object)
     {'data_quality_flags': [8, 8, 7, 6, 5, 4, 3, 2]}
     >>> file_object.close()
 
@@ -144,7 +158,7 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
     The data quality flags will always exists because they are part of the
     fixed MiniSEED header and therefore need to be in every MiniSEED file.
     >>> filename = getExampleFile("timingquality.mseed")
-    >>> getTimingQualityAndDataQualityFlagsCount(filename) \
+    >>> getTimingAndDataQuality(filename) \
         # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
@@ -153,7 +167,7 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
 
     Also works with file pointers and StringIOs.
     >>> f = open(filename, 'rb')
-    >>> getTimingQualityAndDataQualityFlagsCount(f) \
+    >>> getTimingAndDataQuality(f) \
         # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
@@ -162,7 +176,7 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
 
     >>> file_object = StringIO(f.read())
     >>> f.close()
-    >>> getTimingQualityAndDataQualityFlagsCount(file_object) \
+    >>> getTimingAndDataQuality(file_object) \
         # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
@@ -203,12 +217,12 @@ def getTimingQualityAndDataQualityFlagsCount(file_or_file_object):
     result['timing_quality_min'] = min(timing_quality)
     result['timing_quality_max'] = max(timing_quality)
     result['timing_quality_average'] = sum(timing_quality) / count
-    result['timing_quality_median'] = scoreatpercentile(timing_quality, 50,
-                                                        issorted=False)
-    result['timing_quality_lower_quantile'] = scoreatpercentile(timing_quality,
-                                                  25, issorted=False)
-    result['timing_quality_upper_quantile'] = scoreatpercentile(timing_quality,
-                                                  75, issorted=False)
+    result['timing_quality_median'] = \
+        scoreatpercentile(timing_quality, 50, issorted=False)
+    result['timing_quality_lower_quantile'] = \
+        scoreatpercentile(timing_quality, 25, issorted=False)
+    result['timing_quality_upper_quantile'] = \
+        scoreatpercentile(timing_quality, 75, issorted=False)
     return result
 
 

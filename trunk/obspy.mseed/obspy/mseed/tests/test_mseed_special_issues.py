@@ -2,6 +2,7 @@
 from __future__ import with_statement
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.attribdict import AttribDict
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed, PyFile_FromFile
@@ -291,10 +292,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data',
                             'reclen_1024_without_sequence_numbers.mseed')
         tr = read(file)[0]
-        ms = "AttribDict({'dataquality': 'D', 'record_length': 1024, " + \
-             "'byteorder': '>', 'encoding': 'STEIM1'})"
+        ms = AttribDict({'record_length': 1024, 'encoding': 'STEIM1',
+                         'filesize': 2048, 'dataquality': 'D',
+                         'number_of_records': 2, 'byteorder': '>'})
         self.assertEqual('XX.STF1..HHN', tr.id)
-        self.assertEqual(ms, repr(tr.stats.mseed))
+        self.assertEqual(ms, tr.stats.mseed)
         self.assertEqual(932, tr.stats.npts)
         self.assertEqual(UTCDateTime(2007, 5, 31, 22, 45, 46, 720000),
                          tr.stats.endtime)
