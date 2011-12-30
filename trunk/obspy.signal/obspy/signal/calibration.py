@@ -23,8 +23,6 @@ from obspy.signal import konnoOhmachiSmoothing, pazToFreqResp
 from obspy.signal.util import nextpow2
 import numpy as np
 
-libgse2 = False
-
 
 def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
                 save_data=True):
@@ -147,15 +145,14 @@ def _calcresp(calfile, nfft, sampfreq):
     :returns: complex transfer function, array of frequencies
     """
     # avoid top level dependency on gse2
-    global libgse2
-    if not libgse2:
-        try:
-            import obspy.gse2.libgse2 as libgse2
-        except ImportError:
-            msg = "obspy.gse2 is needed for this fct and not installed"
-            raise ImportError(msg)
+    try:
+        from obspy.gse2.paz import readPaz
+    except ImportError:
+        msg = "Error during import from obspy.gse2. Please make " + \
+              "sure obspy.gse2 is installed properly."
+        raise ImportError(msg)
     # calculate transfer function
-    poles, zeros, scale_fac = libgse2.readPaz(calfile)
+    poles, zeros, scale_fac = readPaz(calfile)
     h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
                          nfft, freq=True, pitsa=False)
     return h, f

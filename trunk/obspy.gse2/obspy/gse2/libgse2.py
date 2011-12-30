@@ -30,8 +30,7 @@ import ctypes as C
 import doctest
 import numpy as np
 from obspy.core import UTCDateTime
-from obspy.core.util import c_file_p, formatScientific, deprecated
-from obspy.gse2 import paz
+from obspy.core.util import c_file_p, formatScientific
 
 
 # Import shared libgse2
@@ -429,30 +428,6 @@ def getStartAndEndTime(f):
                            head.n_samps / float(head.samp_rate))
     del fp, head
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
-
-
-@deprecated
-def attach_faked_paz(*args, **kwargs):
-    """
-    DEPRECATED name. Use :func:`~obspy.gse2.paz.attach_paz` instead.
-    """
-    return paz.attach_paz(*args, **kwargs)
-
-
-@deprecated
-def readPaz(*args, **kwargs):
-    """
-    DEPRECATED. Function moved to :func:`~obspy.gse2.paz.readPaz`.
-    """
-    return paz.readPaz(*args, **kwargs)
-
-
-@deprecated
-def attach_paz(*args, **kwargs):
-    """
-    DEPRECATED. Function moved to :func:`~obspy.gse2.paz.attach_paz`.
-    """
-    return paz.attach_paz(*args, **kwargs)
 
 
 if __name__ == '__main__':

@@ -21,8 +21,8 @@ class CalibrationTestCase(unittest.TestCase):
 
     def test_relcal_sts2_vs_unknown(self):
         """
-        Test relative calibration of unknow instrument vs STS2 in the same time
-        range. Window length is set to 20 s, smoothing rate to 10.
+        Test relative calibration of unknown instrument vs STS2 in the same
+        time range. Window length is set to 20 s, smoothing rate to 10.
         """
         st1 = read(os.path.join(self.path, 'ref_STS2'))
         st2 = read(os.path.join(self.path, 'ref_unknown'))
