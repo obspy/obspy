@@ -275,13 +275,12 @@ def _getRecordInformation(file_object, offset=0):
     # check if full SEED or Mini-SEED
     if file_object.read(8)[6] == 'V':
         # found a full SEED record - seek first Mini-SEED record
-        # search blockette 10 (should be first according to standard - however
-        # some SEED writers don't take the standard serious enough and even
-        # invent new blockettes ...
+        # search blockette 005, 008 or 010 which contain the record length
         blockette_id = file_object.read(3)
-        while blockette_id not in ['010', '008']:
-            if not blockette_id.startswith('01'):
-                raise Exception('Volume blockette expects 01x')
+        while blockette_id not in ['010', '008', '005']:
+            if not blockette_id.startswith('0'):
+                msg = 'Volume blockette id 0xx expected, got %s'
+                raise Exception(msg % blockette_id)
             # get length and jump to end of current blockette
             blockette_len = int(file_object.read(4))
             file_object.seek(blockette_len - 7, 1)
