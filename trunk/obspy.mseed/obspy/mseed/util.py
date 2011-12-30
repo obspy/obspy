@@ -3,13 +3,13 @@
 Mini-SEED specific utilities.
 """
 from __future__ import with_statement
-
 from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
 import ctypes as C
 import numpy as np
+import warnings
 
 
 def getStartAndEndTime(file_or_file_object):
@@ -48,7 +48,6 @@ def getStartAndEndTime(file_or_file_object):
 
     >>> from StringIO import StringIO
     >>> file_object = StringIO(f.read())
-    >>> f.seek(0, 0)
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -57,13 +56,12 @@ def getStartAndEndTime(file_or_file_object):
     If the file pointer does not point to the first record, the start time will
     refer to the record it points to.
 
-    >>> f.seek(512, 1)
+    >>> f.seek(512)
     >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    If the file pointer does not point to the first record, the start time will
-    refer to the record it points to.
+    The same is valid for a file-like object. 
 
     >>> file_object = StringIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
@@ -136,6 +134,7 @@ def getTimingAndDataQuality(file_or_file_object):
     {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
 
     Also works with file pointers and StringIOs.
+
     >>> f = open(filename, 'rb')
     >>> getTimingAndDataQuality(f)
     {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
@@ -148,15 +147,16 @@ def getTimingAndDataQuality(file_or_file_object):
 
     If the file pointer or StringIO position does not correspond to the first
     record the omitted records will be skipped.
+
     >>> file_object.seek(1024, 1)
     >>> getTimingAndDataQuality(file_object)
     {'data_quality_flags': [8, 8, 7, 6, 5, 4, 3, 2]}
     >>> file_object.close()
 
-
     Reading a file with Blockette 1001 will return timing quality statistics.
     The data quality flags will always exists because they are part of the
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
+
     >>> filename = getExampleFile("timingquality.mseed")
     >>> getTimingAndDataQuality(filename) \
         # doctest: +NORMALIZE_WHITESPACE
@@ -166,6 +166,7 @@ def getTimingAndDataQuality(file_or_file_object):
     'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
 
     Also works with file pointers and StringIOs.
+
     >>> f = open(filename, 'rb')
     >>> getTimingAndDataQuality(f) \
         # doctest: +NORMALIZE_WHITESPACE
@@ -272,6 +273,15 @@ def _getRecordInformation(file_object, offset=0):
     info['filesize'] = file_object.tell() - record_start
     file_object.seek(record_start, 0)
 
+    # check current position 
+    if info['filesize'] % 256 != 0:
+        # if a multiple of minimal record length 256
+        record_start = 0
+    elif file_object.read(8)[6] not in ['D', 'R', 'Q', 'M']:
+        # if valid data record start at all starting with D, R, Q or M
+        record_start = 0
+    file_object.seek(record_start, 0)
+
     # check if full SEED or Mini-SEED
     if file_object.read(8)[6] == 'V':
         # found a full SEED record - seek first Mini-SEED record
@@ -279,7 +289,8 @@ def _getRecordInformation(file_object, offset=0):
         blockette_id = file_object.read(3)
         while blockette_id not in ['010', '008', '005']:
             if not blockette_id.startswith('0'):
-                msg = 'Volume blockette id 0xx expected, got %s'
+                msg = "SEED Volume Index Control Headers: blockette 0xx" + \
+                      " expected, got %s"
                 raise Exception(msg % blockette_id)
             # get length and jump to end of current blockette
             blockette_len = int(file_object.read(4))
@@ -293,7 +304,7 @@ def _getRecordInformation(file_object, offset=0):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6] in ['V', 'S', 'A', 'T']:
+        while file_object.read(7)[6] != 'D':
             record_start += rec_len
             file_object.seek(record_start, 0)
 
@@ -311,9 +322,9 @@ def _getRecordInformation(file_object, offset=0):
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
     values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
-    starttime = UTCDateTime(\
-            year=values[0], julday=values[1], hour=values[2], minute=values[3],
-            second=values[4], microsecond=values[5] * 100)
+    starttime = UTCDateTime(year=values[0], julday=values[1], hour=values[2],
+                            minute=values[3], second=values[4],
+                            microsecond=values[5] * 100)
     npts = values[6]
     info['npts'] = npts
     samp_rate_factor = values[7]
@@ -354,7 +365,7 @@ def _getRecordInformation(file_object, offset=0):
                                                   file_object.read(3))
             if ENDIAN[word_order] != endian:
                 msg = 'Inconsistent word order.'
-                raise Exception(msg)
+                warnings.warn(msg, UserWarning)
             info['encoding'] = encoding
             info['record_length'] = 2 ** record_length
         elif blkt_type == 1001:

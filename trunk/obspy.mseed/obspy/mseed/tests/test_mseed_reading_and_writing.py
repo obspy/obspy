@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from obspy.core import UTCDateTime, Stream, Trace, read, AttribDict
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from obspy.mseed import util
-from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
+from obspy.mseed.headers import clibmseed, ENCODINGS
 from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
+import sys
 import unittest
+import warnings
 
 
 class MSEEDReadingAndWritingTestCase(unittest.TestCase):
@@ -603,6 +606,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st.write(tempfile, format="MSEED")
         os.remove(tempfile)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
         Tests all data and endian types into a single file.
@@ -613,23 +617,27 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         for dtype in ["i2", "i4", "f4", "f8", "S1"]:
             for enc in ["<", ">", "="]:
                 st1.append(Trace(data=data.astype(np.dtype(enc + dtype))))
-        st1.write(tempfile, format="MSEED")
-        # read everything back (int16 gets converted into int32)
-        st2 = read(tempfile)
-        for dtype in ["i4", "i4", "f4", "f8", "S1"]:
-            for enc in ["<", ">", "="]:
-                tr = st2.pop(0).data
-                self.assertEqual(tr.dtype.kind + str(tr.dtype.itemsize), dtype)
-                # byte order is always native (=)
-                np.testing.assert_array_equal(tr, data.astype("=" + dtype))
-        os.remove(tempfile)
+        # this will raise a UserWarning - ignoring for test
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            st1.write(tempfile, format="MSEED")
+            # read everything back (int16 gets converted into int32)
+            st2 = read(tempfile)
+            for dtype in ["i4", "i4", "f4", "f8", "S1"]:
+                for enc in ["<", ">", "="]:
+                    tr = st2.pop(0).data
+                    self.assertEqual(tr.dtype.kind + str(tr.dtype.itemsize),
+                                     dtype)
+                    # byte order is always native (=)
+                    np.testing.assert_array_equal(tr, data.astype("=" + dtype))
+            os.remove(tempfile)
 
     def test_enforceSteim2WithSteim1asEncoding(self):
         """
         This tests whether the encoding kwarg overwrites the encoding in
         trace.stats.mseed.encoding.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         st = read(file)
         self.assertEqual(st[0].stats.mseed.encoding, 'STEIM1')
@@ -816,27 +824,31 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(isMSEED(file))
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_bizarreFiles(self):
         """
         Tests reading some bizarre MSEED files.
         """
-        st1 = read(os.path.join(self.path, "data", "bizarre",
-                                "endiantest.be-header.be-data.mseed"))
-        st2 = read(os.path.join(self.path, "data", "bizarre",
-                                "endiantest.be-header.le-data.mseed"))
-        st3 = read(os.path.join(self.path, "data", "bizarre",
-                                "endiantest.le-header.be-data.mseed"))
-        st4 = read(os.path.join(self.path, "data", "bizarre",
-                                "endiantest.le-header.le-data.mseed"))
-        for st in [st1, st2, st3, st4]:
-            self.assertEqual(len(st), 1)
-            self.assertEqual(st[0].id, "NL.HGN.00.BHZ")
-            self.assertEqual(st[0].stats.starttime,
-                             UTCDateTime("2003-05-29T02:13:22.043400Z"))
-            self.assertEqual(st[0].stats.endtime,
-                             UTCDateTime("2003-05-29T02:18:20.693400Z"))
-            self.assertEqual(st[0].stats.npts, 11947)
-            self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
+        # this will raise a UserWarning - ignoring for test
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            st1 = read(os.path.join(self.path, "data", "bizarre",
+                                    "endiantest.be-header.be-data.mseed"))
+            st2 = read(os.path.join(self.path, "data", "bizarre",
+                                    "endiantest.be-header.le-data.mseed"))
+            st3 = read(os.path.join(self.path, "data", "bizarre",
+                                    "endiantest.le-header.be-data.mseed"))
+            st4 = read(os.path.join(self.path, "data", "bizarre",
+                                    "endiantest.le-header.le-data.mseed"))
+            for st in [st1, st2, st3, st4]:
+                self.assertEqual(len(st), 1)
+                self.assertEqual(st[0].id, "NL.HGN.00.BHZ")
+                self.assertEqual(st[0].stats.starttime,
+                                 UTCDateTime("2003-05-29T02:13:22.043400Z"))
+                self.assertEqual(st[0].stats.endtime,
+                                 UTCDateTime("2003-05-29T02:18:20.693400Z"))
+                self.assertEqual(st[0].stats.npts, 11947)
+                self.assertEqual(list(st[0].data[0:3]), [2787, 2776, 2774])
 
     def test_writeAndReadDifferentEncodings(self):
         """
