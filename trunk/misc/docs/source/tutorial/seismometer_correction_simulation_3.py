@@ -1,6 +1,5 @@
 from obspy.iris import Client
 from obspy.core import UTCDateTime, read
-from obspy.signal import seisSim, invsim
 import matplotlib.pyplot as plt
 import numpy as np
 
