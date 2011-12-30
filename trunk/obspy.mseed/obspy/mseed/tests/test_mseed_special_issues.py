@@ -262,24 +262,40 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             self.assertRaises(DeprecationWarning, read, timingqual,
                               quality=True)
 
+    def test_readWithMissingBlockette010(self):
+        """
+        Reading a Full/Mini-SEED w/o blockette 010 but blockette 008.
+        """
+        # 1 - Mini-SEED
+        file = os.path.join(self.path, 'data', 'blockette008.mseed')
+        tr = read(file)[0]
+        self.assertEqual('BW.PART..EHZ', tr.id)
+        self.assertEqual(1642, tr.stats.npts)
+        # 2 - full SEED
+        file = os.path.join(self.path, 'data',
+                            'RJOB.BW.EHZ.D.300806.0000.fullseed')
+        tr = read(file)[0]
+        self.assertEqual('BW.RJOB..EHZ', tr.id)
+        self.assertEqual(412, tr.stats.npts)
+
     def test_issue160(self):
         """
         Tests issue #160.
 
-        Reading the head of old fullseed file. Only the first 1024 byte of the
-        original file are provided.
+        Reading the header of SEED file.
         """
         file = os.path.join(self.path, 'data',
-                            'RJOB.BW.EHZ.D.300806.0000.fullseed')
+                            'BW.BGLD.__.EHE.D.2008.001.first_10_records')
         tr_one = read(file)[0]
         tr_two = read(file, headonly=True)[0]
-        ms = "AttribDict({'dataquality': 'D', 'record_length': 512, " + \
-             "'byteorder': '>', 'encoding': 'STEIM1'})"
+        ms = AttribDict({'record_length': 512, 'encoding': 'STEIM1',
+                         'filesize': 5120, 'dataquality': 'D',
+                         'number_of_records': 10, 'byteorder': '>'})
         for tr in tr_one, tr_two:
-            self.assertEqual('BW.RJOB..EHZ', tr.id)
-            self.assertEqual(ms, repr(tr.stats.mseed))
-            self.assertEqual(412, tr.stats.npts)
-            self.assertEqual(UTCDateTime(2006, 8, 30, 0, 0, 2, 815000),
+            self.assertEqual('BW.BGLD..EHE', tr.id)
+            self.assertEqual(ms, tr.stats.mseed)
+            self.assertEqual(4120, tr.stats.npts)
+            self.assertEqual(UTCDateTime(2008, 1, 1, 0, 0, 20, 510000),
                              tr.stats.endtime)
 
     def test_issue217(self):

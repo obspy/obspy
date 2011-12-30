@@ -65,7 +65,7 @@ VALID_CONTROL_HEADERS = SEED_CONTROL_HEADERS + MINI_SEED_CONTROL_HEADERS
 DATATYPES = {"a": C.c_char, "i": C.c_int32, "f": C.c_float, "d": C.c_double}
 SAMPLESIZES = {'a': 1, 'i': 4, 'f': 4, 'd': 8}
 
-# Valid record lengths for MiniSEED files.
+# Valid record lengths for Mini-SEED files.
 VALID_RECORD_LENGTHS = [256, 512, 1024, 2048, 4096, 8192, 16384, 32768, 65536,
                         131072, 262144, 524288, 1048576]
 

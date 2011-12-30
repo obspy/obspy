@@ -27,13 +27,13 @@ def isMSEED(filename):
     :return: ``True`` if a Mini-SEED file.
 
     This method only reads the first seven bytes of the file and checks
-    whether its a MiniSEED or fullSEED file.
+    whether its a Mini-SEED or full SEED file.
 
     It also is true for fullSEED files because libmseed can read the data
     part of fullSEED files. If the method finds a fullSEED file it also
     checks if it has a data part and returns False otherwise.
 
-    Thus it cannot be used to validate a MiniSEED or SEED file.
+    Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
     fp = open(filename, 'rb')
     header = fp.read(7)
@@ -98,7 +98,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :param mseed_object: Filename or open file like object that contains the
-        binary MiniSEED data. Any object that provides a read() method will be
+        binary Mini-SEED data. Any object that provides a read() method will be
         considered to be a file like object.
     :type starttime: UTCDateTime
     :param starttime: Only read data samples after or at the starttime.
@@ -313,7 +313,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
 
 
 def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
-               flush=1, verbose=0, **kwargs):
+               flush=1, verbose=0, **_kwargs):
     """
     Write Mini-SEED file from a Stream object.
 
@@ -570,8 +570,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     # Loop over every trace and finally write it to the filehandler.
     for trace, data, trace_attr in izip(stream, trace_data, trace_attributes):
         # Create C struct MSTraceGroup.
-        mstg = MSTG(trace, data, dataquality=trace_attr['dataquality'],
-                    byteorder=trace_attr['byteorder'])
+        mstg = MSTG(trace, data, dataquality=trace_attr['dataquality'])
         # Initialize packedsamples pointer for the mst_pack function
         packedsamples = C.c_int()
 
@@ -631,11 +630,11 @@ class MSTG(object):
     MSTraceGroup struct.
 
     The class works on a Trace instead of a Stream because that way it is
-    possible to write MiniSEED files with a different encoding per Trace.
+    possible to write Mini-SEED files with a different encoding per Trace.
 
     The class is mainly used to achieve a clean memory management.
     """
-    def __init__(self, trace, data, dataquality, byteorder):
+    def __init__(self, trace, data, dataquality):
         """
         The init function requires a ObsPy Trace object which will be used to
         fill self.mstg.

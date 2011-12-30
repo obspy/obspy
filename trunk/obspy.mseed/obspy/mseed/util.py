@@ -14,16 +14,16 @@ import numpy as np
 
 def getStartAndEndTime(file_or_file_object):
     """
-    Returns the start- and endtime of a MiniSEED file or file-like object.
+    Returns the start- and endtime of a Mini-SEED file or file-like object.
 
     :type file_or_file_object: basestring or open file-like object.
-    :param file_or_file_object: MiniSEED file name or open file-like object
-        containing a MiniSEED record.
+    :param file_or_file_object: Mini-SEED file name or open file-like object
+        containing a Mini-SEED record.
     :return: tuple (start time of first record, end time of last record)
 
     This method will return the start time of the first record and the end time
     of the last record. Keep in mind that it will not return the correct result
-    if the records in the MiniSEED file do not have a chronological ordering.
+    if the records in the Mini-SEED file do not have a chronological ordering.
 
     The returned endtime is the time of the last data sample and not the
     time that the last sample covers.
@@ -44,7 +44,7 @@ def getStartAndEndTime(file_or_file_object):
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    And also with a MiniSEED file stored in a StringIO.
+    And also with a Mini-SEED file stored in a StringIO.
 
     >>> from StringIO import StringIO
     >>> file_object = StringIO(f.read())
@@ -87,8 +87,8 @@ def getTimingAndDataQuality(file_or_file_object):
     statistics about the timing quality if applicable.
 
     :type file_or_file_object: basestring or open file-like object.
-    :param file_or_file_object: MiniSEED file name or open file-like object
-        containing a MiniSEED record.
+    :param file_or_file_object: Mini-SEED file name or open file-like object
+        containing a Mini-SEED record.
 
     :return: Dictionary with information about the timing quality and the data
         quality flags.
@@ -156,7 +156,7 @@ def getTimingAndDataQuality(file_or_file_object):
 
     Reading a file with Blockette 1001 will return timing quality statistics.
     The data quality flags will always exists because they are part of the
-    fixed MiniSEED header and therefore need to be in every MiniSEED file.
+    fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
     >>> filename = getExampleFile("timingquality.mseed")
     >>> getTimingAndDataQuality(filename) \
         # doctest: +NORMALIZE_WHITESPACE
@@ -252,10 +252,10 @@ def getRecordInformation(file_or_file_object, offset=0):
 
 def _getRecordInformation(file_object, offset=0):
     """
-    Takes the MiniSEED record stored in file_object at the current position and
-    returns some information about it.
+    Searches the first Mini-SEED record stored in file_object at the current
+    position and returns some information about it.
 
-    If offset is given, the MiniSEED record is assumed to start at current
+    If offset is given, the Mini-SEED record is assumed to start at current
     position + offset in file_object.
     """
     initial_position = file_object.tell()
@@ -272,6 +272,32 @@ def _getRecordInformation(file_object, offset=0):
     info['filesize'] = file_object.tell() - record_start
     file_object.seek(record_start, 0)
 
+    # check if full SEED or Mini-SEED
+    if file_object.read(8)[6] == 'V':
+        # found a full SEED record - seek first Mini-SEED record
+        # search blockette 10 (should be first according to standard - however
+        # some SEED writers don't take the standard serious enough and even
+        # invent new blockettes ...
+        blockette_id = file_object.read(3)
+        while blockette_id not in ['010', '008']:
+            if not blockette_id.startswith('01'):
+                raise Exception('Volume blockette expects 01x')
+            # get length and jump to end of current blockette
+            blockette_len = int(file_object.read(4))
+            file_object.seek(blockette_len - 7, 1)
+            # read next blockette id
+            blockette_id = file_object.read(3)
+        # Skip the next bytes containing length of the blockette and version
+        file_object.seek(8, 1)
+        # get record length
+        rec_len = pow(2, int(file_object.read(2)))
+        # reset file pointer
+        file_object.seek(record_start, 0)
+        # cycle through file using record length until first data record found
+        while file_object.read(7)[6] in ['V', 'S', 'A', 'T']:
+            record_start += rec_len
+            file_object.seek(record_start, 0)
+
     # Figure out the byteorder.
     file_object.seek(record_start + 20, 0)
     # Get the year.
@@ -284,7 +310,8 @@ def _getRecordInformation(file_object, offset=0):
     # Seek back and read more information.
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
-    values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, file_object.read(28))
+    data = file_object.read(28)
+    values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
     starttime = UTCDateTime(\
             year=values[0], julday=values[1], hour=values[2], minute=values[3],
             second=values[4], microsecond=values[5] * 100)
