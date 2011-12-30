@@ -257,7 +257,8 @@ def _createReport(ttrs, timetaken, log, server):
         'python_version': result['platform']['python_version'],
         'architecture': result['platform']['architecture'],
         'tests': tests,
-        'errors': failures + errors,
+        'failures': failures,
+        'errors': errors,
         'modules': len(ttrs),
         'xml': xml_doc
     })
