@@ -568,8 +568,8 @@ class Parser(object):
             raise SEEDParserException("Expecting 000001V ")
         # The first blockette has to be Blockette 10.
         temp = data.read(3)
-        if temp != '010':
-            raise SEEDParserException("Expecting blockette 010")
+        if temp not in ['010', '008', '005']:
+            raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
         data.seek(4, 1)
         # Set the version.
