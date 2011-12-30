@@ -36,4 +36,14 @@ here:
 
 .. plot:: source/tutorial/seismometer_correction_simulation_2.py
 
+It is further possible to use evalresp_ to evaluate the instrument
+response information from a RESP file.
+
+.. include:: seismometer_correction_simulation_3.py
+   :literal:
+
+.. plot:: source/tutorial/seismometer_correction_simulation_3.py
+
 .. _matplotlib: http://matplotlib.sourceforge.net/
+
+.. _evalresp: http://www.iris.edu/software/downloads/seed_tools/
