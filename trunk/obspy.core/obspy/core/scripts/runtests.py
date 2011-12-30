@@ -77,7 +77,7 @@ all modules, have a verbose output and report everything you would run::
         $ obspy-runtests -r -v --all
 """
 
-from obspy.core.util import DEFAULT_MODULES, ALL_MODULES
+from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from optparse import OptionParser
 import numpy as np
 import os
@@ -168,7 +168,7 @@ def _createReport(ttrs, timetaken, log, server):
     tests = 0
     errors = 0
     failures = 0
-    for module in ALL_MODULES:
+    for module in sorted(ALL_MODULES):
         result['obspy'][module] = {}
         try:
             mod = __import__('obspy.' + module, fromlist='obspy')
@@ -179,17 +179,28 @@ def _createReport(ttrs, timetaken, log, server):
             continue
         # test results
         ttr = ttrs[module]
+        result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
         result['obspy'][module]['tested'] = True
         result['obspy'][module]['tests'] = ttr.testsRun
         tests += ttr.testsRun
+        # depending on module type either use failure (network related modules)
+        # or errors (all others)
         result['obspy'][module]['errors'] = {}
-        for method, text in ttr.errors:
-            result['obspy'][module]['errors'][str(method)] = text
-            errors += 1
         result['obspy'][module]['failures'] = {}
-        for method, text in ttr.failures:
-            result['obspy'][module]['failures'][str(method)] = text
-            failures += 1
+        if module in NETWORK_MODULES: 
+            for _, text in ttr.errors:
+                result['obspy'][module]['errors']['f%s' % (failures)] = text
+                failures += 1
+            for _, text in ttr.failures:
+                result['obspy'][module]['errors']['f%s' % (failures)] = text
+                failures += 1
+        else:
+            for _, text in ttr.errors:
+                result['obspy'][module]['errors']['f%s' % (errors)] = text
+                errors += 1
+            for _, text in ttr.failures:
+                result['obspy'][module]['errors']['f%s' % (errors)] = text
+                errors += 1
     # get dependencies
     result['dependencies'] = {}
     for module in DEPENDENCIES:
@@ -272,25 +283,45 @@ def _createReport(ttrs, timetaken, log, server):
 
 
 class _TextTestRunner:
-    def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1):
+    def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
+                 timeit=False):
         self.stream = unittest._WritelnDecorator(stream)
         self.descriptions = descriptions
         self.verbosity = verbosity
+        self.timeit = timeit
 
     def _makeResult(self):
         return unittest._TextTestResult(self.stream, self.descriptions,
                                         self.verbosity)
 
     def run(self, suites):
-        "Run the given test case or test suite."
-        startTime = time.time()
+        """
+        Run the given test case or test suite.
+        """
         results = {}
-        for id, test in suites.iteritems():
+        time_taken = 0
+        keys = sorted(suites.keys())
+        for id in keys:
+            test = suites[id]
             result = self._makeResult()
+            start = time.time()
             test(result)
+            stop = time.time()
             results[id] = result
-        stopTime = time.time()
-        timeTaken = stopTime - startTime
+            total = stop - start
+            results[id].__dict__['timetaken'] = total
+            if self.timeit:
+                self.stream.writeln('')
+                self.stream.write("obspy.%s: " % (id))
+                num = test.countTestCases()
+                try:
+                    avg = float(total) / num
+                except:
+                    avg = 0
+                msg = '%d tests in %.3fs (average of %.4fs per test)'
+                self.stream.writeln(msg % (num, total, avg))
+                self.stream.writeln('')
+            time_taken += total
         runs = 0
         faileds = 0
         erroreds = 0
@@ -306,7 +337,7 @@ class _TextTestRunner:
             runs += result.testsRun
         self.stream.writeln(unittest._TextTestResult.separator2)
         self.stream.writeln("Ran %d test%s in %.3fs" %
-                            (runs, runs != 1 and "s" or "", timeTaken))
+                            (runs, runs != 1 and "s" or "", time_taken))
         self.stream.writeln()
         if not wasSuccessful:
             self.stream.write("FAILED (")
@@ -319,11 +350,12 @@ class _TextTestRunner:
             self.stream.writeln(")")
         else:
             self.stream.writeln("OK")
-        return results, timeTaken
+        return results, time_taken
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
-             server="tests.obspy.org", all=False):
+             server="tests.obspy.org", all=False, timeit=False,
+             interactive=False):
     """
     This function executes ObsPy test suites.
 
@@ -342,12 +374,18 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     suites = _getSuites(verbosity, tests, all)
-    ttr, timetaken = _TextTestRunner(verbosity=verbosity).run(suites)
+    ttr, total_time = _TextTestRunner(verbosity=verbosity,
+                                      timeit=timeit).run(suites)
+    if interactive and not report:
+        msg = "Do you want to report this to tests.obspy.org? [n]: "
+        var = raw_input(msg).lower()
+        if 'y' in var:
+            report = True
     if report:
-        _createReport(ttr, timetaken, log, server)
+        _createReport(ttr, total_time, log, server)
 
 
-def main():
+def main(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
@@ -363,9 +401,15 @@ def main():
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
+    parser.add_option("-t", "--timeit", default=False,
+                      action="store_true", dest="timeit",
+                      help="shows module based total times")
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
                       help="submit a test report")
+    parser.add_option("-d", "--dontask", default=False,
+                      action="store_true", dest="dontask",
+                      help="don't ask for submitting a test report")
     parser.add_option("-u", "--server", default="tests.obspy.org",
                       type="string", dest="server",
                       help="report server (default is tests.obspy.org)")
@@ -379,8 +423,10 @@ def main():
     # set correct verbosity level
     if options.verbose:
         verbosity = 2
-        # show all numpy warnings
+        # raise all numpy warnings
         np.seterr(all='raise')
+        # raise user and deprecation warnings
+        warnings.simplefilter("error", UserWarning)
     elif options.quiet:
         verbosity = 0
         # ignore user and deprecation warnings
@@ -399,8 +445,11 @@ def main():
         report = False
     if 'OBSPY_REPORT_SERVER' in os.environ.keys():
         options.server = os.environ['OBSPY_REPORT_SERVER']
+    # check interactivitiy settings
+    if interactive and options.dontask:
+        interactive = False
     runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all)
+             options.all, options.timeit, interactive)
 
 
 if __name__ == "__main__":
@@ -408,4 +457,4 @@ if __name__ == "__main__":
     # This script is automatically installed with name obspy-runtests by
     # setup.py to the Scripts or bin directory of your Python distribution
     # setup.py needs a function to which it's scripts can be linked.
-    main()
+    main(interactive=False)
