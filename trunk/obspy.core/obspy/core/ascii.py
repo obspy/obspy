@@ -437,9 +437,9 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
                            dtype, unit)
         fh.write(header)
         # write data
-        times = np.arange(stats.starttime,
-                          stats.endtime + stats.delta,
-                          stats.delta)
+        times = np.linspace(stats.starttime.timestamp, stats.endtime.timestamp,
+                            stats.npts)
+        times = [UTCDateTime(t) for t in times]
         data = np.vstack((times, trace.data)).T
         # .26s cuts the Z from the time string
         np.savetxt(fh, data, fmt="%.26s  " + fmt)
