@@ -40,6 +40,9 @@ def deprecated(func, warning_msg=None):
 
 
 def deprecated_keywords(keywords):
+    """
+    Decorator for marking keywords as deprecated.
+    """
     def fdec(func):
         fname = func.func_name
         msg = "Deprecated keyword %s in %s() call - please use %s instead."

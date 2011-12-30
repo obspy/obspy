@@ -184,16 +184,10 @@ class Stats(AttribDict):
         """
         Return better readable string representation of Stats object.
         """
-        dict_copy = copy(self.__dict__)
         priorized_keys = ['network', 'station', 'location', 'channel',
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
-        # determine longest key name for alignment of all items
-        head = ["%16s: %s" % (key, dict_copy.pop(key)) \
-                for key in priorized_keys]
-        head.extend(["%16s: %s" % (key, dict_copy.pop(key)) \
-                     for key in dict_copy.keys()])
-        return "\n".join(head)
+        return self._pretty_str(priorized_keys)
 
     def _calculateDerivedValues(self):
         """

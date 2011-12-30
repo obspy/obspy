@@ -36,6 +36,7 @@ class AttribDict(dict, object):
     ['network', 'station']
     """
     readonly = []
+    priorized_keys = []
 
     def __init__(self, data={}):
         dict.__init__(data)
@@ -90,6 +91,34 @@ class AttribDict(dict, object):
             if key in self.readonly:
                 continue
             self[key] = value
+
+    def _pretty_str(self, priorized_keys=[], min_label_length=16):
+        """
+        Return better readable string representation of AttribDict object.
+
+        :type priorized_keys: List of str, optional
+        :param priorized_keys: Keywords of current AttribtDict which will be
+            shown before all other keywords. Those keywords must exists
+            otherwise an exception will be raised. Defaults to empty list.
+        :type min_label_length: int, optional
+        :param min_label_length: Minimum label length for keywords. Defaults
+            to ``16``.
+        :return: String representation of current AttribDict object.
+        """
+        keys = self.keys()
+        # determine longest key name for alignment of all items
+        try:
+            i = max(max([len(k) for k in keys]), min_label_length)
+        except ValueError:
+            # no keys
+            return ""
+        pattern = "%%%ds: %%s" % (i)
+        # check if keys exist
+        other_keys = [k for k in keys if k not in priorized_keys]
+        # priorized keys first + all other keys
+        keys = priorized_keys + sorted(other_keys)
+        head = [pattern % (k, self.__dict__[k]) for k in keys]
+        return "\n".join(head)
 
 
 if __name__ == '__main__':
