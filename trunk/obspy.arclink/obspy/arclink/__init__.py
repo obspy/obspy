@@ -61,7 +61,7 @@ Basic Usage
     the next picture.
 
     .. plot::
-    
+
         from obspy.core import UTCDateTime
         from obspy.arclink.client import Client
         client = Client(user='test@obspy.org')

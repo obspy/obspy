@@ -106,7 +106,7 @@ class tracebuf2:
         stat.network = self.net.split('\x00')[0]
         stat.station = self.sta.split('\x00')[0]
         location = self.loc.split('\x00')[0]
-        if location=='--':
+        if location == '--':
             stat.location = ''
         else:
             stat.location = location
