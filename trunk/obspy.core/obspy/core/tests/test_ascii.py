@@ -309,6 +309,8 @@ class ASCIITestCase(unittest.TestCase):
         self.assertTrue(lines[0].startswith('TIMESERIES'))
         self.assertTrue('TSPAIR' in lines[0])
         self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185\n')
+        # test issue #321 (problems in time stamping)
+        self.assertEqual(lines[-1], '2008-01-15T00:00:15.750000  772\n')
         # read again
         stream = readTSPAIR(tmpfile)
         stream.verify()
