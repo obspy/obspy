@@ -100,17 +100,26 @@ class ClientTestCase(unittest.TestCase):
         included in resulting text.
         """
         client = Client()
+        # 1
         t1 = UTCDateTime("2005-01-01")
         t2 = UTCDateTime("2008-01-01")
-        got = client.sacpz(network="IU", station="ANMO", location="00",
-                           channel="BHZ", starttime=t1, endtime=t2)
-        got = got.splitlines()
+        result = client.sacpz("IU", "ANMO", "00", "BHZ", t1, t2)
+        # drop lines with creation date (current time during request)
+        result = result.splitlines()
         sacpz_file = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.sacpz')
         expected = open(sacpz_file, 'rt').read().splitlines()
-        # drop lines with creation date (current time during request)
-        got.pop(5)
+        result.pop(5)
         expected.pop(5)
-        self.assertEquals(got, expected)
+        self.assertEquals(result, expected)
+        # 2 - empty location code
+        dt = UTCDateTime("2002-11-01")
+        result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
+        self.assertTrue("* STATION    (KSTNM): LON" in result)
+        self.assertTrue("* LOCATION   (KHOLE):   " in result)
+        # 3 - empty location code via '--'
+        result = client.sacpz('UW', 'LON', '--', 'BHZ', dt)
+        self.assertTrue("* STATION    (KSTNM): LON" in result)
+        self.assertTrue("* LOCATION   (KHOLE):   " in result)
 
     def test_distaz(self):
         """
@@ -122,9 +131,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertAlmostEquals(result['distance'], 2.09554)
         self.assertAlmostEquals(result['backazimuth'], 5.46946)
         self.assertAlmostEquals(result['azimuth'], 185.47692)
+        # w/o kwargs
+        result = client.distaz(1.1, 1.2, 3.2, 1.4)
+        self.assertAlmostEquals(result['distance'], 2.09554)
+        self.assertAlmostEquals(result['backazimuth'], 5.46946)
+        self.assertAlmostEquals(result['azimuth'], 185.47692)
         # missing parameters
         self.assertRaises(Exception, client.distaz, stalat=1.1)
+        self.assertRaises(Exception, client.distaz, 1.1)
         self.assertRaises(Exception, client.distaz, stalat=1.1, stalon=1.2)
+        self.assertRaises(Exception, client.distaz, 1.1, 1.2)
 
     def test_flinnengdahl(self):
         """
@@ -134,15 +150,25 @@ class ClientTestCase(unittest.TestCase):
         # code
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
         self.assertEquals(result, 683)
+        # w/o kwargs
+        result = client.flinnengdahl(-20.5, -100.6, "code")
+        self.assertEquals(result, 683)
         # region
         result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
+        self.assertEquals(result, 'OREGON')
+        # w/o kwargs
+        result = client.flinnengdahl(42, -122.24, "region")
         self.assertEquals(result, 'OREGON')
         # both
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
         self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        # w/o kwargs
+        result = client.flinnengdahl(-20.5, -100.6, "both")
+        self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
         # default rtype
         result = client.flinnengdahl(lat=42, lon=-122.24)
         self.assertEquals(result, (32, 'OREGON'))
+        # w/o kwargs
         # outside boundaries
         self.assertRaises(Exception, client.flinnengdahl, lat=-90.1, lon=0)
         self.assertRaises(Exception, client.flinnengdahl, lat=90.1, lon=0)
@@ -293,18 +319,70 @@ class ClientTestCase(unittest.TestCase):
     def test_availability(self):
         """
         Tests availability of waveform data at the DMC.
+
+        Examples are inspired by http://www.iris.edu/ws/availability/.
         """
         client = Client()
-        # GE network
+        # 1
+        t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        result = client.availability('IU', channel='B*', starttime=t1,
+                                     endtime=t2)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU YSS 00 BHZ' in result)
+        # 2
         dt = UTCDateTime("2011-11-13T07:00:00")
         result = client.availability(network='GE', starttime=dt,
                                      endtime=dt + 10)
         self.assertTrue(isinstance(result, basestring))
         self.assertTrue('GE DAG -- BHE' in result)
-        # unknown network results in empty string
+        # 3 - unknown network results in empty string
         dt = UTCDateTime(2011, 11, 16)
         result = client.availability(network='XX', starttime=dt,
                                      endtime=dt + 10)
+        # 4 - location=None
+        t1 = UTCDateTime("2010-02-27T06:30:00")
+        t2 = UTCDateTime("2010-02-27T06:40:00")
+        result = client.availability("IU", "K*", starttime=t1, endtime=t2)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU KBL -- BHZ' in result)
+        self.assertTrue('IU KBS 00 BHE' in result)
+        # 5 - empty location
+        result = client.availability("IU", "K*", "", starttime=t1, endtime=t2)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU KBL -- BHZ' in result)
+        self.assertFalse('IU KBS 00 BHE' in result)
+        # 6 - empty location code via '--'
+        result = client.availability("IU", "K*", "--", starttime=t1,
+                                     endtime=t2)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU KBL -- BHZ' in result)
+        self.assertFalse('IU KBS 00 BHE' in result)
+
+    def test_resp(self):
+        """
+        Tests resp Web service interface.
+
+        Examples are inspired by http://www.iris.edu/ws/resp/.
+        """
+        client = Client()
+        # 1
+        t1 = UTCDateTime("2005-001T00:00:00")
+        t2 = UTCDateTime("2008-001T00:00:00")
+        result = client.resp("IU", "ANMO", "00", "BHZ", t1, t2)
+        self.assertTrue('B050F03     Station:     ANMO' in result)
+        # 2 - empty location code
+        result = client.resp("UW", "LON", "", "EHZ")
+        self.assertTrue('B050F03     Station:     LON' in result)
+        self.assertTrue('B052F03     Location:    ??' in result)
+        # 3 - empty location code via '--'
+        result = client.resp("UW", "LON", "--", "EHZ")
+        self.assertTrue('B050F03     Station:     LON' in result)
+        self.assertTrue('B052F03     Location:    ??' in result)
+        # 4
+        dt = UTCDateTime("2010-02-27T06:30:00.000")
+        result = client.resp("IU", "ANMO", "*", "*", dt)
+        self.assertTrue('B050F03     Station:     ANMO' in result)
 
 
 def suite():

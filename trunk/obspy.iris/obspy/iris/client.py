@@ -158,7 +158,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: MiniSEED data quality indicator. ``'M'`` and ``'B'``
+        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
             (default) are treated the same and indicate best available.
             If ``'M'`` or ``'B'`` are selected, the output data records will be
             stamped with a ``'M'``.
@@ -232,7 +232,7 @@ class Client(object):
 
         This method ensures the storage of the unmodified waveform data
         delivered by the IRIS server, e.g. preserving the record based
-        quality flags of MiniSEED files which would be neglected reading it
+        quality flags of Mini-SEED files which would be neglected reading it
         with obspy.mseed.
 
         :type filename: str
@@ -254,7 +254,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: MiniSEED data quality indicator. ``'M'`` and ``'B'``
+        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
             (default) are treated the same and indicate best available.
             If ``'M'`` or ``'B'`` are selected, the output data records will be
             stamped with a ``'M'``.
@@ -343,7 +343,8 @@ class Client(object):
         fh.write(data)
         fh.close()
 
-    def resp(self, filename=None, **kwargs):
+    def resp(self, network, station, location="*", channel="*",
+             starttime=None, endtime=None, filename=None, **kwargs):
         """
         Interface for `resp` Web service of IRIS
         (http://www.iris.edu/ws/resp/).
@@ -357,15 +358,16 @@ class Client(object):
         :param network: Network code, e.g. ``'IU'``.
         :type station: str
         :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str
+        :type location: str, optional
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Use ``'--'`` for empty location codes.
-        :type channel: str
+            Defaults to ``'*'``.
+        :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Defaults to ``'*'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: End date and time. Requires starttime parameter.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -377,10 +379,8 @@ class Client(object):
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = UTCDateTime("2010-02-27T10:30:00.000")
-        >>> data = client.resp(network="IU", station="ANMO", location="00",
-        ...                    channel="BHZ", starttime=t1, endtime=t2)
+        >>> dt = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> data = client.resp("IU", "ANMO", "00", "BHZ", dt)
         >>> print(data)  # doctest: +ELLIPSIS
         #
         ####################################################################...
@@ -391,17 +391,29 @@ class Client(object):
         B052F04     Channel:     BHZ
         ...
         """
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)
         # convert UTCDateTime to string for query
-        try:
-            kwargs['starttime'] = \
-                UTCDateTime(kwargs['starttime']).formatIRISWebService()
-        except KeyError:
-            pass
-        try:
-            kwargs['endtime'] = \
-                UTCDateTime(kwargs['endtime']).formatIRISWebService()
-        except KeyError:
-            pass
+        if starttime and endtime:
+            try:
+                kwargs['starttime'] = \
+                    UTCDateTime(starttime).formatIRISWebService()
+            except:
+                kwargs['starttime'] = starttime
+            try:
+                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+            except:
+                kwargs['endtime'] = endtime
+        elif starttime:
+            try:
+                kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
+            except:
+                kwargs['time'] = starttime
         # build up query
         url = '/resp/query'
         try:
@@ -412,7 +424,9 @@ class Client(object):
             raise Exception(msg)
         return self._toFileOrData(filename, data)
 
-    def station(self, filename=None, **kwargs):
+    def station(self, network, station, location="*", channel="*",
+                starttime=None, endtime=None, level='sta', filename=None,
+                **kwargs):
         """
         Interface for `station` Web service of IRIS
         (http://www.iris.edu/ws/station/).
@@ -427,19 +441,20 @@ class Client(object):
         :type network: str
         :param network: Network code, e.g. ``'IU'``.
         :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str
-        :param location: Location code, e.g. ``'00'``. Use ``'--'`` for empty
-            location codes.
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``.
+        :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
+        :type location: str, optional
+        :param location: Location code, e.g. ``'00'``, wildcards allowed.
+            Defaults to ``'*'``.
+        :type channel: str, optional
+        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
+            Defaults to ``'*'``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type level: ``'net'``, ``'sta'``, ``'chan'``, or ``'resp'``, optional
         :param level: Specify whether to include channel/response metadata or
-            not.
+            not. Defaults to ``'sta'``.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -473,18 +488,29 @@ class Client(object):
          </Network>
         </StaMessage>
         """
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)
+        kwargs['level'] = level
         # convert UTCDateTime to string for query
         try:
-            starttime = UTCDateTime(kwargs['starttime']).date
+            starttime = UTCDateTime(starttime).date
         except KeyError:
-            starttime = UTCDateTime(1900, 1, 1)
+            starttime = None
         try:
-            endtime = UTCDateTime(kwargs['endtime']).date
+            endtime = UTCDateTime(endtime).date
         except KeyError:
-            endtime = UTCDateTime(2501, 1, 1)
-        kwargs.pop('starttime')
-        kwargs.pop('endtime')
-        kwargs['timewindow'] = '%s,%s' % (starttime, endtime)
+            endtime = None
+        if starttime and endtime:
+            kwargs['timewindow'] = "%s,%s" % (starttime, endtime)
+        elif starttime:
+            kwargs['startafter'] = "%s" % (starttime)
+        elif endtime:
+            kwargs['endbefore'] = "%s" % (endtime)
         # build up query
         url = '/station/query'
         try:
@@ -495,7 +521,8 @@ class Client(object):
             raise Exception(msg)
         return self._toFileOrData(filename, data)
 
-    def dataselect(self, filename=None, **kwargs):
+    def dataselect(self, network, station, location, channel,
+                   starttime, endtime, quality='B', filename=None, **kwargs):
         """
         Interface for `dataselect` Web service of IRIS
         (http://www.iris.edu/ws/dataselect/).
@@ -504,15 +531,14 @@ class Client(object):
         are allowed). With this service you specify network, station, location,
         channel and a time range and the service returns either as an ObsPy
         :class:`~obspy.core.stream.Stream` object or saves the data directly
-        as MiniSEED file.
+        as Mini-SEED file.
 
         :type network: str
         :param network: Network code, e.g. ``'IU'``.
         :type station: str
         :param station: Station code, e.g. ``'ANMO'``.
         :type location: str
-        :param location: Location code, e.g. ``'00'``. Use ``'--'`` for empty
-            location codes.
+        :param location: Location code, e.g. ``'00'``
         :type channel: str
         :param channel: Channel code, e.g. ``'BHZ'``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -520,7 +546,7 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: MiniSEED data quality indicator. ``'M'`` and ``'B'``
+        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
             (default) are treated the same and indicate best available.
             If ``'B'`` is selected, the output data records will be stamped
             with a ``M``.
@@ -537,23 +563,22 @@ class Client(object):
         >>> client = Client()
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
         >>> t2 = UTCDateTime("2010-02-27T07:00:00.000")
-        >>> st = client.dataselect(network="IU", station="ANMO", location="00",
-        ...                        channel="BHZ", starttime=t1, endtime=t2)
+        >>> st = client.dataselect("IU", "ANMO", "00", "BHZ", t1, t2)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 36000 samples
         """
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)
+        kwargs['quality'] = str(quality)
         # convert UTCDateTime to string for query
-        try:
-            kwargs['starttime'] = \
-                UTCDateTime(kwargs['starttime']).formatIRISWebService()
-        except KeyError:
-            pass
-        try:
-            kwargs['endtime'] = \
-                UTCDateTime(kwargs['endtime']).formatIRISWebService()
-        except KeyError:
-            pass
+        kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
+        kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
         # build up query
         url = '/dataselect/query'
         try:
@@ -604,7 +629,7 @@ class Client(object):
             Can be a filename with a text file in bulkdataselect compatible
             format or a string in the same format.
         :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: MiniSEED data quality indicator. ``'M'`` and ``'B'``
+        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
             (default) are treated the same and indicate best available.
             If ``'B'`` is selected, the output data records will be stamped
             with a ``M``.
@@ -675,7 +700,7 @@ class Client(object):
                      endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
                      lat=None, lon=None, minradius=None, maxradius=None,
                      minlat=None, maxlat=None, minlon=None, maxlon=None,
-                     output="bulk", filename=None):
+                     output="bulk", restricted=False, filename=None, **kwargs):
         """
         Interface for `availability` Web service of IRIS
         (http://www.iris.edu/ws/availability/).
@@ -691,15 +716,19 @@ class Client(object):
         The XML format contains station locations as well as channel time range
         for :meth:`~obspy.iris.client.Client.availability()`.
 
-        :type network: str
+        :type network: str, optional
         :param network: Network code, e.g. ``'IU'``, wildcards allowed.
-        :type station: str
+            Defaults to ``'*'``.
+        :type station: str, optional
         :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
-        :type location: str
+            Defaults to ``'*'``.
+        :type location: str, optional
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
+            Defaults to ``'*'``.
             Use ``'--'`` for empty location codes.
-        :type channel: str
+        :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
+            Defaults to ``'*'``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -720,6 +749,9 @@ class Client(object):
         :param maxlat: Maximum latitude for rectangular bounding box.
         :type maxlon: float, optional
         :param maxlon: Maximum longitude for rectangular bounding box.
+        :type restricted: bool, optional
+        :param restricted: If ``True``, availability of restricted as well as
+            unrestricted data is reported. Defaults to ``False``.
         :type output: str, optional
         :param output: Output format, either ``"bulk"`` or ``"xml"``. Defaults
             to ``"bulk"``.
@@ -747,9 +779,8 @@ class Client(object):
         >>> client = Client()
         >>> t1 = UTCDateTime("2010-02-27T06:30:00")
         >>> t2 = UTCDateTime("2010-02-27T06:40:00")
-        >>> response = client.availability(network="IU", station="B*",
-        ...         channel="BH*", starttime=t1, endtime=t2)
-        >>> print(response)
+        >>> result = client.availability("IU", "B*", "*", "BH*", t1, t2)
+        >>> print(result)
         IU BBSR 00 BH1 2010-02-27T06:30:00 2010-02-27T06:40:00
         IU BBSR 00 BH2 2010-02-27T06:30:00 2010-02-27T06:40:00
         IU BBSR 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
@@ -761,7 +792,7 @@ class Client(object):
         IU BILL 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
         <BLANKLINE>
 
-        >>> st = client.bulkdataselect(response)
+        >>> st = client.bulkdataselect(result)
         >>> print(st)  # doctest: +ELLIPSIS
         9 Trace(s) in Stream:
         IU.BBSR.00.BH1 | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
@@ -776,10 +807,12 @@ class Client(object):
         """
         url = '/availability/query'
         # build up query
-        kwargs = {}
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
-        kwargs['location'] = str(location)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         try:
             kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
@@ -790,6 +823,7 @@ class Client(object):
         except:
             kwargs['endtime'] = endtime
         kwargs['output'] = str(output)
+        kwargs['restricted'] = str(restricted).lower()
         # sanity checking geographical bounding areas
         rectangular = (minlat, minlon, maxlat, maxlon)
         circular = (lon, lat, minradius, maxradius)
@@ -833,9 +867,8 @@ class Client(object):
                 raise
         return self._toFileOrData(filename, data)
 
-    def sacpz(self, network="*", station="*", location="*", channel="*",
-              starttime=UTCDateTime() - (60 * 60 * 24 * 7),
-              endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10, filename=None):
+    def sacpz(self, network, station, location="*", channel="*",
+              starttime=None, endtime=None, filename=None, **kwargs):
         """
         Interface for `sacpz` Web service of IRIS
         (http://www.iris.edu/ws/sacpz/).
@@ -846,18 +879,19 @@ class Client(object):
         station, channel, location and time.
 
         :type network: str
-        :param network: Network code, e.g. ``'IU'``, wildcards allowed.
+        :param network: Network code, e.g. ``'IU'``.
         :type station: str
-        :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
-        :type location: str
+        :param station: Station code, e.g. ``'ANMO'``.
+        :type location: str, optional
         :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Use ``'--'`` for empty location codes.
-        :type channel: str
+            Defaults to ``'*'``.
+        :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+            Defaults to ``'*'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime` optional
         :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: End date and time. Requires starttime parameter.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -870,11 +904,9 @@ class Client(object):
         >>> from obspy.iris import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client()
-        >>> t1 = UTCDateTime("2005-01-01")
-        >>> t2 = UTCDateTime("2008-01-01")
-        >>> sacpz = client.sacpz(network="IU", station="ANMO", location="00",
-        ...                      channel="BHZ", starttime=t1, endtime=t2)
-        >>> print(sacpz) # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> dt = UTCDateTime("2005-01-01")
+        >>> sacpz = client.sacpz("IU", "ANMO", "00", "BHZ", dt)
+        >>> print(sacpz)  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         * **********************************
         * NETWORK   (KNETWK): IU
         * STATION    (KSTNM): ANMO
@@ -915,29 +947,41 @@ class Client(object):
         <BLANKLINE>
         """
         url = '/sacpz/query'
-        kwargs = {}
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
-        kwargs['location'] = str(location)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
-        try:
-            kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
-        except:
-            kwargs['starttime'] = starttime
-        try:
-            kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
-        except:
-            kwargs['endtime'] = endtime
+        # convert UTCDateTime to string for query
+        if starttime and endtime:
+            try:
+                kwargs['starttime'] = \
+                    UTCDateTime(starttime).formatIRISWebService()
+            except:
+                kwargs['starttime'] = starttime
+            try:
+                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+            except:
+                kwargs['endtime'] = endtime
+        elif starttime:
+            try:
+                kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
+            except:
+                kwargs['time'] = starttime
         data = self._fetch(url, **kwargs)
         return self._toFileOrData(filename, data)
 
-    def distaz(self, **kwargs):
+    def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Interface for `distaz` Web service of IRIS
         (http://www.iris.edu/ws/distaz/).
 
-        This method calculates the distance and azimuth between two points on
-        a sphere.
+        This method will calculate the great-circle angular distance, azimuth,
+        and backazimuth between two geographic coordinate pairs. All results
+        are reported in degrees, with azimuth and backazimuth measured
+        clockwise from North.
 
         :type stalat: float
         :param stalat: Station latitude.
@@ -951,11 +995,11 @@ class Client(object):
         :return: Dictionary containing values for azimuth, backazimuth and
             distance.
 
-        This method will calculate the distance and azimuth between two points
-        on a sphere. Azimuths start at north and go clockwise, i.e.
-        0/360 = north, 90 = east, 180 = south, 270 = west. The azimuth is from
-        the station to the event, the backazimuth is from the event to the
-        station.
+        The azimuth is the angle from the station to the event, while the
+        backazimuth is the angle from the event to the station.
+
+        Latitudes are converted to geocentric latitudes using the WGS84
+        spheroid to correct for ellipticity.
 
         .. rubric:: Example
 
@@ -975,7 +1019,8 @@ class Client(object):
         # build up query
         url = '/distaz/query'
         try:
-            data = self._fetch(url, headers=headers, **kwargs)
+            data = self._fetch(url, headers=headers, stalat=stalat,
+                               stalon=stalon, evtlat=evtlat, evtlon=evtlon)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -1038,7 +1083,7 @@ class Client(object):
     def evalresp(self, network, station, location, channel, time=UTCDateTime(),
                  minfreq=0.00001, maxfreq=None, nfreq=200, units='def',
                  width=800, height=600, annotate=True, output='plot',
-                 filename=None):
+                 filename=None, **kwargs):
         """
         Interface for `evalresp` Web service of IRIS
         (http://www.iris.edu/ws/evalresp/).
@@ -1162,10 +1207,12 @@ class Client(object):
                 client.evalresp("IU", "ANMO", "00", "BHZ", dt)
         """
         url = '/evalresp/query'
-        kwargs = {}
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
-        kwargs['location'] = str(location)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         try:
             kwargs['time'] = UTCDateTime(time).formatIRISWebService()
