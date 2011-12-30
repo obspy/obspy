@@ -7,6 +7,14 @@
 #
 # Copyright (C) 2008-2011 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
+from obspy.core.util.base import NamedTemporaryFile
+from obspy.signal.util import clibevresp
+import ctypes as C
+import math as M
+import numpy as np
+import os
+import scipy.signal
+import util
 """
 Python Module for Instrument Correction (Seismology), PAZ
 Poles and zeros information must be given in SEED convention, correction to
@@ -19,12 +27,6 @@ m/s.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import math as M
-import numpy as np
-import scipy.signal
-import util
-from obspy.signal.util import clibevresp
-import ctypes as C
 
 
 # Sensitivity is 2080 according to:
@@ -76,29 +78,35 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
 
-    :type t_samp: Float
+    :type t_samp: float
     :param t_samp: Sampling interval in seconds
-    :type nfft: Integer
+    :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: String
-    :param filename: SEED RESP-filename
+    :type filename: str
+    :param filename: SEED RESP-filename or content of RESP file
     :type date: UTCDateTime
     :param date: Date of interest
-    :type station: String
+    :type station: str
     :param station: Station id
-    :type channel: String
+    :type channel: str
     :param channel: Channel id
-    :type network: String
+    :type network: str
     :param network: Network id
-    :type locid: String
+    :type locid: str
     :param locid: Location id
-    :type units: String
+    :type units: str
     :param units: Units to return response in. Can be either DIS, VEL or ACC
-    :type debug: Boolean
+    :type debug: bool
     :param debug: Verbose output to stdout. Disabled by default.
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
+    # evalresp needs files with correct line separators depending on OS
+    data = open(filename, 'rb').read()
+    fh = NamedTemporaryFile()
+    tempfile = fh.name
+    fh.write(os.linesep.join(data.splitlines()))
+    fh.close()
 
     STALEN = 64
     NETLEN = 64
@@ -139,7 +147,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         vbs = C.c_char_p("")
     rtyp = C.c_char_p("CS")
     datime = C.c_char_p("%d,%3d" % (date.year, date.getJulday()))
-    fn = C.c_char_p(filename)
+    fn = C.c_char_p(tempfile)
     nfreqs = C.c_int(freqs.size)
     clibevresp.evresp.restype = C.POINTER(response)
     clibevresp.evresp.argtypes = [
@@ -168,6 +176,11 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     f = np.array([res[0].freqs[i] for i in xrange(res[0].nfreqs)])
     h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
+    # close temporary file
+    try:
+        os.remove(tempfile)
+    except:
+        pass
     if freq:
         return h, f
     return h
@@ -292,7 +305,7 @@ def specInv(spec, wlev):
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=True, simulate_sensitivity=True,
             water_level=600.0, zero_mean=True, taper=True,
-            taper_fraction=0.05, pre_filt=None, seedresp=None, **kwargs):
+            taper_fraction=0.05, pre_filt=None, seedresp=None, **_kwargs):
     """
     Simulate/Correct seismometer.
 

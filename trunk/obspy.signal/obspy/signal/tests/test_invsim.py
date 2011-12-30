@@ -4,9 +4,9 @@
 The InvSim test suite.
 """
 
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core import Trace, UTCDateTime
 from obspy.sac import attach_paz
-from obspy.signal import seisSim, cornFreq2Paz, lowpass, estimateMagnitude
+from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
 from obspy.signal.seismometer import INSTRUMENTS
 import gzip
 import numpy as np
@@ -190,7 +190,7 @@ class InvSimTestCase(unittest.TestCase):
                       np.sum(tr2.data ** 2))
         self.assertTrue(rms < 0.0421)
 
-    def test_evalrespsac_vs_obspy(self):
+    def test_evalrespVsObsPy(self):
         """
         Compare results from removing instrument response using
         evalresp in SAC and ObsPy. Visual inspection shows that the traces are
@@ -223,6 +223,23 @@ class InvSimTestCase(unittest.TestCase):
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0041)
+
+    def test_evalrespUsingDifferentLineSeparator(self):
+        """
+        The evalresp needs a file with correct line separator, so '\n' for
+        POSIX, '\r' for Mac OS, or '\r\n' for Windows. Here we check that
+        evalresp reads all three formats.
+        """
+        dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        # linux
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+        evalresp(0.01, 524288, respf, dt)
+        # mac
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
+        evalresp(0.01, 524288, respf, dt)
+        # windows
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
+        evalresp(0.01, 524288, respf, dt)
 
 
 def suite():
