@@ -189,10 +189,10 @@ def _createReport(ttrs, timetaken, log, server):
         result['obspy'][module]['failures'] = {}
         if module in NETWORK_MODULES: 
             for _, text in ttr.errors:
-                result['obspy'][module]['errors']['f%s' % (failures)] = text
+                result['obspy'][module]['failures']['f%s' % (failures)] = text
                 failures += 1
             for _, text in ttr.failures:
-                result['obspy'][module]['errors']['f%s' % (failures)] = text
+                result['obspy'][module]['failures']['f%s' % (failures)] = text
                 failures += 1
         else:
             for _, text in ttr.errors:
