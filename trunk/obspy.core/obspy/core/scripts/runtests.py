@@ -88,7 +88,7 @@ import warnings
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds']
+                'suds', 'mpl_toolkits.basemap']
 
 
 #XXX: start of ugly monkey patch for Python 2.7
