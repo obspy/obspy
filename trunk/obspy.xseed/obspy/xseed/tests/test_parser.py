@@ -528,6 +528,28 @@ class ParserTestCase(unittest.TestCase):
             parser = Parser(filename)
             self.assertEquals(parser.version, 2.3)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    def test_issue157(self):
+        """
+        Test case for issue #157: re-using parser object.
+        """
+        expected = {'latitude': 48.162899, 'elevation': 565.0,
+                    'longitude': 11.2752}
+        filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
+        t = UTCDateTime("2010-07-01")
+        parser = Parser()
+        parser.read(filename2)
+        # parsing a second time will raise a UserWarning: Clearing parser
+        # before every subsequent read()
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error", UserWarning)
+            self.assertRaises(UserWarning, parser.read, filename1)
+            warnings.simplefilter("ignore", UserWarning)
+            parser.read(filename1)
+            result = parser.getCoordinates("BW.FURT..EHZ", t)
+            self.assertEqual(expected, result)
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
