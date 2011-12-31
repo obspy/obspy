@@ -270,7 +270,7 @@ def _getRecordInformation(file_object, offset=0):
 
     # Get the size of the buffer.
     file_object.seek(0, 2)
-    info['filesize'] = file_object.tell() - record_start
+    info['filesize'] = long(file_object.tell() - record_start)
     file_object.seek(record_start, 0)
 
     # check current position 
@@ -384,7 +384,7 @@ def _getRecordInformation(file_object, offset=0):
 
     info['number_of_records'] = long(info['filesize'] // \
                                      info['record_length'])
-    info['excess_bytes'] = info['filesize'] % info['record_length']
+    info['excess_bytes'] = long(info['filesize'] % info['record_length'])
 
     # Reset file pointer.
     file_object.seek(initial_position, 0)
