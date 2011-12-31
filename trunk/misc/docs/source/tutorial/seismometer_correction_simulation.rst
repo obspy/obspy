@@ -2,6 +2,10 @@
 Seismometer Correction/Simulation
 =================================
 
+----------------------
+Using a PAZ dictionary
+----------------------
+
 The following script shows how to simulate a 1Hz seismometer from a STS-2
 seismometer with the given poles and zeros. Poles, zeros, gain
 (*A0 normalization factor*) and sensitivity (*overall sensitivity*) are
@@ -35,6 +39,10 @@ here:
    plt.show()
 
 .. plot:: source/tutorial/seismometer_correction_simulation_2.py
+
+-----------------
+Using a RESP file
+-----------------
 
 It is further possible to use evalresp_ to evaluate the instrument
 response information from a RESP file.
