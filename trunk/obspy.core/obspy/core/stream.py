@@ -11,8 +11,8 @@ Module for handling ObsPy Stream objects.
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _getPlugins, getExampleFile, \
-    getEntryPoints, uncompressFile
+from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
+from obspy.core.util.base import WAVEFORM_ENTRY_POINTS
 from pkg_resources import load_entry_point
 import copy
 import fnmatch
@@ -21,9 +21,6 @@ import numpy as np
 import os
 import urllib2
 import warnings
-
-
-ENTRY_POINTS = getEntryPoints()
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
@@ -245,47 +242,41 @@ def _read(filename, format=None, headonly=False, **kwargs):
     if isinstance(filename, basestring) and not os.path.exists(filename):
         msg = "File not found '%s'" % (filename)
         raise IOError(msg)
-    # go through all known formats
+    # get format entry point
     format_ep = None
     if not format:
-        # detect format
-        eps = ENTRY_POINTS
-        for ep in eps:
+        # auto detect format - go through all known formats in given sort order
+        for format_ep in WAVEFORM_ENTRY_POINTS.values():
             try:
                 # search isFormat for given entry point
-                isFormat = load_entry_point(ep.dist.key,
-                                            'obspy.plugin.waveform.' + ep.name,
-                                            'isFormat')
+                isFormat = load_entry_point(format_ep.dist.key,
+                    'obspy.plugin.waveform.%s' % (format_ep.name), 'isFormat')
             except ImportError, e:
                 # verbose error handling/parsing
-                msg = "Cannot load module %s:\n%s" % (ep.dist.key, str(e))
+                msg = "Cannot load module %s:\n%s" % (format_ep.dist.key, e)
                 warnings.warn(msg, category=ImportWarning)
                 continue
+            # check format
             if isFormat(filename):
-                format_ep = ep
                 break
     else:
         # format given via argument
-        format = format.upper()
         try:
-            format_ep = [_i for _i in ENTRY_POINTS if _i.name == format][0]
+            format_ep = WAVEFORM_ENTRY_POINTS[format.upper()]
         except IndexError:
-            msg = "Format is not supported. Supported Formats: "
-            raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
+            msg = "Format is not supported. Supported Formats: %s"
+            raise TypeError(msg % (', '.join(WAVEFORM_ENTRY_POINTS)))
     # file format should be known by now
     try:
         # search readFormat for given entry point
         readFormat = load_entry_point(format_ep.dist.key,
-                                      'obspy.plugin.waveform.' + \
-                                      format_ep.name, 'readFormat')
-    except:
-        msg = "Format is not supported. Supported Formats: "
-        raise TypeError(msg + ', '.join([_i.name for _i in ENTRY_POINTS]))
-    if headonly:
-        stream = readFormat(filename, headonly=True, **kwargs)
-    else:
-        stream = readFormat(filename, **kwargs)
-    # set a format keyword for each trace
+            'obspy.plugin.waveform.%s' % (format_ep.name), 'readFormat')
+    except ImportError:
+        msg = "Format is not supported. Supported Formats: %s"
+        raise TypeError(msg % (', '.join(WAVEFORM_ENTRY_POINTS)))
+    # read
+    stream = readFormat(filename, headonly=headonly, **kwargs)
+    # set _format identifier for each trace
     for trace in stream:
         trace.stats._format = format_ep.name
     return stream
@@ -1219,18 +1210,15 @@ class Stream(object):
                       'np.array.filled() to convert the masked array to a ' + \
                       'normal array.'
                 raise NotImplementedError(msg)
-        format = format.upper()
-        # Gets all available formats and the corresponding entry points.
-        formats_ep = _getPlugins('obspy.plugin.waveform', 'writeFormat')
         try:
-            # search writeFormat for given entry point
-            ep = formats_ep[format]
-            writeFormat = load_entry_point(ep.dist.key,
-                                           'obspy.plugin.waveform.' + \
-                                           ep.name, 'writeFormat')
-        except:
-            msg = "Format is not supported. Supported Formats: "
-            raise TypeError(msg + ', '.join(formats_ep.keys()))
+            # get format specific entry point
+            format_ep = WAVEFORM_ENTRY_POINTS[format.upper()]
+            # search writeFormat method for given entry point
+            writeFormat = load_entry_point(format_ep.dist.key,
+                'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
+        except IndexError, ImportError:
+            msg = "Format is not supported. Supported Formats: %s"
+            raise TypeError(msg % (', '.join(WAVEFORM_ENTRY_POINTS)))
         writeFormat(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
@@ -1639,7 +1627,6 @@ class Stream(object):
         """
         for tr in self:
             tr.filter(type, **options)
-        return
 
     def trigger(self, type, **options):
         """
@@ -1684,7 +1671,6 @@ class Stream(object):
         """
         for tr in self:
             tr.trigger(type, **options)
-        return
 
     def downsample(self, decimation_factor, no_filter=False,
                    strict_length=False):
@@ -1741,8 +1727,7 @@ class Stream(object):
         """
         for tr in self:
             tr.downsample(decimation_factor=decimation_factor,
-                    no_filter=no_filter, strict_length=strict_length)
-        return
+                          no_filter=no_filter, strict_length=strict_length)
 
     def max(self):
         """

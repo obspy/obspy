@@ -36,7 +36,8 @@ LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
 
 # package specific
-VERSION = open(os.path.join(LOCAL_PATH, 'obspy', 'signal', 'VERSION.txt')).read()
+VERSION = open(os.path.join(LOCAL_PATH, 'obspy', 'signal',
+                            'VERSION.txt')).read()
 NAME = 'obspy.signal'
 AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
@@ -44,8 +45,22 @@ LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'signal', 'processing', 'filter', 'trigger',
             'instrument correction', 'picker', 'instrument simulation',
             'features', 'envelope', 'hob']
-INSTALL_REQUIRES = ['obspy.core', 'scipy']  # +numpy!?
-ENTRY_POINTS = {}
+INSTALL_REQUIRES = ['obspy.core > 0.5.1', 'scipy']
+ENTRY_POINTS = {
+    'obspy.plugin.trigger': [
+        'recstalta = obspy.signal.trigger:recSTALTA',
+        'carlstatrig = obspy.signal.trigger:classicSTALTA',
+        'delayedstalta = obspy.signal.trigger:delayedSTALTA',
+        'zdetect = obspy.signal.trigger:zDetect',
+        'recstaltapy = obspy.signal.trigger:recSTALTAPy',
+    ],
+    'obspy.plugin.filter': [
+        'bandpass = obspy.signal.filter:bandpass',
+        'bandstop = obspy.signal.filter:bandstop',
+        'lowpass = obspy.signal.filter:lowpass',
+        'highpass = obspy.signal.filter:highpass',
+    ],
+}
 
 
 def setupLibSignal():
@@ -141,7 +156,7 @@ def convert2to3():
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
     # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):
+    def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]

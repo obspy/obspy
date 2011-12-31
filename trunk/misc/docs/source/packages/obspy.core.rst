@@ -27,11 +27,7 @@
        stream
        utcdatetime
        ascii
-       util.attribdict
-       util.base
-       util.decorator
-       util.geodetics
-       util.misc
+       util
 
     .. comment to end block
 

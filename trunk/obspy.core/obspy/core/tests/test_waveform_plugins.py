@@ -2,7 +2,7 @@
 
 from obspy.core import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, _getPlugins
+from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 from pkg_resources import load_entry_point
 import StringIO
 import cStringIO
@@ -27,7 +27,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         tmpfile = NamedTemporaryFile().name
         # create empty file
         open(tmpfile, 'wb').close()
-        formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
+        formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
         for ep in formats_ep.values():
             isFormat = load_entry_point(ep.dist.key,
                                         'obspy.plugin.waveform.' + ep.name,
@@ -41,7 +41,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
+        formats = _getEntryPoints('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -139,7 +139,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         Tests all isFormat methods against all data test files from the other
         modules for false positives.
         """
-        formats_ep = _getPlugins('obspy.plugin.waveform', 'isFormat')
+        formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
         formats = formats_ep.values()
         # Collect all false positives.
         false_positives = []
@@ -191,7 +191,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         data = np.arange(0, 20000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
-        formats = _getPlugins('obspy.plugin.waveform', 'writeFormat')
+        formats = _getEntryPoints('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
             # XXX: skip SEGY and SU formats for now as they need some special
             # headers.
@@ -253,9 +253,10 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         warnings.filterwarnings("ignore", "Detected non contiguous data")
         # test all plugins with both read and write method
-        formats_write = set(_getPlugins('obspy.plugin.waveform',
-                                        'writeFormat'))
-        formats_read = set(_getPlugins('obspy.plugin.waveform', 'readFormat'))
+        formats_write = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'writeFormat'))
+        formats_read = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
         # mseed will raise exception for int64 data, thus use int32 only
         data = np.arange(10, dtype='int32')

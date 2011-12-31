@@ -11,12 +11,13 @@ Module for handling ObsPy Trace objects.
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
+from obspy.core.util.base import TRIGGER_ENTRY_POINTS, FILTER_ENTRY_POINTS
+from pkg_resources import load_entry_point
 import math
 import numpy as np
 import warnings
 
 
-# avoid significant overhead of reimported signal functions
 signal = None
 
 
@@ -1103,35 +1104,27 @@ class Trace(object):
             tr.filter("highpass", freq=1.0)
             tr.plot()
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
-        # dictionary to map given type-strings to filter functions
-        filter_functions = {"bandpass": signal.bandpass,
-                            "bandstop": signal.bandstop,
-                            "lowpass": signal.lowpass,
-                            "highpass": signal.highpass}
-
-        # make type string comparison case insensitive
         type = type.lower()
-
-        if type not in filter_functions:
-            msg = "Filter type \"%s\" not recognized. " % type + \
-                  "Filter type must be one of: %s." % filter_functions.keys()
-            raise ValueError(msg)
-
+        try:
+            # get filter specific entry point
+            entry_point = FILTER_ENTRY_POINTS[type]
+            filterFunction = load_entry_point(entry_point.dist.key,
+                'obspy.plugin.filter', entry_point.name)
+        except KeyError, ImportError:
+            # check if any filter is available at all
+            if not TRIGGER_ENTRY_POINTS:
+                msg = "Your current ObsPy installation does not support " + \
+                      "any filter functions. Please make sure " + \
+                      "obspy.signal is installed properly."
+                raise ImportError(msg)
+            # ok we have filter, but given filter is not supported
+            msg = "Filter type \"%s\" is not supported. Supported types: %s"
+            raise ValueError(msg % (type, ', '.join(FILTER_ENTRY_POINTS)))
         # do the actual filtering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # filter_functions dictionary.
-        self.data = filter_functions[type](self.data,
-                df=self.stats.sampling_rate, **options)
-
+        self.data = filterFunction(self.data, df=self.stats.sampling_rate,
+                                   **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
@@ -1182,51 +1175,38 @@ class Trace(object):
             tr.trigger('recstalta', sta=3, lta=10)
             tr.plot()
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
-        # dictionary to map given type-strings to trigger functions
-        # (keys all lower case!!)
-        trigger_functions = {'recstalta': signal.trigger.recSTALTA,
-                             'carlstatrig': signal.trigger.classicSTALTA,
-                             'delayedstalta': signal.trigger.delayedSTALTA,
-                             'zdetect': signal.trigger.zDetect}
-
-        # make type string comparison case insensitive
         type = type.lower()
-
-        if type not in trigger_functions:
-            msg = "Trigger type \"%s\" not recognized. " % type + \
-                  "Trigger type must be one of: %s." % trigger_functions.keys()
-            raise ValueError(msg)
-
+        try:
+            # get trigger specific entry point
+            entry_point = TRIGGER_ENTRY_POINTS[type]
+            triggerFunction = load_entry_point(entry_point.dist.key,
+                'obspy.plugin.trigger', entry_point.name)
+        except KeyError, ImportError:
+            # check if any trigger is available at all
+            if not TRIGGER_ENTRY_POINTS:
+                msg = "Your current ObsPy installation does not support " + \
+                      "any trigger functions. Please make sure " + \
+                      "obspy.signal is installed properly."
+                raise ImportError(msg)
+            # ok we have triggers, but given trigger is not supported
+            msg = "Trigger type \"%s\" is not supported. Supported types: %s"
+            raise ValueError(msg % (type, ', '.join(TRIGGER_ENTRY_POINTS)))
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
         # used in length of trigger averages)...
         spr = self.stats.sampling_rate
         for key in ['sta', 'lta']:
             if key in options:
-                options['n' + key] = int(options[key] * spr)
-                del options[key]
-
+                options['n%s' % (key)] = int(options.pop(key) * spr)
         # do the actual triggering. the options dictionary is passed as
         # kwargs to the function that is mapped according to the
         # trigger_functions dictionary.
-        self.data = trigger_functions[type](self.data, **options)
-
+        self.data = triggerFunction(self.data, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
         proc_info = "trigger:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
-
-        return
 
     def downsample(self, decimation_factor, no_filter=False,
                    strict_length=False):
@@ -1522,7 +1502,7 @@ class Trace(object):
 
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
-            self.stats['processing'] = []
+            self.stats.setdefault('processing', [])
         proc_info = "normalize:%s" % norm
         self.stats['processing'].append(proc_info)
 

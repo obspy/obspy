@@ -9,6 +9,7 @@ Base utilities and constants for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core.util.ordereddict import OrderedDict
 from pkg_resources import require, iter_entry_points
 import ctypes as C
 import doctest
@@ -195,32 +196,6 @@ def _getVersionString(module="obspy.core"):
     return egg_version
 
 
-def _getPlugins(group, subgroup_name=None):
-    """
-    Gets a dictionary of all available waveform features plug-ins.
-
-    :type group: str
-    :param group: Group name.
-    :type subgroup_name: str, optional
-    :param subgroup_name: Subgroup name (defaults to None).
-    :rtype: dict
-    :returns: Dictionary of entry points of each plug-in.
-
-    .. rubric:: Example
-
-    >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
-    {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
-    """
-    features = {}
-    for ep in iter_entry_points(group):
-        if subgroup_name:
-            if list(iter_entry_points(group + '.' + ep.name, subgroup_name)):
-                features[ep.name] = ep
-        else:
-            features[ep.name] = ep
-    return features
-
-
 def add_doctests(testsuite, module_name):
     """
     Function to add all available doctests of the module with given name
@@ -302,36 +277,81 @@ def add_unittests(testsuite, module_name):
         testsuite.addTest(module.suite())
 
 
-def getEntryPoints():
+def _getEntryPoints(group, subgroup=None):
     """
-    Creates a sorted list of available entry points.
+    Gets a dictionary of all available plug-ins of a group or subgroup.
+
+    :type group: str
+    :param group: Group name.
+    :type subgroup: str, optional
+    :param subgroup: Subgroup name (defaults to None).
+    :rtype: dict
+    :returns: Dictionary of entry points of each plug-in.
+
+    .. rubric:: Example
+
+    >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
+    {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
+    """
+    features = {}
+    for ep in iter_entry_points(group):
+        if subgroup:
+            if list(iter_entry_points(group + '.' + ep.name, subgroup)):
+                features[ep.name] = ep
+        else:
+            features[ep.name] = ep
+    return features
+
+
+def getWaveformEntryPoints():
+    """
+    Creates a list of available waveform plug-ins.
     """
     # get all available entry points
-    formats_ep = _getPlugins('obspy.plugin.waveform', 'readFormat')
+    ep_list = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
     # NOTE: If no file format is installed, this will fail and therefore the
-    # whole file can no longer be executed. However obspy.core.ascii is
+    # whole file can no longer be executed. However obspy.core.ascii should be
     # always available.
-    if not formats_ep:
+    if not ep_list:
         msg = "Your current ObsPy installation does not support any file " + \
               "reading formats. Please update or extend your ObsPy " + \
               "installation."
         raise Exception(msg)
-    eps = formats_ep.values()
-    names = [_i.name for _i in eps]
-    # loop through known waveform plug-ins and add them to resulting list
-    new_entries = []
-    for entry in WAVEFORM_PREFERRED_ORDER:
-        # skip plug-ins which are not installed
-        if not entry in names:
+    ep_dict = dict((ep.name, ep) for ep in ep_list.values())
+    # loop through official supported waveform plug-ins and add them to
+    # ordered dict of entry points
+    entry_points = OrderedDict()
+    for name in WAVEFORM_PREFERRED_ORDER:
+        try:
+            entry_points[name] = ep_dict.pop(name)
+        except:
+            # skip plug-ins which are not installed
             continue
-        new_entries.append(formats_ep[entry])
-        index = names.index(entry)
-        eps.pop(index)
-        names.pop(index)
-    # extend resulting list with any modules which are unknown
-    new_entries.extend(eps)
-    # return list of entry points
-    return new_entries
+    # extend entry points with any left over waveform plug-ins
+    entry_points.update(ep_dict)
+    return entry_points
+
+WAVEFORM_ENTRY_POINTS = getWaveformEntryPoints()
+
+
+def getTriggerEntryPoints():
+    """
+    Creates a list of available trigger functions.
+    """
+    ep_list = _getEntryPoints('obspy.plugin.trigger')
+    return dict((ep.name, ep) for ep in ep_list.values())
+
+TRIGGER_ENTRY_POINTS = getTriggerEntryPoints()
+
+
+def getFilterEntryPoints():
+    """
+    Creates a list of available filter functions.
+    """
+    ep_list = _getEntryPoints('obspy.plugin.filter')
+    return dict((ep.name, ep) for ep in ep_list.values())
+
+FILTER_ENTRY_POINTS = getFilterEntryPoints()
 
 
 def getMatplotlibVersion():
