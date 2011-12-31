@@ -432,6 +432,23 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(blkt_link.blktdatalen, 4)
         del ms
 
+    def test_issue272(self):
+        """
+        Tests issue #272
+
+        Option headonly should not read the actual waveform data.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'BW.BGLD.__.EHE.D.2008.001.first_10_records')
+        # everything
+        st = read(filename)
+        self.assertEqual(st[0].stats.npts, 4120)
+        self.assertEqual(len(st[0].data), 4120)
+        # headers only
+        st = read(filename, headonly=True)
+        self.assertEqual(st[0].stats.npts, 4120)
+        self.assertEqual(len(st[0].data), 0)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
