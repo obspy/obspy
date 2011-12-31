@@ -88,8 +88,8 @@ def isMSEED(filename):
     return False
 
 
-def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
-              readMSInfo=True, headonly=False, reclen=None, **kwargs):
+def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
+              sourcename=None, reclen=None, recinfo=True, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -104,22 +104,22 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
     :param starttime: Only read data samples after or at the starttime.
     :type endtime: UTCDateTime
     :param endtime: Only read data samples before or at the starttime.
+    :param headonly: Determines whether or not to unpack the data or just
+        read the headers.
     :type sourcename: str
     :param sourcename: Sourcename has to have the structure
         'network.station.location.channel' and can contain globbing characters.
         Defaults to ``None``.
-    :type readMSInfo: bool, optional
-    :param readMSInfo: If ``True`` the byteorder, record length and the
+    :param reclen: If it is None, it will be automatically determined for every
+        record. If it is known, just set it to the record length in bytes which
+        will increase the reading speed slightly.
+    :type recinfo: bool, optional
+    :param recinfo: If ``True`` the byteorder, record length and the
         encoding of the file will be read and stored in every Trace's
         stats.mseed AttribDict. These stored attributes will also be used while
         writing a Mini-SEED file. Only the very first record of the file will
         be read and all following records are assumed to be the same. Defaults
         to ``True``.
-    :param headonly: Determines whether or not to unpack the data or just
-        read the headers.
-    :param reclen: If it is None, it will be automatically determined for every
-        record. If it is known, just set it to the record length in bytes which
-        will increase the reading speed slightly.
 
     .. rubric:: Example
 
@@ -158,7 +158,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
-    if readMSInfo:
+    if recinfo:
         info = util.getRecordInformation(mseed_object)
         info['encoding'] = ENCODINGS[info['encoding']][0]
         # Only keep information relevant for the whole file.
@@ -293,7 +293,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, sourcename=None,
             # Make sure to init the number of samples.
             trace = Trace(header=header, data=data)
             # Append information if necessary.
-            if readMSInfo:
+            if recinfo:
                 for key, value in info.iteritems():
                     setattr(trace.stats.mseed, key, value)
             traces.append(trace)
