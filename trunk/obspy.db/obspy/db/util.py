@@ -42,16 +42,19 @@ def parseMappingData(lines):
             try:
                 temp['starttime'] = UTCDateTime(data[2])
             except:
-                raise msg + "starttime '%s' is not a time format" % data[2]
+                msg += "starttime '%s' is not a time format"
+                raise Exception(msg % data[2])
         else:
             temp['starttime'] = None
         if len(data) > 3:
             try:
                 temp['endtime'] = UTCDateTime(data[3])
             except:
-                raise msg + "endtime '%s' is not a time format" % data[3]
+                msg += "endtime '%s' is not a time format"
+                raise Exception(msg % data[3])
             if temp['endtime'] < temp['starttime']:
-                raise msg + "endtime '%s' should be after starttime" % data[3]
+                msg += "endtime '%s' should be after starttime"
+                raise Exception(msg % data[3])
         else:
             temp['endtime'] = None
         results.setdefault(old_id, [])
