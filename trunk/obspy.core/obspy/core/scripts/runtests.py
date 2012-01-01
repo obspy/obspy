@@ -409,11 +409,6 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     suites = _getSuites(verbosity, tests, all)
     ttr, total_time = _TextTestRunner(verbosity=verbosity,
                                       timeit=timeit).run(suites)
-    if interactive and not report:
-        msg = "Do you want to report this to tests.obspy.org? [n]: "
-        var = raw_input(msg).lower()
-        if 'y' in var:
-            report = True
     if slowest:
         mydict = {}
         # loop over modules
@@ -427,6 +422,13 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         print "Slowest Tests"
         print "-------------"
         print os.linesep.join(sorted_tests)
+        print
+        print
+    if interactive and not report:
+        msg = "Do you want to report this to tests.obspy.org? [n]: "
+        var = raw_input(msg).lower()
+        if 'y' in var:
+            report = True
     if report:
         _createReport(ttr, total_time, log, server)
 
