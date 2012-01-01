@@ -1058,16 +1058,14 @@ class Trace(object):
                 simulate_sensitivity=simulate_sensitivity, **kwargs)
 
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         if paz_remove:
             proc_info = "simulate:inverse:%s:sensitivity=%s" % \
                     (paz_remove, remove_sensitivity)
-            self.stats['processing'].append(proc_info)
+            self.__addProcessingInfo(proc_info)
         if paz_simulate:
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                     (paz_simulate, simulate_sensitivity)
-            self.stats['processing'].append(proc_info)
+            self.__addProcessingInfo(proc_info)
 
     def filter(self, type, **options):
         """
@@ -1112,10 +1110,8 @@ class Trace(object):
         # mapped according to the filter_functions dictionary
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "filter:%s:%s" % (type, options)
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def trigger(self, type, **options):
         """
@@ -1176,10 +1172,8 @@ class Trace(object):
         # mapped according to the trigger_functions dictionary
         self.data = func(self.data, **options)
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "trigger:%s:%s" % (type, options)
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     @deprecated
     def downsample(self, decimation_factor, no_filter=False,
@@ -1269,10 +1263,8 @@ class Trace(object):
                 float(factor)
 
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "downsample:integerDecimation:%s" % factor
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def max(self):
         """
@@ -1341,10 +1333,8 @@ class Trace(object):
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "differentiate:%s" % type
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def integrate(self, type='cumtrapz', **options):
         """
@@ -1388,10 +1378,8 @@ class Trace(object):
         # integrating
         self.data = func(*args, **options)
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "integrate:%s" % (type)
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def detrend(self, type='simple', **options):
         """
@@ -1427,10 +1415,8 @@ class Trace(object):
         # detrending
         self.data = func(self.data, **options)
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "detrend:%s:%s" % (type, options)
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def normalize(self, norm=None):
         """
@@ -1481,10 +1467,8 @@ class Trace(object):
         self.data /= abs(norm)
 
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats.setdefault('processing', [])
         proc_info = "normalize:%s" % norm
-        self.stats['processing'].append(proc_info)
+        self.__addProcessingInfo(proc_info)
 
     def copy(self):
         """
@@ -1524,6 +1508,14 @@ class Trace(object):
         True
         """
         return deepcopy(self)
+
+    def __addProcessingInfo(self, info):
+        """
+        Adds the given informational string to the `processing` field in the
+        trace's :class:`~obspy.core.trace.stats.Stats` object.
+        """
+        proc = self.stats.setdefault('processing', [])
+        proc.append(info)
 
 
 if __name__ == '__main__':

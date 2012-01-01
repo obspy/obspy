@@ -535,7 +535,7 @@ class Catalog(object):
         # draw coastlines, country boundaries, fill continents.
         map.drawcoastlines()
         map.drawcountries()
-        map.fillcontinents(color = '#EEEEEE')
+        map.fillcontinents(color='#EEEEEE')
         # draw the edge of the map projection region (the projection limb)
         map.drawmapboundary()
         # lat/lon coordinates
