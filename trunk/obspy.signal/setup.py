@@ -60,6 +60,9 @@ ENTRY_POINTS = {
         'lowpass = obspy.signal.filter:lowpass',
         'highpass = obspy.signal.filter:highpass',
     ],
+    'obspy.plugin.detrend': [
+        'simple = obspy.signal.detrend:simple',
+    ],
 }
 
 

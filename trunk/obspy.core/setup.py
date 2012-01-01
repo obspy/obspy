@@ -59,6 +59,16 @@ ENTRY_POINTS = {
         'readFormat = obspy.core.ascii:readSLIST',
         'writeFormat = obspy.core.ascii:writeSLIST',
     ],
+    'obspy.plugin.detrend': [
+        'linear = scipy.signal:detrend',
+        'constant = scipy.signal:detrend',
+    ],
+    'obspy.plugin.integrate': [
+        'trapz = scipy.integrate:trapz',
+        'cumtrapz = scipy.integrate:cumtrapz',
+        'simps( = scipy.integrate:simps',
+        'romb = scipy.integrate:romb',
+    ],
 }
 
 

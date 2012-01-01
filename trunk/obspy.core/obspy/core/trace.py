@@ -11,8 +11,7 @@ Module for handling ObsPy Trace objects.
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
-from obspy.core.util.base import TRIGGER_ENTRY_POINTS, FILTER_ENTRY_POINTS
-from pkg_resources import load_entry_point
+from obspy.core.util.base import _getFunctionFromEntryPoint
 import math
 import numpy as np
 import warnings
@@ -1105,26 +1104,12 @@ class Trace(object):
             tr.plot()
         """
         type = type.lower()
-        try:
-            # get filter specific entry point
-            entry_point = FILTER_ENTRY_POINTS[type]
-            filterFunction = load_entry_point(entry_point.dist.key,
-                'obspy.plugin.filter', entry_point.name)
-        except KeyError, ImportError:
-            # check if any filter is available at all
-            if not TRIGGER_ENTRY_POINTS:
-                msg = "Your current ObsPy installation does not support " + \
-                      "any filter functions. Please make sure " + \
-                      "obspy.signal is installed properly."
-                raise ImportError(msg)
-            # ok we have filter, but given filter is not supported
-            msg = "Filter type \"%s\" is not supported. Supported types: %s"
-            raise ValueError(msg % (type, ', '.join(FILTER_ENTRY_POINTS)))
-        # do the actual filtering. the options dictionary is passed as
-        # kwargs to the function that is mapped according to the
-        # filter_functions dictionary.
-        self.data = filterFunction(self.data, df=self.stats.sampling_rate,
-                                   **options)
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('filter', type)
+        # filtering
+        # the options dictionary is passed as kwargs to the function that is
+        # mapped according to the filter_functions dictionary
+        self.data = func(self.data, df=self.stats.sampling_rate, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
@@ -1176,21 +1161,8 @@ class Trace(object):
             tr.plot()
         """
         type = type.lower()
-        try:
-            # get trigger specific entry point
-            entry_point = TRIGGER_ENTRY_POINTS[type]
-            triggerFunction = load_entry_point(entry_point.dist.key,
-                'obspy.plugin.trigger', entry_point.name)
-        except KeyError, ImportError:
-            # check if any trigger is available at all
-            if not TRIGGER_ENTRY_POINTS:
-                msg = "Your current ObsPy installation does not support " + \
-                      "any trigger functions. Please make sure " + \
-                      "obspy.signal is installed properly."
-                raise ImportError(msg)
-            # ok we have triggers, but given trigger is not supported
-            msg = "Trigger type \"%s\" is not supported. Supported types: %s"
-            raise ValueError(msg % (type, ', '.join(TRIGGER_ENTRY_POINTS)))
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('trigger', type)
         # convert the two arguments sta and lta to nsta and nlta as used by
         # actual triggering routines (needs conversion to int, as samples are
         # used in length of trigger averages)...
@@ -1198,10 +1170,10 @@ class Trace(object):
         for key in ['sta', 'lta']:
             if key in options:
                 options['n%s' % (key)] = int(options.pop(key) * spr)
-        # do the actual triggering. the options dictionary is passed as
-        # kwargs to the function that is mapped according to the
-        # trigger_functions dictionary.
-        self.data = triggerFunction(self.data, **options)
+        # triggering
+        # the options dictionary is passed as kwargs to the function that is
+        # mapped according to the trigger_functions dictionary
+        self.data = func(self.data, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
@@ -1368,7 +1340,7 @@ class Trace(object):
         proc_info = "differentiate:%s" % type
         self.stats['processing'].append(proc_info)
 
-    def integrate(self, type='cumtrapz'):
+    def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
 
@@ -1383,24 +1355,33 @@ class Trace(object):
             Cumulatively integrate using the composite trapezoidal rule (uses
             :func:`scipy.integrate.cumtrapz`). Result has one sample less then
             the input!
+
+        ``'trapz'``
+            see :func:`scipy.integrate.trapz`
+
+        ``'simps'``
+            see :func:`scipy.integrate.simps`
+
+        ``'romb'``
+            see :func:`scipy.integrate.romb`
         """
-        # including method option for future implementation of fourier domain
-        # integration
         type = type.lower()
-        if type == 'cumtrapz':
-            import scipy.integrate
-            self.data = scipy.integrate.cumtrapz(self.data,
-                                                 dx=self.stats.delta)
-        else:
-            msg = "integration method '%s' does not exist" % type
-            raise ValueError(msg)
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('integrate', type)
+        # handle scipy specific settings
+        if func.__module__.startswith('scipy'):
+            # we need to set dx if not given in options
+            if 'dx' not in options:
+                options['dx'] = self.stats.delta
+        # integrating
+        self.data = func(self.data, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
-        proc_info = "integrate:%s" % type
+        proc_info = "integrate:%s" % (type)
         self.stats['processing'].append(proc_info)
 
-    def detrend(self, type='simple'):
+    def detrend(self, type='simple', **options):
         """
         Method to remove a linear trend from the trace.
 
@@ -1413,7 +1394,7 @@ class Trace(object):
 
         ``'simple'``
             Subtracts a linear function defined by first/last sample of the
-            trace (uses :func:`obspy.signal.invsim.detrend`).
+            trace (uses :func:`obspy.signal.detrend.simple`).
 
         ``'linear'``
             Fitting a linear function to the trace with least squares and
@@ -1422,34 +1403,21 @@ class Trace(object):
         ``'constant'`` or ``'demean'``
             Mean of data is subtracted (uses :func:`scipy.signal.detrend`).
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-        # detrend
         type = type.lower()
-        if type == 'simple':
-            signal.invsim.detrend(self.data)
-        elif type in ['linear', 'constant', 'demean']:
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('detrend', type)
+        # handle scipy specific settings
+        if func.__module__.startswith('scipy'):
             if type == 'demean':
                 type = 'constant'
-            from scipy.signal import detrend as scipy_detrend
-            try:
-                self.data = scipy_detrend(self.data, type=type)
-            except ValueError, e:
-                msg = str(e) + ' in trace: %s' % self.__str__()
-                raise ValueError(msg)
-        else:
-            msg = "detrending method '%s' does not exist" % type
-            raise ValueError(msg)
+            # we need to set the type keyword
+            options['type'] = type
+        # detrending
+        self.data = func(self.data, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
-        proc_info = "detrend:%s" % type
+        proc_info = "detrend:%s:%s" % (type, options)
         self.stats['processing'].append(proc_info)
 
     def normalize(self, norm=None):

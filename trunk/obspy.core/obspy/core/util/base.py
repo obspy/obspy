@@ -10,7 +10,7 @@ Base utilities and constants for ObsPy.
 """
 
 from obspy.core.util.ordereddict import OrderedDict
-from pkg_resources import require, iter_entry_points
+from pkg_resources import require, iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
 import glob
@@ -303,25 +303,16 @@ def _getEntryPoints(group, subgroup=None):
     return features
 
 
-def getWaveformEntryPoints():
+def _getOrderedEntryPoints(group, subgroup=None, order_list=[]):
     """
-    Creates a list of available waveform plug-ins.
+    Gets a ordered dictionary of all available plug-ins of a group or subgroup.
     """
     # get all available entry points
-    ep_list = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
-    # NOTE: If no file format is installed, this will fail and therefore the
-    # whole file can no longer be executed. However obspy.core.ascii should be
-    # always available.
-    if not ep_list:
-        msg = "Your current ObsPy installation does not support any file " + \
-              "reading formats. Please update or extend your ObsPy " + \
-              "installation."
-        raise Exception(msg)
-    ep_dict = dict((ep.name, ep) for ep in ep_list.values())
+    ep_dict = _getEntryPoints(group, subgroup)
     # loop through official supported waveform plug-ins and add them to
     # ordered dict of entry points
     entry_points = OrderedDict()
-    for name in WAVEFORM_PREFERRED_ORDER:
+    for name in order_list:
         try:
             entry_points[name] = ep_dict.pop(name)
         except:
@@ -331,27 +322,41 @@ def getWaveformEntryPoints():
     entry_points.update(ep_dict)
     return entry_points
 
-WAVEFORM_ENTRY_POINTS = getWaveformEntryPoints()
+
+ENTRY_POINTS = {
+    'trigger': _getEntryPoints('obspy.plugin.trigger'),
+    'filter': _getEntryPoints('obspy.plugin.filter'),
+    'detrend': _getEntryPoints('obspy.plugin.detrend'),
+    'integrate': _getEntryPoints('obspy.plugin.integrate'),
+    'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
+                                       'readFormat',
+                                       WAVEFORM_PREFERRED_ORDER)
+}
 
 
-def getTriggerEntryPoints():
+def _getFunctionFromEntryPoint(group, type):
     """
-    Creates a list of available trigger functions.
+    A "automagic" function searching a given dict of entry points for a valid
+    entry point and returns the function call. Otherwise it will raise a
+    default error message.
     """
-    ep_list = _getEntryPoints('obspy.plugin.trigger')
-    return dict((ep.name, ep) for ep in ep_list.values())
-
-TRIGGER_ENTRY_POINTS = getTriggerEntryPoints()
-
-
-def getFilterEntryPoints():
-    """
-    Creates a list of available filter functions.
-    """
-    ep_list = _getEntryPoints('obspy.plugin.filter')
-    return dict((ep.name, ep) for ep in ep_list.values())
-
-FILTER_ENTRY_POINTS = getFilterEntryPoints()
+    ep_dict = ENTRY_POINTS[group]
+    try:
+        # get detrend specific entry point
+        entry_point = ep_dict[type]
+        func = load_entry_point(entry_point.dist.key,
+            'obspy.plugin.%s' % (group), entry_point.name)
+    except KeyError, ImportError:
+        # check if any detrend is available at all
+        if not ep_dict:
+            msg = "Your current ObsPy installation does not support " + \
+                  "any %s functions. Please make sure obspy.signal" + \
+                  "and SciPy are installed properly."
+            raise ImportError(msg % (group.capitalize()))
+        # ok we have detrend, but given detrend is not supported
+        msg = "%s type \"%s\" is not supported. Supported types: %s"
+        raise ValueError(msg % (group.capitalize(), type, ', '.join(ep_dict)))
+    return func
 
 
 def getMatplotlibVersion():

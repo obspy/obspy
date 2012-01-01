@@ -8,6 +8,8 @@
 # Copyright (C) 2008-2011 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import deprecated
+from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.util import clibevresp
 import ctypes as C
 import math as M
@@ -186,8 +188,11 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     return h
 
 
+@deprecated
 def detrend(trace):
     """
+    DEPRECATED - use :func:`obspy.signal.detrend.simple` instead.
+
     Inplace detrend signal simply by subtracting a line through the first
     and last point of the trace
 
@@ -436,7 +441,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # transform data back into the time domain
     data = np.fft.irfft(data)[0:ndat]
     # linear detrend
-    detrend(data)
+    data = simpleDetrend(data)
     # correct for involved overall sensitivities
     if paz_remove and remove_sensitivity:
         data /= paz_remove['sensitivity']
