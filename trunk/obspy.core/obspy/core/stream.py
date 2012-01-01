@@ -13,6 +13,7 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
 from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.decorator import deprecated
 from pkg_resources import load_entry_point
 import copy
 import fnmatch
@@ -1675,14 +1676,22 @@ class Stream(object):
         for tr in self:
             tr.trigger(type, **options)
 
+    @deprecated
     def downsample(self, decimation_factor, no_filter=False,
                    strict_length=False):
         """
-        Downsample data in all traces of stream.
+        DEPRECATED - use :func:`obspy.core.stream.Stream.decimate` instead.
+        """
+        return self.decimate(decimation_factor, no_filter=no_filter,
+                             strict_length=strict_length)
 
-        :type decimation_factor: int
-        :param decimation_factor: Factor by which the sampling rate is lowered
-            by decimation.
+    def decimate(self, factor, no_filter=False, strict_length=False):
+        """
+        Downsample data in all traces of stream by an integer factor.
+
+        :type factor: int
+        :param factor: Factor by which the sampling rate is lowered by
+            decimation.
         :type no_filter: bool, optional
         :param no_filter: Deactivates automatic filtering if set to ``True``.
             Defaults to ``False``.
@@ -1729,8 +1738,8 @@ class Stream(object):
         array([0, 4, 8])
         """
         for tr in self:
-            tr.downsample(decimation_factor=decimation_factor,
-                          no_filter=no_filter, strict_length=strict_length)
+            tr.decimate(factor, no_filter=no_filter,
+                        strict_length=strict_length)
 
     def max(self):
         """
