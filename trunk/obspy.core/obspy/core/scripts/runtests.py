@@ -416,7 +416,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             mydict.update(dict(mod.timer))
         sorted_tests = sorted(mydict.iteritems(), key=operator.itemgetter(1))
         sorted_tests = sorted_tests[::-1][:slowest]
-        sorted_tests = ["%0.4fs: %s" % (dt, desc)
+        sorted_tests = ["%0.3fs: %s" % (dt, desc)
                         for (desc, dt) in sorted_tests]
         print
         print "Slowest Tests"

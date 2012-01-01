@@ -92,6 +92,19 @@ class AttribDict(dict, object):
                 continue
             self[key] = value
 
+
+    def setdefault(self, key, value=None):
+        """
+        If key is in the dictionary, return its value. If not, insert key with
+        a value of default and return default. Default defaults to None.
+        """
+        try:
+            return self.__dict__[key]
+        except KeyError:
+            super(AttribDict, self).__setattr__(key, value)
+            super(AttribDict, self).__setitem__(key, value)
+        return value
+
     def _pretty_str(self, priorized_keys=[], min_label_length=16):
         """
         Return better readable string representation of AttribDict object.
