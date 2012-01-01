@@ -66,8 +66,11 @@ ENTRY_POINTS = {
     'obspy.plugin.integrate': [
         'trapz = scipy.integrate:trapz',
         'cumtrapz = scipy.integrate:cumtrapz',
-        'simps( = scipy.integrate:simps',
+        'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
+    ],
+    'obspy.plugin.differentiate': [
+        'gradient = numpy:gradient',
     ],
 }
 

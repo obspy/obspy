@@ -1309,7 +1309,7 @@ class Trace(object):
         """
         return self.data.std()
 
-    def differentiate(self, type='gradient'):
+    def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
 
@@ -1326,14 +1326,11 @@ class Trace(object):
             hence has the same shape as the input array. (uses
             :func:`numpy.gradient`)
         """
-        # including method option for future implementation of fourier domain
-        # differentiation
         type = type.lower()
-        if type == 'gradient':
-            self.data = np.gradient(self.data, self.stats.delta)
-        else:
-            msg = "differentiation method '%s' does not exist" % type
-            raise ValueError(msg)
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('differentiate', type)
+        # differentiate
+        self.data = func(self.data, self.stats.delta, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
@@ -1352,29 +1349,35 @@ class Trace(object):
         .. rubric:: _`Supported Methods`
 
         ``'cumtrapz'``
-            Cumulatively integrate using the composite trapezoidal rule (uses
+            Trapezoidal rule to cumulatively compute integral (uses
             :func:`scipy.integrate.cumtrapz`). Result has one sample less then
             the input!
 
         ``'trapz'``
-            see :func:`scipy.integrate.trapz`
+            Trapezoidal rule to compute integral from samples (uses
+            :func:`scipy.integrate.trapz`).
 
         ``'simps'``
-            see :func:`scipy.integrate.simps`
+            Simpson's rule to compute integral from samples (uses
+            :func:`scipy.integrate.simps`).
 
         ``'romb'``
-            see :func:`scipy.integrate.romb`
+            Romberg Integration to compute integral from (2**k + 1)
+            evenly-spaced samples. (uses :func:`scipy.integrate.romb`).
         """
         type = type.lower()
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('integrate', type)
-        # handle scipy specific settings
+        # handle function specific settings
         if func.__module__.startswith('scipy'):
-            # we need to set dx if not given in options
+            # scipy needs to set dx keyword if not given in options
             if 'dx' not in options:
                 options['dx'] = self.stats.delta
+            args = [self.data]
+        else:
+            args = [self.data, self.stats.delta]
         # integrating
-        self.data = func(self.data, **options)
+        self.data = func(*args, **options)
         # add processing information to the stats dictionary
         if 'processing' not in self.stats:
             self.stats['processing'] = []
@@ -1406,11 +1409,11 @@ class Trace(object):
         type = type.lower()
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('detrend', type)
-        # handle scipy specific settings
+        # handle function specific settings
         if func.__module__.startswith('scipy'):
+            # scipy need to set the type keyword
             if type == 'demean':
                 type = 'constant'
-            # we need to set the type keyword
             options['type'] = type
         # detrending
         self.data = func(self.data, **options)

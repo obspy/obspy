@@ -328,6 +328,7 @@ ENTRY_POINTS = {
     'filter': _getEntryPoints('obspy.plugin.filter'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
+    'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat',
                                        WAVEFORM_PREFERRED_ORDER)
