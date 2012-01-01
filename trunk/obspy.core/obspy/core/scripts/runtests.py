@@ -80,6 +80,7 @@ all modules, have a verbose output and report everything you would run::
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from optparse import OptionParser
 import numpy as np
+import operator
 import os
 import sys
 import time
@@ -168,6 +169,8 @@ def _createReport(ttrs, timetaken, log, server):
     tests = 0
     errors = 0
     failures = 0
+    skipped = 0
+    dev = False
     for module in sorted(ALL_MODULES):
         result['obspy'][module] = {}
         try:
@@ -177,11 +180,16 @@ def _createReport(ttrs, timetaken, log, server):
             result['obspy'][module]['installed'] = ''
         if module not in ttrs:
             continue
+        # check if developer version
+        if not dev and '.dev-r' in result['obspy'][module]['installed']:
+            dev = True
         # test results
         ttr = ttrs[module]
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
         result['obspy'][module]['tested'] = True
         result['obspy'][module]['tests'] = ttr.testsRun
+        skipped += len(ttr.skipped)
+        result['obspy'][module]['skipped'] = len(ttr.skipped)
         tests += ttr.testsRun
         # depending on module type either use failure (network related modules)
         # or errors (all others)
@@ -225,10 +233,19 @@ def _createReport(ttrs, timetaken, log, server):
             result['platform'][func] = temp
         except:
             result['platform'][func] = ''
+    # post only the first part of the node name (only applies to MacOS X)
+    try:
+        result['platform']['node'] = result['platform']['node'].split('.')[0]
+    except:
+        pass
+    # append [dev] to node it at least one .dev module is installed
+    if dev:
+        result['platform']['node'] += ' [dev]'
     # test results
     result['tests'] = tests
     result['errors'] = errors
     result['failures'] = failures
+    result['skipped'] = skipped
 
     # generate XML document
     def _dict2xml(doc, result):
@@ -277,10 +294,26 @@ def _createReport(ttrs, timetaken, log, server):
         response = conn.getresponse()
     # handle errors
     if response.status == 200:
-        print("Test report has been sent to %s." % (server))
+        print("Test report has been sent to %s. Thank you!" % (server))
     else:
         print("Error: Could not sent a test report to %s." % (server))
         print(response.reason)
+
+
+class _TextTestResult(unittest._TextTestResult):
+    """
+    A custom test result class that can print formatted text results to a
+    stream. Used by TextTestRunner.
+    """
+    timer = []
+
+    def startTest(self, test):
+        self.start = time.time()
+        super(_TextTestResult, self).startTest(test)
+
+    def stopTest(self, test):
+        super(_TextTestResult, self).stopTest(test)
+        self.timer.append((test, time.time() - self.start))
 
 
 class _TextTestRunner:
@@ -292,8 +325,7 @@ class _TextTestRunner:
         self.timeit = timeit
 
     def _makeResult(self):
-        return unittest._TextTestResult(self.stream, self.descriptions,
-                                        self.verbosity)
+        return _TextTestResult(self.stream, self.descriptions, self.verbosity)
 
     def run(self, suites):
         """
@@ -356,7 +388,7 @@ class _TextTestRunner:
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False):
+             interactive=False, slowest=0):
     """
     This function executes ObsPy test suites.
 
@@ -382,6 +414,19 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         var = raw_input(msg).lower()
         if 'y' in var:
             report = True
+    if slowest:
+        mydict = {}
+        # loop over modules
+        for mod in ttr.values():
+            mydict.update(dict(mod.timer))
+        sorted_tests = sorted(mydict.iteritems(), key=operator.itemgetter(1))
+        sorted_tests = sorted_tests[::-1][:slowest]
+        sorted_tests = ["%0.4fs: %s" % (dt, desc)
+                        for (desc, dt) in sorted_tests]
+        print
+        print "Slowest Tests"
+        print "-------------"
+        print os.linesep.join(sorted_tests)
     if report:
         _createReport(ttr, total_time, log, server)
 
@@ -405,6 +450,9 @@ def main(interactive=True):
     parser.add_option("-t", "--timeit", default=False,
                       action="store_true", dest="timeit",
                       help="shows module based total times")
+    parser.add_option("-s", "--slowest", default=0,
+                      type='int', dest="n",
+                      help="reports n slowest test cases")
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
                       help="submit a test report")
@@ -433,6 +481,8 @@ def main(interactive=True):
         # ignore user and deprecation warnings
         warnings.simplefilter("ignore", DeprecationWarning)
         warnings.simplefilter("ignore", UserWarning)
+        # don't ask to send a report
+        options.dontask = True
     else:
         verbosity = 1
         # show all NumPy warnings
@@ -446,11 +496,11 @@ def main(interactive=True):
         report = False
     if 'OBSPY_REPORT_SERVER' in os.environ.keys():
         options.server = os.environ['OBSPY_REPORT_SERVER']
-    # check interactivitiy settings
+    # check interactivity settings
     if interactive and options.dontask:
         interactive = False
     runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all, options.timeit, interactive)
+             options.all, options.timeit, interactive, options.n)
 
 
 if __name__ == "__main__":
