@@ -188,8 +188,13 @@ def _createReport(ttrs, timetaken, log, server):
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
         result['obspy'][module]['tested'] = True
         result['obspy'][module]['tests'] = ttr.testsRun
-        skipped += len(ttr.skipped)
-        result['obspy'][module]['skipped'] = len(ttr.skipped)
+        # skipped is not supported for Python < 2.7
+        try:
+            skipped += len(ttr.skipped)
+            result['obspy'][module]['skipped'] = len(ttr.skipped)
+        except AttributeError:
+            skipped = ''
+            result['obspy'][module]['skipped'] = ''
         tests += ttr.testsRun
         # depending on module type either use failure (network related modules)
         # or errors (all others)
