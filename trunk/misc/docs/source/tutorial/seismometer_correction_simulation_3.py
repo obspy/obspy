@@ -15,7 +15,7 @@ client = Client()
 client.saveWaveform(rawf, 'NZ', 'BFZ', '10', 'HHZ', t1, t2)
 
 # Download and save instrument response file
-client.saveResponse(respf, 'NZ', 'BFZ', '10', 'HHZ',t1, t2, format="RESP")
+client.saveResponse(respf, 'NZ', 'BFZ', '10', 'HHZ', t1, t2, format="RESP")
 
 # read in your raw data
 st = read(rawf)
@@ -23,26 +23,24 @@ st = read(rawf)
 # make a copy to keep our original data
 st_orig = st.copy()
 
-# define a filter band to 
-# prevent amplifying noise
-# during the deconvolution
+# define a filter band to prevent amplifying noise during the deconvolution
 fl1 = 0.005
 fl2 = 0.006
 fl3 = 30.
 fl4 = 35.
 
-# this can be the date of your raw data or
-# any date for which the SEED Resp-file is valid
+# this can be the date of your raw data or any date for which the
+# SEED RESP-file is valid
 date = t1
 
-seedresp = {'filename':respf, # RESP filename
-            'date':date,
-            'units':'VEL' #Units to return response in ('DIS', 'VEL' or ACC)
-            }
+seedresp = {'filename': respf,  # RESP filename
+            'date': date,
+            'units': 'VEL'  # Units to return response in ('DIS', 'VEL' or ACC)
+}
 
 # Remove instrument response using the information from the given RESP file
-st.simulate(paz_remove=None,remove_sensitivity=False,pre_filt=(fl1,fl2,fl3,fl4),
-            seedresp=seedresp)
+st.simulate(paz_remove=None, remove_sensitivity=False,
+            pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp)
 
 # plot original and simulated data
 tr = st[0]
