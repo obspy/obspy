@@ -317,7 +317,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ArcLinkException, client.getWaveform, 'AA', 'AAAAA',
                           '', '*', start, end)
         # example 2
-        start = UTCDateTime(2200, 1, 1)
+        start = UTCDateTime(2038, 1, 1)
         end = start + 1
         self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
                           '', '*', start, end)
