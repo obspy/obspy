@@ -72,13 +72,14 @@ the names of all available test cases.
         $ obspy-runtests -r
 
 Of course you may combine most of the options here, e.g. in order to test
-all modules, have a verbose output and report everything you would run::
+all modules ecept the module obspy.sh and obspy.seishub, have a verbose output
+and report everything you would run::
 
-        $ obspy-runtests -r -v --all
+        $ obspy-runtests -r -v -x seishub -x sh --all
 """
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
-from optparse import OptionParser
+from optparse import OptionParser, OptionGroup
 import numpy as np
 import operator
 import os
@@ -115,14 +116,10 @@ unittest._WritelnDecorator = _WritelnDecorator
 #XXX: end of ugly monkey patch
 
 
-def _getSuites(verbosity=1, names=[], all=False):
+def _getSuites(verbosity=1, names=[]):
     """
     The ObsPy test suite.
     """
-    if all:
-        names = ALL_MODULES
-    elif names == []:
-        names = DEFAULT_MODULES
     # Construct the test suite from the given names. Modules
     # need not be imported before in this case
     suites = {}
@@ -393,7 +390,7 @@ class _TextTestRunner:
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0):
+             interactive=False, slowest=0, exclude=[]):
     """
     This function executes ObsPy test suites.
 
@@ -411,7 +408,19 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :type server: string, optional
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
-    suites = _getSuites(verbosity, tests, all)
+    if all:
+        tests = ALL_MODULES
+    elif not tests:
+        tests = DEFAULT_MODULES
+    # remove any excluded module
+    if exclude:
+        for name in exclude:
+            try:
+                tests.remove(name)
+            except ValueError:
+                pass
+    # fetch tests suites
+    suites = _getSuites(verbosity, tests)
     ttr, total_time = _TextTestRunner(verbosity=verbosity,
                                       timeit=timeit).run(suites)
     if slowest:
@@ -445,39 +454,45 @@ def main(interactive=True):
     except ImportError:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
-    usage = "USAGE: %prog [options] modules\n\n" + \
-            "\n".join(__doc__.split("\n")[3:])
+    usage = "USAGE: %prog [options] modules\n\n"
     parser = OptionParser(usage.strip())
+    parser.add_option("--all", default=False,
+                      action="store_true", dest="all",
+                      help="include all modules " + \
+                           "(default excludes network modules)")
+    parser.add_option("-x", "--exclude",
+                      action="append", type="str", dest="module",
+                      help="exclude one given module")
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
                       help="verbose mode")
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
-    parser.add_option("-t", "--timeit", default=False,
+    # timing / profile options
+    timing = OptionGroup(parser, "Timing/Profile Options")
+    timing.add_option("-t", "--timeit", default=False,
                       action="store_true", dest="timeit",
-                      help="shows module based total times")
-    parser.add_option("-s", "--slowest", default=0,
+                      help="shows accumulated run times of each module")
+    timing.add_option("-s", "--slowest", default=0,
                       type='int', dest="n",
-                      help="reports n slowest test cases")
-    parser.add_option("-p", "--profile", default=False,
-                      action="store_true", dest="profile",
-                      help="runs cProfile and creates obspy.plog file")
-    parser.add_option("-r", "--report", default=False,
+                      help="lists n slowest test cases")
+    parser.add_option_group(timing)
+    # reporting options
+    report = OptionGroup(parser, "Reporting Options")
+    report.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
-                      help="submit a test report")
-    parser.add_option("-d", "--dontask", default=False,
+                      help="automatically submit a test report")
+    report.add_option("-d", "--dontask", default=False,
                       action="store_true", dest="dontask",
-                      help="don't ask for submitting a test report")
-    parser.add_option("-u", "--server", default="tests.obspy.org",
+                      help="don't explicitly ask for submitting a test report")
+    report.add_option("-u", "--server", default="tests.obspy.org",
                       type="string", dest="server",
                       help="report server (default is tests.obspy.org)")
-    parser.add_option("-l", "--log", default=None,
+    report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
-    parser.add_option("--all", default=False,
-                      action="store_true", dest="all",
-                      help="include tests which require a network connection")
+    parser.add_option_group(report)
     (options, _) = parser.parse_args()
     # set correct verbosity level
     if options.verbose:
@@ -511,7 +526,7 @@ def main(interactive=True):
         interactive = False
     runTests(verbosity, parser.largs, report, options.log, options.server,
              options.all, options.timeit, interactive, options.n,
-             options.profile)
+             exclude=options.module)
 
 
 if __name__ == "__main__":
