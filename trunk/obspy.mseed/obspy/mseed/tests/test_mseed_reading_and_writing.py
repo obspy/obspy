@@ -424,7 +424,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             # Write it.
             tempfile = NamedTemporaryFile().name
             st.write(tempfile, format="MSEED", reclen=rec_len)
-            # Get additional header info 
+            # Get additional header info
             info = util.getRecordInformation(tempfile)
             # Test reading the two files.
             temp_st = read(tempfile)

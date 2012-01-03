@@ -154,7 +154,7 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__dict__.get('test'), 'NEW')
         self.assertTrue('test' in ad)
         self.assertTrue('test' in ad.__dict__)
-        # 2 - existing key should not be overwritten 
+        # 2 - existing key should not be overwritten
         default = ad.setdefault('test', 'SOMETHINGDIFFERENT')
         self.assertEqual(default, 'NEW')
         self.assertEqual(ad['test'], 'NEW')

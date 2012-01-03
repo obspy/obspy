@@ -61,7 +61,7 @@ def getStartAndEndTime(file_or_file_object):
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    The same is valid for a file-like object. 
+    The same is valid for a file-like object.
 
     >>> file_object = StringIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
@@ -273,7 +273,7 @@ def _getRecordInformation(file_object, offset=0):
     info['filesize'] = long(file_object.tell() - record_start)
     file_object.seek(record_start, 0)
 
-    # check current position 
+    # check current position
     if info['filesize'] % 256 != 0:
         # if a multiple of minimal record length 256
         record_start = 0

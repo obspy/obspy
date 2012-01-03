@@ -162,7 +162,6 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, tr2.data)
 
 
-
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

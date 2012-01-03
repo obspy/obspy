@@ -200,7 +200,7 @@ def _createReport(ttrs, timetaken, log, server):
         # or errors (all others)
         result['obspy'][module]['errors'] = {}
         result['obspy'][module]['failures'] = {}
-        if module in NETWORK_MODULES: 
+        if module in NETWORK_MODULES:
             for _, text in ttr.errors:
                 result['obspy'][module]['failures']['f%s' % (failures)] = text
                 failures += 1
@@ -460,6 +460,9 @@ def main(interactive=True):
     parser.add_option("-s", "--slowest", default=0,
                       type='int', dest="n",
                       help="reports n slowest test cases")
+    parser.add_option("-p", "--profile", default=False,
+                      action="store_true", dest="profile",
+                      help="runs cProfile and creates obspy.plog file")
     parser.add_option("-r", "--report", default=False,
                       action="store_true", dest="report",
                       help="submit a test report")
@@ -507,7 +510,8 @@ def main(interactive=True):
     if interactive and options.dontask:
         interactive = False
     runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all, options.timeit, interactive, options.n)
+             options.all, options.timeit, interactive, options.n,
+             options.profile)
 
 
 if __name__ == "__main__":

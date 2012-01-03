@@ -20,4 +20,4 @@ from obspy.core.util.decorator import deprecated, deprecated_keywords, \
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     formatScientific, scoreatpercentile
-from obspy.core.util.ordereddict import OrderedDict 
+from obspy.core.util.ordereddict import OrderedDict

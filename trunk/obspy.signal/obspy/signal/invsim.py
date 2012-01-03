@@ -30,7 +30,6 @@ m/s.
 """
 
 
-
 # Sensitivity is 2080 according to:
 # P. Bormann: New Manual of Seismological Observatory Practice
 # IASPEI Chapter 3, page 24

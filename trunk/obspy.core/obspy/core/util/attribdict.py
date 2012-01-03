@@ -92,7 +92,6 @@ class AttribDict(dict, object):
                 continue
             self[key] = value
 
-
     def setdefault(self, key, value=None):
         """
         If key is in the dictionary, return its value. If not, insert key with
