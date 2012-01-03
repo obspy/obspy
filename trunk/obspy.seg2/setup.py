@@ -24,9 +24,7 @@ For more information visit http://www.obspy.org.
 """
 
 from setuptools import find_packages, setup
-from setuptools.extension import Extension
 import os
-import platform
 import shutil
 import sys
 
@@ -60,7 +58,7 @@ def convert2to3():
     shutil.rmtree(dst_path, ignore_errors=True)
     # copy original tree into 2to3 folder ignoring some unneeded files
 
-    def ignored_files(adir, filenames):
+    def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]
