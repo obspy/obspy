@@ -153,10 +153,14 @@ class TraceTestCase(unittest.TestCase):
         tr2 = tr_bkp.copy()
         tr.downsample(4)
         df = tr2.stats.sampling_rate
-        tr2.data = lowpassCheby2(data=tr2.data, freq=df * 0.5 / 4.0,
-                                 df=df, maxorder=12, ba=False)
+        tr2.data, fp = lowpassCheby2(data=tr2.data, freq=df * 0.5 / 4.0,
+                                     df=df, maxorder=12, ba=False,
+                                     freq_passband=True)
+        # check that iteratively determined pass band frequency is correct
+        self.assertAlmostEquals(0.0811378285461, fp, places=7)
         tr2.downsample(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)
+
 
 
 def suite():

@@ -243,8 +243,8 @@ class FilterTestCase(unittest.TestCase):
         w, h = sg.freqz(b, a, int(nyquist))
         freq = w / np.pi * nyquist
         h_db = 20 * np.log10(abs(h))
-        # be smaller than -95dB above lowpass frequency
-        self.assertTrue(h_db[freq > 50].max() < -95)
+        # be smaller than -96dB above lowpass frequency
+        self.assertTrue(h_db[freq > 50].max() < -96)
         # be 0 (1dB ripple) before filter ramp
         self.assertTrue(h_db[freq < 25].min() > -1)
 

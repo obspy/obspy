@@ -308,7 +308,8 @@ def integerDecimation(data, decimation_factor):
     return data
 
 
-def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
+def lowpassCheby2(data, freq, df, maxorder=12, ba=False,
+                  freq_passband=False):
     """
     Cheby2-Lowpass Filter
 
@@ -316,20 +317,32 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
     The main purpose of this cheby2 filter is downsampling.
     #318 shows some plots of this filter design itself.
 
+    This method will iteratively design a filter, whose pass
+    band frequency is determined dynamically, such that the
+    values above the stop band frequency are lower than -96dB.
+
     :param data: Data to filter, type numpy.ndarray.
     :param freq: The frequency above which signals are attenuated
         with 95 dB
     :param df: Sampling rate in Hz.
     :param maxorder: Maximal order of the designed cheby2 filter
-    :param ba: If True return the filter coefficients (b, a) instead of
-        filtering, if False return the filtered data
+    :param ba: If True return only the filter coefficients (b, a) instead
+        of filtering
+    :param freq_passband: If True return additionaly to the filtered data,
+        the iteratively determined pass band frequency
     :return: Filtered data.
     """
     nyquist = df * 0.5
     # rp - maximum ripple of passband, rs - attenuation of stopband
-    rp, rs, order = 1, 95, 1e99
+    rp, rs, order = 1, 96, 1e99
     ws = freq / nyquist  # stop band frequency
     wp = ws              # pass band frequency
+    # raise for some bad scenarios
+    if ws > 1:
+        ws = 1.0
+        msg = "Selected corner frequency is above Nyquist. " + \
+              "Setting Nyquist as high corner."
+        warnings.warn(msg)
     while True:
         if order <= maxorder:
             break
@@ -338,4 +351,6 @@ def lowpassCheby2(data, freq, df, maxorder=12, ba=False):
     b, a = cheby2(order, rs, wn, btype='low', analog=0, output='ba')
     if ba:
         return b, a
+    if freq_passband:
+        return lfilter(b, a, data), wp * nyquist
     return lfilter(b, a, data)
