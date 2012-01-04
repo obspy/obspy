@@ -140,18 +140,18 @@ class StreamTestCase(unittest.TestCase):
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_le3d1s)
         self.assertEqual(st1, st2)
 
-    def test_downsample(self):
+    def test_decimate(self):
         """
         Tests if all traces in the stream object are handled as expected
-        by the downsample method on the trace object.
+        by the decimate method on the trace object.
         """
         # create test Stream
         st = self.mseed_stream
         st_bkp = st.copy()
-        # test if all traces are downsampled as expected
-        st.downsample(10, strict_length=False)
+        # test if all traces are decimated as expected
+        st.decimate(10, strict_length=False)
         for i, tr in enumerate(st):
-            st_bkp[i].downsample(10, strict_length=False)
+            st_bkp[i].decimate(10, strict_length=False)
             self.assertEqual(tr, st_bkp[i])
 
 

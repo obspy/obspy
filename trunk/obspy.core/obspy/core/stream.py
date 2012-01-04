@@ -1731,7 +1731,7 @@ class Stream(object):
         1.0
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> st.downsample(4, strict_length=False, no_filter=True)
+        >>> st.decimate(4, strict_length=False, no_filter=True)
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data

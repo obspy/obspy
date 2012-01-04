@@ -123,26 +123,26 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(tr.data, traces_bkp[0].data)
         self.assertEqual(tr.stats, traces_bkp[0].stats)
 
-    def test_downsample(self):
+    def test_decimate(self):
         """
-        Tests the downsample method of the Trace object.
+        Tests the decimate method of the Trace object.
         """
         # create test Trace
         tr = Trace(data=np.arange(20))
         tr_bkp = deepcopy(tr)
         # some test that should fail and leave the original trace alone
-        self.assertRaises(ValueError, tr.downsample, 7, strict_length=True)
-        self.assertRaises(ValueError, tr.downsample, 9, strict_length=True)
-        self.assertRaises(ArithmeticError, tr.downsample, 18)
+        self.assertRaises(ValueError, tr.decimate, 7, strict_length=True)
+        self.assertRaises(ValueError, tr.decimate, 9, strict_length=True)
+        self.assertRaises(ArithmeticError, tr.decimate, 18)
         # some tests in place
-        tr.downsample(4, no_filter=True)
+        tr.decimate(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 4))
         self.assertEqual(tr.stats.npts, 5)
         self.assertEqual(tr.stats.sampling_rate, 0.25)
         self.assertEqual(tr.stats.processing,
                          ["downsample:integerDecimation:4"])
         tr = tr_bkp.copy()
-        tr.downsample(10, no_filter=True)
+        tr.decimate(10, no_filter=True)
         np.testing.assert_array_equal(tr.data, np.arange(0, 20, 10))
         self.assertEqual(tr.stats.npts, 2)
         self.assertEqual(tr.stats.sampling_rate, 0.1)
@@ -151,14 +151,14 @@ class TraceTestCase(unittest.TestCase):
         # some tests with automatic prefiltering
         tr = tr_bkp.copy()
         tr2 = tr_bkp.copy()
-        tr.downsample(4)
+        tr.decimate(4)
         df = tr2.stats.sampling_rate
         tr2.data, fp = lowpassCheby2(data=tr2.data, freq=df * 0.5 / 4.0,
                                      df=df, maxorder=12, ba=False,
                                      freq_passband=True)
         # check that iteratively determined pass band frequency is correct
         self.assertAlmostEquals(0.0811378285461, fp, places=7)
-        tr2.downsample(4, no_filter=True)
+        tr2.decimate(4, no_filter=True)
         np.testing.assert_array_equal(tr.data, tr2.data)
 
 

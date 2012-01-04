@@ -8,12 +8,12 @@ st = read("http://examples.obspy.org/RJOB_061005_072159.ehz.new")
 # There is only one trace in the Stream object, let's work on that trace...
 tr = st[0]
 
-# Downsample the 200 Hz data by a factor of 4 to 50 Hz. Note that this
+# Decimate the 200 Hz data by a factor of 4 to 50 Hz. Note that this
 # automatically includes a lowpass filtering with corner frequency 20 Hz.
 # We work on a copy of the original data just to demonstrate the effects of
 # downsampling.
 tr_new = tr.copy()
-tr_new.downsample(decimation_factor=4, strict_length=False)
+tr_new.decimate(decimation_factor=4, strict_length=False)
 
 # For comparison also only filter the original data (same filter options as in
 # automatically applied filtering during downsampling, corner frequency
