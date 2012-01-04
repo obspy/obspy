@@ -1,13 +1,10 @@
 #!/bin/bash
 
+PACKAGES="core mseed arclink db earthworm gse2 imaging iris neries sac seg2 \
+segy seisan seishub sh signal taup wav xseed"
+
 # go from here to ObsPy root directory
 cd ../..
-TRUNKDIR=`pwd`
-
-# get list of all package names from core.util.base.py
-cd $TRUNKDIR/obspy.core/obspy/core/util/
-PACKAGES=`python -c "from base import ALL_MODULES; print ' '.join(ALL_MODULES)"`
-cd $TRUNKDIR
 
 # link all packages to python2.x/lib/site-packages/
 for NAME in $PACKAGES; do
