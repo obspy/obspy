@@ -92,6 +92,16 @@ import warnings
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
                 'suds', 'mpl_toolkits.basemap']
 
+PSTATS_HELP = """
+Call "python -m pstats obspy.pstats" for an interactive profiling session.
+
+The following commands will produce the same output as shown above:
+  sort cumulative
+  stats obspy. 20
+
+Type "help" to see all available options.
+"""
+
 
 #XXX: start of ugly monkey patch for Python 2.7
 # classes _TextTestRunner and _WritelnDecorator have been marked as depreciated
@@ -321,7 +331,7 @@ class _TextTestResult(unittest._TextTestResult):
 class _TextTestRunner:
     def __init__(self, stream=sys.stderr, descriptions=1, verbosity=1,
                  timeit=False):
-        self.stream = unittest._WritelnDecorator(stream)
+        self.stream = unittest._WritelnDecorator(stream)  # @UndefinedVariable
         self.descriptions = descriptions
         self.verbosity = verbosity
         self.timeit = timeit
@@ -361,7 +371,8 @@ class _TextTestRunner:
         faileds = 0
         erroreds = 0
         wasSuccessful = True
-        self.stream.writeln()
+        if self.verbosity:
+            self.stream.writeln()
         for result in results.values():
             failed, errored = map(len, (result.failures, result.errors))
             faileds += failed
@@ -370,10 +381,11 @@ class _TextTestRunner:
                 wasSuccessful = False
                 result.printErrors()
             runs += result.testsRun
-        self.stream.writeln(unittest._TextTestResult.separator2)
-        self.stream.writeln("Ran %d test%s in %.3fs" %
-                            (runs, runs != 1 and "s" or "", time_taken))
-        self.stream.writeln()
+        if self.verbosity:
+            self.stream.writeln(unittest._TextTestResult.separator2)
+            self.stream.writeln("Ran %d test%s in %.3fs" %
+                                (runs, runs != 1 and "s" or "", time_taken))
+            self.stream.writeln()
         if not wasSuccessful:
             self.stream.write("FAILED (")
             if faileds:
@@ -383,7 +395,7 @@ class _TextTestRunner:
                     self.stream.write(", ")
                 self.stream.write("errors=%d" % erroreds)
             self.stream.writeln(")")
-        else:
+        elif self.verbosity:
             self.stream.writeln("OK")
         return results, time_taken
 
@@ -447,28 +459,32 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         _createReport(ttr, total_time, log, server)
 
 
-def main(interactive=True):
+def run(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
     except ImportError:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
-    usage = "USAGE: %prog [options] modules\n\n"
+    usage = "USAGE: %prog [options] module1 module2 ...\n\n"
     parser = OptionParser(usage.strip())
-    parser.add_option("--all", default=False,
-                      action="store_true", dest="all",
-                      help="include all modules " + \
-                           "(default excludes network modules)")
-    parser.add_option("-x", "--exclude",
-                      action="append", type="str", dest="module",
-                      help="exclude one given module")
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
                       help="verbose mode")
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
+    # filter options
+    filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
+        "will test all installed ObsPy packages which don't require a " + \
+        "active network connection.")
+    filter.add_option("--all", default=False,
+                      action="store_true", dest="all",
+                      help="test all modules (including network modules)")
+    filter.add_option("-x", "--exclude",
+                      action="append", type="str", dest="module",
+                      help="exclude given module from test")
+    parser.add_option_group(filter)
     # timing / profile options
     timing = OptionGroup(parser, "Timing/Profile Options")
     timing.add_option("-t", "--timeit", default=False,
@@ -477,6 +493,10 @@ def main(interactive=True):
     timing.add_option("-s", "--slowest", default=0,
                       type='int', dest="n",
                       help="lists n slowest test cases")
+    timing.add_option("-p", "--profile", default=False,
+                      action="store_true", dest="profile",
+                      help="uses cProfile, saves the results to file " + \
+                           "obspy.pstats and prints some profiling numbers")
     parser.add_option_group(timing)
     # reporting options
     report = OptionGroup(parser, "Reporting Options")
@@ -529,9 +549,34 @@ def main(interactive=True):
              exclude=options.module)
 
 
+def main(interactive=True):
+    """
+    Entry point for setup.py.
+
+    Wrapper for a profiler if requested otherwise just call run() directly.
+    If profiling is enabled we disable interactivity as it would wait for user
+    input and influence the statistics. However the -r option still works.
+    """
+    if '-p' in sys.argv or '--profile' in sys.argv:
+        try:
+            import cProfile as Profile
+        except ImportError:
+            import Profile
+        Profile.run('from obspy.core.scripts.runtests import run; run()',
+                    'obspy.pstats')
+        import pstats
+        stats = pstats.Stats('obspy.pstats')
+        print
+        print "Profiling:"
+        stats.sort_stats('cumulative').print_stats('obspy.', 20)
+        print PSTATS_HELP
+    else:
+        run(interactive)
+
+
 if __name__ == "__main__":
     # It is not possible to add the code of main directly to here.
     # This script is automatically installed with name obspy-runtests by
     # setup.py to the Scripts or bin directory of your Python distribution
     # setup.py needs a function to which it's scripts can be linked.
-    main(interactive=False)
+    run(interactive=False)
