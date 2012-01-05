@@ -244,7 +244,8 @@ class PPSD():
     >>> print ppsd.times
     []
 
-    Now we could add data to the probabilistic psd and plot it like ...
+    Now we could add data to the probabilistic psd (all processing like
+    demeaning, tapering and so on is done internally) and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
     >>> print ppsd.times # doctest: +SKIP
@@ -270,7 +271,7 @@ class PPSD():
         :class:`~obspy.xseed.parser.Parser` instance with information from
         e.g. a Dataless SEED than to just provide a static PAZ dictionary.
 
-    .. _`ObsPy Tutorial`: http://www.obspy.org/wiki/ObspyTutorial
+    .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False):
