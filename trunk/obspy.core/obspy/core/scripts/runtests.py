@@ -87,6 +87,7 @@ import sys
 import time
 import unittest
 import warnings
+import copy
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
@@ -421,9 +422,9 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     :param server: Report server URL (default is ``"tests.obspy.org"``).
     """
     if all:
-        tests = ALL_MODULES
+        tests = copy.copy(ALL_MODULES)
     elif not tests:
-        tests = DEFAULT_MODULES
+        tests = copy.copy(DEFAULT_MODULES)
     # remove any excluded module
     if exclude:
         for name in exclude:
