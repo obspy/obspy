@@ -13,7 +13,7 @@ tr = st[0]
 # We work on a copy of the original data just to demonstrate the effects of
 # downsampling.
 tr_new = tr.copy()
-tr_new.decimate(decimation_factor=4, strict_length=False)
+tr_new.decimate(factor=4, strict_length=False)
 
 # For comparison also only filter the original data (same filter options as in
 # automatically applied filtering during downsampling, corner frequency
