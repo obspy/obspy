@@ -449,6 +449,35 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.npts, 4120)
         self.assertEqual(len(st[0].data), 0)
 
+    def test_issue325(self):
+        """
+        Tests issue #325: Use selection with non default dataquality flag.
+        """
+        filename = os.path.join(self.path, 'data', 'dataquality-m.mseed')
+        # 1 - read all
+        st = read(filename)
+        self.assertEquals(len(st), 3)
+        t1 = st[0].stats.starttime
+        t2 = st[0].stats.endtime
+        # 2 - select full time window
+        st2 = read(filename, starttime=t1, endtime=t2)
+        self.assertEquals(len(st2), 3)
+        self.assertEquals(st, st2)
+        # 3 - use selection
+        st2 = read(filename, starttime=t1, endtime=t2, sourcename='*.*.*.*')
+        self.assertEquals(len(st2), 3)
+        self.assertEquals(st, st2)
+        st2 = read(filename, starttime=t1, endtime=t2, sourcename='*')
+        self.assertEquals(len(st2), 3)
+        self.assertEquals(st, st2)
+        # 4 - selection without times
+        st2 = read(filename, sourcename='*.*.*.*')
+        self.assertEquals(len(st2), 3)
+        self.assertEquals(st, st2)
+        st2 = read(filename, sourcename='*')
+        self.assertEquals(len(st2), 3)
+        self.assertEquals(st, st2)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')

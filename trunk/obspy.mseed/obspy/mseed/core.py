@@ -213,7 +213,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         selections = Selections()
         selections.timewindows.contents = select_time
         if starttime is not None:
-            if type(starttime) != UTCDateTime:
+            if not isinstance(starttime, UTCDateTime):
                 msg = 'starttime needs to be a UTCDateTime object'
                 raise ValueError(msg)
             selections.timewindows.contents.starttime = \
@@ -222,7 +222,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.starttime = HPTERROR
         if endtime is not None:
-            if type(endtime) != UTCDateTime:
+            if not isinstance(endtime, UTCDateTime):
                 msg = 'endtime needs to be a UTCDateTime object'
                 raise ValueError(msg)
             selections.timewindows.contents.endtime = \
@@ -231,16 +231,15 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if type(sourcename) != str:
+            if not isinstance(sourcename, basestring):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering
             # after the dataquality which is disabled here to not confuse
-            # users.
-            selections.srcname = sourcename.replace('.', '_') + '_D'
+            # users. (* == all data qualities)
+            selections.srcname = sourcename.replace('.', '_') + '_*'
         else:
             selections.srcname = '*'
-
     all_data = []
 
     # Use a callback function to allocate the memory and keep track of the
@@ -255,7 +254,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
     lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-                              reclen, 0, allocData)
+                                    reclen, 0, allocData)
 
     # XXX: Check if the freeing works.
     del selections
