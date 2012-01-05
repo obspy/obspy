@@ -57,10 +57,11 @@ class UtilTestCase(unittest.TestCase):
         Testing gps2DistAzimuth function using the module geographiclib.
         """
         # nearly antipodal points
-        self.assertAlmostEquals(gps2DistAzimuth(15.26804251, 2.93007342,
-                                                -14.80522806, -177.2299081),
-                                (19951425.048688546, 8.65553241932755,
-                                 351.36325485132306))
+        result = gps2DistAzimuth(15.26804251, 2.93007342, -14.80522806,
+                                 -177.2299081)
+        self.assertAlmostEquals(result[0], 19951425.048688546)
+        self.assertAlmostEquals(result[1], 8.65553241932755)
+        self.assertAlmostEquals(result[2], 351.36325485132306)
         # out of bounds
         self.assertRaises(ValueError, gps2DistAzimuth, 91, 0, 0, 0)
         self.assertRaises(ValueError, gps2DistAzimuth, -91, 0, 0, 0)
