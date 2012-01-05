@@ -111,6 +111,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.readTSPAIR`
     SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.readSEGY`
     SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
+    SEG2     :mod:`obspy.seg2`    :func:`obspy.seg2.seg2.readSEG2`
     WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
     =======  ===================  ====================================
 
