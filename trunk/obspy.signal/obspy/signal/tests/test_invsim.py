@@ -233,13 +233,13 @@ class InvSimTestCase(unittest.TestCase):
         dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
         # linux
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
-        evalresp(0.01, 524288, respf, dt)
+        evalresp(0.01, 512, respf, dt)
         # mac
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
-        evalresp(0.01, 524288, respf, dt)
+        evalresp(0.01, 512, respf, dt)
         # windows
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
-        evalresp(0.01, 524288, respf, dt)
+        evalresp(0.01, 512, respf, dt)
 
 
 def suite():
