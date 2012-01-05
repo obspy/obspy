@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from obspy.core.util import calcVincentyInverse, gps2DistAzimuth, skipIf
 import sys
 import unittest
