@@ -518,7 +518,7 @@ class ParserTestCase(unittest.TestCase):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
         """
-        filename = os.path.join(self.path, 'BN.LPW..BHE.dataless')
+        filename = os.path.join(self.path, 'BN.LPW._.BHE.dataless')
         # raises a UserWarning: More than one Abbreviation Dictionary Control
         # Headers found!
         with warnings.catch_warnings(record=True):
