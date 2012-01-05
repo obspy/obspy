@@ -124,17 +124,19 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     .. rubric:: Example
 
     >>> from obspy.core import read
-    >>> st = read("/path/to/test.mseed")
+    >>> st = read("/path/to/two_channels.mseed")
+    >>> print(st)  # doctest: +ELLIPSIS
+    2 Trace(s) in Stream:
+    BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
+    BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
 
-    The following example will read all EHZ channels from the BW network from
-    the binary data in mseed_data. Only the first hour of 2010 will be read.
-
-    >>> from cStringIO import StringIO
-    >>> f = StringIO(mseed_data)  # doctest: +SKIP
-    >>> selection = {'starttime': UTCDateTime(2010, 1, 1, 0, 0, 0),
-    ...              'endtime': UTCDateTime(2010, 1, 1, 1, 0, 0),
-    ...              'sourcename': 'BW.*.*.EHZ'}
-    >>> st = readMSEED(f, selection)  # doctest: +SKIP
+    >>> from obspy.core import UTCDateTime
+    >>> st = read("/path/to/test.mseed",
+    ...           starttime=UTCDateTime("2003-05-29T02:16:00"),
+    ...           selection="NL.*.*.?HZ")
+    >>> print(st)  # doctest: +ELLIPSIS
+    1 Trace(s) in Stream:
+    NL.HGN.00.BHZ | 2003-05-29T02:15:59.993400Z - ... | 40.0 Hz, 5629 samples
     """
     # Parse the headonly and reclen flags.
     if headonly is True:
@@ -319,48 +321,48 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     .. warning::
         This function should NOT be called directly, it registers via the
-        the :meth:`~obspy.core.stream.Stream.write` method of an ObsPy
-        :class:`~obspy.core.stream.Stream` object.
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
-    stream_object : :class:`~obspy.core.stream.Stream`
-        A Stream object. Data in stream object must be of type int32.
-        NOTE: They are automatically adapted if necessary
-    filename : string
-        Name of the output file
-    encoding : int or string, optional
-        Should be set to one of the following supported Mini-SEED data encoding
-        formats: ASCII (0)*, INT16 (1), INT32 (3), FLOAT32 (4)*, FLOAT64 (5)*,
-        STEIM1 (10) and STEIM2 (11)*. Default data types a marked with an
-        asterisk. Currently INT24 (2) is not supported due to lacking NumPy
-        support.
-    reclen : int, optional
-        Should be set to the desired data record length in bytes
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: A Stream object. Data in stream object must be of type
+        int32. NOTE: They are automatically adapted if necessary
+    :type filename: str
+    :param filename: Name of the output file
+    :type encoding: int or str, optional
+    :param encoding: Should be set to one of the following supported Mini-SEED
+        data encoding formats: ASCII (``0``)*, INT16 (``1``), INT32 (``3``),
+        FLOAT32 (``4``)*, FLOAT64 (``5``)*, STEIM1 (``10``) and STEIM2
+        (``11``)*. Default data types a marked with an asterisk. Currently
+        INT24 (``2``) is not supported due to lacking NumPy support.
+    :type reclen: int, optional
+    :param reclen: Should be set to the desired data record length in bytes
         which must be expressible as 2 raised to the power of X where X is
         between (and including) 8 to 20.
         Defaults to 4096
-    byteorder : [ 0 or '<' | '1 or '>' | '='], optional
-        Must be either 0 or '<' for LSBF or little-endian, 1 or '>' for MBF or
-        big-endian. '=' is the native byteorder. If -1 it will be passed
-        directly to libmseed which will also default it to big endian.
-        Defaults to big endian.
-    flush : int, optional
-        If it is not zero all of the data will be packed into
+    :type byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``], optional
+    :param byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
+        native byteorder. If ``-1`` it will be passed directly to libmseed
+        which will also default it to big endian. Defaults to big endian.
+    :type flush: int, optional
+    :param flush: If it is not zero all of the data will be packed into
         records, otherwise records will only be packed while there are
         enough data samples to completely fill a record.
-    verbose : int, optional
-        Controls verbosity, a value of zero will result in no diagnostic
-        output.
+    :type verbose: int, optional
+    :param verbose: Controls verbosity, a value of zero will result in no
+        diagnostic output.
 
     .. note::
         The reclen, encoding and byteorder keyword arguments can be set
-        in the trace.stats.mseed AttribDict as well as as kwargs. If both are
-        set the kwargs will be used.
+        in the stats.mseed of each :class:`~obspy.core.trace.Trace` as well as
+        as kwargs of this function. If both are given the kwargs will be used.
 
     .. rubric:: Example
 
     >>> from obspy.core import read
     >>> st = read()
-    >>> st.write('filename.mseed', format='MSEED') #doctest: +SKIP
+    >>> st.write('filename.mseed', format='MSEED')  # doctest: +SKIP
     """
     # Some sanity checks for the keyword arguments.
     if reclen is not None and reclen not in VALID_RECORD_LENGTHS:
