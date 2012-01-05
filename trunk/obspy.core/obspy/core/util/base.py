@@ -165,7 +165,7 @@ def getExampleFile(filename):
     raise IOError(msg)
 
 
-def _getVersionString(module="obspy.core"):
+def _getVersionString(module):
     """
     Returns either the .egg version or current SVN revision for a given module.
 
