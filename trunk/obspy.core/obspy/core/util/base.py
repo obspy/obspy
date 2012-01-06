@@ -224,13 +224,13 @@ def add_doctests(testsuite, module_name):
         if not '__init__.py' in files:
             continue
         # skip tests directories
-        if 'tests' in root:
+        if root.endswith('tests'):
             continue
         # skip scripts directories
-        if 'scripts' in root:
+        if root.endswith('scripts'):
             continue
         # skip lib directories
-        if 'lib' in root:
+        if root.endswith('lib'):
             continue
         # loop over all files
         for file in files:
