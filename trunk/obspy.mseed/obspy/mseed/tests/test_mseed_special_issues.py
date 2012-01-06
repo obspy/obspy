@@ -11,7 +11,6 @@ from struct import unpack
 import ctypes as C
 import numpy as np
 import os
-import platform
 import sys
 import unittest
 import warnings
@@ -168,9 +167,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         This test depends on the platform specific localtime()/gmtime()
         function.
         """
-        # XXX: skip Windows systems
-        if platform.system() == 'Windows':
-            return
         # create trace
         tr = Trace(data=np.empty(1000))
         tr.stats.starttime = UTCDateTime("1969-01-01T00:00:00")
