@@ -474,7 +474,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     if interactive and not report:
         msg = "Do you want to report this to tests.obspy.org? [n]: "
         var = raw_input(msg).lower()
-        if var in ('y', 'yes'):
+        if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
         _createReport(ttr, total_time, log, server)
