@@ -82,7 +82,7 @@ def isASC(filename):
     return True
 
 
-def readASC(filename, headonly=False):
+def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
@@ -185,7 +185,7 @@ def readASC(filename, headonly=False):
     return stream
 
 
-def writeASC(stream, filename, **kwargs):
+def writeASC(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
@@ -253,7 +253,8 @@ def isQ(filename):
     return True
 
 
-def readQ(filename, headonly=False, data_directory=None, byteorder='='):
+def readQ(filename, headonly=False, data_directory=None, byteorder='=',
+          **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler Q file and returns an ObsPy Stream object.
 
@@ -399,7 +400,8 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='='):
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='=', **kwargs):
+def writeQ(stream, filename, data_directory=None, byteorder='=',
+           **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler Q file from given ObsPy Stream object.
 

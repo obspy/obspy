@@ -51,7 +51,7 @@ def isSLIST(filename):
 
     .. rubric:: Example
 
-    >>> isSLIST('/path/to/slist.ascii')  #doctest: +SKIP
+    >>> isSLIST('/path/to/slist.ascii')  # doctest: +SKIP
     True
     """
     try:
@@ -76,7 +76,7 @@ def isTSPAIR(filename):
 
     .. rubric:: Example
 
-    >>> isTSPAIR('/path/to/tspair.ascii')  #doctest: +SKIP
+    >>> isTSPAIR('/path/to/tspair.ascii')  # doctest: +SKIP
     True
     """
     try:
@@ -90,7 +90,7 @@ def isTSPAIR(filename):
     return True
 
 
-def readSLIST(filename, headonly=False):
+def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a ASCII SLIST file and returns an ObsPy Stream object.
 
@@ -163,7 +163,7 @@ def readSLIST(filename, headonly=False):
     return stream
 
 
-def readTSPAIR(filename, headonly=False):
+def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads a ASCII TSPAIR file and returns an ObsPy Stream object.
 

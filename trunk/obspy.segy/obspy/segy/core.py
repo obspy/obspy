@@ -114,7 +114,8 @@ def isSEGY(filename):
 
 
 def readSEGY(filename, headonly=False, byteorder=None,
-             textual_header_encoding=None, unpack_trace_headers=False):
+             textual_header_encoding=None, unpack_trace_headers=False,
+             **kwargs):  # @UnusedVariable
     """
     Reads a SEG Y file and returns an ObsPy Stream object.
 
@@ -238,7 +239,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
 
 
 def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
-              textual_header_encoding=None):
+              textual_header_encoding=None, **kwargs):  # @UnusedVariable
     """
     Writes a SEG Y file from given ObsPy Stream object.
 
@@ -445,7 +446,7 @@ def isSU(filename):
 
 
 def readSU(filename, headonly=False, byteorder=None,
-           unpack_trace_headers=False):
+           unpack_trace_headers=False, **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Unix (SU) file and returns an ObsPy Stream object.
 
@@ -550,7 +551,7 @@ def readSU(filename, headonly=False, byteorder=None,
     return stream
 
 
-def writeSU(stream, filename, byteorder=None):
+def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Unix (SU) file from given ObsPy Stream object.
 

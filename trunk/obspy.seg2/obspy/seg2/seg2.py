@@ -174,7 +174,7 @@ class SEG2(object):
             raise SEG2InvalidFileError(msg)
         size_of_this_block = unpack('%sH' % self.endian,
                                     trace_descriptor_block[2:4])[0]
-        size_of_corresponding_data_block = \
+        _size_of_corresponding_data_block = \
                 unpack('%sL' % self.endian, trace_descriptor_block[4:8])[0]
         number_of_samples_in_data_block = \
                 unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
@@ -279,11 +279,11 @@ def isSEG2(filename):
     return True
 
 
-def readSEG2(filename):
+def readSEG2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
     return seg2.readFile(filename)
 
 
-def writeSEG2(filename):
+def writeSEG2(filename, **kwargs):  # @UnusedVariable
     msg = 'Writing SEG-2 files is not implemented so far.'
     raise NotImplementedError(msg)

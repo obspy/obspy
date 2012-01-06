@@ -44,11 +44,11 @@ def read(pathname_or_url=None, format=None, headonly=False,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: string or StringIO.StringIO, optional
-    :param pathname_or_url: String containing a file name or a URL. Wildcards
-        are allowed for a file name. If this attribute is omitted, a
-        :class:`~obspy.core.stream.Stream` object with an example data set will
-        be created.
+    :type pathname_or_url: str or StringIO.StringIO, optional
+    :param pathname_or_url: String containing a file name or a URL or a open
+        file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example :class:`~obspy.core.stream.Stream`
+        object will be returned.
     :type format: string, optional
     :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
         ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
@@ -168,6 +168,27 @@ def read(pathname_or_url=None, format=None, headonly=False,
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
         XX.TEST..BHZ | 2008-01-15T00:00:00.025000Z - ... | 40.0 Hz, 635 samples
+
+    (5) Reading a file-like object.
+
+        >>> from StringIO import StringIO
+        >>> import urllib2
+        >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
+        >>> stringio_obj = StringIO(urllib2.urlopen(example_url).read())
+        >>> st = read(stringio_obj)
+        >>> print(st)  # doctest: +ELLIPSIS
+        1 Trace(s) in Stream:
+        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+
+     (6) Using 'starttime' and 'endtime' parameters
+
+        >>> from obspy.core import read, UTCDateTime
+        >>> dt = UTCDateTime("2005-08-31T02:34:00")
+        >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
+        ...           starttime=dt, endtime=dt+10)
+        >>> print(st)  # doctest: +ELLIPSIS
+        1 Trace(s) in Stream:
+        .RJOB..Z | 2005-08-31T02:33:59.999999Z - ... | 200.0 Hz, 2001 samples
     """
     # if no pathname or URL specified, make example stream
     if not pathname_or_url:
