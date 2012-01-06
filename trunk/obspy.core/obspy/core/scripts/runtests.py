@@ -191,7 +191,7 @@ def _createReport(ttrs, timetaken, log, server):
         if module not in ttrs:
             continue
         # check if developer version
-        if not dev and '.dev-' in result['obspy'][module]['installed']:
+        if not dev and '.dev' in result['obspy'][module]['installed']:
             dev = True
         # test results
         ttr = ttrs[module]
