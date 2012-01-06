@@ -57,7 +57,8 @@ class Parser(object):
         The SEED file format description can be found at
         http://www.iris.edu/manuals/SEEDManual_V2.4.pdf.
 
-        The XML-SEED format was proposed in
+        The XML-SEED format was proposed in:
+
         * http://www.orfeus-eu.org/Organization/Newsletter/vol6no2/xml.shtml
         * http://www.jamstec.go.jp/pacific21/xmlninja/.
     """
@@ -164,7 +165,7 @@ class Parser(object):
 
     def getXSEED(self, version=DEFAULT_XSEED_VERSION, split_stations=False):
         """
-        Returns a XML representation of all headers of a SEED volume.
+        Returns a XSEED representation of the current Parser object.
 
         :type version: float, optional
         :param version: XSEED version string (default is ``1.1``).
@@ -239,7 +240,7 @@ class Parser(object):
 
     def writeXSEED(self, filename, *args, **kwargs):
         """
-        Stores XML-SEED string into file with given name.
+        Writes a XML-SEED file with given name.
         """
         result = self.getXSEED(*args, **kwargs)
         if isinstance(result, basestring):
@@ -262,7 +263,7 @@ class Parser(object):
 
     def getSEED(self, compact=False):
         """
-        Takes everything stored in the object returns a valid SEED string.
+        Returns a SEED representation of the current Parser object.
         """
         self.compact = compact
         # Nothing to write if not all necessary data is available.
@@ -296,7 +297,7 @@ class Parser(object):
 
     def writeSEED(self, filename, *args, **kwargs):
         """
-        Stores SEED string into file with given name.
+        Writes a dataless SEED file with given name.
         """
         fh = open(filename, 'wb')
         fh.write(self.getSEED(*args, **kwargs))
@@ -304,7 +305,7 @@ class Parser(object):
 
     def getRESP(self):
         """
-        Returns a SEED RESP file from the current obspy.xseed.Parser object.
+        Returns a RESP representation of the current Parser object.
 
         It aims to produce the same RESP files as when running rdseed with
         the command: "rdseed -f seed.test -R".
@@ -525,7 +526,7 @@ class Parser(object):
 
     def writeRESP(self, folder, zipped=False):
         """
-        Stores channel responses into files within a given folder.
+        Writes for each channel a RESP file within a given folder.
 
         :param folder: Folder name.
         :param zipped: Compresses all files into a single ZIP archive named by
