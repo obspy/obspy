@@ -130,3 +130,8 @@ Gallery
     :width: 300px
     :target: tutorial/travel_time_plot.html
     :alt: Travel Time Plot
+
+.. plot:: source/tutorial/benchmark.py
+    :width: 300px
+    :target: http://docs.obspy.org/packages/autogen/obspy.segy.benchmark.plotBenchmark.html
+    :alt: Benchmark Plot
