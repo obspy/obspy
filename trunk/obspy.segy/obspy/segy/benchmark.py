@@ -250,9 +250,9 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
 
     # limit offset axis
     spacing = (max_y - min_y) / 50.0
-    if not ymax or ymax > max_y:
+    if ymax is None or ymax > max_y:
         ymax = max_y + spacing
-    if not ymin or ymin < min_y:
+    if ymin is None or ymin < min_y:
         ymin = min_y - spacing
     ax.set_ylim(ymin, ymax)
 
