@@ -86,8 +86,10 @@ import os
 import sys
 import time
 import unittest
+import doctest
 import warnings
 import copy
+import glob
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
@@ -403,7 +405,7 @@ class _TextTestRunner:
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0, exclude=[]):
+             interactive=False, slowest=0, exclude=[], tutorial=False):
     """
     This function executes ObsPy test suites.
 
@@ -434,6 +436,24 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
                 pass
     # fetch tests suites
     suites = _getSuites(verbosity, tests)
+    # add testsuite for all of the tutorial's rst files
+    if tutorial:
+        try:
+            # ugly finding of docs/tutorial path:
+            tut_path = __file__
+            while not tut_path.endswith("trunk"):
+                tut_path = os.path.split(tut_path)[0]
+            tut_path = os.path.join(tut_path, 'misc', 'docs', 'source',
+                                    'tutorial', '*.rst')
+            tut_suite = unittest.TestSuite()
+            for file in glob.glob(tut_path):
+                filesuite = doctest.DocFileSuite(file, module_relative=False)
+                tut_suite.addTest(filesuite)
+            suites['tutorial'] = tut_suite
+        except:
+            msg = "Could not add tutorial files to tests."
+            warnings.warn(msg)
+    # run test suites
     ttr, total_time = _TextTestRunner(verbosity=verbosity,
                                       timeit=timeit).run(suites)
     if slowest:
@@ -454,7 +474,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     if interactive and not report:
         msg = "Do you want to report this to tests.obspy.org? [n]: "
         var = raw_input(msg).lower()
-        if 'y' in var:
+        if var in ('y', 'yes'):
             report = True
     if report:
         _createReport(ttr, total_time, log, server)
@@ -475,6 +495,9 @@ def run(interactive=True):
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
+    parser.add_option("--tutorial", default=False,
+                      action="store_true", dest="tutorial",
+                      help="test rst files in tutorial")
     # filter options
     filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
         "will test all installed ObsPy packages which don't require a " + \
@@ -547,7 +570,7 @@ def run(interactive=True):
         interactive = False
     runTests(verbosity, parser.largs, report, options.log, options.server,
              options.all, options.timeit, interactive, options.n,
-             exclude=options.module)
+             exclude=options.module, tutorial=options.tutorial)
 
 
 def main(interactive=True):
