@@ -102,7 +102,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
 
     .. rubric:: Example
 
-    The following example plots five seismic unix files in one benchmark image.
+    The following example plots four seismic unix files in one benchmark image.
 
     >>> import glob
     >>> sufiles = glob.glob('seismic01_*_vz.su')
