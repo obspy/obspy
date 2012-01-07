@@ -250,17 +250,16 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     """
     n = nfft // 2
     b, a = scipy.signal.ltisys.zpk2tf(zeros, poles, scale_fac)
-    # b has to be a list for the scipy.signal.freqs() call later but zpk2tf()
+    # a has to be a list for the scipy.signal.freqs() call later but zpk2tf()
     # strangely returns it as an integer.
     if not isinstance(a, np.ndarray) and a == 1.0:
         a = [1.0]
     fy = 1 / (t_samp * 2.0)
-    # start at zero to get zero for offset/ DC of fft
-    f = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
+    # start at zero to get zero for offset / DC of fft
+    f = np.linspace(0, fy, n + 1)
     _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
     if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
         h = np.conj(h)
-    h[-1] = h[-1].real + 0.0j
     if freq:
         return h, f
     return h
@@ -390,19 +389,16 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     delta = 1.0 / samp_rate
     #
     ndat = len(data)
-    # find next power of 2 in order to prohibit wrap around effects
-    # during convolution, the number of points for the FFT has to be at
-    # least 2 *ndat cf. Numerical Recipes p. 429 calculate next power
-    # of 2
-    nfft = util.nextpow2(2 * ndat)
-    # explicitly copy, else input data will be modified (astype copies the
-    # data). Avoid numerical problems by using float64
     data = data.astype("float64")
     if zero_mean:
         data -= data.mean()
     if taper:
         data *= cosTaper(ndat, taper_fraction)
-    # transform data in Fourier domain
+    # The number of points for the FFT has to be at least 2 * ndat (in
+    # order to prohibit wrap around effects during convolution) cf.
+    # Numerical Recipes p. 429 calculate next power of 2.
+    nfft = util.nextpow2(2 * ndat)
+    # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
@@ -416,7 +412,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
                                         units=seedresp['units'], freq=True)
     if paz_remove or seedresp:
         if pre_filt:
-            #### make cosine taper
+            # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             idx0 = np.where((freqs >= fl1) & (freqs < fl2))
             idx1 = np.where((freqs >= fl2) & (freqs <= fl3))

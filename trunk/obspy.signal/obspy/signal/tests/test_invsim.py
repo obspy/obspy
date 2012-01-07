@@ -162,32 +162,25 @@ class InvSimTestCase(unittest.TestCase):
         #    cd1.close()
         #    p.wait()
 
-        data = np.loadtxt(sacf)
         stats = {'network': 'KA', 'delta': 0.99999988079072466,
                  'station': 'KARC', 'location': 'S1',
                  'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
-                 'npts': 86399, 'calib': 1.00868e+09,
-                 'sampling_rate': 1.0000001192092896, 'channel': 'BHZ'}
-        tr = Trace(data, stats)
+                 'calib': 1.00868e+09, 'channel': 'BHZ'}
+        tr = Trace(np.loadtxt(sacf), stats)
 
         attach_paz(tr, pzf, tovel=False)
         tr.data = seisSim(tr.data, tr.stats.sampling_rate,
                           paz_remove=tr.stats.paz, remove_sensitivity=False,
                           pre_filt=(fl1, fl2, fl3, fl4))
-        data = np.loadtxt(testsacf)
-        stats = {'network': 'KA', 'delta': 0.99999988079072466,
-                 'station': 'KARC', 'location': 'S1',
-                 'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
-                 'npts': 86399, 'calib': 1.0,
-                 'sampling_rate': 1.0000001192092896, 'channel': 'BHZ'}
-        tr2 = Trace(data, stats)
 
-        #import pylab as plt
-        #plt.plot(tr.data)
-        #plt.plot(tr2.data)
-        #plt.show()
-        rms = np.sqrt(np.sum((tr.data - tr2.data) ** 2) / \
-                      np.sum(tr2.data ** 2))
+        data = np.loadtxt(testsacf)
+
+        # import matplotlib.pyplot as plt
+        # plt.plot(tr.data)
+        # plt.plot(data)
+        # plt.show()
+        rms = np.sqrt(np.sum((tr.data - data) ** 2) / \
+                      np.sum(tr.data ** 2))
         self.assertTrue(rms < 0.0421)
 
     def test_evalrespVsObsPy(self):
@@ -206,8 +199,7 @@ class InvSimTestCase(unittest.TestCase):
         stats = {'network': 'NZ', 'delta': 0.01,
                  'station': 'CRLZ', 'location': '10',
                  'starttime': UTCDateTime(2010, 9, 4, 4, 52, 58, 997000),
-                 'npts': 49000, 'calib': 1.0,
-                 'sampling_rate': 100.0, 'channel': 'HHZ'}
+                 'calib': 1.0, 'channel': 'HHZ'}
         tr = Trace(data, stats)
         trtest = Trace(test_data, stats)
         fl1 = 0.00588
@@ -222,6 +214,10 @@ class InvSimTestCase(unittest.TestCase):
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
                       np.sum(trtest.data ** 2))
+        # import matplotlib.pyplot as plt
+        # plt.plot(tr.data)
+        # plt.plot(trtest.data)
+        # plt.show()
         self.assertTrue(rms < 0.0041)
 
     def test_evalrespUsingDifferentLineSeparator(self):
@@ -229,17 +225,22 @@ class InvSimTestCase(unittest.TestCase):
         The evalresp needs a file with correct line separator, so '\n' for
         POSIX, '\r' for Mac OS, or '\r\n' for Windows. Here we check that
         evalresp reads all three formats.
+
+        This test only checks the parsing capabilities of evalresp,
+        the number of fft points used (nfft) can therefore be chosen
+        small.
         """
         dt = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        nfft = 8
         # linux
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
-        evalresp(0.01, 512, respf, dt)
+        evalresp(0.01, nfft, respf, dt)
         # mac
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.mac')
-        evalresp(0.01, 512, respf, dt)
+        evalresp(0.01, nfft, respf, dt)
         # windows
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
-        evalresp(0.01, 512, respf, dt)
+        evalresp(0.01, nfft, respf, dt)
 
 
 def suite():
