@@ -9,7 +9,7 @@
 #---------------------------------------------------------------------
 
 # Must be executed in the scripts directory
-METAPACKAGE_VERSION=0.5.0
+METAPACKAGE_VERSION=0.6.0
 DEBVERSION=1
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
