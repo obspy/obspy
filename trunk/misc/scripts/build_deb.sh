@@ -29,7 +29,7 @@ TAGSDIR=$BASEDIR/tags
 
 # deactivate, else each time all packages are removed
 #rm -rf $PACKAGEDIR $TAGSDIR
-#mkdir -p $PACKAGEDIR
+mkdir -p $PACKAGEDIR
 
 # download tags
 #svn checkout --quiet https://svn.obspy.org/tags $TAGSDIR
