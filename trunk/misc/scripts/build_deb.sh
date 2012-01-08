@@ -9,6 +9,8 @@
 #---------------------------------------------------------------------
 
 # Must be executed in the scripts directory
+# Tags are supposed to be checked out as "tags" subdirectory
+
 METAPACKAGE_VERSION=0.6.0
 DEBVERSION=1
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
@@ -25,19 +27,16 @@ PACKAGEDIR=$BASEDIR/packages
 DIR=$BASEDIR/../..
 TAGSDIR=$BASEDIR/tags
 
-FTPHOST=obspy.org
-FTPUSER=obspy
-
 # deactivate, else each time all packages are removed
-rm -rf $PACKAGEDIR $TAGSDIR
-mkdir -p $PACKAGEDIR
+#rm -rf $PACKAGEDIR $TAGSDIR
+#mkdir -p $PACKAGEDIR
 
 # download tags
-svn checkout --quiet https://svn.obspy.org/tags $TAGSDIR
-if [ ! $? -eq 0 ]; then
-    echo "Error during svn checkout, aborting"
-    exit 1
-fi
+#svn checkout --quiet https://svn.obspy.org/tags $TAGSDIR
+#if [ ! $? -eq 0 ]; then
+#    echo "Error during svn checkout, aborting"
+#    exit 1
+#fi
 
 MODULES=`ls $TAGSDIR`
 
