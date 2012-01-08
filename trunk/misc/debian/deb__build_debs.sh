@@ -1,6 +1,6 @@
 #!/bin/bash
 #-------------------------------------------------------------------
-# Filename: build_deb.sh
+# Filename: deb__build_debs.sh
 #  Purpose: Build Debian packages for ObsPy 
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
@@ -8,23 +8,20 @@
 # Copyright (C) 2011 ObsPy Development Team
 #---------------------------------------------------------------------
 
-# Must be executed in the scripts directory
+# Must be executed in the misc/debian directory
 # Tags are supposed to be checked out as "tags" subdirectory
 
 METAPACKAGE_VERSION=0.6.0
 DEBVERSION=1
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
-#
 # Setting PATH to correct python distribution, avoid to use virtualenv
-#
 export PATH=/usr/bin:/usr/sbin:/bin:/sbin
 
 CODENAME=`lsb_release -cs`
 
 BASEDIR=`pwd`
 PACKAGEDIR=$BASEDIR/packages
-DIR=$BASEDIR/../..
 TAGSDIR=$BASEDIR/tags
 
 # deactivate, else each time all packages are removed
@@ -46,9 +43,7 @@ MODULES=`ls $TAGSDIR`
 #    NOT_EQUIVS="True"
 #fi
 
-#
 # Build all ObsPy Packages
-#
 for MODULE in $MODULES; do
     echo "#### Working on $MODULE"
     MODULEDIR=$TAGSDIR/$MODULE
@@ -94,42 +89,22 @@ EOF
     done
 done
 
-#
 # Build namespace package if NOT_EQUIVS is non zero
-#
 #if [ -z "$NOT_EQUIVS" ]; then
-    cd $BASEDIR/..
-    svn revert ./debian/control
-    ex ./debian/control << EOF
+cd $BASEDIR
+svn revert control
+ex control << EOF
 g/Standards-Version/s/[x0-9.]\+/$VERSION/
 g/^Version/s/[x0-9.]\+/${METAPACKAGE_VERSION}-${DEBVERSION}\~${CODENAME}/
 wq
 EOF
-    equivs-build ./debian/control
-    FILENAME=`ls python-obspy_*.deb`
-    mv $FILENAME $PACKAGEDIR
+equivs-build control
+mv python-obspy_*.deb $PACKAGEDIR
 #fi
 
-#
 # run lintian to verify the packages
-#
-for MODULE in $MODULES; do
-    PACKAGE=`ls $PACKAGEDIR/python-obspy-${MODULE#obspy.}_*.deb`
+for PACKAGE in `ls $PACKAGEDIR/*.deb`; do
     echo $PACKAGE
     #lintian -i $PACKAGE # verbose output
     lintian $PACKAGE
 done
-
-####
-#### upload built packages
-####
-###cd $PACKAGEDIR
-###echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
-###read FTPPASSWD
-###ftp -i -n -v $FTPHOST &> $BASEDIR/ftp.log << EOF
-###user $FTPUSER $FTPPASSWD
-###binary
-###cd debian/packages
-###mput *.deb
-###bye
-###EOF
