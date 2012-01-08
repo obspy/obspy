@@ -1573,8 +1573,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1632,8 +1632,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1672,8 +1672,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1736,8 +1736,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1795,8 +1795,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1824,8 +1824,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1852,8 +1852,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
@@ -1912,8 +1912,8 @@ class Stream(object):
 
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
-            original data, use :meth:`~obspy.core.stream.Stream.copy` to make a
-            copy of your trace.
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
