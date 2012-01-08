@@ -46,7 +46,7 @@ class InvSimTestCase(unittest.TestCase):
             # simulate instrument
             datcorr = seisSim(data, samp_rate, paz_remove=PAZ_LE3D,
                               paz_simulate=paz, water_level=600.0,
-                              zero_mean=False)
+                              zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
             f = gzip.open(file)
@@ -80,7 +80,7 @@ class InvSimTestCase(unittest.TestCase):
             # simulate instrument
             datcorr = seisSim(data, samp_rate, paz_remove=PAZ_STS2,
                               paz_simulate=paz, water_level=600.0,
-                              zero_mean=False)
+                              zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
             f = gzip.open(file)

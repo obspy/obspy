@@ -308,7 +308,8 @@ def specInv(spec, wlev):
 def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=True, simulate_sensitivity=True,
             water_level=600.0, zero_mean=True, taper=True,
-            taper_fraction=0.05, pre_filt=None, seedresp=None, **_kwargs):
+            taper_fraction=0.05, pre_filt=None, seedresp=None,
+            nfft_pow2=False, **_kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -348,6 +349,12 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
+    :type nfft_pow2: Boolean
+    :param nfft_pow2: Number of frequency points to use for FFT. If True,
+        the exact power of two is taken (default in PITSA). If False the
+        data are not zeropadded to the next power of two which makes a
+        slower FFT but is then much faster for e.g. evalresp which scales
+        with the FFT points.
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 
@@ -397,7 +404,15 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # The number of points for the FFT has to be at least 2 * ndat (in
     # order to prohibit wrap around effects during convolution) cf.
     # Numerical Recipes p. 429 calculate next power of 2.
-    nfft = util.nextpow2(2 * ndat)
+    if nfft_pow2:
+        nfft = util.nextpow2(2 * ndat)
+    # evalresp scales directly with nfft, therefor taking the next power of
+    # two has a greater negative performance impact than the slow down of a
+    # not power of two in the FFT
+    elif ndat & 1:  # check if even
+        nfft = 2 * (ndat + 1)
+    else:
+        nfft = 2 * ndat
     # Transform data in Fourier domain
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
