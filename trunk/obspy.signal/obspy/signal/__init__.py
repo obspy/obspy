@@ -186,7 +186,7 @@ from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
         gps2DistAzimuth
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
         delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick
-from invsim import cosTaper, detrend, cornFreq2Paz
+from invsim import cosTaper, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
 from util import utlGeoKm, utlLonLat
