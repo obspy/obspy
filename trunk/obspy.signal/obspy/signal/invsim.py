@@ -137,18 +137,18 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
-    sta = C.c_char_p(station)
-    cha = C.c_char_p(channel)
-    net = C.c_char_p(network)
-    locid = C.c_char_p(locid)
-    unts = C.c_char_p(units)
+    sta = C.create_string_buffer(station)
+    cha = C.create_string_buffer(channel)
+    net = C.create_string_buffer(network)
+    locid = C.create_string_buffer(locid)
+    unts = C.create_string_buffer(units)
     if debug:
-        vbs = C.c_char_p("-v")
+        vbs = C.create_string_buffer("-v")
     else:
-        vbs = C.c_char_p("")
-    rtyp = C.c_char_p("CS")
-    datime = C.c_char_p("%d,%3d" % (date.year, date.getJulday()))
-    fn = C.c_char_p(tempfile)
+        vbs = C.create_string_buffer("")
+    rtyp = C.create_string_buffer("CS")
+    datime = C.create_string_buffer("%d,%3d" % (date.year, date.getJulday()))
+    fn = C.create_string_buffer(tempfile)
     nfreqs = C.c_int(freqs.size)
     clibevresp.evresp.restype = C.POINTER(response)
     clibevresp.evresp.argtypes = [
@@ -175,9 +175,13 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     h = np.array([complex(res[0].rvec[i].real, res[0].rvec[i].imag)
                   for i in xrange(res[0].nfreqs)])
     f = np.array([res[0].freqs[i] for i in xrange(res[0].nfreqs)])
+    clibevresp.free_response.restype = C.c_void_p
+    clibevresp.free_response.argtypes = [C.POINTER(response)]
+    clibevresp.free_response(res)
+    del res
     h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
-    # close temporary file
+    # delete temporary file
     try:
         os.remove(tempfile)
     except:
