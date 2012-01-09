@@ -988,6 +988,22 @@ class UTCDateTime(object):
         """
         self.__precision = int(value)
 
+    def toordinal(self):
+        """
+        Return proleptic Gregorian ordinal.  January 1 of year 1 is day 1.
+
+        See :meth:`datetime.datetime.toordinal()`.
+
+        :return: int
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2012, 1, 1)
+        >>> dt.toordinal()
+        734503
+        """
+        return self.datetime.toordinal()
+
     precision = property(getPrecision, setPrecision)
 
 
