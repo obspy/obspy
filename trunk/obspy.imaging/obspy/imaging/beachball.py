@@ -5,7 +5,7 @@
 #   Author: Robert Barsch
 #    Email: barsch@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Robert Barsch
+# Copyright (C) 2008-2012 Robert Barsch
 #---------------------------------------------------------------------
 
 """

@@ -5,7 +5,7 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Moritz Beyreuther
+# Copyright (C) 2008-2012 Moritz Beyreuther
 #---------------------------------------------------------------------
 """
 Python routines for reading GSE pole and zero (PAZ) files.

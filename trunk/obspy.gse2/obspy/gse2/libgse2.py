@@ -5,7 +5,7 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2010 Moritz Beyreuther
+# Copyright (C) 2008-2012 Moritz Beyreuther
 #---------------------------------------------------------------------
 """
 Lowlevel module internally used for handling GSE2 files

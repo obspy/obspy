@@ -5,7 +5,7 @@
 #   Author: Yannik Behr, C. J. Ammon's
 #    Email: yannik.behr@vuw.ac.nz
 #
-# Copyright (C) 2008-2010 Yannik Behr, C. J. Ammon's
+# Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 from obspy.core import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth

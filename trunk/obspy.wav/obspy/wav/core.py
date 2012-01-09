@@ -5,7 +5,7 @@
 #   Author: Moritz Beyreuther
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2009-2011 Moritz Beyreuther
+# Copyright (C) 2009-2012 Moritz Beyreuther
 #-------------------------------------------------------------------------
 """
 WAV bindings to ObsPy core module.

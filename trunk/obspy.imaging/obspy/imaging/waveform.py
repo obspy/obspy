@@ -5,7 +5,7 @@
 #   Author: Lion Krischer
 #    Email: krischer@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Lion Krischer
+# Copyright (C) 2008-2012 Lion Krischer
 #---------------------------------------------------------------------
 from copy import deepcopy, copy
 from datetime import datetime

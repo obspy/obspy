@@ -5,7 +5,7 @@
 #   Author: Christian Sippl, Moritz Beyreuther
 #    Email: sippl@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Christian Sippl
+# Copyright (C) 2008-2012 Christian Sippl
 #---------------------------------------------------------------------
 """
 Plotting spectrogram of seismograms.

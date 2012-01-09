@@ -4,7 +4,7 @@
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Moritz Beyreuther, Tobias Megies
+# Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
 #-------------------------------------------------------------------
 """
 Signal processing routines based on cross correlation techniques.

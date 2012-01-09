@@ -4,7 +4,7 @@
 #   Author: Conny Hammer
 #    Email: conny@geo.uni-potsdam.de
 #
-# Copyright (C) 2008-2011 Conny Hammer
+# Copyright (C) 2008-2012 Conny Hammer
 #-------------------------------------------------------------------
 """
 Polarization Analysis

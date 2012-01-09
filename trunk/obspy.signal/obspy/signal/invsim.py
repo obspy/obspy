@@ -5,7 +5,7 @@
 #   Author: Moritz Beyreuther, Yannik Behr
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 Moritz Beyreuther, Yannik Behr
+# Copyright (C) 2008-2012 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import deprecated

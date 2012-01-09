@@ -5,7 +5,7 @@
 #   Author: Tobias Megies, Moritz Beyreuther
 #    Email: megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2011 ObsPy Development Team
+# Copyright (C) 2008-2012 ObsPy Development Team
 #-----------------------------------------------
 """
 ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (mopad)

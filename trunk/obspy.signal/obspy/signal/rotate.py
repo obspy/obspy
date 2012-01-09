@@ -5,7 +5,7 @@
 #   Author: Tobias Megies, Tom Richter
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2009-2011 Tobias Megies, Tom Richter
+# Copyright (C) 2009-2012 Tobias Megies, Tom Richter
 #---------------------------------------------------------------------
 """
 Various Seismogram Rotation Functions

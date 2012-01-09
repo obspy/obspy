@@ -6,7 +6,7 @@
 #           Lion Krischer
 #           Tobias Megies
 #
-# Copyright (C) 2008-2011 Robert Barsch, Moritz Beyreuther, Lion Krischer,
+# Copyright (C) 2008-2012 Robert Barsch, Moritz Beyreuther, Lion Krischer,
 #                         Tobias Megies
 #------------------------------------------------------------------------------
 """
