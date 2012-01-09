@@ -707,6 +707,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(UTCDateTime(999.999999909, precision=7) >= \
                         UTCDateTime(999.999999900, precision=7))
 
+    def test_toordinal(self):
+        """
+        Short test if toordinal() is working.
+        Matplotlib's date2num() function depends on this which is used a lot in
+        plotting.
+        """
+        dt = UTCDateTime("2012-03-04T11:05:09.123456Z")
+        self.assertEquals(dt.toordinal(), 734566)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
