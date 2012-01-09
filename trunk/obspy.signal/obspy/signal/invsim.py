@@ -172,13 +172,18 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                             freqs, nfreqs, rtyp, vbs, start_stage,
                             stop_stage, stdio_flag, C.c_int(0))
-    h = np.array([complex(res[0].rvec[i].real, res[0].rvec[i].imag)
-                  for i in xrange(res[0].nfreqs)])
-    f = np.array([res[0].freqs[i] for i in xrange(res[0].nfreqs)])
+    # optimizing performance, see
+    # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+    nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+    h = np.empty(nfreqs, dtype='complex128')
+    f = np.empty(nfreqs, dtype='float64')
+    for i in xrange(nfreqs):
+        h[i] = rvec[i].real + rvec[i].imag * 1j
+        f[i] = rfreqs[i]
     clibevresp.free_response.restype = C.c_void_p
     clibevresp.free_response.argtypes = [C.POINTER(response)]
     clibevresp.free_response(res)
-    del res
+    del nfreqs, rfreqs, rvec, res
     h = np.conj(h)
     h[-1] = h[-1].real + 0.0j
     # delete temporary file
