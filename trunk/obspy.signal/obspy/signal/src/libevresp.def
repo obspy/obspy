@@ -1,3 +1,4 @@
 LIBRARY libevresp.dll
 EXPORTS
     evresp
+    free_response
