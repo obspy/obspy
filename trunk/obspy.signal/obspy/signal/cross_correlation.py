@@ -17,7 +17,7 @@ Signal processing routines based on cross correlation techniques.
 """
 
 from obspy.core import Trace, Stream
-from obspy.signal.util import clibsignal
+from obspy.signal.headers import clibsignal
 import ctypes as C
 import numpy as np
 
@@ -88,15 +88,6 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         msg = "shift_len too large. The underlying C code would silently " + \
               "use shift_len/2 which we want to avoid."
         raise ValueError(msg)
-
-    clibsignal.X_corr.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_int, C.c_int,
-        C.POINTER(C.c_int), C.POINTER(C.c_double)]
-    clibsignal.X_corr.restype = C.c_void_p
-
     # be nice and adapt type if necessary
     tr1 = np.require(tr1, 'float32', ['C_CONTIGUOUS'])
     tr2 = np.require(tr2, 'float32', ['C_CONTIGUOUS'])

@@ -13,64 +13,7 @@ from scipy import signal, fix, fftpack
 import ctypes as C
 import math as M
 import numpy as np
-import os
-import platform
-
-
-# Import shared libsignal depending on the platform.
-# create library names
-lib_names = [
-     # platform specific library name
-    'libsignal-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
-    'libsignal']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
-# initialize library
-clibsignal = None
-for lib_name in lib_names:
-    try:
-        clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                         lib_name + lib_extension))
-    except Exception, e:
-        pass
-    else:
-        break
-if not clibsignal:
-    msg = 'Could not load shared library for obspy.signal.\n\n %s' % (e)
-    raise ImportError(msg)
-
-# Import shared libevresp depending on the platform.
-# create library names
-erlib_names = [
-    # platform specific library name
-    'libevresp-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
-        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
-    'libevresp']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
-# initialize library
-clibevresp = None
-for erlib_name in erlib_names:
-    try:
-        clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                         erlib_name + lib_extension))
-    except Exception, e:
-        pass
-    else:
-        break
-if not clibevresp:
-    msg = 'Could not load shared library for ' + \
-          'obspy.signal.invsim.evalresp\n\n %s' % (e)
-    raise ImportError(msg)
+from obspy.signal.headers import clibsignal
 
 
 def utlGeoKm(orig_lon, orig_lat, lon, lat):
@@ -92,12 +35,6 @@ def utlGeoKm(orig_lon, orig_lat, lon, lat):
     :return: x, y coordinate in km (in reference to origin)
     """
     # 2009-10-11 Moritz
-
-    clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
-                                      C.POINTER(C.c_double),
-                                      C.POINTER(C.c_double)]
-    clibsignal.utl_geo_km.restype = C.c_void_p
-
     x = C.c_double(lon)
     y = C.c_double(lat)
 

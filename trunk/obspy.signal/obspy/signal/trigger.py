@@ -22,10 +22,10 @@ implemented. (see Withers et al. 1998 p. 98).
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from util import clibsignal
 import ctypes as C
 import numpy as np
 from obspy.core.util import deprecated
+from obspy.signal.headers import clibsignal
 
 
 @deprecated
@@ -54,11 +54,6 @@ def recSTALTA(a, nsta, nlta):
 
     .. seealso:: [Withers1998]_, p. 98
     """
-    clibsignal.recstalta.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_int, C.c_int]
-    clibsignal.recstalta.restype = C.c_void_p
     # be nice and adapt type if necessary
     a = np.require(a, 'float64', ['C_CONTIGUOUS'])
     ndat = len(a)
@@ -401,11 +396,6 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers
     pfm = C.create_string_buffer("     ", 5)
-    clibsignal.ppick.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.POINTER(C.c_int), C.c_char_p, C.c_float, C.c_int, C.c_int,
-        C.c_float, C.c_float, C.c_int, C.c_int]
-    clibsignal.ppick.restype = C.c_int
     # be nice and adapt type if necessary
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
@@ -442,14 +432,6 @@ def arPick(a, b, c, samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s,
     :param s_pick: if true pick also S phase, elso only P
     :return: (ptime, stime) parrival and sarrival
     """
-    clibsignal.ar_picker.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_float, C.c_float, C.c_float, C.c_float, C.c_float,
-        C.c_float, C.c_float, C.c_int, C.c_int, C.POINTER(C.c_float),
-        C.POINTER(C.c_float), C.c_double, C.c_double, C.c_int]
-    clibsignal.ar_picker.restypes = C.c_int
     # be nice and adapt type if necessary
     a = np.require(a, 'float32', ['C_CONTIGUOUS'])
     b = np.require(b, 'float32', ['C_CONTIGUOUS'])

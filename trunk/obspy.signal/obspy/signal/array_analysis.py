@@ -21,7 +21,8 @@ import math
 import warnings
 import ctypes as C
 import numpy as np
-from obspy.signal.util import utlGeoKm, clibsignal, nextpow2
+from obspy.signal.util import utlGeoKm, nextpow2
+from obspy.signal.headers import clibsignal
 from obspy.core import Stream
 from scipy.integrate import cumtrapz
 
@@ -826,24 +827,6 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
         | **int ix:** ix output for backazimuth calculation
         | **int iy:** iy output for backazimuth calculation
     """
-    #XXX moritz: add a note where params are pointers
-
-    clibsignal.bbfk.argtypes = [
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int,
-        C.POINTER(C.c_void_p),
-        np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_void_p,
-        C.POINTER(C.c_float),
-        C.POINTER(C.c_float),
-        C.POINTER(C.c_int),
-        C.POINTER(C.c_int),
-        C.c_float, C.c_float, C.c_float,
-        C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
-        C.c_int,
-    ]
-    clibsignal.bbfk.restype = C.c_int
-
     # allocate output variables
     abspow = C.c_float()
     power = C.c_float()
@@ -1027,17 +1010,13 @@ def cosine_taper(ndat, fraction=0.1):
     >>> abs(tap - buf).max() < 1e-2
     True
     """
-    clibsignal.cosine_taper.argtypes = [
-        np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-        C.c_int, C.c_double]
-    clibsignal.cosine_taper.restype = C.c_int
     data = np.empty(ndat, dtype='float64')
     # the c extension tapers fraction from the beginning and the end,
     # therefore we half it
     # XXX: frac is never used
     #frac = C.c_double(fraction / 2.0)
 
-    errcode = clibsignal.cosine_taper(data, ndat, fraction)
+    errcode = clibsignal.cosine_taper(data, ndat, frac)
     if errcode != 0:
         raise Exception('bbfk: C-Extension returned error %d' % errcode)
     return data

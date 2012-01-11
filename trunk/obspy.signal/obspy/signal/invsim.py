@@ -10,7 +10,7 @@
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import deprecated
 from obspy.signal.detrend import simple as simpleDetrend
-from obspy.signal.util import clibevresp
+from obspy.signal.headers import clibevresp
 import ctypes as C
 import math as M
 import numpy as np
@@ -109,27 +109,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     fh.write(os.linesep.join(data.splitlines()))
     fh.close()
 
-    STALEN = 64
-    NETLEN = 64
-    CHALEN = 64
-    LOCIDLEN = 64
-
-    class c_complex(C.Structure):
-        _fields_ = [("real", C.c_double),
-                    ("imag", C.c_double)]
-
-    class response(C.Structure):
-        pass
-
-    response._fields_ = [("station", C.c_char * STALEN),
-                         ("network", C.c_char * NETLEN),
-                         ("locid", C.c_char * LOCIDLEN),
-                         ("channel", C.c_char * CHALEN),
-                         ("rvec", C.POINTER(c_complex)),
-                         ("nfreqs", C.c_int),
-                         ("freqs", C.POINTER(C.c_double)),
-                         ("next", C.POINTER(response))]
-
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
@@ -150,25 +129,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     datime = C.create_string_buffer("%d,%3d" % (date.year, date.getJulday()))
     fn = C.create_string_buffer(tempfile)
     nfreqs = C.c_int(freqs.size)
-    clibevresp.evresp.restype = C.POINTER(response)
-    clibevresp.evresp.argtypes = [
-        C.c_char_p,
-        C.c_char_p,
-        C.c_char_p,
-        C.c_char_p,
-        C.c_char_p,
-        C.c_char_p,
-        C.c_char_p,
-        np.ctypeslib.ndpointer(dtype='float64',
-                               ndim=1,
-                               flags='C_CONTIGUOUS'),
-        C.c_int,
-        C.c_char_p,
-        C.c_char_p,
-        C.c_int,
-        C.c_int,
-        C.c_int,
-        C.c_int]
     res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                             freqs, nfreqs, rtyp, vbs, start_stage,
                             stop_stage, stdio_flag, C.c_int(0))
@@ -180,8 +140,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     for i in xrange(nfreqs):
         h[i] = rvec[i].real + rvec[i].imag * 1j
         f[i] = rfreqs[i]
-    clibevresp.free_response.restype = C.c_void_p
-    clibevresp.free_response.argtypes = [C.POINTER(response)]
     clibevresp.free_response(res)
     del nfreqs, rfreqs, rvec, res
     h = np.conj(h)
