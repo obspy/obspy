@@ -1014,7 +1014,7 @@ def cosine_taper(ndat, fraction=0.1):
     # the c extension tapers fraction from the beginning and the end,
     # therefore we half it
     # XXX: frac is never used
-    #frac = C.c_double(fraction / 2.0)
+    frac = C.c_double(fraction / 2.0)
 
     errcode = clibsignal.cosine_taper(data, ndat, frac)
     if errcode != 0:
