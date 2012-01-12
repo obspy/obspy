@@ -452,6 +452,17 @@ class UTCDateTime(object):
 
     def getWeekday(self):
         """
+        Return the day of the week as an integer (Monday is 0, Sunday is 6).
+
+        :rtype: int
+        :return: Returns day of the week as an integer, where Monday is 0 and
+            Sunday is 6.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.weekday()
+        2
         """
         return self.getDateTime().weekday
 
@@ -515,15 +526,37 @@ class UTCDateTime(object):
         >>> dt.getJulday()
         275
         """
-        return self.getDateTime().timetuple().tm_yday
+        return self.utctimetuple().tm_yday
 
     julday = property(getJulday)
 
     def timetuple(self):
         """
         Return a time.struct_time such as returned by time.localtime().
+
+        :rtype: time.struct_time
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.timetuple()  # doctest: +ELLIPSIS
+        time.struct_time(tm_year=2008, tm_mon=10, tm_mday=1, ..., tm_isdst=-1)
         """
-        return time.gmtime(self.timestamp)
+        return self.getDateTime().timetuple()
+
+    def utctimetuple(self):
+        """
+        Return a time.struct_time of current UTCDateTime object.
+
+        :rtype: time.struct_time
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.utctimetuple()  # doctest: +ELLIPSIS
+        time.struct_time(tm_year=2008, tm_mon=10, tm_mday=1, ..., tm_isdst=0)
+        """
+        return self.getDateTime().utctimetuple()
 
     def __add__(self, value):
         """
@@ -774,6 +807,7 @@ class UTCDateTime(object):
 
     def __repr__(self):
         """
+        Returns a representation of UTCDatetime object.
         """
         return 'UTCDateTime' + self.getDateTime().__repr__()[17:]
 
@@ -815,6 +849,52 @@ class UTCDateTime(object):
         """
         return UTCDateTime(datetime.datetime.strptime(date_string, format))
 
+    def timetz(self):
+        """
+        Return time object with same hour, minute, second, microsecond, and
+        tzinfo attributes. See also method :meth:`datetime.datetime.time()`.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.timetz()
+        datetime.time(12, 30, 35, 45020)
+        """
+        return self.getDateTime().timetz()
+
+    def utcoffset(self):
+        """
+        Returns None (to stay compatible with :class:`datetime.datetime`)
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.utcoffset()
+        """
+        return self.getDateTime().utcoffset()
+
+    def dst(self):
+        """
+        Returns None (to stay compatible with :class:`datetime.datetime`)
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.dst()
+        """
+        return self.getDateTime().dst()
+
+    def tzname(self):
+        """
+        Returns None (to stay compatible with :class:`datetime.datetime`)
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.tzname()
+        """
+        return self.getDateTime().tzname()
+
     def ctime(self):
         """
         Return a string representing the date and time.
@@ -828,21 +908,54 @@ class UTCDateTime(object):
 
     def isoweekday(self):
         """
-        Return the day of the week as an integer, where Monday is 1 and Sunday
-        is 7.
+        Return the day of the week as an integer (Monday is 1, Sunday is 7).
+
+        :rtype: int
+        :return: Returns day of the week as an integer, where Monday is 1 and
+            Sunday is 7.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.isoweekday()
+        3
         """
         return self.getDateTime().isoweekday()
 
     def isocalendar(self):
         """
-        Return a 3-tuple, (ISO year, ISO week number, ISO weekday).
+        Returns a tuple containing (ISO year, ISO week number, ISO weekday).
+
+        :rtype: tuple of ints
+        :return: Returns a tuple containing ISO year, ISO week number and ISO
+            weekday.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.isocalendar()
+        (2008, 40, 3)
         """
         return self.getDateTime().isocalendar()
 
     def isoformat(self, sep="T"):
         """
-        Return a string representing the date and time in ISO 8601 format,
-        YYYY-MM-DDTHH:MM:SS.mmmmmm or, if microsecond is 0, YYYY-MM-DDTHH:MM:SS
+        Return a string representing the date and time in ISO 8601 format.
+
+        :rtype: str
+        :return: String representing the date and time in ISO 8601 format like
+            YYYY-MM-DDTHH:MM:SS.mmmmmm or, if microsecond is 0,
+            YYYY-MM-DDTHH:MM:SS.
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        >>> dt.isoformat()
+        '2008-10-01T12:30:35.045020'
+
+        >>> dt = UTCDateTime(2008, 10, 1)
+        >>> dt.isoformat()
+        '2008-10-01T00:00:00'
         """
         return self.getDateTime().isoformat(sep=sep)
 
@@ -990,7 +1103,7 @@ class UTCDateTime(object):
 
     def toordinal(self):
         """
-        Return proleptic Gregorian ordinal.  January 1 of year 1 is day 1.
+        Return proleptic Gregorian ordinal. January 1 of year 1 is day 1.
 
         See :meth:`datetime.datetime.toordinal()`.
 
@@ -1002,7 +1115,7 @@ class UTCDateTime(object):
         >>> dt.toordinal()
         734503
         """
-        return self.datetime.toordinal()
+        return self.getDateTime().toordinal()
 
     precision = property(getPrecision, setPrecision)
 

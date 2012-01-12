@@ -180,6 +180,25 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertTrue('test' in ad)
         self.assertTrue('test' in ad.__dict__)
 
+    def test_clear(self):
+        """
+        Tests clear method of AttribDict class.
+        """
+        ad = AttribDict()
+        ad.test = 1
+        ad['test2'] = 'test'
+        # removing via pop
+        ad.clear()
+        self.assertFalse('test' in ad)
+        self.assertFalse('test2' in ad)
+        self.assertFalse('test' in ad.__dict__)
+        self.assertFalse('test2' in ad.__dict__)
+        self.assertFalse(hasattr(ad, 'test'))
+        self.assertFalse(hasattr(ad, 'test2'))
+        # class attributes should be still present
+        self.assertTrue(hasattr(ad, 'readonly'))
+        self.assertTrue(hasattr(ad, 'priorized_keys'))
+
 
 def suite():
     return unittest.makeSuite(AttribDictTestCase, 'test')

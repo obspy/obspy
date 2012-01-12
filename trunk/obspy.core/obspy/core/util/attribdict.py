@@ -58,6 +58,10 @@ class AttribDict(dict, object):
         super(AttribDict, self).__delattr__(name)
         return super(AttribDict, self).__delitem__(name)
 
+    def clear(self):
+        self.__dict__ = {}
+        return super(AttribDict, self).clear()
+
     def pop(self, name, default={}):
         value = super(AttribDict, self).pop(name, default)
         del self.__dict__[name]
