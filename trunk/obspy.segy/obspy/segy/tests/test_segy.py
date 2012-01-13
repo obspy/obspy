@@ -561,16 +561,6 @@ class SEGYTestCase(unittest.TestCase):
         st = readSEGY(StringIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 
-    def testTwoDigitYears(self):
-        """
-        Even tough not specified in the 1975 SEG Y rev 1 standard, 2 digit
-        years should be read correctly. Some programs produce them.
-
-        Every two digit year < 30 will be mapped to 2000-2029 and every two
-        digit year >=30 <100 will be mapped to 1930-1999.
-        """
-        # Read two artificial test files and check the years.
-
 
 def rms(x, y):
     """

@@ -65,7 +65,6 @@ if not clibevresp:
     raise ImportError(msg)
 
 
-
 #XXX moritz: add a note where params are pointers
 clibsignal.bbfk.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
@@ -128,9 +127,11 @@ NETLEN = 64
 CHALEN = 64
 LOCIDLEN = 64
 
+
 class C_COMPLEX(C.Structure):
     _fields_ = [("real", C.c_double),
                 ("imag", C.c_double)]
+
 
 class RESPONSE(C.Structure):
     pass
@@ -166,4 +167,3 @@ clibevresp.evresp.restype = C.POINTER(RESPONSE)
 
 clibevresp.free_response.argtypes = [C.POINTER(RESPONSE)]
 clibevresp.free_response.restype = C.c_void_p
-

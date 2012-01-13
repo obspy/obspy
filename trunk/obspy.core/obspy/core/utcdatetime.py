@@ -535,12 +535,6 @@ class UTCDateTime(object):
         Return a time.struct_time such as returned by time.localtime().
 
         :rtype: time.struct_time
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.timetuple()  # doctest: +ELLIPSIS
-        time.struct_time(tm_year=2008, tm_mon=10, tm_mday=1, ..., tm_isdst=-1)
         """
         return self.getDateTime().timetuple()
 
@@ -549,12 +543,6 @@ class UTCDateTime(object):
         Return a time.struct_time of current UTCDateTime object.
 
         :rtype: time.struct_time
-
-        .. rubric:: Example
-
-        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.utctimetuple()  # doctest: +ELLIPSIS
-        time.struct_time(tm_year=2008, tm_mon=10, tm_mday=1, ..., tm_isdst=0)
         """
         return self.getDateTime().utctimetuple()
 
