@@ -10,6 +10,7 @@ echo '#############' >> $LOG
 echo `date` >> $LOG
 
 rm -rf $DIR
+mkdir $HOME/build_all_debs
 
 svn checkout --non-interactive --trust-server-cert https://svn.obspy.org/trunk/misc/debian $DIR
 
@@ -21,9 +22,8 @@ for DIST in lenny squeeze lucid maverick natty oneiric; do
         svn checkout --non-interactive --trust-server-cert https://svn.obspy.org/tags $TAGSDIR
         svn revert --non-interactive --trust-server-cert $DIR/control
         echo "cd $DIR; ./deb__build_debs.sh 2>&1 >> $LOG" | schroot -c $DISTARCH
+        mv $DIR/packages/* $HOME/build_all_debs/
     done
 done
 
-mkdir $HOME/build_all_debs
-cp $DIR/packages/* $HOME/build_all_debs/
 cp $LOG $HOME/
