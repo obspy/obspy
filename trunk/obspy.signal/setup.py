@@ -45,7 +45,7 @@ LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'signal', 'processing', 'filter', 'trigger',
             'instrument correction', 'picker', 'instrument simulation',
             'features', 'envelope', 'hob']
-INSTALL_REQUIRES = ['obspy.core > 0.5.1', 'scipy']
+INSTALL_REQUIRES = ['obspy.core > 0.6.1', 'scipy']
 ENTRY_POINTS = {
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recSTALTA',
@@ -160,7 +160,8 @@ def convert2to3():
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
     # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(_adir, filenames):
+
+    def ignored_files(adir, filenames):  # @UnusedVariable
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]
@@ -210,7 +211,8 @@ def setupPackage():
         namespace_packages=['obspy'],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME, NAME),
+        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME,
+                                                                    NAME),
         include_package_data=True,
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,
