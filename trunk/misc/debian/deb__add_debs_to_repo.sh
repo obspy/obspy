@@ -14,7 +14,7 @@ DEBDIR=$BASEDIR/deb
 PACKAGEDIR=$BASEDIR/packages
 export GNUPGHOME=$HOME/.gnupg-obspy
 
-gpg-agent --daemon
+eval $(gpg-agent --daemon)
 for FILE in `ls $PACKAGEDIR/*.deb`; do
     CODENAME=`echo $FILE | sed -e "s#.*~##" -e "s#_.*##"`
     reprepro --component 'main' -Vb $DEBDIR includedeb $CODENAME $FILE
