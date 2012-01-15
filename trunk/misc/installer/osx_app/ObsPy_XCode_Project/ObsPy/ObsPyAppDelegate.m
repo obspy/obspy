@@ -93,7 +93,7 @@
     if (retcode == NSAlertOtherReturn)
     {
         emulator = [[TTYEmulation alloc] initWithTextView:OutPut andViewWindow:terminalWindow];
-        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects: nil]];
+        [emulator runSingleCommand: @"/Applications/ObsPy.app/Contents/MacOS/bin/obspy-runtests" withArguments:[NSArray arrayWithObjects:@"-d", nil]];
     }
 }
 
