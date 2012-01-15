@@ -14,10 +14,13 @@ DEBDIR=$BASEDIR/deb
 PACKAGEDIR=$BASEDIR/packages
 export GNUPGHOME=$HOME/.gnupg-obspy
 
+gpg-agent --daemon
 for FILE in `ls $PACKAGEDIR/*.deb`; do
     CODENAME=`echo $FILE | sed -e "s#.*~##" -e "s#_.*##"`
-    reprepro --ask-passphrase --component 'main' -Vb $DEBDIR includedeb $CODENAME $FILE
+    reprepro --component 'main' -Vb $DEBDIR includedeb $CODENAME $FILE
 done
+killall gpg-agent
+
 ##if [ $? != 0 ]; then Error when running reprepro, exiting now; fi
 ## do reprepro check + checkpool! get return status
 chmod -R a+rX $DEBDIR
