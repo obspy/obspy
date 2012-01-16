@@ -1089,6 +1089,8 @@ class UTCDateTime(object):
         """
         self.__precision = int(value)
 
+    precision = property(getPrecision, setPrecision)
+
     def toordinal(self):
         """
         Return proleptic Gregorian ordinal. January 1 of year 1 is day 1.
@@ -1105,7 +1107,19 @@ class UTCDateTime(object):
         """
         return self.getDateTime().toordinal()
 
-    precision = property(getPrecision, setPrecision)
+    @staticmethod
+    def now():
+        """
+        Returns current UTC datetime.
+        """
+        return UTCDateTime()
+
+    @staticmethod
+    def utcnow():
+        """
+        Returns current UTC datetime.
+        """
+        return UTCDateTime()
 
 
 if __name__ == '__main__':
