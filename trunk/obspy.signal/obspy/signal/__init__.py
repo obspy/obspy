@@ -10,7 +10,8 @@ correction and coordinate transformations.
 
 Filter
 ------
-Available filters are :func:`~obspy.signal.filter.bandpass()`,
+The :mod:`~obspy.signal.filter` module provides various filters. Available
+filters are :func:`~obspy.signal.filter.bandpass()`,
 :func:`~obspy.signal.filter.lowpass()`,
 :func:`~obspy.signal.filter.highpass()`,
 :func:`~obspy.signal.filter.bandstop()`. Zero-phase filtering can be done by
@@ -61,11 +62,11 @@ works similar:
 
 Instrument Correction
 ---------------------
-The response of the instrument can be removed by the invsim module. The
-following example shows how to remove the the instrument response of a
-STS2 and simulate an instrument with 2Hz corner frequency.
-In the example only the first trace is processed to see the changes in
-comparison with the other traces in the plot.
+The response of the instrument can be removed by the
+:mod:`~obspy.signal.invsim` module. The following example shows how to remove
+the the instrument response of a STS2 and simulate an instrument with 2Hz
+corner frequency. In the example only the first trace is processed to see the
+changes in comparison with the other traces in the plot.
 
 >>> from obspy.core import read
 >>> from obspy.signal import seisSim, cornFreq2Paz
