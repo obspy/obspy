@@ -14,7 +14,7 @@ from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
 from obspy.core import UTCDateTime
-from obspy.core.util import deprecated_keywords, guessDelta
+from obspy.core.util import guessDelta
 import httplib
 import os
 import pickle
@@ -31,10 +31,6 @@ HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
                         HTTP_ACCEPTED_NODATA_METHODS
 
 
-DEPRECATED_KEYWORDS = {'network_id': 'network', 'station_id': 'station',
-                       'location_id': 'location', 'channel_id': 'channel',
-                       'start_datetime': 'starttime',
-                       'end_datetime': 'endtime'}
 KEYWORDS = {'network': 'network_id', 'station': 'station_id',
             'location': 'location_id', 'channel': 'channel_id',
             'starttime': 'start_datetime', 'endtime': 'end_datetime'}
@@ -315,7 +311,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         root = self.client._objectify(url, **kwargs)
         return [str(node['network']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id': 'network'})
     def getStationIds(self, network=None, **kwargs):
         """
         Gets a list of station ids.
@@ -333,7 +328,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         root = self.client._objectify(url, **kwargs)
         return [str(node['station']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station'})
     def getLocationIds(self, network=None, station=None, **kwargs):
         """
         Gets a list of location ids.
@@ -353,8 +347,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         root = self.client._objectify(url, **kwargs)
         return [str(node['location']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
-                          'location_id': 'location'})
     def getChannelIds(self, network=None, station=None, location=None,
                       **kwargs):
         """
@@ -377,8 +369,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         root = self.client._objectify(url, **kwargs)
         return [str(node['channel']) for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
-                          'location_id': 'location', 'channel_id': 'channel'})
     def getLatency(self, network=None, station=None, location=None,
                    channel=None, **kwargs):
         """
@@ -404,7 +394,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getWaveform(self, network, station, location=None, channel=None,
                     starttime=None, endtime=None, apply_filter=False,
                     getPAZ=False, getCoordinates=False,
@@ -507,7 +496,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         stream._cleanup()
         return stream
 
-    @deprecated_keywords(DEPRECATED_KEYWORDS)
     def getPreview(self, network, station, location=None, channel=None,
                    starttime=None, endtime=None, trace_ids=None, **kwargs):
         """
@@ -542,8 +530,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         stream = pickle.loads(data)
         return stream
 
-    @deprecated_keywords({'start_datetime': 'starttime',
-                          'end_datetime': 'endtime'})
     def getPreviewByIds(self, trace_ids=None, starttime=None, endtime=None,
                         **kwargs):
         """
@@ -589,7 +575,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
     package = 'seismology'
     resourcetype = 'station'
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station'})
     def getList(self, network=None, station=None, **kwargs):
         """
         Gets a list of station information.
@@ -610,8 +595,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
         return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
                 for node in root.getchildren()]
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
-                          'location_id': 'location'})
     def getCoordinates(self, network, station, datetime, location=''):
         """
         Get coordinate information.
@@ -650,8 +633,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
             coords[key] = metadata[key]
         return coords
 
-    @deprecated_keywords({'network_id': 'network', 'station_id': 'station',
-                          'location_id': 'location', 'channel_id': 'channel'})
     def getPAZ(self, network, station, datetime, location='', channel='',
                seismometer_gain=False):
         """

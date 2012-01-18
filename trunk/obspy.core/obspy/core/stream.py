@@ -13,7 +13,6 @@ from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import deprecated
 from pkg_resources import load_entry_point
 import copy
 import fnmatch
@@ -1697,15 +1696,6 @@ class Stream(object):
         """
         for tr in self:
             tr.trigger(type, **options)
-
-    @deprecated
-    def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=False):
-        """
-        DEPRECATED - use :func:`obspy.core.stream.Stream.decimate` instead.
-        """
-        return self.decimate(decimation_factor, no_filter=no_filter,
-                             strict_length=strict_length)
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """

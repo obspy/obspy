@@ -13,7 +13,6 @@ from math import ceil
 from obspy.core import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk
-from obspy.core.util.decorator import deprecated
 import StringIO
 import matplotlib.pyplot as plt
 import numpy as np
@@ -845,12 +844,3 @@ class WaveformPlotting(object):
                                       self.endtime.strftime(pattern))
             self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
                               horizontalalignment='left')
-
-
-@deprecated
-def plot_trigger(trace, cft, thrOn, thrOff, show=True):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.plotTrigger` instead.
-    """
-    from obspy.signal.trigger import plotTrigger
-    return plotTrigger(trace, cft, thrOn, thrOff, show=show)

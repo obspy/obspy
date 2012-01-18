@@ -326,21 +326,21 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
 def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
            p_dur):
     """
-    Wrapper for P-picker routine by M. Baer, Schweizer. Erdbebendienst.
+    Wrapper for P-picker routine by M. Baer, Schweizer Erdbebendienst.
 
     :param reltrc: timeseries as numpy.ndarray float32 data, possibly filtered
     :param samp_int: number of samples per second
-    :param tdownmax: if dtime exceeds tdownmax, the trigger is examined
-                     for validity
+    :param tdownmax: if dtime exceeds tdownmax, the trigger is examined for
+        validity
     :param tupevent: min nr of samples for itrm to be accepted as a pick
     :param thr1: threshold to trigger for pick (c.f. paper)
     :param thr2: threshold for updating sigma  (c.f. paper)
-    :param preset_len: no of points taken for the estimation of variance
-                       of SF(t) on preset()
-    :param p_dur: p_dur defines the time interval for which the
-                  maximum amplitude is evaluated Originally set to 6 secs
+    :param preset_len: no of points taken for the estimation of variance of
+        SF(t) on preset()
+    :param p_dur: p_dur defines the time interval for which the maximum
+        amplitude is evaluated Originally set to 6 secs
     :return: (pptime, pfm) pptime sample number of parrival; pfm direction
-             of first motion (U or D)
+        of first motion (U or D)
 
     .. note:: currently the first sample is not take into account
 

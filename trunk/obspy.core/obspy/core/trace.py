@@ -12,7 +12,6 @@ from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
-from obspy.core.util.decorator import deprecated
 import math
 import numpy as np
 import warnings
@@ -1174,15 +1173,6 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "trigger:%s:%s" % (type, options)
         self.__addProcessingInfo(proc_info)
-
-    @deprecated
-    def downsample(self, decimation_factor, no_filter=False,
-                   strict_length=False):
-        """
-        DEPRECATED - use :func:`obspy.core.trace.Trace.decimate` instead.
-        """
-        return self.decimate(decimation_factor, no_filter=no_filter,
-                             strict_length=strict_length)
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
