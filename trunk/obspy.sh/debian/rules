@@ -6,7 +6,9 @@
 	dh $@
 
 binary:
-	dh binary --until dh_shlibdeps
+	dh binary --before dh_auto_install
+	dh_auto_install -- release
+	dh binary --after dh_auto_install --until dh_shlibdeps
 	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
 	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
 	dh binary --after dh_shlibdeps
