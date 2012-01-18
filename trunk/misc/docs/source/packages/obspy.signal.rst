@@ -21,7 +21,6 @@
        ~filter.envelope
        ~invsim.estimateMagnitude
        ~invsim.evalresp
-       ~rotate.gps2DistAzimuth
        ~filter.highpass
        ~filter.lowpass
        ~invsim.pazToFreqResp
@@ -45,19 +44,20 @@
        :toctree: autogen
        :nosignatures:
 
+       array_analysis
+       calibration
+       cpxtrace
+       cross_correlation
+       detrend
        filter
+       freqattributes
+       hoctavbands
        invsim
+       polarization
+       psd
        rotate
        seismometer
        trigger
        util
-       cpxtrace
-       polarization
-       hoctavbands
-       freqattributes
-       array_analysis
-       cross_correlation
-       psd
-       calibration
 
     .. comment to end block

@@ -7,8 +7,19 @@
 #
 # Copyright (C) 2008-2012 Moritz Beyreuther, Yannik Behr
 #---------------------------------------------------------------------
+"""
+Python Module for Instrument Correction (Seismology).
+PAZ (Poles and zeros) information must be given in SEED convention, correction
+to m/s.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
 import ctypes as C
@@ -17,17 +28,6 @@ import numpy as np
 import os
 import scipy.signal
 import util
-"""
-Python Module for Instrument Correction (Seismology), PAZ
-Poles and zeros information must be given in SEED convention, correction to
-m/s.
-
-:copyright:
-    The ObsPy Development Team (devs@obspy.org)
-:license:
-    GNU Lesser General Public License, Version 3
-    (http://www.gnu.org/copyleft/lesser.html)
-"""
 
 
 # Sensitivity is 2080 according to:
@@ -152,21 +152,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     if freq:
         return h, f
     return h
-
-
-@deprecated
-def detrend(trace):
-    """
-    DEPRECATED - use :func:`obspy.signal.detrend.simple` instead.
-
-    Inplace detrend signal simply by subtracting a line through the first
-    and last point of the trace
-
-    :param trace: Data to detrend
-    """
-    ndat = len(trace)
-    x1, x2 = trace[0], trace[-1]
-    trace -= (x1 + np.arange(ndat) * (x2 - x1) / float(ndat - 1))
 
 
 def cornFreq2Paz(fc, damp=0.707):

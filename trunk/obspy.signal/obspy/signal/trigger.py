@@ -10,10 +10,11 @@
 """
 Python trigger routines for seismology.
 
-Module implementing the Recursive STA/LTA (see Withers et al. 1998 p. 98)
-Two versions, a fast ctypes one and a bit slower python one. Further the
-classic and delayed STA/LTA, the carlStaTrig and the zdetect are
-implemented. (see Withers et al. 1998 p. 98).
+Module implementing the Recursive STA/LTA. Two versions, a fast ctypes one and
+a bit slower python one. Further the classic and delayed STA/LTA, the
+carlSTATrig and the zDetect are implemented.
+
+.. seealso:: [Withers1998]_, p. 98
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -24,16 +25,7 @@ implemented. (see Withers et al. 1998 p. 98).
 
 import ctypes as C
 import numpy as np
-from obspy.core.util import deprecated
 from obspy.signal.headers import clibsignal
-
-
-@deprecated
-def recStalta(a, nsta, nlta):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTA` instead.
-    """
-    return recSTALTA(a, nsta, nlta)
 
 
 def recSTALTA(a, nsta, nlta):
@@ -63,22 +55,15 @@ def recSTALTA(a, nsta, nlta):
     return charfct
 
 
-@deprecated
-def recStaltaPy(a, nsta, nlta):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.recSTALTAPy` instead.
-    """
-    return recSTALTAPy(a, nsta, nlta)
-
-
 def recSTALTAPy(a, nsta, nlta):
     """
-    Recursive STA/LTA.
+    Recursive STA/LTA written in Python.
 
-    Bit slower version written in Python.
+    .. note::
 
-    :note: There exists a faster version of this trigger wrapped in C
-           called recstalta in this module!
+        There exists a faster version of this trigger wrapped in C
+        called :func:`~obspy.signal.trigger.recSTALTA` in this module!
+
     :type a: NumPy ndarray
     :param a: Seismic Trace
     :type nsta: Int
@@ -112,14 +97,6 @@ def recSTALTAPy(a, nsta, nlta):
         if i < nlta:
             charfct[i] = 0.
     return np.array(charfct)
-
-
-@deprecated
-def carlStaTrig(a, nsta, nlta, ratio, quiet):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.carlSTATrig` instead.
-    """
-    return carlSTATrig(a, nsta, nlta, ratio, quiet)
 
 
 def carlSTATrig(a, nsta, nlta, ratio, quiet):
@@ -177,14 +154,6 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
     return eta
 
 
-@deprecated
-def classicStaLta(a, nsta, nlta):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.classicSTALTA` instead.
-    """
-    return classicSTALTA(a, nsta, nlta)
-
-
 def classicSTALTA(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
@@ -228,14 +197,6 @@ def classicSTALTA(a, nsta, nlta):
     return sta / lta
 
 
-@deprecated
-def delayedStaLta(a, nsta, nlta):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.delayedSTALTA` instead.
-    """
-    return delayedSTALTA(a, nsta, nlta)
-
-
 def delayedSTALTA(a, nsta, nlta):
     """
     Delayed STA/LTA.
@@ -263,14 +224,6 @@ def delayedSTALTA(a, nsta, nlta):
                  nlta + lta[i - 1]
     sta[0:nlta + nsta + 50] = 0
     return sta / lta
-
-
-@deprecated
-def zdetect(a, nsta):
-    """
-    DEPRECATED. Use :func:`obspy.signal.trigger.zDetect` instead.
-    """
-    return zDetect(a, nsta)
 
 
 def zDetect(a, nsta):

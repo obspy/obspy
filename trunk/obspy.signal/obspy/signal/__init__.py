@@ -22,7 +22,7 @@ comparison with the other traces in the plot.
 .. warning::
 
     Before filtering you should make sure that data is demeaned/detrended, e.g.
-    using :func:`~obspy.signal.invsim.detrend`. Otherwise there can be massive
+    using :func:`~obspy.signal.detrend.simple`. Otherwise there can be massive
     artifacts from filtering.
 
 .. note::
@@ -182,8 +182,7 @@ cpxtrace analysis, ...), please also check the tutorial.**
 from obspy.core.util import _getVersionString
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
-from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE, \
-        gps2DistAzimuth
+from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
         delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick
 from invsim import cosTaper, cornFreq2Paz

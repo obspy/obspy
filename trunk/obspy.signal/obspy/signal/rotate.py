@@ -18,7 +18,6 @@ Various Seismogram Rotation Functions
 """
 
 from math import pi, sin, cos
-from obspy.core.util import deprecated
 
 
 def rotate_NE_RT(n, e, ba):
@@ -101,22 +100,3 @@ def rotate_LQT_ZNE(l, q, t, ba, inc):
     n = -l * sin(inc) * cos(ba) + q * cos(inc) * cos(ba) + t * sin(ba)
     e = -l * sin(inc) * sin(ba) + q * cos(inc) * sin(ba) - t * cos(ba)
     return z, n, e
-
-
-@deprecated
-def _vulnerable_gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    """
-    DEPRECATED. Use :func:`obspy.core.util.geodetics.calcVincentyInverse`
-    instead.
-    """
-    from obspy.core.util import calcVincentyInverse
-    return calcVincentyInverse(lat1, lon1, lat2, lon2)
-
-
-@deprecated
-def gps2DistAzimuth(lat1, lon1, lat2, lon2):
-    """
-    DEPRECATED. Use :func:`obspy.core.util.geodetics.gps2DistAzimuth` instead.
-    """
-    from obspy.core.util import gps2DistAzimuth
-    return gps2DistAzimuth(lat1, lon1, lat2, lon2)

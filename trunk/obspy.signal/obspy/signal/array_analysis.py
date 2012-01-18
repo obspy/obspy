@@ -603,14 +603,14 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 
     - serveral machines:
         1. goto clients and start workers (important to make sure it uses
-            the right python version with obspy installed):
+           the right python version with obspy installed)::
 
-            python /usr/bin/ppserver -s <secret> -w <ncpus>
+               $ python /usr/bin/ppserver -s <secret> -w <ncpus>
 
         2. replace sonic by sonic_pp and set njobs, clientlist and secret:
 
-            sonic_pp(..., njobs=njobs, pservers=('client1', 'client2',),
-                     secret=<secret>)
+           >>> sonic_pp(..., njobs=njobs,  # doctest: +SKIP
+           ...          pservers=('client1', 'client2',), secret=<secret>)
     """
     import pp
 
@@ -1013,7 +1013,6 @@ def cosine_taper(ndat, fraction=0.1):
     data = np.empty(ndat, dtype='float64')
     # the c extension tapers fraction from the beginning and the end,
     # therefore we half it
-    # XXX: frac is never used
     frac = C.c_double(fraction / 2.0)
 
     errcode = clibsignal.cosine_taper(data, ndat, frac)
