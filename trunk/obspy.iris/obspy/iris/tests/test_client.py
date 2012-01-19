@@ -271,13 +271,13 @@ class ClientTestCase(unittest.TestCase):
         # 1
         url = "http://www.iris.edu/ws/event/query?mindepth=34.9&" + \
             "maxdepth=35.1&catalog=NEIC%20PDE&contributor=NEIC%20PDE-Q&" + \
-            "magtype=MB&lat=-56.1&lon=-26.7&maxradius=.1"
+            "magtype=MB&lat=-56.1&lon=-26.7&maxradius=1"
         # direct call
         doc1 = urllib.urlopen(url).read()
         # using client
         doc2 = client.event(mindepth=34.9, maxdepth=35.1, catalog="NEIC PDE",
                             contributor="NEIC PDE-Q", magtype="MB", lat=-56.1,
-                            lon=-26.7, maxradius=0.1)
+                            lon=-26.7, maxradius=1)
         self.assertEqual(doc1, doc2)
         client = Client()
         # 2
