@@ -185,6 +185,27 @@ def complexifyString(line):
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
 
 
+def toIntOrZero(value):
+    """
+    Tries to converts given value to integer or returns 0 if it fails.
+
+    :param value: Arbitary data type.
+    :rtype: int
+
+    .. rubric:: Example
+
+    >>> toIntOrZero("12")
+    12
+
+    >>> toIntOrZero("x")
+    0
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

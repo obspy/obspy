@@ -9,6 +9,7 @@ Base utilities and constants for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.ordereddict import OrderedDict
 from pkg_resources import require, iter_entry_points, load_entry_point
 import ctypes as C
@@ -370,7 +371,7 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__.replace('svn', '')
-        version = map(int, version.split("."))
+        version = map(toIntOrZero, version.split("."))
     except ImportError:
         version = None
     return version

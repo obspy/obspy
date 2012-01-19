@@ -19,5 +19,5 @@ from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
-    formatScientific, scoreatpercentile
+    formatScientific, scoreatpercentile, toIntOrZero
 from obspy.core.util.ordereddict import OrderedDict
