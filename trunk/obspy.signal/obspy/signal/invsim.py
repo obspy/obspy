@@ -323,9 +323,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     instrument's passband (for a detailed discussion see
     *Of Poles and Zeros*, F. Scherbaum, Kluwer Academic Publishers).
 
-    Pre-defined poles, zeros, gain dictionaries for instruments to simulate
-    can be imported from obspy.signal.seismometer
-
     .. versionchanged:: 0.5.1
         The default for `remove_sensitivity` and `simulate_sensitivity` has
         been changed to ``True``. Old deprecated keyword arguments `paz`,
