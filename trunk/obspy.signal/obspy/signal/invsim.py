@@ -465,10 +465,10 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
                'gain': 1.0, 'sensitivity': 671140000.0}
     >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
     >>> print(round(mag, 6))
-    2.165345
+    2.132873
     >>> mag = estimateMagnitude([paz, paz], [3.34e6, 5e6], [0.065, 0.1], 0.255)
     >>> print(round(mag, 6))
-    2.386788
+    2.347618
     """
     # convert input to lists
     if not isinstance(paz, list) and not isinstance(paz, tuple):
