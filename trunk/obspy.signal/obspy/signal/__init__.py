@@ -23,7 +23,7 @@ comparison with the other traces in the plot.
 .. warning::
 
     Before filtering you should make sure that data is demeaned/detrended, e.g.
-    using :func:`~obspy.signal.detrend.simple`. Otherwise there can be massive
+    using :func:`obspy.signal.detrend.simple`. Otherwise there can be massive
     artifacts from filtering.
 
 .. note::
