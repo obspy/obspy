@@ -34,7 +34,7 @@ import util
 # P. Bormann: New Manual of Seismological Observatory Practice
 # IASPEI Chapter 3, page 24
 # (PITSA has 2800)
-WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124],
+WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
 
 
