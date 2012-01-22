@@ -245,9 +245,7 @@ def remezFIR(data, freqmin, freqmax, df):
     # Source:
     # http://episteme.arstechnica.com/
     #         eve/forums/a/tpc/f/6330927813/m/175006289731
-    # See also:
-    # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592174
-    # http://aspn.activestate.com/ASPN/Mail/Message/scipy-dev/1592172
+    #
     # take 10% of freqmin and freqmax as """corners"""
     flt = freqmin - 0.1 * freqmin
     fut = freqmax + 0.1 * freqmax
@@ -272,6 +270,9 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
         Default 2048
     :return: Filtered data.
     """
+    # Source: Travis Oliphant
+    # http://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
+    #
     # There is not currently an FIR-filter design program in SciPy. One
     # should be constructed as it is not hard to implement (of course making
     # it generic with all the options you might want would take some time).
@@ -279,8 +280,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     # What kind of window are you currently using?
     #
     # For your purposes this is what I would do:
-    # SRC: Travis Oliphant
-    # http://aspn.activestate.com/ASPN/Mail/Message/scipy-user/2009409]
+    #
     # winlen = 2**11 #2**10 = 1024; 2**11 = 2048; 2**12 = 4096
     # give frequency bins in Hz and sample spacing
     w = fft.fftfreq(winlen, 1 / float(samp_rate))
