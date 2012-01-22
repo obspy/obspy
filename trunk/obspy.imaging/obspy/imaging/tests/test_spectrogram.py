@@ -38,7 +38,8 @@ class SpectrogramTestCase(unittest.TestCase):
         st = Stream([tr])
         outfile = os.path.join(self.path, 'spectogram.png')
         spectrogram.spectrogram(st[0].data, log=True, outfile=outfile,
-                                samp_rate=st[0].stats.sampling_rate)
+                                samp_rate=st[0].stats.sampling_rate,
+                                show=False)
         # check that outfile was modified
         stat = os.stat(outfile)
         self.assertTrue(abs(stat.st_mtime - time.time()) < 3)

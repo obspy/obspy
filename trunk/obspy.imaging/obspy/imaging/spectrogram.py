@@ -51,7 +51,7 @@ def _nearestPow2(x):
 
 
 def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
-                outfile=None, format=None, axes=None, dbscale=False,
+                outfile=None, fmt=None, axes=None, dbscale=False,
                 mult=8.0, cmap=None, zorder=None, title=None, show=True,
                 sphinx=False, clip=[0.0, 1.0]):
     """
@@ -72,10 +72,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     :type outfile: String
     :param outfile: String for the filename of output file, if None
         interactive plotting is activated.
-    :type format: String
-    :param format: Format of image to save
+    :type fmt: String
+    :param fmt: Format of image to save
     :type axes: :class:`matplotlib.axes.Axes`
-    :param axes: Plot into given axes, this deactivates the format and
+    :param axes: Plot into given axes, this deactivates the fmt and
         outfile option.
     :type dbscale: bool
     :param dbscale: If True 10 * log10 of color values is taken, if False the
@@ -127,25 +127,25 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # arrays
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     if MATPLOTLIB_VERSION >= [0, 99, 0]:
-        spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
+        specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
                                               pad_to=mult, noverlap=nlap)
     else:
-        spectrogram, freq, time = mlab.specgram(data, Fs=samp_rate,
+        specgram, freq, time = mlab.specgram(data, Fs=samp_rate,
                                                 NFFT=nfft, noverlap=nlap)
     # db scale and remove zero/offset for amplitude
     if dbscale:
-        spectrogram = 10 * np.log10(spectrogram[1:, :])
+        specgram = 10 * np.log10(specgram[1:, :])
     else:
-        spectrogram = np.sqrt(spectrogram[1:, :])
+        specgram = np.sqrt(specgram[1:, :])
     freq = freq[1:]
 
     vmin, vmax = clip
     if vmin < 0 or vmax > 1 or vmin >= vmax:
         msg = "Invalid parameters for clip option."
         raise ValueError(msg)
-    range = float(spectrogram.max() - spectrogram.min())
-    vmin = spectrogram.min() + vmin * range
-    vmax = spectrogram.min() + vmax * range
+    _range = float(specgram.max() - specgram.min())
+    vmin = specgram.min() + vmin * _range
+    vmax = specgram.min() + vmax * _range
     norm = Normalize(vmin, vmax, clip=True)
 
     if not axes:
@@ -175,19 +175,19 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
             # Log scaling for frequency values (y-axis)
             ax.set_yscale('log')
             # Plot times
-            ax.pcolormesh(time, freq, spectrogram, cmap=cmap, zorder=zorder,
+            ax.pcolormesh(time, freq, specgram, cmap=cmap, zorder=zorder,
                           norm=norm)
         else:
             X, Y = np.meshgrid(time, freq)
-            ax.pcolor(X, Y, spectrogram, cmap=cmap, zorder=zorder, norm=norm)
+            ax.pcolor(X, Y, specgram, cmap=cmap, zorder=zorder, norm=norm)
             ax.semilogy()
     else:
         # this method is much much faster!
-        spectrogram = np.flipud(spectrogram)
+        specgram = np.flipud(specgram)
         # center bin
         extent = (time[0] - halfbin_time, time[-1] + halfbin_time, \
                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
-        ax.imshow(spectrogram, interpolation="nearest", extent=extent,
+        ax.imshow(specgram, interpolation="nearest", extent=extent,
                   cmap=cmap, zorder=zorder)
 
     # set correct way of axis, whitespace before and after with window
@@ -211,8 +211,8 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         plt.draw()
         np.seterr(**temp)
     if outfile:
-        if format:
-            fig.savefig(outfile, format=format)
+        if fmt:
+            fig.savefig(outfile, format=fmt)
         else:
             fig.savefig(outfile)
     elif show:
