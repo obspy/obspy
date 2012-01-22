@@ -173,8 +173,7 @@ def envelope(data):
 
     Computes the envelope of the given function. The envelope is determined by
     adding the squared amplitudes of the function and it's Hilbert-Transform
-    and then taking the squareroot.
-    (See Kanasewich: Time Sequence Analysis in Geophysics)
+    and then taking the square-root. (See [Kanasewich1981]_)
     The envelope at the start/end should not be taken too seriously.
 
     :param data: Data to make envelope of, type numpy.ndarray.

@@ -18,10 +18,6 @@ Citations
 
 """)
 
-parser = bibtex.Parser(encoding='utf8')
-for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
-    parser.parse_file(file)
-
 @node
 def names(children, data, role, **kwargs):
     assert not children
@@ -83,6 +79,15 @@ formats = {
     ]
 }
 
+
+parser = bibtex.Parser(encoding='utf8')
+for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
+    try:
+        parser.parse_file(file)
+    except:
+        print("Error parsing file %s:" % (file))
+        raise
+
 entries = parser.data.entries
 
 for key in sorted(entries.keys()):
@@ -90,11 +95,15 @@ for key in sorted(entries.keys()):
     if entry.type not in formats:
         msg = "BibTeX entry type %s not implemented"
         raise NotImplementedError(msg % (entry.type))
-    fh.write('.. [%s] ' % (key))
+    out = '.. [%s]  %s'
     line = formats[entry.type].format_data(entry).plaintext()
     # replace special content, e.g. <nbsp>
     line = line.replace('<nbsp>', ' ')
-    fh.write(line)
+    try:
+        fh.write(out % (key, line))
+    except:
+        print("Error writing %s:" % (key))
+        raise
     fh.write(os.linesep)
 
 fh.close()

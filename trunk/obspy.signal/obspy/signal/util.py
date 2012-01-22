@@ -103,7 +103,7 @@ def nearestPow2(x):
     """
     Finds the nearest integer that is a power of 2.
     In contrast to :func:`nextpow2` also searches for numbers smaller than the
-    input and returns them ifthey are closer than the next bigger power of 2.
+    input and returns them if they are closer than the next bigger power of 2.
     """
     a = M.pow(2, M.ceil(M.log(x, 2)))
     b = M.pow(2, M.floor(M.log(x, 2)))

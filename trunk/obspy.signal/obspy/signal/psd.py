@@ -210,20 +210,9 @@ class PPSD():
     """
     Class to compile probabilistic power spectral densities for one combination
     of network/station/location/channel/sampling_rate.
-    Calculations are based on the routine used by::
 
-        Daniel E. McNamara and Raymond P. Buland
-        Ambient noise levels in the continental United States
-        Bulletin of the Seismological Society of America,
-        (August 2004), 94(4):1517-1527
-
-    For information on New High/Low Noise Model see::
-
-        Jon Peterson
-        Observations and modeling of seismic background noise
-        USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/
-        regional/asl/pubs/files/ofr93-322.pdf
+    Calculations are based on the routine used by [McNamara2004]_.
+    For information on New High/Low Noise Model see [Peterson2003]_.
 
     .. rubric:: Basic Usage
 
@@ -831,13 +820,7 @@ class PPSD():
 def get_NLNM():
     """
     Returns periods and psd values for the New Low Noise Model.
-    For information on New High/Low Noise Model see::
-
-        Jon Peterson
-        Observations and modeling of seismic background noise
-        USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/
-        regional/asl/pubs/files/ofr93-322.pdf
+    For information on New High/Low Noise Model see [Peterson2003]_.
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
@@ -848,18 +831,13 @@ def get_NLNM():
 def get_NHNM():
     """
     Returns periods and psd values for the New High Noise Model.
-    For information on New High/Low Noise Model see::
-
-        Jon Peterson
-        Observations and modeling of seismic background noise
-        USGS Open File Report 93-322
-        http://ehp3-earthquake.wr.usgs.gov/
-        regional/asl/pubs/files/ofr93-322.pdf
+    For information on New High/Low Noise Model see [Peterson2003]_.
     """
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
     nlnm = data['high_noise']
     return (periods, nlnm)
+
 
 if __name__ == '__main__':
     import doctest

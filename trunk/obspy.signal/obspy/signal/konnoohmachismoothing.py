@@ -20,17 +20,12 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     frequencies.
 
     Returns the smoothing window around the center frequency with one value per
-    input frequency defined as follows:
+    input frequency defined as follows (see [Konno1998]_):
 
     [sin(b * log_10(f/f_c)) / (b * log_10(f/f_c)]^4
         b   = bandwidth
         f   = frequency
         f_c = center frequency
-
-    (see Konno, K, and T Ohmachi. 1998. Ground-Motion Characteristics Estimated
-    from Spectral Ratio between Horizontal and Vertical Components of
-    Microtremor. Bulletin of the Seismological Society of America 88, no. 1:
-    228-241.)
 
     The bandwidth of the smoothing function is constant on a logarithmic scale.
     A small value will lead to a strong smoothing, while a large value of will
