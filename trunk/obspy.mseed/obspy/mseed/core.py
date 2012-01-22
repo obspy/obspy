@@ -490,6 +490,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['byteorder'] = 1
 
         # Handle the encoding.
+        trace_attr['encoding'] = None
         if encoding is not None:
             # Check if the dtype for all traces is compatible with the enforced
             # encoding.
@@ -523,8 +524,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                       'dtype of the data.\nA suitable encoding will ' + \
                       'be chosen.'
                 warnings.warn(msg, UserWarning)
-        else:
-            # automatically detect encoding if no encoding is given.
+                trace_attr['encoding'] = None
+        # automatically detect encoding if no encoding is given.
+        if not trace_attr['encoding']:
             if trace.data.dtype.type == np.dtype("int32"):
                 trace_attr['encoding'] = 11
             elif trace.data.dtype.type == np.dtype("float32"):

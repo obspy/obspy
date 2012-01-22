@@ -474,6 +474,25 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEquals(len(st2), 3)
         self.assertEquals(st, st2)
 
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    def test_issue332(self):
+        """
+        Tests issue #332
+
+        Writing traces with wrong encoding in stats should raise only a user
+        warning.
+        """
+        tempfile = NamedTemporaryFile().name
+        st = read()
+        tr = st[0]
+        tr.data = tr.data.astype('float64') + .5
+        tr.stats.mseed = {'encoding': 0}
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
+        # clean up
+        os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
