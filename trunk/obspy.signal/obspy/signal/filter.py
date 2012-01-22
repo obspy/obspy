@@ -296,7 +296,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
 
 def integerDecimation(data, decimation_factor):
     """
-    Downsampling by applying a simple integer decimation. (experimental)
+    Downsampling by applying a simple integer decimation.
 
     Make sure that no signal is present in frequency bands above the new
     Nyquist frequency (samp_rate/2/decimation_factor), e.g. by applying a
