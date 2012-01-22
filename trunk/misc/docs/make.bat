@@ -19,7 +19,7 @@ if "%1" == "help" (
 	:help
 	echo.Please use `make ^<target^>` where ^<target^> is one of
 	echo.  html       to make standalone HTML files
-    echo.  html+log   to make standalone HTML files and log everything into an error.log file
+	echo.  html+log   to make standalone HTML files and log everything into an error.log file
 	echo.  dirhtml    to make HTML files named index.html in directories
 	echo.  singlehtml to make a single large HTML file
 	echo.  pickle     to make pickle files
@@ -37,7 +37,9 @@ if "%1" == "help" (
 	echo.  linkcheck  to check all external links for integrity
 	echo.  doctest    to run all doctests embedded in the documentation if enabled
 	echo.  coverage   to make create coverage HTML files
+	echo.  coverager  to make create coverage HTML files and report test
 	echo.  pep8       to check PEP8 of tutorial
+	echo.  citations  to generate citations page
 	goto end
 )
 
@@ -50,21 +52,26 @@ if "%1" == "clean" (
 )
 
 if "%1" == "coverage" (
-    coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests --all
-    coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
-    goto end
+	coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests --all
+	coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
+	goto end
 )
 
 if "%1" == "coverager" (
-    coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r --all
-    coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
-    goto end
+	coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r --all
+	coverage html --rcfile=.coveragerc -d %BUILDDIR%\html\coverage
+	goto end
 )
 
 if "%1" == "pep8" (
-    python pep8_packages.py 1
-    pep8 --show-source source\tutorial
-    goto end
+	python make_pep8.py 1
+	pep8 --show-source source\tutorial
+	goto end
+)
+
+if "%1" == "citations" (
+	python make_citations.py
+	goto end
 )
 
 if "%1" == "html" (

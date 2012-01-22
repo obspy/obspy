@@ -38,8 +38,9 @@ help:
 	@echo "  linkcheck  to check all external links for integrity"
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to make create coverage HTML files"
-	@echo "  coverage   to make create coverage HTML files and report test"
+	@echo "  coverager  to make create coverage HTML files and report test"
 	@echo "  pep8       to check PEP8 of tutorial"
+	@echo "  citations  to generate citations page"
 
 clean:
 	@rm -rf $(BUILDDIR)/*
@@ -55,8 +56,11 @@ coverager:
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 
 pep8:
-	@python pep8_packages.py 1
+	@python make_pep8.py 1
 	@pep8 --show-source source/tutorial
+
+citations:
+	@python make_citations
 
 html:
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
