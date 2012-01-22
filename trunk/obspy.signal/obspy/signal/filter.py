@@ -298,8 +298,6 @@ def integerDecimation(data, decimation_factor):
     """
     Downsampling by applying a simple integer decimation. (experimental)
 
-    .. warning:: This is experimental code. Use with caution!
-
     Make sure that no signal is present in frequency bands above the new
     Nyquist frequency (samp_rate/2/decimation_factor), e.g. by applying a
     lowpass filter beforehand!
