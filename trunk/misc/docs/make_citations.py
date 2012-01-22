@@ -83,8 +83,10 @@ formats = {
     ]
 }
 
+entries = parser.data.entries
 
-for key, entry in parser.data.entries.iteritems():
+for key in sorted(entries.keys()):
+    entry = entries[key]
     if entry.type not in formats:
         msg = "BibTeX entry type %s not implemented"
         raise NotImplementedError(msg % (entry.type))
