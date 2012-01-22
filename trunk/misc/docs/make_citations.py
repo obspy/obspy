@@ -99,6 +99,9 @@ for key in sorted(entries.keys()):
     line = formats[entry.type].format_data(entry).plaintext()
     # replace special content, e.g. <nbsp>
     line = line.replace('<nbsp>', ' ')
+    line = line.replace(u'\xa0',' ')
+    line = line.replace(u'–','-')
+    line = line.replace(u'—','-')
     try:
         fh.write(out % (key, line))
     except:

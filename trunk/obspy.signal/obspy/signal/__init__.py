@@ -33,8 +33,8 @@ comparison with the other traces in the plot.
     specified. It returns the filtered data.  For
     :class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace`
     objects simply use their respective filtering methods
-    :meth:`~obspy.core.stream.Stream.filter` and
-    :meth:`~obspy.core.trace.Trace.filter`.
+    :meth:`obspy.core.stream.Stream.filter` and
+    :meth:`obspy.core.trace.Trace.filter`.
 
 >>> from obspy.core import read
 >>> import obspy.signal

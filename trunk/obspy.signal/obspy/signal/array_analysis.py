@@ -33,11 +33,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     This routine calculates the best-fitting rigid body rotation and
     uniform strain as functions of time, and their formal errors, given
     three-component ground motion time series recorded on a seismic array.
-    The theory implemented herein is presented in the papers::
-
-      Spudich et al. (J. Geophys. Res., 1995), (abbreviated S95 herein)
-      Spudich and Fletcher (Bull. Seismol. Soc. Am., 2008)  (SF08)
-      Spudich and Fletcher (Bull. Seismol. Soc. Am., 2009). (SF09)
+    The theory implemented herein is presented in the papers [Spudich1995]_,
+    (abbreviated S95 herein) [Spudich2008]_ (SF08) and [Spudich2009]_ (SF09).
 
     This is a translation of the Matlab Code presented in (SF09) with
     small changes in details only. Output has been checked to be the same
