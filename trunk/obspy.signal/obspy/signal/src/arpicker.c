@@ -4,16 +4,36 @@
 #   Author: Joachim Wassermann
 # Copyright (C) J. Wassermann
 #---------------------------------------------------------------------*/
+#include "arpicker.h"
 #include "platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 #include <time.h>
-#include "arpicker.h"
+#include <errno.h>
 
 
-int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, float f1, float f2, float lta_p, float sta_p, float lta_s, float sta_s, int m_p, int m_s, float *ptime, float *stime, double l_p, double l_s, int s_pick)
+static float calc_aic(double f_err, double b_err) {
+    float aic;
+    double tmp1;
+    double tmp2;
+    errno = 0;
+    tmp1 = log(f_err*f_err) * -1.0;
+    if (errno != 0) {
+        fprintf(stderr,"\nError in log calculation for f_err!\n");
+    }
+    errno = 0;
+    tmp2 = log(b_err*b_err);
+    if (errno != 0) {
+        fprintf(stderr,"\nError in log calculation for f_err!\n");
+    }
+    aic = (float) (tmp1 - tmp2);
+    return aic;
+}
+
+
+int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, float f1, float f2, float lta_p, float sta_p, float lta_s, float sta_s, int m1_p, int m1_s, float *ptime, float *stime, double l_p, double l_s, int s_pick)
 {
     float *buff1,*buff2,*buff3,*buff4; 
     float *buff1_s,*buff4_s;
@@ -32,19 +52,60 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     int nl_p,nl_s;
     int n65,n32;
     int trace_flag=0;
+    int errcode = 0;
 
-    *ptime = 0;
-    *stime = 0;
-    buff1 = (float *)calloc(ndat,sizeof(float));
-    buff1_s = (float *)calloc(ndat,sizeof(float));
-    buff2 = (float *)calloc(ndat,sizeof(float));
-    buff3 = (float *)calloc(ndat,sizeof(float));
-    buff4 = (float *)calloc(ndat,sizeof(float));
-    buff4_s = (float *)calloc(ndat,sizeof(float));
-    f_error = (float *)calloc(ndat,sizeof(float));
-    b_error = (float *)calloc(ndat,sizeof(float));
-    ar_f = (float *)calloc(ndat/2,sizeof(float));
-    ar_b = (float *)calloc(ndat/2,sizeof(float));
+    *ptime = 0.0f;
+    *stime = 0.0f;
+    buff1 = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff1 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff1)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buff1_s = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff1_s == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff1_s)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buff2 = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff2 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff2)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buff3 = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff3 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff3)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buff4 = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff4 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff4)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buff4_s = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buff4_s == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buff4_s)!\n");
+        exit(EXIT_FAILURE);
+    }
+    f_error = (float *)calloc((size_t) ndat,sizeof(float));
+    if (f_error == NULL) {
+        fprintf(stderr,"\nMemory allocation error (f_error)!\n");
+        exit(EXIT_FAILURE);
+    }
+    b_error = (float *)calloc((size_t) ndat,sizeof(float));
+    if (b_error == NULL) {
+        fprintf(stderr,"\nMemory allocation error (b_error)!\n");
+        exit(EXIT_FAILURE);
+    }
+    ar_f = (float *)calloc((size_t) (ndat/2),sizeof(float));
+    if (ar_f == NULL) {
+        fprintf(stderr,"\nMemory allocation error (ar_f)!\n");
+        exit(EXIT_FAILURE);
+    }
+    ar_b = (float *)calloc((size_t) (ndat/2),sizeof(float));
+    if (ar_b == NULL) {
+        fprintf(stderr,"\nMemory allocation error (ar_b)!\n");
+        exit(EXIT_FAILURE);
+    }
     memcpy((void *)buff1,(void *)tr,ndat*sizeof(float));
     memcpy((void *)buff1_s,(void *)tr_1,ndat*sizeof(float));
     memcpy((void *)buff4_s,(void *)tr_2,ndat*sizeof(float));
@@ -108,8 +169,16 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     nsta = (int)(sta_p*sample_rate);
     nlta = (int)(lta_p*sample_rate);
     stlt = 0.;
-    buf_sta = (float *)calloc(ndat,sizeof(float));
-    buf_lta = (float *)calloc(ndat,sizeof(float));
+    buf_sta = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buf_sta == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buf_sta)!\n");
+        exit(EXIT_FAILURE);
+    }
+    buf_lta = (float *)calloc((size_t) ndat,sizeof(float));
+    if (buf_lta == NULL) {
+        fprintf(stderr,"\nMemory allocation error (buf_lta)!\n");
+        exit(EXIT_FAILURE);
+    }
 
     for(i=0;i<(i1-nlta);i++){
         for(j=(i+nlta-nsta);j<(i+nlta);j++){
@@ -127,10 +196,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
 
     nl_p = (int)(l_p*sample_rate);
     nl_s = (int)(l_s*sample_rate);
-    if((i2+nl_p+m_p)>ndat){
-        i2 -= nl_p +m_p;
+    if((i2+nl_p+m1_p)>ndat){
+        i2 -= nl_p +m1_p;
     }
-    i2 += m_p + nl_p;
+    i2 += m1_p + nl_p;
 
     // Leonard & Kennett AIC Criterion - Model2
     for(i=0;i<(i2+nl_p);i++){
@@ -141,14 +210,18 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         buff2[i2+nl_p-i-1] = buff1[i];
     }
 
-    spr_coef_paz(buff1-1,nl_p,m_p,&pm,ar_f-1);
-    spr_coef_paz(buff2-1,nl_p,m_p,&pm,ar_b-1);
+    errcode  = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
+    errcode += spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    if (errcode != 0) {
+        fprintf(stderr,"\nError during PAZ calculation!\n");
+        exit(EXIT_FAILURE);
+    }
 
     //estimating the Forward-BackwardAIC 
-    for(i=m_p;i<i2-nl_p;i++){
+    for(i=m1_p;i<i2-nl_p;i++){
         for(k=0;k<nl_p;k++){
             f = buff1[i+k];
-            for(j=0;j<m_p;j++){
+            for(j=0;j<m1_p;j++){
                 f -= (buff1[i+k-j]*ar_f[j]); 
             }
             u = f*f * 1.0f/(float)nl_p;
@@ -156,10 +229,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         }
     }
     //estimating the Backward-AIC 
-    for(i=m_p;i<(i2-nl_p);i++){
+    for(i=m1_p;i<(i2-nl_p);i++){
         for(k=0;k<nl_p;k++){
             b = buff2[i+k];
-            for(j=0;j<m_p;j++){
+            for(j=0;j<m1_p;j++){
                 b -= (buff2[i+k-j]*ar_b[j]); 
             }
             u = b*b * 1.0f/(float)nl_p;
@@ -168,8 +241,8 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
-    for(i=(m_p+nl_p),j=(i2-1-m_p-nl_p);i<=(i2-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
-        aic = (float)(-1.0*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
+    for(i=(m1_p+nl_p),j=(i2-1-m1_p-nl_p);i<=(i2-1-m1_p-nl_p) && j>=(m1_p+nl_p);i++,j--){
+        aic = calc_aic(f_error[i], b_error[j]);
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
             i3 = i;
@@ -180,7 +253,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     memset(b_error,0,ndat*sizeof(float));
 
     // changed to rounding, Moritz
-    n32 = (int)((i2-i3)*2.0+m_p+nl_p + 0.5);
+    n32 = (int)((i2-i3)*2.0+m1_p+nl_p + 0.5);
     i3 = i2-n32;
     if(i3 < 0)
         i3 = 0;
@@ -194,14 +267,18 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         buff2[n32-i-1] = buff1[i];
     }
 
-    spr_coef_paz(buff1-1,nl_p,m_p,&pm,ar_f-1);
-    spr_coef_paz(buff2-1,nl_p,m_p,&pm,ar_b-1);
+    errcode  = spr_coef_paz(buff1-1,nl_p,m1_p,&pm,ar_f-1);
+    errcode += spr_coef_paz(buff2-1,nl_p,m1_p,&pm,ar_b-1);
+    if (errcode != 0) {
+        fprintf(stderr,"\nError during PAZ calculation!\n");
+        exit(EXIT_FAILURE);
+    }
 
     //estimating the Forward-AIC 
-    for(i=m_p;i<(n32-nl_p);i++){
+    for(i=m1_p;i<(n32-nl_p);i++){
         for(k=0;k<nl_p;k++){
             f = buff1[i+k];
-            for(j=0;j<m_p;j++){
+            for(j=0;j<m1_p;j++){
                 f -= (float)(buff1[i+k-j]*ar_f[j]); 
             }
             u = f*f * 1.0f/(float)nl_p;
@@ -209,10 +286,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
         }
     }
     //estimating the Backward-AIC 
-    for(i=m_p;i<(n32-nl_p);i++){
+    for(i=m1_p;i<(n32-nl_p);i++){
         for(k=0;k<nl_p;k++){
             b = buff2[i+k];
-            for(j=0;j<m_p;j++){
+            for(j=0;j<m1_p;j++){
                 b -= (float)(buff2[i+k-j]*ar_b[j]); 
             }
             u = b*b * 1.0f/(float)nl_p;
@@ -221,8 +298,8 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
     // Joint AIC forward and backward looking for minimum
     aic_mini = 0.;
-    for(i=(m_p+nl_p),j=(n32-1-m_p-nl_p);i<=(n32-1-m_p-nl_p) && j>=(m_p+nl_p);i++,j--){
-        aic = (float)(-1.0*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
+    for(i=(m1_p+nl_p),j=(n32-1-m1_p-nl_p);i<=(n32-1-m1_p-nl_p) && j>=(m1_p+nl_p);i++,j--){
+        aic = calc_aic(f_error[i], b_error[j]);
         if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
             aic_mini = aic;
             i4 = i+i3;
@@ -230,7 +307,7 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
     }
 
     // estimation of P-Onset
-    *ptime = (i4-nl_p)/sample_rate;
+    *ptime = ((float) (i4-nl_p))/sample_rate;
 
     if(s_pick == 1){
         memset(f_error,0,ndat*sizeof(float));
@@ -261,10 +338,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 i5 = i+nlta;
             }
         }
-        i5 += m_s + nl_s;
+        i5 += m1_s + nl_s;
         i6 = 0;
         // we try this for now
-        //   i6 = i4 - m_s - nl_s;
+        //   i6 = i4 - m1_s - nl_s;
 #if 0
 #endif
         // STA-LTA in reversed direction
@@ -301,14 +378,18 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 buff2[n65-i-1] = buff1[i];
             }
 
-            spr_coef_paz(buff1_s-1,nl_s,m_s,&pm,ar_f-1);
-            spr_coef_paz(buff2-1,nl_s,m_s,&pm,ar_b-1);
+            errcode  = spr_coef_paz(buff1_s-1,nl_s,m1_s,&pm,ar_f-1);
+            errcode += spr_coef_paz(buff2-1,nl_s,m1_s,&pm,ar_b-1);
+            if (errcode != 0) {
+                fprintf(stderr,"\nError during PAZ calculation!\n");
+                exit(EXIT_FAILURE);
+            }
 
             //estimating the Forward-AIC 
-            for(i=m_s;i<(n65-nl_s);i++){
+            for(i=m1_s;i<(n65-nl_s);i++){
                 for(k=0;k<nl_s;k++){
                     f = buff1_s[i+k];
-                    for(j=0;j<m_s;j++){
+                    for(j=0;j<m1_s;j++){
                         f -= (buff1_s[i+k-j]*ar_f[j]); 
                     }
                     u = f*f * 1.0f/(float)nl_s;
@@ -316,10 +397,10 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
                 }
             }
             //estimating the Backward-AIC 
-            for(i=m_s;i<(n65-nl_s);i++){
+            for(i=m1_s;i<(n65-nl_s);i++){
                 for(k=0;k<nl_s;k++){
                     b = buff2[i+k];
-                    for(j=0;j<m_s;j++){
+                    for(j=0;j<m1_s;j++){
                         b -= (buff2[i+k-j]*ar_b[j]); 
                     }
                     u = b*b * 1.0f/(float)nl_s;
@@ -329,8 +410,8 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             // Joint AIC forward and backward looking for minimum
             aic_mini = 0.;
             i7 = 0;
-            for(i=(m_s+nl_s),j=(n65-1-m_s-nl_s);i<=(n65-1-m_s-nl_s) && j>=(m_s+nl_s);i++,j--){
-                aic = (float)(-1*log(f_error[i]*f_error[i]) - log(b_error[j]*b_error[j]));
+            for(i=(m1_s+nl_s),j=(n65-1-m1_s-nl_s);i<=(n65-1-m1_s-nl_s) && j>=(m1_s+nl_s);i++,j--){
+                aic = calc_aic(f_error[i], b_error[j]);
                 if(aic < aic_mini && b_error[j] > 0. && f_error[i] >0.){
                     aic_mini = aic;
                     i7 = i+i6;
@@ -338,11 +419,11 @@ int ar_picker(float *tr, float *tr_1, float *tr_2, int ndat, float sample_rate, 
             }
             // S-onsettime, changed to return seconds
             if(i7 > 0)
-                *stime = (i7-nl_s)/sample_rate;
+                *stime = ((float) (i7-nl_s))/sample_rate;
             else
-                *stime = 0;
+                *stime = 0.0f;
         }else
-            *stime = 0;
+            *stime = 0.0f;
     }
 
 

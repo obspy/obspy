@@ -46,12 +46,12 @@ void spr_bp_fast_bworth(float *tr, int ndat, float tsa, float flo, float fhi, in
 {
     int k;                   /* index */
     int n,m,mm;
-    double a[MAX_SEC+1];
-    double b[MAX_SEC+1];
-    double c[MAX_SEC+1];
-    double d[MAX_SEC+1];
-    double e[MAX_SEC+1];
-    double f[MAX_SEC+1][6];
+    static double a[MAX_SEC+1];
+    static double b[MAX_SEC+1];
+    static double c[MAX_SEC+1];
+    static double d[MAX_SEC+1];
+    static double e[MAX_SEC+1];
+    static double f[MAX_SEC+1][6];
 
     double temp;
     double c1,c2,c3;
@@ -152,10 +152,10 @@ void spr_hp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
 {
     int k;                   /* index */
     int n,m,mm;
-    double a[MAX_SEC+1];
-    double b[MAX_SEC+1];
-    double c[MAX_SEC+1];
-    double f[MAX_SEC+1][6];
+    static double a[MAX_SEC+1];
+    static double b[MAX_SEC+1];
+    static double c[MAX_SEC+1];
+    static double f[MAX_SEC+1][6];
  
     double temp;
     double wcp,cs;
@@ -239,10 +239,10 @@ void spr_lp_fast_bworth(float *tr, int ndat, float tsa, float fc, int ns, int zp
 {
     int k;                       /* index */
     int n,m,mm;
-    double a[MAX_SEC+1];
-    double b[MAX_SEC+1];
-    double c[MAX_SEC+1];
-    double f[MAX_SEC+1][6];
+    static double a[MAX_SEC+1];
+    static double b[MAX_SEC+1];
+    static double c[MAX_SEC+1];
+    static double f[MAX_SEC+1][6];
  
     double temp;
     double wcp,cs,x;
@@ -362,7 +362,11 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
        position of the maximum */
     if (pos >= 0) max_pos = pos;  
   
-    x  = (float *)calloc(ndat2+1,sizeof(double));
+    x  = (float *)calloc((size_t) (ndat2+1),sizeof(double));
+    if (x == NULL) {
+        fprintf(stderr,"\nMemory allocation error (x)!\n");
+        exit(EXIT_FAILURE);
+    }
     for (j = max_pos; j < ndat;j = j + dec_ratio)
     {
         if((j/dec_ratio < ndat2) && (j/dec_ratio>=0))
@@ -382,7 +386,7 @@ void  decim(float *tr1, int ndat, int ndat2, int dec_ratio, int pos)
    
 }
 
-int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef)
+int spr_coef_paz(float *tr,int n,int m,/*@out@*/ float *fp,/*@out@*/ float *coef)
 {
     int i,j,k;
     float sqr_sum;
@@ -392,9 +396,21 @@ int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef)
     float num;
     float denom;
 
-    extra_tr1 = (float *) calloc (n, sizeof(float));// allocate extra_tr1
-    extra_tr2 = (float *) calloc (n, sizeof(float));// allocate extra_tr2
-    extra_tr3 = (float *) calloc (m, sizeof(float));// allocate extra_tr3
+    extra_tr1 = (float *) calloc ((size_t) n, sizeof(float));// allocate extra_tr1
+    if (extra_tr1 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (extra_tr1)!\n");
+        exit(EXIT_FAILURE);
+    }
+    extra_tr2 = (float *) calloc ((size_t) n, sizeof(float));// allocate extra_tr2
+    if (extra_tr2 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (extra_tr2)!\n");
+        exit(EXIT_FAILURE);
+    }
+    extra_tr3 = (float *) calloc ((size_t) m, sizeof(float));// allocate extra_tr3
+    if (extra_tr3 == NULL) {
+        fprintf(stderr,"\nMemory allocation error (extra_tr3)!\n");
+        exit(EXIT_FAILURE);
+    }
 
     // calculating mean square
     sqr_sum = 0.0;
@@ -442,5 +458,8 @@ int spr_coef_paz(float *tr,int n,int m,float *fp,float *coef)
         }
     }
     // we should never reach this point
+    free( (void*) extra_tr1);
+    free( (void*) extra_tr2);
+    free( (void*) extra_tr3);
     return(1);
 }

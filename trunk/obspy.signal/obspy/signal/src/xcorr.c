@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <memory.h>
+#include <float.h>
 
 void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat2, int *shift, double* coe_p)
 {
@@ -27,17 +28,17 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
     int max=0;
     int eff_lag;
 
-    tra1 = (float *)calloc(ndat1, sizeof(float));
+    tra1 = (float *)calloc((size_t) ndat1, sizeof(float));
     if (tra1 == NULL) 
     {
         fprintf(stderr,"\nMemory allocation error!\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
-    tra2 = (float *)calloc(ndat2, sizeof(float));
+    tra2 = (float *)calloc((size_t) ndat2, sizeof(float));
     if (tra2 == NULL) 
     {
         fprintf(stderr,"\nMemory allocation error!\n");
-        exit(0);
+        exit(EXIT_FAILURE);
     }
 
     /* Determing the maximum 'usable' window */
@@ -74,7 +75,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
             tra1[a] = tr1[a] - (float)sum;
         }
         flag = 0;
-        if(sum == 0.0)
+        if(fabs(sum) < DBL_EPSILON) /* == 0.0 */
             flag = 1;
         for (a=0;a<ndat1;a++)
         {
@@ -109,7 +110,7 @@ void X_corr(float *tr1, float *tr2, double *corp, int param, int ndat1, int ndat
         {
             tra2[a] = tra2[a]/(float)cmax;
         }
-        if(sum == 0.0)
+        if(fabs(sum) < DBL_EPSILON) /* == 0.0 */
             flag += 1;
 
         /* xcorr ... */

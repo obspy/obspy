@@ -11,7 +11,7 @@
 #include <string.h>
 
 
-extern void preset(float *, int , float *, float *, float *, float *, float *, float *, int *, int *, int *, int *, char *, int *, float );
+static void preset(float *, int , float *, float *, float *, /*@out@*/ float *, /*@out@*/ float *, float *, int *, /*@out@*/ int *, /*@out@*/ int *, /*@out@*/ int *, char *, /*@out@*/ int *, float );
 /*
 *******************************************************************************
 c====================================================================
@@ -103,8 +103,9 @@ int p_dur;
 
 int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec, int tdownmax, int tupevent, float thrshl1, float thrshl2, int preset_len, int p_dur){
       int len2;
-      int *trace;
-      int ipkflg,uptime;
+      int *trace = NULL;
+      int ipkflg;
+      int uptime = 0;
       int pamp,pamptime;
       int preptime,prepamp,prepamptime,ifrst;
       int noise,noisetime,signal,signaltime;
@@ -131,7 +132,11 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
 
       /* prepare integer version of float input trace */
 
-      trace = (int *)calloc(npts+1,sizeof(int));
+      trace = (int *)calloc((size_t)(npts+1),sizeof(int));
+      if (trace == NULL) {
+          fprintf(stderr,"\nMemory allocation error!\n");
+          exit(EXIT_FAILURE);
+      }
 
       max = min = reltrc[1];
       for (ii=1; ii<=npts; ii++) {
@@ -454,7 +459,7 @@ float samplespersec;*/
 
 /*int preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, float *sumx2, float *sdev, int *nsum, int *itar, int *ptime, int *preptime, char *pfm, int *ipkflg, float samplespersec)*/
 
-void preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, float *sumx2, float *sdev, int *nsum, int *itar, int *ptime, int *preptime, char *pfm, int *ipkflg, float samplespersec)
+static void preset(float *rbuf, int n, float *old, float *y2, float *yt, /*@out@*/ float *sumx, /*@out@*/ float *sumx2, float *sdev, int *nsum, /*@out@*/ int *itar, /*@out@*/ int *ptime, /*@out@*/ int *preptime, char *pfm, /*@out@*/ int *ipkflg, float samplespersec)
 {
       int i;
       float yy2,yyt,ysv;
@@ -476,7 +481,7 @@ void preset(float *rbuf, int n, float *old, float *y2, float *yt, float *sumx, f
       }
 
       if ((n*(*y2)-(*sumx)*(*sumx))/(n*n) > 0)
-          *sdev= (float)(sqrt(n*(*y2)-(*sumx)*(*sumx))/(n*n));
+          *sdev= (float)(sqrt((float)n*(*y2)-(*sumx)*(*sumx))/(n*n));
       else
           *sdev = 1;
       *sumx= 0.0;

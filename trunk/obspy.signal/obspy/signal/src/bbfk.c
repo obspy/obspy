@@ -29,6 +29,7 @@ extern void rfftf(int N, double* data, double* wrk);
 extern void rffti(int N, double* wrk);
 
 
+/* splint: cannot be static, is exported and used from python */
 int cosine_taper(double *taper, int ndat, double fraction)
 {
     int	i1,i2,i3,i4,k;
@@ -64,7 +65,6 @@ int cosine_taper(double *taper, int ndat, double fraction)
         } else
             taper[k] = 1.0;
     }
-
     return 0;
 }
 
@@ -76,6 +76,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     int		j,k,l,w;
     int		n;
     int		wlow,whigh;
+    int     errcode;
     float	df;
     double	**window;
     double  *taper;
@@ -109,7 +110,11 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /* Magic size needed by rffti (see also
      * http://projects.scipy.org/numpy/browser/trunk/
      * +numpy/fft/fftpack_litemodule.c#L277)*/
-    fftpack_work = (double *)calloc((2*nfft+15), sizeof(double));
+    fftpack_work = (double *)calloc((size_t) (2*nfft+15), sizeof(double));
+    if (fftpack_work == NULL) {
+        fprintf(stderr,"\nMemory allocation error (fftpack_work)!\n");
+        exit(EXIT_FAILURE);
+    }
     rffti(nfft, fftpack_work);
 
     df = digfreq/(float)nfft;
@@ -131,10 +136,21 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /****************************************************************************/
     /* first we need the fft'ed window of traces for the stations of this group */
     /****************************************************************************/
-    window = (double **)calloc(nstat, sizeof(double *));
+    window = (double **)calloc((size_t) nstat, sizeof(double *));
+    if (window == NULL) {
+        fprintf(stderr,"\nMemory allocation error (window)!\n");
+        exit(EXIT_FAILURE);
+    }
     /* we allocate the taper buffer, size nsamp! */
-    taper = (double *)calloc(nsamp, sizeof(double));
-    cosine_taper(taper, nsamp, 0.1); 
+    taper = (double *)calloc((size_t) nsamp, sizeof(double));
+    if (taper == NULL) {
+        fprintf(stderr,"\nMemory allocation error (taper)!\n");
+        exit(EXIT_FAILURE);
+    }
+    errcode = cosine_taper(taper, nsamp, 0.1);
+    if (errcode != 0) {
+        fprintf(stderr,"\nError during cosine tapering!\n");
+    }
     for (j=0;j<nstat;j++) {
         /* be sure we are inside our memory */
         if ((spoint[j] + offset + nsamp) > ntrace[j]) {
@@ -145,7 +161,11 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         }
         /* doing calloc is automatically zero-padding, too */
         /* mimic realft, allocate an extra word/index in the array dimensions */
-        window[j] = (double *)calloc(nfft+1, sizeof(double));
+        window[j] = (double *)calloc((size_t) (nfft+1), sizeof(double));
+        if (window[j] == NULL) {
+            fprintf(stderr,"\nMemory allocation error (window[j])!\n");
+            exit(EXIT_FAILURE);
+        }
         memcpy((void *)(window[j]+1),(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
         /*************************************************/
         /* 4.6.98, we insert offset removal and tapering */
@@ -189,16 +209,40 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /****************************************************/
     /* allocate w-maps, maxpow values and nominator-map */
     /****************************************************/
-    nomin = (float **)calloc(grdpts_x, sizeof(float *));
-    for (k=0;k<grdpts_x;k++) {
-        nomin[k]  = (float *)calloc(grdpts_y, sizeof(float));
+    nomin = (float **)calloc((size_t) grdpts_x, sizeof(float *));
+    if (nomin == NULL) {
+        fprintf(stderr,"\nMemory allocation error (nomin)!\n");
+        exit(EXIT_FAILURE);
     }
-    maxpow = (float *)calloc(nfft/2, sizeof(float));
-    pow = (float ***)calloc(nfft/2, sizeof(float **));
+    for (k=0;k<grdpts_x;k++) {
+        nomin[k]  = (float *)calloc((size_t) grdpts_y, sizeof(float));
+        if (nomin[k] == NULL) {
+            fprintf(stderr,"\nMemory allocation error (nomin[k])!\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+    maxpow = (float *)calloc((size_t) (nfft/2), sizeof(float));
+    if (maxpow == NULL) {
+        fprintf(stderr,"\nMemory allocation error (maxpow)!\n");
+        exit(EXIT_FAILURE);
+    }
+    pow = (float ***)calloc((size_t) (nfft/2), sizeof(float **));
+    if (pow == NULL) {
+        fprintf(stderr,"\nMemory allocation error (pow)!\n");
+        exit(EXIT_FAILURE);
+    }
     for (w=0;w<nfft/2;w++) {
-        pow[w] = (float **)calloc(grdpts_x, sizeof(float *));
+        pow[w] = (float **)calloc((size_t) (grdpts_x), sizeof(float *));
+        if (pow[w] == NULL) {
+            fprintf(stderr,"\nMemory allocation error (pow[w])!\n");
+            exit(EXIT_FAILURE);
+        }
         for (k=0;k<grdpts_x;k++) {
-            pow[w][k] = (float *)calloc(grdpts_y, sizeof(float));
+            pow[w][k] = (float *)calloc((size_t) grdpts_y, sizeof(float));
+            if (pow[w][k] == NULL) {
+                fprintf(stderr,"\nMemory allocation error (pow[w][k])!\n");
+                exit(EXIT_FAILURE);
+            }
         }
     }
 
