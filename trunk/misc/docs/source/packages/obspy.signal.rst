@@ -56,7 +56,6 @@
        polarization
        psd
        rotate
-       seismometer
        trigger
        util
 
