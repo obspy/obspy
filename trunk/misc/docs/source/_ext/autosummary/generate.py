@@ -86,7 +86,8 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
         if template_dir:
             template_dirs.insert(0, template_dir)
         template_loader = FileSystemLoader(template_dirs)
-    template_env = SandboxedEnvironment(loader=template_loader)
+    template_env = SandboxedEnvironment(loader=template_loader,
+                                        extensions=["jinja2.ext.do"])
 
     # read
     items = find_autosummary_in_files(sources)
