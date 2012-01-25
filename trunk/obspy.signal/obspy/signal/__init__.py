@@ -10,15 +10,8 @@ correction and coordinate transformations.
 
 Filter
 ------
-The :mod:`~obspy.signal.filter` module provides various filters. Available
-filters are :func:`~obspy.signal.filter.bandpass()`,
-:func:`~obspy.signal.filter.lowpass()`,
-:func:`~obspy.signal.filter.highpass()`,
-:func:`~obspy.signal.filter.bandstop()`. Zero-phase filtering can be done by
-specifying ``zerophase=True``.
-The following example shows how to highpass a seismogram at 1.0Hz.
-In the example only the first trace is processed to see the changes in
-comparison with the other traces in the plot.
+The :mod:`~obspy.signal.filter` module provides various filters, including
+different bandpass, lowpass, highpass, bandstop and FIR filter.
 
 .. warning::
 
@@ -26,11 +19,15 @@ comparison with the other traces in the plot.
     using :func:`obspy.signal.detrend.simple`. Otherwise there can be massive
     artifacts from filtering.
 
+The following example shows how to highpass a seismogram at 1.0Hz.
+In the example only the first trace is processed to see the changes in
+comparison with the other traces in the plot.
+
 .. note::
 
     The filter takes the data explicitly as argument (i.e. an
-    :class:`~numpy.ndarray`) and therefore the `sampling_rate` needs to be also
-    specified. It returns the filtered data.  For
+    :class:`numpy.ndarray`) and therefore the ``sampling_rate`` needs to be
+    also specified. It returns the filtered data.  For
     :class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace`
     objects simply use their respective filtering methods
     :meth:`obspy.core.stream.Stream.filter` and
@@ -175,9 +172,6 @@ automated use and network coincidence there are some example scripts in the
 .. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
-
-**There are many more functions available (rotation, pazToFreqResp,
-cpxtrace analysis, ...), please also check the tutorial.**
 """
 
 from obspy.core.util import _getVersionString

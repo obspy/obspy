@@ -1582,7 +1582,7 @@ class Stream(object):
         >>> from obspy.core import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
-        >>> st.plot() # doctest: +SKIP
+        >>> st.plot()  # doctest: +SKIP
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
         ...                       -131.04-467.29j, -131.04+467.29j],
@@ -1591,7 +1591,7 @@ class Stream(object):
         ...             'sensitivity': 2516778400.0}
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-        >>> st.plot() # doctest: +SKIP
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1622,7 +1622,8 @@ class Stream(object):
 
         :type type: str
         :param type: String that specifies which filter is applied (e.g.
-            ``"bandpass"``).
+            ``"bandpass"``). See the `Supported Filter`_ section below for
+            further details.
         :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
@@ -1636,12 +1637,36 @@ class Stream(object):
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
+        .. rubric:: _`Supported Filter`
+
+        ``'bandpass'``
+            Butterworth-Bandpass (uses :func:`obspy.signal.filter.bandpass`).
+
+        ``'bandstop'``
+            Butterworth-Bandstop (uses :func:`obspy.signal.filter.bandstop`).
+
+        ``'lowpass'``
+            Butterworth-Lowpass (uses :func:`obspy.signal.filter.lowpass`).
+
+        ``'highpass'``
+            Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
+
+        ``'lowpassCheby2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+
+        ``'lowpassFIR'`` (experimental)
+            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
+
+        ``'remezFIR'`` (experimental)
+            Minimax optimal bandpass using Remez algorithm (uses
+            :func:`obspy.signal.filter.remezFIR`).
+
         .. rubric:: Example
 
         >>> from obspy.core import read
         >>> st = read()
         >>> st.filter("highpass", freq=1.0)
-        >>> st.plot() # doctest: +SKIP
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1658,7 +1683,8 @@ class Stream(object):
         Runs a triggering algorithm on all traces in the stream.
 
         :param type: String that specifies which trigger is applied (e.g.
-            ``'recstalta'``).
+            ``'recstalta'``). See the `Supported Trigger`_ section below for
+            further details.
         :param options: Necessary keyword arguments for the respective trigger
             that will be passed on.
             (e.g. ``sta=3``, ``lta=10``)
@@ -1675,6 +1701,25 @@ class Stream(object):
             a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
+
+        .. rubric:: _`Supported Trigger`
+
+        ``'recstalta'``
+            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+
+        ``'carlstatrig'``
+            Computes the carlSTATrig characteristic function (uses
+            :func:`obspy.signal.trigger.classicSTALTA`).
+
+        ``'delayedstalta'``
+            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+
+        ``'zdetect'``
+            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+
+        ``'recstaltapy'``
+            Recursive STA/LTA written in Python (uses
+            :func:`obspy.signal.trigger.recSTALTAPy`).
 
         .. rubric:: Example
 

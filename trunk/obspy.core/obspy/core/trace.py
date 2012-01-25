@@ -996,11 +996,14 @@ class Trace(object):
         performed in one go in the frequency domain, otherwise only the
         specified step is performed.
 
-        Processing is performed in place on the actual data array.
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing``.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
         .. rubric:: Example
 
@@ -1060,11 +1063,11 @@ class Trace(object):
         if paz_remove:
             proc_info = "simulate:inverse:%s:sensitivity=%s" % \
                     (paz_remove, remove_sensitivity)
-            self.__addProcessingInfo(proc_info)
+            self._addProcessingInfo(proc_info)
         if paz_simulate:
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                     (paz_simulate, simulate_sensitivity)
-            self.__addProcessingInfo(proc_info)
+            self._addProcessingInfo(proc_info)
 
     def filter(self, type, **options):
         """
@@ -1072,18 +1075,44 @@ class Trace(object):
 
         :type type: str
         :param type: String that specifies which filter is applied (e.g.
-            ``"bandpass"``).
+            ``"bandpass"``). See the `Supported Filter`_ section below for
+            further details.
         :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
-        This is performed in place on the actual data array. The original data
-        is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing``.
-        For details see :mod:`obspy.signal`.
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
+        .. rubric:: _`Supported Filter`
+
+        ``'bandpass'``
+            Butterworth-Bandpass (uses :func:`obspy.signal.filter.bandpass`).
+
+        ``'bandstop'``
+            Butterworth-Bandstop (uses :func:`obspy.signal.filter.bandstop`).
+
+        ``'lowpass'``
+            Butterworth-Lowpass (uses :func:`obspy.signal.filter.lowpass`).
+
+        ``'highpass'``
+            Butterworth-Highpass (uses :func:`obspy.signal.filter.highpass`).
+
+        ``'lowpassCheby2'``
+            Cheby2-Lowpass (uses :func:`obspy.signal.filter.lowpassCheby2`).
+
+        ``'lowpassFIR'`` (experimental)
+            FIR-Lowpass (uses :func:`obspy.signal.filter.lowpassFIR`).
+
+        ``'remezFIR'`` (experimental)
+            Minimax optimal bandpass using Remez algorithm (uses
+            :func:`obspy.signal.filter.remezFIR`).
 
         .. rubric:: Example
 
@@ -1110,14 +1139,15 @@ class Trace(object):
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
         # add processing information to the stats dictionary
         proc_info = "filter:%s:%s" % (type, options)
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.
 
         :param type: String that specifies which trigger is applied (e.g.
-            ``'recstalta'``).
+            ``'recstalta'``). See the `Supported Trigger`_ section below for
+            further details.
         :param options: Necessary keyword arguments for the respective trigger
             that will be passed on.
             (e.g. ``sta=3``, ``lta=10``)
@@ -1126,15 +1156,33 @@ class Trace(object):
             (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
             seconds average, respectively)
 
-        This is performed in place on the actual data array. The original data
-        is not accessible anymore afterwards.
+        .. note::
 
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing``.
-        For details see :mod:`obspy.signal`.
+        .. rubric:: _`Supported Trigger`
+
+        ``'recstalta'``
+            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
+
+        ``'carlstatrig'``
+            Computes the carlSTATrig characteristic function (uses
+            :func:`obspy.signal.trigger.classicSTALTA`).
+
+        ``'delayedstalta'``
+            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+
+        ``'zdetect'``
+            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+
+        ``'recstaltapy'``
+            Recursive STA/LTA written in Python (uses
+            :func:`obspy.signal.trigger.recSTALTAPy`).
 
         .. rubric:: Example
 
@@ -1172,7 +1220,7 @@ class Trace(object):
         self.data = func(self.data, **options)
         # add processing information to the stats dictionary
         proc_info = "trigger:%s:%s" % (type, options)
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
@@ -1193,15 +1241,20 @@ class Trace(object):
         other samples are thrown away. Prior to decimation a lowpass filter is
         applied to ensure no aliasing artifacts are introduced. The automatic
         filtering can be deactivated with ``no_filter=True``.
+
         If the length of the data array modulo ``decimation_factor`` is not
         zero then the endtime of the trace is changing on sub-sample scale. To
         abort downsampling in case of changing endtimes set
         ``strict_length=True``.
-        The original data is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``stats.processing`` of every trace.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
         .. rubric:: Example
 
@@ -1254,7 +1307,7 @@ class Trace(object):
 
         # add processing information to the stats dictionary
         proc_info = "downsample:integerDecimation:%s" % factor
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def max(self):
         """
@@ -1309,6 +1362,15 @@ class Trace(object):
             ``'gradient'``. See the `Supported Methods`_ section below for
             further details.
 
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
         .. rubric:: _`Supported Methods`
 
         ``'gradient'``
@@ -1324,7 +1386,7 @@ class Trace(object):
         self.data = func(self.data, self.stats.delta, **options)
         # add processing information to the stats dictionary
         proc_info = "differentiate:%s" % type
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def integrate(self, type='cumtrapz', **options):
         """
@@ -1334,6 +1396,15 @@ class Trace(object):
         :param type: Method to use for integration. Defaults to
             ``'cumtrapz'``. See the `Supported Methods`_ section below for
             further details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
         .. rubric:: _`Supported Methods`
 
@@ -1369,7 +1440,7 @@ class Trace(object):
         self.data = func(*args, **options)
         # add processing information to the stats dictionary
         proc_info = "integrate:%s" % (type)
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def detrend(self, type='simple', **options):
         """
@@ -1379,6 +1450,15 @@ class Trace(object):
             optional
         :param type: Method to use for detrending. Defaults to ``'simple'``.
             See the `Supported Methods`_ section below for further details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
         .. rubric:: _`Supported Methods`
 
@@ -1406,7 +1486,7 @@ class Trace(object):
         self.data = func(self.data, **options)
         # add processing information to the stats dictionary
         proc_info = "detrend:%s:%s" % (type, options)
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def normalize(self, norm=None):
         """
@@ -1418,15 +1498,16 @@ class Trace(object):
             maximum. If a negative value is specified then its absolute value
             is used.
 
-        The original data is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
-
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing``.
+        If ``trace.data.dtype`` was integer it is changing to float.
 
         .. note::
-            If ``trace.data.dtype`` was integer it is changing to float.
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
 
         .. rubric:: Example
 
@@ -1458,7 +1539,7 @@ class Trace(object):
 
         # add processing information to the stats dictionary
         proc_info = "normalize:%s" % norm
-        self.__addProcessingInfo(proc_info)
+        self._addProcessingInfo(proc_info)
 
     def copy(self):
         """
@@ -1499,7 +1580,7 @@ class Trace(object):
         """
         return deepcopy(self)
 
-    def __addProcessingInfo(self, info):
+    def _addProcessingInfo(self, info):
         """
         Adds the given informational string to the `processing` field in the
         trace's :class:`~obspy.core.trace.stats.Stats` object.

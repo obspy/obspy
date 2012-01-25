@@ -199,6 +199,8 @@ def remezFIR(data, freqmin, freqmax, df):
     Finite impulse response (FIR) filter whose transfer function minimizes
     the maximum error between the desired gain and the realized gain in the
     specified bands using the remez exchange algorithm.
+
+    .. versionadded:: 0.6.2
     """
     # Remez filter description
     # ========================
@@ -254,7 +256,7 @@ def remezFIR(data, freqmin, freqmax, df):
     return convolve(filt, data)
 
 
-def lowpassFIR(data, freq, samp_rate, winlen=2048):
+def lowpassFIR(data, freq, df, winlen=2048):
     """
     FIR-Lowpass Filter. (experimental)
 
@@ -264,10 +266,12 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Data below this frequency pass.
-    :param samp_rate: Sampling rate in Hz.
+    :param df: Sampling rate in Hz.
     :param winlen: Window length for filter in samples, must be power of 2;
         Default 2048
     :return: Filtered data.
+
+    .. versionadded:: 0.6.2
     """
     # Source: Travis Oliphant
     # http://mail.scipy.org/pipermail/scipy-user/2004-February/002628.html
@@ -282,7 +286,7 @@ def lowpassFIR(data, freq, samp_rate, winlen=2048):
     #
     # winlen = 2**11 #2**10 = 1024; 2**11 = 2048; 2**12 = 4096
     # give frequency bins in Hz and sample spacing
-    w = fft.fftfreq(winlen, 1 / float(samp_rate))
+    w = fft.fftfreq(winlen, 1 / float(df))
     # cutoff is low-pass filter
     myfilter = where((abs(w) < freq), 1., 0.)
     # ideal filter
