@@ -341,6 +341,16 @@ def _getFunctionFromEntryPoint(group, type):
     A "automagic" function searching a given dict of entry points for a valid
     entry point and returns the function call. Otherwise it will raise a
     default error message.
+
+    .. rubric:: Example
+
+    >>> _getFunctionFromEntryPoint('detrend', 'simple')  # doctest: +ELLIPSIS
+    <function simple at 0x...>
+
+    >>> _getFunctionFromEntryPoint('detrend', 'XXX')  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    ValueError: Detrend type "XXX" is not supported. Supported types: ...
     """
     ep_dict = ENTRY_POINTS[group]
     try:

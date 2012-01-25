@@ -582,8 +582,10 @@ class Client(object):
                     temp['end'] = UTCDateTime(node.get('end'))
                 else:
                     temp['end'] = None
-                temp['host'] = node.get('address').split(':')[0].strip()
-                temp['port'] = int(node.get('address').split(':')[1].strip())
+                # address field may contain multiple addresses (?)
+                address = node.get('address').split(',')[0]
+                temp['host'] = address.split(':')[0].strip()
+                temp['port'] = int(address.split(':')[1].strip())
                 result[id].append(temp)
         return result
 
