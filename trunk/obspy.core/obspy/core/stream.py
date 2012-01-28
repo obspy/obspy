@@ -1294,7 +1294,7 @@ class Stream(object):
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given start time.
-        For more info see :meth:`~obspy.core.trace.Trace._ltrim.`
+        For more info see :meth:`~obspy.core.trace.Trace._ltrim`.
         """
         for trace in self.traces:
             trace.trim(starttime=starttime, pad=pad,
@@ -1305,7 +1305,7 @@ class Stream(object):
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
         Cuts all traces of this Stream object to given end time.
-        For more info see :meth:`~obspy.core.trace.Trace._rtrim.`
+        For more info see :meth:`~obspy.core.trace.Trace._rtrim`.
         """
         for trace in self.traces:
             trace.trim(endtime=endtime, pad=pad, nearest_sample=nearest_sample)
