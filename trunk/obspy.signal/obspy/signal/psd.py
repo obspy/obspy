@@ -175,7 +175,8 @@ def welch_taper(data):
         inplace operation, so data should be float.
 
     :type data: :class:`~numpy.ndarray`
-    :param data: Data to apply the taper to. Inplace operation, but also returns data for convenience.
+    :param data: Data to apply the taper to. Inplace operation, but also
+        returns data for convenience.
     :returns: Tapered data.
     """
     data *= welch_window(len(data))
@@ -188,7 +189,7 @@ def welch_window(N):
 
     Routine is checked against PITSA for both even and odd values, but not for
     strange values like N<5.
-    
+
     .. note::
         See e.g.:
         http://www.cg.tuwien.ac.at/hostings/cescg/CESCG99/TTheussl/node7.html
