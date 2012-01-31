@@ -159,9 +159,10 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
 
 def fft_taper(data):
     """
-    Cosine taper, 10 percent at each end.
-    Like done in mcnamara etal.
-    Caution: inplace operation, so data should be float.
+    Cosine taper, 10 percent at each end (like done by [McNamara2004]_).
+
+    .. warning::
+        Inplace operation, so data should be float.
     """
     data *= cosTaper(len(data), 0.2)
     return data
@@ -172,7 +173,7 @@ def welch_taper(data):
     Applies a welch window to data. See :func:`~obspy.signal.psd.welch_window`.
 
     .. warning::
-        inplace operation, so data should be float.
+        Inplace operation, so data should be float.
 
     :type data: :class:`~numpy.ndarray`
     :param data: Data to apply the taper to. Inplace operation, but also
