@@ -241,14 +241,14 @@ class InvSimTestCase(unittest.TestCase):
         #the sac-commands that created the testing file
         if False:
             import subprocess as sp
-            p = sp.Popen('sac',stdin=sp.PIPE)
+            p = sp.Popen('sac', stdin=sp.PIPE)
             cd1 = p.stdin
-            print >>cd1, "r %s"%rawf
+            print >>cd1, "r %s" % rawf
             print >>cd1, "rmean"
             print >>cd1, "taper type cosine width 0.05"
             print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
-            %f %f %f %f"% (respf, fl1, fl2, fl3, fl4)
-            print >>cd1, "w over %s"%(evalrespf)
+            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4)
+            print >>cd1, "w over %s" % evalrespf
             print >>cd1, "quit"
             cd1.close()
             p.wait()
@@ -276,14 +276,14 @@ class InvSimTestCase(unittest.TestCase):
         #plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
         #plt.show()
 
-
     def test_cosineTaper(self):
         # SAC trace was generated with:
         # taper type cosine width 0.05
-        for i in [99,100]:
-            sac_taper = os.path.join(self.path, 'ones_trace_%d_tapered.sac' % i)
+        for i in [99, 100]:
+            sac_taper = os.path.join(self.path,
+                                     'ones_trace_%d_tapered.sac' % i)
             tr = read(sac_taper)[0]
-            tap = cosTaper(i, p=0.1,halfcosine=False,sactaper=True)
+            tap = cosTaper(i, p=0.1, halfcosine=False, sactaper=True)
             np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
 
         # The following lines compare the cosTaper result with
@@ -296,7 +296,8 @@ class InvSimTestCase(unittest.TestCase):
         #fl4 = 35.0
         #npts = freqs.size
         #tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        #tap2 = c_sac_taper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
+        #tap2 = c_sac_taper(freqs.size, freqs=freqs,
+        #                   flimit=(fl1, fl2, fl3, fl4))
         #import matplotlib.pyplot as plt
         #plt.plot(tap,'b')
         #plt.plot(tap2,'g--')

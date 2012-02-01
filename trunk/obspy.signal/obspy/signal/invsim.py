@@ -39,7 +39,8 @@ WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
 
 
-def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True, sactaper=False):
+def cosTaper(npts, p=0.1, freqs=None, flimit=None,
+             halfcosine=True, sactaper=False):
     """
     Cosine Taper.
 
@@ -104,19 +105,19 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True, sactaper=Fal
     if halfcosine:
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
-        cos_win[idx1:idx2+1] =  0.5 * (1.0 - np.cos((np.pi * \
-            (np.arange(idx1, idx2+1) - idx1) / (idx2 - idx1))))
-        cos_win[idx2+1:idx3] = 1.0
-        cos_win[idx3:idx4+1] = 0.5 * (1.0 + np.cos((np.pi * \
-            (idx3 - np.arange(idx3, idx4+1)) / (idx4 - idx3))))
+        cos_win[idx1:idx2 + 1] = 0.5 * (1.0 - np.cos((np.pi * \
+            (np.arange(idx1, idx2 + 1) - idx1) / (idx2 - idx1))))
+        cos_win[idx2 + 1:idx3] = 1.0
+        cos_win[idx3:idx4 + 1] = 0.5 * (1.0 + np.cos((np.pi * \
+            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3))))
     else:
-        cos_win[idx1:idx2+1] =  np.cos(-(np.pi / 2.0 * \
-               (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1)))
-        cos_win[idx2+1:idx3] = 1.0
-        cos_win[idx3:idx4+1] = np.cos((np.pi / 2.0 * \
-            (idx3 - np.arange(idx3, idx4+1)) / (idx4 - idx3)))
+        cos_win[idx1:idx2 + 1] = np.cos(-(np.pi / 2.0 * \
+               (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+        cos_win[idx2 + 1:idx3] = 1.0
+        cos_win[idx3:idx4 + 1] = np.cos((np.pi / 2.0 * \
+            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
-    # if indices are identical division by zero 
+    # if indices are identical division by zero
     # causes NaN values in cos_win
     if idx1 == idx2:
         cos_win[idx1] = 0.0
@@ -124,22 +125,24 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True, sactaper=Fal
         cos_win[idx3] = 0.0
     return cos_win
 
+
 def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
     twopi = 6.283185307179586
-    dblepi = 0.5*twopi
+    dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
     taper = []
     for freq in freqs:
         if freq < fl3 and freq > fl2:
             taper_v = 1.0
         if freq >= fl3 and freq <= fl4:
-		taper_v = 0.5*(1.0 + M.cos( dblepi*(freq - fl3)/(fl4 - fl3) ))
+            taper_v = 0.5 * (1.0 + M.cos(dblepi * (freq - fl3) / (fl4 - fl3)))
         if freq > fl4 or freq < fl1:
             taper_v = 0.0
         if freq >= fl1 and freq <= fl2:
-            taper_v = 0.5*(1.0 - M.cos( dblepi*(freq - fl1)/(fl2 - fl1)))
+            taper_v = 0.5 * (1.0 - M.cos(dblepi * (freq - fl1) / (fl2 - fl1)))
         taper.append(taper_v)
     return np.array(taper)
+
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False, debug=False):
@@ -375,9 +378,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         slower FFT but is then much faster for e.g. evalresp which scales
         with the FFT points.
     :type pitsasim: Boolean
-    :param pitsasim: Choose parameters to match instrument correction as done by PITSA.
+    :param pitsasim: Choose parameters to match
+        instrument correction as done by PITSA.
     :type sacsim: Boolean
-    :param sacsim: Choose parameters to match instrument correction as done by SAC.
+    :param sacsim: Choose parameters to match
+        instrument correction as done by SAC.
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 
@@ -421,7 +426,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         data -= data.mean()
     if taper:
         if sacsim:
-            data *= cosTaper(ndat, taper_fraction,sactaper=sacsim,halfcosine=False)
+            data *= cosTaper(ndat, taper_fraction,
+                             sactaper=sacsim, halfcosine=False)
         else:
             data *= cosTaper(ndat, taper_fraction)
     # The number of points for the FFT has to be at least 2 * ndat (in
