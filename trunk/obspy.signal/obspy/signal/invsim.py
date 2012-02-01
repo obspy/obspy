@@ -22,6 +22,7 @@ to m/s.
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
+#from obspy.signal.array_analysis import cosine_taper as cosTaper
 import ctypes as C
 import math as M
 import numpy as np
@@ -72,6 +73,21 @@ def cosTaper(npts, p=0.1):
         np.ones(npts - 2 * frac),
         0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))), axis=0)
 
+def cosTaperSac(npts, p=0.1):
+    if p == 0.0 or p == 1.0:
+        frac = int(npts * p / 2.0)
+    else:
+        frac = int(npts * p / 2.0 + 0.5)
+
+    fl1 = 0
+    fl2 = frac
+    fl3 = npts - frac
+    fl4 = npts 
+    cos_win = np.zeros(npts)
+    cos_win[0:frac] =  np.cos(-(np.pi / 2.0 * (fl2 - np.arange(fl1, fl2)) / (fl2 - fl1)))
+    cos_win[frac:npts-frac] = 1.0
+    cos_win[npts-frac:npts] = np.cos((np.pi / 2.0 * (fl3 - np.arange(fl3+1, fl4+1)) / (fl4 - fl3)))
+    return cos_win
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False, debug=False):
