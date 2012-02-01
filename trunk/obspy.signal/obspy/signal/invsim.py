@@ -22,7 +22,6 @@ to m/s.
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
-#from obspy.signal.array_analysis import cosine_taper as cosTaper
 import ctypes as C
 import math as M
 import numpy as np
