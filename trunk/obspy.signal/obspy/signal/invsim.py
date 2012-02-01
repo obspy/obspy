@@ -39,7 +39,7 @@ WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
 
 
-def cosTaper(npts, p=0.1):
+def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True, sactaper=False):
     """
     Cosine Taper.
 
@@ -50,6 +50,19 @@ def cosTaper(npts, p=0.1):
         the beginning and 5% form the end
     :rtype: float NumPy ndarray
     :return: Cosine taper array/vector of length npts.
+    :type freqs: NumPy ndarray
+    :param freqs: Frequencies as, for example, returned by fftfreq
+    :type flimit: List or tuple of floats
+    :param flimit: The list or tuple defines the four corner frequencies
+        (f1,f2,f3,f4) of the cosine taper which is one between f2 and f3 and
+        tapers to zero for f1 < f < f2 and f3 < f < f4.
+    :type halfcosine: Boolean
+    :param halfcosine: If True the taper is a half cosine function. If False it
+        is a quater cosine function.
+    :type sactaper: Boolean
+    :param sactaper: If set to True the cosine taper already tapers at the
+        corner frequency (SAC behaviour). By default, the taper has a value
+        of 1.0 at the corner frequencies.
 
     .. rubric:: Example
 
@@ -66,28 +79,67 @@ def cosTaper(npts, p=0.1):
     if p == 0.0 or p == 1.0:
         frac = int(npts * p / 2.0)
     else:
-        frac = int(npts * p / 2.0) + 1
-    # return concatenated beginning, middle and end
-    return np.concatenate((
-        0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, frac))),
-        np.ones(npts - 2 * frac),
-        0.5 * (1 + np.cos(np.linspace(0, np.pi, frac)))), axis=0)
-
-def cosTaperSac(npts, p=0.1):
-    if p == 0.0 or p == 1.0:
-        frac = int(npts * p / 2.0)
-    else:
         frac = int(npts * p / 2.0 + 0.5)
 
-    fl1 = 0
-    fl2 = frac
-    fl3 = npts - frac
-    fl4 = npts 
+    if freqs is not None and flimit is not None:
+        fl1, fl2, fl3, fl4 = flimit
+        idx1 = np.argmin(abs(freqs - fl1))
+        idx2 = np.argmin(abs(freqs - fl2))
+        idx3 = np.argmin(abs(freqs - fl3))
+        idx4 = np.argmin(abs(freqs - fl4))
+    else:
+        idx1 = 0
+        idx2 = frac - 1
+        idx3 = npts - frac
+        idx4 = npts - 1
+    if sactaper:
+        # in SAC the second and third
+        # index are already tapered
+        idx2 += 1
+        idx3 -= 1
+
+   # the taper at idx1 and idx4 equals zero and
+   # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
-    cos_win[0:frac] =  np.cos(-(np.pi / 2.0 * (fl2 - np.arange(fl1, fl2)) / (fl2 - fl1)))
-    cos_win[frac:npts-frac] = 1.0
-    cos_win[npts-frac:npts] = np.cos((np.pi / 2.0 * (fl3 - np.arange(fl3+1, fl4+1)) / (fl4 - fl3)))
+    if halfcosine:
+        #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
+        #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
+        cos_win[idx1:idx2+1] =  0.5 * (1.0 - np.cos((np.pi * \
+            (np.arange(idx1, idx2+1) - idx1) / (idx2 - idx1))))
+        cos_win[idx2+1:idx3] = 1.0
+        cos_win[idx3:idx4+1] = 0.5 * (1.0 + np.cos((np.pi * \
+            (idx3 - np.arange(idx3, idx4+1)) / (idx4 - idx3))))
+    else:
+        cos_win[idx1:idx2+1] =  np.cos(-(np.pi / 2.0 * \
+               (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1)))
+        cos_win[idx2+1:idx3] = 1.0
+        cos_win[idx3:idx4+1] = np.cos((np.pi / 2.0 * \
+            (idx3 - np.arange(idx3, idx4+1)) / (idx4 - idx3)))
+
+    # if indices are identical division by zero 
+    # causes NaN values in cos_win
+    if idx1 == idx2:
+        cos_win[idx1] = 0.0
+    if idx3 == idx4:
+        cos_win[idx3] = 0.0
     return cos_win
+
+def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
+    twopi = 6.283185307179586
+    dblepi = 0.5*twopi
+    fl1, fl2, fl3, fl4 = flimit
+    taper = []
+    for freq in freqs:
+        if freq < fl3 and freq > fl2:
+            taper_v = 1.0
+        if freq >= fl3 and freq <= fl4:
+		taper_v = 0.5*(1.0 + M.cos( dblepi*(freq - fl3)/(fl4 - fl3) ))
+        if freq > fl4 or freq < fl1:
+            taper_v = 0.0
+        if freq >= fl1 and freq <= fl2:
+            taper_v = 0.5*(1.0 - M.cos( dblepi*(freq - fl1)/(fl2 - fl1)))
+        taper.append(taper_v)
+    return np.array(taper)
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False, debug=False):
@@ -159,7 +211,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     clibevresp.free_response(res)
     del nfreqs, rfreqs, rvec, res
     h = np.conj(h)
-    h[-1] = h[-1].real + 0.0j
     # delete temporary file
     try:
         os.remove(tempfile)
@@ -277,7 +328,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=True, simulate_sensitivity=True,
             water_level=600.0, zero_mean=True, taper=True,
             taper_fraction=0.05, pre_filt=None, seedresp=None,
-            nfft_pow2=False, **_kwargs):
+            nfft_pow2=False, pitsasim=True, sacsim=False, **_kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -323,6 +374,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         data are not zeropadded to the next power of two which makes a
         slower FFT but is then much faster for e.g. evalresp which scales
         with the FFT points.
+    :type pitsasim: Boolean
+    :param pitsasim: Choose parameters to match instrument correction as done by PITSA.
+    :type sacsim: Boolean
+    :param sacsim: Choose parameters to match instrument correction as done by SAC.
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 
@@ -365,7 +420,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if zero_mean:
         data -= data.mean()
     if taper:
-        data *= cosTaper(ndat, taper_fraction)
+        if sacsim:
+            data *= cosTaper(ndat, taper_fraction,sactaper=sacsim,halfcosine=False)
+        else:
+            data *= cosTaper(ndat, taper_fraction)
     # The number of points for the FFT has to be at least 2 * ndat (in
     # order to prohibit wrap around effects during convolution) cf.
     # Numerical Recipes p. 429 calculate next power of 2.
@@ -394,15 +452,12 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         if pre_filt:
             # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
-            idx0 = np.where((freqs >= fl1) & (freqs < fl2))
-            idx1 = np.where((freqs >= fl2) & (freqs <= fl3))
-            idx2 = np.where((freqs > fl3) & (freqs <= fl4))
-            cos_win = np.zeros(freqs.size)
-            cos_win[idx0] = 0.5 * \
-                    (1 - np.cos((np.pi * (fl1 - freqs[idx0])) / (fl2 - fl1)))
-            cos_win[idx1] = 1.0
-            cos_win[idx2] = 0.5 * \
-                    (1 + np.cos((np.pi * (fl3 - freqs[idx2])) / (fl4 - fl3)))
+            if sacsim:
+                cos_win = c_sac_taper(freqs.size, freqs=freqs,
+                                flimit=(fl1, fl2, fl3, fl4))
+            else:
+                cos_win = cosTaper(freqs.size, freqs=freqs,
+                             flimit=(fl1, fl2, fl3, fl4))
             data *= cos_win
         #if paz_remove.has_key('t_shift'):
         #    data *= np.exp(-1j*2*np.pi*freqs*paz_remove['t_shift'])
@@ -413,10 +468,13 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if paz_simulate:
         data *= np.conj(pazToFreqResp(paz_simulate['poles'],
                 paz_simulate['zeros'], paz_simulate['gain'], delta, nfft))
+
+    data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
     data = np.fft.irfft(data)[0:ndat]
-    # linear detrend
-    data = simpleDetrend(data)
+    if pitsasim:
+        # linear detrend
+        data = simpleDetrend(data)
     # correct for involved overall sensitivities
     if paz_remove and remove_sensitivity:
         data /= paz_remove['sensitivity']

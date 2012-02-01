@@ -4,9 +4,10 @@
 The InvSim test suite.
 """
 
-from obspy.core import Trace, UTCDateTime
+from obspy.core import Trace, UTCDateTime, read
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
+from obspy.signal.invsim import cosTaper, c_sac_taper
 import gzip
 import numpy as np
 import os
@@ -209,7 +210,7 @@ class InvSimTestCase(unittest.TestCase):
         attach_paz(tr, pzf, tovel=False)
         tr.data = seisSim(tr.data, tr.stats.sampling_rate,
                           paz_remove=tr.stats.paz, remove_sensitivity=False,
-                          pre_filt=(fl1, fl2, fl3, fl4), cosine_taper=0.05)
+                          pre_filt=(fl1, fl2, fl3, fl4))
 
         data = np.loadtxt(testsacf)
 
@@ -228,35 +229,78 @@ class InvSimTestCase(unittest.TestCase):
         pretty much identical but differences remain (rms ~ 0.042). Haven't
         found the cause for those, yet.
         """
-        evalrespf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC_resp.asc.gz')
-        rawf = os.path.join(self.path, 'CRLZ_.HHZ.10.NZ.SAC.asc.gz')
+        evalrespf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC_resp')
+        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
-
-        data = np.loadtxt(rawf)
-        test_data = np.loadtxt(evalrespf)
-        stats = {'network': 'NZ', 'delta': 0.01,
-                 'station': 'CRLZ', 'location': '10',
-                 'starttime': UTCDateTime(2010, 9, 4, 4, 52, 58, 997000),
-                 'calib': 1.0, 'channel': 'HHZ'}
-        tr = Trace(data, stats)
-        trtest = Trace(test_data, stats)
         fl1 = 0.00588
         fl2 = 0.00625
         fl3 = 30.
         fl4 = 35.
+
+        #Set the following if-clause to True to run
+        #the sac-commands that created the testing file
+        if False:
+            import subprocess as sp
+            p = sp.Popen('sac',stdin=sp.PIPE)
+            cd1 = p.stdin
+            print >>cd1, "r %s"%rawf
+            print >>cd1, "rmean"
+            print >>cd1, "taper type cosine width 0.05"
+            print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
+            %f %f %f %f"% (respf, fl1, fl2, fl3, fl4)
+            print >>cd1, "w over %s"%(evalrespf)
+            print >>cd1, "quit"
+            cd1.close()
+            p.wait()
+
+        tr = read(rawf)[0]
+        trtest = read(evalrespf)[0]
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
         tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
                           remove_sensitivity=False,
-                          pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp)
+                          pre_filt=(fl1, fl2, fl3, fl4),
+                          seedresp=seedresp, taper_fraction=0.1,
+                          pitsasim=False, sacsim=True)
         tr.data *= 1e9
         rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
                       np.sum(trtest.data ** 2))
-        # import matplotlib.pyplot as plt
-        # plt.plot(tr.data)
-        # plt.plot(trtest.data)
-        # plt.show()
-        self.assertTrue(rms < 0.0041)
+        self.assertTrue(rms < 0.0094)
+        #import matplotlib.pyplot as plt
+        #plt.plot(tr.data-trtest.data,'b')
+        #plt.plot(trtest.data,'g')
+        #plt.figure()
+        #plt.psd(tr.data,Fs=100.,NFFT=32768)
+        #plt.psd(trtest.data,Fs=100.,NFFT=32768)
+        #plt.figure()
+        #plt.psd(tr.data - trtest.data, Fs=100., NFFT=32768)
+        #plt.show()
+
+
+    def test_cosineTaper(self):
+        # SAC trace was generated with:
+        # taper type cosine width 0.05
+        for i in [99,100]:
+            sac_taper = os.path.join(self.path, 'ones_trace_%d_tapered.sac' % i)
+            tr = read(sac_taper)[0]
+            tap = cosTaper(i, p=0.1,halfcosine=False,sactaper=True)
+            np.testing.assert_array_almost_equal(tap, tr.data, decimal=6)
+
+        # The following lines compare the cosTaper result with
+        # the result of the algorithm used by SAC in its taper routine
+        # (taper.c)
+        #freqs = np.fft.fftfreq(2**15,0.01)
+        #fl1 = 0.00588
+        #fl2 = 0.00625
+        #fl3 = 30.0
+        #fl4 = 35.0
+        #npts = freqs.size
+        #tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
+        #tap2 = c_sac_taper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
+        #import matplotlib.pyplot as plt
+        #plt.plot(tap,'b')
+        #plt.plot(tap2,'g--')
+        #plt.show()
 
     def test_evalrespUsingDifferentLineSeparator(self):
         """
