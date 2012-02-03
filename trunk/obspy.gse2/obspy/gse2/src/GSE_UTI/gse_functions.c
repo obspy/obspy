@@ -221,19 +221,19 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
           break;
       }
       /* print error if we reached the end of the file */
-      if (fgets (cbuf,82,fop) == NULL) {
+      if (fgets (cbuf,83,fop) == NULL) {
           printf ("decomp_6b: Neither DAT2 or DAT1 found!\n"); 
           return -1;
       }
   }
 
-  if (fgets (cbuf,82,fop) == NULL) /* read first char line */
+  if (fgets (cbuf,83,fop) == NULL) /* read first char line */
   	{printf ("decomp_6b: Whoops! No data after DAT2 or DAT1.\n"); return -1; }
   for (i = 0; i < n_of_samples; i++)		/* loop over expected samples */
   {
   	ibuf += 1;
   	if (ibuf > 79 || isspace(cbuf[ibuf])) { 
-  	  if (fgets (cbuf,82,fop) == NULL) 	/* get next line */
+  	  if (fgets (cbuf,83,fop) == NULL) 	/* get next line */
   		{printf ("decomp_6b: missing input line?\n"); return -1; }
       /* We need a space to be sure that CHK2 is not occuring in the middle
        * of the encoded string/buffer */
@@ -256,7 +256,7 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   	  itemp <<= 5;			/* multiply with 32 for next byte */
   	  ibuf += 1;
   	  if (ibuf > 79 || isspace(cbuf[ibuf])) {
-  	    if (fgets (cbuf,82,fop) == NULL) 	/* get next line */
+  	    if (fgets (cbuf,83,fop) == NULL) 	/* get next line */
   		{printf ("decomp_6b: missing input line.\n"); return -1; }
   	    ibuf = 0;
 	  }

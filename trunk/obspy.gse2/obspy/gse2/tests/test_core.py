@@ -294,6 +294,21 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[1].data[-8:].tolist(), data2)
 
 
+    def test_readDos(self):
+        """
+        Read file with dos newlines / encoding, that is
+        Line Feed (LF) and Carriage Return (CR)
+        see #355
+        """
+        filedos  = os.path.join(self.path, 'data', 
+                                'loc_RJOB20050831023349_first100_dos.z')
+        fileunix = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        st = read(filedos, verify_chksum=True)
+        st2 = read(fileunix, verify_chksum=True)
+        np.testing.assert_equal(st[0].data, st2[0].data[:100])
+        self.assertEqual(st[0].stats['station'], 'RJOB')
+
+
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
 
