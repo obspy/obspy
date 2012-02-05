@@ -7,6 +7,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 import cPickle
 import numpy as np
+import os
 import pickle
 import sys
 import unittest
@@ -1090,6 +1091,9 @@ class StreamTestCase(unittest.TestCase):
         st2 = read(tmpfile2)
         self.assertEquals(len(st2), 3)
         np.testing.assert_array_equal(st2[0].data, st[0].data)
+        # clean up
+        os.remove(tmpfile)
+        os.remove(tmpfile2)
 
     def test_getGaps2(self):
         """
