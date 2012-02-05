@@ -693,7 +693,7 @@ class PPSD():
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
-             show_noise_models=True, grid=True):
+             show_noise_models=True, grid=True, show=True):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -715,6 +715,8 @@ class PPSD():
         :param show_noise_models: Enable/disable plotting of noise models.
         :type grid: bool (optional)
         :param grid: Enable/disable grid in histogram plot.
+        :type show: bool (optional)
+        :param show: Enable/disable immediately showing the plot.
         """
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
@@ -775,7 +777,7 @@ class PPSD():
         if filename is not None:
             plt.savefig(filename)
             plt.close()
-        else:
+        elif show:
             plt.show()
 
     def plot_coverage(self, filename=None):
