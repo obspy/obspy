@@ -2,7 +2,10 @@
 from __future__ import with_statement
 from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy.core.stream import writePickle, readPickle, isPickle
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
+import cPickle
 import numpy as np
 import pickle
 import sys
@@ -1041,6 +1044,52 @@ class StreamTestCase(unittest.TestCase):
         st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEquals(st[0].stats, st2[0].stats)
+
+    def test_cpickle(self):
+        """
+        Testing pickling of Stream objects..
+        """
+        tr = Trace(data=np.random.randn(1441))
+        st = Stream([tr])
+        st.verify()
+        # protocol 0 (ASCII)
+        temp = cPickle.dumps(st, protocol=0)
+        st2 = cPickle.loads(temp)
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
+        self.assertEquals(st[0].stats, st2[0].stats)
+        # protocol 1 (old binary)
+        temp = cPickle.dumps(st, protocol=1)
+        st2 = cPickle.loads(temp)
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
+        self.assertEquals(st[0].stats, st2[0].stats)
+        # protocol 2 (new binary)
+        temp = cPickle.dumps(st, protocol=2)
+        st2 = cPickle.loads(temp)
+        np.testing.assert_array_equal(st[0].data, st2[0].data)
+        self.assertEquals(st[0].stats, st2[0].stats)
+
+    def test_readWritePickle(self):
+        """
+        """
+        st = read()
+        # write
+        tmpfile = NamedTemporaryFile().name
+        tmpfile2 = NamedTemporaryFile().name
+        writePickle(st, tmpfile)
+        st.write(tmpfile2, format='PICKLE')
+        # check and read directly
+        self.assertTrue(isPickle(tmpfile), True)
+        st2 = readPickle(tmpfile)
+        self.assertEquals(len(st2), 3)
+        np.testing.assert_array_equal(st2[0].data, st[0].data)
+        # use read() with given format
+        st2 = read(tmpfile2, format='PICKLE')
+        self.assertEquals(len(st2), 3)
+        np.testing.assert_array_equal(st2[0].data, st[0].data)
+        # use read() and autodetect format
+        st2 = read(tmpfile2)
+        self.assertEquals(len(st2), 3)
+        np.testing.assert_array_equal(st2[0].data, st[0].data)
 
     def test_getGaps2(self):
         """

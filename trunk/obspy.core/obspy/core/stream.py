@@ -14,6 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
 from obspy.core.util.base import ENTRY_POINTS
 from pkg_resources import load_entry_point
+import cPickle
 import copy
 import fnmatch
 import math
@@ -2165,6 +2166,74 @@ class Stream(object):
                     self.traces.append(cur_trace)
                     cur_trace = trace
             self.traces.append(cur_trace)
+
+
+def isPickle(filename):  # @UnusedVariable
+    """
+    Checks whether a file is ASCII TSPAIR format.
+
+    :type filename: str
+    :param filename: Name of the ASCII TSPAIR file to be checked.
+    :rtype: bool
+    :return: ``True`` if ASCII TSPAIR file.
+
+    .. rubric:: Example
+
+    >>> isTSPAIR('/path/to/tspair.ascii')  # doctest: +SKIP
+    True
+    """
+    if isinstance(filename, basestring):
+        try:
+            st = cPickle.load(open(filename, 'rb'))
+        except:
+            return False
+    else:
+        try:
+            st = cPickle.load(filename)
+        except:
+            return False
+    return isinstance(st, Stream)
+
+
+def readPickle(filename, **kwargs):  # @UnusedVariable
+    """
+    Reads and returns pickled ObsPy Stream object.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        ObsPy :func:`~obspy.core.stream.read` function, call this instead.
+
+    :type filename: str
+    :param filename: ASCII file to be read.
+    :rtype: :class:`~obspy.core.stream.Stream`
+    :return: A ObsPy Stream object.
+    """
+    if isinstance(filename, basestring):
+        return cPickle.load(open(filename, 'rb'))
+    else:
+        return cPickle.load(filename)
+
+
+def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
+    """
+    Writes a Python pickle of current stream.
+
+    .. warning::
+        This function should NOT be called directly, it registers via the
+        the :meth:`~obspy.core.stream.Stream.write` method of an
+        ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
+
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: The ObsPy Stream object to write.
+    :type filename: str
+    :param filename: Name of file to write.
+    :type protocol: int, optional
+    :param filename: Pickle protocol, defaults to ``2``.
+    """
+    if isinstance(filename, basestring):
+        cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+    else:
+        cPickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':

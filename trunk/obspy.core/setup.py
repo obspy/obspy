@@ -48,6 +48,7 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform': [
         'TSPAIR = obspy.core.ascii',
         'SLIST = obspy.core.ascii',
+        'PICKLE = obspy.core.stream',
     ],
     'obspy.plugin.waveform.TSPAIR': [
         'isFormat = obspy.core.ascii:isTSPAIR',
@@ -58,6 +59,11 @@ ENTRY_POINTS = {
         'isFormat = obspy.core.ascii:isSLIST',
         'readFormat = obspy.core.ascii:readSLIST',
         'writeFormat = obspy.core.ascii:writeSLIST',
+    ],
+    'obspy.plugin.waveform.PICKLE': [
+        'isFormat = obspy.core.stream:isPickle',
+        'readFormat = obspy.core.stream:readPickle',
+        'writeFormat = obspy.core.stream:writePickle',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
