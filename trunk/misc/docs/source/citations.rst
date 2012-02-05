@@ -13,7 +13,7 @@ Citations
    | Beyreuther, M., Barsch, R., Krischer, L., Megies, T., Behr, Y., and Wassermann, J. (May/June 2010),
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
-   | http://srl.geoscienceworld.org/content/81/3/530.short
+   | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
 .. [Kanasewich1981]  
    | Kanasewich, E. R. (1981),
    | **Time sequence analysis in geophysics**,
