@@ -77,8 +77,8 @@ window..
 
 ..or saved to an image file:
 
-    >>> ppsd.plot("/tmp/ppsd.png")
-    >>> ppsd.plot("/tmp/ppsd.pdf")
+    >>> ppsd.plot("/tmp/ppsd.png")  # doctest: +SKIP
+    >>> ppsd.plot("/tmp/ppsd.pdf")  # doctest: +SKIP
 
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
 

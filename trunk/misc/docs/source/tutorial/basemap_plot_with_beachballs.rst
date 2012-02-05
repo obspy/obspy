@@ -29,8 +29,8 @@ The first lines of our SRTM data file (from
 * The Python package GDAL_ allows you to directly read a GeoTiff into NumPy_
   :class:`~numpy.ndarray`
 
-      >>> geo = gdal.Open("file.geotiff")
-      >>> x = geo.ReadAsArray()
+      >>> geo = gdal.Open("file.geotiff")  # doctest: +SKIP
+      >>> x = geo.ReadAsArray()  # doctest: +SKIP
 
 * GeoTiff elevation data is available e.g. from ASTER_
 * Shading/Illumination can be added. See the basemap example plotmap_shaded.py_

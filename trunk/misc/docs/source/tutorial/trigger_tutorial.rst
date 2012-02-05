@@ -94,7 +94,7 @@ Help for each function is available  HTML formatted or in the usual Python manne
 
     >>> from obspy.signal.trigger import classicSTALTA
     >>> help(classicSTALTA)  # doctest: +ELLIPSIS
-    Help on function classicSTALTA in module obspy.signal.trigger ...
+    Help on function classicSTALTA in module obspy.signal.trigger...
 
 The triggering itself mainly consists of the following two steps:
 
@@ -172,10 +172,12 @@ samples.
     >>> from obspy.signal.trigger import pkBaer
     >>> trace = read("http://examples.obspy.org/ev0_6.a01.gse2")[0]
     >>> df = trace.stats.sampling_rate
-    >>> p_pick, phase_info = pkBaer(trace.data, df
+    >>> p_pick, phase_info = pkBaer(trace.data, df,
     ...                             20, 60, 7.0, 12.0, 100, 100)
-    >>> print p_pick, phase_info
-    (6894, u'EPU3')
+    >>> print(p_pick)
+    6894
+    >>> print(phase_info) 
+    EPU3
     >>> print(p_pick / df)
     34.47
 
@@ -195,11 +197,13 @@ For :func:`~obspy.signal.trigger.arPick`, input and output are in seconds.
     >>> df = tr1.stats.sampling_rate
     >>> p_pick, s_pick = arPick(tr1.data, tr2.data, tr3.data, df,
     ...                         1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2)
-    >>> print p_pick, s_pick
-    (30.6350002289 31.1499996185)
+    >>> print(p_pick)
+    30.6350002289
+    >>> print(s_pick)
+    31.2800006866
 
-This gives the output 30.6350002289 31.1499996185, meaning that a P pick at
-30.64s and an S pick at 31.15s were identified.
+This gives the output 30.6350002289 and 31.2800006866, meaning that a P pick at
+30.64s and an S pick at 31.28s were identified.
 
 ----------------
 Advanced Example

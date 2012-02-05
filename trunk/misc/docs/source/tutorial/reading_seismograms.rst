@@ -46,7 +46,7 @@ via the ``stats`` keyword on each :class:`~obspy.core.trace.Trace`:
 
 .. doctest::
 
-    >>> print tr.stats
+    >>> print tr.stats  # doctest: +NORMALIZE_WHITESPACE
              network:
              station: RJOB
             location:

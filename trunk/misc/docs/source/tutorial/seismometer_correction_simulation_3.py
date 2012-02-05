@@ -1,24 +1,21 @@
 from obspy.iris import Client
 from obspy.core import UTCDateTime, read
+from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
 import numpy as np
-
-rawf = 'BFZ.HHZ.mseed'
-respf = 'RESP.NZ.BFZ.10.HHZ'
+import os
 
 # MW 7.1 Darfield earthquake, New Zealand
 t1 = UTCDateTime("2010-09-3T16:30:00.000")
 t2 = UTCDateTime("2010-09-3T17:00:00.000")
 
-# Download and save waveform
+# Fetch waveform from IRIS web service into a ObsPy stream object
 client = Client()
-client.saveWaveform(rawf, 'NZ', 'BFZ', '10', 'HHZ', t1, t2)
+st = client.getWaveform('NZ', 'BFZ', '10', 'HHZ', t1, t2)
 
-# Download and save instrument response file
+# Download and save instrument response file into a temporary file
+respf = NamedTemporaryFile().name
 client.saveResponse(respf, 'NZ', 'BFZ', '10', 'HHZ', t1, t2, format="RESP")
-
-# read in your raw data
-st = read(rawf)
 
 # make a copy to keep our original data
 st_orig = st.copy()
@@ -55,3 +52,6 @@ plt.plot(time, tr.data, 'k')
 plt.ylabel('Velocity [m/s]')
 plt.xlabel('Time [s]')
 plt.show()
+
+# cleanup - delete temporary file
+os.remove(respf)
