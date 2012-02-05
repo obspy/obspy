@@ -12,6 +12,5 @@ EXPORTS
     decim
     spr_coef_paz
     ppick
-    preset
     bbfk
     cosine_taper
