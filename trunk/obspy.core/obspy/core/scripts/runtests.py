@@ -439,12 +439,10 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
-            # ugly finding of docs/tutorial path:
-            tut_path = __file__
-            while not tut_path.endswith("trunk"):
-                tut_path = os.path.split(tut_path)[0]
-            tut_path = os.path.join(tut_path, 'misc', 'docs', 'source',
-                                    'tutorial', '*.rst')
+            # assume we are in the trunk
+            tut_path = os.path.dirname(__file__)
+            tut_path = os.path.join(tut_path, '..', '..', '..', '..', 'misc',
+                                    'docs', 'source', 'tutorial', '*.rst')
             tut_suite = unittest.TestSuite()
             for file in glob.glob(tut_path):
                 filesuite = doctest.DocFileSuite(file, module_relative=False)
@@ -495,9 +493,6 @@ def run(interactive=True):
     parser.add_option("-q", "--quiet", default=False,
                       action="store_true", dest="quiet",
                       help="quiet mode")
-    parser.add_option("--tutorial", default=False,
-                      action="store_true", dest="tutorial",
-                      help="test rst files in tutorial")
     # filter options
     filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
         "will test all installed ObsPy packages which don't require a " + \
@@ -508,6 +503,9 @@ def run(interactive=True):
     filter.add_option("-x", "--exclude",
                       action="append", type="str", dest="module",
                       help="exclude given module from test")
+    filter.add_option("--tutorial", default=False,
+                      action="store_true", dest="tutorial",
+                      help="add doctests in tutorial")
     parser.add_option_group(filter)
     # timing / profile options
     timing = OptionGroup(parser, "Timing/Profile Options")
