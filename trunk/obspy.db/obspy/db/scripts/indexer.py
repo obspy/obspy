@@ -2,6 +2,27 @@
 # -*- coding: utf-8 -*-
 """
 A command-line program that indexes seismogram files into a database.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+
+.. rubric:: Usage Examples
+
+(1) Run indexer as daemon continuously crawling the given paths but index only
+    the last 24 hours (-r24) of a waveform archive::
+
+       #!/bin/bash
+       DB=postgresql://username:password@localhost:5432/database
+       DATA=/path/to/archive/2010,/path/to/archive/2011,/path/to/arclink
+       LOG=/path/to/indexer.log
+       ./obspy-indexer -v -i0.0 -n1 -u$DB -d$DATA -r24 -l$LOG &
+
+(2) Run only once and remove duplicates::
+
+       ./obspy-indexer -v -i0.0 --run_once --check_duplicates -n1 -u$DB -d$DATA
 """
 
 from obspy.db import __version__

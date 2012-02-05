@@ -40,9 +40,9 @@ LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'seismogram', 'database', 'SeisHub']
 INSTALL_REQUIRES = ['obspy.core', 'obspy.mseed', 'sqlalchemy']
 ENTRY_POINTS = {
-        'obspy.db.feature' : [
-            'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
-            'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
+        'obspy.db.feature': [
+            'minmax_amplitude = obspy.db.features:MinMaxAmplitudeFeature',
+            'bandpass_preview = obspy.db.features:BandpassPreviewFeature',
         ],
         'console_scripts': [
             'obspy-indexer = obspy.db.scripts.indexer:main'
@@ -58,6 +58,7 @@ def convert2to3():
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
     # copy original tree into 2to3 folder ignoring some unneeded files
+
     def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
@@ -108,7 +109,8 @@ def setupPackage():
         namespace_packages=['obspy'],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME, NAME),
+        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME,
+                                                                    NAME),
         include_package_data=True,
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,

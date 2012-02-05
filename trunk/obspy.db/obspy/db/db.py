@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+SQLAlchemy ORM definitions (database layout) for obspy.db.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
     PickleType, Boolean
@@ -14,6 +23,9 @@ Base = declarative_base()
 
 
 class WaveformPath(Base):
+    """
+    DB table containing file directories.
+    """
     __tablename__ = 'default_waveform_paths'
     __table_args__ = (UniqueConstraint('path'), {})
 
@@ -32,6 +44,9 @@ class WaveformPath(Base):
 
 
 class WaveformFile(Base):
+    """
+    DB table containing waveform files.
+    """
     __tablename__ = 'default_waveform_files'
     __table_args__ = (UniqueConstraint('file', 'path_id'), {})
 
@@ -56,6 +71,9 @@ class WaveformFile(Base):
 
 
 class WaveformChannel(Base):
+    """
+    DB table containing channels.
+    """
     __tablename__ = 'default_waveform_channels'
     __table_args__ = (UniqueConstraint('network', 'station', 'location',
                                        'channel', 'file_id'), {})
@@ -72,7 +90,7 @@ class WaveformChannel(Base):
     calib = Column(Float, nullable=False)
     sampling_rate = Column(Float, nullable=False)
     npts = Column(Integer, nullable=False)
-    preview = Column(PickleType, nullable=True)
+    preview = Column(PickleType(protocol=0), nullable=True)
 
     gaps = relation("WaveformGaps", order_by="WaveformGaps.id",
                     backref="channel", cascade="all, delete, delete-orphan")
@@ -100,7 +118,10 @@ class WaveformChannel(Base):
         return "<WaveformChannel('%s')>" % (self.id)
 
     def getPreview(self, apply_calibration=False):
-        data = np.loads(str(self.preview))
+        try:
+            data = np.loads(self.preview)
+        except:
+            data = np.array([])
         if apply_calibration:
             data = data * self.calib
         tr = Trace(data=data)
@@ -116,6 +137,9 @@ class WaveformChannel(Base):
 
 
 class WaveformGaps(Base):
+    """
+    DB table containing gaps.
+    """
     __tablename__ = 'default_waveform_gaps'
 
     id = Column(Integer, primary_key=True)
@@ -137,6 +161,9 @@ class WaveformGaps(Base):
 
 
 class WaveformFeatures(Base):
+    """
+    DB table containing optional features created during indexing.
+    """
     __tablename__ = 'default_waveform_features'
     __table_args__ = (UniqueConstraint('channel_id', 'key'), {})
 

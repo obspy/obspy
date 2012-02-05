@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
+"""
+A waveform indexer collecting metadata from a file based waveform archive and
+storing in into a standard SQL database.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from obspy.core import read
 from obspy.core.preview import createPreview
-from obspy.core.util import _getPlugins
+from obspy.core.util.base import _getEntryPoints
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
     WaveformGaps, WaveformFeatures
 import fnmatch
@@ -18,10 +28,6 @@ class WaveformFileCrawler(object):
     This class scans periodically all given paths for waveform files and
     collects them into a watch list.
     """
-    def __init__(self):
-        # for API doc
-        pass
-
     def _update_or_insert(self, dataset):
         """
         Add a new file into or modifies existing file in database.
@@ -389,7 +395,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
     try:
         # fetch and initialize all possible waveform feature plug-ins
         all_features = {}
-        for (key, ep) in _getPlugins('obspy.db.feature').iteritems():
+        for (key, ep) in _getEntryPoints('obspy.db.feature').iteritems():
             try:
                 # load plug-in
                 cls = ep.load()

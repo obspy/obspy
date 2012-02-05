@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Feature generators for ObsPy Trace objects.
+Optional feature generators for ObsPy Trace objects.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -13,24 +13,28 @@ from obspy.core.util import scoreatpercentile
 
 
 class BandpassPreviewFeature(object):
-    def __init__(self):
-        # for API doc
-        pass
+    """
+    Bandpass filter (freqmin=0.1, freqmax=20.0) all trace previews.
+    """
 
     def process(self, trace):
-        # applying bandpass on preview trace
+        """
+        Bandpass filter (freqmin=0.1, freqmax=20.0) all trace previews.
+        """
+        # applying bandpass on trace directly - this will not modify the
+        # original waveform file but it will influence the preview trace
         trace.filter("bandpass", freqmin=0.1, freqmax=20.0)
         return {}
 
 
 class MinMaxAmplitudeFeature(object):
-    def __init__(self):
-        # for API doc
-        pass
+    """
+    Generates statistics about the amplitude values.
+    """
 
     def process(self, trace):
         """
-        Gets some statistics about the amplitude values.
+        Generates statistics about the amplitude values.
 
         This may take a while to calculate - use a moderate looping interval.
 
@@ -39,9 +43,9 @@ class MinMaxAmplitudeFeature(object):
         >>> from obspy.core import Trace
         >>> import numpy as np
         >>> tr = Trace(data=np.arange(-5,5))
-        >>> result = AmplitudeFeature().process(tr)
+        >>> result = MinMaxAmplitudeFeature().process(tr)
         >>> result['max']
-        4
+        4.0
         >>> result['upper_quantile']
         1.75
         """

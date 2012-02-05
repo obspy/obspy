@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
+"""
+Additional utilities for obspy.db.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 from obspy.core import UTCDateTime
 
 
 def parseMappingData(lines):
     """
+    Parses a mapping file used by the indexer.
     """
     results = {}
     for line in lines:
