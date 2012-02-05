@@ -7,7 +7,7 @@ The InvSim test suite.
 from obspy.core import Trace, UTCDateTime, read
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
-from obspy.signal.invsim import cosTaper, c_sac_taper
+from obspy.signal.invsim import cosTaper
 import gzip
 import numpy as np
 import os

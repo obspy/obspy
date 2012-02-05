@@ -214,7 +214,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st[0].stats.delta, 30.0)
         self.assertEquals(st[0].stats.npts, 1000)
         self.assertEquals(st[0].stats.preview, True)
-        self.assertEquals(st[0].data.all(), self.preview.all())
+        np.testing.assert_equal(st[0].data, self.preview)
         # 2 - no data
         st = self.client.getPreview(network='XX', starttime=dt, endtime=dt + 2)
         self.assertEquals(len(st), 0)

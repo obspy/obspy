@@ -38,8 +38,8 @@ WOODANDERSON = {'poles': [-6.283 + 4.7124j, -6.283 - 4.7124j],
                 'zeros': [0 + 0j], 'gain': 1.0, 'sensitivity': 2080}
 
 
-def cosTaper(npts, p=0.1, freqs=None, flimit=None,
-             halfcosine=True, sactaper=False):
+def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
+             sactaper=False):
     """
     Cosine Taper.
 
@@ -54,11 +54,11 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None,
     :param freqs: Frequencies as, for example, returned by fftfreq
     :type flimit: List or tuple of floats
     :param flimit: The list or tuple defines the four corner frequencies
-        (f1,f2,f3,f4) of the cosine taper which is one between f2 and f3 and
+        (f1, f2, f3, f4) of the cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
     :type halfcosine: Boolean
     :param halfcosine: If True the taper is a half cosine function. If False it
-        is a quater cosine function.
+        is a quarter cosine function.
     :type sactaper: Boolean
     :param sactaper: If set to True the cosine taper already tapers at the
         corner frequency (SAC behaviour). By default, the taper has a value
@@ -67,8 +67,8 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None,
     .. rubric:: Example
 
     >>> tap = cosTaper(100, 1.0)
-    >>> tap2 = 0.5*(1+np.cos(np.linspace(np.pi,2*np.pi,50)))
-    >>> (tap[0:50]==tap2).all()
+    >>> tap2 = 0.5 * (1 + np.cos(np.linspace(np.pi, 2 * np.pi, 50)))
+    >>> np.allclose(tap[0:50], tap2)
     True
     >>> npts = 100
     >>> p = 0.1
@@ -98,8 +98,8 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None,
         idx2 += 1
         idx3 -= 1
 
-   # the taper at idx1 and idx4 equals zero and
-   # at idx2 and idx3 equals one
+    # the taper at idx1 and idx4 equals zero and
+    # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
     if halfcosine:
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
@@ -459,10 +459,10 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             fl1, fl2, fl3, fl4 = pre_filt
             if sacsim:
                 cos_win = c_sac_taper(freqs.size, freqs=freqs,
-                                flimit=(fl1, fl2, fl3, fl4))
+                                      flimit=(fl1, fl2, fl3, fl4))
             else:
                 cos_win = cosTaper(freqs.size, freqs=freqs,
-                             flimit=(fl1, fl2, fl3, fl4))
+                                   flimit=(fl1, fl2, fl3, fl4))
             data *= cos_win
         #if paz_remove.has_key('t_shift'):
         #    data *= np.exp(-1j*2*np.pi*freqs*paz_remove['t_shift'])
