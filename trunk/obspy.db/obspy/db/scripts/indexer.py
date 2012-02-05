@@ -192,8 +192,8 @@ Default path option is 'data=*.*'.""")
         help="Deletes and recreates the complete database at start up.")
     parser.add_option("--host", type="string", dest="host",
         help="Server host name. Default is 'localhost'.", default="localhost")
-    parser.add_option("--port", type="int", dest="port", default=8081,
-        help="Port number. Default is '8081'.")
+    parser.add_option("--port", type="int", dest="port", default=0,
+        help="Port number. If not given a free port will be picked.")
 
     (options, _) = parser.parse_args()
     # set level of verbosity
