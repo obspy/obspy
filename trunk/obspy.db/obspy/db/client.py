@@ -22,25 +22,30 @@ class Client(object):
     """
     Client for a database created by obspy.db.
     """
-    def __init__(self, url, debug=False):
+    def __init__(self, url=None, session=None, debug=False):
         """
         Initializes the client.
 
-        :type url: string
+        :type url: string, optional
         :param url: A string that indicates database dialect and connection
             arguments. See
             http://docs.sqlalchemy.org/en/latest/core/engines.html for more
             information about database dialects and urls.
+        :type session: class:`sqlalchemy.orm.session.Session`, optional
+        :param session: An existing database session object.
         :type debug: boolean, optional
         :param debug: Enables verbose output.
         """
-        self.engine = create_engine(url, encoding='utf-8',
-                               convert_unicode=True)
-        Base.metadata.create_all(self.engine,  # @UndefinedVariable
-                                 checkfirst=True)
-        # enable verbosity after table creations
-        self.engine.echo = debug
-        self.session = sessionmaker(bind=self.engine)
+        if url:
+            self.engine = create_engine(url, encoding='utf-8',
+                                        convert_unicode=True)
+            Base.metadata.create_all(self.engine,  # @UndefinedVariable
+                                     checkfirst=True)
+            # enable verbosity after table creations
+            self.engine.echo = debug
+            self.session = sessionmaker(bind=self.engine)
+        else:
+            self.session = session
 
     def getNetworkIDs(self):
         """
@@ -102,6 +107,9 @@ class Client(object):
         :type station: string, optional
         :param station: Filter result by given station id if given. Defaults
             to ``None``.
+        :type location: string, optional
+        :param location: Filter result by given location id if given. Defaults
+            to ``None``.
         """
         session = self.session()
         query = session.query(WaveformChannel.channel)
@@ -116,10 +124,10 @@ class Client(object):
         session.close()
         return [r[0] for r in results if len(r) == 1]
 
-    def getLatency(self, network=None, station=None, location=None,
-                   channel=None):
+    def getEndtimes(self, network=None, station=None, location=None,
+                    channel=None):
         """
-        Generates a list of latency values for each channel.
+        Generates a list of last endtimes for each channel.
         """
         # build up query
         session = self.session()

@@ -137,24 +137,24 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('EHZ' in data)
         self.assertTrue('BHZ' in data)
 
-    def test_getLatency(self):
+    def test_getEndtimes(self):
         """
-        Tests for method getLatency.
+        Tests for method getEndtimes.
         """
         # 1
-        data = self.client.getLatency()
+        data = self.client.getEndtimes()
         self.assertEquals(len(data), 2)
         self.assertEquals(data['BW.MANZ..EHZ'],
                           UTCDateTime(2012, 1, 2, 23, 59, 59, 999999))
         self.assertEquals(data['GE.FUR.00.BHZ'],
                           UTCDateTime(2012, 1, 1, 8, 19, 59, 990000))
         # 2 - using wildcards
-        data = self.client.getLatency(network='?W', station='M*', location='')
+        data = self.client.getEndtimes(network='?W', station='M*', location='')
         self.assertEquals(len(data), 1)
         self.assertEquals(data['BW.MANZ..EHZ'],
                           UTCDateTime(2012, 1, 2, 23, 59, 59, 999999))
         # 3 - no data
-        data = self.client.getLatency(network='GE', station='*', location='')
+        data = self.client.getEndtimes(network='GE', station='*', location='')
         self.assertEquals(len(data), 0)
 
     def test_getWaveformPath(self):
