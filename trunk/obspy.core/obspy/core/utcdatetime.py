@@ -464,7 +464,7 @@ class UTCDateTime(object):
         >>> dt.weekday()
         2
         """
-        return self.getDateTime().weekday
+        return self.getDateTime().weekday()
 
     weekday = property(getWeekday)
 
