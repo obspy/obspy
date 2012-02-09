@@ -493,6 +493,32 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # clean up
         os.remove(tempfile)
 
+    def test_issue341(self):
+        """
+        Tests issue #341
+
+        Read/write of MiniSEED files with huge sampling rates/delta values.
+        """
+        tempfile = NamedTemporaryFile().name
+        # 1 - sampling rate
+        st = read()
+        tr = st[0]
+        tr.stats.sampling_rate = 10000000
+        tr.write(tempfile, format="MSEED")
+        # read again
+        st = read(tempfile)
+        self.assertEquals(st[0].stats.sampling_rate, 10000000)
+        # 2 - delta
+        st = read()
+        tr = st[0]
+        tr.stats.delta = 10000000
+        tr.write(tempfile, format="MSEED")
+        # read again
+        st = read(tempfile)
+        self.assertEquals(st[0].stats.delta, 10000000)
+        # clean up
+        os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
