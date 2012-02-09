@@ -21,13 +21,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
 
     def test_raiseOnEmptyFile(self):
         """
-        Test case ensures that empty files do raise
-        warnings.
+        Test case ensures that empty files do raise warnings.
         """
         tmpfile = NamedTemporaryFile().name
         # create empty file
         open(tmpfile, 'wb').close()
         formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
+        # using format keyword
         for ep in formats_ep.values():
             isFormat = load_entry_point(ep.dist.key,
                                         'obspy.plugin.waveform.' + ep.name,
@@ -297,6 +297,18 @@ class WaveformPluginsTestCase(unittest.TestCase):
         st1 = read(os.path.join(path, 'data', 'slist.ascii.bz2'))
         st2 = read(os.path.join(path, 'data', 'slist.ascii'))
         self.assertTrue(st1 == st2)
+
+    def test_raiseOnUnknownFormat(self):
+        """
+        Test case for issue #338:
+        """
+        tmpfile = NamedTemporaryFile().name
+        # create empty file
+        open(tmpfile, 'wb').close()
+        # using format keyword
+        self.assertRaises(TypeError, read, tmpfile)
+        # cleanup
+        os.remove(tmpfile)
 
 
 def suite():

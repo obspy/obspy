@@ -282,6 +282,8 @@ def _read(filename, format=None, headonly=False, **kwargs):
             # check format
             if isFormat(filename):
                 break
+        else:
+            raise TypeError('Unknown format for file %s' % filename)
     else:
         # format given via argument
         format = format.upper()
