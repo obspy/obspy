@@ -461,7 +461,7 @@ class UTCDateTime(object):
         .. rubric:: Example
 
         >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
-        >>> dt.weekday()
+        >>> dt.weekday
         2
         """
         return self.getDateTime().weekday()

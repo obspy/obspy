@@ -716,6 +716,14 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime("2012-03-04T11:05:09.123456Z")
         self.assertEquals(dt.toordinal(), 734566)
 
+    def test_weekday(self):
+        """
+        Tests weekday method.
+        """
+        dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
+        self.assertEquals(dt.weekday, 2)
+        self.assertEquals(dt.getWeekday(), 2)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
