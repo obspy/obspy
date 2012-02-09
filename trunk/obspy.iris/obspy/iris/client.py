@@ -1431,19 +1431,9 @@ class Client(object):
 
         >>> from obspy.iris import Client
         >>> client = Client()
-        >>> events = client.event(minmag=9.0)
-        >>> print events  # doctest: +ELLIPSIS
-        <BLANKLINE>
-        <quakeml xmlns:iris="http://www.iris.edu/ws/event/origins/" ...
-         <eventParameters publicID="smi:www.iris.edu/ws/event/query">
-          <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
-           ...
-           <type>earthquake</type>
-           <description>
-            <type>Flinn-Engdahl region (228)</type>
-            <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
-           </description>
-           ...
+        >>> events = client.event(minmag=9.1)
+        >>> print(events)  # doctest: +ELLIPSIS
+        <?xml version="1.0" encoding="UTF-8"?><q:quakeml ...
         """
         # convert UTCDateTimes to string
         try:
