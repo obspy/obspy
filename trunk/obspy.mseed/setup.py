@@ -60,6 +60,9 @@ KEYWORDS = ['ObsPy', 'seismology', 'MSEED', 'MiniSEED', 'waveform',
             'seismograms']
 INSTALL_REQUIRES = ['obspy.core']
 ENTRY_POINTS = {
+    'console_scripts': [
+        'obspy-mseed-recordanalyzer = obspy.mseed.scripts.recordanalyzer:main',
+    ],
     'obspy.plugin.waveform': [
         'MSEED = obspy.mseed.core',
     ],
@@ -88,7 +91,7 @@ def setupLibMSEED():
     extra_link_args = []
     extra_compile_args = []
     src_obspy = os.path.join('obspy', 'mseed', 'src') + os.sep
-    src =  os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
+    src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
     # get symbols for libmseed
     lines = open(src + 'libmseed.def', 'r').readlines()[2:]
     symbols = [s.strip() for s in lines if s.strip() != '']
