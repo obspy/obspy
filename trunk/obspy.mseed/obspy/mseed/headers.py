@@ -140,6 +140,7 @@ class blkt_100_s(C.Structure):
         ('flags', C.c_byte),
         ('reserved', C.c_ubyte * 3),
     ]
+blkt_100 = blkt_100_s
 
 
 # Blockette 200, Generic Event Detection (without header)

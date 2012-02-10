@@ -10,6 +10,7 @@ from itertools import izip
 from math import log
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
+from obspy.mseed.headers import blkt_100_s
 import ctypes as C
 import numpy as np
 import os
@@ -397,6 +398,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     trace_attributes = []
     use_blkt_1001 = 0
+    use_blkt_100 = False
     # The data might need to be modified. To not modify the input data keep
     # references of which data to finally write.
     trace_data = []
@@ -416,6 +418,12 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         if starttime % 100 != 0 or \
            (1.0 / trace.stats.sampling_rate * HPTMODULUS) % 100 != 0:
             use_blkt_1001 += 1
+
+        # Determine if a blockette 100 will be needed to represent the input
+        # sample rate or if the sample rate in the fixed section of the data
+        # header will suffice (see ms_genfactmult in libmseed/genutils.c)
+        if trace.stats.starttime > 32727.0 or trace.stats.starttime < 0.0:
+            use_blkt_100 = True
 
         # Set data quality to indeterminate (= D) if it is not already set.
         try:
@@ -599,7 +607,23 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             blkt1001 = C.c_char(' ')
             C.memset(C.pointer(blkt1001), 0, size)
             ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
-                                       size, 1001, 0)
+                                                 size, 1001, 0)
+            # Usually returns a pointer to the added blockette in the
+            # blockette link chain and a NULL pointer if it fails.
+            # NULL pointers have a false boolean value according to the
+            # ctypes manual.
+            if bool(ret_val) is False:
+                clibmseed.msr_free(C.pointer(msr))
+                del mstg, msr
+                raise Exception('Error in msr_addblockette')
+        # Only use Blockette 100 if necessary.
+        if use_blkt_100:
+            size = C.sizeof(blkt_100_s)
+            blkt100 = C.c_char(' ')
+            C.memset(C.pointer(blkt100), 0, size)
+            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
+                                                 size, 100, 0)
+            
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the

@@ -261,6 +261,7 @@ def _getRecordInformation(file_object, offset=0):
     """
     initial_position = file_object.tell()
     record_start = initial_position
+    samp_rate = None
 
     info = {}
 
@@ -342,20 +343,8 @@ def _getRecordInformation(file_object, offset=0):
         # Time correction is in units of 0.0001 seconds.
         starttime += time_correction * 0.0001
 
-    # Calculate the sample rate according to the SEED manual.
-    if (samp_rate_factor > 0) and (samp_rate_mult) > 0:
-        samp_rate = float(samp_rate_factor * samp_rate_mult)
-    elif (samp_rate_factor > 0) and (samp_rate_mult) < 0:
-        samp_rate = -1.0 * float(samp_rate_factor) / float(samp_rate_mult)
-    elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
-        samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
-    elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
-        samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
-
-    info['samp_rate'] = samp_rate
-
-    # Traverse the blockettes and parse Blockettes 500, 1000 and/or 1001 if
-    # any of those is found.
+    # Traverse the blockettes and parse Blockettes 100, 500, 1000 and/or 1001
+    # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
         blkt_type, blkt_offset = unpack('%sHH' % endian, file_object.read(4))
@@ -376,6 +365,22 @@ def _getRecordInformation(file_object, offset=0):
             file_object.seek(14, 1)
             mu_sec = unpack('%sb' % endian, file_object.read(1))[0]
             starttime += float(mu_sec) / 1E6
+        elif blkt_type == 100:
+            samp_rate = unpack('%sf' % endian, file_object.read(4))[0]
+
+    # If samprate not set via blockette 100 calculate the sample rate according
+    # to the SEED manual.
+    if not samp_rate:
+        if (samp_rate_factor > 0) and (samp_rate_mult) > 0:
+            samp_rate = float(samp_rate_factor * samp_rate_mult)
+        elif (samp_rate_factor > 0) and (samp_rate_mult) < 0:
+            samp_rate = -1.0 * float(samp_rate_factor) / float(samp_rate_mult)
+        elif (samp_rate_factor < 0) and (samp_rate_mult) > 0:
+            samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
+        elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
+            samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
+
+    info['samp_rate'] = samp_rate
 
     info['starttime'] = starttime
     # Endtime is the time of the last sample.

@@ -143,7 +143,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         # create stream object
         data = np.array([395.07809448, 395.0782, 1060.28112793, -1157.37487793,
-                         - 1236.56237793, 355.07028198, -1181.42175293],
+                         -1236.56237793, 355.07028198, -1181.42175293],
                         dtype=np.float32)
         st = Stream([Trace(data=data)])
         tempfile = NamedTemporaryFile().name
@@ -503,19 +503,19 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # 1 - sampling rate
         st = read()
         tr = st[0]
-        tr.stats.sampling_rate = 10000000
+        tr.stats.sampling_rate = 1000000000.0
         tr.write(tempfile, format="MSEED")
         # read again
         st = read(tempfile)
-        self.assertEquals(st[0].stats.sampling_rate, 10000000)
+        self.assertEquals(st[0].stats.sampling_rate, 1000000000.0)
         # 2 - delta
         st = read()
         tr = st[0]
-        tr.stats.delta = 10000000
+        tr.stats.delta = 10000000.0
         tr.write(tempfile, format="MSEED")
         # read again
         st = read(tempfile)
-        self.assertEquals(st[0].stats.delta, 10000000)
+        self.assertAlmostEquals(st[0].stats.delta, 10000000.0, 0)
         # clean up
         os.remove(tempfile)
 
