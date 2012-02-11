@@ -345,8 +345,7 @@ def write(headdict, data, f, inplace=False):
     n = len(data)
     clibgse2.buf_init(None)
     #
-    chksum = C.c_int32(0)
-    chksum = clibgse2.check_sum(data, n, chksum)
+    chksum = clibgse2.check_sum(data, n, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
