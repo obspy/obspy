@@ -134,42 +134,33 @@ class ClientTestCase(unittest.TestCase):
                         'port': 18001,
                         'priority': 1,
                         'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
-        # 4 - BW network via bhlsa04.knmi.nl:18002
-        client = Client(host="bhlsa03.knmi.nl", port=18002)
-        results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEquals(results,
-            {'BW...': [{'priority': 2, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'webdc.eu', 'end': None, 'port': 18002},
-                       {'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'erde.geophysik.uni-muenchen.de', 'end': None,
-                        'port': 18001}]})
-        # 5 - IV network via webdc.eu:18001
+        # 4 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('IV', '', dt, dt + 1)
         self.assertEquals(results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
-        # 6 - IV network via webdc.eu:18002
+        # 5 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('IV', '', dt, dt + 1)
         self.assertEquals(results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
-        # 7 - GE.APE via webdc.eu:18001
+        # 6 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001)
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEquals(results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'webdc.eu', 'end': None, 'port': 18002}]})
-        # 8 - GE.APE via webdc.eu:18002
+        # 7 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEquals(results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'webdc.eu', 'end': None, 'port': 18002}]})
-        #9 - unknown network 00 via webdc.eu:18002
+        # 8 - unknown network 00 via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002)
         results = client.getRouting('00', '', dt, dt + 1)
         self.assertEquals(results, {})
