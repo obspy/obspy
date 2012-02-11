@@ -158,27 +158,42 @@ class UTCDateTime(object):
 
     .. rubric:: _`Precision`
 
-    The UTCDateTime class works on a default precision of 6 digits. You may
-    change that either by,
+    The :class:`UTCDateTime` class works with a default precision of ``6``
+    digits which effects the comparison of date/time values, e.g.:
+
+    >>> dt = UTCDateTime(0)
+    >>> dt2 = UTCDateTime(0.00001)
+    >>> dt3 = UTCDateTime(0.0000001)
+    >>> print(dt.precision)
+    6
+    >>> dt == dt2  # 5th digit is within current precision
+    False
+    >>> dt == dt3  # 7th digit will be neglected
+    True
+
+    You may change that behaviour either by,
 
     (1) using the ``precision`` keyword during object initialization:
 
-        >>> from obspy.core import UTCDateTime
-        >>> dt = UTCDateTime(precision=4)
+        >>> dt = UTCDateTime(0, precision=4)
+        >>> dt2 = UTCDateTime(0.00001, precision=4)
         >>> print(dt.precision)
         4
-        >>> dt = UTCDateTime()  # default precision is used
-        >>> print(dt.precision)
-        6
+        >>> dt == dt2
+        True
 
-    (2) Set it system wide using a monkey patch:
+    (2) or set it the class attribute ``DEFAULT_PRECISION`` for all new
+        :class:`UTCDateTime` objects using a monkey patch:
 
         >>> UTCDateTime.DEFAULT_PRECISION = 4
-        >>> dt = UTCDateTime()
+        >>> dt = UTCDateTime(0)
+        >>> dt2 = UTCDateTime(0.00001)
         >>> print(dt.precision)
         4
+        >>> dt == dt2
+        True
 
-        Don't forget to reset the default precision if not needed anymore!
+        Don't forget to reset ``DEFAULT_PRECISION`` if not needed anymore!
 
         >>> UTCDateTime.DEFAULT_PRECISION = 6
 
@@ -556,6 +571,9 @@ class UTCDateTime(object):
         """
         return self.utctimetuple().tm_yday
 
+    """
+    Gets/sets Julian day of the current UTCDateTime object.
+    """
     julday = property(getJulday)
 
     def timetuple(self):
