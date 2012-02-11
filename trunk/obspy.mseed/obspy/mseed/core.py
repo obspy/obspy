@@ -398,7 +398,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     trace_attributes = []
     use_blkt_1001 = 0
-    use_blkt_100 = False
+
     # The data might need to be modified. To not modify the input data keep
     # references of which data to finally write.
     trace_data = []
@@ -422,8 +422,11 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Determine if a blockette 100 will be needed to represent the input
         # sample rate or if the sample rate in the fixed section of the data
         # header will suffice (see ms_genfactmult in libmseed/genutils.c)
-        if trace.stats.starttime > 32727.0 or trace.stats.starttime < 0.0:
+        if trace.stats.sampling_rate >= 32727.0 or \
+           trace.stats.sampling_rate <= (1.0 / 32727.0):
             use_blkt_100 = True
+        else:
+            use_blkt_100 = False
 
         # Set data quality to indeterminate (= D) if it is not already set.
         try:
