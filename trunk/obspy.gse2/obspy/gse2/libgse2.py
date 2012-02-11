@@ -245,14 +245,10 @@ def verifyChecksum(fh, data, version=2):
     :type version: Int
     :param version: GSE version, either 1 or 2, defaults to 2.
     """
-    # XXX: GSE1 seems to have always negative values but the same numeric value
-    # as GSE2
-    chksum_data = clibgse2.check_sum(data, len(data), C.c_int32())
-    if version == 2:
-        chksum_data = abs(chksum_data)
+    chksum_data = clibgse2.check_sum(data, len(data), C.c_int32(0))
     # find checksum within file
     buf = fh.readline()
-    chksum_file = -1
+    chksum_file = 0
     CHK_LINE = 'CHK%d' % version
     while buf:
         if buf.startswith(CHK_LINE):
@@ -349,8 +345,8 @@ def write(headdict, data, f, inplace=False):
     n = len(data)
     clibgse2.buf_init(None)
     #
-    chksum = C.c_int32()
-    chksum = abs(clibgse2.check_sum(data, n, chksum))
+    chksum = C.c_int32(0)
+    chksum = clibgse2.check_sum(data, n, chksum)
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
