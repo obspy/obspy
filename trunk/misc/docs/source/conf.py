@@ -234,7 +234,7 @@ intersphinx_mapping = {
     'numpy': ('http://docs.scipy.org/doc/numpy/', None),
     'scipy': ('http://docs.scipy.org/doc/scipy/reference/', None),
     'matplotlib': ('http://matplotlib.sourceforge.net/', None),
-    'sqlalchemy': ('http://docs.sqlalchemy.org/', None),
+    'sqlalchemy': ('http://docs.sqlalchemy.org/en/latest/', None),
 }
 
 # generate automatically stubs
