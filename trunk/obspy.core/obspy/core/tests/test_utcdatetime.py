@@ -724,6 +724,34 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertEquals(dt.weekday, 2)
         self.assertEquals(dt.getWeekday(), 2)
 
+    def test_defaultPrecision(self):
+        """
+        Tests setting of default precisions via monkey patching.
+        """
+        dt = UTCDateTime()
+        # instance
+        self.assertEqual(dt.precision, 6)
+        self.assertEqual(dt.DEFAULT_PRECISION, 6)
+        # class
+        self.assertEqual(UTCDateTime.DEFAULT_PRECISION, 6)
+        dt = UTCDateTime()
+        # set new default precision
+        UTCDateTime.DEFAULT_PRECISION = 3
+        dt2 = UTCDateTime()
+        # first instance should be unchanged
+        self.assertEqual(dt.precision, 6)
+        # but class attribute has changed
+        self.assertEqual(dt.DEFAULT_PRECISION, 3)
+        # class
+        self.assertEqual(UTCDateTime.DEFAULT_PRECISION, 3)
+        # second instance should use new precision
+        self.assertEqual(dt2.DEFAULT_PRECISION, 3)
+        self.assertEqual(dt2.precision, 3)
+        # cleanup
+        UTCDateTime.DEFAULT_PRECISION = 6
+        # class
+        self.assertEqual(UTCDateTime.DEFAULT_PRECISION, 6)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

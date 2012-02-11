@@ -36,7 +36,8 @@ class UTCDateTime(object):
         as first input argument.
     :type precision: int, optional
     :param precision: Sets the precision used by the rich comparison operators.
-        Defaults to ``6`` digits after the decimal point.
+        Defaults to ``6`` digits after the decimal point. See also `Precision`_
+        section below.
 
     .. versionchanged:: 0.5.1
         UTCDateTime is no longer based on Python's datetime.datetime class
@@ -155,16 +156,43 @@ class UTCDateTime(object):
         >>> UTCDateTime(dt)
         UTCDateTime(2009, 5, 24, 8, 28, 12, 5001)
 
+    .. rubric:: _`Precision`
+
+    The UTCDateTime class works on a default precision of 6 digits. You may
+    change that either by,
+
+    (1) using the ``precision`` keyword during object initialization:
+
+        >>> from obspy.core import UTCDateTime
+        >>> dt = UTCDateTime(precision=4)
+        >>> print(dt.precision)
+        4
+        >>> dt = UTCDateTime()  # default precision is used
+        >>> print(dt.precision)
+        6
+
+    (2) Set it system wide using a monkey patch:
+
+        >>> UTCDateTime.DEFAULT_PRECISION = 4
+        >>> dt = UTCDateTime()
+        >>> print(dt.precision)
+        4
+
+        Don't forget to reset the default precision if not needed anymore!
+
+        >>> UTCDateTime.DEFAULT_PRECISION = 6
+
     .. _ISO8601:2004: http://en.wikipedia.org/wiki/ISO_8601
     """
     timestamp = 0.0
+    DEFAULT_PRECISION = 6
 
     def __init__(self, *args, **kwargs):
         """
         Creates a new UTCDateTime object.
         """
         # set default precision
-        self.precision = kwargs.pop('precision', 6)
+        self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # iso8601 flag
         iso8601 = kwargs.pop('iso8601', False) == True
         # check parameter
@@ -1037,7 +1065,7 @@ class UTCDateTime(object):
 
     def getPrecision(self):
         """
-        Returns precision used by the rich comparison operators.
+        Returns precision of current UTCDateTime object.
 
         :return: int
 
@@ -1053,7 +1081,7 @@ class UTCDateTime(object):
 
     def setPrecision(self, value=6):
         """
-        Set precision used by the rich comparison operators.
+        Set precision of current UTCDateTime object.
 
         :type value: int, optional
         :param value: Precision value used by the rich comparison operators.

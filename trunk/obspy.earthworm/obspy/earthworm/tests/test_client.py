@@ -16,6 +16,14 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.earthworm.client.Client.
     """
+    def setUp(self):
+        # Monkey patch: set lower default precision of all UTCDateTime objects
+        UTCDateTime.DEFAULT_PRECISION = 4
+
+    def tearDown(self):
+        # restore default precision of all UTCDateTime objects
+        UTCDateTime.DEFAULT_PRECISION = 6
+
     def test_getWaveform(self):
         """
         Tests getWaveform method.
