@@ -236,8 +236,8 @@ def getRecordInformation(file_or_file_object, offset=0):
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("test.mseed")
     >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'record_length': 4096, 'data_quality_flags': 0, 'samp_rate': 40.0,
-     'byteorder': '>', 'encoding': 11, 'activity_flags': 0, 'excess_bytes': 0L,
+    {'record_length': 4096, 'data_quality_flags': 0, 'activity_flags': 0,
+     'byteorder': '>', 'encoding': 11, 'samp_rate': 40.0, 'excess_bytes': 0L,
      'filesize': 8192L,
      'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 5980,
      'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
