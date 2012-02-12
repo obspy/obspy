@@ -2,4 +2,4 @@ dev:
  * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate 
  * added UTCDateTime.DEFAULT_PRECISION
  * import of an unsupported waveform will result into a TypeError [#338]
- * added UTCDateTime.now() and UTCDateTime.utcnow() methods
+ * added compatibility methods for AttribDict and UTCDateTime

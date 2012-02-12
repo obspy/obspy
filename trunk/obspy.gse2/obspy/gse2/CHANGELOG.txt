@@ -1,2 +1,2 @@
 dev:
- * Bugfixing checksum calculation of GSE2/GSE1
+ * bugfixing checksum calculation of GSE2/GSE1

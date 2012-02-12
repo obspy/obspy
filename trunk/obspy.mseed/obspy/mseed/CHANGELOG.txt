@@ -1,3 +1,4 @@
 dev:
- * Adding read/write support for very large and very small sampling rates using
+ * adding read/write support for very large and very small sampling rates using
    blockette 100 in MiniSEED
+ * new obspy-mseed-recordanalyzer script for analyzing SEED files via console

@@ -1,0 +1,2 @@
+dev:
+ * added client for a database created by obspy.db
