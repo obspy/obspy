@@ -28,6 +28,7 @@ import os
 import platform
 import ctypes as C
 import doctest
+import warnings
 import numpy as np
 from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific
@@ -256,6 +257,14 @@ def verifyChecksum(fh, data, version=2):
             break
         buf = fh.readline()
     if chksum_data != chksum_file:
+        # 2012-02-12, should be deleted in a year from now
+        if abs(chksum_data) == abs(chksum_file):
+            msg = "Checksum differs only in absolute value. If this file " + \
+                "was written with ObsPy GSE2, this is due to a bug in " + \
+                "the obspy.gse2.write routine (resolved with [3431]), " + \
+                "and thus this message can be safely ignored."
+            warnings.warn(msg, UserWarning)
+            return
         msg = "Mismatching checksums, CHK %d != CHK %d"
         raise ChksumError(msg % (chksum_data, chksum_file))
     return
