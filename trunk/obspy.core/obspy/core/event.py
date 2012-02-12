@@ -525,27 +525,29 @@ class Catalog(object):
         """
         raise NotImplementedError
 
-    def plot(self, *args, **kwargs):
+    def plot(self, resolution='l', **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
         """
         from mpl_toolkits.basemap import Basemap
         import matplotlib.pyplot as plt
-        map = Basemap(resolution='l')
-        # draw coastlines, country boundaries, fill continents.
+        fig = plt.figure()
+        fig.add_axes([0, 0, 1, 1])
+        map = Basemap(resolution=resolution)
+        # draw coast lines, country boundaries, fill continents.
         map.drawcoastlines()
         map.drawcountries()
-        map.fillcontinents(color='#EEEEEE')
+        map.fillcontinents(color='0.8')
         # draw the edge of the map projection region (the projection limb)
         map.drawmapboundary()
         # lat/lon coordinates
         lats = []
         lons = []
         labels = []
-        for event in self.events:
+        for i, event in enumerate(self.events):
             lats.append(event.preferred_origin.latitude)
             lons.append(event.preferred_origin.longitude)
-            labels.append(event.preferred_origin.time)
+            labels.append(' #%d' % i)
         # compute the native map projection coordinates for events.
         x, y = map(lons, lats)
         # plot filled circles at the locations of the events.
@@ -557,10 +559,15 @@ class Catalog(object):
 
 
 if __name__ == '__main__':
-    import StringIO
-    from obspy.neries import Client
-    data = Client(user='test@obspy.org').getLatestEvents(20)
-    cat = _readQuakeML(StringIO.StringIO(data))
+    # neries
+    #from obspy.neries import Client
+    #data = Client(user='test@obspy.org').getLatestEvents(20)
+    #catalog = _readQuakeML(StringIO.StringIO(data))
+    # iris
+    from obspy.iris import Client
+    data = Client(user='test@obspy.org').event(minmag=9.1)
+    catalog = _readQuakeML(StringIO.StringIO(data))
+    # seishub
     #cat = _readSeisHubEventXML('obspyck.xml')
-    print cat
-#    cat.plot()
+    print catalog
+    catalog.plot()
