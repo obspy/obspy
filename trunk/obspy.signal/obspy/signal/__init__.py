@@ -16,8 +16,8 @@ different bandpass, lowpass, highpass, bandstop and FIR filter.
 .. warning::
 
     Before filtering you should make sure that data is demeaned/detrended, e.g.
-    using :func:`obspy.signal.detrend.simple`. Otherwise there can be massive
-    artifacts from filtering.
+    using :meth:`obspy.core.stream.Stream.detrend`. Otherwise there can be
+    massive artifacts from filtering.
 
 The following example shows how to highpass a seismogram at 1.0Hz.
 In the example only the first trace is processed to see the changes in
