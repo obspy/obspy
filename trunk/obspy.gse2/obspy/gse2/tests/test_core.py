@@ -293,15 +293,14 @@ class CoreTestCase(unittest.TestCase):
         # check last 8 samples
         self.assertEqual(st[1].data[-8:].tolist(), data2)
 
-
     def test_readDos(self):
         """
         Read file with dos newlines / encoding, that is
         Line Feed (LF) and Carriage Return (CR)
         see #355
         """
-        filedos  = os.path.join(self.path, 'data', 
-                                'loc_RJOB20050831023349_first100_dos.z')
+        filedos = os.path.join(self.path, 'data',
+                               'loc_RJOB20050831023349_first100_dos.z')
         fileunix = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
         st = read(filedos, verify_chksum=True)
         st2 = read(fileunix, verify_chksum=True)

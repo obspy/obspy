@@ -626,7 +626,6 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             C.memset(C.pointer(blkt100), 0, size)
             ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
                                                  size, 100, 0)
-            
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
