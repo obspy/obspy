@@ -1222,6 +1222,50 @@ class Trace(object):
         proc_info = "trigger:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
 
+    def resample(self, num, window=None):
+        """
+        Resample trace data using Fourier method.
+
+        :type num: int
+        :param num: The number of samples in the resampled signal.
+        :type window: array_like, callable, string, float, or tuple, optional
+        :param window: Specifies the window applied to the signal in the
+            Fourier domain. See :func:`scipy.signal.resample` for details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
+        Uses :func:`scipy.signal.resample`. The resampled signal starts at the
+        same value as x but is sampled with a spacing of
+        ``len(data) / num * (spacing of data)``. Because a Fourier method is
+        used, the signal is assumed to be periodic.
+
+        .. rubric:: Example
+
+        >>> tr = Trace(data=np.array([0.5, 0, 0.5, 1, 0.5, 0, 0.5, 1]))
+        >>> len(tr)
+        8
+        >>> tr.stats.delta
+        1.0
+        >>> tr.resample(16)
+        >>> len(tr)
+        16
+        >>> tr.stats.delta
+        0.5
+        >>> tr.data  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        array([ 0.5       ,  0.14644661,  0.        ,  0.14644661,  0.5 ...
+        """
+        from scipy.signal import resample
+        factor = float(self.stats.npts) / num
+        self.data = resample(self.data, num, window=window)
+        self.stats.delta *= factor
+
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
         Downsample trace data by an integer factor.

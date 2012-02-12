@@ -1,4 +1,5 @@
 dev:
+ * new resample method for Trace and Stream object
  * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate 
  * added UTCDateTime.DEFAULT_PRECISION
  * import of an unsupported waveform will result into a TypeError [#338]

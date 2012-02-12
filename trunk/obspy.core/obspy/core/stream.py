@@ -1745,6 +1745,49 @@ class Stream(object):
         for tr in self:
             tr.trigger(type, **options)
 
+
+    def resample(self, num, window=None):
+        """
+        Resample data in all traces of stream using Fourier method.
+
+        :type num: int
+        :param num: The number of samples in the resampled signal.
+        :type window: array_like, callable, string, float, or tuple, optional
+        :param window: Specifies the window applied to the signal in the
+            Fourier domain. See :func:`scipy.signal.resample` for details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of every trace.
+
+        Uses :func:`scipy.signal.resample`. The resampled signal starts at the
+        same value as x but is sampled with a spacing of
+        ``len(data) / num * (spacing of data)``. Because a Fourier method is
+        used, the signal is assumed to be periodic.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> st.resample(300)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
+        """
+        for tr in self:
+            tr.resample(num, window=window)
+
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
         Downsample data in all traces of stream by an integer factor.
