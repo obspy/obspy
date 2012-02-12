@@ -11,8 +11,22 @@ class StreamTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.stream.Stream.
     """
+    def test_filter(self):
+        """
+        Tests the filter method of the Stream object.
 
-    def setUp(self):
+        Basically three scenarios are tested (with differing filter options):
+        - filtering with in_place=False:
+            - is original stream unchanged?
+            - is data of filtered stream's traces the same as if done by hand
+            - is processing information present in filtered stream's traces
+        - filtering with in_place=True:
+            - is data of filtered stream's traces the same as if done by hand
+            - is processing information present in filtered stream's traces
+        - filtering with bad arguments passed to stream.filter():
+            - is a TypeError properly raised?
+            - after all bad filter calls, is the stream still unchanged?
+        """
         # set specific seed value such that random numbers are reproducible
         np.random.seed(815)
         header = {'network': 'BW', 'station': 'BGLD',
@@ -32,32 +46,15 @@ class StreamTestCase(unittest.TestCase):
         header['npts'] = 50668
         trace4 = Trace(data=np.random.randint(0, 1000, 50668),
                        header=deepcopy(header))
-        self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
+        mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
         trace = Trace(data=np.random.randint(0, 1000, 12000), header=header)
-        self.gse2_stream = Stream(traces=[trace])
-
-    def test_filter(self):
-        """
-        Tests the filter method of the Stream object.
-
-        Basically three scenarios are tested (with differing filter options):
-        - filtering with in_place=False:
-            - is original stream unchanged?
-            - is data of filtered stream's traces the same as if done by hand
-            - is processing information present in filtered stream's traces
-        - filtering with in_place=True:
-            - is data of filtered stream's traces the same as if done by hand
-            - is processing information present in filtered stream's traces
-        - filtering with bad arguments passed to stream.filter():
-            - is a TypeError properly raised?
-            - after all bad filter calls, is the stream still unchanged?
-        """
+        gse2_stream = Stream(traces=[trace])
         # streams to run tests on:
-        streams = [self.mseed_stream, self.gse2_stream]
+        streams = [mseed_stream, gse2_stream]
         # drop the longest trace of the first stream to save a second
         streams[0].pop()
         streams_bkp = deepcopy(streams)
@@ -146,7 +143,7 @@ class StreamTestCase(unittest.TestCase):
         by the decimate method on the trace object.
         """
         # create test Stream
-        st = self.mseed_stream
+        st = read()
         st_bkp = st.copy()
         # test if all traces are decimated as expected
         st.decimate(10, strict_length=False)
