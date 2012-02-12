@@ -1,0 +1,3 @@
+dev:
+ * Adding read/write support for very large and very small sampling rates using
+   blockette 100 in MiniSEED
