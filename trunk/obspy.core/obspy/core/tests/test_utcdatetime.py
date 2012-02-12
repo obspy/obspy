@@ -407,11 +407,11 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(1970, 1, 1, 12, 23, 34, 456789)
         # as function
-        self.assertEquals(dt.getDate(), datetime.date(1970, 1, 1))
-        self.assertEquals(dt.getTime(), datetime.time(12, 23, 34, 456789))
-        self.assertEquals(dt.getDateTime(),
+        self.assertEquals(dt._getDate(), datetime.date(1970, 1, 1))
+        self.assertEquals(dt._getTime(), datetime.time(12, 23, 34, 456789))
+        self.assertEquals(dt._getDateTime(),
                           datetime.datetime(1970, 1, 1, 12, 23, 34, 456789))
-        self.assertAlmostEquals(dt.getTimeStamp(), 44614.456789)
+        self.assertAlmostEquals(dt._getTimeStamp(), 44614.456789)
         # as property
         self.assertEquals(dt.date, datetime.date(1970, 1, 1))
         self.assertEquals(dt.time, datetime.time(12, 23, 34, 456789))
@@ -722,7 +722,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(2008, 10, 1, 12, 30, 35, 45020)
         self.assertEquals(dt.weekday, 2)
-        self.assertEquals(dt.getWeekday(), 2)
+        self.assertEquals(dt._getWeekday(), 2)
 
     def test_defaultPrecision(self):
         """
