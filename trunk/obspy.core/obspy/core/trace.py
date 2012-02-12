@@ -1265,6 +1265,9 @@ class Trace(object):
         factor = float(self.stats.npts) / num
         self.data = resample(self.data, num, window=window)
         self.stats.delta *= factor
+        # add processing information to the stats dictionary
+        proc_info = "resample:%d:%s" % (num, window)
+        self._addProcessingInfo(proc_info)
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
