@@ -47,13 +47,13 @@ def guessDelta(channel):
 
     .. rubric:: Example
 
-    >>> print guessDelta('BHZ')
+    >>> guessDelta('BHZ')
     0.1
 
-    >>> print guessDelta('H')
+    >>> guessDelta('H')
     0.0125
 
-    >>> print guessDelta('XZY')  # doctest: +SKIP
+    >>> guessDelta('XZY')  # doctest: +SKIP
     0
     """
     try:
