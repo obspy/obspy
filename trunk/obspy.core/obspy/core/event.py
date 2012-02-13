@@ -325,13 +325,18 @@ class Event(AttribDict):
     """
     Seismological event containing origins, picks, magnitudes, etc.
     """
+    public_id = None
+    type = None
+    type_certainty = None
+    description = None
+    comment = None
+    creation_info = None
+    picks = []
+    amplitudes = []
+    station_magnitudes = []
+    focal_mechanism = []
     origins = []
     magnitudes = []
-    amplitudes = []
-    picks = []
-    focal_mechanism = []
-    station_magnitudes = []
-    type = None
 
     def __str__(self):
         out = '%s | %+7.3f, %+8.3f' % (self.preferred_origin.time,
@@ -344,78 +349,83 @@ class Event(AttribDict):
             out += ' | %s' % (self.preferred_origin.evaluation_mode)
         return out
 
-    def getPreferredMagnitude(self):
+    def _getPreferredMagnitude(self):
         if self.magnitudes:
             return self.magnitudes[0]
         return None
 
-    preferred_magnitude = property(getPreferredMagnitude)
+    preferred_magnitude = property(_getPreferredMagnitude)
 
-    def getPreferredMagnitudeID(self):
+    def _getPreferredMagnitudeID(self):
         if self.magnitudes:
             return self.magnitudes[0].public_id
         return None
 
-    preferred_magnitude_id = property(getPreferredMagnitudeID)
+    preferred_magnitude_id = property(_getPreferredMagnitudeID)
 
-    def getPreferredOrigin(self):
+    def _getPreferredOrigin(self):
         if self.origins:
             return self.origins[0]
         return None
 
-    preferred_origin = property(getPreferredOrigin)
+    preferred_origin = property(_getPreferredOrigin)
 
-    def getPreferredOriginID(self):
+    def _getPreferredOriginID(self):
         if self.origins:
             return self.origins[0].public_id
         return None
 
-    preferred_origin_id = property(getPreferredOriginID)
+    preferred_origin_id = property(_getPreferredOriginID)
 
-    def getPreferredFocalMechanism(self):
+    def _getPreferredFocalMechanism(self):
         if self.focal_mechanism:
             return self.focal_mechanism[0]
         return None
 
-    preferred_focal_mechanism = property(getPreferredFocalMechanism)
+    preferred_focal_mechanism = property(_getPreferredFocalMechanism)
 
-    def getPreferredFocalMechanismID(self):
+    def _getPreferredFocalMechanismID(self):
         if self.focal_mechanism:
             return self.focal_mechanism[0].public_id
         return None
 
-    preferred_focal_mechanism_id = property(getPreferredFocalMechanismID)
+    preferred_focal_mechanism_id = property(_getPreferredFocalMechanismID)
 
-    def getTime(self):
+    def _getTime(self):
         return self.preferred_origin.time
 
-    time = datetime = property(getTime)
+    time = datetime = property(_getTime)
 
-    def getLatitude(self):
+    def _getLatitude(self):
         return self.preferred_origin.latitude
 
-    latitude = lat = property(getLatitude)
+    latitude = lat = property(_getLatitude)
 
-    def getLongitude(self):
+    def _getLongitude(self):
         return self.preferred_origin.longitude
 
-    longitude = lon = property(getLongitude)
+    longitude = lon = property(_getLongitude)
 
-    def getMagnitude(self):
+    def _getMagnitude(self):
         return self.preferred_magnitude.magnitude
 
-    magnitude = mag = property(getMagnitude)
+    magnitude = mag = property(_getMagnitude)
 
-    def getMagnitudeType(self):
+    def _getMagnitudeType(self):
         return self.preferred_magnitude.type
 
-    magnitude_type = mag_type = property(getMagnitudeType)
+    magnitude_type = mag_type = property(_getMagnitudeType)
 
 
 class Catalog(object):
     """
     Seismological event catalog containing a list of events.
     """
+    public_id = None
+    description = None
+    comment = None
+    creation_info = None
+
     def __init__(self, events=None):
         self.events = []
         if events:
@@ -561,7 +571,8 @@ class Catalog(object):
 if __name__ == '__main__':
     # neries
     #from obspy.neries import Client
-    #data = Client(user='test@obspy.org').getLatestEvents(20)
+    #data = Client(user='test@obspy.org').getLatestEvents(3)
+    #print data
     #catalog = _readQuakeML(StringIO.StringIO(data))
     # iris
     from obspy.iris import Client
@@ -570,4 +581,4 @@ if __name__ == '__main__':
     # seishub
     #cat = _readSeisHubEventXML('obspyck.xml')
     print catalog
-    catalog.plot()
+    #catalog.plot()
