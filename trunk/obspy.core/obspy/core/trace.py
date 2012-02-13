@@ -1222,15 +1222,20 @@ class Trace(object):
         proc_info = "trigger:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
 
-    def resample(self, num, window=None):
+    def resample(self, sampling_rate, window='hanning', no_filter=True,
+                 strict_length=False):
         """
         Resample trace data using Fourier method.
 
-        :type num: int
-        :param num: The number of samples in the resampled signal.
+        :type sampling_rate: float
+        :param sampling_rate: The sampling rate of the resampled signal.
         :type window: array_like, callable, string, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
-            Fourier domain. See :func:`scipy.signal.resample` for details.
+            Fourier domain. Defaults ``'hanning'`` window. See
+            :func:`scipy.signal.resample` for details.
+        :type strict_length: bool, optional
+        :param strict_length: Leave traces unchanged for which endtime of trace
+            would change. Defaults to ``False``.
 
         .. note::
 
@@ -1241,32 +1246,40 @@ class Trace(object):
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of this trace.
 
-        Uses :func:`scipy.signal.resample`. The resampled signal starts at the
-        same value as x but is sampled with a spacing of
-        ``len(data) / num * (spacing of data)``. Because a Fourier method is
-        used, the signal is assumed to be periodic.
+        Uses :func:`scipy.signal.resample`. Because a Fourier method is used,
+        the signal is assumed to be periodic.
 
         .. rubric:: Example
 
         >>> tr = Trace(data=np.array([0.5, 0, 0.5, 1, 0.5, 0, 0.5, 1]))
         >>> len(tr)
         8
-        >>> tr.stats.delta
+        >>> tr.stats.sampling_rate
         1.0
-        >>> tr.resample(16)
+        >>> tr.resample(4.0)
         >>> len(tr)
-        16
-        >>> tr.stats.delta
-        0.5
+        32
+        >>> tr.stats.sampling_rate
+        4.0
         >>> tr.data  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-        array([ 0.5       ,  0.14644661,  0.        ,  0.14644661,  0.5 ...
+        array([ 0.5       ,  0.40432914,  0.3232233 ,  0.26903012,  0.25 ...
         """
         from scipy.signal import resample
-        factor = float(self.stats.npts) / num
+        factor = self.stats.sampling_rate / float(sampling_rate)
+        # check if endtime changes and this is not explicitly allowed
+        if strict_length and len(self.data) % factor != 0.0:
+            msg = "Endtime of trace would change and strict_length=True."
+            raise ValueError(msg)
+        # do automatic lowpass filtering
+        if not no_filter:
+            # XXX
+            raise NotImplementedError
+        # resample
+        num = int(self.stats.npts / factor)
         self.data = resample(self.data, num, window=window)
-        self.stats.delta *= factor
+        self.stats.sampling_rate = sampling_rate
         # add processing information to the stats dictionary
-        proc_info = "resample:%d:%s" % (num, window)
+        proc_info = "resample:%d:%s" % (sampling_rate, window)
         self._addProcessingInfo(proc_info)
 
     def decimate(self, factor, no_filter=False, strict_length=False):

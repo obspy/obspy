@@ -1746,15 +1746,23 @@ class Stream(object):
             tr.trigger(type, **options)
 
 
-    def resample(self, num, window=None):
+    def resample(self, sampling_rate, window='hanning', no_filter=False,
+                 strict_length=False):
         """
         Resample data in all traces of stream using Fourier method.
 
-        :type num: int
-        :param num: The number of samples in the resampled signal.
+        :type sampling_rate: float
+        :param sampling_rate: The sampling rate of the resampled signal.
         :type window: array_like, callable, string, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
-            Fourier domain. See :func:`scipy.signal.resample` for details.
+            Fourier domain. Defaults ``'hanning'`` window. See
+            :func:`scipy.signal.resample` for details.
+        :type no_filter: bool, optional
+        :param no_filter: Deactivates automatic filtering if set to ``True``.
+            Defaults to ``False``.
+        :type strict_length: bool, optional
+        :param strict_length: Leave traces unchanged for which endtime of trace
+            would change. Defaults to ``False``.
 
         .. note::
 
@@ -1765,10 +1773,8 @@ class Stream(object):
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
 
-        Uses :func:`scipy.signal.resample`. The resampled signal starts at the
-        same value as x but is sampled with a spacing of
-        ``len(data) / num * (spacing of data)``. Because a Fourier method is
-        used, the signal is assumed to be periodic.
+        Uses :func:`scipy.signal.resample`. Because a Fourier method is used,
+        the signal is assumed to be periodic.
 
         .. rubric:: Example
 
@@ -1778,7 +1784,7 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.resample(300)
+        >>> st.resample(10.0)
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
@@ -1786,7 +1792,8 @@ class Stream(object):
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
         """
         for tr in self:
-            tr.resample(num, window=window)
+            tr.resample(sampling_rate, window=window, no_filter=no_filter,
+                        strict_length=strict_length)
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """

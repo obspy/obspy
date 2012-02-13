@@ -291,8 +291,8 @@ def _getEntryPoints(group, subgroup=None):
 
     .. rubric:: Example
 
-    >>> _getPlugins('obspy.plugin.waveform')  # doctest: +SKIP
-    {'SAC': EntryPoint.parse('SAC = obspy.sac.core'), 'MSEED': EntryPoint...}
+    >>> _getEntryPoints('obspy.plugin.waveform')  # doctest: +ELLIPSIS
+    {...'SLIST': EntryPoint.parse('SLIST = obspy.core.ascii')...}
     """
     features = {}
     for ep in iter_entry_points(group):
@@ -355,7 +355,12 @@ def _getFunctionFromEntryPoint(group, type):
     ep_dict = ENTRY_POINTS[group]
     try:
         # get detrend specific entry point
-        entry_point = ep_dict[type]
+        if type in ep_dict:
+            entry_point = ep_dict[type]
+        else:
+            # search using lower cases only
+            entry_point = [v for k, v in ep_dict.items()
+                           if k.lower() == type.lower()][0]
         func = load_entry_point(entry_point.dist.key,
             'obspy.plugin.%s' % (group), entry_point.name)
     except KeyError, ImportError:
