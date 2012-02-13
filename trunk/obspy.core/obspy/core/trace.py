@@ -1340,17 +1340,13 @@ class Trace(object):
                 msg = "Automatic filter design is unstable for decimation " + \
                       "factors above 16. Manual decimation is necessary."
                 raise ArithmeticError(msg)
-            #low_corner = 0.4 * self.stats.sampling_rate / decimation_factor
-            #self.filter('lowpass', freq=low_corner)
-            self.data = signal.filter.lowpassCheby2(self.data,
-                self.stats.sampling_rate * 0.5 / float(factor),
-                self.stats.sampling_rate, maxorder=12)
+            freq = self.stats.sampling_rate * 0.5 / float(factor)
+            self.filter('lowpassCheby2', freq=freq, maxorder=12)
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure
         self.data = signal.integerDecimation(self.data, factor)
-        self.stats.sampling_rate = self.stats.sampling_rate / \
-                float(factor)
+        self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
 
         # add processing information to the stats dictionary
         proc_info = "downsample:integerDecimation:%s" % factor
