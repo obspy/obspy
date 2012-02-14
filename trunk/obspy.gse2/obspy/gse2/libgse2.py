@@ -24,14 +24,15 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import os
-import platform
-import ctypes as C
-import doctest
-import warnings
-import numpy as np
+from distutils import sysconfig
 from obspy.core import UTCDateTime
 from obspy.core.util import c_file_p, formatScientific
+import ctypes as C
+import doctest
+import numpy as np
+import os
+import platform
+import warnings
 
 
 # Import shared libgse2
@@ -42,11 +43,8 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libgse2']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
+# get default file extension for shared objects
+lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
 clibgse2 = None
 for lib_name in lib_names:

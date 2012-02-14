@@ -3,6 +3,7 @@
 Defines the libsignal and evalresp structures and blockettes.
 """
 
+from distutils import sysconfig
 import ctypes as C
 import numpy as np
 import os
@@ -17,11 +18,8 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libsignal']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
+# get default file extension for shared objects
+lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
 clibsignal = None
 for lib_name in lib_names:
@@ -44,11 +42,6 @@ erlib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libevresp']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
 # initialize library
 clibevresp = None
 for erlib_name in erlib_names:

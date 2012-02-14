@@ -1,7 +1,10 @@
+# -*- coding: utf-8 -*-
+
+from distutils import sysconfig
+from struct import unpack
 import ctypes as C
 import os
 import platform
-from struct import unpack
 
 # Import shared libsegy depending on the platform.
 # create library names
@@ -11,11 +14,8 @@ lib_names = [
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libsegy']
-# add correct file extension
-if  platform.system() == 'Windows':
-    lib_extension = '.pyd'
-else:
-    lib_extension = '.so'
+# get default file extension for shared objects
+lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
 clibsegy = None
 for lib_name in lib_names:
