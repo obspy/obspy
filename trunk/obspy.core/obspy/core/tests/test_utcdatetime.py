@@ -16,7 +16,7 @@ except ImportError:
 NO_NEGATIVE_TIMESTAMPS = False
 try:  # pragma: no cover
     # this will fail at Win OS
-    UTCDateTime(-44000).getDateTime()
+    UTCDateTime(-44000).datetime
 except:  # pragma: no cover
     NO_NEGATIVE_TIMESTAMPS = True
 
