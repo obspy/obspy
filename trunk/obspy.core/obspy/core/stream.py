@@ -1746,7 +1746,7 @@ class Stream(object):
             tr.trigger(type, **options)
 
 
-    def resample(self, sampling_rate, window='hanning', no_filter=False,
+    def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
         Resample data in all traces of stream using Fourier method.

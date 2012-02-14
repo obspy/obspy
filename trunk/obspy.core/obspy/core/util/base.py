@@ -363,7 +363,7 @@ def _getFunctionFromEntryPoint(group, type):
                            if k.lower() == type.lower()][0]
         func = load_entry_point(entry_point.dist.key,
             'obspy.plugin.%s' % (group), entry_point.name)
-    except KeyError, ImportError:
+    except (KeyError, ImportError, IndexError):
         # check if any detrend is available at all
         if not ep_dict:
             msg = "Your current ObsPy installation does not support " + \
