@@ -158,8 +158,7 @@ def getTimingAndDataQuality(file_or_file_object):
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
 
     >>> filename = getExampleFile("timingquality.mseed")
-    >>> getTimingAndDataQuality(filename) \
-        # doctest: +NORMALIZE_WHITESPACE
+    >>> getTimingAndDataQuality(filename)  # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
     'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
@@ -168,8 +167,7 @@ def getTimingAndDataQuality(file_or_file_object):
     Also works with file pointers and StringIOs.
 
     >>> f = open(filename, 'rb')
-    >>> getTimingAndDataQuality(f) \
-        # doctest: +NORMALIZE_WHITESPACE
+    >>> getTimingAndDataQuality(f)  # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
     'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
@@ -177,8 +175,7 @@ def getTimingAndDataQuality(file_or_file_object):
 
     >>> file_object = StringIO(f.read())
     >>> f.close()
-    >>> getTimingAndDataQuality(file_object) \
-        # doctest: +NORMALIZE_WHITESPACE
+    >>> getTimingAndDataQuality(file_object)  # doctest: +NORMALIZE_WHITESPACE
     {'timing_quality_upper_quantile': 75.0,
     'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
     'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
