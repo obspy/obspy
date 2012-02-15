@@ -500,9 +500,9 @@ def paz2AmpValueOfFreqResp(paz, freq):
 
     .. rubric:: Example
 
-    >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j], \
-               'zeros': [0 + 0j, 0 + 0j], \
-               'gain': 0.4}
+    >>> paz = {'poles': [-4.44 + 4.44j, -4.44 - 4.44j],
+    ...        'zeros': [0 + 0j, 0 + 0j],
+    ...        'gain': 0.4}
     >>> amp = paz2AmpValueOfFreqResp(paz, 1)
     >>> print(round(amp, 7))
     0.2830262
@@ -536,9 +536,9 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
 
     .. rubric:: Example
 
-    >>> paz = {'poles': [-4.444+4.444j, -4.444-4.444j, -1.083+0j], \
-               'zeros': [0+0j, 0+0j, 0+0j], \
-               'gain': 1.0, 'sensitivity': 671140000.0}
+    >>> paz = {'poles': [-4.444+4.444j, -4.444-4.444j, -1.083+0j],
+    ...        'zeros': [0+0j, 0+0j, 0+0j],
+    ...        'gain': 1.0, 'sensitivity': 671140000.0}
     >>> mag = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
     >>> print(round(mag, 6))
     2.132873

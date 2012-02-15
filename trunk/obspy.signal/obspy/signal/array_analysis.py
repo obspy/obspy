@@ -606,7 +606,7 @@ def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 
         2. replace sonic by sonic_pp and set njobs, clientlist and secret:
 
-           >>> sonic_pp(..., njobs=njobs,  # doctest: +SKIP
+           >>> sonic_pp(*args, **kwargs, njobs=njobs,  # doctest: +SKIP
            ...          pservers=('client1', 'client2',), secret=<secret>)
     """
     import pp
