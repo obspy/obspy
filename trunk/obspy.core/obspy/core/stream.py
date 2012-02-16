@@ -381,6 +381,8 @@ class Stream(object):
 
     def __init__(self, traces=None):
         self.traces = []
+        if not isinstance(traces, list):
+            traces = [traces]
         if traces:
             self.traces.extend(traces)
 
