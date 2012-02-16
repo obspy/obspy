@@ -1493,14 +1493,14 @@ class Stream(object):
         The ``method`` argument controls the handling of overlapping data
         values.
         """
-#        def listsort(order, current):
-#            """
-#            Helper method for keeping trace's ordering
-#            """
-#            try:
-#                return order.index(current)
-#            except ValueError:
-#                return -1
+        def listsort(order, current):
+            """
+            Helper method for keeping trace's ordering
+            """
+            try:
+                return order.index(current)
+            except ValueError:
+                return -1
 
         if method == -1:
             self._cleanup()
@@ -1508,7 +1508,7 @@ class Stream(object):
         # check sampling rates and dtypes
         self._mergeChecks()
         # remember order of traces
-#        order = [id(i) for i in self.traces]
+        order = [id(i) for i in self.traces]
         # order matters!
         self.sort(keys=['network', 'station', 'location', 'channel',
                         'starttime', 'endtime'])
@@ -1518,21 +1518,21 @@ class Stream(object):
         try:
             while True:
                 trace = self.traces.pop(0)
-                id = trace.getId()
-                if id not in traces_dict:
-                    traces_dict[id] = [trace]
+                _id = trace.getId()
+                if _id not in traces_dict:
+                    traces_dict[_id] = [trace]
                 else:
-                    traces_dict[id].append(trace)
+                    traces_dict[_id].append(trace)
         except IndexError:
             pass
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id in traces_dict.keys():
-            cur_trace = traces_dict[id].pop(0)
+        for _id in traces_dict.keys():
+            cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
-            for _i in xrange(len(traces_dict[id])):
-                trace = traces_dict[id].pop(0)
+            for _i in xrange(len(traces_dict[_id])):
+                trace = traces_dict[_id].pop(0)
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(trace, method,
                     fill_value=fill_value, sanity_checks=False,
@@ -1541,7 +1541,7 @@ class Stream(object):
 
         # trying to restore order, newly created traces are placed at
         # start
-#        self.traces.sort(key=lambda x: listsort(order, id(x)))
+        self.traces.sort(key=lambda x: listsort(order, id(x)))
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
