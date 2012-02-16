@@ -381,7 +381,7 @@ class Stream(object):
 
     def __init__(self, traces=None):
         self.traces = []
-        if not isinstance(traces, list):
+        if isinstance(traces, Trace):
             traces = [traces]
         if traces:
             self.traces.extend(traces)
@@ -1493,11 +1493,22 @@ class Stream(object):
         The ``method`` argument controls the handling of overlapping data
         values.
         """
+#        def listsort(order, current):
+#            """
+#            Helper method for keeping trace's ordering
+#            """
+#            try:
+#                return order.index(current)
+#            except ValueError:
+#                return -1
+
         if method == -1:
             self._cleanup()
             return
         # check sampling rates and dtypes
         self._mergeChecks()
+        # remember order of traces
+#        order = [id(i) for i in self.traces]
         # order matters!
         self.sort(keys=['network', 'station', 'location', 'channel',
                         'starttime', 'endtime'])
@@ -1527,6 +1538,10 @@ class Stream(object):
                     fill_value=fill_value, sanity_checks=False,
                     interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
+
+        # trying to restore order, newly created traces are placed at
+        # start
+#        self.traces.sort(key=lambda x: listsort(order, id(x)))
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
