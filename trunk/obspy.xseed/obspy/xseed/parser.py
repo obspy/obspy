@@ -389,6 +389,7 @@ class Parser(object):
         if self._format != 'SEED':
             self.__init__(self.getSEED())
         channels = {}
+	dates = {}
         channel_ids_unsupported = []
         for station in self.stations:
             for blockette in station:
@@ -398,12 +399,15 @@ class Parser(object):
                     start = blockette.start_effective_date
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
-                    id = "%s.%s.%s" % (station_id,
+                    id = "%s.%s.%s/%e/%e" % (station_id,
                                              blockette.location_identifier,
-                                             blockette.channel_identifier)
+                                             blockette.channel_identifier,
+                                             start.timestamp,
+	                                     end.timestamp)
                     channels[id] = {}
-		    channels[id]['start'] = start
-		    channels[id]['end'] = end
+                    dates[id] = {}
+                    dates[id]['start'] = start
+                    dates[id]['end'] = end
                 elif blockette.id == 58:
                     if blockette.stage_sequence_number == 0:
                         channels[id]['sensitivity'] = \
@@ -464,11 +468,11 @@ class Parser(object):
         for id in channel_ids_unsupported:
             channels.pop(id)
         # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha]
+	channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
             channel = [cha for cha in channel \
-                       if channels[cha]['end'] >= datetime \
-                       and channels[cha]['start'] <= datetime]
+                       if dates[cha]['end'] >= datetime \
+                       and dates[cha]['start'] <= datetime]
         if len(channel) == 0:
             msg = 'No channel with the given description:' \
                 + ', '.join(channel)
@@ -494,6 +498,7 @@ class Parser(object):
         if self._format != 'SEED':
             self.__init__(self.getSEED())
         channels = {}
+	dates = {}
         for station in self.stations:
             for blockette in station:
                 if blockette.id == 50:
@@ -507,21 +512,24 @@ class Parser(object):
                         raise SEEDParserException(msg)
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
-                    id = "%s.%s.%s" % (station_id,
+                    id = "%s.%s.%s/%e/%e" % (station_id,
                                              blockette.location_identifier,
-                                             blockette.channel_identifier)
+                                             blockette.channel_identifier,
+                                             start.timestamp,
+	                                     end.timestamp)
                     channels[id] = {}
-                    channels[id]['start'] = start.timestamp
-                    channels[id]['end'] = end.timestamp
                     channels[id]['latitude'] = blockette.latitude
                     channels[id]['longitude'] = blockette.longitude
                     channels[id]['elevation'] = blockette.elevation
+                    dates[id] = {}
+                    dates[id]['start'] = start
+                    dates[id]['end'] = end
         # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha]
+	channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
             channel = [cha for cha in channel \
-                       if channels[cha]['end'] >= datetime \
-                       and channels[cha]['start'] <= datetime]
+                       if dates[cha]['end'] >= datetime \
+                       and dates[cha]['start'] <= datetime]
         if len(channel) == 0:
             msg = 'No channel with the given description:' \
                 + ', '.join(channel)
