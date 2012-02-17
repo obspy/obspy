@@ -398,12 +398,12 @@ class Parser(object):
                     start = blockette.start_effective_date
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
-                    id = "%s.%s.%s/%e/%e" % (station_id,
+                    id = "%s.%s.%s" % (station_id,
                                              blockette.location_identifier,
-                                             blockette.channel_identifier,
-                                             start.timestamp,
-                                             end.timestamp)
+                                             blockette.channel_identifier)
                     channels[id] = {}
+		    channels[id]['start'] = start
+		    channels[id]['end'] = end
                 elif blockette.id == 58:
                     if blockette.stage_sequence_number == 0:
                         channels[id]['sensitivity'] = \
@@ -464,13 +464,17 @@ class Parser(object):
         for id in channel_ids_unsupported:
             channels.pop(id)
         # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
+        channel = [cha for cha in channels if channel_id in cha]
         if datetime:
             channel = [cha for cha in channel \
-                       if float(cha.split('/')[1]) < datetime.timestamp \
-                       and float(cha.split('/')[2]) > datetime.timestamp]
-        if len(channel) != 1:
-            msg = 'None or more than one channel with the given description:' \
+                       if channels[cha]['end'] >= datetime \
+                       and channels[cha]['start'] <= datetime]
+        if len(channel) == 0:
+            msg = 'No channel with the given description:' \
+                + ', '.join(channel)
+            raise SEEDParserException(msg)
+        elif len(channel) > 1:
+            msg = 'More than one channel with the given description:' \
                 + ', '.join(channel)
             raise SEEDParserException(msg)
         return channels[channel[0]]
@@ -503,23 +507,27 @@ class Parser(object):
                         raise SEEDParserException(msg)
                     end = blockette.end_effective_date or UTCDateTime()
                 elif blockette.id == 52:
-                    id = "%s.%s.%s/%e/%e" % (station_id,
+                    id = "%s.%s.%s" % (station_id,
                                              blockette.location_identifier,
-                                             blockette.channel_identifier,
-                                             start.timestamp,
-                                             end.timestamp)
+                                             blockette.channel_identifier)
                     channels[id] = {}
+                    channels[id]['start'] = start.timestamp
+                    channels[id]['end'] = end.timestamp
                     channels[id]['latitude'] = blockette.latitude
                     channels[id]['longitude'] = blockette.longitude
                     channels[id]['elevation'] = blockette.elevation
         # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
+        channel = [cha for cha in channels if channel_id in cha]
         if datetime:
             channel = [cha for cha in channel \
-                       if float(cha.split('/')[1]) < datetime.timestamp \
-                       and float(cha.split('/')[2]) > datetime.timestamp]
-        if len(channel) != 1:
-            msg = 'None or more than one channel with the given description:' \
+                       if channels[cha]['end'] >= datetime \
+                       and channels[cha]['start'] <= datetime]
+        if len(channel) == 0:
+            msg = 'No channel with the given description:' \
+                + ', '.join(channel)
+            raise SEEDParserException(msg)
+        elif len(channel) > 1:
+            msg = 'More than one channel with the given description:' \
                 + ', '.join(channel)
             raise SEEDParserException(msg)
         return channels[channel[0]]
