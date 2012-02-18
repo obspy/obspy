@@ -1246,7 +1246,7 @@ class Stream(object):
             # search writeFormat method for given entry point
             writeFormat = load_entry_point(format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
-        except IndexError, ImportError:
+        except (IndexError, ImportError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(WAVEFORM_ENTRY_POINTS)))
         writeFormat(self, filename, **kwargs)
