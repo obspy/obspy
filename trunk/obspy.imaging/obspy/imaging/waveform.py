@@ -103,14 +103,7 @@ class WaveformPlotting(object):
             else:
                 # One plot for each trace.
                 if self.automerge:
-                    count = []
-                    for tr in self.stream:
-                        if hasattr(tr.stats, 'preview') and tr.stats.preview:
-                            tr_id = tr.id + 'preview'
-                        else:
-                            tr_id = tr.id
-                        if not tr_id in count:
-                            count.append(tr_id)
+                    count = self.__getMergablesIds()
                     count = len(count)
                 else:
                     count = len(self.stream)
@@ -150,6 +143,30 @@ class WaveformPlotting(object):
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
+
+    def __getMergeId(self, tr):
+        tr_id = tr.id
+        # don't merge normal traces with previews
+        try:
+            if tr.stats.preview:
+                tr_id += 'preview'
+        except KeyError:
+            pass
+        # don't merge traces with different processing steps
+        try:
+            if tr.stats.processing:
+                tr_id += str(tr.stats.processing)
+        except KeyError:
+            pass
+        return tr_id
+
+    def __getMergablesIds(self):
+        ids = []
+        for tr in self.stream:
+            tr_id = self.__getMergeId(tr)
+            if not tr_id in ids:
+                ids.append(tr_id)
+        return ids
 
     def plotWaveform(self, *args, **kwargs):
         """
@@ -232,21 +249,11 @@ class WaveformPlotting(object):
         else:
             # Generate sorted list of traces (no copy)
             # Sort order, id, starttime, endtime
-            ids = []
-            for tr in self.stream:
-                if hasattr(tr.stats, 'preview') and tr.stats.preview:
-                    id = tr.id + 'preview'
-                else:
-                    id = tr.id
-                if not id in ids:
-                    ids.append(id)
+            ids = self.__getMergablesIds()
             for id in ids:
                 stream_new.append([])
                 for tr in self.stream:
-                    if hasattr(tr.stats, 'preview') and tr.stats.preview:
-                        tr_id = tr.id + 'preview'
-                    else:
-                        tr_id = tr.id
+                    tr_id = self.__getMergeId(tr)
                     if tr_id == id:
                         # does not copy the elements of the data array
                         tr_ref = copy(tr)

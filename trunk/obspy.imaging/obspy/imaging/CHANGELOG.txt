@@ -1,0 +1,3 @@
+dev:
+ * traces with same id but different processing steps will not be merged
+   anymore using the plot() method
