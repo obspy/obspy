@@ -389,7 +389,7 @@ class Parser(object):
         if self._format != 'SEED':
             self.__init__(self.getSEED())
         channels = {}
-	dates = {}
+        dates = {}
         channel_ids_unsupported = []
         for station in self.stations:
             for blockette in station:
@@ -403,7 +403,7 @@ class Parser(object):
                                              blockette.location_identifier,
                                              blockette.channel_identifier,
                                              start.timestamp,
-	                                     end.timestamp)
+                                             end.timestamp)
                     channels[id] = {}
                     dates[id] = {}
                     dates[id]['start'] = start
@@ -468,7 +468,7 @@ class Parser(object):
         for id in channel_ids_unsupported:
             channels.pop(id)
         # Returns only the keys.
-	channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
+        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
             channel = [cha for cha in channel \
                        if dates[cha]['end'] >= datetime \
@@ -498,7 +498,7 @@ class Parser(object):
         if self._format != 'SEED':
             self.__init__(self.getSEED())
         channels = {}
-	dates = {}
+        dates = {}
         for station in self.stations:
             for blockette in station:
                 if blockette.id == 50:
@@ -516,7 +516,7 @@ class Parser(object):
                                              blockette.location_identifier,
                                              blockette.channel_identifier,
                                              start.timestamp,
-	                                     end.timestamp)
+                                             end.timestamp)
                     channels[id] = {}
                     channels[id]['latitude'] = blockette.latitude
                     channels[id]['longitude'] = blockette.longitude
@@ -525,7 +525,7 @@ class Parser(object):
                     dates[id]['start'] = start
                     dates[id]['end'] = end
         # Returns only the keys.
-	channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
+        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
         if datetime:
             channel = [cha for cha in channel \
                        if dates[cha]['end'] >= datetime \

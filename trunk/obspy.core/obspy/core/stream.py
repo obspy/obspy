@@ -1762,7 +1762,6 @@ class Stream(object):
         for tr in self:
             tr.trigger(type, **options)
 
-
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
