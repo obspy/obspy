@@ -540,6 +540,23 @@ class StreamTestCase(unittest.TestCase):
         stream.sort(keys=['npts', 'sampling_rate', 'endtime'])
         self.assertEqual([i.stats.sampling_rate for i in stream.traces],
                          [100.0, 200.0, 300.0, 400.0, 500.0])
+        # The same with reverted sorting
+        # Use normal sorting.
+        stream.sort(reverse=True)
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
+                         [100.0, 200.0, 400.0, 500.0, 300.0])
+        # Sort after sampling_rate.
+        stream.sort(keys=['sampling_rate'], reverse=True)
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
+                         [500.0, 400.0, 300.0, 200.0, 100.0])
+        # Sort after channel and sampling rate.
+        stream.sort(keys=['channel', 'sampling_rate'], reverse=True)
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
+                         [100.0, 400.0, 300.0, 500.0, 200.0])
+        # Sort after npts and sampling_rate and endtime.
+        stream.sort(keys=['npts', 'sampling_rate', 'endtime'], reverse=True)
+        self.assertEqual([i.stats.sampling_rate for i in stream.traces],
+                         [500.0, 400.0, 300.0, 200.0, 100.0])
         # Sorting without a list or a wrong item string should fail.
         self.assertRaises(TypeError, stream.sort, keys=1)
         self.assertRaises(TypeError, stream.sort, keys='sampling_rate')

@@ -1133,7 +1133,7 @@ class Stream(object):
         self.traces.reverse()
 
     def sort(self, keys=['network', 'station', 'location', 'channel',
-                         'starttime', 'endtime']):
+                         'starttime', 'endtime'], reverse=False):
         """
         Method to sort the traces in the Stream object.
 
@@ -1149,6 +1149,8 @@ class Stream(object):
              'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'
              Defaults to ['network', 'station', 'location', 'channel',
              'starttime', 'endtime'].
+        :type reverse: bool
+        :param reverse: Reverts sorting order to descending.
 
         .. rubric:: Example
 
@@ -1181,7 +1183,7 @@ class Stream(object):
                 raise TypeError(msg)
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
-            self.traces.sort(key=lambda x: x.stats[_i], reverse=False)
+            self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
 
     def write(self, filename, format, **kwargs):
         """
