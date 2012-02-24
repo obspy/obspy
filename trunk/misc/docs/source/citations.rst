@@ -14,6 +14,11 @@ Citations
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
    | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
+.. [Jurkevics1988]
+   | Jurkevics, A. (1988),
+   | **Polarization analysis of three-component array data**,
+   | *Bulletin of the Seismological Society of America*, 78 (5), 1725-1743.
+   | http://www.bssaonline.org/content/78/5/1725.short
 .. [Kanasewich1981]  
    | Kanasewich, E. R. (1981),
    | **Time sequence analysis in geophysics**,

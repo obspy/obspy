@@ -26,6 +26,14 @@ def eigval(datax, datay, dataz, fk, normf=1):
 
     Computes the rectilinearity, the planarity and the eigenvalues of the given
     data which can be windowed or not.
+    The time derivatives are calculated by central differences and the
+    parameter ``fk`` describes the coefficients of the used polynomial. The values
+    of ``fk`` depend on the order of the derivative you want to calculate. If you
+    do not want to use derivatives you can simply use [1,1,1,1,1] for ``fk``.
+
+    The algorithm is mainly based on the paper by Jurkevics. The rest is just
+    the numerical differentiation by central differences (carried out by the
+    routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
     :type datax: :class:`~numpy.ndarray`
     :param datax: Data of x component.
@@ -33,11 +41,16 @@ def eigval(datax, datay, dataz, fk, normf=1):
     :param datay: Data of y component.
     :type dataz: :class:`~numpy.ndarray`
     :param dataz: Data of z component.
+    :type fk: list
+    :param fk: Coefficients of polynomial used for calculating the time
+        derivatives.
     :param normf: Factor for normalization.
     :return: **leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect,
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
         time derivative of rectilinearity, Time derivative of planarity.
+
+    .. seealso:: [Jurkevics1988]_
     """
     covmat = np.zeros([3, 3])
     leigenv1 = np.zeros(datax.shape[0], dtype='float64')
