@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------
 # Filename: hoctavbands.py
 #   Author: Conny Hammer
-#    Email: conny@geo.uni-potsdam.de
+#    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
 #-------------------------------------------------------------------
@@ -57,13 +57,13 @@ def sonogram(data, fs, fc1, nofb, no_win):
     z = np.zeros([len(c[:, 1]), nofb])
     z_tot = np.zeros(len(c[:, 1]))
     hob = np.zeros([no_win, nofb])
-    for k in range(no_win):
-        for j in range(len(c[1, :])):
+    for k in xrange(no_win):
+        for j in xrange(len(c[1, :])):
             z_tot[k] = z_tot[k] + pow(np.abs(c[k, j]), 2)
-        for i in range(nofb):
+        for i in xrange(nofb):
             start = int(round(fmin[i] * nfft * 1. / float(fs), 0))
             end = int(round(fmax[i] * nfft * 1. / float(fs), 0)) + 1
-            for j in range(start, end):
+            for j in xrange(start, end):
                 z[k, i] = z[k, i] + pow(np.abs(c[k, j - 1]), 2)
             hob[k, i] = np.log(z[k, i] / z_tot[k])
     return hob

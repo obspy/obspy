@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------
 # Filename: polarization.py
 #   Author: Conny Hammer
-#    Email: conny@geo.uni-potsdam.de
+#    Email: conny.hammer@geo.uni-potsdam.de
 #
 # Copyright (C) 2008-2012 Conny Hammer
 #-------------------------------------------------------------------

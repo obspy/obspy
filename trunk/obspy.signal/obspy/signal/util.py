@@ -157,29 +157,41 @@ def smooth(x, smoothie):
     """
     size_x = np.size(x)
     suma = np.zeros(size_x)
-    if smoothie > 1:
+    if smoothie > 0:
         if (len(x) > 1 and len(x) < size_x):
             #out_add = append(append([x[0,:]]*smoothie,x,axis=0),
             #                     [x[(len(x)-1),:]]*smoothie,axis=0)
-            out_add = (np.append([x[0, :]] * int(smoothie), x, axis=0))
+            #out_add = (np.append([x[0, :]]*int(smoothie), x, axis=0))
+            out_add = np.vstack(( [x[0, :]] * int(smoothie), x, \
+                     [x[(len(x)-1), :]] * int(smoothie) ))
             help = np.transpose(out_add)
-            out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
+            #out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
+            out = signal.lfilter(np.hstack((np.ones(smoothie) / (2*smoothie), \
+                     0,np.ones(smoothie) / (2*smoothie))), 1, help)
             out = np.transpose(out)
-            out = out[smoothie:len(out), :]
+            #out = out[smoothie:len(out), :]
+            out = out[2*smoothie:len(out), :]
             #out = filter(ones(1,smoothie)/smoothie,1,out_add)
             #out[1:smoothie,:] = []
         else:
-            out_add = np.append(np.append([x[0]] * smoothie, x),
-                               [x[size_x - 1]] * smoothie)
-            for i in xrange(smoothie, len(x) + smoothie):
-                sum = 0
-                for k in xrange(-smoothie, smoothie):
-                    sum = sum + out_add[i + k]
-                    suma[i - smoothie] = float(sum) / (2 * smoothie)
-                    out = suma
-                    out[0:smoothie] = out[smoothie]
-                    out[size_x - 1 - smoothie:size_x] = \
-                        out[size_x - 1 - smoothie]
+            #out_add = np.append(np.append([x[0]] * smoothie, x),
+            #                   [x[size_x - 1]] * smoothie)
+            out_add = np.hstack(( [x[0]] * int(smoothie), x, \
+                     [x[(len(x)-1)]] * int(smoothie) ))
+            out = signal.lfilter(np.hstack((np.ones(smoothie) / (2*smoothie), \
+                     0,np.ones(smoothie) / (2*smoothie))), 1, out_add)
+            out = out[2*smoothie:len(out)]
+            out[0:smoothie] = out[smoothie]
+            out[len(out)-smoothie:len(out)] = out[len(out)-smoothie-1]
+            #for i in xrange(smoothie, len(x) + smoothie):
+            #    sum = 0
+            #    for k in xrange(-smoothie, smoothie):
+            #        sum = sum + out_add[i + k]
+            #        suma[i - smoothie] = float(sum) / (2 * smoothie)
+            #        out = suma
+            #        out[0:smoothie] = out[smoothie]
+            #        out[size_x - 1 - smoothie:size_x] = \
+            #            out[size_x - 1 - smoothie]
     else:
         out = x
     return out
