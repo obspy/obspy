@@ -763,6 +763,43 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].data.tolist(),
                          [1, 1, 1, 1, 1, 2, 3, 3, 4, 5, 5, 5])
 
+    def test_split(self):
+        """
+        Testing splitting of streams containing masked arrays.
+        """
+        # 1 - create a Stream with gaps
+        tr1 = Trace(data=np.ones(4, dtype=np.int32) * 1)
+        tr2 = Trace(data=np.ones(3, dtype=np.int32) * 5)
+        tr2.stats.starttime = tr1.stats.starttime + 9
+        st = Stream([tr1, tr2])
+        st.merge()
+        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        # now we split again
+        st2 = st.split()
+        self.assertEqual(len(st2), 2)
+        self.assertTrue(isinstance(st2[0].data, np.ndarray))
+        self.assertTrue(isinstance(st2[1].data, np.ndarray))
+        self.assertEqual(st2[0].data.tolist(), [1, 1, 1, 1])
+        self.assertEqual(st2[1].data.tolist(), [5, 5, 5])
+        # 2 - use default example
+        st = self.mseed_stream
+        st.merge()
+        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        # now we split again
+        st2 = st.split()
+        self.assertEquals(len(st2), 4)
+        self.assertEquals(len(st2[0]), 412)
+        self.assertEquals(len(st2[1]), 824)
+        self.assertEquals(len(st2[2]), 824)
+        self.assertEquals(len(st2[3]), 50668)
+        self.assertEquals(st2[0].stats.starttime,
+                          UTCDateTime("2007-12-31T23:59:59.915000"))
+        self.assertEquals(st2[3].stats.endtime,
+                          UTCDateTime("2008-01-01T00:04:31.790000"))
+        for i in xrange(4):
+            self.assertEquals(st2[i].stats.sampling_rate, 200)
+            self.assertEquals(st2[i].getId(), 'BW.BGLD..EHE')
+
     def test_mergeOverlapsDefaultMethod(self):
         """
         Test the merge method of the Stream object.
@@ -1239,7 +1276,7 @@ class StreamTestCase(unittest.TestCase):
         for st in [st0, st1, st2, st3, st4, st5, st6, st7, st8]:
             self.assertEqual(stA == st, False)
             self.assertEqual(stA != st, True)
-        # some weirder tests against non-Stream objects
+        # some weird tests against non-Stream objects
         for object in [0, 1, 0.0, 1.0, "", "test", True, False, [], [tr0],
                        set(), set(tr0), {}, {"test": "test"}, Trace(), None]:
             self.assertEqual(st0 == object, False)

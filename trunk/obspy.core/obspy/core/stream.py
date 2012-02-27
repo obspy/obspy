@@ -2237,6 +2237,19 @@ class Stream(object):
                     cur_trace = trace
             self.traces.append(cur_trace)
 
+    def split(self):
+        """
+        Splits any trace containing gaps into contiguous unmasked traces.
+
+        :rtype: :class:`obspy.core.stream.Stream`
+        :returns: Returns a new stream object containing only contiguous
+            unmasked.
+        """
+        new_stream = Stream()
+        for trace in self.traces:
+            new_stream.extend(trace.split())
+        return new_stream
+
 
 def isPickle(filename):  # @UnusedVariable
     """

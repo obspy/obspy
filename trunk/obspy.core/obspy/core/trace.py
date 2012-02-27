@@ -1644,6 +1644,29 @@ class Trace(object):
         proc = self.stats.setdefault('processing', [])
         proc.append(info)
 
+    def split(self):
+        """
+        Splits a Trace object containing gaps into several traces.
+
+        :rtype: list
+        :returns: List of splitted traces. A gapless trace will still be
+            returned as list with only one entry.
+        """
+        if not isinstance(self.data, np.ma.masked_array):
+            # no gaps
+            return [self]
+        slices = np.ma.extras.flatnotmasked_contiguous(self.data)
+        trace_list = []
+        for slice in slices:
+            if slice.step:
+                raise NotImplementedError("step not supported")
+            stats = self.stats.copy()
+            tr = Trace(header=stats)
+            tr.stats.starttime += (stats.delta * slice.start)
+            tr.data = self.data[slice.start:slice.stop + 1]
+            trace_list.append(tr)
+        return trace_list
+
 
 if __name__ == '__main__':
     import doctest

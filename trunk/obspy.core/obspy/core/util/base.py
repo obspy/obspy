@@ -367,7 +367,7 @@ def _getFunctionFromEntryPoint(group, type):
         # check if any detrend is available at all
         if not ep_dict:
             msg = "Your current ObsPy installation does not support " + \
-                  "any %s functions. Please make sure obspy.signal" + \
+                  "any %s functions. Please make sure obspy.signal " + \
                   "and SciPy are installed properly."
             raise ImportError(msg % (group.capitalize()))
         # ok we have detrend, but given detrend is not supported
