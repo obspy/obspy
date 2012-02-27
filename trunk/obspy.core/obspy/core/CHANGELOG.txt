@@ -1,4 +1,6 @@
 dev:
+ * new split method for transforming streams containing masked arrays into
+   contiguous traces
  * new resample method for Trace and Stream object
  * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate 
  * added UTCDateTime.DEFAULT_PRECISION
