@@ -1663,7 +1663,7 @@ class Trace(object):
             stats = self.stats.copy()
             tr = Trace(header=stats)
             tr.stats.starttime += (stats.delta * slice.start)
-            tr.data = self.data[slice.start:slice.stop + 1]
+            tr.data = self.data[slice.start:slice.stop]
             trace_list.append(tr)
         return trace_list
 
