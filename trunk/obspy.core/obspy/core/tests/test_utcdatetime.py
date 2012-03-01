@@ -752,6 +752,37 @@ class UTCDateTimeTestCase(unittest.TestCase):
         # class
         self.assertEqual(UTCDateTime.DEFAULT_PRECISION, 6)
 
+    def test_toStringPrecision(self):
+        """
+        Tests __str__ method while using a precision.
+        """
+        # precision 7
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.0000000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 500000, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.5000000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34.500000, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.5000000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 5, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.0000050Z')
+        dt = UTCDateTime(1980, 2, 3, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T00:00:00.0000000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 444999, precision=7)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.4449990Z')
+        # precision 3
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 500000, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.500Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34.500000, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.500Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 5, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.000Z')
+        dt = UTCDateTime(1980, 2, 3, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T00:00:00.000Z')
+        dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 444999, precision=3)
+        self.assertEquals(str(dt), '1980-02-03T12:23:34.445Z')
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

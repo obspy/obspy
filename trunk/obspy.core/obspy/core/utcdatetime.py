@@ -831,9 +831,8 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        text = self._getDateTime().isoformat('T')
-        if '.' not in text:
-            text += '.000000'
+        text = self.strftime('%Y-%m-%dT%H:%M:%S')
+        text += (self.__ms_pattern % (self.timestamp % 1))[1:]
         return text + 'Z'
 
     def __unicode__(self):
@@ -1312,6 +1311,7 @@ class UTCDateTime(object):
             12
         """
         self.__precision = int(value)
+        self.__ms_pattern = "%%0.%df" % (self.__precision)
 
     precision = property(_getPrecision, _setPrecision)
 
