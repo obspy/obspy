@@ -831,9 +831,8 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        text = self.strftime('%Y-%m-%dT%H:%M:%S')
-        text += (self.__ms_pattern % (self.timestamp % 1))[1:]
-        return text + 'Z'
+        return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
+                          (self.__ms_pattern % (self.timestamp % 1))[1:])
 
     def __unicode__(self):
         """
