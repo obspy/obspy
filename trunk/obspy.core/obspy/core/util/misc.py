@@ -10,6 +10,8 @@ Various additional utilities for ObsPy.
 """
 
 import warnings
+import itertools
+import numpy as np
 
 
 # The following dictionary maps the first character of the channel_id to the
@@ -112,6 +114,28 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
         return values[int(idx)]
     else:
         return _interpolate(values[int(idx)], values[int(idx) + 1], idx % 1)
+
+
+def flatnotmaskedContiguous(a):
+    """
+    Find contiguous unmasked data in a masked array along the given axis.
+
+    This function is taken from
+    :func:`numpy.ma.extras.flatnotmasked_contiguous`
+    Copyright (c) Pierre Gerard-Marchant
+    """
+    np.ma.extras.flatnotmasked_contiguous
+    m = np.ma.getmask(a)
+    if m is np.ma.nomask:
+        return slice(0, a.size, None)
+    i = 0
+    result = []
+    for (k, g) in itertools.groupby(m.ravel()):
+        n = len(list(g))
+        if not k:
+            result.append(slice(i, i + n))
+        i += n
+    return result or None
 
 
 def formatScientific(value):

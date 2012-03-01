@@ -12,6 +12,7 @@ from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
+from obspy.core.util.misc import flatnotmaskedContiguous
 import math
 import numpy as np
 import warnings
@@ -1655,7 +1656,7 @@ class Trace(object):
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
             return [self]
-        slices = np.ma.extras.flatnotmasked_contiguous(self.data)
+        slices = flatnotmaskedContiguous(self.data)
         trace_list = []
         for slice in slices:
             if slice.step:
