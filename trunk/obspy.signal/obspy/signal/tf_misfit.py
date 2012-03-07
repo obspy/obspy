@@ -8,16 +8,9 @@
 # Copyright (C) 2012 Martin van Driel
 #---------------------------------------------------------------------
 """
-Various Time Frequency Misfit Functions
+Various Time Frequency Misfit Functions based on Kristekova et. al. (2006).
 
-Based on:
-
-M. Kristekova, J. Kristek, P. Moczo, and S. M. Day,
-Misfit Criteria for Quantitative Comparison of Seismograms
-Bulletin of the Seismological Society of America, Vol. 96, No. 5,
-pp. 1836-1850, October 2006, doi: 10.1785/0120060012
-
-Will be refered to as Kristekova et. al. (2006) below.
+.. seealso:: [Kristekova2006]_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -25,37 +18,37 @@ Will be refered to as Kristekova et. al. (2006) below.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-            
+
 import numpy as np
 from obspy.signal import util, cosTaper
 
 
 def cwt(st, dt, w0, f, wl='morlet'):
-    '''
-    Continuous Wavelet Transformation
-    
-    Continuous Wavelet Transformation in the Frequency Domain. Compare to
-    Kristekova et. al. (2006) eq. (4)
+    """
+    Continuous Wavelet Transformation in the Frequency Domain.
+
+    .. seealso:: [Kristekova2006]_, eq. (4)
 
     :param st: time dependent signal. Will be demeaned and tapered before FFT,
         type numpy.ndarray.
     :param dt: time step between two samples in st
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param f: frequency discretization, type numpy.ndarray.  
+    :param f: frequency discretization, type numpy.ndarray.
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
         values.
-    '''
+    """
     npts = len(st)
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
-    
+
     cwt = np.zeros((t.shape[0], f.shape[0])) * 0j
 
     if wl == 'morlet':
-        psi = lambda t : np.pi**(-.25) * np.exp(1j * w0 * t) * np.exp(-t**2 / 2.)
+        psi = lambda t : np.pi**(-.25) * np.exp(1j * w0 * t) * \
+            np.exp(-t**2 / 2.)
         scale = lambda f : w0 / (2 * np.pi * f)
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
@@ -67,21 +60,20 @@ def cwt(st, dt, w0, f, wl='morlet'):
 
     for n, _f in enumerate(f):
         a = scale(_f)
-        # time shift necesarry, because wavelet is defined around t = 0
+        # time shift necessary, because wavelet is defined around t = 0
         psih = psi(-1*(t - t[-1]/2.)/a).conjugate() / np.abs(a)**.5
         psihf = np.fft.fft(psih, n=nfft)
         tminin = int(t[-1]/2. / (t[1] - t[0]))
-        cwt[:,n] = np.fft.ifft(psihf * sf)[tminin:tminin+t.shape[0]] * (t[1] - t[0])
-
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin+t.shape[0]] * \
+            (t[1] - t[0])
     return cwt.T
 
 
-
-def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Time Frequency Envelope Misfit
-    
-    Time Frequency Envelope Misfit as defined in Kristekova et. al. (2006) eq.(9)
+
+    .. seealso:: [Kristekova2006]_, eq. (9)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -93,11 +85,10 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -106,12 +97,11 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return (np.abs(W2) - np.abs(W1)) / np.max(np.abs(W1))
 
 
-
-def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Time Frequency Phase Misfit
-    
-    Time Frequency Phase Misfit as defined in Kristekova et. al. (2006) eq.(10)
+
+    .. seealso:: [Kristekova2006]_, eq. (10)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -123,11 +113,10 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -140,13 +129,11 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return np.abs(W1) * TFPMl / np.pi / np.max(np.abs(W1))
 
 
-
-def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Time-dependent Envelope Misfit
-    
-    Time-dependent Envelope Misfit Misfit as defined in Kristekova et. al.
-        (2006) eq.(11)
+
+    .. seealso:: [Kristekova2006]_, eq. (11)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -158,10 +145,9 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -173,13 +159,11 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return TEMl
 
 
-
-def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Time-dependent Phase Misfit
-    
-    Time-dependent Phase Misfit Misfit as defined in Kristekova et. al.
-        (2006) eq.(12)
+
+    .. seealso:: [Kristekova2006]_, eq. (12)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -191,10 +175,9 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -212,13 +195,11 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return TPMl
 
 
-
-def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Frequency-dependent Envelope Misfit
-    
-    Frequency-dependent Envelope Misfit as defined in Kristekova et. al.
-        (2006) eq.(14)
+
+    .. seealso:: [Kristekova2006]_, eq. (14)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -230,10 +211,9 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
     npts = len(st1)
 
@@ -246,13 +226,11 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return TEMl
 
 
-
-def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Frequency-dependent Phase Misfit
     
-    Frequency-dependent Phase Misfit as defined in Kristekova et. al.
-        (2006) eq.(15)
+    .. seealso:: [Kristekova2006]_, eq. (15)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -264,10 +242,9 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray.
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
     npts = len(st1)
 
@@ -286,13 +263,11 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return TPMl
 
 
-
-def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Single Valued Envelope Misfit
 
-    Single Valued Envelope Misfit as defined in Kristekova et. al.
-        (2006) eq.(17)
+    .. seealso:: [Kristekova2006]_, eq. (17)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -304,10 +279,9 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Single Valued Envelope Misfit
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -319,13 +293,11 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     return EMl
 
 
-
-def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
-    '''
+def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+    """
     Single Valued Phase Misfit
 
-    Single Valued Phase Misfit as defined in Kristekova et. al.
-        (2006) eq.(18)
+    .. seealso:: [Kristekova2006]_, eq. (18)
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -337,10 +309,9 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param wl: wavelet to use in continuous wavelet transform
 
     :return: Single Valued Phase Misfit
-    '''
+    """
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     W1 = cwt(st1, dt, w0, f)
@@ -356,5 +327,3 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, wl='morlet'):
     PMl /= (np.sum(np.abs(W1)**2))**.5
 
     return PMl
-
-

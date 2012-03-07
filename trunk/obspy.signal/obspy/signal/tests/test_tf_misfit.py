@@ -4,16 +4,20 @@
 The tf_misfit test suite.
 """
 
-import numpy as np
+from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, tpm, em, pm
 from scipy.signal import hilbert
-from tf_misfit import *
+import numpy as np
+import os
 import unittest
+
 
 class TfTestCase(unittest.TestCase):
     """
     Test cases for array_analysis functions.
     """
     def setUp(self):
+        # path to test files
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
         tmax = 3.
         dt = 0.1
         npts = int(tmax / dt + 1)
@@ -35,18 +39,19 @@ class TfTestCase(unittest.TestCase):
         t = np.linspace(0., tmax, npts)
         f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-        H = lambda t: (np.sign(t) + 1)/ 2 
+        H = lambda t: (np.sign(t) + 1)/ 2
 
-        S1 = lambda t: A1 * (t - t1) * np.exp(-2*(t - t1)) * np.cos(2. * np.pi * f1 * \
-                       (t - t1) + phi1 * np.pi) * H(t - t1)
+        S1 = lambda t: A1 * (t - t1) * np.exp(-2*(t - t1)) * \
+            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         # generate analytical signal (hilbert transform) and add phase shift
         s1h = hilbert(S1(t))
-        s1p = np.real(np.abs(s1h) * np.exp(np.angle(s1h) * 1j + ps * np.pi * 1j))
+        s1p = np.real(np.abs(s1h) * \
+            np.exp(np.angle(s1h) * 1j + ps * np.pi * 1j))
 
         # signal with amplitude error
-        S1a = lambda t: A1a * (t - t1) * np.exp(-2*(t - t1)) * np.cos(2. * np.pi * f1 * \
-                        (t - t1) + phi1 * np.pi) * H(t - t1)
+        S1a = lambda t: A1a * (t - t1) * np.exp(-2*(t - t1)) * \
+            np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         self.S1 = S1
         self.s1p = s1p
@@ -60,31 +65,27 @@ class TfTestCase(unittest.TestCase):
         self.nf = nf
         self.w0 = 6
 
-
-    def tearDown(self):
-        pass
-
     def test_phase_misfit(self):
-        # tests all tf misfits with a signal that has phase misfit
+        """
+        Tests all tf misfits with a signal that has phase misfit
+        """
         S1 = self.S1
         s1p = self.s1p
         t = self.t
         dt = self.dt
-        f = self.f
-        
+
         fmin = self.fmin 
         fmax = self.fmax 
         nf = self.nf
-        w0 = self.w0
 
-        TFEM_11p_ref = np.loadtxt('test_tf_misfit_data/TFEM_11p.dat')
-        TFPM_11p_ref = np.loadtxt('test_tf_misfit_data/TFPM_11p.dat')
-        TEM_11p_ref = np.loadtxt('test_tf_misfit_data/TEM_11p.dat')
-        FEM_11p_ref = np.loadtxt('test_tf_misfit_data/FEM_11p.dat')
-        FPM_11p_ref = np.loadtxt('test_tf_misfit_data/FPM_11p.dat')
-        TPM_11p_ref = np.loadtxt('test_tf_misfit_data/TPM_11p.dat')
-        EM_11p_ref = np.loadtxt('test_tf_misfit_data/EM_11p.dat')
-        PM_11p_ref = np.loadtxt('test_tf_misfit_data/PM_11p.dat')
+        TFEM_11p_ref = np.loadtxt(self.path + os.sep + 'TFEM_11p.dat')
+        TFPM_11p_ref = np.loadtxt(self.path + os.sep + 'TFPM_11p.dat')
+        TEM_11p_ref = np.loadtxt(self.path + os.sep + 'TEM_11p.dat')
+        FEM_11p_ref = np.loadtxt(self.path + os.sep + 'FEM_11p.dat')
+        FPM_11p_ref = np.loadtxt(self.path + os.sep + 'FPM_11p.dat')
+        TPM_11p_ref = np.loadtxt(self.path + os.sep + 'TPM_11p.dat')
+        EM_11p_ref = np.loadtxt(self.path + os.sep + 'EM_11p.dat')
+        PM_11p_ref = np.loadtxt(self.path + os.sep + 'PM_11p.dat')
 
         TFEM_11p = tfem(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         TFPM_11p = tfpm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
@@ -104,37 +105,37 @@ class TfTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(EM_11p, EM_11p_ref, decimal=5)
         np.testing.assert_array_almost_equal(PM_11p, PM_11p_ref, decimal=5)
 
-        # keeping the savecommands in case the files need to be updated
-        #np.savetxt('test_tf_misfit_data/TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TFPM_11p.dat', TFPM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TEM_11p.dat', TEM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/FEM_11p.dat', FEM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/FPM_11p.dat', FPM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TPM_11p.dat', TPM_11p, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/EM_11p.dat', (EM_11p,), fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/PM_11p.dat', (PM_11p,), fmt='%1.5e')
+        # keeping the save commands in case the files need to be updated
+        #np.savetxt('data/TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
+        #np.savetxt('data/TFPM_11p.dat', TFPM_11p, fmt='%1.5e')
+        #np.savetxt('data/TEM_11p.dat', TEM_11p, fmt='%1.5e')
+        #np.savetxt('data/FEM_11p.dat', FEM_11p, fmt='%1.5e')
+        #np.savetxt('data/FPM_11p.dat', FPM_11p, fmt='%1.5e')
+        #np.savetxt('data/TPM_11p.dat', TPM_11p, fmt='%1.5e')
+        #np.savetxt('data/EM_11p.dat', (EM_11p,), fmt='%1.5e')
+        #np.savetxt('data/PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
     def test_envelope_misfit(self):
-        # tests all tf misfits with a signal that has envelope misfit
+        """
+        Tests all tf misfits with a signal that has envelope misfit
+        """
         S1 = self.S1
         S1a = self.S1a
         t = self.t
         dt = self.dt
-        f = self.f
-        
+
         fmin = self.fmin 
         fmax = self.fmax 
         nf = self.nf
-        w0 = self.w0
 
-        TFEM_11a_ref = np.loadtxt('test_tf_misfit_data/TFEM_11a.dat')
-        TFPM_11a_ref = np.loadtxt('test_tf_misfit_data/TFPM_11a.dat')
-        TEM_11a_ref = np.loadtxt('test_tf_misfit_data/TEM_11a.dat')
-        FEM_11a_ref = np.loadtxt('test_tf_misfit_data/FEM_11a.dat')
-        FPM_11a_ref = np.loadtxt('test_tf_misfit_data/FPM_11a.dat')
-        TPM_11a_ref = np.loadtxt('test_tf_misfit_data/TPM_11a.dat')
-        EM_11a_ref = np.loadtxt('test_tf_misfit_data/EM_11a.dat')
-        PM_11a_ref = np.loadtxt('test_tf_misfit_data/PM_11a.dat')
+        TFEM_11a_ref = np.loadtxt(self.path + os.sep + 'TFEM_11a.dat')
+        TFPM_11a_ref = np.loadtxt(self.path + os.sep + 'TFPM_11a.dat')
+        TEM_11a_ref = np.loadtxt(self.path + os.sep + 'TEM_11a.dat')
+        FEM_11a_ref = np.loadtxt(self.path + os.sep + 'FEM_11a.dat')
+        FPM_11a_ref = np.loadtxt(self.path + os.sep + 'FPM_11a.dat')
+        TPM_11a_ref = np.loadtxt(self.path + os.sep + 'TPM_11a.dat')
+        EM_11a_ref = np.loadtxt(self.path + os.sep + 'EM_11a.dat')
+        PM_11a_ref = np.loadtxt(self.path + os.sep + 'PM_11a.dat')
 
         TFEM_11a = tfem(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         TFPM_11a = tfpm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
@@ -154,15 +155,16 @@ class TfTestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(EM_11a, EM_11a_ref, decimal=5)
         np.testing.assert_array_almost_equal(PM_11a, PM_11a_ref, decimal=5)
 
-        # keeping the savecommands in case the files need to be updated
-        #np.savetxt('test_tf_misfit_data/TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TFPM_11a.dat', TFPM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TEM_11a.dat', TEM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/FEM_11a.dat', FEM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/FPM_11a.dat', FPM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/TPM_11a.dat', TPM_11a, fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/EM_11a.dat', (EM_11a,), fmt='%1.5e')
-        #np.savetxt('test_tf_misfit_data/PM_11a.dat', (PM_11a,), fmt='%1.5e')
+        # keeping the save commands in case the files need to be updated
+        #np.savetxt('data/TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
+        #np.savetxt('data/TFPM_11a.dat', TFPM_11a, fmt='%1.5e')
+        #np.savetxt('data/TEM_11a.dat', TEM_11a, fmt='%1.5e')
+        #np.savetxt('data/FEM_11a.dat', FEM_11a, fmt='%1.5e')
+        #np.savetxt('data/FPM_11a.dat', FPM_11a, fmt='%1.5e')
+        #np.savetxt('data/TPM_11a.dat', TPM_11a, fmt='%1.5e')
+        #np.savetxt('data/EM_11a.dat', (EM_11a,), fmt='%1.5e')
+        #np.savetxt('data/PM_11a.dat', (PM_11a,), fmt='%1.5e')
+
 
 def suite():
     return unittest.makeSuite(TfTestCase, 'test')
@@ -170,4 +172,3 @@ def suite():
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
-

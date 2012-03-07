@@ -29,6 +29,12 @@ Citations
    | **Ground-motion characteristics estimated from spectral ratio between horizontal and vertical components of microtremor**,
    | *Bulletin of the Seismological Society of America*, 88 (1), 228-241.
    | http://www.bssaonline.org/content/88/1/228.abstract
+.. [Kristekova2006]  
+   | Kristekova, M., Kristek, J., Moczo, P., and Day, S. M. (2006)
+   | **Misfit Criteria for Quantitative Comparison of Seismograms**
+   | *Bulletin of the Seismological Society of America, Vol. 96, No. 5, pp. 1836-1850, October 2006*
+   | http://dx.doi.org/10.1785/0120060012
+
 .. [McNamara2004]  
    | McNamara, D. E. and Buland, R. P. (2004),
    | **Ambient Noise Levels in the Continental United States**,
