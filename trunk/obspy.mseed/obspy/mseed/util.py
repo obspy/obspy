@@ -376,6 +376,9 @@ def _getRecordInformation(file_object, offset=0):
             samp_rate = -1.0 * float(samp_rate_mult) / float(samp_rate_factor)
         elif (samp_rate_factor < 0) and (samp_rate_mult) < 0:
             samp_rate = -1.0 / float(samp_rate_factor * samp_rate_mult)
+        else:
+            # if everything is unset or 0 set sample rate to 1
+            samp_rate = 1
 
     info['samp_rate'] = samp_rate
 

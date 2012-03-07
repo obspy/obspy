@@ -6,3 +6,4 @@ dev:
  * added UTCDateTime.DEFAULT_PRECISION
  * import of an unsupported waveform will result into a TypeError [#338]
  * added compatibility methods for AttribDict and UTCDateTime
+ * retaining trace order in stream while merging
