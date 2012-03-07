@@ -122,9 +122,7 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, f)
     W2 = cwt(st2, dt, w0, f)
 
-    TFPMl = np.angle(W2) - np.angle(W1)
-    TFPMl[TFPMl > np.pi] -= 2*np.pi
-    TFPMl[TFPMl < -np.pi] += 2*np.pi
+    TFPMl = np.angle(W2 / W1)
 
     return np.abs(W1) * TFPMl / np.pi / np.max(np.abs(W1))
 
@@ -183,9 +181,7 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, f)
     W2 = cwt(st2, dt, w0, f)
 
-    TPMl = np.angle(W2) - np.angle(W1)
-    TPMl[TPMl > np.pi] -= 2*np.pi
-    TPMl[TPMl < -np.pi] += 2*np.pi
+    TPMl = np.angle(W2 / W1)
 
     TPMl = np.abs(W1) * TPMl / np.pi
 
@@ -251,9 +247,7 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, f)
     W2 = cwt(st2, dt, w0, f)
 
-    TPMl = np.angle(W2) - np.angle(W1)
-    TPMl[TPMl > np.pi] -= 2*np.pi
-    TPMl[TPMl < -np.pi] += 2*np.pi
+    TPMl = np.angle(W2 / W1)
 
     TPMl = np.abs(W1) * TPMl / np.pi
 
@@ -317,9 +311,7 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, f)
     W2 = cwt(st2, dt, w0, f)
 
-    PMl = np.angle(W2) - np.angle(W1)
-    PMl[PMl > np.pi] -= 2 * np.pi
-    PMl[PMl < -np.pi] += 2 * np.pi
+    PMl = np.angle(W2 / W1)
 
     PMl = np.abs(W1) * PMl / np.pi
 
