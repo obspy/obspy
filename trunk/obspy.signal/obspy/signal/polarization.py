@@ -27,9 +27,10 @@ def eigval(datax, datay, dataz, fk, normf=1):
     Computes the rectilinearity, the planarity and the eigenvalues of the given
     data which can be windowed or not.
     The time derivatives are calculated by central differences and the
-    parameter ``fk`` describes the coefficients of the used polynomial. The values
-    of ``fk`` depend on the order of the derivative you want to calculate. If you
-    do not want to use derivatives you can simply use [1,1,1,1,1] for ``fk``.
+    parameter ``fk`` describes the coefficients of the used polynomial. The
+    values of ``fk`` depend on the order of the derivative you want to
+    calculate. If you do not want to use derivatives you can simply
+    use [1,1,1,1,1] for ``fk``.
 
     The algorithm is mainly based on the paper by Jurkevics. The rest is just
     the numerical differentiation by central differences (carried out by the

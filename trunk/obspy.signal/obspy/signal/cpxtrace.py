@@ -81,19 +81,19 @@ def normEnvelope(data, fs, smoothie, fk):
         i = 0
         Anorm = np.zeros(x[1].shape[0], dtype='float64')
         for row in x[1]:
-            A_win_smooth = util.smooth(row, int(np.floor(len(row)/3)))
+            A_win_smooth = util.smooth(row, int(np.floor(len(row) / 3)))
             # Differentiation of original signal, dA/dt
             #A_win_add = append(append([row[0]]*(size(fk)/2),row),
             #                      [row[size(row)-1]]*(size(fk)/2))
             # Better, because faster, calculation of A_win_add
-            A_win_add = np.hstack(([A_win_smooth[0]] * (size(fk) // 2), 
-                                   A_win_smooth, 
+            A_win_add = np.hstack(([A_win_smooth[0]] * (size(fk) // 2),
+                                   A_win_smooth,
                                    [A_win_smooth[size(A_win_smooth) - 1]] * \
                                    (size(fk) // 2)))
             t = signal.lfilter(fk, 1, A_win_add)
             #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values of time derivative
-            t = t[size(fk)-1:size(t)]
+            t = t[size(fk) - 1:size(t)]
             A_win_smooth[A_win_smooth < 1] = 1
             # (dA/dt) / 2*PI*smooth(A)*fs/2
             t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
@@ -107,10 +107,10 @@ def normEnvelope(data, fs, smoothie, fk):
         #                      [Anorm[size(Anorm) - 1]] * (size(fk) // 2))
         # faster alternative to calculate Anorm_add
         Anorm_add = np.hstack(([Anorm[0]] * (np.size(fk) // 2), Anorm, \
-                  [Anorm[np.size(Anorm) - 1]] * (np.size(fk) // 2))) 
+                  [Anorm[np.size(Anorm) - 1]] * (np.size(fk) // 2)))
         dAnorm = signal.lfilter(fk, 1, Anorm_add)
         # correct start and end values of time derivative
-        dAnorm = dAnorm[size(fk)-1:size(dAnorm)]
+        dAnorm = dAnorm[size(fk) - 1:size(dAnorm)]
         #dAnorm = dAnorm[size(fk) // 2:(size(dAnorm) - size(fk) // 2)]
         return Anorm, dAnorm
     else:
@@ -126,7 +126,7 @@ def normEnvelope(data, fs, smoothie, fk):
         t = signal.lfilter(fk, 1, A_win_add)
         #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         # correct start and end values of time derivative
-        t = t[size(fk)-1:size(t)]
+        t = t[size(fk) - 1:size(t)]
         A_win_smooth[A_win_smooth < 1] = 1
         # (dA/dt) / 2*PI*smooth(A)*fs/2
         t_ = t / (2. * pi * (A_win_smooth) * (fs / 2.0))
@@ -168,7 +168,8 @@ def centroid(data, fk):
                 if (t >= half):
                     frac = (half - (t - sum(row[0:k - 1]))) / \
                         (t - (t - sum(row[0:k - 1])))
-                    centroid[i] = (float(k-1) + float(frac)) / float(size(row))
+                    centroid[i] = \
+                        (float(k - 1) + float(frac)) / float(size(row))
                     break
             i = i + 1
         #centroid_add = np.append(np.append([centroid[0]] * (size(fk) // 2), \
@@ -179,7 +180,7 @@ def centroid(data, fk):
         dcentroid = signal.lfilter(fk, 1, centroid_add)
         #dcentroid = dcentroid[size(fk) // 2:(size(dcentroid) - size(fk) // 2)]
         # correct start and end values of time derivative
-        dcentroid = dcentroid[ size(fk)-1 : size(dcentroid)]
+        dcentroid = dcentroid[size(fk) - 1:size(dcentroid)]
         return centroid, dcentroid
     else:
         centroid = np.zeros(1, dtype='float64')
@@ -223,11 +224,11 @@ def instFreq(data, fs, fk):
             #                      [f[size(f) - 1]] * (size(fk) // 2))
             # faster alternative to calculate f_add
             f_add = np.hstack(([f[0]] * (np.size(fk) // 2), f, \
-                  [f[np.size(f) - 1]] * (np.size(fk) // 2))) 
+                  [f[np.size(f) - 1]] * (np.size(fk) // 2)))
             fd = signal.lfilter(fk, 1, f_add)
             #fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
             # correct start and end values of time derivative
-            fd = fd[size(fk)-1 :size(fd)]
+            fd = fd[size(fk) - 1:size(fd)]
             #h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
             #                      [h[size(h) - 1]] * (size(fk) // 2))
             # faster alternative to calculate h_add
@@ -236,7 +237,7 @@ def instFreq(data, fs, fk):
             hd = signal.lfilter(fk, 1, h_add)
             #hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
             # correct start and end values of time derivative
-            hd = hd[size(fk)-1 :size(hd)]
+            hd = hd[size(fk) - 1:size(hd)]
             omega_win = abs(((f * hd - fd * h) / (f * f + h * h)) * \
                              fs / 2 / pi)
             omega[i] = np.median(omega_win)
@@ -249,7 +250,7 @@ def instFreq(data, fs, fk):
         domega = signal.lfilter(fk, 1, omega_add)
         #domega = domega[size(fk) // 2:(size(domega) - size(fk) // 2)]
         # correct start and end values of time derivative
-        domega = domega[ size(fk)-1 : size(domega)]
+        domega = domega[size(fk) - 1:size(domega)]
         return omega, domega
     else:
         omega = np.zeros(size(x[0]), dtype='float64')
@@ -263,7 +264,7 @@ def instFreq(data, fs, fk):
         fd = signal.lfilter(fk, 1, f_add)
         #fd = fd[size(fk) // 2:(size(fd) - size(fk) // 2)]
         # correct start and end values of time derivative
-        fd = fd[size(fk)-1 :size(fd)]
+        fd = fd[size(fk) - 1:size(fd)]
         #h_add = np.append(np.append([h[0]] * (size(fk) // 2), h),
         #                      [h[size(h) - 1]] * (size(fk) // 2))
         # faster alternative to calculate h_add
@@ -272,7 +273,7 @@ def instFreq(data, fs, fk):
         hd = signal.lfilter(fk, 1, h_add)
         #hd = hd[size(fk) // 2:(size(hd) - size(fk) // 2)]
         # correct start and end values of time derivative
-        hd = hd[size(fk)-1 :size(hd)]
+        hd = hd[size(fk) - 1:size(hd)]
         omega = abs(((f * hd - fd * h) / (f * f + h * h)) * fs / 2 / pi)
         return omega
 
@@ -305,7 +306,7 @@ def instBwith(data, fs, fk):
             t = signal.lfilter(fk, 1, A_win_add)
             #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
             # correct start and end values
-            t = t[size(fk)-1:size(t)]
+            t = t[size(fk) - 1:size(t)]
             sigma_win = abs((t * fs) / (row * 2 * pi))
             sigma[i] = np.median(sigma_win)
             i = i + 1
@@ -317,7 +318,7 @@ def instBwith(data, fs, fk):
         dsigma = signal.lfilter(fk, 1, sigma_add)
         #dsigma = dsigma[size(fk) // 2:(size(dsigma) - size(fk) // 2)]
         # correct start and end values
-        dsigma = dsigma[size(fk)-1:size(dsigma)]
+        dsigma = dsigma[size(fk) - 1:size(dsigma)]
         return sigma, dsigma
     else:
         sigma = np.zeros(size(x[0]), dtype='float64')
@@ -329,6 +330,6 @@ def instBwith(data, fs, fk):
         t = signal.lfilter(fk, 1, A_win_add)
         #t = t[size(fk) // 2:(size(t) - size(fk) // 2)]
         # correct start and end values
-        t = t[size(fk)-1:size(t)] 
+        t = t[size(fk) - 1:size(t)]
         sigma = abs((t * fs) / (x[1] * 2 * pi))
         return sigma

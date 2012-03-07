@@ -128,7 +128,7 @@ def cfrequency(data, fs, smoothie, fk):
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
         #dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
         # correct start and end values of time derivative
-        dcfreq = dcfreq[np.size(fk)-1:np.size(dcfreq)]        
+        dcfreq = dcfreq[np.size(fk) - 1:np.size(dcfreq)]
         return cfreq, dcfreq
     else:
         Px_wm = welch(data, np.hamming(len(data)), util.nextpow2(len(data)))
@@ -179,7 +179,7 @@ def bwith(data, fs, smoothie, fk):
         dbwith = signal.lfilter(fk, 1, bwith_add)
         #dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
         # correct start and end values of time derivative
-        dbwith = dbwith[np.size(fk)-1:]
+        dbwith = dbwith[np.size(fk) - 1:]
         bwith = util.smooth(bwith, smoothie)
         dbwith = util.smooth(dbwith, smoothie)
         return bwith, dbwith
@@ -232,7 +232,7 @@ def domperiod(data, fs, smoothie, fk):
         #ddperiod = ddperiod[np.size(fk) / \
         #    2:(np.size(ddperiod) - np.size(fk) // 2)]
         # correct start and end values of time derivative
-        ddperiod = ddperiod[np.size(fk)-1:]
+        ddperiod = ddperiod[np.size(fk) - 1:]
         dperiod = util.smooth(dperiod, smoothie)
         ddperiod = util.smooth(ddperiod, smoothie)
         return dperiod, ddperiod
@@ -294,7 +294,7 @@ def logbankm(p, n, fs, w):
     return xx, mn - 1, mx - 1
 
 
-def logcep(data, fs, nc, p, n, w):
+def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     """
     Cepstrum of a signal.
 
@@ -312,7 +312,6 @@ def logcep(data, fs, nc, p, n, w):
     :param n: Number of data windows.
     :return: Cepstral coefficients.
     """
-    # XXX: argument n is never used within function!!!
     dataT = np.transpose(data)
     nfft = util.nextpow2(dataT.shape[0])
     fc = fftpack.fft(dataT, nfft, 0)

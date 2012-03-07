@@ -1,2 +1,4 @@
 dev:
  * adding toolbox to calculate Time-Frequency Misfits
+ * fixed bug in calculation of time derivatives
+ 
