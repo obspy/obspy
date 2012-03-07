@@ -19,12 +19,12 @@ class TfTestCase(unittest.TestCase):
         # path to test files
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         tmax = 3.
-        dt = 0.1
-        npts = int(tmax / dt + 1)
+        npts = 60
+        dt = tmax / (npts - 1)
 
         fmin = 1.
         fmax = 3.
-        nf = 4.
+        nf = 3
 
         # Constants for S1
         A1 = 4.
@@ -96,14 +96,16 @@ class TfTestCase(unittest.TestCase):
         EM_11p = em(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         PM_11p = pm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
-        np.testing.assert_array_almost_equal(TFEM_11p, TFEM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TFPM_11p, TFPM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TEM_11p, TEM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(FEM_11p, FEM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(FPM_11p, FPM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TPM_11p, TPM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(EM_11p, EM_11p_ref, decimal=5)
-        np.testing.assert_array_almost_equal(PM_11p, PM_11p_ref, decimal=5)
+        tol = 1e-5
+
+        np.testing.assert_allclose(TFEM_11p, TFEM_11p_ref, rtol=tol, atol=np.abs(TFEM_11p_ref).max()*tol)
+        np.testing.assert_allclose(TFPM_11p, TFPM_11p_ref, rtol=tol, atol=np.abs(TFPM_11p_ref).max()*tol)
+        np.testing.assert_allclose(TEM_11p, TEM_11p_ref, rtol=tol, atol=np.abs(TEM_11p_ref).max()*tol)
+        np.testing.assert_allclose(FEM_11p, FEM_11p_ref, rtol=tol, atol=np.abs(FEM_11p_ref).max()*tol)
+        np.testing.assert_allclose(FPM_11p, FPM_11p_ref, rtol=tol, atol=np.abs(FPM_11p_ref).max()*tol)
+        np.testing.assert_allclose(TPM_11p, TPM_11p_ref, rtol=tol, atol=np.abs(TPM_11p_ref).max()*tol)
+        np.testing.assert_allclose(EM_11p, EM_11p_ref, rtol=tol, atol=np.abs(EM_11p_ref).max()*tol)
+        np.testing.assert_allclose(PM_11p, PM_11p_ref, rtol=tol, atol=np.abs(PM_11p_ref).max()*tol)
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt('data/TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
@@ -146,14 +148,16 @@ class TfTestCase(unittest.TestCase):
         EM_11a = em(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         PM_11a = pm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
-        np.testing.assert_array_almost_equal(TFEM_11a, TFEM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TFPM_11a, TFPM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TEM_11a, TEM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(FEM_11a, FEM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(FPM_11a, FPM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(TPM_11a, TPM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(EM_11a, EM_11a_ref, decimal=5)
-        np.testing.assert_array_almost_equal(PM_11a, PM_11a_ref, decimal=5)
+        tol = 1e-5
+
+        np.testing.assert_allclose(TFEM_11a, TFEM_11a_ref, rtol=tol, atol=np.abs(TFEM_11a_ref).max()*tol)
+        np.testing.assert_allclose(TFPM_11a, TFPM_11a_ref, rtol=tol, atol=np.abs(TFPM_11a_ref).max()*tol)
+        np.testing.assert_allclose(TEM_11a, TEM_11a_ref, rtol=tol, atol=np.abs(TEM_11a_ref).max()*tol)
+        np.testing.assert_allclose(FEM_11a, FEM_11a_ref, rtol=tol, atol=np.abs(FEM_11a_ref).max()*tol)
+        np.testing.assert_allclose(FPM_11a, FPM_11a_ref, rtol=tol, atol=np.abs(FPM_11a_ref).max()*tol)
+        np.testing.assert_allclose(TPM_11a, TPM_11a_ref, rtol=tol, atol=np.abs(TPM_11a_ref).max()*tol)
+        np.testing.assert_allclose(EM_11a, EM_11a_ref, rtol=tol, atol=np.abs(EM_11a_ref).max()*tol)
+        np.testing.assert_allclose(PM_11a, PM_11a_ref, rtol=tol, atol=np.abs(PM_11a_ref).max()*tol)
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt('data/TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
