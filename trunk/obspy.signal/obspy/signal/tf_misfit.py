@@ -23,7 +23,7 @@ import numpy as np
 from obspy.signal import util, cosTaper
 
 
-def cwt(st, dt, w0, f, wl='morlet'):
+def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     """
     Continuous Wavelet Transformation in the Frequency Domain.
 
@@ -43,6 +43,8 @@ def cwt(st, dt, w0, f, wl='morlet'):
     npts = len(st)
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
+    
+    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     cwt = np.zeros((t.shape[0], f.shape[0])) * 0j
 
@@ -89,10 +91,8 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     return (np.abs(W2) - np.abs(W1)) / np.max(np.abs(W1))
 
@@ -117,10 +117,8 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     TFPMl = np.angle(W2 / W1)
 
@@ -146,10 +144,8 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     TEMl = np.sum((np.abs(W2) - np.abs(W1)), axis=0) / nf
     TEMl /=  np.max(np.sum(np.abs(W1), axis=0))  / nf
@@ -176,10 +172,8 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     TPMl = np.angle(W2 / W1)
 
@@ -210,11 +204,10 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
     npts = len(st1)
 
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     TEMl = np.sum((np.abs(W2) - np.abs(W1)), axis=1) / npts
     TEMl /=  np.max(np.sum(np.abs(W1), axis=1))  / npts
@@ -241,11 +234,10 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray.
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
     npts = len(st1)
 
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     TPMl = np.angle(W2 / W1)
 
@@ -276,10 +268,8 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Single Valued Envelope Misfit
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     EMl = (np.sum((np.abs(W2) - np.abs(W1))**2))**.5
     EMl /=  (np.sum(np.abs(W1)**2))**.5
@@ -306,10 +296,8 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
 
     :return: Single Valued Phase Misfit
     """
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-
-    W1 = cwt(st1, dt, w0, f)
-    W2 = cwt(st2, dt, w0, f)
+    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
+    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
     PMl = np.angle(W2 / W1)
 
