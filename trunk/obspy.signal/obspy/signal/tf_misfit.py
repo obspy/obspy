@@ -490,7 +490,7 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
         if len(st1.shape) == 1:
             return EM[0] / (np.sum(Ar**2))**.5
         else:
-            return EM / (np.sum(Ar**2))**.5
+            return EM / (np.sum(np.sum(Ar**2, axis=2), axis=1))**.5
 
 
 def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -886,10 +886,6 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     ax_TFPM.set_yscale('log')
     
     # add colorbars
-    #ax_cb_TFEM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, 
-    #                           bottom + h_1 + 2*h_2 + h_3, w_cb, h_3])
-    #fig.colorbar(img_TFEM, cax=ax_cb_TFEM)
-
     ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
                                w_cb, h_2 + h_3])
     fig.colorbar(img_TFPM, cax=ax_cb_TFPM)
