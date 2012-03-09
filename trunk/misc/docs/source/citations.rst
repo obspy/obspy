@@ -35,7 +35,7 @@ Citations
    | *Bulletin of the Seismological Society of America*, 96 (5), 1836-1850.
    | http://dx.doi.org/10.1785/0120060012
 .. [Kristekova2009]  
-   | Kristekova, M., Kristek, J. and Moczo, P. (2006),
+   | Kristekova, M., Kristek, J. and Moczo, P. (2009),
    | **Time-frequency misfit and goodness-of-fit criteria for quantitative comparison of time signals**,
    | *Geophysical Journal International*, 178 (2), 813-825.
    | http://doi.wiley.com/10.1111/j.1365-246X.2009.04177.x
