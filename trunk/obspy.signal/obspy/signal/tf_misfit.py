@@ -76,10 +76,10 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -136,10 +136,10 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -196,10 +196,10 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -255,10 +255,10 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -315,10 +315,10 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -377,10 +377,10 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -439,10 +439,10 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
@@ -498,10 +498,10 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
-    :param st1: signal 1 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
-    :param st2: signal 2 of two signals to compare, will be demeaned and
-        tapered before FFT in CWT, type numpy.ndarray.
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
