@@ -4,7 +4,8 @@
 The tf_misfit test suite.
 """
 
-from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, tpm, em, pm
+from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, tpm, em, pm, \
+                                   tfeg, tfpg, teg, feg, fpg, tpg, eg, pg
 from scipy.signal import hilbert
 import numpy as np
 import os
@@ -63,6 +64,7 @@ class TfTestCase(unittest.TestCase):
         self.fmin = fmin
         self.fmax = fmax
         self.nf = nf
+        self.npts = npts
         self.w0 = 6
 
     def test_phase_misfit(self):
@@ -187,6 +189,38 @@ class TfTestCase(unittest.TestCase):
         #np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
         #np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
+    def test_envelope_gof(self):
+        """
+        Tests all tf gofs
+        """
+        S1 = self.S1
+        t = self.t
+        dt = self.dt
+
+        fmin = self.fmin 
+        fmax = self.fmax 
+        nf = self.nf
+        npts = self.npts
+        
+        tol = 1e-5
+        
+        TFEG = tfeg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TFPG = tfpg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TEG = teg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TPG = tpg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FEG = feg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FPG = fpg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        EG = eg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        PG = pg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+
+        np.testing.assert_allclose(TFEG, np.ones((nf, npts)) * 10., rtol=tol)
+        np.testing.assert_allclose(TFPG, np.ones((nf, npts)) * 10., rtol=tol)
+        np.testing.assert_allclose(TEG, np.ones(npts) * 10., rtol=tol)
+        np.testing.assert_allclose(TPG, np.ones(npts) * 10., rtol=tol)
+        np.testing.assert_allclose(FEG, np.ones(nf) * 10., rtol=tol)
+        np.testing.assert_allclose(FPG, np.ones(nf) * 10., rtol=tol)
+        np.testing.assert_allclose(EG, 10., rtol=tol)
+        np.testing.assert_allclose(PG, 10., rtol=tol)
 
 def suite():
     return unittest.makeSuite(TfTestCase, 'test')

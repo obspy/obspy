@@ -550,3 +550,247 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return PM[0] / (np.sum(Ar**2))**.5
         else:
             return PM / (np.sum(np.sum(Ar**2, axis=2), axis=1))**.5
+
+
+
+def tfeg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Time Frequency Envelope Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(15)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: time frequency representation of Envelope Goodness-Of-Fit,
+        type numpy.ndarray.
+    """
+    TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+                st2_isref=st2_isref)
+    return A * np.exp(-np.abs(TFEM)**k)
+
+
+def tfpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Time Frequency Phase Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(16)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: time frequency representation of Phase Goodness-Of-Fit,
+        type numpy.ndarray.
+    """
+    TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+                st2_isref=st2_isref)
+    return A * (1 - np.abs(TFPM)**k)
+
+
+def teg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Time Dependent Envelope Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(15)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: time dependent Envelope Goodness-Of-Fit, type numpy.ndarray.
+    """
+    TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * np.exp(-np.abs(TEM)**k)
+
+
+def tpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Time Dependent Phase Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(16)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: time dependent Phase Goodness-Of-Fit, type numpy.ndarray.
+    """
+    TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * (1 - np.abs(TPM)**k)
+
+
+def feg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Frequency Dependent Envelope Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(15)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: frequency dependent Envelope Goodness-Of-Fit, type numpy.ndarray.
+    """
+    FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * np.exp(-np.abs(FEM)**k)
+
+
+def fpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Frequency Dependent Phase Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(16)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: frequency dependent Phase Goodness-Of-Fit, type numpy.ndarray.
+    """
+    FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * (1 - np.abs(FPM)**k)
+
+
+def eg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Single Valued Envelope Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(15)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: Single Valued Envelope Goodness-Of-Fit,
+    """
+    EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * np.exp(-np.abs(EM)**k)
+
+
+def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st2_isref=True, A=10., k=1.):
+    """
+    Single Valued Phase Goodness-Of_Fit
+
+    .. seealso:: [Kristekova2009]_, Eq.(16)
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+
+    :return: Single Valued Phase Goodness-Of-Fit,
+    """
+    PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+               st2_isref=st2_isref)
+    return A * (1 - np.abs(PM)**k)
+
