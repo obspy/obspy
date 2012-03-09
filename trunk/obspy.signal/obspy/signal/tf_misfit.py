@@ -43,10 +43,9 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     npts = len(st)
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
-    
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.zeros((t.shape[0], f.shape[0])) * 0j
+    cwt = np.empty((npts, nf)) * 0j
 
     if wl == 'morlet':
         psi = lambda t : np.pi**(-.25) * np.exp(1j * w0 * t) * \
@@ -55,8 +54,6 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
 
-    st -= st.mean()
-    st *= cosTaper(len(st), p=0.05)
     nfft = util.nextpow2(len(st)) * 2
     sf = np.fft.fft(st, n=nfft)
 
@@ -71,7 +68,8 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     return cwt.T
 
 
-def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Time Frequency Envelope Misfit
 
@@ -94,10 +92,24 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    return (np.abs(W2) - np.abs(W1)) / np.max(np.abs(W1))
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
+
+    TFEM = (np.abs(W2) - np.abs(W1))
+
+    if norm == 'global':
+        return  TFEM / np.max(Ar)
+    elif norm == 'local':
+        return  TFEM / Ar
 
 
-def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Time Frequency Phase Misfit
 
@@ -120,12 +132,24 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    TFPMl = np.angle(W2 / W1)
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
 
-    return np.abs(W1) * TFPMl / np.pi / np.max(np.abs(W1))
+    TFPM = np.angle(W2 / W1) / np.pi
+
+    if norm == 'global':
+        return Ar * TFPM / np.max(Ar)
+    elif norm == 'local':
+        return TFPM
 
 
-def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Time-dependent Envelope Misfit
 
@@ -147,13 +171,24 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    TEMl = np.sum((np.abs(W2) - np.abs(W1)), axis=0) / nf
-    TEMl /=  np.max(np.sum(np.abs(W1), axis=0))  / nf
-   
-    return TEMl
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
+
+    TEM = np.sum((np.abs(W2) - np.abs(W1)), axis=0)
+
+    if norm == 'global':
+        return TEM / np.max(np.sum(Ar, axis=0))
+    elif norm == 'local':
+        return TEM / np.sum(Ar, axis=0)
 
 
-def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Time-dependent Phase Misfit
 
@@ -175,17 +210,25 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    TPMl = np.angle(W2 / W1)
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
 
-    TPMl = np.abs(W1) * TPMl / np.pi
+    TPM = np.angle(W2 / W1) / np.pi
+    TPM = np.sum(Ar * TPM, axis=0)
 
-    TPMl = np.sum(TPMl, axis=0) / nf
-    TPMl /= np.max(np.sum(np.abs(W1), axis=0)) / nf
+    if norm == 'global':
+        return TPM / np.max(np.sum(Ar, axis=0))
+    elif norm == 'local':
+        return TPM / np.sum(Ar, axis=0)
 
-    return TPMl
 
-
-def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Frequency-dependent Envelope Misfit
 
@@ -209,13 +252,25 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    TEMl = np.sum((np.abs(W2) - np.abs(W1)), axis=1) / npts
-    TEMl /=  np.max(np.sum(np.abs(W1), axis=1))  / npts
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
+
+    TEM = np.abs(W2) - np.abs(W1)
+    TEM = np.sum(TEM, axis=1)
    
-    return TEMl
+    if norm == 'global':
+        return TEM / np.max(np.sum(Ar, axis=1))
+    elif norm == 'local':
+        return TEM / np.sum(Ar, axis=1)
 
 
-def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Frequency-dependent Phase Misfit
     
@@ -239,17 +294,25 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    TPMl = np.angle(W2 / W1)
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
 
-    TPMl = np.abs(W1) * TPMl / np.pi
+    TPM = np.angle(W2 / W1) / np.pi
+    TPM = np.sum(Ar * TPM, axis=1)
 
-    TPMl = np.sum(TPMl, axis=1) / npts
-    TPMl /= np.max(np.sum(np.abs(W1), axis=1)) / npts
+    if norm == 'global':
+        return TPM / np.max(np.sum(Ar, axis=1))
+    elif norm == 'local':
+        return TPM / np.sum(Ar, axis=1)
 
-    return TPMl
 
-
-def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Single Valued Envelope Misfit
 
@@ -271,13 +334,24 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    EMl = (np.sum((np.abs(W2) - np.abs(W1))**2))**.5
-    EMl /=  (np.sum(np.abs(W1)**2))**.5
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
+
+    EM = (np.sum((np.abs(W2) - np.abs(W1))**2))**.5
    
-    return EMl
+    if norm == 'global':
+        return EM / (np.sum(Ar**2))**.5
+    elif norm == 'local':
+        return EM / (np.sum(Ar**2))**.5
 
 
-def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
+def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+    st1_isref=True):
     """
     Single Valued Phase Misfit
 
@@ -299,11 +373,19 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6):
     W1 = cwt(st1, dt, w0, fmin, fmax, nf)
     W2 = cwt(st2, dt, w0, fmin, fmax, nf)
 
-    PMl = np.angle(W2 / W1)
+    if st1_isref:
+        Ar = np.abs(W1)
+    else:
+        if np.abs(W1).max() > np.abs(W2).max():
+            Ar = np.abs(W1)
+        else:
+            Ar = np.abs(W2)
 
-    PMl = np.abs(W1) * PMl / np.pi
+    PM = np.angle(W2 / W1) / np.pi
 
-    PMl = (np.sum(PMl**2))**.5
-    PMl /= (np.sum(np.abs(W1)**2))**.5
+    PM = (np.sum((Ar * PM)**2))**.5
 
-    return PMl
+    if norm == 'global':
+        return PM / (np.sum(Ar**2))**.5
+    elif norm == 'local':
+        return PM / (np.sum(Ar**2))**.5
