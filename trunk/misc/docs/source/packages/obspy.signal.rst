@@ -56,6 +56,7 @@
        polarization
        psd
        rotate
+       tf_misfit
        trigger
        util
 
