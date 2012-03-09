@@ -23,6 +23,8 @@ Kristekova et. al. (2009).
 
 import numpy as np
 from obspy.signal import util, cosTaper
+import matplotlib.pyplot as plt
+from matplotlib.ticker import NullFormatter, MultipleLocator, NullLocator
 
 
 def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
@@ -794,3 +796,178 @@ def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
                st2_isref=st2_isref)
     return A * (1 - np.abs(PM)**k)
 
+
+
+def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
+    norm='global', st2_isref=True, left=0.1, bottom=0.1, h_1=0.2, h_2=0.125,
+    h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01, d_cb=0.0, show=True, plot_args=['k',
+    'r', 'b'], ylim=0., clim=0., cmap='RdBu'):
+    """
+    Plot all timefrequency misfits in one plot.
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param left: plot distance from the left of the figure
+    :param bottom: plot distance from the bottom of the figure
+    :param h_1: height of the signal axes
+    :param h_2: height of the TEM and TPM axes
+    :param h_3: height of the TFEM and TFPM axes
+    :param w_1: width of the FEM and FPM axes
+    :param w_2: width of the TFEM, TFPM, signal etc. axes
+    :param w_cb: width of the colorbar axes
+    :param d_cb: distance of the colorbar axes to the other axes
+    :param show: show figure or return
+    :param plot_args: list of plot arguments passed to the signal 1/2 and
+        TEM/TPM/FEM/FPM plots
+    :param ylim: limits in misfit for TEM/TPM/FEM/FPM
+    :param clim: limits of the colorbars
+    :param cmap: colormap for TFEM/TFPM
+
+    :return: If show is False, returns a maplotlib.pyplot.figure object
+    """
+
+    npts = len(st1)
+    tmax = (npts - 1) * dt
+    t = np.linspace(0., tmax, npts)
+    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
+
+    # Plot S1 and S1t and TFEM + TFPM misfits
+    fig = plt.figure()
+    
+    # plot signals
+    ax_sig = fig.add_axes([left + w_1, bottom + h_2 + h_3, w_2, h_1])
+    ax_sig.plot(t, st1, plot_args[0])
+    ax_sig.plot(t, st2, plot_args[1])
+    
+    # plot TEM
+    TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref)
+    ax_TEM = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
+    ax_TEM.plot(t, TEM, plot_args[2])
+    
+    # plot TFEM
+    TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+                st2_isref=st2_isref)
+    ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2*h_2 + h_3, w_2, h_3])
+    img_TFEM = ax_TFEM.imshow(TFEM, interpolation='nearest', cmap=cmap, extent=[t[0],
+                              t[-1], fmin, fmax], aspect='auto', origin='lower')
+    ax_TFEM.set_yscale('log')
+    
+    # plot FEM
+    FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref)
+    ax_FEM = fig.add_axes([left, bottom + h_1 + 2*h_2 + h_3, w_1, h_3])
+    ax_FEM.semilogy(FEM, f, plot_args[2])
+    ax_FEM.set_ylim(fmin, fmax)
+    
+    # plot TPM
+    TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref)
+    ax_TPM = fig.add_axes([left + w_1, bottom, w_2, h_2])
+    ax_TPM.plot(t, TPM, plot_args[2])
+    
+    # plot TFPM
+    TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref)
+    ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
+    img_TFPM = ax_TFPM.imshow(TFPM, interpolation='nearest', cmap=cmap, extent=[t[0],
+                         t[-1], f[0], f[-1]], aspect='auto', origin='lower')
+    ax_TFPM.set_yscale('log')
+    
+    # add colorbars
+    #ax_cb_TFEM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, 
+    #                           bottom + h_1 + 2*h_2 + h_3, w_cb, h_3])
+    #fig.colorbar(img_TFEM, cax=ax_cb_TFEM)
+
+    ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
+                               w_cb, h_2 + h_3])
+    fig.colorbar(img_TFPM, cax=ax_cb_TFPM)
+    
+    # plot FPM
+    FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref)
+    ax_FPM = fig.add_axes([left, bottom + h_2, w_1, h_3])
+    ax_FPM.semilogy(FPM, f, plot_args[2])
+    ax_FPM.set_ylim(fmin, fmax)
+   
+    
+    # set limits
+    ylim_sig = np.max([np.abs(st1).max(), np.abs(st2).max()]) * 1.1
+    ax_sig.set_ylim(-ylim_sig, ylim_sig)
+
+    if ylim == 0.:
+        ylim = np.max([np.abs(TEM).max(), np.abs(TPM).max(), np.abs(FEM).max(),
+                       np.abs(FPM).max()]) * 1.1
+
+    ax_TEM.set_ylim(-ylim, ylim)
+    ax_FEM.set_xlim(-ylim, ylim)
+    ax_TPM.set_ylim(-ylim, ylim)
+    ax_FPM.set_xlim(-ylim, ylim)
+
+    if clim == 0.:
+        clim = np.max([np.abs(TFEM).max(), np.abs(TFPM).max()])
+
+    img_TFPM.set_clim(-clim, clim)
+    img_TFEM.set_clim(-clim, clim)
+
+
+    # add text box for EM + PM
+    PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+            st2_isref=st2_isref)
+    EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+            st2_isref=st2_isref)
+
+    textstr = 'EM = %.2f\nPM = %.2f' % (EM, PM)
+    props = dict(boxstyle='round', facecolor='white')
+    ax_sig.text(-0.15, 0.5, textstr, transform=ax_sig.transAxes,
+            verticalalignment='center', horizontalalignment='right',
+            bbox=props)
+    
+    ax_TPM.set_xlabel('time')
+    ax_FEM.set_ylabel('frequency')
+    ax_FPM.set_ylabel('frequency')
+    
+    # add text boxes
+    props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+    ax_TFEM.text(0.95, 0.85, 'TFEM', transform=ax_TFEM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    ax_TFPM.text(0.95, 0.85, 'TFPM', transform=ax_TFPM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    ax_TEM.text(0.95, 0.75, 'TEM', transform=ax_TEM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    ax_TPM.text(0.95, 0.75, 'TPM', transform=ax_TPM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    ax_FEM.text(0.9, 0.85, 'FEM', transform=ax_FEM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    ax_FPM.text(0.9, 0.85, 'FPM', transform=ax_FPM.transAxes,
+            verticalalignment='top', horizontalalignment='right',
+            bbox=props)
+    
+    # remove axis labels
+    ax_TFPM.xaxis.set_major_formatter(NullFormatter())
+    ax_TFEM.xaxis.set_major_formatter(NullFormatter())
+    ax_TEM.xaxis.set_major_formatter(NullFormatter())
+    ax_sig.xaxis.set_major_formatter(NullFormatter())
+    ax_TFPM.yaxis.set_major_formatter(NullFormatter())
+    ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+    
+    if show:
+        plt.show()
+    else:
+        return fig
