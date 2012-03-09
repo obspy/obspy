@@ -8,9 +8,11 @@
 # Copyright (C) 2012 Martin van Driel
 #---------------------------------------------------------------------
 """
-Various Time Frequency Misfit Functions based on Kristekova et. al. (2006).
+Various Time Frequency Misfit Functions based on Kristekova et. al. (2006) and
+Kristekova et. al. (2009).
 
 .. seealso:: [Kristekova2006]_
+.. seealso:: [Kristekova2009]_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -29,8 +31,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
 
     .. seealso:: [Kristekova2006]_, eq. (4)
 
-    :param st: time dependent signal. Will be demeaned and tapered before FFT,
-        type numpy.ndarray.
+    :param st: time dependent signal.
     :param dt: time step between two samples in st
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
@@ -73,7 +74,7 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Time Frequency Envelope Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (9)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -85,6 +86,9 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray.
@@ -113,7 +117,7 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Time Frequency Phase Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (10)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -125,6 +129,9 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray.
@@ -153,7 +160,7 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Time-dependent Envelope Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (11)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -165,6 +172,9 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray.
     """
@@ -192,7 +202,7 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Time-dependent Phase Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (12)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -204,6 +214,9 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray.
     """
@@ -232,7 +245,7 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Frequency-dependent Envelope Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (14)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -244,6 +257,9 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray.
     """
@@ -274,7 +290,7 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Frequency-dependent Phase Misfit
     
-    .. seealso:: [Kristekova2006]_, eq. (15)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -286,6 +302,9 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray.
     """
@@ -316,7 +335,7 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Single Valued Envelope Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (17)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -328,6 +347,9 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Single Valued Envelope Misfit
     """
@@ -355,7 +377,7 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     Single Valued Phase Misfit
 
-    .. seealso:: [Kristekova2006]_, eq. (18)
+    .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, will be demeaned and
         tapered before FFT in CWT, type numpy.ndarray.
@@ -367,6 +389,9 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+        is a reference
 
     :return: Single Valued Phase Misfit
     """
