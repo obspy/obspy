@@ -70,7 +70,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
 
 
 def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Time Frequency Envelope Misfit
 
@@ -87,33 +87,50 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: time frequency representation of Envelope Misfit,
         type numpy.ndarray.
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    TFEM = (np.abs(W2) - np.abs(W1))
+    TFEM = (np.abs(W1) - np.abs(W2))
 
     if norm == 'global':
-        return  TFEM / np.max(Ar)
+        if len(st1.shape) == 1:
+            return  TFEM[0] / np.max(Ar)
+        else:
+            return  TFEM / np.max(Ar)
     elif norm == 'local':
-        return  TFEM / Ar
+        if len(st1.shape) == 1:
+            return  TFEM[0] / Ar[0]
+        else:
+            return  TFEM / Ar
 
 
 def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Time Frequency Phase Misfit
 
@@ -130,33 +147,50 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: time frequency representation of Phase Misfit,
         type numpy.ndarray.
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    TFPM = np.angle(W2 / W1) / np.pi
+    TFPM = np.angle(W1 / W2) / np.pi
 
     if norm == 'global':
-        return Ar * TFPM / np.max(Ar)
+        if len(st1.shape) == 1:
+            return Ar[0] * TFPM[0] / np.max(Ar)
+        else:
+            return Ar * TFPM / np.max(Ar)
     elif norm == 'local':
-        return TFPM
+        if len(st1.shape) == 1:
+            return TFPM[0]
+        else:
+            return TFPM
 
 
 def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Time-dependent Envelope Misfit
 
@@ -173,32 +207,49 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Time-dependent Envelope Misfit, type numpy.ndarray.
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    TEM = np.sum((np.abs(W2) - np.abs(W1)), axis=0)
+    TEM = np.sum((np.abs(W1) - np.abs(W2)), axis=1)
 
     if norm == 'global':
-        return TEM / np.max(np.sum(Ar, axis=0))
+        if len(st1.shape) == 1:
+            return TEM[0] / np.max(np.sum(Ar, axis=1))
+        else:
+            return TEM / np.max(np.sum(Ar, axis=1))
     elif norm == 'local':
-        return TEM / np.sum(Ar, axis=0)
+        if len(st1.shape) == 1:
+            return TEM[0] / np.sum(Ar, axis=1)[0]
+        else:
+            return TEM / np.sum(Ar, axis=1)
 
 
 def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Time-dependent Phase Misfit
 
@@ -215,33 +266,50 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Time-dependent Phase Misfit, type numpy.ndarray.
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
-            Ar = np.abs(W1)
-        else:
             Ar = np.abs(W2)
+        else:
+            Ar = np.abs(W1)
 
-    TPM = np.angle(W2 / W1) / np.pi
-    TPM = np.sum(Ar * TPM, axis=0)
+    TPM = np.angle(W1 / W2) / np.pi
+    TPM = np.sum(Ar * TPM, axis=1)
 
     if norm == 'global':
-        return TPM / np.max(np.sum(Ar, axis=0))
+        if len(st1.shape) == 1:
+            return TPM[0] / np.max(np.sum(Ar, axis=1))
+        else:
+            return TPM / np.max(np.sum(Ar, axis=1))
     elif norm == 'local':
-        return TPM / np.sum(Ar, axis=0)
+        if len(st1.shape) == 1:
+            return TPM[0] / np.sum(Ar, axis=1)[0]
+        else:
+            return TPM / np.sum(Ar, axis=1)
 
 
 def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Frequency-dependent Envelope Misfit
 
@@ -258,35 +326,52 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray.
     """
-    npts = len(st1)
+    if len(st1.shape) == 1:
+        npts = st1.shape[0]
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        npts = st1.shape[1]
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
-    if st1_isref:
-        Ar = np.abs(W1)
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    TEM = np.abs(W2) - np.abs(W1)
-    TEM = np.sum(TEM, axis=1)
+    TEM = np.abs(W1) - np.abs(W2)
+    TEM = np.sum(TEM, axis=2)
    
     if norm == 'global':
-        return TEM / np.max(np.sum(Ar, axis=1))
+        if len(st1.shape) == 1:
+            return TEM[0] / np.max(np.sum(Ar, axis=2))
+        else:
+            return TEM / np.max(np.sum(Ar, axis=2))
     elif norm == 'local':
-        return TEM / np.sum(Ar, axis=1)
+        if len(st1.shape) == 1:
+            return TEM[0] / np.sum(Ar, axis=2)[0]
+        else:
+            return TEM / np.sum(Ar, axis=2)
 
 
 def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Frequency-dependent Phase Misfit
     
@@ -303,35 +388,52 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray.
     """
-    npts = len(st1)
+    if len(st1.shape) == 1:
+        npts = st1.shape[0]
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        npts = st1.shape[1]
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
 
-    if st1_isref:
-        Ar = np.abs(W1)
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    TPM = np.angle(W2 / W1) / np.pi
-    TPM = np.sum(Ar * TPM, axis=1)
+    TPM = np.angle(W1 / W2) / np.pi
+    TPM = np.sum(Ar * TPM, axis=2)
 
     if norm == 'global':
-        return TPM / np.max(np.sum(Ar, axis=1))
+        if len(st1.shape) == 1:
+            return TPM[0] / np.max(np.sum(Ar, axis=2))
+        else:
+            return TPM / np.max(np.sum(Ar, axis=2))
     elif norm == 'local':
-        return TPM / np.sum(Ar, axis=1)
+        if len(st1.shape) == 1:
+            return TPM[0] / np.sum(Ar, axis=2)[0]
+        else:
+            return TPM / np.sum(Ar, axis=2)
 
 
 def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Single Valued Envelope Misfit
 
@@ -348,32 +450,49 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Single Valued Envelope Misfit
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    EM = (np.sum((np.abs(W2) - np.abs(W1))**2))**.5
+    EM = (np.sum(np.sum((np.abs(W1) - np.abs(W2))**2, axis=2), axis=1))**.5
    
     if norm == 'global':
-        return EM / (np.sum(Ar**2))**.5
+        if len(st1.shape) == 1:
+            return EM[0] / (np.sum(Ar**2))**.5
+        else:
+            return EM / ((np.sum(np.sum(Ar**2, axis=2), axis=1))**.5).max()
     elif norm == 'local':
-        return EM / (np.sum(Ar**2))**.5
+        if len(st1.shape) == 1:
+            return EM[0] / (np.sum(Ar**2))**.5
+        else:
+            return EM / (np.sum(Ar**2))**.5
 
 
 def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st1_isref=True):
+    st2_isref=True):
     """
     Single Valued Phase Misfit
 
@@ -390,27 +509,44 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
     :param norm: 'global' or 'local' normalization of the misfit
-    :param st1_isref: Boolean, True if st1 is a reference signal, False if none
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
         is a reference
 
     :return: Single Valued Phase Misfit
     """
-    W1 = cwt(st1, dt, w0, fmin, fmax, nf)
-    W2 = cwt(st2, dt, w0, fmin, fmax, nf)
+    if len(st1.shape) == 1:
+        W1 = np.empty((1, nf, st1.shape[0])) * 0j
+        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        
+        W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
+        W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
+    else:
+        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
+        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
-    if st1_isref:
-        Ar = np.abs(W1)
+        for i in np.arange(st1.shape[0]):
+            W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
+            W2[i] = cwt(st2[i], dt, w0, fmin, fmax, nf)
+
+    if st2_isref:
+        Ar = np.abs(W2)
     else:
         if np.abs(W1).max() > np.abs(W2).max():
             Ar = np.abs(W1)
         else:
             Ar = np.abs(W2)
 
-    PM = np.angle(W2 / W1) / np.pi
+    PM = np.angle(W1 / W2) / np.pi
 
-    PM = (np.sum((Ar * PM)**2))**.5
+    PM = (np.sum(np.sum((Ar * PM)**2, axis=2), axis=1))**.5
 
     if norm == 'global':
-        return PM / (np.sum(Ar**2))**.5
+        if len(st1.shape) == 1:
+            return PM[0] / (np.sum(Ar**2))**.5
+        else:
+            return PM / ((np.sum(np.sum(Ar**2, axis=1), axis=2))**.5).max()
     elif norm == 'local':
-        return PM / (np.sum(Ar**2))**.5
+        if len(st1.shape) == 1:
+            return PM[0] / (np.sum(Ar**2))**.5
+        else:
+            return PM / (np.sum(np.sum(Ar**2, axis=2), axis=1))**.5

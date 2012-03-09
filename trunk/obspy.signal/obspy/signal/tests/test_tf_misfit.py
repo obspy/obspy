@@ -78,8 +78,6 @@ class TfTestCase(unittest.TestCase):
         fmax = self.fmax 
         nf = self.nf
 
-        print self.path + os.sep + 'TFEM_11p.dat'
-
         TFEM_11p_ref = np.loadtxt(self.path + os.sep + 'TFEM_11p.dat')
         TFPM_11p_ref = np.loadtxt(self.path + os.sep + 'TFPM_11p.dat')
         TEM_11p_ref = np.loadtxt(self.path + os.sep + 'TEM_11p.dat')
@@ -89,14 +87,14 @@ class TfTestCase(unittest.TestCase):
         EM_11p_ref = np.loadtxt(self.path + os.sep + 'EM_11p.dat')
         PM_11p_ref = np.loadtxt(self.path + os.sep + 'PM_11p.dat')
 
-        TFEM_11p = tfem(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TFPM_11p = tfpm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TEM_11p = tem(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        FEM_11p = fem(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        FPM_11p = fpm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TPM_11p = tpm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        EM_11p = em(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        PM_11p = pm(S1(t), s1p, dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TFEM_11p = tfem(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TFPM_11p = tfpm(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TEM_11p = tem(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FEM_11p = fem(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FPM_11p = fpm(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TPM_11p = tpm(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        EM_11p = em(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        PM_11p = pm(s1p, S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
         tol = 1e-5
         atol_min = 1e-15
@@ -150,14 +148,14 @@ class TfTestCase(unittest.TestCase):
         EM_11a_ref = np.loadtxt(self.path + os.sep + 'EM_11a.dat')
         PM_11a_ref = np.loadtxt(self.path + os.sep + 'PM_11a.dat')
 
-        TFEM_11a = tfem(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TFPM_11a = tfpm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TEM_11a = tem(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        TPM_11a = tpm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        FEM_11a = fem(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        FPM_11a = fpm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        EM_11a = em(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
-        PM_11a = pm(S1(t), S1a(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TFEM_11a = tfem(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TFPM_11a = tfpm(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TEM_11a = tem(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        TPM_11a = tpm(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FEM_11a = fem(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        FPM_11a = fpm(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        EM_11a = em(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
+        PM_11a = pm(S1a(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
         tol = 1e-5
         atol_min = 1e-15
