@@ -40,9 +40,9 @@ class TfTestCase(unittest.TestCase):
         t = np.linspace(0., tmax, npts)
         f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-        H = lambda t: (np.sign(t) + 1)/ 2
+        H = lambda t: (np.sign(t) + 1) / 2
 
-        S1 = lambda t: A1 * (t - t1) * np.exp(-2*(t - t1)) * \
+        S1 = lambda t: A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
             np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         # generate analytical signal (hilbert transform) and add phase shift
@@ -51,7 +51,7 @@ class TfTestCase(unittest.TestCase):
             np.exp(np.angle(s1h) * 1j + ps * np.pi * 1j))
 
         # signal with amplitude error
-        S1a = lambda t: A1a * (t - t1) * np.exp(-2*(t - t1)) * \
+        S1a = lambda t: A1a * (t - t1) * np.exp(-2 * (t - t1)) * \
             np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H(t - t1)
 
         self.S1 = S1
@@ -76,8 +76,8 @@ class TfTestCase(unittest.TestCase):
         t = self.t
         dt = self.dt
 
-        fmin = self.fmin 
-        fmax = self.fmax 
+        fmin = self.fmin
+        fmax = self.fmax
         nf = self.nf
 
         TFEM_11p_ref = np.loadtxt(self.path + os.sep + 'TFEM_11p.dat')
@@ -102,21 +102,21 @@ class TfTestCase(unittest.TestCase):
         atol_min = 1e-15
 
         np.testing.assert_allclose(TFEM_11p, TFEM_11p_ref, rtol=tol,
-                atol=np.abs(TFEM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(TFEM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TFPM_11p, TFPM_11p_ref, rtol=tol,
-                atol=np.abs(TFPM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(TFPM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TEM_11p, TEM_11p_ref, rtol=tol,
-                atol=np.abs(TEM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(TEM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(FEM_11p, FEM_11p_ref, rtol=tol,
-                atol=np.abs(FEM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(FEM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(FPM_11p, FPM_11p_ref, rtol=tol,
-                atol=np.abs(FPM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(FPM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TPM_11p, TPM_11p_ref, rtol=tol,
-                atol=np.abs(TPM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(TPM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(EM_11p, EM_11p_ref, rtol=tol,
-                atol=np.abs(EM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(EM_11p_ref).max() * tol + atol_min)
         np.testing.assert_allclose(PM_11p, PM_11p_ref, rtol=tol,
-                atol=np.abs(PM_11p_ref).max()*tol + atol_min)
+                atol=np.abs(PM_11p_ref).max() * tol + atol_min)
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
@@ -137,8 +137,8 @@ class TfTestCase(unittest.TestCase):
         t = self.t
         dt = self.dt
 
-        fmin = self.fmin 
-        fmax = self.fmax 
+        fmin = self.fmin
+        fmax = self.fmax
         nf = self.nf
 
         TFEM_11a_ref = np.loadtxt(self.path + os.sep + 'TFEM_11a.dat')
@@ -163,21 +163,21 @@ class TfTestCase(unittest.TestCase):
         atol_min = 1e-15
 
         np.testing.assert_allclose(TFEM_11a, TFEM_11a_ref, rtol=tol,
-                atol=np.abs(TFEM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(TFEM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TFPM_11a, TFPM_11a_ref, rtol=tol,
-                atol=np.abs(TFPM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(TFPM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TEM_11a, TEM_11a_ref, rtol=tol,
-                atol=np.abs(TEM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(TEM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(FEM_11a, FEM_11a_ref, rtol=tol,
-                atol=np.abs(FEM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(FEM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(FPM_11a, FPM_11a_ref, rtol=tol,
-                atol=np.abs(FPM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(FPM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(TPM_11a, TPM_11a_ref, rtol=tol,
-                atol=np.abs(TPM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(TPM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(EM_11a, EM_11a_ref, rtol=tol,
-                atol=np.abs(EM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(EM_11a_ref).max() * tol + atol_min)
         np.testing.assert_allclose(PM_11a, PM_11a_ref, rtol=tol,
-                atol=np.abs(PM_11a_ref).max()*tol + atol_min)
+                atol=np.abs(PM_11a_ref).max() * tol + atol_min)
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
@@ -197,13 +197,13 @@ class TfTestCase(unittest.TestCase):
         t = self.t
         dt = self.dt
 
-        fmin = self.fmin 
-        fmax = self.fmax 
+        fmin = self.fmin
+        fmax = self.fmax
         nf = self.nf
         npts = self.npts
-        
+
         tol = 1e-5
-        
+
         TFEG = tfeg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         TFPG = tfpg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         TEG = teg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
@@ -221,6 +221,7 @@ class TfTestCase(unittest.TestCase):
         np.testing.assert_allclose(FPG, np.ones(nf) * 10., rtol=tol)
         np.testing.assert_allclose(EG, 10., rtol=tol)
         np.testing.assert_allclose(PG, 10., rtol=tol)
+
 
 def suite():
     return unittest.makeSuite(TfTestCase, 'test')

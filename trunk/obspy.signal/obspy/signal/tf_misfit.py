@@ -22,9 +22,9 @@ Kristekova et. al. (2009).
 """
 
 import numpy as np
-from obspy.signal import util, cosTaper
+from obspy.signal import util
 import matplotlib.pyplot as plt
-from matplotlib.ticker import NullFormatter, MultipleLocator, NullLocator
+from matplotlib.ticker import NullFormatter
 
 
 def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
@@ -51,9 +51,9 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     cwt = np.empty((npts, nf)) * 0j
 
     if wl == 'morlet':
-        psi = lambda t : np.pi**(-.25) * np.exp(1j * w0 * t) * \
-            np.exp(-t**2 / 2.)
-        scale = lambda f : w0 / (2 * np.pi * f)
+        psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
+            np.exp(-t ** 2 / 2.)
+        scale = lambda f: w0 / (2 * np.pi * f)
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
 
@@ -63,16 +63,16 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     for n, _f in enumerate(f):
         a = scale(_f)
         # time shift necessary, because wavelet is defined around t = 0
-        psih = psi(-1*(t - t[-1]/2.)/a).conjugate() / np.abs(a)**.5
+        psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
         psihf = np.fft.fft(psih, n=nfft)
-        tminin = int(t[-1]/2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin+t.shape[0]] * \
+        tminin = int(t[-1] / 2. / (t[1] - t[0]))
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + t.shape[0]] * \
             (t[1] - t[0])
     return cwt.T
 
 
 def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+         st2_isref=True):
     """
     Time Frequency Envelope Misfit
 
@@ -98,7 +98,7 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -132,7 +132,7 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+         st2_isref=True):
     """
     Time Frequency Phase Misfit
 
@@ -158,7 +158,7 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -192,7 +192,7 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+        st2_isref=True):
     """
     Time-dependent Envelope Misfit
 
@@ -217,7 +217,7 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -251,7 +251,7 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+        st2_isref=True):
     """
     Time-dependent Phase Misfit
 
@@ -276,7 +276,7 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -311,7 +311,7 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+        st2_isref=True):
     """
     Frequency-dependent Envelope Misfit
 
@@ -334,14 +334,12 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Frequency-dependent Envelope Misfit, type numpy.ndarray.
     """
     if len(st1.shape) == 1:
-        npts = st1.shape[0]
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        npts = st1.shape[1]
         W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
         W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
@@ -359,7 +357,7 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     TEM = np.abs(W1) - np.abs(W2)
     TEM = np.sum(TEM, axis=2)
-   
+
     if norm == 'global':
         if len(st1.shape) == 1:
             return TEM[0] / np.max(np.sum(Ar, axis=2))
@@ -373,10 +371,10 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+        st2_isref=True):
     """
     Frequency-dependent Phase Misfit
-    
+
     .. seealso:: [Kristekova2009]_, Table 1. and 2.
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
@@ -396,14 +394,12 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Frequency-dependent Phase Misfit, type numpy.ndarray.
     """
     if len(st1.shape) == 1:
-        npts = st1.shape[0]
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        npts = st1.shape[1]
         W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
         W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
 
@@ -435,7 +431,7 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+       st2_isref=True):
     """
     Single Valued Envelope Misfit
 
@@ -460,7 +456,7 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -479,22 +475,22 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
         else:
             Ar = np.abs(W2)
 
-    EM = (np.sum(np.sum((np.abs(W1) - np.abs(W2))**2, axis=2), axis=1))**.5
-   
+    EM = (np.sum(np.sum((np.abs(W1) - np.abs(W2)) ** 2, axis=2), axis=1)) ** .5
+
     if norm == 'global':
         if len(st1.shape) == 1:
-            return EM[0] / (np.sum(Ar**2))**.5
+            return EM[0] / (np.sum(Ar ** 2)) ** .5
         else:
-            return EM / ((np.sum(np.sum(Ar**2, axis=2), axis=1))**.5).max()
+            return EM / ((np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5).max()
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return EM[0] / (np.sum(Ar**2))**.5
+            return EM[0] / (np.sum(Ar ** 2)) ** .5
         else:
-            return EM / (np.sum(np.sum(Ar**2, axis=2), axis=1))**.5
+            return EM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
 
 
 def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True):
+       st2_isref=True):
     """
     Single Valued Phase Misfit
 
@@ -519,7 +515,7 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     if len(st1.shape) == 1:
         W1 = np.empty((1, nf, st1.shape[0])) * 0j
         W2 = np.empty((1, nf, st1.shape[0])) * 0j
-        
+
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
@@ -540,23 +536,22 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
     PM = np.angle(W1 / W2) / np.pi
 
-    PM = (np.sum(np.sum((Ar * PM)**2, axis=2), axis=1))**.5
+    PM = (np.sum(np.sum((Ar * PM) ** 2, axis=2), axis=1)) ** .5
 
     if norm == 'global':
         if len(st1.shape) == 1:
-            return PM[0] / (np.sum(Ar**2))**.5
+            return PM[0] / (np.sum(Ar ** 2)) ** .5
         else:
-            return PM / ((np.sum(np.sum(Ar**2, axis=1), axis=2))**.5).max()
+            return PM / ((np.sum(np.sum(Ar ** 2, axis=1), axis=2)) ** .5).max()
     elif norm == 'local':
         if len(st1.shape) == 1:
-            return PM[0] / (np.sum(Ar**2))**.5
+            return PM[0] / (np.sum(Ar ** 2)) ** .5
         else:
-            return PM / (np.sum(np.sum(Ar**2, axis=2), axis=1))**.5
-
+            return PM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
 
 
 def tfeg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+         st2_isref=True, A=10., k=1.):
     """
     Time Frequency Envelope Goodness-Of_Fit
 
@@ -583,11 +578,11 @@ def tfeg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                 st2_isref=st2_isref)
-    return A * np.exp(-np.abs(TFEM)**k)
+    return A * np.exp(-np.abs(TFEM) ** k)
 
 
 def tfpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+         st2_isref=True, A=10., k=1.):
     """
     Time Frequency Phase Goodness-Of_Fit
 
@@ -614,11 +609,11 @@ def tfpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                 st2_isref=st2_isref)
-    return A * (1 - np.abs(TFPM)**k)
+    return A * (1 - np.abs(TFPM) ** k)
 
 
 def teg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+        st2_isref=True, A=10., k=1.):
     """
     Time Dependent Envelope Goodness-Of_Fit
 
@@ -644,11 +639,11 @@ def teg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * np.exp(-np.abs(TEM)**k)
+    return A * np.exp(-np.abs(TEM) ** k)
 
 
 def tpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+        st2_isref=True, A=10., k=1.):
     """
     Time Dependent Phase Goodness-Of_Fit
 
@@ -674,11 +669,11 @@ def tpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * (1 - np.abs(TPM)**k)
+    return A * (1 - np.abs(TPM) ** k)
 
 
 def feg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+        st2_isref=True, A=10., k=1.):
     """
     Frequency Dependent Envelope Goodness-Of_Fit
 
@@ -704,11 +699,11 @@ def feg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * np.exp(-np.abs(FEM)**k)
+    return A * np.exp(-np.abs(FEM) ** k)
 
 
 def fpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+        st2_isref=True, A=10., k=1.):
     """
     Frequency Dependent Phase Goodness-Of_Fit
 
@@ -734,11 +729,11 @@ def fpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * (1 - np.abs(FPM)**k)
+    return A * (1 - np.abs(FPM) ** k)
 
 
 def eg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+       st2_isref=True, A=10., k=1.):
     """
     Single Valued Envelope Goodness-Of_Fit
 
@@ -764,11 +759,11 @@ def eg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     EM = em(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * np.exp(-np.abs(EM)**k)
+    return A * np.exp(-np.abs(EM) ** k)
 
 
 def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
-    st2_isref=True, A=10., k=1.):
+       st2_isref=True, A=10., k=1.):
     """
     Single Valued Phase Goodness-Of_Fit
 
@@ -794,14 +789,14 @@ def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     """
     PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                st2_isref=st2_isref)
-    return A * (1 - np.abs(PM)**k)
-
+    return A * (1 - np.abs(PM) ** k)
 
 
 def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
-    norm='global', st2_isref=True, left=0.1, bottom=0.1, h_1=0.2, h_2=0.125,
-    h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01, d_cb=0.0, show=True, plot_args=['k',
-    'r', 'b'], ylim=0., clim=0., cmap='RdBu'):
+                    norm='global', st2_isref=True, left=0.1, bottom=0.1,
+                    h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
+                    d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
+                    clim=0., cmap='RdBu'):
     """
     Plot all timefrequency misfits in one plot.
 
@@ -836,7 +831,6 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
 
     :return: If show is False, returns a maplotlib.pyplot.figure object
     """
-
     npts = len(st1)
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
@@ -844,60 +838,60 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
 
     # Plot S1 and S1t and TFEM + TFPM misfits
     fig = plt.figure()
-    
+
     # plot signals
     ax_sig = fig.add_axes([left + w_1, bottom + h_2 + h_3, w_2, h_1])
     ax_sig.plot(t, st1, plot_args[0])
     ax_sig.plot(t, st2, plot_args[1])
-    
+
     # plot TEM
     TEM = tem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
     ax_TEM = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
     ax_TEM.plot(t, TEM, plot_args[2])
-    
+
     # plot TFEM
     TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
                 st2_isref=st2_isref)
-    ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2*h_2 + h_3, w_2, h_3])
-    img_TFEM = ax_TFEM.imshow(TFEM, interpolation='nearest', cmap=cmap, extent=[t[0],
-                              t[-1], fmin, fmax], aspect='auto', origin='lower')
+    ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
+                            h_3])
+    img_TFEM = ax_TFEM.imshow(TFEM, interpolation='nearest', cmap=cmap,
+        extent=[t[0], t[-1], fmin, fmax], aspect='auto', origin='lower')
     ax_TFEM.set_yscale('log')
-    
+
     # plot FEM
     FEM = fem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
-    ax_FEM = fig.add_axes([left, bottom + h_1 + 2*h_2 + h_3, w_1, h_3])
+    ax_FEM = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
     ax_FEM.semilogy(FEM, f, plot_args[2])
     ax_FEM.set_ylim(fmin, fmax)
-    
+
     # plot TPM
     TPM = tpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
     ax_TPM = fig.add_axes([left + w_1, bottom, w_2, h_2])
     ax_TPM.plot(t, TPM, plot_args[2])
-    
+
     # plot TFPM
     TFPM = tfpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
     ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
-    img_TFPM = ax_TFPM.imshow(TFPM, interpolation='nearest', cmap=cmap, extent=[t[0],
-                         t[-1], f[0], f[-1]], aspect='auto', origin='lower')
+    img_TFPM = ax_TFPM.imshow(TFPM, interpolation='nearest', cmap=cmap,
+        extent=[t[0], t[-1], f[0], f[-1]], aspect='auto', origin='lower')
     ax_TFPM.set_yscale('log')
-    
+
     # add colorbars
     ax_cb_TFPM = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
                                w_cb, h_2 + h_3])
     fig.colorbar(img_TFPM, cax=ax_cb_TFPM)
-    
+
     # plot FPM
     FPM = fpm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
               st2_isref=st2_isref)
     ax_FPM = fig.add_axes([left, bottom + h_2, w_1, h_3])
     ax_FPM.semilogy(FPM, f, plot_args[2])
     ax_FPM.set_ylim(fmin, fmax)
-   
-    
+
     # set limits
     ylim_sig = np.max([np.abs(st1).max(), np.abs(st2).max()]) * 1.1
     ax_sig.set_ylim(-ylim_sig, ylim_sig)
@@ -917,7 +911,6 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     img_TFPM.set_clim(-clim, clim)
     img_TFEM.set_clim(-clim, clim)
 
-
     # add text box for EM + PM
     PM = pm(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
             st2_isref=st2_isref)
@@ -929,11 +922,11 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     ax_sig.text(-0.15, 0.5, textstr, transform=ax_sig.transAxes,
             verticalalignment='center', horizontalalignment='right',
             bbox=props)
-    
+
     ax_TPM.set_xlabel('time')
     ax_FEM.set_ylabel('frequency')
     ax_FPM.set_ylabel('frequency')
-    
+
     # add text boxes
     props = dict(boxstyle='round', facecolor='white', alpha=0.5)
     ax_TFEM.text(0.95, 0.85, 'TFEM', transform=ax_TFEM.transAxes,
@@ -954,7 +947,7 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     ax_FPM.text(0.9, 0.85, 'FPM', transform=ax_FPM.transAxes,
             verticalalignment='top', horizontalalignment='right',
             bbox=props)
-    
+
     # remove axis labels
     ax_TFPM.xaxis.set_major_formatter(NullFormatter())
     ax_TFEM.xaxis.set_major_formatter(NullFormatter())
@@ -962,7 +955,7 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     ax_sig.xaxis.set_major_formatter(NullFormatter())
     ax_TFPM.yaxis.set_major_formatter(NullFormatter())
     ax_TFEM.yaxis.set_major_formatter(NullFormatter())
-    
+
     if show:
         plt.show()
     else:
