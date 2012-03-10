@@ -4,12 +4,24 @@
 The tf_misfit test suite.
 """
 
-from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, tpm, em, pm, \
-                                   tfeg, tfpg, teg, feg, fpg, tpg, eg, pg
+from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
+    tfpg, teg, feg, fpg, tpg, tfeg, tpm
 from scipy.signal import hilbert
 import numpy as np
 import os
 import unittest
+try:
+    from unittest import skipIf
+except ImportError:
+    from obspy.core.util import skipIf  # @UnusedImport
+
+
+# tests suite needs a recent NumPy version
+OLD_NUMPY_VERSION = False
+try:  # pragma: no cover
+    from numpy.testing import assert_allclose  # @UnusedImport
+except ImportError:  # pragma: no cover
+    OLD_NUMPY_VERSION = True
 
 
 class TfTestCase(unittest.TestCase):
@@ -67,6 +79,7 @@ class TfTestCase(unittest.TestCase):
         self.npts = npts
         self.w0 = 6
 
+    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_phase_misfit(self):
         """
         Tests all tf misfits with a signal that has phase misfit
@@ -128,6 +141,7 @@ class TfTestCase(unittest.TestCase):
         #np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
         #np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
+    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_envelope_misfit(self):
         """
         Tests all tf misfits with a signal that has envelope misfit
@@ -189,6 +203,7 @@ class TfTestCase(unittest.TestCase):
         #np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
         #np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
+    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_envelope_gof(self):
         """
         Tests all tf gofs
