@@ -965,8 +965,8 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
         # add text box for EM + PM
         textstr = 'EM = %.2f\nPM = %.2f' % (EM[itr], PM[itr])
         props = dict(boxstyle='round', facecolor='white')
-        ax_sig.text(-0.15, 0.5, textstr, transform=ax_sig.transAxes,
-                verticalalignment='center', horizontalalignment='right',
+        ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
+                verticalalignment='center', horizontalalignment='left',
                 bbox=props)
 
         ax_TPM.set_xlabel('time')
@@ -1001,6 +1001,209 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
         ax_sig.xaxis.set_major_formatter(NullFormatter())
         ax_TFPM.yaxis.set_major_formatter(NullFormatter())
         ax_TFEM.yaxis.set_major_formatter(NullFormatter())
+
+        figs.append(fig)
+
+    if show:
+        plt.show()
+    else:
+        if len(st1.shape) == 1:
+            return figs[0]
+        else:
+            return figs
+
+
+def plot_tf_gofs(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
+                    norm='global', st2_isref=True, A=10., k=1., left=0.1,
+                    bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
+                    w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
+                    ylim=0., clim=0., cmap=None):
+    """
+    Plot all timefrequency Goodnes-Of-Fits its in one plot.
+
+    :param st1: signal 1 of two signals to compare, type numpy.ndarray with
+        shape (number of components, number of time samples) or (number of
+        timesamples, ) for single component data
+    :param st2: signal 2 of two signals to compare, type and shape as st1
+    :param dt: time step between two samples in st1 and st2
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param norm: 'global' or 'local' normalization of the misfit
+    :param st2_isref: Boolean, True if st2 is a reference signal, False if none
+        is a reference
+    :param A: Maximum value of Goodness-Of-Fit for perfect agreement
+    :param k: sensitivity of Goodness-Of-Fit to the misfit
+    :param left: plot distance from the left of the figure
+    :param bottom: plot distance from the bottom of the figure
+    :param h_1: height of the signal axes
+    :param h_2: height of the TEM and TPM axes
+    :param h_3: height of the TFEM and TFPM axes
+    :param w_1: width of the FEM and FPM axes
+    :param w_2: width of the TFEM, TFPM, signal etc. axes
+    :param w_cb: width of the colorbar axes
+    :param d_cb: distance of the colorbar axes to the other axes
+    :param show: show figure or return
+    :param plot_args: list of plot arguments passed to the signal 1/2 and
+        TEM/TPM/FEM/FPM plots
+    :param ylim: limits in misfit for TEM/TPM/FEM/FPM
+    :param clim: limits of the colorbars
+    :param cmap: colormap for TFEM/TFPM, either a string or
+        matplotlib.cm.Colormap instance
+
+    :return: If show is False, returns a maplotlib.pyplot.figure object (single
+        component data) or a list of figure objects (multi component data)
+    """
+    npts = st1.shape[-1]
+    tmax = (npts - 1) * dt
+    t = np.linspace(0., tmax, npts)
+    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
+
+    if cmap == None:
+        cmap = 'hot'
+
+    # compute time frequency misfits
+    TFEG = tfeg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+                st2_isref=st2_isref, A=A, k=k)
+    TEG = teg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref, A=A, k=k)
+    FEG = feg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref, A=A, k=k)
+    EG = eg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+            st2_isref=st2_isref, A=A, k=k)
+    TFPG = tfpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref, A=A, k=k)
+    TPG = tpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref, A=A, k=k)
+    FPG = fpg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+              st2_isref=st2_isref, A=A, k=k)
+    PG = pg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
+            st2_isref=st2_isref, A=A, k=k)
+
+    if len(st1.shape) == 1:
+        TFEG = np.array([TFEG])
+        TEG = np.array([TEG])
+        FEG = np.array([FEG])
+        EG = np.array([EG])
+        TFPG = np.array([TFPG])
+        TPG = np.array([TPG])
+        FPG = np.array([FPG])
+        PG = np.array([PG])
+        st1 = np.array([st1])
+        st2 = np.array([st2])
+        ntr = 1
+    else:
+        ntr = st1.shape[0]
+
+    figs = []
+
+    for itr in np.arange(ntr):
+        # Plot S1 and S1t and TFEG + TFPG misfits
+        fig = plt.figure()
+
+        # plot signals
+        ax_sig = fig.add_axes([left + w_1, bottom + h_2 + h_3, w_2, h_1])
+        ax_sig.plot(t, st1[itr], plot_args[0])
+        ax_sig.plot(t, st2[itr], plot_args[1])
+
+        # plot TEG
+        ax_TEG = fig.add_axes([left + w_1, bottom + h_1 + h_2 + h_3, w_2, h_2])
+        ax_TEG.plot(t, TEG[itr], plot_args[2])
+
+        # plot TFEG
+        ax_TFEG = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
+                                h_3])
+        img_TFEG = ax_TFEG.imshow(TFEG[itr], interpolation='nearest',
+            cmap=cmap, extent=[t[0], t[-1], fmin, fmax], aspect='auto',
+            origin='lower')
+        ax_TFEG.set_yscale('log')
+
+        # plot FEG
+        ax_FEG = fig.add_axes([left, bottom + h_1 + 2 * h_2 + h_3, w_1, h_3])
+        ax_FEG.semilogy(FEG[itr], f, plot_args[2])
+        ax_FEG.set_ylim(fmin, fmax)
+
+        # plot TPG
+        ax_TPG = fig.add_axes([left + w_1, bottom, w_2, h_2])
+        ax_TPG.plot(t, TPG[itr], plot_args[2])
+
+        # plot TFPG
+        ax_TFPG = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
+        img_TFPG = ax_TFPG.imshow(TFPG[itr], interpolation='nearest',
+            cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]], aspect='auto',
+            origin='lower')
+        ax_TFPG.set_yscale('log')
+
+        # add colorbars
+        ax_cb_TFPG = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom,
+                                   w_cb, h_2 + h_3])
+        fig.colorbar(img_TFPG, cax=ax_cb_TFPG)
+
+        # plot FPG
+        ax_FPG = fig.add_axes([left, bottom + h_2, w_1, h_3])
+        ax_FPG.semilogy(FPG[itr], f, plot_args[2])
+        ax_FPG.set_ylim(fmin, fmax)
+
+        # set limits
+        ylim_sig = np.max([np.abs(st1).max(), np.abs(st2).max()]) * 1.1
+        ax_sig.set_ylim(-ylim_sig, ylim_sig)
+
+        if ylim == 0.:
+            ylim = np.max([np.abs(TEG).max(), np.abs(TPG).max(),
+                           np.abs(FEG).max(), np.abs(FPG).max()]) * 1.1
+
+        ax_TEG.set_ylim(0., ylim)
+        ax_FEG.set_xlim(0., ylim)
+        ax_TPG.set_ylim(0., ylim)
+        ax_FPG.set_xlim(0., ylim)
+
+        if clim == 0.:
+            clim = np.max([np.abs(TFEG).max(), np.abs(TFPG).max()])
+
+        img_TFPG.set_clim(0., clim)
+        img_TFEG.set_clim(0., clim)
+
+        # add text box for EG + PG
+        textstr = 'EG = %2.2f\nPG = %2.2f' % (EG[itr], PG[itr])
+        props = dict(boxstyle='round', facecolor='white')
+        ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
+                verticalalignment='center', horizontalalignment='left',
+                bbox=props)
+
+        ax_TPG.set_xlabel('time')
+        ax_FEG.set_ylabel('frequency')
+        ax_FPG.set_ylabel('frequency')
+
+        # add text boxes
+        props = dict(boxstyle='round', facecolor='white', alpha=0.5)
+        ax_TFEG.text(0.95, 0.85, 'TFEG', transform=ax_TFEG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+        ax_TFPG.text(0.95, 0.85, 'TFPG', transform=ax_TFPG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+        ax_TEG.text(0.95, 0.75, 'TEG', transform=ax_TEG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+        ax_TPG.text(0.95, 0.75, 'TPG', transform=ax_TPG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+        ax_FEG.text(0.9, 0.85, 'FEG', transform=ax_FEG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+        ax_FPG.text(0.9, 0.85, 'FPG', transform=ax_FPG.transAxes,
+                verticalalignment='top', horizontalalignment='right',
+                bbox=props)
+
+        # remove axis labels
+        ax_TFPG.xaxis.set_major_formatter(NullFormatter())
+        ax_TFEG.xaxis.set_major_formatter(NullFormatter())
+        ax_TEG.xaxis.set_major_formatter(NullFormatter())
+        ax_sig.xaxis.set_major_formatter(NullFormatter())
+        ax_TFPG.yaxis.set_major_formatter(NullFormatter())
+        ax_TFEG.yaxis.set_major_formatter(NullFormatter())
 
         figs.append(fig)
 
