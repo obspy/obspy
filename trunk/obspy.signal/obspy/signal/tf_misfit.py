@@ -25,6 +25,7 @@ import numpy as np
 from obspy.signal import util
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
+from matplotlib.colors import LinearSegmentedColormap
 
 
 def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
@@ -859,7 +860,29 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     if cmap == None:
-        cmap = 'RdBu'
+        CDICT_TFM = {'red': ((0.0, 0.0, 0.0),
+                             (0.2, 0.0, 0.0),
+                             (0.4, 0.0, 0.0),
+                             (0.5, 1.0, 1.0),
+                             (0.6, 1.0, 1.0),
+                             (0.8, 1.0, 1.0),
+                             (1.0, 0.2, 0.2)),
+                     'green': ((0.0, 0.0, 0.0),
+                               (0.2, 0.0, 0.0),
+                               (0.4, 1.0, 1.0),
+                               (0.5, 1.0, 1.0),
+                               (0.6, 1.0, 1.0),
+                               (0.8, 0.0, 0.0),
+                               (1.0, 0.0, 0.0)),
+                     'blue': ((0.0, 0.2, 0.2),
+                              (0.2, 1.0, 1.0),
+                              (0.4, 1.0, 1.0),
+                              (0.5, 1.0, 1.0),
+                              (0.6, 0.0, 0.0),
+                              (0.8, 0.0, 0.0),
+                              (1.0, 0.0, 0.0))}
+
+        cmap = LinearSegmentedColormap('cmap_tfm', CDICT_TFM, 1024)
 
     # compute time frequency misfits
     TFEM = tfem(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
@@ -1062,7 +1085,23 @@ def plot_tf_gofs(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     if cmap == None:
-        cmap = 'hot'
+        CDICT_GOF = {'red': ((0.0, 0.6, 0.6),
+                             (0.4, 0.6, 1.0),
+                             (0.6, 1.0, 1.0),
+                             (0.8, 1.0, 1.0),
+                             (1.0, 1.0, 1.0)),
+                     'green': ((0.0, 0.0, 0.0),
+                               (0.4, 0.0, 0.5),
+                               (0.6, 0.5, 1.0),
+                               (0.8, 1.0, 1.0),
+                               (1.0, 1.0, 1.0)),
+                     'blue': ((0.0, 0.0, 0.0),
+                              (0.4, 0.0, 0.0),
+                              (0.6, 0.0, 0.0),
+                              (0.8, 0.0, 1.0),
+                              (1.0, 1.0, 1.0))}
+
+        cmap = LinearSegmentedColormap('cmap_gof', CDICT_GOF, 1024)
 
     # compute time frequency misfits
     TFEG = tfeg(st1, st2, dt=dt, fmin=fmin, fmax=fmax, nf=nf, w0=w0, norm=norm,
