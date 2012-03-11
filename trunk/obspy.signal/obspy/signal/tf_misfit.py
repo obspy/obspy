@@ -903,16 +903,16 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
             st2_isref=st2_isref)
 
     if len(st1.shape) == 1:
-        TFEM = np.array([TFEM])
-        TEM = np.array([TEM])
-        FEM = np.array([FEM])
-        EM = np.array([EM])
-        TFPM = np.array([TFPM])
-        TPM = np.array([TPM])
-        FPM = np.array([FPM])
-        PM = np.array([PM])
-        st1 = np.array([st1])
-        st2 = np.array([st2])
+        TFEM = TFEM.reshape((1, nf, npts))
+        TEM = TEM.reshape((1, npts))
+        FEM = FEM.reshape((1, nf))
+        EM = EM.reshape((1, 1))
+        TFPM = TFPM.reshape((1, nf, npts))
+        TPM = TPM.reshape((1, npts))
+        FPM = FPM.reshape((1, nf))
+        PM = PM.reshape((1, 1))
+        st1 = st1.reshape((1, npts))
+        st2 = st2.reshape((1, npts))
         ntr = 1
     else:
         ntr = st1.shape[0]
@@ -1122,16 +1122,16 @@ def plot_tf_gofs(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
             st2_isref=st2_isref, A=A, k=k)
 
     if len(st1.shape) == 1:
-        TFEG = np.array([TFEG])
-        TEG = np.array([TEG])
-        FEG = np.array([FEG])
-        EG = np.array([EG])
-        TFPG = np.array([TFPG])
-        TPG = np.array([TPG])
-        FPG = np.array([FPG])
-        PG = np.array([PG])
-        st1 = np.array([st1])
-        st2 = np.array([st2])
+        TFEG = TFEG.reshape((1, nf, npts))
+        TEG = TEG.reshape((1, npts))
+        FEG = FEG.reshape((1, nf))
+        EG = EG.reshape((1, 1))
+        TFPG = TFPG.reshape((1, nf, npts))
+        TPG = TPG.reshape((1, npts))
+        FPG = FPG.reshape((1, nf))
+        PG = PG.reshape((1, 1))
+        st1 = st1.reshape((1, npts))
+        st2 = st2.reshape((1, npts))
         ntr = 1
     else:
         ntr = st1.shape[0]
