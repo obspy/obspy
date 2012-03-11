@@ -44,12 +44,12 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     :return: time frequency representation of st, type numpy.ndarray of complex
         values.
     """
-    npts = len(st)
+    npts = len(st) * 2
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.empty((npts, nf)) * 0j
+    cwt = np.empty((npts / 2, nf)) * 0j
 
     if wl == 'morlet':
         psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
@@ -58,7 +58,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     else:
         raise ValueError('wavelet type "' + wl + '" not defined!')
 
-    nfft = util.nextpow2(len(st)) * 2
+    nfft = util.nextpow2(npts) * 2
     sf = np.fft.fft(st, n=nfft)
 
     for n, _f in enumerate(f):
@@ -67,7 +67,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
         psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
         psihf = np.fft.fft(psih, n=nfft)
         tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + t.shape[0]] * \
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts / 2] * \
             (t[1] - t[0])
     return cwt.T
 
@@ -819,7 +819,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
                     clim=0., cmap=None):
     """
-    Plot all timefrequency misfits in one plot.
+    Plot all timefrequency misfits in one plot (per component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -920,7 +920,6 @@ def plot_tf_misfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
     figs = []
 
     for itr in np.arange(ntr):
-        # Plot S1 and S1t and TFEM + TFPM misfits
         fig = plt.figure()
 
         # plot signals
@@ -1042,7 +1041,7 @@ def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                     ylim=0., clim=0., cmap=None):
     """
-    Plot all timefrequency Goodnes-Of-Fits its in one plot.
+    Plot all timefrequency Goodnes-Of-Fits its in one plot (per component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -1139,7 +1138,6 @@ def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
     figs = []
 
     for itr in np.arange(ntr):
-        # Plot S1 and S1t and TFEG + TFPG misfits
         fig = plt.figure()
 
         # plot signals
@@ -1250,6 +1248,155 @@ def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         plt.show()
     else:
         if len(st1.shape) == 1:
+            return figs[0]
+        else:
+            return figs
+
+
+def plot_tfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
+             bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
+             d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
+             mode='absolute'):
+    """
+    Plot time-frequency representation of the signal.
+
+    :param st: signal, type numpy.ndarray with shape (number of components,
+        number of time samples) or (number of timesamples, ) for single
+        component data
+    :param dt: time step between two samples in st
+    :param fmin: minimal frequency to be analyzed
+    :param fmax: maximal frequency to be analyzed
+    :param nf: number of frequencies (will be chosen with logarithmic spacing)
+    :param w0: parameter for the wavelet, tradeoff between time and frequency
+        resolution
+    :param left: plot distance from the left of the figure
+    :param bottom: plot distance from the bottom of the figure
+    :param h_1: height of the signal axis
+    :param h_2: height of the TFR/spectrum axis
+    :param w_1: width of the spectrum axis
+    :param w_2: width of the TFR/signal axes
+    :param w_cb: width of the colorbar axes
+    :param d_cb: distance of the colorbar axes to the other axes
+    :param show: show figure or return
+    :param plot_args: list of plot arguments passed to the signal and spectrum
+        plots
+    :param clim: limits of the colorbars
+    :param cmap: colormap for TFEM/TFPM, either a string or
+        matplotlib.cm.Colormap instance
+    :param mode: 'absolute' for absolute value of TFR, 'power' for |TFR|^2
+
+    :return: If show is False, returns a maplotlib.pyplot.figure object (single
+        component data) or a list of figure objects (multi component data)
+    """
+    npts = st.shape[-1]
+    tmax = (npts - 1) * dt
+    t = np.linspace(0., tmax, npts)
+    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
+    f_lin = np.linspace(0, 0.5 / dt, npts / 2 + 1)
+
+    if cmap == None:
+        CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
+                             (0.05, 1.0, 1.0),
+                             (0.2, 0.0, 0.0),
+                             (0.4, 0.0, 0.0),
+                             (0.6, 0.0, 0.0),
+                             (0.8, 1.0, 1.0),
+                             (1.0, 1.0, 1.0)),
+                     'green': ((0.0, 1.0, 1.0),
+                               (0.05, 0.0, 0.0),
+                               (0.2, 0.0, 0.0),
+                               (0.4, 1.0, 1.0),
+                               (0.6, 1.0, 1.0),
+                               (0.8, 1.0, 1.0),
+                               (1.0, 0.0, 0.0)),
+                     'blue': ((0.0, 1.0, 1.0),
+                              (0.05, 1.0, 1.0),
+                              (0.2, 1.0, 1.0),
+                              (0.4, 1.0, 1.0),
+                              (0.6, 0.0, 0.0),
+                              (0.8, 0.0, 0.0),
+                              (1.0, 0.0, 0.0))}
+
+        cmap = LinearSegmentedColormap('cmap_tfr', CDICT_TFR, 1024)
+
+    if len(st.shape) == 1:
+        W = np.empty((1, nf, npts)) * 0j
+        W[0] = cwt(st, dt, w0, fmin, fmax, nf)
+        ntr = 1
+
+        spec = np.empty((1, npts / 2 + 1)) * 0j
+        spec[0] = np.fft.rfft(st) * dt
+
+        st = st.reshape((1, npts))
+    else:
+        W = np.empty((st.shape[0], nf, npts)) * 0j
+        spec = np.empty((st.shape[0], npts / 2 + 1)) * 0j
+
+        for i in np.arange(st.shape[0]):
+            W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
+            spec[i] = np.fft.rfft(st[i]) * dt
+
+        ntr = st.shape[0]
+
+    if mode == 'absolute':
+        TFR = np.abs(W)
+        spec = np.abs(spec)
+    elif mode == 'power':
+        TFR = np.abs(W) ** 2
+        spec = np.abs(spec) ** 2
+
+    figs = []
+
+    for itr in np.arange(ntr):
+        fig = plt.figure()
+
+        # plot signals
+        ax_sig = fig.add_axes([left + w_1, bottom, w_2, h_1])
+        ax_sig.plot(t, st[itr], plot_args[0])
+
+        # plot TFR
+        ax_TFR = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
+        img_TFR = ax_TFR.imshow(TFR[itr], interpolation='nearest',
+            cmap=cmap, extent=[t[0], t[-1], fmin, fmax], aspect='auto',
+            origin='lower')
+        ax_TFR.set_yscale('log')
+
+        # plot spectrum
+        ax_spec = fig.add_axes([left, bottom + h_1, w_1, h_2])
+        ax_spec.semilogy(spec[itr], f_lin, plot_args[1])
+
+        # add colorbars
+        ax_cb_TFR = fig.add_axes([left + w_1 + w_2 + d_cb + w_cb, bottom +
+                                  h_1, w_cb, h_2])
+        fig.colorbar(img_TFR, cax=ax_cb_TFR)
+
+        # set limits
+        ax_sig.set_ylim(st.min() * 1.1, st.max() * 1.1)
+        ax_sig.set_xlim(t[0], t[-1])
+
+        xlim = spec.max() * 1.1
+
+        ax_spec.set_xlim(xlim, 0.)
+        ax_spec.set_ylim(fmin, fmax)
+
+        if clim == 0.:
+            clim = TFR.max()
+
+        img_TFR.set_clim(0., clim)
+
+        ax_sig.set_xlabel('time')
+        ax_spec.set_ylabel('frequency')
+
+        # remove axis labels
+        ax_TFR.xaxis.set_major_formatter(NullFormatter())
+        ax_TFR.yaxis.set_major_formatter(NullFormatter())
+
+        figs.append(fig)
+
+    if show:
+        plt.show()
+    else:
+        if len(st.shape) == 1:
             return figs[0]
         else:
             return figs
