@@ -72,7 +72,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     return cwt.T
 
 
-def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True):
     """
     Time Frequency Envelope Misfit
@@ -133,7 +133,7 @@ def tfem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return  TFEM / Ar
 
 
-def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True):
     """
     Time Frequency Phase Misfit
@@ -194,7 +194,7 @@ def tfpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TFPM
 
 
-def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True):
     """
     Time-dependent Envelope Misfit
@@ -255,7 +255,7 @@ def tem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TEM / np.sum(Ar, axis=1)
 
 
-def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True):
     """
     Time-dependent Phase Misfit
@@ -317,7 +317,7 @@ def tpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TPM / np.sum(Ar, axis=1)
 
 
-def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True):
     """
     Frequency-dependent Envelope Misfit
@@ -379,7 +379,7 @@ def fem(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TEM / np.sum(Ar, axis=2)
 
 
-def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True):
     """
     Frequency-dependent Phase Misfit
@@ -441,7 +441,7 @@ def fpm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TPM / np.sum(Ar, axis=2)
 
 
-def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True):
     """
     Single Valued Envelope Misfit
@@ -500,7 +500,7 @@ def em(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return EM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
 
 
-def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True):
     """
     Single Valued Phase Misfit
@@ -561,7 +561,7 @@ def pm(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return PM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
 
 
-def tfeg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
     Time Frequency Envelope Goodness-Of-Fit
@@ -593,7 +593,7 @@ def tfeg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * np.exp(-np.abs(TFEM) ** k)
 
 
-def tfpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tfpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
          st2_isref=True, A=10., k=1.):
     """
     Time Frequency Phase Goodness-Of-Fit
@@ -625,7 +625,7 @@ def tfpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(TFPM) ** k)
 
 
-def teg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def teg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
     Time Dependent Envelope Goodness-Of-Fit
@@ -657,7 +657,7 @@ def teg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * np.exp(-np.abs(TEM) ** k)
 
 
-def tpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def tpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
     Time Dependent Phase Goodness-Of-Fit
@@ -689,7 +689,7 @@ def tpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(TPM) ** k)
 
 
-def feg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def feg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
     Frequency Dependent Envelope Goodness-Of-Fit
@@ -721,7 +721,7 @@ def feg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * np.exp(-np.abs(FEM) ** k)
 
 
-def fpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def fpg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         st2_isref=True, A=10., k=1.):
     """
     Frequency Dependent Phase Goodness-Of-Fit
@@ -753,7 +753,7 @@ def fpg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(FPM) ** k)
 
 
-def eg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def eg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
     Single Valued Envelope Goodness-Of-Fit
@@ -783,7 +783,7 @@ def eg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * np.exp(-np.abs(EM) ** k)
 
 
-def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
+def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
        st2_isref=True, A=10., k=1.):
     """
     Single Valued Phase Goodness-Of-Fit
@@ -813,7 +813,7 @@ def pg(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(PM) ** k)
 
 
-def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
+def plot_tf_misfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     norm='global', st2_isref=True, left=0.1, bottom=0.1,
                     h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
                     d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
@@ -1036,7 +1036,7 @@ def plot_tf_misfits(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plot_tf_gofs(st1, st2, dt=1., fmin=1., fmax=10., nf=100, w0=6,
+def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     norm='global', st2_isref=True, A=10., k=1., left=0.1,
                     bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
                     w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
