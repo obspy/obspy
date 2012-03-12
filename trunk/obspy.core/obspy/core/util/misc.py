@@ -8,7 +8,6 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
 import warnings
 import itertools
 import numpy as np
@@ -35,7 +34,7 @@ BAND_CODE = {'F': 1000.0,
              'R': 0.0001,
              'P': 0.000001,
              'T': 0.0000001,
-             'Q': 0.00000001, }
+             'Q': 0.00000001}
 
 
 def guessDelta(channel):
@@ -81,22 +80,26 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
     upper) of two values.  Values of ``a`` outside this (closed) interval
     will be ignored.
 
-        >>> a = [1, 2, 3, 4]
-        >>> scoreatpercentile(a, 25)
-        1.75
-        >>> scoreatpercentile(a, 50)
-        2.5
-        >>> scoreatpercentile(a, 75)
-        3.25
-        >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-        >>> scoreatpercentile(a, 25)
-        25.5
-        >>> scoreatpercentile(a, 50)
-        40
-        >>> scoreatpercentile(a, 75)
-        42.5
+    .. rubric:: Examples
 
-    This function is taken from :func:`scipy.stats.scoreatpercentile`
+    >>> a = [1, 2, 3, 4]
+    >>> scoreatpercentile(a, 25)
+    1.75
+    >>> scoreatpercentile(a, 50)
+    2.5
+    >>> scoreatpercentile(a, 75)
+    3.25
+
+    >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
+    >>> scoreatpercentile(a, 25)
+    25.5
+    >>> scoreatpercentile(a, 50)
+    40
+    >>> scoreatpercentile(a, 75)
+    42.5
+
+    This function is taken from :func:`scipy.stats.scoreatpercentile`.
+
     Copyright (c) Gary Strangman
     """
     if issorted:
@@ -121,7 +124,8 @@ def flatnotmaskedContiguous(a):
     Find contiguous unmasked data in a masked array along the given axis.
 
     This function is taken from
-    :func:`numpy.ma.extras.flatnotmasked_contiguous`
+    :func:`numpy.ma.extras.flatnotmasked_contiguous`.
+
     Copyright (c) Pierre Gerard-Marchant
     """
     np.ma.extras.flatnotmasked_contiguous
@@ -154,7 +158,7 @@ def formatScientific(value):
         [MSC v.1310 32 bit (Intel)] on **win32**
 
         >>> '%E' % 2.5 # doctest: +SKIP
-        '2.500000E+000'`
+        '2.500000E+000'
 
     (2) **Python 2.5.2** (r252:60911, Apr  2 2008, 18:38:52)
         [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on **linux2**
@@ -213,7 +217,7 @@ def toIntOrZero(value):
     """
     Tries to converts given value to integer or returns 0 if it fails.
 
-    :param value: Arbitary data type.
+    :param value: Arbitrary data type.
     :rtype: int
 
     .. rubric:: Example

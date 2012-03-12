@@ -33,6 +33,7 @@ class WaveformPlotting(object):
     data sets.
 
     .. warning::
+
         This class should NOT be used directly, instead use the
         :meth:`~obspy.core.stream.Stream.plot` method of the
         ObsPy :class:`~obspy.core.stream.Stream` or
