@@ -131,6 +131,8 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return  TFEM[0] / Ar[0]
         else:
             return  TFEM / Ar
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -192,6 +194,8 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TFPM[0]
         else:
             return TFPM
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -253,6 +257,8 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TEM[0] / np.sum(Ar, axis=1)[0]
         else:
             return TEM / np.sum(Ar, axis=1)
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -315,6 +321,8 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TPM[0] / np.sum(Ar, axis=1)[0]
         else:
             return TPM / np.sum(Ar, axis=1)
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -377,6 +385,8 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TEM[0] / np.sum(Ar, axis=2)[0]
         else:
             return TEM / np.sum(Ar, axis=2)
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -439,6 +449,8 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return TPM[0] / np.sum(Ar, axis=2)[0]
         else:
             return TPM / np.sum(Ar, axis=2)
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -498,6 +510,8 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return EM[0] / (np.sum(Ar ** 2)) ** .5
         else:
             return EM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -559,6 +573,8 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
             return PM[0] / (np.sum(Ar ** 2)) ** .5
         else:
             return PM / (np.sum(np.sum(Ar ** 2, axis=2), axis=1)) ** .5
+    else:
+        raise ValueError('norm "' + norm + '" not defined!')
 
 
 def tfeg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
@@ -813,7 +829,7 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(PM) ** k)
 
 
-def plot_tf_misfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
+def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     norm='global', st2_isref=True, left=0.1, bottom=0.1,
                     h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
                     d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
@@ -1035,7 +1051,7 @@ def plot_tf_misfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
+def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                     norm='global', st2_isref=True, A=10., k=1., left=0.1,
                     bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
                     w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
@@ -1253,10 +1269,10 @@ def plot_tf_gofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plot_tfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
+def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
              bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
              d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
-             mode='absolute'):
+             mode='absolute', fft_zero_pad_fac=0):
     """
     Plot time-frequency representation of the signal.
 
@@ -1284,15 +1300,33 @@ def plot_tfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     :param cmap: colormap for TFEM/TFPM, either a string or
         matplotlib.cm.Colormap instance
     :param mode: 'absolute' for absolute value of TFR, 'power' for |TFR|^2
+    :param fft_zero_pad_fac: integer, if > 0, the signal is zero padded to nfft
+        = nextpow2(len(st)) * fft_zero_pad_fac to get smoother spectrum in the
+        low frequencies (has no effect on the TFR and might make
+        demeaning/tapering necessary to avoid artefacts)
 
     :return: If show is False, returns a maplotlib.pyplot.figure object (single
         component data) or a list of figure objects (multi component data)
+
+    .. plot::
+    Example:
+
+    >>> from obspy.signal.tf_misfit import plotTfr
+    >>> from obspy.core import read
+    >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
+    >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, fmax=50., w0=8., nf=512,
+    ...     fft_zero_pad_fac=4)
     """
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
-    f_lin = np.linspace(0, 0.5 / dt, npts / 2 + 1)
+
+    if fft_zero_pad_fac == 0:
+        nfft = npts
+    else:
+        nfft = util.nextpow2(npts) * fft_zero_pad_fac
+    f_lin = np.linspace(0, 0.5 / dt, nfft / 2 + 1)
 
     if cmap == None:
         CDICT_TFR = {'red': ((0.0, 1.0, 1.0),
@@ -1324,17 +1358,17 @@ def plot_tfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         W[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.empty((1, npts / 2 + 1)) * 0j
-        spec[0] = np.fft.rfft(st) * dt
+        spec = np.empty((1, nfft / 2 + 1)) * 0j
+        spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
         W = np.empty((st.shape[0], nf, npts)) * 0j
-        spec = np.empty((st.shape[0], npts / 2 + 1)) * 0j
+        spec = np.empty((st.shape[0], nfft / 2 + 1)) * 0j
 
         for i in np.arange(st.shape[0]):
             W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
-            spec[i] = np.fft.rfft(st[i]) * dt
+            spec[i] = np.fft.rfft(st[i], n=nfft) * dt
 
         ntr = st.shape[0]
 
@@ -1344,6 +1378,8 @@ def plot_tfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     elif mode == 'power':
         TFR = np.abs(W) ** 2
         spec = np.abs(spec) ** 2
+    else:
+        raise ValueError('mode "' + mode + '" not defined!')
 
     figs = []
 
