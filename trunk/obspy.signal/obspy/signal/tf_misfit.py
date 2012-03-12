@@ -11,8 +11,7 @@
 Various Time Frequency Misfit Functions based on Kristekova et. al. (2006) and
 Kristekova et. al. (2009).
 
-.. seealso:: [Kristekova2006]_
-.. seealso:: [Kristekova2009]_
+.. seealso:: [Kristekova2006]_ and [Kristekova2009]_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -830,10 +829,10 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
 
 
 def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
-                    norm='global', st2_isref=True, left=0.1, bottom=0.1,
-                    h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
-                    d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
-                    clim=0., cmap=None):
+                  norm='global', st2_isref=True, left=0.1, bottom=0.1,
+                  h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
+                  d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
+                  clim=0., cmap=None):
     """
     Plot all timefrequency misfits in one plot (per component).
 
@@ -951,8 +950,8 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         ax_TFEM = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
         img_TFEM = ax_TFEM.imshow(TFEM[itr], interpolation='nearest',
-            cmap=cmap, extent=[t[0], t[-1], fmin, fmax], aspect='auto',
-            origin='lower')
+                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
+                                  aspect='auto', origin='lower')
         ax_TFEM.set_yscale('log')
 
         # plot FEM
@@ -967,8 +966,8 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         # plot TFPM
         ax_TFPM = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
         img_TFPM = ax_TFPM.imshow(TFPM[itr], interpolation='nearest',
-            cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]], aspect='auto',
-            origin='lower')
+                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
+                                  aspect='auto', origin='lower')
         ax_TFPM.set_yscale('log')
 
         # add colorbars
@@ -1004,8 +1003,8 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         textstr = 'EM = %.2f\nPM = %.2f' % (EM[itr], PM[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
-                verticalalignment='center', horizontalalignment='left',
-                bbox=props)
+                    verticalalignment='center', horizontalalignment='left',
+                    bbox=props)
 
         ax_TPM.set_xlabel('time')
         ax_FEM.set_ylabel('frequency')
@@ -1014,23 +1013,23 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         # add text boxes
         props = dict(boxstyle='round', facecolor='white', alpha=0.5)
         ax_TFEM.text(0.95, 0.85, 'TFEM', transform=ax_TFEM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                     verticalalignment='top', horizontalalignment='right',
+                     bbox=props)
         ax_TFPM.text(0.95, 0.85, 'TFPM', transform=ax_TFPM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                     verticalalignment='top', horizontalalignment='right',
+                     bbox=props)
         ax_TEM.text(0.95, 0.75, 'TEM', transform=ax_TEM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_TPM.text(0.95, 0.75, 'TPM', transform=ax_TPM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_FEM.text(0.9, 0.85, 'FEM', transform=ax_FEM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_FPM.text(0.9, 0.85, 'FPM', transform=ax_FPM.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
 
         # remove axis labels
         ax_TFPM.xaxis.set_major_formatter(NullFormatter())
@@ -1052,10 +1051,10 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
 
 
 def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
-                    norm='global', st2_isref=True, A=10., k=1., left=0.1,
-                    bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
-                    w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
-                    ylim=0., clim=0., cmap=None):
+               norm='global', st2_isref=True, A=10., k=1., left=0.1,
+               bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
+               w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
+               ylim=0., clim=0., cmap=None):
     """
     Plot all timefrequency Goodnes-Of-Fits its in one plot (per component).
 
@@ -1169,8 +1168,8 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         ax_TFEG = fig.add_axes([left + w_1, bottom + h_1 + 2 * h_2 + h_3, w_2,
                                 h_3])
         img_TFEG = ax_TFEG.imshow(TFEG[itr], interpolation='nearest',
-            cmap=cmap, extent=[t[0], t[-1], fmin, fmax], aspect='auto',
-            origin='lower')
+                                  cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
+                                  aspect='auto', origin='lower')
         ax_TFEG.set_yscale('log')
 
         # plot FEG
@@ -1185,8 +1184,8 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         # plot TFPG
         ax_TFPG = fig.add_axes([left + w_1, bottom + h_2, w_2, h_3])
         img_TFPG = ax_TFPG.imshow(TFPG[itr], interpolation='nearest',
-            cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]], aspect='auto',
-            origin='lower')
+                                  cmap=cmap, extent=[t[0], t[-1], f[0], f[-1]],
+                                  aspect='auto', origin='lower')
         ax_TFPG.set_yscale('log')
 
         # add colorbars
@@ -1222,8 +1221,8 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         textstr = 'EG = %2.2f\nPG = %2.2f' % (EG[itr], PG[itr])
         props = dict(boxstyle='round', facecolor='white')
         ax_sig.text(-0.3, 0.5, textstr, transform=ax_sig.transAxes,
-                verticalalignment='center', horizontalalignment='left',
-                bbox=props)
+                    verticalalignment='center', horizontalalignment='left',
+                    bbox=props)
 
         ax_TPG.set_xlabel('time')
         ax_FEG.set_ylabel('frequency')
@@ -1232,23 +1231,23 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         # add text boxes
         props = dict(boxstyle='round', facecolor='white', alpha=0.5)
         ax_TFEG.text(0.95, 0.85, 'TFEG', transform=ax_TFEG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                     verticalalignment='top', horizontalalignment='right',
+                     bbox=props)
         ax_TFPG.text(0.95, 0.85, 'TFPG', transform=ax_TFPG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                     verticalalignment='top', horizontalalignment='right',
+                     bbox=props)
         ax_TEG.text(0.95, 0.75, 'TEG', transform=ax_TEG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_TPG.text(0.95, 0.75, 'TPG', transform=ax_TPG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_FEG.text(0.9, 0.85, 'FEG', transform=ax_FEG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
         ax_FPG.text(0.9, 0.85, 'FPG', transform=ax_FPG.transAxes,
-                verticalalignment='top', horizontalalignment='right',
-                bbox=props)
+                    verticalalignment='top', horizontalalignment='right',
+                    bbox=props)
 
         # remove axis labels
         ax_TFPG.xaxis.set_major_formatter(NullFormatter())
@@ -1308,19 +1307,24 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     :return: If show is False, returns a maplotlib.pyplot.figure object (single
         component data) or a list of figure objects (multi component data)
 
-    .. plot::
-    Example:
+    .. rubric:: Example
 
-    >>> from obspy.signal.tf_misfit import plotTfr
     >>> from obspy.core import read
     >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
-    >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, fmax=50., w0=8., nf=512,
-    ...     fft_zero_pad_fac=4)
+    >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
+    ...         fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
+
+    .. plot::
+
+        from obspy.signal.tf_misfit import plotTfr
+        from obspy.core import read
+        tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
+        plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
+                fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
     """
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
-    f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     if fft_zero_pad_fac == 0:
         nfft = npts
@@ -1393,8 +1397,8 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         # plot TFR
         ax_TFR = fig.add_axes([left + w_1, bottom + h_1, w_2, h_2])
         img_TFR = ax_TFR.imshow(TFR[itr], interpolation='nearest',
-            cmap=cmap, extent=[t[0], t[-1], fmin, fmax], aspect='auto',
-            origin='lower')
+                                cmap=cmap, extent=[t[0], t[-1], fmin, fmax],
+                                aspect='auto', origin='lower')
         ax_TFR.set_yscale('log')
 
         # plot spectrum
@@ -1436,3 +1440,8 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             return figs[0]
         else:
             return figs
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
