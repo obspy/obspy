@@ -1,0 +1,223 @@
+# -*- coding: utf-8 -*-
+"""
+Module to manage SeedLinkConnection state.
+
+Part of Python implementaion of libslink of Chad Trabant and
+JSeedLink of Anthony Lomax
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
+
+
+from obspyRT.seedlink.seedlinkexception import SeedLinkException
+from obspyRT.seedlink.slpacket import SLPacket
+
+class SLState(object):
+    """ 
+     * Class to manage SeedLinkConnection state.
+    
+    
+    :var SL_DOWN: Connection state down.
+    :type SL_DOWN: int
+
+    :var SL_UP: Connection state up.
+    :type SL_UP: int
+
+    :var SL_DATA: Connection state data.
+    :type SL_DATA: int
+
+    :var state: Connection state.
+    :type state: int
+    
+
+    :var NO_QUERY: INFO query state NO_QUERY.
+    :type NO_QUERY: int
+	
+    :var INFO_QUERY: INFO query state INFO_QUERY.
+    :type INFO_QUERY: int.
+	
+    :var KEEP_ALIVE_QUERY: INFO query state KEEP_ALIVE_QUERY.
+    :type KEEP_ALIVE_QUERY: int
+
+    :var query_mode: INFO query state.
+    :type query_mode: int
+	
+
+    :var BUFSIZE: Size of receiving buffer (default is 8192).
+    :type BUFSIZE: int
+
+    :var databuf: Data buffer for received packets.
+    :type databuf: bytearray
+
+    :var recptr: Receive pointer for databuf.
+    :type recptr: int
+
+    :var sendptr: Send pointer for databuf.
+    :type sendptr: int
+
+
+    :var expect_info: Flag to indicate if an INFO response is expected.
+    :type expect_info: boolean
+	
+    :var netto_trig: Network timeout trigger.netto_trig
+    :type netto_trig: int
+
+    :var netdly_trig: Network re-connect delay trigger.
+    :type netdly_trig: int
+
+    :var keepalive_trig: Send keepalive trigger.
+    :type keepalive_trig: TTT
+
+    :var previous_time: Time stamp of last state update.
+    :type previous_time: float
+
+    :var netto_time: Network timeout time stamp.
+    :type netto_time: float
+
+    :var netdly_time: Network re-connect delay time stamp.
+    :type netdly_time: float
+
+    :var keepalive_time: Keepalive time stamp.
+    :type keepalive_time: float
+
+    """
+
+    SL_DOWN = 0
+    SL_UP = 1
+    SL_DATA = 2
+    NO_QUERY = 0
+    INFO_QUERY = 1
+    KEEP_ALIVE_QUERY = 2
+    BUFSIZE = 8192
+
+    state = SL_DOWN
+    query_mode = NO_QUERY
+    #AJL databuf = [str() for __idx0 in range(BUFSIZE)]
+    databuf = bytearray(BUFSIZE)
+    recptr = 0
+    sendptr = 0
+    expect_info = False
+    netto_trig = -1
+    netdly_trig = 0
+    keepalive_trig = -1
+    previous_time = 0.0
+    netto_time = 0.0
+    netdly_time = 0.0
+    keepalive_time = 0.0
+
+    def __init__(self):
+        pass
+
+    def getPacket(self):
+        """
+        Returns last received packet.
+
+        :return: last recieved packet if data buffer contains a full packet to send.
+        :raise: SeedLinkException if there is not a packet ready to send.
+
+        See also: :meth:`packetAvailable`
+
+        """
+        if not self.packetAvailable():
+            raise SeedLinkException("SLPacket not available to send")
+        return SLPacket(self.databuf, self.sendptr)
+
+    def packetAvailable(self):
+        """
+        Check for full packet available to send.
+
+        :return: true if data buffer contains a full packet to send.
+
+        See also: :meth:`getPacket`
+
+        """
+        return self.recptr - self.sendptr >= SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
+
+    def bytesRemaining(self):
+        """
+        Return number of bytes remaining in receiving buffer.
+
+        :return: number of bytes remaining.
+
+        """
+        return self.BUFSIZE - self.recptr
+
+    def isError(self):
+        """
+        Check for SeedLink ERROR packet.
+
+        :return: true if next send packet is a SeedLink ERROR packet
+
+        :raise: SeedLinkException if there are not enough bytes to determine
+
+        """
+        if self.recptr - self.sendptr < len(SLPacket.ERRORSIGNATURE):
+            raise SeedLinkException("not enough bytes to determine packet type")
+        return self.databuf[self.sendptr : self.sendptr + len(SLPacket.ERRORSIGNATURE)].lower() == SLPacket.ERRORSIGNATURE.lower()
+
+    def isEnd(self):
+        """
+        Check for SeedLink END packet.
+
+        :return: true if next send packet is a SeedLink END packet
+
+        :raise: SeedLinkException if there are not enough bytes to determine
+
+        """
+        if self.recptr - self.sendptr < len(SLPacket.ENDSIGNATURE):
+            raise SeedLinkException("not enough bytes to determine packet type")
+        return self.databuf[self.sendptr : self.sendptr + len(SLPacket.ENDSIGNATURE)].lower() == SLPacket.ENDSIGNATURE.lower()
+
+    def packetIsInfo(self):
+        """
+        Check for SeedLink INFO packet.
+
+        :return: true if next send packet is a SeedLink INFO packet
+
+        :raise: SeedLinkException if there are not enough bytes to determine packet type
+
+        """
+        if self.recptr - self.sendptr < len(SLPacket.INFOSIGNATURE):
+            raise SeedLinkException("not enough bytes to determine packet type")
+        return self.databuf[self.sendptr : self.sendptr + len(SLPacket.INFOSIGNATURE)].lower() == SLPacket.INFOSIGNATURE.lower()
+
+    def incrementSendPointer(self):
+        """
+        Increments the send pointer by size of one packet.
+
+        """
+        self.sendptr += SLPacket.SLHEADSIZE + SLPacket.SLRECSIZE
+
+    #AJL packed_buf = [str() for __idx0 in range(BUFSIZE)]
+    packed_buf = bytearray(BUFSIZE)
+
+    def packDataBuffer(self):
+        """
+        Packs the buffer by removing all sent packets and shifting remaining bytes to beginning of buffer.
+
+        """
+        #AJL System.arraycopy(self.databuf, self.sendptr, self.packed_buf, 0, self.recptr - self.sendptr)
+        self.packed_buf[0:self.recptr - self.sendptr] = self.databuf[self.sendptr : self.recptr]
+        temp_buf = self.databuf
+        self.databuf = self.packed_buf
+        self.packed_buf = temp_buf
+        self.recptr -= self.sendptr
+        self.sendptr = 0
+
+    def appendBytes(self, bytes):
+        """
+        Appends bytes to the receive buffer after the last received data.
+
+        """
+        if self.bytesRemaining() < len(bytes):
+            raise SeedLinkException("not enough bytes remaining in buffer to append new bytes")
+        ## for-while
+        for i in range(len(bytes)):
+            self.databuf[self.recptr] = bytes[i]
+            self.recptr += 1
+
+
