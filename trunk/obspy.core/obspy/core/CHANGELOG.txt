@@ -1,4 +1,5 @@
 dev:
+ * new formatSeedLink method for UTCDateTime object
  * new split method for transforming streams containing masked arrays into
    contiguous traces
  * new resample method for Trace and Stream object
