@@ -834,7 +834,8 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                   d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
                   clim=0., cmap=None):
     """
-    Plot all timefrequency misfits in one plot (per component).
+    Plot all timefrequency misfits and the time series in one plot (per
+    component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -868,6 +869,71 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
 
     :return: If show is False, returns a maplotlib.pyplot.figure object (single
         component data) or a list of figure objects (multi component data)
+
+    .. rubric:: Example
+
+    For a signal with pure phase error
+    .. seealso:: [Kristekova2006]_, Fig.(4)
+
+    >>> import numpy as np
+    >>> from scipy.signal import hilbert
+    >>> tmax = 6.
+    >>> dt = 0.01
+    >>> npts = int(tmax / dt + 1)
+    >>> t = np.linspace(0., tmax, npts)
+    >>> A1 = 4.
+    >>> t1 = 2.
+    >>> f1 = 2.
+    >>> phi1 = 0.
+    >>> phase_shift = 0.1
+    >>> H = lambda t: (np.sign(t) + 1)/ 2
+    >>> S1 = lambda t: (A1 * (t - t1) * np.exp(-2*(t - t1)) *
+    ...                np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) *
+    ...                H(t - t1))
+    >>> # Distorted signal:
+    >>> # generate analytical signal (hilbert transform) and add phase shift
+    >>> st1 = S1(t)
+    >>> st1 = hilbert(st1)
+    >>> st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) + 
+    ...                                     phase_shift * np.pi) * 1j))
+    >>> # Reference signal
+    >>> st2 = S1(t)
+    >>> plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
+
+    .. plot::
+
+        import numpy as np
+        from obspy.signal.tf_misfit import plotTfMisfits
+        from scipy.signal import hilbert
+
+        tmax = 6.
+        dt = 0.01
+        npts = int(tmax / dt + 1)
+        t = np.linspace(0., tmax, npts)
+
+        A1 = 4.
+        t1 = 2.
+        f1 = 2.
+        phi1 = 0.
+
+        phase_shift = 0.1
+
+        H = lambda t: (np.sign(t) + 1)/ 2
+        S1 = lambda t: (A1 * (t - t1) * np.exp(-2*(t - t1)) *
+                        np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) *
+                        H(t - t1))
+
+        # Distorted signal:
+        # generate analytical signal (hilbert transform) and add phase shift
+        st1 = S1(t)
+        st1 = hilbert(st1)
+        st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) + 
+                                            phase_shift * np.pi) * 1j))
+
+        # Reference signal
+        st2 = S1(t)
+
+        plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
@@ -1056,7 +1122,8 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
                w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
                ylim=0., clim=0., cmap=None):
     """
-    Plot all timefrequency Goodnes-Of-Fits its in one plot (per component).
+    Plot all timefrequency Goodnes-Of-Fits and the time series in one plot (per
+    component).
 
     :param st1: signal 1 of two signals to compare, type numpy.ndarray with
         shape (number of components, number of time samples) or (number of
@@ -1273,7 +1340,7 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
              d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
              mode='absolute', fft_zero_pad_fac=0):
     """
-    Plot time-frequency representation of the signal.
+    Plot time-frequency representation, spectrum and time series of the signal.
 
     :param st: signal, type numpy.ndarray with shape (number of components,
         number of time samples) or (number of timesamples, ) for single
