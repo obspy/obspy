@@ -208,7 +208,7 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
 
   int i, ibuf=-1, k, inn, jsign=0, joflow=0;
   int32_t itemp;
-  char cbuf[82]=" ";
+  char cbuf[83]=" ";
   
   if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
   
