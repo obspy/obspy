@@ -13,7 +13,7 @@ for seismology.
 For more information visit http://www.obspy.org.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Victor Kress
 :license:
     GNU General Public License (GPL)
 
