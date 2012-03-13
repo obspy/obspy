@@ -1,2 +1,3 @@
 dev:
- * bugfixing checksum calculation of GSE2/GSE1
+ * bugfix for buffer overflow in test_readDos
+ * bugfix checksum calculation of GSE2/GSE1
