@@ -12,6 +12,10 @@ The obspy.realtime package has been developed by Anthony Lomax within the NERA
 WP12/JRA2 activities (funded by the European Community's Seventh Framework
 Program [FP7/2007-2013] under grant agreement n° 262330).
 
+Please contact Anthony Lomax (anthony@alomax.net, www.alomax.net) for
+professional services for further development or customization of this or
+related ObsPy packages.
+
 
 Overview
 --------

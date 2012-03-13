@@ -32,8 +32,8 @@ def scale(trace, rtmemory_list=[], factor=1.0):
         Persistent memory used by this process for specified trace.
     :type factor: float, optional
     :param factor: Scale factor (default is 1.0).
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
@@ -57,11 +57,10 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
             Persistent memory used by this process for specified trace.
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
-
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
@@ -101,10 +100,10 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
             Persistent memory used by this process for specified trace.
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
@@ -147,12 +146,12 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
             Persistent memory used by this process for specified trace.
     :type width: int
     :param width: Width in number of sample points for filter.
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
@@ -231,12 +230,12 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
             Persistent memory used by this process for specified trace.
     :type width: int
     :param width: Width in number of sample points for tauc window.
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
@@ -333,7 +332,7 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
             Persistent memory used by this process for specified trace.
     :type mem_time: float
     :param mem_time: Length in seconds of data memory (must be much larger
@@ -347,8 +346,8 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     :type gain: float
     :param gain: Nominal gain to convert input displacement trace to meters
         of ground displacement.
-    :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
-        Trace object.
+    :rtype: NumPy :class:`numpy.ndarray`
+    :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
