@@ -3,7 +3,7 @@
 Module for handling ObsPy RtMemory objects.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -15,13 +15,10 @@ import numpy as np
 class RtMemory:
 
     def __init__(self):
-
         self.initialized = False
 
-
     def initialize(self, data_type, length_input, length_output,
-    input_inital_value=0, output_inital_value=0):
-
+                   input_inital_value=0, output_inital_value=0):
         """
         Create and initialize input and output arrays for this RtMemory object.
 
@@ -37,9 +34,7 @@ class RtMemory:
         :type output_inital_value: float, optional
         :param output_inital_value: Initialization value for the output
             memory array (default is 1.0).
-
         """
-
         self.input = np.ones(length_input, data_type)
         self.input *= input_inital_value
 
@@ -51,11 +46,9 @@ class RtMemory:
         #print 'DEBUG: np.size(self.input): ', np.size(self.input)
         #print 'DEBUG: np.size(self.output): ', np.size(self.output)
 
-
     def _update(self, memory_array, data):
-
         """
-        Update specified memory array using specifed number of points from
+        Update specified memory array using specified number of points from
             end of specified data array.
 
         :type memory_array: numpy.ndarray
@@ -65,9 +58,7 @@ class RtMemory:
         :param data:  Data array to use for update.
         :return: NumPy :class:`np.ndarray` object containing updated
             memory array (input or output).
-
         """
-
         #print 'DEBUG: np.size(memory_array): ', np.size(memory_array)
         #print 'DEBUG: np.size(data): ', np.size(data)
         if data.size >= np.size(memory_array):
@@ -79,33 +70,25 @@ class RtMemory:
             memory_array = memory_array[data.size:]
             # append data
             memory_array = np.concatenate((memory_array, data))
-
         return memory_array
 
-
-
     def updateOutput(self, data):
-
         """
-        Update output memory using specifed number of points from end of
+        Update output memory using specified number of points from end of
             specified array.
 
         :type data: numpy.ndarray
         :param data:  Data array to use for update.
         """
-
         self.output = self._update(self.output, data)
-
-
 
     def updateInput(self, data):
 
         """
-        Update input memory using specifed number of points from end of
+        Update input memory using specified number of points from end of
             specified array.
 
         :type data: numpy.ndarray
         :param data:  Data array to use for update.
         """
-
         self.input = self._update(self.input, data)

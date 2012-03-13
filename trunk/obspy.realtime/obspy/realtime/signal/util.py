@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy RtMemory objects.
+Signal processing functions for RtMemory objects.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -11,14 +11,14 @@ Module for handling ObsPy RtMemory objects.
 
 import math
 import sys
-
 import numpy as np
-import obspy.core.trace
-import obspyRT.realtime.rtmemory as rtmem
+from obspy.core.trace import Trace, UTCDateTime
+from obspy.realtime.rtmemory import RtMemory
 
 _PI = math.pi
 _TWO_PI = 2.0 * math.pi
 _MIN_FLOAT_VAL = 1.0e-20
+
 
 def scale(trace, rtmemory_list=[], factor=1.0):
     """
@@ -28,16 +28,14 @@ def scale(trace, rtmemory_list=[], factor=1.0):
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
     :type rtmemory_list: list
-    :param process_name: list of obspyRT.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
+        Persistent memory used by this process for specified trace.
     :type factor: float, optional
     :param factor: Scale factor (default is 1.0).
     :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
         Trace object.
-
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
@@ -51,9 +49,9 @@ def scale(trace, rtmemory_list=[], factor=1.0):
     return(sample)
 
 
-def integrate(trace, rtmemory_list=[rtmem.RtMemory()]):
+def integrate(trace, rtmemory_list=[RtMemory()]):
     """
-    Apply simple rectanglular integation to array data.
+    Apply simple rectangular integration to array data.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
@@ -65,8 +63,7 @@ def integrate(trace, rtmemory_list=[rtmem.RtMemory()]):
         Trace object.
 
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
@@ -96,7 +93,7 @@ def integrate(trace, rtmemory_list=[rtmem.RtMemory()]):
     return(sample)
 
 
-def differentiate(trace, rtmemory_list=[rtmem.RtMemory()]):
+def differentiate(trace, rtmemory_list=[RtMemory()]):
     """
     Apply simple differentiation to array data.
 
@@ -109,8 +106,7 @@ def differentiate(trace, rtmemory_list=[rtmem.RtMemory()]):
     :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
         Trace object.
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
@@ -126,10 +122,10 @@ def differentiate(trace, rtmemory_list=[rtmem.RtMemory()]):
     if not rtmemory.initialized:
         memory_size_input = 1
         memory_size_output = 0
-        rtmemory.initialize(sample.dtype, memory_size_input, 
+        rtmemory.initialize(sample.dtype, memory_size_input,
                             memory_size_output, 0, 0)
         # avoid large diff value for first output sample
-        rtmemory.input[0] = sample[0]   
+        rtmemory.input[0] = sample[0]
 
     previous_sample = rtmemory.input[0]
 
@@ -143,9 +139,9 @@ def differentiate(trace, rtmemory_list=[rtmem.RtMemory()]):
     return(sample)
 
 
-def boxcar(trace, rtmemory_list=[rtmem.RtMemory()], width=-1):
+def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     """
-    Apply boxcar smmothing to data in array sample.
+    Apply boxcar smoothing to data in array sample.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
@@ -158,8 +154,7 @@ def boxcar(trace, rtmemory_list=[rtmem.RtMemory()], width=-1):
     :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
         Trace object.
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
@@ -212,7 +207,7 @@ def boxcar(trace, rtmemory_list=[rtmem.RtMemory()], width=-1):
                 value = sample[i2]
             sum += value
         if (icount > 0):
-            new_sample[i] = (float) (sum / float(icount))
+            new_sample[i] = (float)(sum / float(icount))
         else:
             new_sample[i] = 0.0
         i1 = i1 + 1
@@ -223,7 +218,7 @@ def boxcar(trace, rtmemory_list=[rtmem.RtMemory()], width=-1):
     return(new_sample)
 
 
-def tauc(trace, rtmemory_list=[rtmem.RtMemory(), rtmem.RtMemory()], width=-1):
+def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     """
     Calculate instantaneous period in a fixed window (Tau_c).
 
@@ -243,8 +238,7 @@ def tauc(trace, rtmemory_list=[rtmem.RtMemory(), rtmem.RtMemory()], width=-1):
     :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
         Trace object.
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
@@ -321,7 +315,8 @@ _INT_INT_SUM = 3
 _POLARITY = 4
 _MEMORY_SIZE_OUTPUT = 5
 
-def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
+
+def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
                 ref_time=None, max_time=-1, gain=1.0):
     """
     Calculate Mwp integral on a displacement trace.
@@ -329,10 +324,10 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
         implements algorithm in :
             Tsuboi, S., Abe, K., Takano, K. & Yamanaka, Y., 1995.
                 Rapid determination of Mw from broadband P waveforms,
-                Bull. seism. Soc. Am., 85, 606Ð613.
+                Bull. seism. Soc. Am., 85, 606-613.
             Tsuboi, S., Whitmore, P.M. & Sokolowski, T.J., 1999.
                 Application of Mwp to deep and teleseismic earthquakes,
-                Bull. seism. Soc. Am., 89, 1345Ð1351.
+                Bull. seism. Soc. Am., 89, 1345-1351.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
@@ -345,7 +340,7 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
         than maximum delay between pick declaration and pick time).
     :type ref_time :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param ref_time: Reference date and time of the data sample
-        (e.g. P pick time) at which to beging Mwp integration.
+        (e.g. P pick time) at which to begin Mwp integration.
     :type max_time: float
     :param max_time: Maximum time in seconds after ref_time to apply Mwp
         integration.
@@ -355,12 +350,11 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
     :return: NumPy :class:`numpy.ndarray` Processed trace data from appended
         Trace object.
     """
-
-    if not isinstance(trace, obspy.core.trace.Trace):
+    if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
-    if not isinstance(ref_time, obspy.core.utcdatetime.UTCDateTime):
+    if not isinstance(ref_time, UTCDateTime):
         msg = "ref_time must be an obspy.core.utcdatetime.UTCDateTime object."
         raise ValueError(msg)
 
@@ -403,11 +397,11 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
         ioffset_mwp_min = 0
     else:
         rtmemory.output[_HAVE_USED_MEMORY] = 1
-    # set Mwp end index correspoinding to maximum duration
+    # set Mwp end index corresponding to maximum duration
     mwp_end_index = int(round(max_time / delta_time))
     ioffset_mwp_max = mwp_end_index + ioffset_pick
     if ioffset_mwp_max < trace.data.size:
-        rtmemory.output[_FLAG_COMPETE_MWP] = 1 # will complete
+        rtmemory.output[_FLAG_COMPETE_MWP] = 1  # will complete
     if ioffset_mwp_max > trace.data.size:
         ioffset_mwp_max = trace.data.size
     # apply double integration, check for extrema
@@ -427,18 +421,18 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
                 "size=%d at invalid index=%d: this should not happen!" % \
                 (np.size(rtmemory.input), n + np.size(rtmemory.input))
             print msg
-            continue # should never reach here
+            continue  # should never reach here
         disp_amp = amplitude - mwp_amp_at_pick
         # check displacement polarity
-        if disp_amp >= 0.0: # pos
+        if disp_amp >= 0.0:  # pos
             # check if past extremum
-            if  polarity < 0: # passed from neg to pos displacement
+            if  polarity < 0:  # passed from neg to pos displacement
                 mwp_int_int_sum *= -1.0
                 mwp_int_int_sum = 0
             polarity = 1
-        elif disp_amp < 0.0: # neg
+        elif disp_amp < 0.0:  # neg
             # check if past extremum
-            if polarity > 0: # passed from pos to neg displacement
+            if polarity > 0:  # passed from pos to neg displacement
                 mwp_int_int_sum = 0
             polarity = -1
         mwp_int_int_sum += (amplitude - mwp_amp_at_pick) * delta_time / gain
@@ -455,12 +449,13 @@ def mwpIntegral(trace, rtmemory_list=[rtmem.RtMemory()], mem_time=1.0,
 
 MWP_INVALID = -9.9
 # 4.213e19 - Tsuboi 1995, 1999
-MWP_CONST = 4.0 * _PI # 4 PI
-MWP_CONST *= 3400.0 # rho
-MWP_CONST *= 7900.0 * 7900.0 * 7900.0 # Pvel**3
-MWP_CONST *= 2.0 # FP average radiation pattern
-MWP_CONST *= (10000.0 / 90.0) # distance deg -> km
-MWP_CONST *= 1000.0 # distance km -> meters
+MWP_CONST = 4.0 * _PI  # 4 PI
+MWP_CONST *= 3400.0  # rho
+MWP_CONST *= 7900.0 * 7900.0 * 7900.0  # Pvel**3
+MWP_CONST *= 2.0  # FP average radiation pattern
+MWP_CONST *= (10000.0 / 90.0)  # distance deg -> km
+MWP_CONST *= 1000.0  # distance km -> meters
+
 
 def calculateMwpMag(peak, epicentral_distance):
     """
@@ -469,32 +464,21 @@ def calculateMwpMag(peak, epicentral_distance):
         implements algorithm in :
             Tsuboi, S., Abe, K., Takano, K. & Yamanaka, Y., 1995.
                 Rapid determination of Mw from broadband P waveforms,
-                Bull. seism. Soc. Am., 85, 606Ð613.
+                Bull. seism. Soc. Am., 85, 606-613.
             Tsuboi, S., Whitmore, P.M. & Sokolowski, T.J., 1999.
                 Application of Mwp to deep and teleseismic earthquakes,
-                Bull. seism. Soc. Am., 89, 1345Ð1351.
+                Bull. seism. Soc. Am., 89, 1345-1351.
 
     :type peak: float
     :param peak: Peak value of integral of displacement seismogram.
     :type epicentral_distance: float
     :param epicentral_distance: Great-circle picentral distance from station
         in degrees.
-    :return: float Calcualted Mwp magnitude.
-
-    Parameters
-    ----------
-        peak float
-            peak value of integral of displacement seismogram
-        epicentral_distance float
-            Great-circle picentral distance from station in degrees.
-
+    :rtype: float
+    :returns: Calculated Mwp magnitude.
     """
-
     moment = MWP_CONST * peak * epicentral_distance
-
-    mwp_mag = MWP_INVALID;
+    mwp_mag = MWP_INVALID
     if moment > sys.float_info.min:
         mwp_mag = (2.0 / 3.0) * (math.log10(moment) - 9.1)
-
-    return (mwp_mag);
-
+    return (mwp_mag)

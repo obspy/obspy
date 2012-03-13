@@ -1,0 +1,34 @@
+package obspy.realtime
+======================
+
+Copyright
+---------
+GNU Lesser General Public License, Version 3 (LGPLv3)
+
+Copyright (c) 2012 by:
+    * Anthony Lomax
+
+The obspy.realtime package has been developed by Anthony Lomax within the NERA
+WP12/JRA2 activities (funded by the European Community's Seventh Framework
+Program [FP7/2007-2013] under grant agreement n° 262330).
+
+
+Overview
+--------
+Real time support for ObsPy.
+
+This package extends the ObsPy core classes with real time functionalities.
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see Beyreuther et al. 2010, Megies et al. 2011).
+The goal of the ObsPy project is to facilitate rapid application development
+for seismology.
+
+For more information visit http://www.obspy.org.
+
+
+Dependencies
+------------
+* obspy.core

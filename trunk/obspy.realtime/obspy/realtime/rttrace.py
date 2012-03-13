@@ -3,23 +3,21 @@
 Module for handling ObsPy RtTrace objects.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import math
-
 from copy import deepcopy
+from obspy.core import Trace, Stats
+from obspy.core.util.base import createEmptyDataChunk
+from obspy.realtime.rtmemory import RtMemory
+from obspy.realtime.signal import util
 import numpy as np
-import obspy.core.trace as octrace
-import obspy.realtime.rtmemory as rtmem
-import obspy.realtime.signal.util
 
 
-
-class RtTrace(octrace.Trace):
+class RtTrace(Trace):
     """
     An object containing data of a continuous series constructed dynamically
     from sequential data packets.
@@ -94,17 +92,16 @@ class RtTrace(octrace.Trace):
     # values are lists: [function name, number of RtMemory objects]
     #global rtprocess_functions
     rtprocess_functions = {
-        'scale': [obspy.realtime.signal.util.scale, 0],
-        'integrate': [obspy.realtime.signal.util.integrate, 1],
-        'differentiate': [obspy.realtime.signal.util.differentiate, 1],
-        'boxcar': [obspy.realtime.signal.util.boxcar, 1],
-        'tauc': [obspy.realtime.signal.util.tauc, 2],
-        'mwpintegral': [obspy.realtime.signal.util.mwpIntegral, 1],
-        }
+        'scale': [util.scale, 0],
+        'integrate': [util.integrate, 1],
+        'differentiate': [util.differentiate, 1],
+        'boxcar': [util.boxcar, 1],
+        'tauc': [util.tauc, 2],
+        'mwpintegral': [util.mwpIntegral, 1],
+    }
 
     max_length = None
     have_appended_data = False
-
 
     @classmethod
     def rtProcessFunctionsToString(cls):
@@ -121,15 +118,13 @@ class RtTrace(octrace.Trace):
             string += str(RtTrace.rtprocess_functions[key][0].__doc__)
         return(string)
 
-
-    def __init__(self, data=None, header=None, max_length=None):
-
+    def __init__(self, data=None, header=None,  # @UnusedVariable
+                 max_length=None):
         """
         Initializes an RtTrace.
 
         See :class:`obspy.core.trace.Trace` for all parameters.
         """
-
         # set window length attribute
         if max_length != None and max_length <= 0:
             raise ValueError("Input max_length out of bounds: %s" % max_length)
@@ -144,15 +139,13 @@ class RtTrace(octrace.Trace):
 
         # initialize parent Trace with no data or header - all data must be
         #   added using __add__
-        octrace.Trace.__init__(self, data, header)
-
+        Trace.__init__(self, data, header)
 
     def __eq__(self, other):
         """
         Implements rich comparison of RtTrace objects for "==" operator.
 
         Traces are the same, if both their data and stats are the same.
-
         """
         #check if other object is a RtTrace
         if not isinstance(other, RtTrace):
@@ -160,33 +153,28 @@ class RtTrace(octrace.Trace):
         # call superclass operator
         return Trace.__eq__(self, other)
 
-
     def __ne__(self, other):
         """
         Implements rich comparison of Trace objects for "!=" operator.
 
         Calls __eq__() and returns the opposite.
-
         """
         return not self.__eq__(other)
 
-
     def __str__(self, id_length=None):
-        return octrace.Trace.__str__(self, id_length)
+        return Trace.__str__(self, id_length)
 
-
-    def __add__(self, trace, method=0, interpolation_samples=0,
-                fill_value='latest', sanity_checks=True):
+    def __add__(self, **kwargs):  # @UnusedVariable
         """
         Too ambiguous, throw an Error.
-        See also: :meth:`RtTrace.append`.
 
+        .. seealso:: :meth:`RtTrace.append`.
         """
-        raise NotImplementedError("Too ambiguous for realtime trace data, " + \
-                                  "therefore not implemented.  Try: RtTrace.append()")
+        msg = "Too ambiguous for realtime trace data. Try: RtTrace.append()"
+        raise NotImplementedError(msg)
 
-    #  TODO: temporary use of modified version of Trace.__add__ to correct bug
-    #   in delta calcualtion (20111209, ObsPy version: 0.4.8.dev-r2921)
+    # TODO: temporary use of modified version of Trace.__add__ to correct bug
+    # in delta calculation (20111209, ObsPy version: 0.4.8.dev-r2921)
     def __addTrace__(self, trace, method=0, interpolation_samples=0,
                      fill_value=None, sanity_checks=True):
         """
@@ -294,7 +282,7 @@ class RtTrace(octrace.Trace):
         ======  ===============================================================
         """
         if sanity_checks:
-            if not isinstance(trace, octrace.Trace):
+            if not isinstance(trace, Trace):
                 raise TypeError
             #  check id
             if self.getId() != trace.getId():
@@ -400,7 +388,6 @@ class RtTrace(octrace.Trace):
         out.data = data
         return out
 
-
     def append(self, trace, gap_overlap_check=False, verbose=False):
         """
         Appends a Trace object to this RtTrace.
@@ -424,10 +411,8 @@ class RtTrace(octrace.Trace):
         :param verbose: Print additional information to stdout
         :return: NumPy :class:`np.ndarray` object containing processed trace
             data from appended Trace object.
-
         """
-
-        # make sure dataype is compatible with Trace.__add__() which returns
+        # make sure datatype is compatible with Trace.__add__() which returns
         #   array of float32
         # convert f4 datatype to float32
         if trace.data.dtype == '>f4' or trace.data.dtype == '<f4':
@@ -435,7 +420,7 @@ class RtTrace(octrace.Trace):
 
         # sanity checks
         if self.have_appended_data:
-            if not isinstance(trace, octrace.Trace):
+            if not isinstance(trace, Trace):
                 raise TypeError
             #  check id
             if self.getId() != trace.getId():
@@ -443,7 +428,7 @@ class RtTrace(octrace.Trace):
                                 trace.getId())
             #  check sample rate
             if self.stats.sampling_rate != trace.stats.sampling_rate:
-                raise TypeError("Sampling rate differs:", 
+                raise TypeError("Sampling rate differs:",
                                 self.stats.sampling_rate,
                                 trace.stats.sampling_rate)
             #  check calibration factor
@@ -454,7 +439,6 @@ class RtTrace(octrace.Trace):
             if self.data.dtype != trace.data.dtype:
                 raise TypeError("Data type differs:",
                                 self.data.dtype, trace.data.dtype)
-
         # TODO: IMPORTANT? Should improve check for gaps and overlaps
         #   and handle more elegantly
         # check times
@@ -468,15 +452,15 @@ class RtTrace(octrace.Trace):
             #    lt = trace
             sr = self.stats.sampling_rate
             #delta = int(math.floor(\
-            #            round((rt.stats.starttime - lt.stats.endtime) * sr, 5) \
-            #            )) - 1
+            #    round((rt.stats.starttime - lt.stats.endtime) * sr, 5) )) - 1
             diff = trace.stats.starttime - self.stats.endtime
             delta = diff * sr - 1.0
             if verbose:
-                print "%s: Overlap/gap of (%g) samples in data: (%s) (%s) diff=%gs  dt=%gs" \
-                    % (self.__class__.__name__,
-                       delta, self.stats.endtime, trace.stats.starttime, \
-                       diff, 1.0 / sr)
+                msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
+                    "diff=%gs  dt=%gs"
+                print  msg % (self.__class__.__name__,
+                              delta, self.stats.endtime, trace.stats.starttime,
+                              diff, 1.0 / sr)
             if delta < -0.1:
                 msg = self.__class__.__name__ + ": " \
                 "Overlap of (%g) samples in data: (%s) (%s) diff=%gs  dt=%gs" \
@@ -498,14 +482,13 @@ class RtTrace(octrace.Trace):
                 print "   Trace processing memory will be re-initialized."
             else:
                 # correct start time to pin absolute trace timing to start of
-                #   appended trace,
-                #   this prevents slow drift of nominal trace timing from absolute
-                #   time when nominal sample rate differs from true sample rate
+                # appended trace, this prevents slow drift of nominal trace
+                # timing from absolute time when nominal sample rate differs
+                # from true sample rate
                 self.stats.starttime = self.stats.starttime + diff - 1.0 / sr
                 if verbose:
                     print "%s: self.stats.starttime adjusted by: %gs" \
                     % (self.__class__.__name__, diff - 1.0 / sr)
-
 
         # first apply all registered processing to Trace
         for proc in self.processing:
@@ -514,7 +497,7 @@ class RtTrace(octrace.Trace):
             # if gap or overlap, clear memory
             if gap_or_overlap and rtmemory_list != None:
                 for n in range(len(rtmemory_list)):
-                    rtmemory_list[n] = rtmem.RtMemory()
+                    rtmemory_list[n] = RtMemory()
             #print 'DEBUG: Applying processing: ', process_name, ' ', options
             # apply processing
             trace.data = self._rtProcess(trace, process_name, rtmemory_list,
@@ -523,10 +506,11 @@ class RtTrace(octrace.Trace):
         # if first data, set stats
         if not self.have_appended_data:
             self.data = np.array(trace.data)
-            self.stats = octrace.Stats(header=trace.stats)
+            self.stats = Stats(header=trace.stats)
         else:
             # fix Trace.__add__ parameters
-            # TODO: IMPORTANT? Should check for gaps and overlaps and handle more elegantly
+            # TODO: IMPORTANT? Should check for gaps and overlaps and handle
+            # more elegantly
             method = 0
             interpolation_samples = 0
             fill_value = 'latest'
@@ -535,8 +519,9 @@ class RtTrace(octrace.Trace):
             #sum_trace = octrace.Trace.__add__(self, trace, method,
             #                                  interpolation_samples,
             #                                  fill_value, sanity_checks)
-            #  TODO: temporary use of modified version of Trace.__add__ to correct bug
-            #   in delta calcualtion (20111209, ObsPy version: 0.4.8.dev-r2921)
+            # TODO: temporary use of modified version of Trace.__add__ to
+            # correct bug  in delta calculation (20111209, ObsPy version:
+            # 0.4.8.dev-r2921)
             sum_trace = self.__addTrace__(trace, method,
                                           interpolation_samples,
                                           fill_value, sanity_checks)
@@ -544,33 +529,31 @@ class RtTrace(octrace.Trace):
             # Trace.__add__ returns new Trace, so update to this RtTrace
             self.data = sum_trace.data
             # set derived values, including endtime
-            self.stats.__setitem__('npts', sum_trace.stats.npts)               
+            self.stats.__setitem__('npts', sum_trace.stats.npts)
             #print "DEBUG: add->self.stats.endtime:", self.stats.endtime
- 
 
             # left trim if data length exceeds max_length
             #print "DEBUG: max_length:", self.max_length
             if self.max_length != None:
-                max_samples = int(self.max_length * self.stats.sampling_rate + 0.5)
-                #print "DEBUG: max_samples:", max_samples, \
+                max_samples = int(self.max_length * \
+                                  self.stats.sampling_rate + 0.5)
+                #print "DEBUG: max_samples:", max_samples,
                 #    " np.size(self.data):", np.size(self.data)
                 if np.size(self.data) > max_samples:
                     starttime = self.stats.starttime \
                         + (np.size(self.data) - max_samples) \
                         / self.stats.sampling_rate
-                    #print "DEBUG: self.stats.starttime:", self.stats.starttime, \
-                    #    " new starttime:", starttime
+                    # print "DEBUG: self.stats.starttime:",
+                    #     self.stats.starttime, " new starttime:", starttime
                     self._ltrim(starttime, pad=False, nearest_sample=True,
                                 fill_value=None)
-                    #print "DEBUG: self.stats.starttime:", self.stats.starttime, \
-                    #    " np.size(self.data):", np.size(self.data)
+                    #print "DEBUG: self.stats.starttime:",
+                    #     self.stats.starttime, " np.size(self.data):",
+                    #     np.size(self.data)
         self.have_appended_data = True
-
         return(trace)
 
-
     def _rtProcess(self, trace, process_name, rtmemory_list, ** options):
-
         """
         Runs a real-time processing algorithm on the a given input array trace.
 
@@ -595,9 +578,7 @@ class RtTrace(octrace.Trace):
             processing function (e.g. width=100).
         :return: NumPy :class:`np.ndarray` object containing processed trace
             data.
-
         """
-
         # make process_name string comparison case insensitive
         process_name = process_name.lower()
 
@@ -607,15 +588,13 @@ class RtTrace(octrace.Trace):
         if process_name not in RtTrace.rtprocess_functions:
             # assume standard obspy or np data function
             #print 'DEBUG: eval: ', process_name + '(trace.data, ** options)'
-            #print 'DEBUG:   --> ', eval(process_name + '(trace.data, ** options)')
+            #print 'DEBUG:   --> ',
+            #    eval(process_name + '(trace.data, ** options)')
             data = eval(process_name + '(trace.data, ** options)')
         else:
             data = RtTrace.rtprocess_functions[
                 process_name][0](trace, rtmemory_list, ** options)
-
         return data
-
-
 
     def registerRtProcess(self, process_name, ** options):
         """
@@ -636,9 +615,7 @@ class RtTrace(octrace.Trace):
                 (e.g. width=100).
         :return: int Length of processing list after registering new processing
             function.
-
         """
-
         # make process_name string comparison case insensitive
         process_name = process_name.lower()
 
@@ -666,19 +643,17 @@ class RtTrace(octrace.Trace):
                 rtmemory_list = None
             else:
                 rtmemory_list = []
-            for i in range(num_mem):
-                rtmemory_list = rtmemory_list + [rtmem.RtMemory()]
+            for _i in range(num_mem):
+                rtmemory_list = rtmemory_list + [RtMemory()]
             entry = (process_name, options, rtmemory_list)
-        # process not found in defined RtTrace.rtprocess_functions, 
+        # process not found in defined RtTrace.rtprocess_functions,
         #   assume obspy or np function
         if entry is None:
             entry = (process_name, options, None)
         self.processing.append(entry)
-        name, opt, mem = self.processing[len(self.processing)-1]
+        #name, opt, mem = self.processing[len(self.processing) - 1]
         #print 'DEBUG: Appended processing: ', name, ' ', opt
-
         return len(self.processing)
-
 
 
 if __name__ == '__main__':

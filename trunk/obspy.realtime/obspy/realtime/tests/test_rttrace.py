@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-The obspyRT.realtime.rttrace test suite.
-"""	
+The obspy.realtime.rttrace test suite.
+"""
 
-import math
-
-import numpy as np
 from obspy.core import read
-import obspyRT.realtime.rttrace as rt
-from obspyRT.realtime.signal.util import *
+from obspy.realtime import RtTrace
+from obspy.realtime.signal.util import calculateMwpMag, scale, tauc, boxcar, \
+    integrate, differentiate, mwpIntegral
+import math
+import numpy as np
 import os
 import unittest
 
-display_processing_functions_doc = True
+DISPLAY_PROCESSING_FUNCTIONS_DOC = False
+
 
 class RtTraceTestCase(unittest.TestCase):
 
@@ -38,60 +39,12 @@ class RtTraceTestCase(unittest.TestCase):
     mwp_mem_time = 2 * mwp_max_time
     boxcar_width = 500
 
-
-    def test_boxcar(self):
-        self.process_list = ['boxcar']
-        self.processTrace()
-        print 'Post-processing for', self.process_list[-1], ':'
-        peak = np.amax(np.abs(self.rt_trace.data))
-        print '   ', self.process_list[-1], 'peak = ', peak
-        self.assertEqual(int(peak * 1000), int(566974.187 * 1000))
- 
-    def test_scale(self):
-        self.process_list = ['scale']
-        self.processTrace()
-        print 'Post-processing for', self.process_list[-1], ':'
-        peak = np.amax(np.abs(self.rt_trace.data))
-        print '   ', self.process_list[-1], 'peak = ', peak
-        self.assertEqual(int(peak * 1000), int(1045236992 * 1000))
-
-    def test_abs(self):
-        self.process_list = ['np.abs']
-        self.processTrace()
-        print 'Post-processing for', self.process_list[-1], ':'
-        peak = np.amax(np.abs(self.rt_trace.data))
-        print '   ', self.process_list[-1], 'peak = ', peak
-        self.assertEqual(int(peak * 1000), int(1045237 * 1000))
-
-
-    def test_tauc(self):
-        self.process_list = ['tauc']
-        self.processTrace()
-        print 'Post-processing for', self.process_list[-1], ':'
-        peak = np.amax(np.abs(self.rt_trace.data))
-        print '   ', self.process_list[-1], 'peak = ', peak
-        self.assertEqual(int(peak * 1000), int(114.296 * 1000))
-
-
-    def test_mwp(self):
-        self.process_list = ['integrate', 'mwpIntegral']
-        self.processTrace()
-        print 'Post-processing for', self.process_list[-1], ':'
-        peak = np.amax(np.abs(self.rt_trace.data))
-        print '   ', self.process_list[-1], 'peak = ', peak
-        print '    epicentral_distance (sac.gcarc) = ', \
-            self.epicentral_distance
-        mwp = calculateMwpMag(peak, self.epicentral_distance)
-        print '    mwp = ', mwp
-        self.assertEqual(int(mwp * 1000), int(8.78902911791 * 1000))
-
-
     @classmethod
     def setUpClass(cls):
         print
-        if display_processing_functions_doc:
+        if DISPLAY_PROCESSING_FUNCTIONS_DOC:
             # display processing functions doc
-            print rt.RtTrace.rtProcessFunctionsToString()
+            print RtTrace.rtProcessFunctionsToString()
         print 'Reading: ', RtTraceTestCase.trace_file
         RtTraceTestCase.data_trace = read(RtTraceTestCase.trace_file)
         RtTraceTestCase.data_trace[0].write('trace_orig.sac', format='SAC')
@@ -110,15 +63,56 @@ class RtTraceTestCase(unittest.TestCase):
         if RtTraceTestCase.plot_traces:
             RtTraceTestCase.plotOriginal()
 
-
     def setUp(self):
         pass
-
 
     def tearDown(self):
         if RtTraceTestCase.plot_traces:
             RtTraceTestCase.plotResults()
 
+    def test_boxcar(self):
+        self.process_list = ['boxcar']
+        self.processTrace()
+        print 'Post-processing for', self.process_list[-1], ':'
+        peak = np.amax(np.abs(self.rt_trace.data))
+        print '   ', self.process_list[-1], 'peak = ', peak
+        self.assertEqual(int(peak * 1000), int(566974.187 * 1000))
+
+    def test_scale(self):
+        self.process_list = ['scale']
+        self.processTrace()
+        print 'Post-processing for', self.process_list[-1], ':'
+        peak = np.amax(np.abs(self.rt_trace.data))
+        print '   ', self.process_list[-1], 'peak = ', peak
+        self.assertEqual(int(peak * 1000), int(1045236992 * 1000))
+
+    def test_abs(self):
+        self.process_list = ['np.abs']
+        self.processTrace()
+        print 'Post-processing for', self.process_list[-1], ':'
+        peak = np.amax(np.abs(self.rt_trace.data))
+        print '   ', self.process_list[-1], 'peak = ', peak
+        self.assertEqual(int(peak * 1000), int(1045237 * 1000))
+
+    def test_tauc(self):
+        self.process_list = ['tauc']
+        self.processTrace()
+        print 'Post-processing for', self.process_list[-1], ':'
+        peak = np.amax(np.abs(self.rt_trace.data))
+        print '   ', self.process_list[-1], 'peak = ', peak
+        self.assertEqual(int(peak * 1000), int(114.296 * 1000))
+
+    def test_mwp(self):
+        self.process_list = ['integrate', 'mwpIntegral']
+        self.processTrace()
+        print 'Post-processing for', self.process_list[-1], ':'
+        peak = np.amax(np.abs(self.rt_trace.data))
+        print '   ', self.process_list[-1], 'peak = ', peak
+        print '    epicentral_distance (sac.gcarc) = ', \
+            self.epicentral_distance
+        mwp = calculateMwpMag(peak, self.epicentral_distance)
+        print '    mwp = ', mwp
+        self.assertEqual(int(mwp * 1000), int(8.78902911791 * 1000))
 
     def processTrace(self):
         print
@@ -127,7 +121,6 @@ class RtTraceTestCase(unittest.TestCase):
         # apply normal obspy processing to original trace
         # Filtering the Stream object
         st_filt = self.data_trace[0].copy()
-        delta_time = 1.0 / self.data_trace[0].stats.sampling_rate
         for process in self.process_list:
             if process == 'scale':
                 st_filt.data = scale(st_filt, factor=self.scale_factor)
@@ -160,9 +153,10 @@ class RtTraceTestCase(unittest.TestCase):
         # create set of contiguous packet data in an array of Trace objects
         total_length = np.size(self.data_trace[0].data)
         # following may give int truncate
-        packet_length = int(total_length / self.num_pakets)  
+        packet_length = int(total_length / self.num_pakets)
         delta_time = 1.0 / self.data_trace[0].stats.sampling_rate
-        print "self.data_trace[0].stats.sampling_rate:", self.data_trace[0].stats.sampling_rate
+        print "self.data_trace[0].stats.sampling_rate:",
+        print self.data_trace[0].stats.sampling_rate
         print "delta_time:", delta_time
         tstart = self.data_trace[0].stats.starttime
         tend = tstart + delta_time * float(packet_length - 1)
@@ -179,8 +173,8 @@ class RtTraceTestCase(unittest.TestCase):
             print "next_tstart, next_tend:", tstart, tend
 
         # assemble realtime trace
-        self.rt_trace = rt.RtTrace()
-        #self.rt_trace = rt.RtTrace(max_length=600)
+        self.rt_trace = RtTrace()
+        #self.rt_trace = RtTrace(max_length=600)
         #
         for process in self.process_list:
             if process == 'scale':
@@ -197,12 +191,11 @@ class RtTraceTestCase(unittest.TestCase):
             elif process == 'differentiate':
                 self.rt_trace.registerRtProcess('diff')
             elif process == 'mwpIntegral':
-                self.rt_trace.registerRtProcess \
-                    (
-                     'mwpIntegral', mem_time=self.mwp_max_time,
-                     ref_time=(self.data_trace[0].stats.starttime + \
-                     self.ref_time_offest),
-                     max_time=self.mwp_max_time, gain=self.trace_gain)
+                self.rt_trace.registerRtProcess('mwpIntegral',
+                    mem_time=self.mwp_max_time,
+                    ref_time=(self.data_trace[0].stats.starttime + \
+                              self.ref_time_offest),
+                    max_time=self.mwp_max_time, gain=self.trace_gain)
             elif process == 'np.abs':
                 self.rt_trace.registerRtProcess('np.abs')
             elif process == 'np.square':
@@ -220,12 +213,10 @@ class RtTraceTestCase(unittest.TestCase):
         print
         self.rt_trace.write('rt_trace.sac', format='SAC')
 
-
     @classmethod
     def plotOriginal(cls):
         plt_stream = read('trace_orig.sac')
         plt_stream.plot(automerge=False, size=(800, 1000), color='blue')
-
 
     @classmethod
     def plotResults(cls):
