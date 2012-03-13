@@ -1196,6 +1196,23 @@ class UTCDateTime(object):
                                          self.hour, self.minute, self.second,
                                          self.microsecond)
 
+    def formatSeedLink(self):
+        """
+        Returns string representation for the SeedLink protocol.
+
+        :return: string
+
+        .. rubric:: Example
+
+        >>> dt = UTCDateTime(2008, 10, 1, 12, 30, 35.45020)
+        >>> dt.formatSeedLink()
+        '2008,10,1,12,30,35'
+        """
+        # round seconds down to integer
+        seconds = int(float(self.second) + float(self.microsecond) / 1.0e6)
+        return "%d,%d,%d,%d,%d,%g" % (self.year, self.month, self.day,
+                                      self.hour, self.minute, seconds)
+
     def formatSEED(self, compact=False):
         """
         Returns string representation for a SEED volume.
