@@ -35,11 +35,11 @@ class RtMemory:
         :param output_inital_value: Initialization value for the output
             memory array (default is 1.0).
         """
-        self.input = np.ones(length_input, data_type)
-        self.input *= input_inital_value
+        self.input = np.empty(length_input, data_type)
+        self.input.fill(input_inital_value)
 
-        self.output = np.ones(length_output, data_type)
-        self.output *= output_inital_value
+        self.output = np.empty(length_output, data_type)
+        self.output.fill(output_inital_value)
 
         self.initialized = True
 
