@@ -1372,8 +1372,9 @@ class Stream(object):
             the data but only passes a reference.
 
         All keyword arguments except for ``component`` are tested directly
-        against the respective entry in the
-        :class:`Trace.stats <obspy.core.trace.Stats>`` dictionary.
+        against the respective entry in the :class:`~obspy.core.trace.Stats`
+        dictionary.
+
         If a string for ``component`` is given (should be a single letter) it
         is tested (case insensitive) against the last letter of the
         ``Trace.stats.channel`` entry.
