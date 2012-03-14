@@ -67,6 +67,8 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :param nearest_sample: Only applied if `starttime` or `endtime` is given.
         Select nearest sample or the one containing the specified time. For
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
+    :param **kwargs: Additional keyword arguments passed to the underlying
+        waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
 
     .. rubric:: Basic Usage
@@ -1033,13 +1035,14 @@ class Stream(object):
         """
         return self.traces.pop(index)
 
-    def printGaps(self, **kwargs):
+    def printGaps(self, min_gap=None, max_gap=None):
         """
         Print gap/overlap list summary information of the Stream object.
 
-        All given keyword arguments are passed to
-        :meth:`~obspy.core.stream.Stream.getGaps` and its result is printed
-        in a human readable form.
+        :param min_gap: All gaps smaller than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
+        :param max_gap: All gaps larger than this value will be omitted. The
+            value is assumed to be in seconds. Defaults to None.
 
         .. rubric:: Example
 
@@ -1068,7 +1071,7 @@ class Stream(object):
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 1 gap(s) and 0 overlap(s)
         """
-        result = self.getGaps(**kwargs)
+        result = self.getGaps(min_gap, max_gap)
         print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
                                                 'Next Sample', 'Delta',
                                                 'Samples'))
@@ -1195,8 +1198,10 @@ class Stream(object):
         :param format: The format to write must be specified. Depending on your
             ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``. See the `Supported Formats` section below for a full
+            ``"WAV"``. See the `Supported Formats`_ section below for a full
             list of supported formats.
+        :param **kwargs: Additional keyword arguments passed to the underlying
+            waveform writer method.
 
         .. rubric:: Example
 
@@ -1209,7 +1214,7 @@ class Stream(object):
         >>> for tr in st: #doctest: +SKIP
         ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
 
-        .. rubric:: Supported Formats
+        .. rubric:: _`Supported Formats`
 
         Additional ObsPy modules extend the parameters of the
         :meth:`~obspy.core.stream.Stream.write` method. The following
@@ -1258,25 +1263,54 @@ class Stream(object):
         """
         Cuts all traces of this Stream object to given start and end time.
 
-        If nearest_sample=True the closest sample point of the first trace
-        is the select, the remaining traces are trimmed according to that
-        sample point.
-        For more info see :meth:`~obspy.core.trace.Trace.trim`.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Specify the start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Specify the end time.
+        :type pad: bool, optional
+        :param pad: Gives the possibility to trim at time points outside the
+            time frame of the original trace, filling the trace with the
+            given ``fill_value``. Defaults to ``False``.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the next sample containing the time
+            is selected. Defaults to ``True``.
+
+                Given the following trace containing 4 samples, "|" are the
+                sample points, "A" is the requested starttime::
+
+                    |        A|         |         |
+
+                ``nearest_sample=True`` will select the second sample point,
+                ``nearest_sample=False`` will select the first sample point.
+
+        :type fill_value: int, float or ``None``, optional
+        :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
+            will be converted to NumPy masked arrays if no value is given and
+            gaps are present.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
         >>> st = read()
-        >>> len(st[0])
-        3000
-        >>> dt = st[0].stats.starttime
-        >>> dt
-        UTCDateTime(2009, 8, 24, 0, 20, 3)
-        >>> st.trim(dt + 2, dt + 4)
-        >>> len(st[0])
-        201
-        >>> st[0].stats.starttime
-        UTCDateTime(2009, 8, 24, 0, 20, 5)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> dt = UTCDateTime("2009-08-24T00:20:20")
+        >>> st.trim(dt, dt + 5)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         """
         if not self:
             return
@@ -1323,9 +1357,31 @@ class Stream(object):
         """
         Returns new Stream object cut to the given start- and endtime.
 
-        Does not copy the data but only passes a reference. Will by default
-        discard any empty traces. Change the keep_empty_traces parameter to
-        True to change this behaviour.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Specify the start time of all traces.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Specify the end time of all traces.
+        :type keep_empty_traces: bool, optional
+        :param keep_empty_traces: Empty traces will be kept if set to ``True``.
+            Defaults to ``False``.
+        :return: New :class:`~obspy.core.stream.Stream` object. Does not copy
+            data but just passes a reference to it.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> dt = UTCDateTime("2009-08-24T00:20:20")
+        >>> st = st.slice(dt, dt + 5)
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         """
         traces = []
         for trace in self:
@@ -1647,7 +1703,7 @@ class Stream(object):
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective filter
+        :param **options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -1708,9 +1764,8 @@ class Stream(object):
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
             further details.
-        :param options: Necessary keyword arguments for the respective trigger
-            that will be passed on.
-            (e.g. ``sta=3``, ``lta=10``)
+        :param **options: Necessary keyword arguments for the respective
+            trigger that will be passed on. (e.g. ``sta=3``, ``lta=10``)
             Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
             and ``nlta`` (samples) by multiplying with sampling rate of trace.
             (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10

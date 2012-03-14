@@ -724,6 +724,8 @@ class Trace(object):
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
             ``"WAV"``. See :meth:`obspy.core.stream.Stream.write` method for
             all possible formats.
+        :param **kwargs: Additional keyword arguments passed to the underlying
+            waveform writer method.
 
         .. rubric:: Example
 
@@ -859,20 +861,40 @@ class Trace(object):
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
         """
-        Cuts current trace to given start and end time. If nearest_sample is
-        True, the closest sample is selected, if nearest_sample is False, the
-        next sample containing the time is selected. Given the following
-        trace containing 4 samples, "|" are the sample points, "A" the
-        starttime::
+        Cuts current trace to given start and end time.
 
-            |        A|         |         |
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Specify the start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Specify the end time.
+        :type pad: bool, optional
+        :param pad: Gives the possibility to trim at time points outside the
+            time frame of the original trace, filling the trace with the
+            given ``fill_value``. Defaults to ``False``.
+        :type nearest_sample: bool, optional
+        :param nearest_sample: If set to ``True``, the closest sample is
+            selected, if set to ``False``, the next sample containing the time
+            is selected. Defaults to ``True``.
 
-        nearest_sample=True will select the second sample point,
-        nearest_sample=False will select the first sample point .
+                Given the following trace containing 4 samples, "|" are the
+                sample points, "A" is the requested starttime::
 
-        pad=True gives the possibility to trim at time points outside the
-        time frame of the original trace, filling the trace with fill_value
-        (the default fill_value=None will mask the corresponding values).
+                    |        A|         |         |
+
+                ``nearest_sample=True`` will select the second sample point,
+                ``nearest_sample=False`` will select the first sample point.
+
+        :type fill_value: int, float or ``None``, optional
+        :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
+            will be converted to NumPy masked arrays if no value is given and
+            gaps are present.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
 
         .. rubric:: Example
 
@@ -898,7 +920,12 @@ class Trace(object):
         """
         Returns a new Trace object with data going from start to end time.
 
-        Does not copy data but just passes a reference to it.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Specify the start time of slice.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Specify the end time of slice.
+        :return: New :class:`~obspy.core.trace.Trace` object. Does not copy
+            data but just passes a reference to it.
 
         .. rubric:: Example
 
