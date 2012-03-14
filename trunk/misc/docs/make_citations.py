@@ -8,15 +8,6 @@ from pybtex.style.template import sentence, field, optional, words, node, join
 import glob
 import os
 
-# write index.rst
-fh = open(os.path.join('source', 'citations.rst'), 'wt')
-fh.write("""
-.. _citations:
-
-Citations
-==========
-
-""")
 
 @node
 def names(children, data, role, **kwargs):
@@ -79,8 +70,32 @@ formats = {
     ]
 }
 
+MACROS = [
+  (u"\'{a}", u"á"),
+  (u"{{", u"{"),
+  (u"}}", u"}"),
+]
 
-parser = bibtex.Parser(encoding='utf8')
+
+
+class BibTeXParser(bibtex.Parser):
+    def parse_stream(self, stream):
+        self.unnamed_entry_counter = 1
+        chunk = stream.read()
+        for (key, value) in MACROS:
+            chunk = chunk.replace(key, value)
+        try:
+            self.BibTeX_entry.searchString(chunk)
+        except ParseException, e:
+            print "%s: syntax error:" % getattr(stream, 'name', '<NO FILE>')
+            print e
+            import sys
+            sys.exit(1)
+        return self.data
+
+parser = BibTeXParser(encoding='utf8')
+
+
 for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
     try:
         parser.parse_file(file)
@@ -89,6 +104,20 @@ for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
         raise
 
 entries = parser.data.entries
+
+# write index.rst
+fh = open(os.path.join('source', 'citations.rst'), 'wt')
+fh.write("""
+.. _citations:
+
+.. DON'T EDIT THIS FILE MANUALLY!
+   Instead insert a BibTeX file into the bibliography folder and
+   run ``make citations`` from command line to automatically create this file!
+
+Citations
+==========
+
+""")
 
 for key in sorted(entries.keys()):
     entry = entries[key]
@@ -103,7 +132,7 @@ for key in sorted(entries.keys()):
     line = line.replace(u'–','-')
     line = line.replace(u'—','-')
     try:
-        fh.write(out % (key, line))
+        fh.write((out % (key, line)).encode('UTF-8'))
     except:
         print("Error writing %s:" % (key))
         raise

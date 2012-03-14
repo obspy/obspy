@@ -67,7 +67,7 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :param nearest_sample: Only applied if `starttime` or `endtime` is given.
         Select nearest sample or the one containing the specified time. For
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
-    :param **kwargs: Additional keyword arguments passed to the underlying
+    :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
 
@@ -1200,7 +1200,7 @@ class Stream(object):
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
             ``"WAV"``. See the `Supported Formats`_ section below for a full
             list of supported formats.
-        :param **kwargs: Additional keyword arguments passed to the underlying
+        :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
         .. rubric:: Example
@@ -1703,7 +1703,7 @@ class Stream(object):
         :param type: String that specifies which filter is applied (e.g.
             ``"bandpass"``). See the `Supported Filter`_ section below for
             further details.
-        :param **options: Necessary keyword arguments for the respective filter
+        :param options: Necessary keyword arguments for the respective filter
             that will be passed on. (e.g. ``freqmin=1.0``, ``freqmax=20.0`` for
             ``"bandpass"``)
 
@@ -1764,7 +1764,7 @@ class Stream(object):
         :param type: String that specifies which trigger is applied (e.g.
             ``'recstalta'``). See the `Supported Trigger`_ section below for
             further details.
-        :param **options: Necessary keyword arguments for the respective
+        :param options: Necessary keyword arguments for the respective
             trigger that will be passed on. (e.g. ``sta=3``, ``lta=10``)
             Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
             and ``nlta`` (samples) by multiplying with sampling rate of trace.

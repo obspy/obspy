@@ -6,33 +6,50 @@ it is. These people have helped by writing code and documentation, and by
 testing. They have created and maintained this product, its associated
 libraries and applications, our build tools and our web sites.
 
-* Charles J. Ammon
-* Robert Barsch
-* Yannik Behr
-* Felix Bernauer
-* Moritz Beyreuther
-* Martin van Driel
-* Sven Egdorf
-* Conny Hammer
-* Sebastian Heimann
-* Seyed Kasra Hosseini Zad
-* Heiner Igel
-* Simon Kremers
-* Victor Kress
-* Lars Krieger
-* Lion Krischer
-* Tobias Megies
-* Alberto Michelini
-* Tom Richter
-* Emiliano Russo
-* Claudio Satriano
-* Chris Scheingraber
-* Christian Sippl
-* Arthur Snoke
-* Stefan Stange
-* Chad Trabant
-* Marcus Walther
-* Joachim Wassermann
+.. rubric:: Hall of Fame
+
+.. hlist::
+    :columns: 3
+
+    * Charles J. Ammon
+    * Robert Barsch
+    * Yannik Behr
+    * Felix Bernauer
+    * Moritz Beyreuther
+    * Martin van Driel
+    * Sven Egdorf
+    * Conny Hammer
+    * Sebastian Heimann
+    * Seyed Kasra Hosseini Zad
+    * Heiner Igel
+    * Simon Kremers
+    * Victor Kress
+    * Lars Krieger
+    * Lion Krischer
+    * Anthony Lomax
+    * Tobias Megies
+    * Alberto Michelini
+    * Tom Richter
+    * Emiliano Russo
+    * Claudio Satriano
+    * Chris Scheingraber
+    * Christian Sippl
+    * Arthur Snoke
+    * Stefan Stange
+    * Chad Trabant
+    * Marcus Walther
+    * Joachim Wassermann
+
+.. rubric:: Funds
+
+ObsPy was partially funded by the
+
+* German Science Foundation (DFG) via grant DFG IG 16/9-1
+* German Ministry for Education and Research (BMBF), GEOTECHNOLOGIEN
+  grant 03G0646H.
+* European Community's Seventh Framework Program [FP7/2007-2013] under
+  grant agreement n° 262330
+* Leibniz Institute for Applied Geophysics (LIAG)
 
 .. rubric:: Quotes
 

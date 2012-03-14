@@ -20,7 +20,7 @@ _TWO_PI = 2.0 * math.pi
 _MIN_FLOAT_VAL = 1.0e-20
 
 
-def scale(trace, rtmemory_list=[], factor=1.0):
+def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
     """
     Scale array data samples by specified factor.
 
@@ -221,10 +221,10 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     """
     Calculate instantaneous period in a fixed window (Tau_c).
 
-        implements eqs 1-3 in :
-            Allen, R.M., and H. Kanamori, The Potential for Earthquake Early
-            Warning in Southern California, Science, 300 (5620), 786-789, 2003.
-        except use a fixed width window instead of decay function
+    .. seealso::
+
+        Implements equations 1-3 in [Allen2003]_ except use a fixed width
+        window instead of decay function.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
@@ -320,13 +320,7 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     """
     Calculate Mwp integral on a displacement trace.
 
-        implements algorithm in :
-            Tsuboi, S., Abe, K., Takano, K. & Yamanaka, Y., 1995.
-                Rapid determination of Mw from broadband P waveforms,
-                Bull. seism. Soc. Am., 85, 606-613.
-            Tsuboi, S., Whitmore, P.M. & Sokolowski, T.J., 1999.
-                Application of Mwp to deep and teleseismic earthquakes,
-                Bull. seism. Soc. Am., 89, 1345-1351.
+    .. seealso:: [Tsuboi1999]_ and [Tsuboi1995]_
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
@@ -460,18 +454,12 @@ def calculateMwpMag(peak, epicentral_distance):
     """
     Calculate Mwp magnitude.
 
-        implements algorithm in :
-            Tsuboi, S., Abe, K., Takano, K. & Yamanaka, Y., 1995.
-                Rapid determination of Mw from broadband P waveforms,
-                Bull. seism. Soc. Am., 85, 606-613.
-            Tsuboi, S., Whitmore, P.M. & Sokolowski, T.J., 1999.
-                Application of Mwp to deep and teleseismic earthquakes,
-                Bull. seism. Soc. Am., 89, 1345-1351.
+    .. seealso:: [Tsuboi1999]_ and [Tsuboi1995]_
 
     :type peak: float
     :param peak: Peak value of integral of displacement seismogram.
     :type epicentral_distance: float
-    :param epicentral_distance: Great-circle picentral distance from station
+    :param epicentral_distance: Great-circle epicentral distance from station
         in degrees.
     :rtype: float
     :returns: Calculated Mwp magnitude.

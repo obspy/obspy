@@ -1,9 +1,18 @@
 
 .. _citations:
 
+.. DON'T EDIT THIS FILE MANUALLY!
+   Instead insert a BibTeX file into the bibliography folder and
+   run ``make citations`` from command line to automatically create this file!
+
 Citations
 ==========
 
+.. [Allen2003]  
+   | Allen, R. M. and Kanamori, H. (2003),
+   | **The Potential for Earthquake Early Warning in Southern California**,
+   | *Science*, 300 (5620), 786-789.
+   | http://www.sciencemag.org/content/300/5620/786.abstract
 .. [Baer1987]  
    | Baer, M. and Kradolfer, U. (1987),
    | **An automatic phase picker for local and teleseismic events**,
@@ -14,11 +23,11 @@ Citations
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
    | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
-.. [Jurkevics1988]
+.. [Jurkevics1988]  
    | Jurkevics, A. (1988),
    | **Polarization analysis of three-component array data**,
    | *Bulletin of the Seismological Society of America*, 78 (5), 1725-1743.
-   | http://www.bssaonline.org/content/78/5/1725.short
+   | http://www.bssaonline.org/content/78/5/1725.abstract
 .. [Kanasewich1981]  
    | Kanasewich, E. R. (1981),
    | **Time sequence analysis in geophysics**,
@@ -30,15 +39,15 @@ Citations
    | *Bulletin of the Seismological Society of America*, 88 (1), 228-241.
    | http://www.bssaonline.org/content/88/1/228.abstract
 .. [Kristekova2006]  
-   | Kristekova, M., Kristek, J., Moczo, P., and Day, S. M. (2006),
+   | Kristekov\á, M., Kristek, J., Moczo, P., and Day, S. M. (2006),
    | **Misfit Criteria for Quantitative Comparison of Seismograms**,
-   | *Bulletin of the Seismological Society of America*, 96 (5), 1836-1850.
-   | http://dx.doi.org/10.1785/0120060012
+   | *Bulletin of the Seismological Society of America*, 96 (5), 1836--1850.
+   | http://dx.doi.org/10.1785/0120060012
 .. [Kristekova2009]  
-   | Kristekova, M., Kristek, J. and Moczo, P. (2009),
+   | Kristekov\á, M., Kristek, J., and Moczo, P. (2009),
    | **Time-frequency misfit and goodness-of-fit criteria for quantitative comparison of time signals**,
-   | *Geophysical Journal International*, 178 (2), 813-825.
-   | http://doi.wiley.com/10.1111/j.1365-246X.2009.04177.x
+   | *Geophysical Journal International*, 178 (2), 813--825.
+   | http://dx.doi.org/10.1111/j.1365-246X.2009.04177.x
 .. [McNamara2004]  
    | McNamara, D. E. and Buland, R. P. (2004),
    | **Ambient Noise Levels in the Continental United States**,
@@ -69,6 +78,16 @@ Citations
    | **Software for Inference of Dynamic Ground Strains and Rotations and Their Errors from Short Baseline Array Observations of Ground Motions**,
    | *Bulletin of the Seismological Society of America*, 99 (2B), 1480-1482.
    | http://www.bssaonline.org/content/99/2B/1480.abstract
+.. [Tsuboi1995]  
+   | Tsuboi, S., Abe, K., Takano, K., and Yamanaka, Y. (1995),
+   | **Rapid determination of Mw from broadband P waveforms**,
+   | *Bulletin of the Seismological Society of America*, 85 (2), 606-613.
+   | http://www.bssaonline.org/content/85/2/606.abstract
+.. [Tsuboi1999]  
+   | Tsuboi, S., Whitmore, P. M., and Sokolowski, T. J. (1999),
+   | **Application of Mwp to deep and teleseismic earthquakes**,
+   | *Bulletin of the Seismological Society of America*, 89 (5), 1345-1351.
+   | http://www.bssaonline.org/content/89/5/1345.abstract
 .. [Withers1998]  
    | Withers, M., Aster, R., Young, C., Beiriger, J., Harris, M., Moore, S., and Trujillo, J. (1998),
    | **A comparison of select trigger algorithms for automated global seismic phase and event detection**,

@@ -724,7 +724,7 @@ class Trace(object):
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
             ``"WAV"``. See :meth:`obspy.core.stream.Stream.write` method for
             all possible formats.
-        :param **kwargs: Additional keyword arguments passed to the underlying
+        :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
         .. rubric:: Example

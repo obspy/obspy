@@ -155,3 +155,11 @@ table.citation, table.citation td {
   cursor: default;
 }
 
+table.hlist td {
+  min-width: 250px;
+  vertical-align: top;
+}
+
+table.hlist td ul {
+  margin-top: 0;
+}
