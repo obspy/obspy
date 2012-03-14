@@ -1968,7 +1968,7 @@ class Stream(object):
 
         ``'simple'``
             Subtracts a linear function defined by first/last sample of the
-            trace (uses :func:`obspy.signal.invsim.detrend`).
+            trace (uses :func:`obspy.signal.detrend.simple`).
 
         ``'linear'``
             Fitting a linear function to the trace with least squares and
