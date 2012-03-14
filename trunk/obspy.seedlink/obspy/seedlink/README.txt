@@ -1,0 +1,37 @@
+package obspy.seedlink
+======================
+
+Copyright
+---------
+GNU Lesser General Public License, Version 3 (LGPLv3)
+
+Copyright (c) 2011-2012 by:
+    * Anthony Lomax
+    * Alberto Michelini
+
+The obspy.seedlink package has been developed by Anthony Lomax within the NERA
+WP12/JRA2 activities (funded by the European Community's Seventh Framework
+Program [FP7/2007-2013] under grant agreement n° 262330).
+
+Please contact Anthony Lomax (anthony@alomax.net, www.alomax.net) for
+professional services for further development or customization of this or
+related ObsPy packages.
+
+
+Overview
+--------
+SeedLink client for ObsPy.
+
+ObsPy is an open-source project dedicated to provide a Python framework for
+processing seismological data. It provides parsers for common file formats and
+seismological signal processing routines which allow the manipulation of
+seismological time series (see Beyreuther et al. 2010, Megies et al. 2011).
+The goal of the ObsPy project is to facilitate rapid application development
+for seismology.
+
+For more information visit http://www.obspy.org.
+
+
+Dependencies
+------------
+* obspy.core

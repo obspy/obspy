@@ -1,96 +1,76 @@
 # -*- coding: utf-8 -*-
 """
-Module to manage the logging of informatoin and error messages.
+Module to manage the logging of information and error messages.
 
-Part of Python implementaion of libslink of Chad Trabant and
+Part of Python implementation of libslink of Chad Trabant and
 JSeedLink of Anthony Lomax
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-
 import sys
 
+
 class SLLog(object):
-    """ 
-    Class to manage the logging of informatoin and error messages.
-    
-    :var log: The stream used for output of informartion messages.
-    (default is sys.stdout).
-    :type log: file
-    /**  */
-    protected PrintStream log = System.out;
-    
-    :var logPrefix: The prefix to prepend to informartion messages
-    (default is an empty string).
-    :type logPrefix: str
-    
-    :var err: The stream used for output of error messages.
-    (default is sys.stderr).
-    :type err: file
-    
-    :var errPrefix: The prefix to prepend to error messages.
-    (default is ERROR:).
-    :type errPrefix: file
-    
+    """
+    Class to manage the logging of information and error messages.
+
+    :var log_out: The stream used for output of information messages.
+        (default is sys.stdout).
+    :type log_out: file
+    :var log_prefix: The prefix to prepend to information messages
+        (default is an empty string).
+    :type log_prefix: str
+    :var err_out: The stream used for output of error messages.
+        (default is sys.stderr).
+    :type err_out: file
+    :var err_prefix: The prefix to prepend to error messages.
+        (default is ERROR:).
+    :type err_prefix: file
     :var verbosity: Verbosity level, 0 is lowest (default is 0).
     :type verbosity: int
-
     """
-
-    logOut = sys.stdout
-    logPrefix = ""
-    errOut = sys.stderr
-    errPrefix = "ERROR: "
+    log_out = sys.stdout
+    log_prefix = ""
+    err_out = sys.stderr
+    err_prefix = "ERROR: "
     verbosity = 0
 
-    def __init__(self, verbosity=None, logOut=None, logPrefix=None,
-                 errOut=None, errPrefix=None):
+    def __init__(self, verbosity=None, log_out=None, log_prefix=None,
+                 err_out=None, err_prefix=None):
         """
         Creates a new instance of an SLLog.
 
-        :param: verbosity verbosity level, 0 is lowest.
-        :param: log stream used for output of informartion messages.
-        :param: logPrefix prefix to prepend to informartion messages.
-        :param: err stream used for output of error messages.
-        :param: errPrefix prefix to prepend to error messages.
-
+        :param verbosity: verbosity level, 0 is lowest.
+        :param log_out: log stream used for output of information messages.
+        :param log_prefix: prefix to prepend to information messages.
+        :param err_out: stream used for output of error messages.
+        :param err_prefix: errPrefix prefix to prepend to error messages.
         """
         if verbosity is not None:
             self.verbosity = verbosity
-        if logOut is not None:
-            self.logOut = logOut
-        else:
-            self.logOut = sys.stdout
-        if logPrefix is not None:
-            self.logPrefix = logPrefix
-        if errOut is not None:
-            self.errOut = errOut
-        else:
-            self.errOut = sys.stderr
-        if errPrefix is not None:
-            self.errPrefix = errPrefix
+        if log_prefix is not None:
+            self.log_prefix = log_prefix
+        if err_prefix is not None:
+            self.err_prefix = err_prefix
+        self.log_out = log_out or sys.stdout
+        self.err_out = err_out or sys.stderr
 
-    def log(self, isError, verbosity, message):
+    def log(self, is_error, verbosity, message):
         """
         Logs a message in appropriate manner.
 
-        :param: isError true if error message, false otherwise.
-        :param: verbosity verbosity level for this messages.
-        :param: message message text.
-
+        :param is_error: true if error message, false otherwise.
+        :param verbosity: verbosity level for this messages.
+        :param message: message text.
         """
-
         if verbosity > self.verbosity:
             return
-
-        if isError:
-            self.errOut.write(self.errPrefix + str(message) + '\n')
+        if is_error:
+            self.err_out.write("%s%s\n" % (self.err_prefix, message))
         else:
-            self.logOut.write(self.logPrefix + str(message) + '\n')
-
-
+            self.log_out.write("%s%s\n" % (self.log_prefix, message))

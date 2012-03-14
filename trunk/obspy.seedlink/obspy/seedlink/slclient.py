@@ -1,60 +1,64 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Module to create and use a connection to a SeedLink server using a SeedLinkConnection object.
+Module to create and use a connection to a SeedLink server using a
+SeedLinkConnection object.
 
-A new SeedLink application can be created by subclassing SLClient and overriding at least
-the packetHandler method of SLClient.
+A new SeedLink application can be created by sub-classing SLClient and
+overriding at least the packetHandler method of SLClient.
 
-Part of Python implementaion of libslink of Chad Trabant and
+Part of Python implementation of libslink of Chad Trabant and
 JSeedLink of Anthony Lomax
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
+from obspy.seedlink.seedlinkexception import SeedLinkException
+from obspy.seedlink.sllog import SLLog
+from obspy.seedlink.slpacket import SLPacket
 import sys
-
-from obspyRT.seedlink.client.seedlinkconnection import SeedLinkConnection
-from obspyRT.seedlink.sllog import SLLog
-from obspyRT.seedlink.slpacket import SLPacket
-from obspyRT.seedlink.seedlinkexception import SeedLinkException
 import traceback
+
 
 class SLClient(object):
     """
-    Basic class to create and use a connection to a SeedLink server using a SeedLinkConnection object.
+    Basic class to create and use a connection to a SeedLink server using a
+    SeedLinkConnection object.
 
-    A new SeedLink application can be created by subclassing SLClient and overriding at least
-    the packetHandler method of SLClient.
+    A new SeedLink application can be created by sub-classing SLClient and
+    overriding at least the packetHandler method of SLClient.
 
-    :var slconn: SeedLinkConnection object for communicating with the SeedLinkConnection over a socket.
+    :var slconn: SeedLinkConnection object for communicating with the
+        SeedLinkConnection over a socket.
     :type slconn: SeedLinkConnection
-    :var verbose: Verbosity level, 0 is lowest. 
+    :var verbose: Verbosity level, 0 is lowest.
     :type verbose: int
-    :var ppackets: Flag to indicate show detailed packet information. 
+    :var ppackets: Flag to indicate show detailed packet information.
     :type  ppackets: boolean
-    :var streamfile: Name of file containing stream list for multi-station mode. 
+    :var streamfile: Name of file containing stream list for multi-station
+        mode.
     :type  streamfile: str
-    :var selectors: Selectors for uni-station or default selectors for multi-station. 
+    :var selectors: Selectors for uni-station or default selectors for
+        multi-station.
     :type  selectors: str
-    :var multiselect: Selectors for multi-station. 
+    :var multiselect: Selectors for multi-station.
     :type  multiselect: str
-    :var statefile: Name of file for reading (if exists) and storing state. 
+    :var statefile: Name of file for reading (if exists) and storing state.
     :type  statefile: str
-    :var begin_time: Beginning of time window for read start in past. 
+    :var begin_time: Beginning of time window for read start in past.
     :type  begin_time :str
-    :var end_time: End of time window for reading windowed data. 
+    :var end_time: End of time window for reading windowed data.
     :type  end_time: str
-    :var infolevel: INFO LEVEL for info request only. 
+    :var infolevel: INFO LEVEL for info request only.
     :type  infolevel: str
-    :var sllog: Logging object. 
+    :var sllog: Logging object.
     :type  sllog SLLog
     """
-
     VERSION = "1.2.0X00"
     VERSION_YEAR = "2011"
     VERSION_DATE = "24Nov" + VERSION_YEAR
@@ -63,16 +67,12 @@ class SLClient(object):
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
     BANNER = ["SLClient comes with ABSOLUTELY NO WARRANTY"]
 
-
-
     def __init__(self, sllog=None):
         """
         Creates a new instance of SLClient with the specified logging object
 
         :param: sllog logging object to handle messages.
-
         """
-
         self.slconn = None
         self.verbose = 0
         self.ppackets = False
@@ -91,17 +91,14 @@ class SLClient(object):
         self.sllog = sllog
         self.slconn = SeedLinkConnection(self.sllog)
 
-
     def parseCmdLineArgs(self, args):
         """
         Parses the commmand line arguments.
 
         :type args: list
-        :param: args main method arguments.
-        :return: -1 on error, 1 if version or help argument found,  0 otherwise.
-
+        :param args: main method arguments.
+        :return: -1 on error, 1 if version or help argument found, 0 otherwise.
         """
-
         if len(args) < 2:
             self.printUsage(False)
             return 1
@@ -158,11 +155,9 @@ class SLClient(object):
             optind += 1
         return 0
 
-
     def initialize(self):
         """
-        Initializes this SLCient.
-
+        Initializes this SLClient.
         """
         if self.slconn.getSLAddress() is None:
             message = "no SeedLink server specified"
@@ -173,8 +168,10 @@ class SLClient(object):
         self.slconn.setLog(self.sllog)
         if self.verbose >= 2:
             self.ppackets = True
-        if self.slconn.getSLAddress().startswith(":"):
-            str(self.slconn.setSLAddress(InetAddress.getLocalHost()) + self.slconn.getSLAddress())
+# XXX: java class InetAddress?
+#        if self.slconn.getSLAddress().startswith(":"):
+#            str(self.slconn.setSLAddress(InetAddress.getLocalHost()) + \
+#                self.slconn.getSLAddress())
         if self.streamfile is not None:
             self.slconn.readStreamList(self.streamfile, self.selectors)
         if self.multiselect is not None:
@@ -190,18 +187,13 @@ class SLClient(object):
             if self.end_time is not None:
                 self.slconn.setEndTime(self.end_time)
 
-
     def run(self):
         """
-        Start this SLCient.
-
+        Start this SLClient.
         """
-
         if self.infolevel is not None:
             self.slconn.requestInfo(self.infolevel)
-
         # Loop with the connection manager
-        slpack = None
         count = 1
         slpack = self.slconn.collect()
         while slpack is not None:
@@ -216,14 +208,14 @@ class SLClient(object):
                 print(self.__class__.__name__ + ": " + sle.value)
             if count >= sys.maxint:
                 count = 1
-                print "DEBUG INFO: " + self.__class__.__name__ + ": Packet count reset to 1"
+                print "DEBUG INFO: " + self.__class__.__name__ + ":",
+                print "Packet count reset to 1"
             else:
                 count += 1
             slpack = self.slconn.collect()
 
         # Close the SeedLinkConnection
         self.slconn.close()
-
 
     def packetHandler(self, count, slpack):
         """
@@ -233,14 +225,14 @@ class SLClient(object):
 
         :type count: int
         :param count:  Packet counter.
-        :type trace: :class:`~obspyRT.seedlink.SLPacket`
-        :param trace:  :class:`~obspyRT.seedlink.SLPacket` the packet to process.
-        :return: Boolean true if connection to SeedLink server should be \
+        :type trace: :class:`~obspy.seedlink.SLPacket`
+        :param trace:  :class:`~obspy.seedlink.SLPacket` the packet to process.
+        :return: Boolean true if connection to SeedLink server should be
             closed and session terminated, false otherwise.
         """
-
         # check if not a complete packet
-        if slpack is None or (slpack == SLPacket.SLNOPACKET) or (slpack == SLPacket.SLERROR):
+        if slpack is None or (slpack == SLPacket.SLNOPACKET) or \
+                (slpack == SLPacket.SLERROR):
             return False
 
         # get basic packet info
@@ -267,7 +259,8 @@ class SLClient(object):
             print(self.__class__.__name__ + ": " + sle.value)
 
         # if here, must be a data blockette
-        print self.__class__.__name__ + ": packet seqnum: " + str(seqnum) + ": blockette type: " + str(type)
+        print self.__class__.__name__ + ": packet seqnum:",
+        print str(seqnum) + ": blockette type: " + str(type)
         if not self.ppackets:
             return False
 
@@ -283,20 +276,18 @@ class SLClient(object):
             " sampletype:" + str(trace.stats['sampletype']), \
             " dataquality:" + str(trace.stats['dataquality'])
             if self.verbose >= 3:
-                print self.__class__.__name__ + ": blockette contains a trace: " + str(trace.stats)
+                print self.__class__.__name__ + ":"
+                print "blockette contains a trace: " + str(trace.stats)
         else:
             print self.__class__.__name__ + ": blockette contains no trace"
-
         return False
-
 
     def printUsage(self, concise):
         """
         Prints the usage message for this class.
-
         """
-
-        print("\nUsage: python " + self.__class__.__name__ + " [options] <[host]:port>")
+        print("\nUsage: python %s [options] <[host]:port>" % \
+              (self.__class__.__name__))
         if concise:
             print("Use '-h' for detailed help")
             return
@@ -327,13 +318,11 @@ class SLClient(object):
         print(" <[host]:port>  Address of the SeedLink server in host:port format")
         print("                  if host is omitted (i.e. ':18000'), localhost is assumed")
 
-
     @classmethod
     def main(cls, args):
         """
         Main method - creates and runs an SLClient using the specified
         command line arguments
-
         """
         slClient = None
         try:
@@ -350,7 +339,6 @@ class SLClient(object):
                 sys.stderr.write("Error: " + e.value)
             traceback.print_exc()
 
-if __name__ == '__main__':
-    import sys
-    SLClient.main(sys.argv)
 
+if __name__ == '__main__':
+    SLClient.main(sys.argv)
