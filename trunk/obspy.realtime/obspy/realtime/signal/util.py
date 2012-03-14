@@ -58,7 +58,7 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
         RtTrace
     :type rtmemory_list: list
     :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+        Persistent memory used by this process for specified trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -101,7 +101,7 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
         RtTrace
     :type rtmemory_list: list
     :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+        Persistent memory used by this process for specified trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -147,7 +147,7 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
         RtTrace
     :type rtmemory_list: list
     :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+        Persistent memory used by this process for specified trace.
     :type width: int
     :param width: Width in number of sample points for filter.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -231,7 +231,7 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
         RtTrace
     :type rtmemory_list: list
     :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+        Persistent memory used by this process for specified trace.
     :type width: int
     :param width: Width in number of sample points for tauc window.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -333,7 +333,7 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
         RtTrace
     :type rtmemory_list: list
     :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-            Persistent memory used by this process for specified trace.
+        Persistent memory used by this process for specified trace.
     :type mem_time: float
     :param mem_time: Length in seconds of data memory (must be much larger
         than maximum delay between pick declaration and pick time).
