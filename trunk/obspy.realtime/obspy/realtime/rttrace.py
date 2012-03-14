@@ -9,9 +9,7 @@ Module for handling ObsPy RtTrace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from copy import deepcopy
 from obspy.core import Trace, Stats
-from obspy.core.util.base import createEmptyDataChunk
 from obspy.realtime.rtmemory import RtMemory
 from obspy.realtime.signal import util
 import numpy as np
@@ -168,225 +166,10 @@ class RtTrace(Trace):
         """
         Too ambiguous, throw an Error.
 
-        .. seealso:: :meth:`RtTrace.append`.
+        .. seealso:: :meth:`obsppy.realtime.RtTrace.append`.
         """
         msg = "Too ambiguous for realtime trace data. Try: RtTrace.append()"
         raise NotImplementedError(msg)
-
-    # TODO: temporary use of modified version of Trace.__add__ to correct bug
-    # in delta calculation (20111209, ObsPy version: 0.4.8.dev-r2921)
-    def __addTrace__(self, trace, method=0, interpolation_samples=0,
-                     fill_value=None, sanity_checks=True):
-        """
-        Adds another Trace object to current trace.
-
-        :type method: ``0`` or ``1``, optional
-        :param method: Method to handle overlaps of traces. Defaults to ``0``.
-            See the table given in the notes section below for further details.
-        :type fill_value: int, float or ``'latest'``, optional
-        :param fill_value: Fill value for gaps. Defaults to ``None``. Traces
-            will be converted to NumPy masked arrays if no value is given and
-            gaps are present. If the keyword ``'latest'`` is provided it will
-            use the latest value before the gap. If keyword ``'interpolate'``
-            is provided, missing values are linearly interpolated (not
-            changing the data type e.g. of integer valued traces).
-        :type interpolation_samples: int, optional
-        :param interpolation_samples: Used only for ``method=1``. It specifies
-            the number of samples which are used to interpolate between
-            overlapping traces. Defaults to ``0``. If set to ``-1`` all
-            overlapping samples are interpolated.
-        :type sanity_checks: boolean, optional
-        :param sanity_checks: Enables some sanity checks before merging traces.
-            Defaults to ``True``.
-
-        Trace data will be converted into a NumPy masked array data type if
-        any gaps are present. This behavior may be prevented by setting the
-        ``fill_value`` parameter. The ``method`` argument controls the
-        handling of overlapping data values.
-
-        Sampling rate, data type and trace.id of both traces must match.
-
-        .. rubric:: Notes
-
-        ======  ===============================================================
-        Method  Description
-        ======  ===============================================================
-        0       Discard overlapping data. Overlaps are essentially treated the
-                same way as gaps::
-
-                    Trace 1: AAAAAAAA
-                    Trace 2:     FFFFFFFF
-                    1 + 2  : AAAA----FFFF
-
-                Contained traces with differing data will be marked as gap::
-
-                    Trace 1: AAAAAAAAAAAA
-                    Trace 2:     FF
-                    1 + 2  : AAAA--AAAAAA
-        1       Discard data of the previous trace assuming the following trace
-                contains data with a more correct time value. The parameter
-                ``interpolation_samples`` specifies the number of samples used
-                to linearly interpolate between the two traces in order to
-                prevent steps. Note that if there are gaps inside, the
-                returned array is still a masked array, only if fill_value
-                is set, the returned array is a normal array and gaps are
-                filled with fill value.
-
-                No interpolation (``interpolation_samples=0``)::
-
-                    Trace 1: AAAAAAAA
-                    Trace 2:     FFFFFFFF
-                    1 + 2  : AAAAFFFFFFFF
-
-                Interpolate first two samples (``interpolation_samples=2``)::
-
-                    Trace 1: AAAAAAAA
-                    Trace 2:     FFFFFFFF
-                    1 + 2  : AAAACDFFFFFF (interpolation_samples=2)
-
-                Interpolate all samples (``interpolation_samples=-1``)::
-
-                    Trace 1: AAAAAAAA
-                    Trace 2:     FFFFFFFF
-                    1 + 2  : AAAABCDEFFFF
-
-                Any contained traces with different data will be discarded::
-
-                    Trace 1: AAAAAAAAAAAA (contained trace)
-                    Trace 2:     FF
-                    1 + 2  : AAAAAAAAAAAA
-
-                Traces with gaps::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAA----FFFF
-
-                Traces with gaps and given ``fill_value=0``::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAA0000FFFF
-
-                Traces with gaps and given ``fill_value='latest'``::
-
-                    Trace 1: ABCD
-                    Trace 2:         FFFF
-                    1 + 2  : ABCDDDDDFFFF
-
-                Traces with gaps and given ``fill_value='interpolate'``::
-
-                    Trace 1: AAAA
-                    Trace 2:         FFFF
-                    1 + 2  : AAAABCDEFFFF
-        ======  ===============================================================
-        """
-        if sanity_checks:
-            if not isinstance(trace, Trace):
-                raise TypeError
-            #  check id
-            if self.getId() != trace.getId():
-                raise TypeError("Trace ID differs")
-            #  check sample rate
-            if self.stats.sampling_rate != trace.stats.sampling_rate:
-                raise TypeError("Sampling rate differs")
-            #  check calibration factor
-            if self.stats.calib != trace.stats.calib:
-                raise TypeError("Calibration factor differs")
-            # check data type
-            if self.data.dtype != trace.data.dtype:
-                raise TypeError("Data type differs")
-        # check times
-        if self.stats.starttime <= trace.stats.starttime:
-            lt = self
-            rt = trace
-        else:
-            rt = self
-            lt = trace
-        # check whether to use the latest value to fill a gap
-        if fill_value == "latest":
-            fill_value = lt.data[-1]
-        elif fill_value == "interpolate":
-            fill_value = (lt.data[-1], rt.data[0])
-        sr = self.stats.sampling_rate
-        # original delta algorithm
-        #delta = int(math.floor(round((rt.stats.starttime - \
-        #                              lt.stats.endtime) * sr, 7))) - 1
-        diff = trace.stats.starttime - self.stats.endtime
-        if diff > 0.0:
-            delta = int(0.5 + diff * sr) - 1
-        else:
-            delta = -int(0.5 + -diff * sr) - 1
-
-        delta_endtime = lt.stats.endtime - rt.stats.endtime
-        # create the returned trace
-        out = self.__class__(header=deepcopy(lt.stats))
-        # check if overlap or gap
-        if delta < 0 and delta_endtime < 0:
-            # overlap
-            delta = abs(delta)
-            if np.all(np.equal(lt.data[-delta:], rt.data[:delta])):
-                # check if data are the same
-                data = [lt.data[:-delta], rt.data]
-            elif method == 0:
-                overlap = createEmptyDataChunk(delta, lt.data.dtype,
-                                               fill_value)
-                data = [lt.data[:-delta], overlap, rt.data[delta:]]
-            elif method == 1 and interpolation_samples >= -1:
-                try:
-                    ls = lt.data[-delta - 1]
-                except:
-                    ls = lt.data[0]
-                if interpolation_samples == -1:
-                    interpolation_samples = delta
-                elif interpolation_samples > delta:
-                    interpolation_samples = delta
-                try:
-                    rs = rt.data[interpolation_samples]
-                except IndexError:
-                    # contained trace
-                    data = [lt.data]
-                else:
-                    # include left and right sample (delta + 2)
-                    interpolation = np.linspace(ls, rs,
-                                                interpolation_samples + 2)
-                    # cut ls and rs and ensure correct data type
-                    interpolation = np.require(interpolation[1:-1],
-                                               lt.data.dtype)
-                    data = [lt.data[:-delta], interpolation,
-                        rt.data[interpolation_samples:]]
-            else:
-                raise NotImplementedError
-        elif delta < 0 and delta_endtime >= 0:
-            # contained trace
-            delta = abs(delta)
-            lenrt = len(rt)
-            t1 = len(lt) - delta
-            t2 = t1 + lenrt
-            if np.all(lt.data[t1:t2] == rt.data):
-                # check if data are the same
-                data = [lt.data]
-            elif method == 0:
-                gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
-                data = [lt.data[:t1], gap, lt.data[t2:]]
-            elif method == 1:
-                data = [lt.data]
-            else:
-                raise NotImplementedError
-        elif delta == 0:
-            data = [lt.data, rt.data]
-        else:
-            # gap
-            # use fixed value or interpolate in between
-            gap = createEmptyDataChunk(delta, lt.data.dtype, fill_value)
-            data = [lt.data, gap, rt.data]
-        # merge traces depending on numpy array type
-        if True in [isinstance(_i, np.ma.masked_array) for _i in data]:
-            data = np.ma.concatenate(data)
-        else:
-            data = np.concatenate(data)
-        out.data = data
-        return out
 
     def append(self, trace, gap_overlap_check=False, verbose=False):
         """
@@ -516,16 +299,9 @@ class RtTrace(Trace):
             fill_value = 'latest'
             sanity_checks = True
             #print "DEBUG: ->trace.stats.endtime:", trace.stats.endtime
-            #sum_trace = octrace.Trace.__add__(self, trace, method,
-            #                                  interpolation_samples,
-            #                                  fill_value, sanity_checks)
-            # TODO: temporary use of modified version of Trace.__add__ to
-            # correct bug  in delta calculation (20111209, ObsPy version:
-            # 0.4.8.dev-r2921)
-            sum_trace = self.__addTrace__(trace, method,
-                                          interpolation_samples,
-                                          fill_value, sanity_checks)
-            #print 'DEBUG: sum_trace.data.dtype: ', sum_trace.data.dtype
+            sum_trace = Trace.__add__(self, trace, method,
+                                      interpolation_samples,
+                                      fill_value, sanity_checks)
             # Trace.__add__ returns new Trace, so update to this RtTrace
             self.data = sum_trace.data
             # set derived values, including endtime
