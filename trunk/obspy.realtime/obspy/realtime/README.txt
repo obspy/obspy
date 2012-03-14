@@ -5,8 +5,9 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2012 by:
+Copyright (c) 2011-2012 by:
     * Anthony Lomax
+    * Alberto Michelini
 
 The obspy.realtime package has been developed by Anthony Lomax within the NERA
 WP12/JRA2 activities (funded by the European Community's Seventh Framework
