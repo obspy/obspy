@@ -283,7 +283,7 @@ class RtTrace(Trace):
             #print 'DEBUG: Applying processing: ', process_name, ' ', options
             # apply processing
             trace.data = self._rtProcess(trace, process_name, rtmemory_list,
-                                         ** options)
+                                         **options)
 
         # if first data, set stats
         if not self.have_appended_data:
@@ -347,8 +347,7 @@ class RtTrace(Trace):
             data.
         """
         # check if direct function call
-        if not isinstance(process, basestring) and \
-           hasattr(process, '__call__'):
+        if hasattr(process, '__call__'):
             return process(trace.data, **options)
 
         # got function defined within rtprocess_functions dictionary
@@ -374,47 +373,44 @@ class RtTrace(Trace):
         :return: Length of processing list after registering new processing
             function.
         """
-        # make process_name string comparison case insensitive
+        # create process_name either from string or function name
         process_name = ("%s" % process).lower()
+
+        # set processing entry for this process
+        entry = False
+        rtmemory_list = None
+        if hasattr(process, '__call__'):
+            # direct function call
+            entry = (process, options, None)
+        elif process_name in RtTrace.rtprocess_functions:
+            # predefined function within RtTrace.rtprocess_functions
+            num = RtTrace.rtprocess_functions[process_name][1]
+            if num:
+                rtmemory_list = [RtMemory()] * num
+            entry = (process_name, options, rtmemory_list)
+        else:
+            # check if process name is contained within a rtprocess_function,
+            # e.g. 'int' for 'integrate'
+            for key in RtTrace.rtprocess_functions:
+                if not key.startswith(process_name):
+                    continue
+                process_name = key
+                num = RtTrace.rtprocess_functions[process_name][1]
+                if num:
+                    rtmemory_list = [RtMemory()] * num
+                entry = (process_name, options, rtmemory_list)
+                break
+
+        if not entry:
+            raise NotImplementedError("Can't register process %s" % (process))
+
+        # add process entry
+        self.processing.append(entry)
 
         # add processing information to the stats dictionary
         proc_info = "realtime_process:%s:%s" % (process_name, options)
         self._addProcessingInfo(proc_info)
 
-        #print 'DEBUG: Appending processing: ', process_name, ' ', options
-
-        # check if direct function call
-        if not isinstance(process, basestring) and \
-           hasattr(process, '__call__'):
-            self.processing.append((process, options, None))
-            return len(self.processing)
-
-        # set processing entry for this process
-        entry = None
-        # check if process in in defined RtTrace.rtprocess_functions
-        if process_name not in RtTrace.rtprocess_functions:
-            # check if process name is prefix to a defined rtprocess_function
-            for key in RtTrace.rtprocess_functions:
-                if key.startswith(process_name):
-                    process_name = key
-                    break
-            entry = (process_name, options, None)
-        else:
-            num_mem = RtTrace.rtprocess_functions[process_name][1]
-            if num_mem < 1:
-                rtmemory_list = None
-            else:
-                rtmemory_list = []
-            for _i in range(num_mem):
-                rtmemory_list = rtmemory_list + [RtMemory()]
-            entry = (process_name, options, rtmemory_list)
-        # process not found in defined RtTrace.rtprocess_functions,
-        #   assume obspy or np function
-        if entry is None:
-            entry = (process_name, options, None)
-        self.processing.append(entry)
-        #name, opt, mem = self.processing[len(self.processing) - 1]
-        #print 'DEBUG: Appended processing: ', name, ' ', opt
         return len(self.processing)
 
 

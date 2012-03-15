@@ -115,8 +115,8 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertEqual(int(mwp * 1000), int(8.78902911791 * 1000))
 
     def _processTrace(self):
-        print
-        print 'Test processing:', self.process_list
+        #print
+        #print 'Test processing:', self.process_list
 
         # apply normal obspy processing to original trace
         # Filtering the Stream object
@@ -151,22 +151,22 @@ class RtTraceTestCase(unittest.TestCase):
         # following may give int truncate
         packet_length = int(total_length / self.num_pakets)
         delta_time = 1.0 / self.data_trace[0].stats.sampling_rate
-        print "self.data_trace[0].stats.sampling_rate:",
-        print self.data_trace[0].stats.sampling_rate
-        print "delta_time:", delta_time
+        #print "self.data_trace[0].stats.sampling_rate:",
+        #print self.data_trace[0].stats.sampling_rate
+        #print "delta_time:", delta_time
         tstart = self.data_trace[0].stats.starttime
         tend = tstart + delta_time * float(packet_length - 1)
-        print "next_tstart, next_tend:", tstart, tend
+        #print "next_tstart, next_tend:", tstart, tend
         traces = []
         for i in range(self.num_pakets):
             tr = self.data_trace[0].copy()
             tr = tr.slice(tstart, tend)
             traces.append(tr)
-            print "tr.stats.sampling_rate:", tr.stats.sampling_rate
+            #print "tr.stats.sampling_rate:", tr.stats.sampling_rate
             tstart = tr.stats.endtime + delta_time
-            print "tstart, tend:", tr.stats.starttime, tr.stats.endtime
+            #print "tstart, tend:", tr.stats.starttime, tr.stats.endtime
             tend = tstart + delta_time * float(packet_length - 1)
-            print "next_tstart, next_tend:", tstart, tend
+            #print "next_tstart, next_tend:", tstart, tend
 
         # assemble realtime trace
         self.rt_trace = RtTrace()
@@ -183,9 +183,10 @@ class RtTraceTestCase(unittest.TestCase):
                 self.rt_trace.registerRtProcess('boxcar',
                                                 width=self.boxcar_width)
             elif process == 'integrate':
-                self.rt_trace.registerRtProcess('integrate')
+                # 'int' is contained in 'integrate'
+                self.rt_trace.registerRtProcess('int')
             elif process == 'differentiate':
-                self.rt_trace.registerRtProcess('differentiate')
+                self.rt_trace.registerRtProcess('diff')
             elif process == 'mwpIntegral':
                 self.rt_trace.registerRtProcess('mwpIntegral',
                     mem_time=self.mwp_max_time,
