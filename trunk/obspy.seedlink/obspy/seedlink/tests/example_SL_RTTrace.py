@@ -11,21 +11,15 @@ import traceback
 
 
 class MySLClient(SLClient):
-
-    def __init__(self, sllog=None, rt_trace=None):
+    """
+    A custom SeedLink client.
+    """
+    def __init__(self, rt_trace=RtTrace(), *args, **kwargs):
         """
-        Creates a new instance of SLClient with the specified logging object
-
-        :param sllog: logging object to handle messages.
+        Creates a new instance of SLClient accepting a realtime trace handler.
         """
-        if rt_trace is None:
-            self.rt_trace = RtTrace()
-        else:
-            self.rt_trace = rt_trace
-
-        # initialize parent SLClient
-        #   added using __add__
-        SLClient.__init__(self)
+        self.rt_trace = rt_trace
+        super(self.__class__, self).__init__(*args, **kwargs)
 
     def packetHandler(self, count, slpack):
         """
@@ -35,9 +29,8 @@ class MySLClient(SLClient):
 
         :type count: int
         :param count:  Packet counter.
-        :type trace: :class:`~obspyRT.seedlink.SLPacket`
-        :param trace:  :class:`~obspyRT.seedlink.SLPacket` the packet to
-            process.
+        :type slpack: :class:`~obspy.seedlink.SLPacket`
+        :param slpack: packet to process.
         :return: Boolean true if connection to SeedLink server should be \
             closed and session terminated, false otherwise.
         """
@@ -80,7 +73,7 @@ class MySLClient(SLClient):
             print " npts:" + str(trace.stats['npts']),
             print " sampletype:" + str(trace.stats['sampletype']),
             print " dataquality:" + str(trace.stats['dataquality'])
-            # append packet data to RtTrace
+            # Custom: append packet data to RtTrace
             #g_o_check = True    # raises Error on gap or overlap
             g_o_check = False   # clears RTTrace memory on gap or overlap
             self.rt_trace.append(trace, gap_overlap_check=g_o_check,
@@ -97,54 +90,54 @@ class MySLClient(SLClient):
             print self.__class__.__name__ + ": blockette contains no trace"
         return False
 
-    @classmethod
-    def main(cls):
-        # initialize realtime trace
-        rttrace = RtTrace(max_length=60)
-        #rttrace.registerRtProcess('integrate')
-        rttrace.registerRtProcess('np.abs')
-        # width in num samples
-        boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
-        rttrace.registerRtProcess('boxcar', width=boxcar_width)
 
-        print "The SeedLink client will collect data packets and append " + \
-            "them to an RTTrace object."
+def main():
+    # initialize realtime trace
+    rttrace = RtTrace(max_length=60)
+    #rttrace.registerRtProcess('integrate')
+    rttrace.registerRtProcess('np.abs')
+    # width in num samples
+    boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
+    rttrace.registerRtProcess('boxcar', width=boxcar_width)
 
-        # create SeedLink client
-        slClient = None
-        try:
-            slClient = MySLClient(rt_trace=rttrace)
-            #
-            slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
-            slClient.multiselect = ("GE_STU:BHZ")
-            #
-            #slClient.slconn.setSLAddress("discovery.rm.ingv.it:39962")
-            #slClient.multiselect = ("IV_MGAB:BHZ")
-            #
-            #slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
-            #slClient.multiselect = ("AT_TTA:BHZ")
-            #
-            # set a time window from 2 min in the past to 5 sec in the future
-            dt = UTCDateTime()
-            slClient.begin_time = (dt - 120.0).formatSeedLink()
-            slClient.end_time = (dt + 5.0).formatSeedLink()
-            print "SeedLink date-time range:", slClient.begin_time, " -> ",
-            print slClient.end_time
-            slClient.verbose = 3
-            slClient.initialize()
-            slClient.run()
-        except SeedLinkException as sle:
-            if slClient is not None and slClient.sllog is not None:
-                slClient.sllog.log(True, 0, sle)
-            else:
-                sys.stderr.write("Error: " + str(sle))
-            traceback.print_exc()
-            raise sle
-        except Exception as e:
-            sys.stderr.write("Error:" + str(e))
-            traceback.print_exc()
-            raise e
+    print "The SeedLink client will collect data packets and append " + \
+        "them to an RTTrace object."
+
+    # create SeedLink client
+    slClient = None
+    try:
+        slClient = MySLClient(rt_trace=rttrace)
+        #
+        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
+        slClient.multiselect = ("GE_STU:BHZ")
+        #
+        #slClient.slconn.setSLAddress("discovery.rm.ingv.it:39962")
+        #slClient.multiselect = ("IV_MGAB:BHZ")
+        #
+        #slClient.slconn.setSLAddress("rtserve.iris.washington.edu:18000")
+        #slClient.multiselect = ("AT_TTA:BHZ")
+        #
+        # set a time window from 2 min in the past to 5 sec in the future
+        dt = UTCDateTime()
+        slClient.begin_time = (dt - 120.0).formatSeedLink()
+        slClient.end_time = (dt + 5.0).formatSeedLink()
+        print "SeedLink date-time range:", slClient.begin_time, " -> ",
+        print slClient.end_time
+        slClient.verbose = 3
+        slClient.initialize()
+        slClient.run()
+    except SeedLinkException as sle:
+        if slClient is not None and slClient.sllog is not None:
+            slClient.sllog.log(True, 0, sle)
+        else:
+            sys.stderr.write("Error: " + str(sle))
+        traceback.print_exc()
+        raise sle
+    except Exception as e:
+        sys.stderr.write("Error:" + str(e))
+        traceback.print_exc()
+        raise e
 
 
 if __name__ == '__main__':
-    MySLClient.main()
+    main()

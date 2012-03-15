@@ -38,8 +38,15 @@ def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-    trace.data *= factor
-    return(trace.data)
+
+    sample = trace.data
+    if np.size(sample) < 1:
+        return(sample)
+
+    for i in range(np.size(sample)):
+        sample[i] = sample[i] * factor
+
+    return(sample)
 
 
 def integrate(trace, rtmemory_list=[RtMemory()]):
@@ -58,8 +65,31 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-    trace.data = np.cumsum(trace.data) * trace.stats.delta
-    return trace.data
+
+    sample = trace.data
+    if np.size(sample) < 1:
+        return(sample)
+
+    delta_time = 1.0 / trace.stats.sampling_rate
+
+    rtmemory = rtmemory_list[0]
+
+    # initialize memory object
+    if not rtmemory.initialized:
+        memory_size_input = 0
+        memory_size_output = 1
+        rtmemory.initialize(sample.dtype, memory_size_input,
+                            memory_size_output, 0, 0)
+
+    sum = rtmemory.output[0]
+
+    for i in range(np.size(sample)):
+        sum += sample[i] * delta_time
+        sample[i] = sum
+
+    rtmemory.output[0] = sum
+
+    return(sample)
 
 
 def differentiate(trace, rtmemory_list=[RtMemory()]):
@@ -78,13 +108,37 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-    # The previous method also had zero for the first sample so this is
-    # duplicated here for now.
-    trace.data = np.concatenate([[0], np.diff(trace.data)]) * trace.stats.sampling_rate
-    return trace.data
+
+    sample = trace.data
+    if np.size(sample) < 1:
+        return(sample)
+
+    delta_time = 1.0 / trace.stats.sampling_rate
+
+    rtmemory = rtmemory_list[0]
+
+    # initialize memory object
+    if not rtmemory.initialized:
+        memory_size_input = 1
+        memory_size_output = 0
+        rtmemory.initialize(sample.dtype, memory_size_input,
+                            memory_size_output, 0, 0)
+        # avoid large diff value for first output sample
+        rtmemory.input[0] = sample[0]
+
+    previous_sample = rtmemory.input[0]
+
+    for i in range(np.size(sample)):
+        diff = (sample[i] - previous_sample) / delta_time
+        previous_sample = sample[i]
+        sample[i] = diff
+
+    rtmemory.input[0] = previous_sample
+
+    return(sample)
 
 
-def boxcar(trace, width, rtmemory_list=[RtMemory()]):
+def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     """
     Apply boxcar smoothing to data in array sample.
 
@@ -103,17 +157,67 @@ def boxcar(trace, width, rtmemory_list=[RtMemory()]):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
 
-    # XXX: Probably better to cut symmetrically at the beginning and end and
-    # adjust the multiplication factor for the boundary elements. But this is
-    # not how the old implementation worked so for know it just copies the old
-    # behaviour.
-    trace.data = np.convolve(trace.data, np.ones(width + 1),
-                             'full')[:len(trace.data)]
-    trace.data /= width + 1
-    return trace.data
+    if not isinstance(width, int):
+        msg = "width parameter must be an int."
+        raise ValueError(msg)
+
+    if not width > 0:
+        msg = "width parameter not specified or < 1."
+        raise ValueError(msg)
+
+    sample = trace.data
+
+    rtmemory = rtmemory_list[0]
+
+    # initialize memory object
+    if not rtmemory.initialized:
+        memory_size_input = width
+        memory_size_output = 0
+        rtmemory.initialize(sample.dtype, memory_size_input,
+                            memory_size_output, 0, 0)
+
+    # initialize array for time-series results
+    new_sample = np.zeros(np.size(sample), sample.dtype)
+
+    i = 0
+    i1 = i - width
+    i2 = i      # causal boxcar of width width
+    sum = 0.0
+    icount = 0
+    for i in range(np.size(sample)):
+        value = 0.0
+        if (icount == 0):    # first pass, accumulate sum
+            for n in range(i1, i2 + 1):
+                if (n < 0):
+                    value = rtmemory.input[width + n]
+                else:
+                    value = sample[n]
+                sum += value
+                icount = icount + 1
+        else:                # later passes, update sum
+            if ((i1 - 1) < 0):
+                value = rtmemory.input[width + (i1 - 1)]
+            else:
+                value = sample[(i1 - 1)]
+            sum -= value
+            if (i2 < 0):
+                value = rtmemory.input[width + i2]
+            else:
+                value = sample[i2]
+            sum += value
+        if (icount > 0):
+            new_sample[i] = (float)(sum / float(icount))
+        else:
+            new_sample[i] = 0.0
+        i1 = i1 + 1
+        i2 = i2 + 1
+
+    rtmemory.updateInput(sample)
+
+    return(new_sample)
 
 
-def tauc(trace, width, rtmemory_list=[RtMemory(), RtMemory()]):
+def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     """
     Calculate instantaneous period in a fixed window (Tau_c).
 
@@ -136,6 +240,11 @@ def tauc(trace, width, rtmemory_list=[RtMemory(), RtMemory()]):
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
+
+    if not width > 0:
+        msg = "tauc: width parameter not specified or < 1."
+        raise ValueError(msg)
+
     sample = trace.data
     delta_time = 1.0 / trace.stats.sampling_rate
 

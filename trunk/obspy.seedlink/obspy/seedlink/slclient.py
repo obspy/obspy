@@ -225,8 +225,8 @@ class SLClient(object):
 
         :type count: int
         :param count:  Packet counter.
-        :type trace: :class:`~obspy.seedlink.SLPacket`
-        :param trace:  :class:`~obspy.seedlink.SLPacket` the packet to process.
+        :type slpack: :class:`~obspy.seedlink.SLPacket`
+        :param slpack: packet to process.
         :return: Boolean true if connection to SeedLink server should be
             closed and session terminated, false otherwise.
         """
