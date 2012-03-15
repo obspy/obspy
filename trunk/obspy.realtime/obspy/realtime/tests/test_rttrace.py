@@ -72,7 +72,7 @@ class RtTraceTestCase(unittest.TestCase):
 
     def test_boxcar(self):
         self.process_list = ['boxcar']
-        self.processTrace()
+        self._processTrace()
         print 'Post-processing for', self.process_list[-1], ':'
         peak = np.amax(np.abs(self.rt_trace.data))
         print '   ', self.process_list[-1], 'peak = ', peak
@@ -80,7 +80,7 @@ class RtTraceTestCase(unittest.TestCase):
 
     def test_scale(self):
         self.process_list = ['scale']
-        self.processTrace()
+        self._processTrace()
         print 'Post-processing for', self.process_list[-1], ':'
         peak = np.amax(np.abs(self.rt_trace.data))
         print '   ', self.process_list[-1], 'peak = ', peak
@@ -88,7 +88,7 @@ class RtTraceTestCase(unittest.TestCase):
 
     def test_abs(self):
         self.process_list = ['np.abs']
-        self.processTrace()
+        self._processTrace()
         print 'Post-processing for', self.process_list[-1], ':'
         peak = np.amax(np.abs(self.rt_trace.data))
         print '   ', self.process_list[-1], 'peak = ', peak
@@ -96,7 +96,7 @@ class RtTraceTestCase(unittest.TestCase):
 
     def test_tauc(self):
         self.process_list = ['tauc']
-        self.processTrace()
+        self._processTrace()
         print 'Post-processing for', self.process_list[-1], ':'
         peak = np.amax(np.abs(self.rt_trace.data))
         print '   ', self.process_list[-1], 'peak = ', peak
@@ -104,7 +104,7 @@ class RtTraceTestCase(unittest.TestCase):
 
     def test_mwp(self):
         self.process_list = ['integrate', 'mwpIntegral']
-        self.processTrace()
+        self._processTrace()
         print 'Post-processing for', self.process_list[-1], ':'
         peak = np.amax(np.abs(self.rt_trace.data))
         print '   ', self.process_list[-1], 'peak = ', peak
@@ -114,7 +114,7 @@ class RtTraceTestCase(unittest.TestCase):
         print '    mwp = ', mwp
         self.assertEqual(int(mwp * 1000), int(8.78902911791 * 1000))
 
-    def processTrace(self):
+    def _processTrace(self):
         print
         print 'Test processing:', self.process_list
 
@@ -133,13 +133,9 @@ class RtTraceTestCase(unittest.TestCase):
             elif process == 'differentiate':
                 st_filt.data = differentiate(st_filt)
             elif process == 'mwpIntegral':
-                st_filt.data = \
-                    mwpIntegral(st_filt,
-                                mem_time=self.mwp_mem_time,
-                                ref_time=(st_filt.stats.starttime
-                                + self.ref_time_offest),
-                                max_time=self.mwp_max_time,
-                                gain=self.trace_gain)
+                st_filt.data = mwpIntegral(st_filt, mem_time=self.mwp_mem_time,
+                    ref_time=(st_filt.stats.starttime + self.ref_time_offest),
+                    max_time=self.mwp_max_time, gain=self.trace_gain)
             elif process == 'np.abs':
                 st_filt.data = np.abs(st_filt.data)
             elif process == 'np.square':
@@ -187,9 +183,9 @@ class RtTraceTestCase(unittest.TestCase):
                 self.rt_trace.registerRtProcess('boxcar',
                                                 width=self.boxcar_width)
             elif process == 'integrate':
-                self.rt_trace.registerRtProcess('int')
+                self.rt_trace.registerRtProcess('integrate')
             elif process == 'differentiate':
-                self.rt_trace.registerRtProcess('diff')
+                self.rt_trace.registerRtProcess('differentiate')
             elif process == 'mwpIntegral':
                 self.rt_trace.registerRtProcess('mwpIntegral',
                     mem_time=self.mwp_max_time,
@@ -197,9 +193,9 @@ class RtTraceTestCase(unittest.TestCase):
                               self.ref_time_offest),
                     max_time=self.mwp_max_time, gain=self.trace_gain)
             elif process == 'np.abs':
-                self.rt_trace.registerRtProcess('np.abs')
+                self.rt_trace.registerRtProcess(np.abs)
             elif process == 'np.square':
-                self.rt_trace.registerRtProcess('np.square')
+                self.rt_trace.registerRtProcess(np.square)
             else:
                 self.rt_trace.registerRtProcess(process)
 

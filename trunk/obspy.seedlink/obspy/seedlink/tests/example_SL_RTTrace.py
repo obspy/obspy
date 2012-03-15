@@ -95,7 +95,7 @@ def main():
     # initialize realtime trace
     rttrace = RtTrace(max_length=60)
     #rttrace.registerRtProcess('integrate')
-    rttrace.registerRtProcess('np.abs')
+    rttrace.registerRtProcess(np.abs)
     # width in num samples
     boxcar_width = 10 * int(rttrace.stats.sampling_rate + 0.5)
     rttrace.registerRtProcess('boxcar', width=boxcar_width)

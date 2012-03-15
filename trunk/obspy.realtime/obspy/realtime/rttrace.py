@@ -88,7 +88,6 @@ class RtTrace(Trace):
     # dictionary to map given type-strings to processing functions
     # keys must be all lower case
     # values are lists: [function name, number of RtMemory objects]
-    #global rtprocess_functions
     rtprocess_functions = {
         'scale': [util.scale, 0],
         'integrate': [util.integrate, 1],
@@ -329,23 +328,15 @@ class RtTrace(Trace):
         self.have_appended_data = True
         return(trace)
 
-    def _rtProcess(self, trace, process_name, rtmemory_list, ** options):
+    def _rtProcess(self, trace, process, rtmemory_list, **options):
         """
         Runs a real-time processing algorithm on the a given input array trace.
 
-        This is performed in place on the actual data array. The original data
-        is not accessible anymore afterwards.
-        To keep your original data, use :meth:`~obspy.core.trace.Trace.copy`
-        to make a copy of your trace.
-        This also makes an entry with information on the applied processing
-        in ``trace.stats.processing``.
-        For details see :mod:`obspy.realtime`.
-
         :type trace: :class:`~obspy.core.trace.Trace`
         :param trace:  :class:`~obspy.core.trace.Trace` object to process
-        :type process_name: str
-        :param process_name: Specifies which processing function is applied
-            (e.g. 'boxcar').
+        :type process: str or function
+        :param process: Specifies which processing function is applied,
+            e.g. ``'boxcar'`` or ``np.abs``` (functions without brackets).
         :type rtmemory_list: list
         :param rtmemory_list: Persistent memory used by process_name on this
             RtTrace.
@@ -355,53 +346,48 @@ class RtTrace(Trace):
         :return: NumPy :class:`np.ndarray` object containing processed trace
             data.
         """
-        # make process_name string comparison case insensitive
-        process_name = process_name.lower()
+        # check if direct function call
+        if not isinstance(process, basestring) and \
+           hasattr(process, '__call__'):
+            return process(trace.data, **options)
 
-        # do the actual processing. the options dictionary is passed as
-        # kwargs to the function that is mapped according to the
-        #   rtprocess_functions dictionary.
-        if process_name not in RtTrace.rtprocess_functions:
-            # assume standard obspy or np data function
-            #print 'DEBUG: eval: ', process_name + '(trace.data, ** options)'
-            #print 'DEBUG:   --> ',
-            #    eval(process_name + '(trace.data, ** options)')
-            data = eval(process_name + '(trace.data, ** options)')
-        else:
-            data = RtTrace.rtprocess_functions[
-                process_name][0](trace, rtmemory_list, ** options)
-        return data
+        # got function defined within rtprocess_functions dictionary
+        process_func = RtTrace.rtprocess_functions[process.lower()][0]
+        return process_func(trace, rtmemory_list, **options)
 
-    def registerRtProcess(self, process_name, ** options):
+    def registerRtProcess(self, process, **options):
         """
-        Adds a real-time processing algorithm to the processing list of this
-            RtTrace.
+        Adds real-time processing algorithm to processing list of this RtTrace.
 
         Processing function must be one of:
             %s. % RtTrace.rtprocess_functions.keys()
             or a non-recursive, time-domain np or obspy function which takes
             a single array as an argument and returns an array
 
-        :type process_name: str
-        :param process_name: Specifies which processing function is applied
-            (e.g. 'boxcar').
+        :type process: str or function
+        :param process: Specifies which processing function is added,
+            e.g. ``'boxcar'`` or ``np.abs``` (functions without brackets).
         :type options: dict, optional
         :param options: Required keyword arguments to be passed the respective
-            processing function
-                (e.g. width=100).
-        :return: int Length of processing list after registering new processing
+            processing function, e.g. ``width=100``.
+        :rtype: int
+        :return: Length of processing list after registering new processing
             function.
         """
         # make process_name string comparison case insensitive
-        process_name = process_name.lower()
+        process_name = ("%s" % process).lower()
 
         # add processing information to the stats dictionary
-        if 'processing' not in self.stats:
-            self.stats['processing'] = []
         proc_info = "realtime_process:%s:%s" % (process_name, options)
-        self.stats['processing'].append(proc_info)
+        self._addProcessingInfo(proc_info)
 
         #print 'DEBUG: Appending processing: ', process_name, ' ', options
+
+        # check if direct function call
+        if not isinstance(process, basestring) and \
+           hasattr(process, '__call__'):
+            self.processing.append((process, options, None))
+            return len(self.processing)
 
         # set processing entry for this process
         entry = None
@@ -413,7 +399,7 @@ class RtTrace(Trace):
                     process_name = key
                     break
             entry = (process_name, options, None)
-        if process_name in RtTrace.rtprocess_functions:
+        else:
             num_mem = RtTrace.rtprocess_functions[process_name][1]
             if num_mem < 1:
                 rtmemory_list = None

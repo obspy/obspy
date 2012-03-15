@@ -38,15 +38,8 @@ def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
-
-    sample = trace.data
-    if np.size(sample) < 1:
-        return(sample)
-
-    for i in range(np.size(sample)):
-        sample[i] = sample[i] * factor
-
-    return(sample)
+    trace.data *= factor
+    return trace.data
 
 
 def integrate(trace, rtmemory_list=[RtMemory()]):
@@ -68,7 +61,7 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
 
     sample = trace.data
     if np.size(sample) < 1:
-        return(sample)
+        return sample
 
     delta_time = 1.0 / trace.stats.sampling_rate
 
