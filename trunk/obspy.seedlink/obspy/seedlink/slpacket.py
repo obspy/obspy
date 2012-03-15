@@ -83,12 +83,14 @@ class SLPacket(object):
 
     def getSequenceNumber(self):
         #print "DEBUG: repr(self.slhead):", repr(self.slhead)
-        #print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():", self.slhead[0 : len(self.INFOSIGNATURE)].lower()
+        #print "DEBUG: self.slhead[0 : len(self.INFOSIGNATURE)].lower():",
+        #print self.slhead[0 : len(self.INFOSIGNATURE)].lower()
         #print "DEBUG: self.INFOSIGNATURE.lower():", self.INFOSIGNATURE.lower()
         if self.slhead[0: len(self.INFOSIGNATURE)].lower() == \
                 self.INFOSIGNATURE.lower():
             return 0
-        #print "DEBUG: self.slhead[0 : len(self.SIGNATURE)].lower():", self.slhead[0 : len(self.SIGNATURE)].lower()
+        #print "DEBUG: self.slhead[0 : len(self.SIGNATURE)].lower():",
+        #print self.slhead[0 : len(self.SIGNATURE)].lower()
         #print "DEBUG: self.SIGNATURE.lower():", self.SIGNATURE.lower()
         if not self.slhead[0: len(self.SIGNATURE)].lower() == \
                 self.SIGNATURE.lower():
@@ -105,7 +107,7 @@ class SLPacket(object):
         return seqnum
 
     def getMSRecord(self):
-        # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse(self)
+        # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
         pyobj = np.array(self.msrecord)
         errcode = \
@@ -151,7 +153,8 @@ class SLPacket(object):
         msrecord_py = self.getMSRecord()
         #print "DEBUG: msrecord_py:", msrecord_py
         #print "DEBUG: msrecord_py.reclen:", msrecord_py.reclen
-        #print "DEBUG: msrecord_py.sequence_number:", msrecord_py.sequence_number
+        #print "DEBUG: msrecord_py.sequence_number:",
+        #print msrecord_py.sequence_number
         #print "DEBUG: msrecord_py.samplecnt:", msrecord_py.samplecnt
         #print "DEBUG: msrecord_py.encoding:", msrecord_py.encoding
         #print "DEBUG: msrecord_py.byteorder:", msrecord_py.byteorder
@@ -170,31 +173,4 @@ class SLPacket(object):
                 blockette = blockette.next.contents
             except:
                 blockette = None
-
-        # 20111202 AJL - seems to be a bug in obspy.mseed.headers.py:
-        #   blkt_link_s type not same as in libmseed.h
-        #   obspy blkt_link_s does not have first member of libmseed.h->blkt_link_s:
-        #       uint16_t blktoffset;  /* Offset to this blockette */
-        #  so with obspy blkt_link_s, blkt_type is in next_blkt
-        #  Fixed: obspy.org Ticket #312 (closed defect: fixed)
-        #    TODO: update code when version with fix available
-        #print "obspy version:", oc.util._getVersionString(module="obspy.core")
-        #return msrecord_py.blkts.contents.blkt_type
-        return msrecord_py.blkts.contents.next_blkt
-
-## old SLPacket.java methods that should be replaced and removed
-#
-#    def getBlockette(self):
-#        if self.blockette is not None:
-#            return self.blockette
-#        seedBuilder = SeedObjectBuilder()
-#        seedDirector = SeedImportDirector(seedBuilder)
-#        try:
-#            seedIn = DataInputStream(ByteArrayInputStream(self.msrecord))
-#            seedDirector.construct(seedIn)
-#            container = seedBuilder.getContainer()
-#            numElem = container.iterate()
-#            self.blockette = container.getNext()
-#            return self.blockette
-#        except (Exception, ), e:
-#            raise SeedLinkException("failed to decode mini-seed record: " + e)
+        return msrecord_py.blkts.contents.blkt_type

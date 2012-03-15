@@ -221,7 +221,7 @@ class SLClient(object):
         """
         Processes each packet received from the SeedLinkConnection.
 
-        This mehod should be overridded when subclassing SLClient.
+        This method should be overridden when sub-classing SLClient.
 
         :type count: int
         :param count:  Packet counter.
@@ -267,14 +267,12 @@ class SLClient(object):
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: ", \
-            trace.stats['network'], trace.stats['station'], \
-            trace.stats['location'], trace.stats['channel'], \
-            trace.stats['starttime'], \
-            " dt:" + str(trace.stats['sampling_rate']), \
-            " npts:" + str(trace.stats['npts']), \
-            " sampletype:" + str(trace.stats['sampletype']), \
-            " dataquality:" + str(trace.stats['dataquality'])
+            print self.__class__.__name__ + ": blockette contains a trace: ",
+            print trace.id, trace.stats['starttime'],
+            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
+            print " npts:" + str(trace.stats['npts']),
+            print " sampletype:" + str(trace.stats['sampletype']),
+            print " dataquality:" + str(trace.stats['dataquality'])
             if self.verbose >= 3:
                 print self.__class__.__name__ + ":"
                 print "blockette contains a trace: " + str(trace.stats)

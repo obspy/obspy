@@ -74,14 +74,12 @@ class MySLClient(SLClient):
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: ", \
-            trace.stats['network'], trace.stats['station'], \
-            trace.stats['location'], trace.stats['channel'], \
-            trace.stats['starttime'], \
-            " dt:" + str(1.0 / trace.stats['sampling_rate']), \
-            " npts:" + str(trace.stats['npts']), \
-            " sampletype:" + str(trace.stats['sampletype']), \
-            " dataquality:" + str(trace.stats['dataquality'])
+            print self.__class__.__name__ + ": blockette contains a trace: ",
+            print trace.id, trace.stats['starttime'],
+            print " dt:" + str(1.0 / trace.stats['sampling_rate']),
+            print " npts:" + str(trace.stats['npts']),
+            print " sampletype:" + str(trace.stats['sampletype']),
+            print " dataquality:" + str(trace.stats['dataquality'])
             # append packet data to RtTrace
             #g_o_check = True    # raises Error on gap or overlap
             g_o_check = False   # clears RTTrace memory on gap or overlap
@@ -89,9 +87,9 @@ class MySLClient(SLClient):
                                  verbose=True)
             length = self.rt_trace.stats.npts /\
                 self.rt_trace.stats.sampling_rate
-            print self.__class__.__name__ + \
-                ": append to RTTrace: npts:", str(self.rt_trace.stats.npts) + \
-                " length:" + str(length) + "s"
+            print self.__class__.__name__ + ":",
+            print "append to RTTrace: npts:", str(self.rt_trace.stats.npts),
+            print "length:" + str(length) + "s"
             # post processing to do something interesting
             peak = np.amax(np.abs(self.rt_trace.data))
             print self.__class__.__name__ + ": abs peak = " + str(peak)
