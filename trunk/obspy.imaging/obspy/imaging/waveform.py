@@ -343,7 +343,7 @@ class WaveformPlotting(object):
             ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots to be symmetrical. Also make some more room
         # at the top.
-        self.fig.subplots_adjust(left=0.12, right=0.88, top=0.88)
+        self.fig.subplots_adjust(left=0.12, right=0.88, top=0.95)
         # Create x_value_array.
         aranged_array = np.arange(self.width)
         x_values = np.empty(2 * self.width)
@@ -366,13 +366,13 @@ class WaveformPlotting(object):
         ax.set_ylim(-0.3, intervals + 0.3)
         self.axis = [ax]
         # Set ticks.
-        self.__dayplotSetYTicks()
-        self.__dayplotSetXTicks()
+        self.__dayplotSetYTicks(*args, **kwargs)
+        self.__dayplotSetXTicks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
-        self.fig.suptitle(self.stream[0].id, fontsize='medium')
+        # self.fig.suptitle(self.stream[0].id, fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -726,16 +726,21 @@ class WaveformPlotting(object):
         """
         Sets the xticks for the dayplot.
         """
+        localization_dict = kwargs.get('localization_dict', {})
+        localization_dict.setdefault('seconds', 'seconds')
+        localization_dict.setdefault('minutes', 'minutes')
+        localization_dict.setdefault('hours', 'hours')
+        localization_dict.setdefault('time in', 'time in')
         max_value = self.width - 1
         # Check whether it are sec/mins/hours and convert to a universal unit.
         if self.interval < 240:
-            time_type = 'seconds'
+            time_type = localization_dict['seconds']
             time_value = self.interval
         elif self.interval < 24000:
-            time_type = 'minutes'
+            time_type = localization_dict['minutes']
             time_value = self.interval / 60
         else:
-            time_type = 'hours'
+            time_type = localization_dict['hours']
             time_value = self.interval / 3600
         count = None
         # Hardcode some common values. The plus one is itentional. It had
@@ -787,7 +792,8 @@ class WaveformPlotting(object):
                                     time_value, count)]
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation)
-        self.axis[0].set_xlabel('time in %s' % time_type)
+        self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
+                                           time_type))
 
     def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -803,11 +809,34 @@ class WaveformPlotting(object):
             tick_steps = range(0, intervals, self.repeat)
             ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
-        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M') \
+
+        left_time_offset = 0
+        right_time_offset = self.time_offset
+        left_ylabel = 'UTC'
+
+        # Complicated way to calculate the label of the y-Axis showing the
+        # second time zone.
+        sign = '%+i' % self.time_offset
+        sign = sign[0]
+        time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
+                     (sign, abs(self.time_offset), (self.time_offset % 1 * 60))
+        right_ylabel = time_label
+
+        if kwargs.get('swap_time_axis', False):
+            left_time_offset, right_time_offset = \
+                    right_time_offset, left_time_offset
+            left_ylabel, right_ylabel = right_ylabel, left_ylabel
+
+        left_ticklabels = [(self.starttime + _i * self.interval + \
+                            left_time_offset * 3600).strftime('%H:%M') \
                       for _i in tick_steps]
+        right_ticklabels = [(self.starttime + (_i + 1) * self.interval + \
+                            right_time_offset * 3600).strftime('%H:%M') \
+                      for _i in tick_steps]
+
         self.axis[0].set_yticks(ticks)
-        self.axis[0].set_yticklabels(ticklabels)
-        self.axis[0].set_ylabel('UTC')
+        self.axis[0].set_yticklabels(left_ticklabels)
+        self.axis[0].set_ylabel(left_ylabel)
         # Save range.
         yrange = self.axis[0].get_ylim()
         # Create twin axis.
@@ -815,17 +844,8 @@ class WaveformPlotting(object):
         self.twin = self.axis[0].twinx()
         self.twin.set_ylim(yrange)
         self.twin.set_yticks(ticks)
-        ticklabels = [(self.starttime + (_i + 1) * self.interval + \
-                      self.time_offset * 3600).strftime('%H:%M') \
-                      for _i in tick_steps]
-        self.twin.set_yticklabels(ticklabels)
-        # Complicated way to calculate the label of the y-Axis showing the
-        # second time zone.
-        sign = '%+i' % self.time_offset
-        sign = sign[0]
-        time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
-                     (sign, abs(self.time_offset), (self.time_offset % 1 * 60))
-        self.twin.set_ylabel(time_label)
+        self.twin.set_yticklabels(right_ticklabels)
+        self.twin.set_ylabel(right_ylabel)
 
     def __setupFigure(self):
         """
@@ -844,8 +864,11 @@ class WaveformPlotting(object):
         if self.type == 'relative':
             return
         if self.type == 'dayplot':
-            suptitle = self.starttime.strftime('%Y-%m-%d')
-            self.fig.suptitle(suptitle, y=0.94, fontsize='small')
+            suptitle = '%s %s' % (self.stream[0].id,
+                                  self.starttime.strftime('%Y-%m-%d'))
+            self.fig.suptitle(suptitle, y=0.98, fontsize='small',
+                              horizontalalignment='left',
+                              x=self.fig.subplotpars.left)
         else:
             pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),

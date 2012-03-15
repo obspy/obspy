@@ -942,6 +942,14 @@ class Stream(object):
             Defaults to the current offset of the system time to UTC time.
         :param timezone: Defines the name of the user defined time scale.
             Defaults to ``'local time'``.
+        :param swap_time_axis: By default the UTC time axis is on the left and
+            the user defined local time zone axis on the right. If this
+            parameter is set to True, they will be swapped.
+        :param localization_dict: Enables limited localization of the dayplot
+            through the usage of a dictionary. To change the labels to, e.g.
+            german, use the following:
+                localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
+                                   'minutes': 'Minuten', 'hours': 'Stunden'}
 
         .. rubric:: Color Options
 
