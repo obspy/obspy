@@ -62,33 +62,40 @@ Instrument Correction
 The response of the instrument can be removed by the
 :mod:`~obspy.signal.invsim` module. The following example shows how to remove
 the the instrument response of a STS2 and simulate an instrument with 2Hz
-corner frequency. In the example only the first trace is processed to see the
-changes in comparison with the other traces in the plot.
+corner frequency.
 
 >>> from obspy.core import read
+>>> st = read()
+>>> st.plot() #doctest: +SKIP
+
+.. plot::
+
+    from obspy.core import read
+    st = read()
+    st.plot()
+
+Now we apply the instrument correction and simulation:
+
 >>> from obspy.signal import seisSim, cornFreq2Paz
 >>> inst2hz = cornFreq2Paz(2.0)
->>> st = read()
->>> tr = st[0]
 >>> sts2 = {'gain': 60077000.0,
-...         'poles': [(-0.037004000000000002+0.037016j),
-...                   (-0.037004000000000002-0.037016j),
-...                   (-251.33000000000001+0j),
-...                   (-131.03999999999999-467.29000000000002j),
-...                   (-131.03999999999999+467.29000000000002j)],
+...         'poles': [(-0.037004+0.037016j),
+...                   (-0.037004-0.037016j),
+...                   (-251.33+0j),
+...                   (-131.04-467.29j),
+...                   (-131.04+467.29j)],
 ...         'sensitivity': 2516778400.0,
 ...         'zeros': [0j, 0j]}
->>> df = tr.stats.sampling_rate
->>> tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
-...                   water_level=60.0, remove_sensitivity=False,
-...                   simulate_sensitivity=False)
+>>> for tr in st:
+...     df = tr.stats.sampling_rate
+...     tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+...                       water_level=60.0)
 >>> st.plot() #doctest: +SKIP
 
 Again, there are convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`:
 
->>> tr.simulate(paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0,
-...             remove_sensitivity=False, simulate_sensitivity=False)
+>>> tr.simulate(paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
 
 .. plot::
 
@@ -98,16 +105,17 @@ Again, there are convenience methods implemented on
     st = read()
     tr = st[0]
     sts2 = {'gain': 60077000.0,
-            'poles': [(-0.037004000000000002+0.037016j),
-                      (-0.037004000000000002-0.037016j),
-                      (-251.33000000000001+0j),
-                      (-131.03999999999999-467.29000000000002j),
-                      (-131.03999999999999+467.29000000000002j)],
+            'poles': [(-0.037004+0.037016j),
+                      (-0.037004-0.037016j),
+                      (-251.33+0j),
+                      (-131.04-467.29j),
+                      (-131.04+467.29j)],
             'sensitivity': 2516778400.0,
             'zeros': [0j, 0j]}
-    df = tr.stats.sampling_rate
-    tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
-                      water_level=60.0)
+    for tr in st:
+        df = tr.stats.sampling_rate
+        tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
+                          water_level=60.0)
     st.plot()
 
 Trigger
