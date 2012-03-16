@@ -128,7 +128,7 @@ Gallery
 
 .. plot:: source/tutorial/time_frequency_misfit_ex2.py
     :width: 300px
-    :target: tutorial/time_frequency_misfit.html
+    :target: tutorial/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
 .. plot:: source/tutorial/travel_time_plot.py
