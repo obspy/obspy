@@ -96,10 +96,10 @@ class RtTrace(Trace):
     5. Some post processing to get Mwp::
 
         >>> peak = np.amax(np.abs(rt_trace.data))
-        >>> peak
+        >>> print(peak)
         0.136404
         >>> mwp = calculateMwpMag(peak, epicentral_distance)
-        >>> mwp
+        >>> print(mwp)
         8.78902911791
     """
     max_length = None
