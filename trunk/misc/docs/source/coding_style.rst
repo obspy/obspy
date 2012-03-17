@@ -82,7 +82,7 @@ Doc Strings
 
   .. code-block:: python
 
-      def test():
+      def testMethod():
           """
           This is a one line doc string.
           """
@@ -94,7 +94,7 @@ Doc Strings
 
   .. code-block:: python
 
-      def test():
+      def testMethod():
           """
           This is just the short story. 
 
@@ -128,7 +128,7 @@ explained by an example:
 
 .. code-block:: python
 
-  def format_exception(etype, value, tb, limit=None):
+  def formatException(etype, value, tb, limit=None):
       """
       Format the exception with a traceback.
 
@@ -143,7 +143,7 @@ explained by an example:
 
 which renders like this:
 
-.. function:: format_exception(etype, value, tb, limit=None)
+.. function:: formatException(etype, value, tb, limit=None)
 
    Format the exception with a traceback.
 
@@ -160,12 +160,13 @@ which renders like this:
 Tests
 -----
 
+* test methods names must start with ``test_`` followed by a mixedCase part
 * Tests which are expected to fail, because there is a known/unfixed bug should
   be commented with an ``XXX:`` followed by an valid ticket number, e.g.
 
   .. code-block:: python
 
-      def test_fails():
+      def test_doSomething():
           """XXX: This test does something. 
 
           But fails badly. See ticket #number.
