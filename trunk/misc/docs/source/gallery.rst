@@ -126,6 +126,11 @@ Gallery
     :target: tutorial/continuous_wavelet_transform.html
     :alt: Continuous Wavelet Transform
 
+.. plot:: source/tutorial/time_frequency_misfit_ex1.py
+    :width: 300px
+    :target: tutorial/time_frequency_misfit.html#plot-the-time-frequency-representation
+    :alt: Plot the Time Frequency Representation
+
 .. plot:: source/tutorial/time_frequency_misfit_ex2.py
     :width: 300px
     :target: tutorial/time_frequency_misfit.html#plot-the-time-frequency-misfits
