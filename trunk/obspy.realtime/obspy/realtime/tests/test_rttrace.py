@@ -118,7 +118,7 @@ class RtTraceTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, rtr.append, tr)
-        # append with gap_overlap_check=True it will raise a TypeError
+        # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
 
     @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
@@ -135,7 +135,7 @@ class RtTraceTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, rtr.append, tr2)
-        # append with gap_overlap_check=True it will raise a TypeError
+        # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr2, gap_overlap_check=True)
 
 
