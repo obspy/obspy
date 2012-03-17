@@ -103,7 +103,6 @@ class RtTrace(Trace):
         >>> print(mwp)
         8.78902911791
     """
-    max_length = None
     have_appended_data = False
 
     @classmethod
@@ -184,6 +183,11 @@ class RtTrace(Trace):
         :return: NumPy :class:`np.ndarray` object containing processed trace
             data from appended Trace object.
         """
+        if not isinstance(trace, Trace):
+            # only add Trace objects
+            raise TypeError("Only obspy.core.trace.Trace objects are allowed")
+
+        # XXX: Confirmed! But why is this????!
         # make sure datatype is compatible with Trace.__add__() which returns
         # array of float32 - convert f4 datatype to float32
         if trace.data.dtype == '>f4' or trace.data.dtype == '<f4':
@@ -191,8 +195,6 @@ class RtTrace(Trace):
 
         # sanity checks
         if self.have_appended_data:
-            if not isinstance(trace, Trace):
-                raise TypeError
             #  check id
             if self.getId() != trace.getId():
                 raise TypeError("Trace ID differs:", self.getId(),
@@ -215,17 +217,10 @@ class RtTrace(Trace):
         # check times
         gap_or_overlap = False
         if self.have_appended_data:
-            #if self.stats.starttime <= trace.stats.starttime:
-            #    lt = self
-            #    rt = trace
-            #else:
-            #    rt = self
-            #    lt = trace
-            sr = self.stats.sampling_rate
             #delta = int(math.floor(\
             #    round((rt.stats.starttime - lt.stats.endtime) * sr, 5) )) - 1
             diff = trace.stats.starttime - self.stats.endtime
-            delta = diff * sr - 1.0
+            delta = diff * self.stats.sampling_rate - 1.0
             if verbose:
                 msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
                     "diff=%gs  dt=%gs"
@@ -256,20 +251,19 @@ class RtTrace(Trace):
                 # appended trace, this prevents slow drift of nominal trace
                 # timing from absolute time when nominal sample rate differs
                 # from true sample rate
-                self.stats.starttime = self.stats.starttime + diff - 1.0 / sr
+                self.stats.starttime = \
+                    self.stats.starttime + diff - self.stats.delta
                 if verbose:
                     print "%s: self.stats.starttime adjusted by: %gs" \
-                    % (self.__class__.__name__, diff - 1.0 / sr)
+                        % (self.__class__.__name__, diff - self.stats.delta)
 
         # first apply all registered processing to Trace
         for proc in self.processing:
-            #print 'DEBUG: Applying processing: ', proc
             process_name, options, rtmemory_list = proc
             # if gap or overlap, clear memory
             if gap_or_overlap and rtmemory_list != None:
                 for n in range(len(rtmemory_list)):
                     rtmemory_list[n] = RtMemory()
-            #print 'DEBUG: Applying processing: ', process_name, ' ', options
             # apply processing
             if hasattr(process_name, '__call__'):
                 # check if direct function call
@@ -283,44 +277,25 @@ class RtTrace(Trace):
         if not self.have_appended_data:
             self.data = np.array(trace.data)
             self.stats = Stats(header=trace.stats)
-        else:
-            # fix Trace.__add__ parameters
-            # TODO: IMPORTANT? Should check for gaps and overlaps and handle
-            # more elegantly
-            method = 0
-            interpolation_samples = 0
-            fill_value = 'latest'
-            sanity_checks = True
-            #print "DEBUG: ->trace.stats.endtime:", trace.stats.endtime
-            sum_trace = Trace.__add__(self, trace, method,
-                                      interpolation_samples,
-                                      fill_value, sanity_checks)
-            # Trace.__add__ returns new Trace, so update to this RtTrace
-            self.data = sum_trace.data
-            # set derived values, including endtime
-            self.stats.__setitem__('npts', sum_trace.stats.npts)
-            #print "DEBUG: add->self.stats.endtime:", self.stats.endtime
-
-            # left trim if data length exceeds max_length
-            #print "DEBUG: max_length:", self.max_length
-            if self.max_length != None:
-                max_samples = int(self.max_length * \
-                                  self.stats.sampling_rate + 0.5)
-                #print "DEBUG: max_samples:", max_samples,
-                #    " np.size(self.data):", np.size(self.data)
-                if np.size(self.data) > max_samples:
-                    starttime = self.stats.starttime \
-                        + (np.size(self.data) - max_samples) \
-                        / self.stats.sampling_rate
-                    # print "DEBUG: self.stats.starttime:",
-                    #     self.stats.starttime, " new starttime:", starttime
-                    self._ltrim(starttime, pad=False, nearest_sample=True,
-                                fill_value=None)
-                    #print "DEBUG: self.stats.starttime:",
-                    #     self.stats.starttime, " np.size(self.data):",
-                    #     np.size(self.data)
-        self.have_appended_data = True
-        return(trace)
+            self.have_appended_data = True
+            return trace
+        # handle all following data sets
+        # fix Trace.__add__ parameters
+        # TODO: IMPORTANT? Should check for gaps and overlaps and handle
+        # more elegantly
+        sum_trace = Trace.__add__(self, trace, method=0,
+            interpolation_samples=0, fill_value='latest', sanity_checks=True)
+        # Trace.__add__ returns new Trace, so update to this RtTrace
+        self.data = sum_trace.data
+        # left trim if data length exceeds max_length
+        if self.max_length != None:
+            max_samples = int(self.max_length * self.stats.sampling_rate + 0.5)
+            if np.size(self.data) > max_samples:
+                starttime = self.stats.starttime + (np.size(self.data) - \
+                    max_samples) / self.stats.sampling_rate
+                self._ltrim(starttime, pad=False, nearest_sample=True,
+                            fill_value=None)
+        return trace
 
     def registerRtProcess(self, process, **options):
         """

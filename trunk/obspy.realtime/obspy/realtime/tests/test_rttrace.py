@@ -105,6 +105,9 @@ class RtTraceTestCase(unittest.TestCase):
         # 4 - data type
         tr = Trace(data=np.array([0.0, 1.1]))
         self.assertRaises(TypeError, rtr.append, tr)
+        # 5 - only Trace objects are allowed
+        self.assertRaises(TypeError, rtr.append, 1)
+        self.assertRaises(TypeError, rtr.append, "2323")
 
     @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
     def test_appendOverlap(self):
