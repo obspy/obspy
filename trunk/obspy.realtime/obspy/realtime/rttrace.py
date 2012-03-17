@@ -10,9 +10,10 @@ Module for handling ObsPy RtTrace objects.
 """
 
 from obspy.core import Trace, Stats
-from obspy.realtime.rtmemory import RtMemory
 from obspy.realtime import signal
+from obspy.realtime.rtmemory import RtMemory
 import numpy as np
+import warnings
 
 
 # dictionary to map given type-strings to processing functions keys must be all
@@ -228,28 +229,28 @@ class RtTrace(Trace):
             if verbose:
                 msg = "%s: Overlap/gap of (%g) samples in data: (%s) (%s) " + \
                     "diff=%gs  dt=%gs"
-                print  msg % (self.__class__.__name__,
-                              delta, self.stats.endtime, trace.stats.starttime,
-                              diff, 1.0 / sr)
+                print msg % (self.__class__.__name__,
+                             delta, self.stats.endtime, trace.stats.starttime,
+                             diff, self.stats.delta)
             if delta < -0.1:
-                msg = self.__class__.__name__ + ": " \
-                "Overlap of (%g) samples in data: (%s) (%s) diff=%gs  dt=%gs" \
-                    % (-delta, self.stats.endtime, trace.stats.starttime, \
-                       diff, 1.0 / sr)
+                msg = "Overlap of (%g) samples in data: (%s) (%s) diff=%gs" + \
+                    "  dt=%gs"
+                msg = msg % (-delta, self.stats.endtime, trace.stats.starttime,
+                             diff, self.stats.delta)
                 if gap_overlap_check:
                     raise TypeError(msg)
                 gap_or_overlap = True
             if delta > 0.1:
-                msg = self.__class__.__name__ + ": " \
-                "Gap of (%g) samples in data: (%s) (%s) diff=%gs  dt=%gs" \
-                    % (delta, self.stats.endtime, trace.stats.starttime, \
-                       diff, 1.0 / sr)
+                msg = "Gap of (%g) samples in data: (%s) (%s) diff=%gs" + \
+                    "  dt=%gs"
+                msg = msg % (delta, self.stats.endtime, trace.stats.starttime,
+                             diff, self.stats.delta)
                 if gap_overlap_check:
                     raise TypeError(msg)
                 gap_or_overlap = True
             if gap_or_overlap:
-                print "Warning: " + msg
-                print "   Trace processing memory will be re-initialized."
+                msg += " - Trace processing memory will be re-initialized."
+                warnings.warn(msg, UserWarning)
             else:
                 # correct start time to pin absolute trace timing to start of
                 # appended trace, this prevents slow drift of nominal trace

@@ -3,10 +3,13 @@
 The obspy.realtime.rttrace test suite.
 """
 from obspy.core import Trace
+from obspy.core.util.decorator import skipIf
 from obspy.realtime import RtTrace
-import unittest
-import numpy as np
 from obspy.realtime.rtmemory import RtMemory
+import numpy as np
+import sys
+import unittest
+import warnings
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -58,6 +61,8 @@ class RtTraceTestCase(unittest.TestCase):
         tr.registerRtProcess('integr')
         self.assertEqual(tr.processing[4][0], 'integrate')
         # 4 - unknown functions
+        self.assertRaises(NotImplementedError,
+                          tr.registerRtProcess, 'integrate2')
         self.assertRaises(NotImplementedError, tr.registerRtProcess, 'xyz')
         # 5 - module instead of function
         self.assertRaises(NotImplementedError, tr.registerRtProcess, np)
@@ -71,6 +76,67 @@ class RtTraceTestCase(unittest.TestCase):
             self.assertTrue('integrate' in tr.stats.processing[i])
         # check kwargs
         self.assertTrue("maeh" in tr.stats.processing[1])
+
+    def test_appendSanityChecks(self):
+        """
+        Testing sanity checks of append method.
+        """
+        rtr = RtTrace()
+        ftr = Trace(data=np.array([0, 1]))
+        # sanity checks need something already appended
+        rtr.append(ftr)
+        # 1 - differing ID
+        tr = Trace(header={'network': 'xyz'})
+        self.assertRaises(TypeError, rtr.append, tr)
+        tr = Trace(header={'station': 'xyz'})
+        self.assertRaises(TypeError, rtr.append, tr)
+        tr = Trace(header={'location': 'xy'})
+        self.assertRaises(TypeError, rtr.append, tr)
+        tr = Trace(header={'channel': 'xyz'})
+        self.assertRaises(TypeError, rtr.append, tr)
+        # 2 - sample rate
+        tr = Trace(header={'sampling_rate': 100.0})
+        self.assertRaises(TypeError, rtr.append, tr)
+        tr = Trace(header={'delta': 0.25})
+        self.assertRaises(TypeError, rtr.append, tr)
+        # 3 - calibration factor
+        tr = Trace(header={'calib': 100.0})
+        self.assertRaises(TypeError, rtr.append, tr)
+        # 4 - data type
+        tr = Trace(data=np.array([0.0, 1.1]))
+        self.assertRaises(TypeError, rtr.append, tr)
+
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    def test_appendOverlap(self):
+        """
+        Appending overlapping traces should raise a UserWarning/TypeError
+        """
+        rtr = RtTrace()
+        tr = Trace(data=np.array([0, 1]))
+        rtr.append(tr)
+        # this raises UserWarning
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, rtr.append, tr)
+        # append with gap_overlap_check=True it will raise a TypeError
+        self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
+
+    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    def test_appendGap(self):
+        """
+        Appending a traces with a time gap should raise a UserWarning/TypeError
+        """
+        rtr = RtTrace()
+        tr = Trace(data=np.array([0, 1]))
+        tr2 = Trace(data=np.array([5, 6]))
+        tr2.stats.starttime = tr.stats.starttime + 10
+        rtr.append(tr)
+        # this raises UserWarning
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, rtr.append, tr2)
+        # append with gap_overlap_check=True it will raise a TypeError
+        self.assertRaises(TypeError, rtr.append, tr2, gap_overlap_check=True)
 
 
 def suite():
