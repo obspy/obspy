@@ -60,9 +60,9 @@ st = read(SAC_DATA_FILE)
 orig_data = st[0].copy().data
 st[0].write('trace_orig.sac', format='SAC')
 # set needed values
-ref_time_offest = st[0].stats['sac']['a']
-print '   sac.a:' + str(ref_time_offest)
-if math.fabs(ref_time_offest - -12345.0) < 0.001:
+ref_time_offset = st[0].stats['sac']['a']
+print '   sac.a:' + str(ref_time_offset)
+if math.fabs(ref_time_offset - -12345.0) < 0.001:
     print 'Error: sac.a value not set.'
 epicentral_distance = st[0].stats['sac']['gcarc']
 print '   sac.gcarc:' + str(epicentral_distance)
@@ -88,7 +88,7 @@ for process in process_list:
         st_filt.data = differentiate(st_filt)
     elif process == 'mwpIntegral':
         st_filt.data = mwpIntegral(st_filt, mem_time=MWP_MAX_TIME,
-             ref_time=(st_filt.stats.starttime + ref_time_offest),
+             ref_time=(st_filt.stats.starttime + ref_time_offset),
              max_time=MWP_MAX_TIME, gain=GAIN)
     elif process == 'np.abs':
         st_filt.data = np.abs(st_filt.data)
@@ -132,7 +132,7 @@ for process in process_list:
         rt_trace.registerRtProcess('diff')
     elif process == 'mwpIntegral':
         rt_trace.registerRtProcess('mwpIntegral', mem_time=MWP_MAX_TIME,
-             ref_time=(st[0].stats.starttime + ref_time_offest),
+             ref_time=(st[0].stats.starttime + ref_time_offset),
              max_time=MWP_MAX_TIME, gain=GAIN)
     elif process == 'np.abs':
         rt_trace.registerRtProcess('np.abs')

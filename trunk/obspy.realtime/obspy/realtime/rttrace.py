@@ -62,8 +62,8 @@ class RtTrace(Trace):
         >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
         >>> len(data_trace)
         12684
-        >>> ref_time_offest = data_trace.stats.sac.a
-        >>> print(ref_time_offest)
+        >>> ref_time_offset = data_trace.stats.sac.a
+        >>> print(ref_time_offset)
         301.506
         >>> epicentral_distance = data_trace.stats.sac.gcarc
         >>> print(epicentral_distance)
@@ -81,7 +81,7 @@ class RtTrace(Trace):
         >>> rt_trace.registerRtProcess('integrate')
         1
         >>> rt_trace.registerRtProcess('mwpIntegral', mem_time=240,
-        ...     ref_time=(data_trace.stats.starttime + ref_time_offest),
+        ...     ref_time=(data_trace.stats.starttime + ref_time_offset),
         ...     max_time=120, gain=1.610210e+09)
         2
 
