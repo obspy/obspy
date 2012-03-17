@@ -55,7 +55,8 @@ Naming
   mangling).
 * Place related classes and top-level functions together in a module. Unlike
   Java, there is no need to limit yourself to one class per module.
-* Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module names.
+* Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module
+  names.
 
 ==================  ====================  ====================================
 Type                Public                Internal
@@ -82,19 +83,19 @@ Doc Strings
 
   .. code-block:: python
 
-      def testMethod():
+      def someMethod():
           """
           This is a one line doc string.
           """
           print "test"
 
 * Multiple lines: both ``"""`` are in new lines - also you should try provide
-  a meaningful one-liner description at the top, followed by two linebreak with
-  further text.
+  a meaningful one-liner description at the top, followed by two linebreaks
+  with further text.
 
   .. code-block:: python
 
-      def testMethod():
+      def someMethod():
           """
           This is just the short story. 
 
