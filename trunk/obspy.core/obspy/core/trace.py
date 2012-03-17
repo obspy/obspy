@@ -269,7 +269,7 @@ class Trace(object):
 
         Traces are the same, if both their data and stats are the same.
         """
-        #check if other object is a Trace
+        # check if other object is a Trace
         if not isinstance(other, Trace):
             return False
         # comparison of Stats objects is supported by underlying AttribDict

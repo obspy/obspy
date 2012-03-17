@@ -5,7 +5,7 @@ The obspy.realtime.rttrace test suite.
 
 from obspy.core import read
 from obspy.realtime import RtTrace
-from obspy.realtime.signal.util import calculateMwpMag, scale, tauc, boxcar, \
+from obspy.realtime.signal import calculateMwpMag, scale, tauc, boxcar, \
     integrate, differentiate, mwpIntegral
 import math
 import numpy as np

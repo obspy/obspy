@@ -2,6 +2,18 @@
 """
 Signal processing functions for RtMemory objects.
 
+For sequential packet processing that requires memory (which includes recursive
+filtering), each processing function (e.g., :mod:`obspy.realtime.signal`)
+needs to manage the initialization and update of
+:class:`~obspy.realtime.rtmemory.RtMemory` object(s), and needs to know when
+and how to get values from this memory.
+
+For example: Boxcar smoothing: For each new data point available past the end
+of the boxcar, the original, un-smoothed data point value at the beginning of
+the boxcar has to be subtracted from the running boxcar sum, this value may be
+in a previous packet, so has to be retrieved from memory see
+:func:`obspy.realtime.signal.boxcar`.
+
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
 :license:
@@ -27,9 +39,9 @@ def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :type factor: float, optional
     :param factor: Scale factor (default is 1.0).
     :rtype: NumPy :class:`numpy.ndarray`
@@ -49,9 +61,9 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -92,9 +104,9 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -138,9 +150,9 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :type width: int
     :param width: Width in number of sample points for filter.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -222,9 +234,9 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :type width: int
     :param width: Width in number of sample points for tauc window.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -318,13 +330,13 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list
-    :param process_name: list of obspy.realtime.rtmemory.RtMemory objects
-        Persistent memory used by this process for specified trace.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :type mem_time: float
     :param mem_time: Length in seconds of data memory (must be much larger
         than maximum delay between pick declaration and pick time).
-    :type ref_time :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :type ref_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param ref_time: Reference date and time of the data sample
         (e.g. P pick time) at which to begin Mwp integration.
     :type max_time: float

@@ -12,6 +12,7 @@ The functionality is provided through the following packages:
 
    obspy.core
    obspy.imaging
+   obspy.realtime
    obspy.signal
    obspy.taup
    obspy.xseed

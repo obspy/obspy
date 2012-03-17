@@ -13,7 +13,8 @@ functionalities.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core.util.base import _getVersionString
-from obspy.realtime.rttrace import RtTrace
+from obspy.realtime.rtmemory import RtMemory
+from obspy.realtime.rttrace import RtTrace, _splitTrace
 
 
 _version__ = _getVersionString("obspy.realtime")

@@ -13,7 +13,9 @@ import numpy as np
 
 
 class RtMemory:
-
+    """
+    Real time memory class.
+    """
     def __init__(self):
         self.initialized = False
 
@@ -43,13 +45,10 @@ class RtMemory:
 
         self.initialized = True
 
-        #print 'DEBUG: np.size(self.input): ', np.size(self.input)
-        #print 'DEBUG: np.size(self.output): ', np.size(self.output)
-
     def _update(self, memory_array, data):
         """
         Update specified memory array using specified number of points from
-            end of specified data array.
+        end of specified data array.
 
         :type memory_array: numpy.ndarray
         :param memory_array:  Memory array (input or output) in this
@@ -59,8 +58,6 @@ class RtMemory:
         :return: NumPy :class:`np.ndarray` object containing updated
             memory array (input or output).
         """
-        #print 'DEBUG: np.size(memory_array): ', np.size(memory_array)
-        #print 'DEBUG: np.size(data): ', np.size(data)
         if data.size >= np.size(memory_array):
             # data length greater than or equal to memory length
             memory_array = data[np.size(data) - np.size(memory_array):]
@@ -75,7 +72,7 @@ class RtMemory:
     def updateOutput(self, data):
         """
         Update output memory using specified number of points from end of
-            specified array.
+        specified array.
 
         :type data: numpy.ndarray
         :param data:  Data array to use for update.
@@ -83,10 +80,9 @@ class RtMemory:
         self.output = self._update(self.output, data)
 
     def updateInput(self, data):
-
         """
         Update input memory using specified number of points from end of
-            specified array.
+        specified array.
 
         :type data: numpy.ndarray
         :param data:  Data array to use for update.

@@ -1,27 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.realtime.signal.util test suite.
+The obspy.realtime.signal test suite.
 """
-from obspy.core import Trace
-from obspy.realtime.signal.util import scale, integrate, differentiate, boxcar
+from obspy.realtime import RtTrace
+from obspy.realtime.signal import scale, integrate, differentiate, boxcar
 
 import numpy as np
 import unittest
 
 
-class RealTimeSignalUtilTestCase(unittest.TestCase):
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
+class RealTimeSignalTestCase(unittest.TestCase):
 
     def test_scale(self):
         """
         Tests the scaling function which simply scales the array of a Trace
         object.
         """
-        tr = Trace(data=np.arange(10))
+        tr = RtTrace(data=np.arange(10))
         data = scale(tr)
         np.testing.assert_array_equal(np.arange(10), data)
         self.assertTrue(data is tr.data)
@@ -36,7 +31,7 @@ class RealTimeSignalUtilTestCase(unittest.TestCase):
         """
         Tests simple integration.
         """
-        tr = Trace(data=np.arange(10, dtype='float32'))
+        tr = RtTrace(data=np.arange(10, dtype='float32'))
         tr.stats.delta = 0.5
         data = integrate(tr)
         np.testing.assert_array_equal(\
@@ -48,7 +43,7 @@ class RealTimeSignalUtilTestCase(unittest.TestCase):
         """
         Tests simple differentiation.
         """
-        tr = Trace(data=np.arange(10, dtype='float32'))
+        tr = RtTrace(data=np.arange(10, dtype='float32'))
         tr.stats.delta = 0.5
         data = differentiate(tr)
         np.testing.assert_array_equal(\
@@ -60,7 +55,7 @@ class RealTimeSignalUtilTestCase(unittest.TestCase):
         """
         Tests simple differentiation.
         """
-        tr = Trace(data=np.arange(10, dtype='float32'))
+        tr = RtTrace(data=np.arange(10, dtype='float32'))
         data = boxcar(tr, width=2)
 
         np.testing.assert_almost_equal(\
@@ -70,7 +65,7 @@ class RealTimeSignalUtilTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(RealTimeSignalUtilTestCase, 'test')
+    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
 
 
 if __name__ == '__main__':

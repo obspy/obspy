@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import read
-from obspy.realtime.signal.util import calculateMwpMag, tauc, scale, boxcar, \
+from obspy.realtime.signal import calculateMwpMag, tauc, scale, boxcar, \
     integrate, differentiate, mwpIntegral
 import math
 import numpy as np

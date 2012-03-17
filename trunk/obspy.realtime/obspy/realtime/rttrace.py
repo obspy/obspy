@@ -11,8 +11,20 @@ Module for handling ObsPy RtTrace objects.
 
 from obspy.core import Trace, Stats
 from obspy.realtime.rtmemory import RtMemory
-from obspy.realtime.signal import util
+from obspy.realtime import signal
 import numpy as np
+
+
+# dictionary to map given type-strings to processing functions keys must be all
+# lower case - values are tuples: (function name, number of RtMemory objects)
+REALTIME_PROCESS_FUNCTIONS = {
+    'scale': (signal.scale, 0),
+    'integrate': (signal.integrate, 1),
+    'differentiate': (signal.differentiate, 1),
+    'boxcar': (signal.boxcar, 1),
+    'tauc': (signal.tauc, 2),
+    'mwpintegral': (signal.mwpIntegral, 1),
+}
 
 
 class RtTrace(Trace):
@@ -29,114 +41,103 @@ class RtTrace(Trace):
 
     .. rubric:: Example
 
-    >>> import numpy as np
-    >>> from obspy.core import read
-    >>> import obspy.realtime.rttrace as rt
-    >>> from obspy.realtime.signal.util import *
-    >>> import os
-    >>>
-    >>> # read data file
-    >>> data_stream = read(os.path.join(os.path.dirname(rt.__file__), \
-            os.path.join('tests', 'data'), 'II.TLY.BHZ.SAC'))
-    >>> data_trace = data_stream[0]
-    >>> ref_time_offest = data_trace.stats['sac']['a']
-    >>> print 'ref_time_offest (sac.a):' + str(ref_time_offest)
-    ref_time_offest (sac.a):301.506
-    >>> epicentral_distance = data_trace.stats['sac']['gcarc']
-    >>> print 'epicentral_distance (sac.gcarc):' + str(epicentral_distance)
-    epicentral_distance (sac.gcarc):30.0855
-    >>>
-    >>> # create set of contiguous packet data in an array of Trace objects
-    >>> total_length = np.size(data_trace.data)
-    >>> num_pakets = 3
-    >>> packet_length = int(total_length / num_pakets)  # may give int truncate
-    >>> delta_time = 1.0 / data_trace.stats.sampling_rate
-    >>> tstart = data_trace.stats.starttime
-    >>> tend = tstart + delta_time * packet_length
-    >>> traces = []
-    >>> for i in range(num_pakets):
-    ...     tr = data_trace.copy()
-    ...     tr = tr.slice(tstart, tend)
-    ...     traces.append(tr)
-    ...     tstart = tend + delta_time
-    ...     tend = tstart + delta_time * packet_length
-    ...
-    >>> # assemble realtime trace
-    >>> rt_trace = rt.RtTrace()
-    >>> rt_trace.registerRtProcess('integrate')
-    1
-    >>> rt_trace.registerRtProcess('mwpIntegral', mem_time=240,
-    ...     ref_time=(data_trace.stats.starttime + ref_time_offest),
-    ...     max_time=120, gain=1.610210e+09)
-    2
-    >>>
-    >>> # append packet data to RtTrace
-    >>> for i in range(num_pakets):
-    ...     appended_trace = rt_trace.append(traces[i], gap_overlap_check=True)
-    ...
-    >>> # post processing to get Mwp
-    >>> peak = np.amax(np.abs(rt_trace.data))
-    >>> print 'mwpIntegral peak = ', peak
-    mwpIntegral peak =  0.136404
-    >>> print 'epicentral_distance = ', epicentral_distance
-    epicentral_distance =  30.0855
-    >>> mwp = calculateMwpMag(peak, epicentral_distance)
-    >>> print 'Mwp = ', mwp
-    Mwp =  8.78902911791
+    RtTrace has been built to handle real time processing of periodically
+    append data packets, such as adding and processing data requested from an
+    SeedLink server. See :mod:`obspy.seedlink` for further information.
+
+    For the sake of simplicity we will just split data of an existing example
+    file into multiple chucks (Trace objects) of about equal size (step 1 + 2)
+    and append those chunks in a simple loop (step 4) into an RtTrace object.
+    Additionally there are two real time processing functions registered to the
+    RtTrace object (step 3) which will automatically process any appended data
+    chunks.
+
+    1. Read first trace of example SAC data file and extract contained time
+       offset and epicentral distance of an earthquake::
+
+        >>> import numpy as np
+        >>> from obspy.realtime import RtTrace, _splitTrace
+        >>> from obspy.core import read
+        >>> from obspy.realtime.signal import calculateMwpMag
+        >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
+        >>> len(data_trace)
+        12684
+        >>> ref_time_offest = data_trace.stats.sac.a
+        >>> print(ref_time_offest)
+        301.506
+        >>> epicentral_distance = data_trace.stats.sac.gcarc
+        >>> print(epicentral_distance)
+        30.0855
+
+    2. Split given trace into a list of three sub-traces::
+
+        >>> traces = _splitTrace(data_trace, num=3)
+        >>> [len(tr) for tr in traces]
+        [4228, 4228, 4228]
+
+    3. Assemble real time trace and register two processes::
+
+        >>> rt_trace = RtTrace()
+        >>> rt_trace.registerRtProcess('integrate')
+        1
+        >>> rt_trace.registerRtProcess('mwpIntegral', mem_time=240,
+        ...     ref_time=(data_trace.stats.starttime + ref_time_offest),
+        ...     max_time=120, gain=1.610210e+09)
+        2
+
+    4. Append and auto-process packet data into RtTrace::
+
+        >>> for tr in traces:
+        ...     processed_trace = rt_trace.append(tr, gap_overlap_check=True)
+        ...
+        >>> len(rt_trace)
+        12684
+
+    5. Some post processing to get Mwp::
+
+        >>> peak = np.amax(np.abs(rt_trace.data))
+        >>> peak
+        0.136404
+        >>> mwp = calculateMwpMag(peak, epicentral_distance)
+        >>> mwp
+        8.78902911791
     """
-
-    # dictionary to map given type-strings to processing functions
-    # keys must be all lower case
-    # values are lists: [function name, number of RtMemory objects]
-    rtprocess_functions = {
-        'scale': [util.scale, 0],
-        'integrate': [util.integrate, 1],
-        'differentiate': [util.differentiate, 1],
-        'boxcar': [util.boxcar, 1],
-        'tauc': [util.tauc, 2],
-        'mwpintegral': [util.mwpIntegral, 1],
-    }
-
     max_length = None
     have_appended_data = False
 
     @classmethod
     def rtProcessFunctionsToString(cls):
         """
-        :return: str String containing doc for all realt-time processing
-        functions.
-        """
+        Return doc string for all predefined real-time processing functions.
 
+        :rtype: str
+        :return: String containing doc for all real-time processing functions.
+        """
         string = 'Real-time processing functions (use as: ' + \
             'RtTrace.registerRtProcess(process_name, [parameter values])):\n'
-        for key in RtTrace.rtprocess_functions:
+        for key in REALTIME_PROCESS_FUNCTIONS:
             string += '\n'
             string += '  ' + (str(key) + ' ' + 80 * '-')[:80]
-            string += str(RtTrace.rtprocess_functions[key][0].__doc__)
+            string += str(REALTIME_PROCESS_FUNCTIONS[key][0].__doc__)
         return(string)
 
-    def __init__(self, data=None, header=None,  # @UnusedVariable
-                 max_length=None):
+    def __init__(self, max_length=None, *args, **kwargs):  # @UnusedVariable
         """
         Initializes an RtTrace.
 
         See :class:`obspy.core.trace.Trace` for all parameters.
         """
         # set window length attribute
-        if max_length != None and max_length <= 0:
+        if max_length is not None and max_length <= 0:
             raise ValueError("Input max_length out of bounds: %s" % max_length)
         self.max_length = max_length
 
         # initialize processing list
         self.processing = []
 
-        # ignore any passed data or header
-        data = np.array([])
-        header = None
-
         # initialize parent Trace with no data or header - all data must be
-        #   added using __add__
-        Trace.__init__(self, data, header)
+        # added using append
+        super(RtTrace, self).__init__(data=np.array([]), header=None)
 
     def __eq__(self, other):
         """
@@ -144,28 +145,16 @@ class RtTrace(Trace):
 
         Traces are the same, if both their data and stats are the same.
         """
-        #check if other object is a RtTrace
+        # check if other object is a RtTrace
         if not isinstance(other, RtTrace):
             return False
-        # call superclass operator
-        return Trace.__eq__(self, other)
-
-    def __ne__(self, other):
-        """
-        Implements rich comparison of Trace objects for "!=" operator.
-
-        Calls __eq__() and returns the opposite.
-        """
-        return not self.__eq__(other)
-
-    def __str__(self, id_length=None):
-        return Trace.__str__(self, id_length)
+        return super(RtTrace, self).__eq__(other)
 
     def __add__(self, **kwargs):  # @UnusedVariable
         """
         Too ambiguous, throw an Error.
 
-        .. seealso:: :meth:`obsppy.realtime.RtTrace.append`.
+        .. seealso:: :meth:`obspy.realtime.RtTrace.append`.
         """
         msg = "Too ambiguous for realtime trace data. Try: RtTrace.append()"
         raise NotImplementedError(msg)
@@ -195,8 +184,7 @@ class RtTrace(Trace):
             data from appended Trace object.
         """
         # make sure datatype is compatible with Trace.__add__() which returns
-        #   array of float32
-        # convert f4 datatype to float32
+        # array of float32 - convert f4 datatype to float32
         if trace.data.dtype == '>f4' or trace.data.dtype == '<f4':
             trace.data = np.array(trace.data, dtype=np.float32)
 
@@ -222,7 +210,7 @@ class RtTrace(Trace):
                 raise TypeError("Data type differs:",
                                 self.data.dtype, trace.data.dtype)
         # TODO: IMPORTANT? Should improve check for gaps and overlaps
-        #   and handle more elegantly
+        # and handle more elegantly
         # check times
         gap_or_overlap = False
         if self.have_appended_data:
@@ -282,8 +270,13 @@ class RtTrace(Trace):
                     rtmemory_list[n] = RtMemory()
             #print 'DEBUG: Applying processing: ', process_name, ' ', options
             # apply processing
-            trace.data = self._rtProcess(trace, process_name, rtmemory_list,
-                                         **options)
+            if hasattr(process_name, '__call__'):
+                # check if direct function call
+                trace.data = process_name(trace.data, **options)
+            else:
+                # got predefined function
+                func = REALTIME_PROCESS_FUNCTIONS[process_name.lower()][0]
+                trace.data = func(trace, rtmemory_list, **options)
 
         # if first data, set stats
         if not self.have_appended_data:
@@ -328,47 +321,24 @@ class RtTrace(Trace):
         self.have_appended_data = True
         return(trace)
 
-    def _rtProcess(self, trace, process, rtmemory_list, **options):
-        """
-        Runs a real-time processing algorithm on the a given input array trace.
-
-        :type trace: :class:`~obspy.core.trace.Trace`
-        :param trace:  :class:`~obspy.core.trace.Trace` object to process
-        :type process: str or function
-        :param process: Specifies which processing function is applied,
-            e.g. ``'boxcar'`` or ``np.abs``` (functions without brackets).
-        :type rtmemory_list: list
-        :param rtmemory_list: Persistent memory used by process_name on this
-            RtTrace.
-        :type options: dict, optional
-        :param options: Required keyword arguments to be passed the respective
-            processing function (e.g. width=100).
-        :return: NumPy :class:`np.ndarray` object containing processed trace
-            data.
-        """
-        # check if direct function call
-        if hasattr(process, '__call__'):
-            return process(trace.data, **options)
-
-        # got function defined within rtprocess_functions dictionary
-        process_func = RtTrace.rtprocess_functions[process.lower()][0]
-        return process_func(trace, rtmemory_list, **options)
-
     def registerRtProcess(self, process, **options):
         """
         Adds real-time processing algorithm to processing list of this RtTrace.
 
         Processing function must be one of:
-            %s. % RtTrace.rtprocess_functions.keys()
+            %s. % REALTIME_PROCESS_FUNCTIONS.keys()
             or a non-recursive, time-domain np or obspy function which takes
             a single array as an argument and returns an array
 
         :type process: str or function
         :param process: Specifies which processing function is added,
-            e.g. ``'boxcar'`` or ``np.abs``` (functions without brackets).
+            e.g. ``"boxcar"`` or ``np.abs``` (functions without brackets).
+            See :mod:`obspy.realtime.signal` for all predefined processing
+            functions.
         :type options: dict, optional
         :param options: Required keyword arguments to be passed the respective
-            processing function, e.g. ``width=100``.
+            processing function, e.g. ``width=100`` for ``'boxcar'`` process.
+            See :mod:`obspy.realtime.signal` for all options.
         :rtype: int
         :return: Length of processing list after registering new processing
             function.
@@ -382,20 +352,20 @@ class RtTrace(Trace):
         if hasattr(process, '__call__'):
             # direct function call
             entry = (process, options, None)
-        elif process_name in RtTrace.rtprocess_functions:
-            # predefined function within RtTrace.rtprocess_functions
-            num = RtTrace.rtprocess_functions[process_name][1]
+        elif process_name in REALTIME_PROCESS_FUNCTIONS:
+            # predefined function
+            num = REALTIME_PROCESS_FUNCTIONS[process_name][1]
             if num:
                 rtmemory_list = [RtMemory()] * num
             entry = (process_name, options, rtmemory_list)
         else:
-            # check if process name is contained within a rtprocess_function,
+            # check if process name is contained within a predefined function,
             # e.g. 'int' for 'integrate'
-            for key in RtTrace.rtprocess_functions:
+            for key in REALTIME_PROCESS_FUNCTIONS:
                 if not key.startswith(process_name):
                     continue
                 process_name = key
-                num = RtTrace.rtprocess_functions[process_name][1]
+                num = REALTIME_PROCESS_FUNCTIONS[process_name][1]
                 if num:
                     rtmemory_list = [RtMemory()] * num
                 entry = (process_name, options, rtmemory_list)
@@ -412,6 +382,57 @@ class RtTrace(Trace):
         self._addProcessingInfo(proc_info)
 
         return len(self.processing)
+
+
+def _splitTrace(trace, num=3):
+    """
+    Helper functions to split given Trace into num Traces of the same size.
+
+    :type trace: :class:`obspy.core.trace.Trace`
+    :param trace: ObsPy Trace object.
+    :type num: int
+    :param num: number of returned traces, default to ``3``.
+    :return: list of traces.
+
+    .. rubric:: Example
+
+    >>> from obspy.core import read, Stream
+    >>> original_trace = read()[0]
+    >>> print(original_trace)  # doctest: +ELLIPSIS
+    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
+    >>> len(original_trace)
+    3000
+    >>> traces = _splitTrace(original_trace, 7)
+    >>> [len(tr) for tr in traces]
+    [429, 429, 429, 429, 429, 429, 426]
+    >>> st = Stream(traces)
+    >>> print(st)  # doctest: +ELLIPSIS
+    7 Trace(s) in Stream:
+    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:11.580000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:15.870000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:20.160000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:24.450000Z - ... | 100.0 Hz, 429 samples
+    BW.RJOB..EHZ | 2009-08-24T00:20:28.740000Z - ... | 100.0 Hz, 426 samples
+    >>> st.merge(-1)
+    >>> st[0] == original_trace
+    True
+    """
+    total_length = np.size(trace.data)
+    rest_length = total_length % num
+    if rest_length:
+        packet_length = (total_length // num)
+    else:
+        packet_length = (total_length // num) - 1
+    tstart = trace.stats.starttime
+    tend = tstart + (trace.stats.delta * packet_length)
+    traces = []
+    for _i in range(num):
+        traces.append(trace.slice(tstart, tend))
+        tstart = tend + trace.stats.delta
+        tend = tstart + (trace.stats.delta * packet_length)
+    return traces
 
 
 if __name__ == '__main__':
