@@ -941,6 +941,8 @@ class Stream(object):
             the seismogram at 0 seconds. ``'normal'`` will produce a standard
             plot.
             Defaults to ``'normal'``.
+        :param equal_scale: Is enabled all plots are equally scaled. Defaults
+            to ``True``.
 
         **Dayplot parameters**
 

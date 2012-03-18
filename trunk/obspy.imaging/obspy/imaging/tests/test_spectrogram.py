@@ -24,9 +24,9 @@ class SpectrogramTestCase(unittest.TestCase):
         self.path = os.path.join(os.path.dirname(__file__), 'output')
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
-    def test_Waveform(self):
+    def test_spectogram(self):
         """
-        Create waveform plotting examples in tests/output directory.
+        Create spectogram plotting examples in tests/output directory.
         """
         # Create dynamic test_files to avoid dependencies of other modules.
         # set specific seed value such that random numbers are reproduceable
@@ -36,8 +36,17 @@ class SpectrogramTestCase(unittest.TestCase):
             'sampling_rate': 200.0, 'channel': 'EHE'}
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
-        outfile = os.path.join(self.path, 'spectogram.png')
+        # 1 - using log=True
+        outfile = os.path.join(self.path, 'spectogram_log.png')
         spectrogram.spectrogram(st[0].data, log=True, outfile=outfile,
+                                samp_rate=st[0].stats.sampling_rate,
+                                show=False)
+        # check that outfile was modified
+        stat = os.stat(outfile)
+        self.assertTrue(abs(stat.st_mtime - time.time()) < 3)
+        # 2 - using log=False
+        outfile = os.path.join(self.path, 'spectogram.png')
+        spectrogram.spectrogram(st[0].data, log=False, outfile=outfile,
                                 samp_rate=st[0].stats.sampling_rate,
                                 show=False)
         # check that outfile was modified

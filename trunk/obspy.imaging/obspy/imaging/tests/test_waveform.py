@@ -5,6 +5,7 @@ The obspy.imaging.waveform test suite.
 
 from copy import deepcopy
 from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.stream import read
 import numpy as np
 import os
 import unittest
@@ -110,7 +111,7 @@ class WaveformTestCase(unittest.TestCase):
         """
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600, 1000.0)
-        filename = 'OneHourManySamples.png'
+        filename = 'waveform_one_hour_many_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
@@ -122,7 +123,7 @@ class WaveformTestCase(unittest.TestCase):
         """
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600, 10.0)
-        filename = 'OneHourFewSamples.png'
+        filename = 'waveform_one_hour_few_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
@@ -136,7 +137,7 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600 * 3 / 4, 500.0)
         st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
-        filename = 'SimpleGapManySamples.png'
+        filename = 'waveform_simple_gap_many_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
@@ -150,7 +151,7 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600 * 3 / 4, 5.0)
         st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
-        filename = 'SimpleGapFewSamples.png'
+        filename = 'waveform_simple_gap_few_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
@@ -170,7 +171,7 @@ class WaveformTestCase(unittest.TestCase):
                                      500.0)
         temp_st[0].stats.location = '02'
         st += temp_st
-        filename = 'ComplexGapManySamples.png'
+        filename = 'waveform_complex_gap_many_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
@@ -190,8 +191,59 @@ class WaveformTestCase(unittest.TestCase):
                                      5.0)
         temp_st[0].stats.location = '02'
         st += temp_st
-        filename = 'ComplexGapFewSamples.png'
+        filename = 'waveform_complex_gap_few_samples.png'
         st.plot(outfile=os.path.join(self.path, filename))
+
+    @skipIf(__name__ != '__main__', 'test must be started manually')
+    def test_plotMultipleTraces(self):
+        """
+        Plots multiple traces underneath.
+        """
+        st = read()
+        # 1 trace
+        outfile = os.path.join(self.path, 'waveform_1_trace.png')
+        st[0].plot(outfile=outfile, automerge=False)
+        # 3 traces
+        outfile = os.path.join(self.path, 'waveform_3_traces.png')
+        st.plot(outfile=outfile, automerge=False)
+        # 5 traces
+        st = st[0] * 5
+        outfile = os.path.join(self.path, 'waveform_5_traces.png')
+        st.plot(outfile=outfile, automerge=False)
+        # 10 traces
+        st = st[0] * 10
+        outfile = os.path.join(self.path, 'waveform_10_traces.png')
+        st.plot(outfile=outfile, automerge=False)
+        # 10 traces - huge numbers
+        st = st[0] * 10
+        for i, tr in enumerate(st):
+            # scale data to have huge numbers
+            st[i].data = tr.data * 10 ** i
+        outfile = os.path.join(self.path, 'waveform_10_traces_huge.png')
+        st.plot(outfile=outfile, automerge=False, equal_scale=False)
+        # 10 traces - tiny numbers
+        st = st[0] * 10
+        for i, tr in enumerate(st):
+            # scale data to have huge numbers
+            st[i].data = tr.data / (10 ** i)
+        outfile = os.path.join(self.path, 'waveform_10_traces_tiny.png')
+        st.plot(outfile=outfile, automerge=False, equal_scale=False)
+        # 20 traces
+        st = st[0] * 20
+        outfile = os.path.join(self.path, 'waveform_20_traces.png')
+        st.plot(outfile=outfile, automerge=False)
+
+    @skipIf(__name__ != '__main__', 'test must be started manually')
+    def test_plotWithLabel(self):
+        """
+        Plots with labels.
+        """
+        st = read()
+        st[0].label = 'Hello World!'
+        st[1].label = u'Hällö Wörld & Marß'
+        st[2].label = '*' * 80
+        outfile = os.path.join(self.path, 'waveform_labels.png')
+        st.plot(outfile=outfile)
 
 
 def suite():

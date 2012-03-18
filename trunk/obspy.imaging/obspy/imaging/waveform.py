@@ -89,6 +89,8 @@ class WaveformPlotting(object):
         self.max_npts = 400000
         # If automerge is enabled. Merge traces with the same id for the plot.
         self.automerge = kwargs.get('automerge', True)
+        # If equal_scale is enabled all plots are equally scaled.
+        self.equal_scale = kwargs.get('equal_scale', True)
         # Set default values.
         # The default value for the size is determined dynamically because
         # there might be more than one channel to plot.
@@ -191,16 +193,12 @@ class WaveformPlotting(object):
             self.plotDay(*args, **kwargs)
         else:
             self.plot(*args, **kwargs)
-        # Adjust the subplot so there is always a margin of 80 px on every
-        # side except for plots with just a single trace.
+        # Adjust the subplot so there is always a fixed margin on every side
         if self.type != 'dayplot':
-            if self.height >= 400:
-                fract_y = 80.0 / self.height
-            else:
-                fract_y = 25.0 / self.height
+            fract_y = 40.0 / self.height
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y,
-                                     left=fract_x, right=1 - fract_x)
+                                     left=fract_x, right=1.0 - fract_x / 2)
         self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
         # the plots.
@@ -320,8 +318,7 @@ class WaveformPlotting(object):
         self.__dayplotNormalizeValues(self, *args, **kwargs)
         # Get timezone information. If none is  given, use local time.
         self.time_offset = kwargs.get('time_offset',
-                           round((UTCDateTime(datetime.now()) - \
-                           UTCDateTime()) / 3600.0, 2))
+            round((UTCDateTime(datetime.now()) - UTCDateTime()) / 3600.0, 2))
         self.timezone = kwargs.get('timezone', 'local time')
         # Try to guess how many steps are needed to advance one full time unit.
         self.repeat = None
@@ -371,8 +368,6 @@ class WaveformPlotting(object):
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
-        # Set the title of the plot.
-        # self.fig.suptitle(self.stream[0].id, fontsize='medium')
 
     def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -415,8 +410,11 @@ class WaveformPlotting(object):
         calib = trace.stats.calib
         max = trace.data.max()
         min = trace.data.min()
+        # set label
         if hasattr(trace.stats, 'preview') and trace.stats.preview:
             tr_id = trace.id + ' [preview]'
+        elif hasattr(trace, 'label'):
+            tr_id = trace.label
         else:
             tr_id = trace.id
         self.stats.append([tr_id, calib * trace.data.mean(),
@@ -463,10 +461,10 @@ class WaveformPlotting(object):
                            sampling_rate)
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
-        for _i, _t in enumerate(trace):
+        for _i, tr in enumerate(trace):
             # Get the start of the next pixel in case the starttime of the
             # trace does not match the starttime of the plot.
-            ts = _t.stats.starttime
+            ts = tr.stats.starttime
             if ts > self.starttime:
                 start = int(ceil(((ts - self.starttime) * \
                         sampling_rate) / pixel_length))
@@ -477,34 +475,34 @@ class WaveformPlotting(object):
                 start = 0
                 prestart = 0
             # Figure out the number of pixels in the current trace.
-            length = len(_t.data) - prestart
+            length = len(tr.data) - prestart
             pixel_count = int(length // pixel_length)
             rest = int(length % pixel_length)
             # Reference to new data array which does not copy data but is
             # reshapeable.
-            data = _t.data[prestart: prestart + pixel_count * pixel_length]
+            data = tr.data[prestart: prestart + pixel_count * pixel_length]
             data = data.reshape(pixel_count, pixel_length)
             # Calculate extreme_values and put them into new array.
             extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
-            min = data.min(axis=1) * _t.stats.calib
-            max = data.max(axis=1) * _t.stats.calib
+            min = data.min(axis=1) * tr.stats.calib
+            max = data.max(axis=1) * tr.stats.calib
             extreme_values[start: start + pixel_count, 0] = min
             extreme_values[start: start + pixel_count, 1] = max
             # First and last and last pixel need separate treatment.
             if start and prestart:
                 extreme_values[start - 1, 0] = \
-                    _t.data[:prestart].min() * _t.stats.calib
+                    tr.data[:prestart].min() * tr.stats.calib
                 extreme_values[start - 1, 1] = \
-                    _t.data[:prestart].max() * _t.stats.calib
+                    tr.data[:prestart].max() * tr.stats.calib
             if rest:
                 if start + pixel_count == self.width:
                     index = self.width - 1
                 else:
                     index = start + pixel_count
                 extreme_values[index, 0] = \
-                    _t.data[-rest:].min() * _t.stats.calib
+                    tr.data[-rest:].min() * tr.stats.calib
                 extreme_values[index, 1] = \
-                    _t.data[-rest:].max() * _t.stats.calib
+                    tr.data[-rest:].max() * tr.stats.calib
             # Use the first array as a reference and merge all following
             # extreme_values into it.
             if _i == 0:
@@ -524,8 +522,13 @@ class WaveformPlotting(object):
                 # Write again to minmax.
                 minmax[:, 0] = min
                 minmax[:, 1] = max
+        # set label
+        if hasattr(trace[0], 'label'):
+            tr_id = trace[0].label
+        else:
+            tr_id = trace[0].id
         # Write to self.stats.
-        self.stats.append([trace[0].id, minmax.mean(),
+        self.stats.append([tr_id, minmax.mean(),
                            minmax[:, 0].min(),
                            minmax[:, 1].max()])
         # Finally plot the data.
@@ -584,6 +587,10 @@ class WaveformPlotting(object):
         # Loop over all axes.
         for _i, ax in enumerate(self.axis):
             mean = self.stats[_i][1]
+            if not self.equal_scale:
+                trace = self.stats[_i]
+                max_distance = max(trace[1] - trace[2],
+                                   trace[3] - trace[1]) * 1.1
             # Set the ylimit.
             min_range = mean - max_distance
             max_range = mean + max_distance
@@ -597,15 +604,19 @@ class WaveformPlotting(object):
                      mean + 0.75 * max_distance]
             ax.set_yticks(ticks)
             # Setup format of the major ticks
-            if max(ticks) - min(ticks) > 10:
+            if abs(max(ticks) - min(ticks)) > 10:
+                # integer numbers
                 fmt = '%d'
+                if abs(min(ticks)) > 10e6:
+                    # but switch back to exponential for huge numbers
+                    fmt = '%.2g'
             else:
                 fmt = '%.2g'
             ax.set_yticklabels([fmt % t for t in ax.get_yticks()],
                                fontsize='small')
             # Set the title of each plot.
-            ax.set_title(self.stats[_i][0], horizontalalignment='left',
-                      fontsize='small', verticalalignment='center')
+            ax.set_title(self.stats[_i][0], horizontalalignment='center',
+                         fontsize='small', verticalalignment='center')
             ax.set_ylim(min_range, max_range)
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
@@ -743,7 +754,7 @@ class WaveformPlotting(object):
             time_type = localization_dict['hours']
             time_value = self.interval / 3600
         count = None
-        # Hardcode some common values. The plus one is itentional. It had
+        # Hardcode some common values. The plus one is intentional. It had
         # hardly any performance impact and enhances readability.
         if self.interval == 15 * 60:
             count = 15 + 1
@@ -788,8 +799,7 @@ class WaveformPlotting(object):
             count = self.number_of_ticks
         # Calculate and set ticks.
         ticks = np.linspace(0.0, max_value, count)
-        ticklabels = ['%i' % _i for _i in np.linspace(0.0,
-                                    time_value, count)]
+        ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
         self.axis[0].set_xticks(ticks)
         self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation)
         self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
@@ -873,5 +883,11 @@ class WaveformPlotting(object):
             pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
-            self.fig.suptitle(suptitle, x=0.02, y=0.96, fontsize='small',
-                              horizontalalignment='left')
+            self.fig.suptitle(suptitle, x=self.__getX(10), y=self.__getY(10),
+                              fontsize='small', horizontalalignment='left')
+
+    def __getY(self, dy):
+        return (self.height - dy) * 1.0 / self.height
+
+    def __getX(self, dx):
+        return dx * 1.0 / self.width

@@ -1,4 +1,6 @@
 dev:
+ * implementation of __mul__ function for Trace and Stream objects
+ * adding 'equal_scale' option to plot() method
  * new formatSeedLink method for UTCDateTime object
  * new split method for transforming streams containing masked arrays into
    contiguous traces

@@ -29,61 +29,61 @@ class BeachballTestCase(unittest.TestCase):
         """
         # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-sumatra-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_sumatra_mt.png'))
         np1 = [274, 13, 55]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-sumatra-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_sumatra_np1.png'))
         np2 = [130, 79, 98]
-        Beachball(np2, outfile=os.path.join(self.path, 'bb-sumatra-np2.png'))
+        Beachball(np2, outfile=os.path.join(self.path, 'bb_sumatra_np2.png'))
         #
         np1 = [264.98, 45.00, -159.99]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-19950128-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_19950128_np1.png'))
         np2 = [160.55, 76.00, -46.78]
-        Beachball(np2, outfile=os.path.join(self.path, 'bb-19950128-np2.png'))
+        Beachball(np2, outfile=os.path.join(self.path, 'bb_19950128_np2.png'))
         #
         mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-20090102-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_20090102_mt.png'))
         np1 = [235, 80, 35]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-20090102-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_20090102_np1.png'))
         np2 = [138, 56, 168]
         Beachball(np2, outfile=os.path.join(self.path, 'bb-20090102-np2.png'))
         # Explosion
         mt = [1, 1, 1, 0, 0, 0]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-explosion.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_explosion.png'))
         # Implosion
         mt = [-1, -1, -1, 0, 0, 0]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-implosion.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_implosion.png'))
         # CLVD - Compensate Linear Vector Dipole
         mt = [1, -2, 1, 0, 0, 0]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-clvd.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_clvd.png'))
         # Double Couple
         mt = [1, -1, 0, 0, 0, 0]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-double-couple.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_double_couple.png'))
         # Lars
         mt = [1, -1, 0, 0, 0, -1]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-lars.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_lars.png'))
         # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
         np1 = [179, 55, -78]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-geiyo-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_geiyo_np1.png'))
         #
         np1 = [10, 42.5, 90]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-honshu-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_honshu_np1.png'))
         np2 = [10, 42.5, 92]
-        Beachball(np2, outfile=os.path.join(self.path, 'bb-honshu-np2.png'))
+        Beachball(np2, outfile=os.path.join(self.path, 'bb_honshu_np2.png'))
         # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
         np1 = [150, 87, 1]
-        Beachball(np1, outfile=os.path.join(self.path, 'bb-tottori-np1.png'))
+        Beachball(np1, outfile=os.path.join(self.path, 'bb_tottori_np1.png'))
         # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
         mt = [0.99, -2.00, 1.01, 0.92, 0.48, 0.15]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-20040905_1-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_20040905_1_mt.png'))
         # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
         mt = [5.24, -6.77, 1.53, 0.81, 1.49, -0.05]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-20040905_0-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_20040905_0_mt.png'))
         # http://iisee.kenken.go.jp/staff/thara/miyagi.htm
         mt = [16.578, -7.987, -8.592, -5.515, -29.732, 7.517]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-miyagi-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_miyagi_mt.png'))
         # http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-        Beachball(mt, outfile=os.path.join(self.path, 'bb-chile-mt.png'))
+        Beachball(mt, outfile=os.path.join(self.path, 'bb_chile_mt.png'))
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
     def test_BeachBallOutputFormats(self):
@@ -233,7 +233,7 @@ class BeachballTestCase(unittest.TestCase):
 
         # Set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
-        fig.savefig(os.path.join(self.path, 'bb-collection.png'))
+        fig.savefig(os.path.join(self.path, 'bb_collection.png'))
 
 
 def suite():

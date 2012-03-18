@@ -73,7 +73,7 @@ class MopadTestCase(unittest.TestCase):
 
         # Set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
-        fig.savefig(os.path.join(self.path, 'mopad-collection.png'))
+        fig.savefig(os.path.join(self.path, 'mopad_collection.png'))
 
 
 def suite():
