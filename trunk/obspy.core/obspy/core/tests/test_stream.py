@@ -328,9 +328,9 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
-    def test_slice(self):
+    def test_slicing(self):
         """
-        Tests the slice of Stream object.
+        Tests slicing of Stream object.
         This is not the test for the Stream objects slice method which is
         passed through to Trace object.
         """
@@ -345,7 +345,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(new_stream[0].stats, stream[1].stats)
         self.assertEqual(new_stream[1].stats, stream[2].stats)
 
-    def test_slice2(self):
+    def test_slicing2(self):
         """
         Slicing using a step should return Stream objects.
         """
@@ -360,6 +360,17 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0:6:2].traces, [tr1, tr3, tr5])
         self.assertEqual(st[1:6:2].traces, [tr2, tr4])
         self.assertEqual(st[1:6:6].traces, [tr2])
+
+    def test_slice(self):
+        """
+        Slice method should not loose attributes set on stream object itself.
+        """
+        st = read()
+        st.test = 1
+        st.muh = "Muh"
+        st2 = st.slice(st[0].stats.starttime, st[0].stats.endtime)
+        self.assertEqual(st2.test, 1)
+        self.assertEqual(st2.muh, "Muh")
 
     def test_pop2(self):
         """

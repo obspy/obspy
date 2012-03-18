@@ -1419,13 +1419,14 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         BW.RJOB..EHE | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
         """
-        traces = []
+        new = self.copy()
+        new.traces = []
         for trace in self:
             sliced_trace = trace.slice(starttime, endtime)
             if keep_empty_traces is False and not sliced_trace.stats.npts:
                 continue
-            traces.append(sliced_trace)
-        return self.__class__(traces=traces)
+            new.append(sliced_trace)
+        return new
 
     def select(self, network=None, station=None, location=None, channel=None,
                sampling_rate=None, npts=None, component=None, id=None):
