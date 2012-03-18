@@ -37,151 +37,168 @@ class RealTimeSignalTestCase(unittest.TestCase):
            self.rt_trace is not None and self.rt_appended_traces:
             self._plotResults()
 
-    def test_square(self):
-        """
-        Testing np.square function.
-        """
-        trace = self.orig_trace.copy()
-        options = {}
-        # filtering manual
-        self.filt_trace_data = np.square(trace, **options)
-        # filtering real time
-        process_list = [(np.square, options)]
-        self._runRtProcess(process_list)
-        # check results
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#    def test_square(self):
+#        """
+#        Testing np.square function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {}
+#        # filtering manual
+#        self.filt_trace_data = np.square(trace, **options)
+#        # filtering real time
+#        process_list = [(np.square, options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_integrate(self):
+#        """
+#        Testing integrate function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {}
+#        # filtering manual
+#        self.filt_trace_data = signal.integrate(trace, **options)
+#        # filtering real time
+#        process_list = [('integrate', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_differentiate(self):
+#        """
+#        Testing differentiate function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {}
+#        # filtering manual
+#        self.filt_trace_data = signal.differentiate(trace, **options)
+#        # filtering real time
+#        process_list = [('differentiate', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_boxcar(self):
+#        """
+#        Testing boxcar function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {'width': 500}
+#        # filtering manual
+#        self.filt_trace_data = signal.boxcar(trace, **options)
+#        # filtering real time
+#        process_list = [('boxcar', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        peak = np.amax(np.abs(self.rt_trace.data))
+#        self.assertAlmostEqual(peak, 566974.187, 3)
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_scale(self):
+#        """
+#        Testing scale function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {'factor': 1000}
+#        # filtering manual
+#        self.filt_trace_data = signal.scale(trace, **options)
+#        # filtering real time
+#        process_list = [('scale', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        peak = np.amax(np.abs(self.rt_trace.data))
+#        self.assertEqual(peak, 1045236992)
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_abs(self):
+#        """
+#        Testing np.abs function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {}
+#        # filtering manual
+#        self.filt_trace_data = np.abs(trace, **options)
+#        # filtering real time
+#        process_list = [(np.abs, options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        peak = np.amax(np.abs(self.rt_trace.data))
+#        self.assertEqual(peak, 1045237)
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_tauc(self):
+#        """
+#        Testing tauc function.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {'width': 60}
+#        # filtering manual
+#        self.filt_trace_data = signal.tauc(trace, **options)
+#        # filtering real time
+#        process_list = [('tauc', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        peak = np.amax(np.abs(self.rt_trace.data))
+#        self.assertAlmostEqual(peak, 114.296, 3)
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_mwpIntegral(self):
+#        """
+#        Testing mwpIntegral functions.
+#        """
+#        trace = self.orig_trace.copy()
+#        options = {'mem_time': 240,
+#                   'ref_time': trace.stats.starttime + 301.506,
+#                   'max_time': 120,
+#                   'gain': 1.610210e+09}
+#        # filtering manual
+#        self.filt_trace_data = signal.mwpIntegral(self.orig_trace.copy(),
+#                                                  **options)
+#        # filtering real time
+#        process_list = [('mwpIntegral', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+#
+#    def test_mwp(self):
+#        """
+#        Testing Mwp calculation using two processing functions.
+#        """
+#        trace = self.orig_trace.copy()
+#        epicentral_distance = 30.0855
+#        options = {'mem_time': 240,
+#                   'ref_time': trace.stats.starttime + 301.506,
+#                   'max_time': 120,
+#                   'gain': 1.610210e+09}
+#        # filtering manual
+#        trace.data = signal.integrate(trace)
+#        self.filt_trace_data = signal.mwpIntegral(trace, **options)
+#        # filtering real time
+#        process_list = [('integrate', {}), ('mwpIntegral', options)]
+#        self._runRtProcess(process_list)
+#        # check results
+#        peak = np.amax(np.abs(self.rt_trace.data))
+#        mwp = signal.calculateMwpMag(peak, epicentral_distance)
+#        self.assertAlmostEqual(mwp, 8.78902911791, 5)
+#        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
-    def test_integrate(self):
+    def test_combined(self):
         """
-        Testing integrate function.
-        """
-        trace = self.orig_trace.copy()
-        options = {}
-        # filtering manual
-        self.filt_trace_data = signal.integrate(trace, **options)
-        # filtering real time
-        process_list = [('integrate', options)]
-        self._runRtProcess(process_list)
-        # check results
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_differentiate(self):
-        """
-        Testing differentiate function.
+        Testing combining integrate and differentiate functions.
         """
         trace = self.orig_trace.copy()
         options = {}
         # filtering manual
+        trace.data = signal.integrate(trace, **options)
         self.filt_trace_data = signal.differentiate(trace, **options)
         # filtering real time
-        process_list = [('differentiate', options)]
+        process_list = [('int', options), ('diff', options)]
         self._runRtProcess(process_list)
         # check results
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_boxcar(self):
-        """
-        Testing boxcar function.
-        """
         trace = self.orig_trace.copy()
-        options = {'width': 500}
-        # filtering manual
-        self.filt_trace_data = signal.boxcar(trace, **options)
-        # filtering real time
-        process_list = [('boxcar', options)]
-        self._runRtProcess(process_list)
-        # check results
-        peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertAlmostEqual(peak, 566974.187, 3)
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_scale(self):
-        """
-        Testing scale function.
-        """
-        trace = self.orig_trace.copy()
-        options = {'factor': 1000}
-        # filtering manual
-        self.filt_trace_data = signal.scale(trace, **options)
-        # filtering real time
-        process_list = [('scale', options)]
-        self._runRtProcess(process_list)
-        # check results
-        peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertEqual(peak, 1045236992)
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_abs(self):
-        """
-        Testing np.abs function.
-        """
-        trace = self.orig_trace.copy()
-        options = {}
-        # filtering manual
-        self.filt_trace_data = np.abs(trace, **options)
-        # filtering real time
-        process_list = [(np.abs, options)]
-        self._runRtProcess(process_list)
-        # check results
-        peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertEqual(peak, 1045237)
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_tauc(self):
-        """
-        Testing tauc function.
-        """
-        trace = self.orig_trace.copy()
-        options = {'width': 60}
-        # filtering manual
-        self.filt_trace_data = signal.tauc(trace, **options)
-        # filtering real time
-        process_list = [('tauc', options)]
-        self._runRtProcess(process_list)
-        # check results
-        peak = np.amax(np.abs(self.rt_trace.data))
-        self.assertAlmostEqual(peak, 114.296, 3)
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_mwpIntegral(self):
-        """
-        Testing mwpIntegral functions.
-        """
-        trace = self.orig_trace.copy()
-        options = {'mem_time': 240,
-                   'ref_time': trace.stats.starttime + 301.506,
-                   'max_time': 120,
-                   'gain': 1.610210e+09}
-        # filtering manual
-        self.filt_trace_data = signal.mwpIntegral(self.orig_trace.copy(),
-                                                  **options)
-        # filtering real time
-        process_list = [('mwpIntegral', options)]
-        self._runRtProcess(process_list)
-        # check results
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
-
-    def test_mwp(self):
-        """
-        Testing Mwp calculation using two processing functions.
-        """
-        trace = self.orig_trace.copy()
-        epicentral_distance = 30.0855
-        options = {'mem_time': 240,
-                   'ref_time': trace.stats.starttime + 301.506,
-                   'max_time': 120,
-                   'gain': 1.610210e+09}
-        # filtering manual
-        trace.data = signal.integrate(trace)
-        self.filt_trace_data = signal.mwpIntegral(trace, **options)
-        # filtering real time
-        process_list = [('integrate', {}), ('mwpIntegral', options)]
-        self._runRtProcess(process_list)
-        # check results
-        peak = np.amax(np.abs(self.rt_trace.data))
-        mwp = signal.calculateMwpMag(peak, epicentral_distance)
-        self.assertAlmostEqual(mwp, 8.78902911791, 5)
-        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_array_equal(trace.data, self.rt_trace.data)
+        np.testing.assert_array_equal(trace.data, self.filt_trace_data)
 
     def _runRtProcess(self, process_list, max_length=None):
         """
