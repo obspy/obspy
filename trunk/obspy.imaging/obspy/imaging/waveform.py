@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2012 Lion Krischer
 #---------------------------------------------------------------------
-from copy import deepcopy, copy
+from copy import copy
 from datetime import datetime
 from math import ceil
 from obspy.core import UTCDateTime, Stream, Trace
@@ -195,9 +195,10 @@ class WaveformPlotting(object):
             self.plot(*args, **kwargs)
         # Adjust the subplot so there is always a fixed margin on every side
         if self.type != 'dayplot':
-            fract_y = 40.0 / self.height
+            fract_y = 60.0 / self.height
+            fract_y2 = 40.0 / self.height
             fract_x = 80.0 / self.width
-            self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y,
+            self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
         self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
@@ -883,7 +884,7 @@ class WaveformPlotting(object):
             pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
-            self.fig.suptitle(suptitle, x=self.__getX(10), y=self.__getY(10),
+            self.fig.suptitle(suptitle, x=self.__getX(10), y=self.__getY(15),
                               fontsize='small', horizontalalignment='left')
 
     def __getY(self, dy):
