@@ -71,7 +71,7 @@ class WaveformPlotting(object):
             self.endtime = max([trace.stats.endtime for \
                            trace in self.stream])
         # Map stream object and slice just in case.
-        self.stream = self.stream.slice(self.starttime, self.endtime)
+        self.stream.trim(self.starttime, self.endtime)
         # normalize times
         if self.type == 'relative':
             dt = self.starttime
