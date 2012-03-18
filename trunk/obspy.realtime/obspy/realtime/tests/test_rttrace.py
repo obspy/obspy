@@ -3,14 +3,16 @@
 The obspy.realtime.rttrace test suite.
 """
 from obspy.core import Trace
+from obspy.core.stream import read
 from obspy.core.util.decorator import skipIf
-from obspy.signal import filter
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
+from obspy.signal import filter
 import numpy as np
 import sys
 import unittest
 import warnings
+from obspy.realtime.rttrace import splitTrace
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -157,6 +159,17 @@ class RtTraceTestCase(unittest.TestCase):
         # register NumPy function call
         rtr.registerRtProcess(np.square)
         rtr.copy()
+
+    def test_appendNotFloat32(self):
+        """
+        Test for not using float32.
+        """
+        tr = read()[0]
+        tr.data = np.require(tr.data, dtype='>f4')
+        traces = splitTrace(tr, 3)
+        rtr = RtTrace()
+        for trace in traces:
+            rtr.append(trace)
 
 
 def suite():

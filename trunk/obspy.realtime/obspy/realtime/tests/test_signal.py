@@ -4,6 +4,7 @@ The obspy.realtime.signal test suite.
 """
 from obspy.core import read
 from obspy.core.stream import Stream
+from obspy.signal.filter import lowpass
 from obspy.realtime import RtTrace, splitTrace, signal
 import numpy as np
 import os
@@ -36,6 +37,20 @@ class RealTimeSignalTestCase(unittest.TestCase):
         if PLOT_TRACES and self.filt_trace_data is not None and \
            self.rt_trace is not None and self.rt_appended_traces:
             self._plotResults()
+
+    def test_lowpass(self):
+        """
+        Testing obspy.signal.filters.lowpass function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'freq': 1.0, 'df': trace.stats.sampling_rate}
+        # filtering manual
+        self.filt_trace_data = lowpass(trace, **options)
+        # filtering real time
+        process_list = [(lowpass, options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_square(self):
         """

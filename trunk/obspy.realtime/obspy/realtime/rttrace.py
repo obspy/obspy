@@ -188,12 +188,6 @@ class RtTrace(Trace):
             # only add Trace objects
             raise TypeError("Only obspy.core.trace.Trace objects are allowed")
 
-        # XXX: Confirmed! But why is this????!
-        # make sure datatype is compatible with Trace.__add__() which returns
-        # array of float32 - convert f4 datatype to float32
-        if trace.data.dtype == '>f4' or trace.data.dtype == '<f4':
-            trace.data = np.array(trace.data, dtype=np.float32)
-
         # sanity checks
         if self.have_appended_data:
             #  check id
@@ -257,7 +251,6 @@ class RtTrace(Trace):
                 if verbose:
                     print "%s: self.stats.starttime adjusted by: %gs" \
                         % (self.__class__.__name__, diff - self.stats.delta)
-
         # first apply all registered processing to Trace
         for proc in self.processing:
             process_name, options, rtmemory_list = proc
@@ -266,6 +259,7 @@ class RtTrace(Trace):
                 for n in range(len(rtmemory_list)):
                     rtmemory_list[n] = RtMemory()
             # apply processing
+            dtype = trace.data.dtype
             if hasattr(process_name, '__call__'):
                 # check if direct function call
                 trace.data = process_name(trace.data, **options)
@@ -273,7 +267,8 @@ class RtTrace(Trace):
                 # got predefined function
                 func = REALTIME_PROCESS_FUNCTIONS[process_name.lower()][0]
                 trace.data = func(trace, rtmemory_list, **options)
-
+            # assure dtype is not changed
+            trace.data = np.require(trace.data, dtype=dtype)
         # if first data, set stats
         if not self.have_appended_data:
             self.data = np.array(trace.data)

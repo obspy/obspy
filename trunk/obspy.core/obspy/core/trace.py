@@ -644,6 +644,7 @@ class Trace(object):
             data = np.ma.concatenate(data)
         else:
             data = np.concatenate(data)
+            data = np.require(data, dtype=lt.data.dtype)
         out.data = data
         return out
 
