@@ -14,7 +14,7 @@ functionalities.
 """
 from obspy.core.util.base import _getVersionString
 from obspy.realtime.rtmemory import RtMemory
-from obspy.realtime.rttrace import RtTrace, _splitTrace
+from obspy.realtime.rttrace import RtTrace, splitTrace
 
 
 _version__ = _getVersionString("obspy.realtime")

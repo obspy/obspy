@@ -12,6 +12,7 @@ Module for handling ObsPy RtTrace objects.
 from obspy.core import Trace, Stats
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
+import copy
 import numpy as np
 import warnings
 
@@ -57,7 +58,7 @@ class RtTrace(Trace):
        offset and epicentral distance of an earthquake::
 
         >>> import numpy as np
-        >>> from obspy.realtime import RtTrace, _splitTrace
+        >>> from obspy.realtime import RtTrace, splitTrace
         >>> from obspy.core import read
         >>> from obspy.realtime.signal import calculateMwpMag
         >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
@@ -72,7 +73,7 @@ class RtTrace(Trace):
 
     2. Split given trace into a list of three sub-traces::
 
-        >>> traces = _splitTrace(data_trace, num=3)
+        >>> traces = splitTrace(data_trace, num=3)
         >>> [len(tr) for tr in traces]
         [4228, 4228, 4228]
 
@@ -359,8 +360,20 @@ class RtTrace(Trace):
 
         return len(self.processing)
 
+    def copy(self, *args, **kwargs):
+        """
+        Returns a deepcopy of this RtTrace.
+        """
+        # XXX: ugly hack to allow deepcopy of an RtTrace object containing
+        # registered NumPy function (numpy.ufunc) calls
+        temp = copy.copy(self.processing)
+        self.processing = []
+        new = copy.deepcopy(self, *args, **kwargs)
+        new.processing = temp
+        return new
 
-def _splitTrace(trace, num=3):
+
+def splitTrace(trace, num=3):
     """
     Helper functions to split given Trace into num Traces of the same size.
 
@@ -378,7 +391,7 @@ def _splitTrace(trace, num=3):
     BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
     >>> len(original_trace)
     3000
-    >>> traces = _splitTrace(original_trace, 7)
+    >>> traces = splitTrace(original_trace, 7)
     >>> [len(tr) for tr in traces]
     [429, 429, 429, 429, 429, 429, 426]
     >>> st = Stream(traces)

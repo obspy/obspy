@@ -4,6 +4,7 @@ The obspy.realtime.rttrace test suite.
 """
 from obspy.core import Trace
 from obspy.core.util.decorator import skipIf
+from obspy.signal import filter
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
 import numpy as np
@@ -140,6 +141,22 @@ class RtTraceTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, rtr.append, tr2)
         # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr2, gap_overlap_check=True)
+
+    def test_copy(self):
+        """
+        Testing copy of RtTrace object.
+        """
+        rtr = RtTrace()
+        rtr.copy()
+        # register predefined function
+        rtr.registerRtProcess('integrate', test=1, muh='maeh')
+        rtr.copy()
+        # register ObsPy function call
+        rtr.registerRtProcess(filter.bandpass, freqmin=0, freqmax=1, df=0.1)
+        rtr.copy()
+        # register NumPy function call
+        rtr.registerRtProcess(np.square)
+        rtr.copy()
 
 
 def suite():

@@ -378,7 +378,7 @@ class WaveformPlotting(object):
         Slow and high memory consumption for large datasets.
         """
         # Copy to avoid any changes to original data.
-        trace = deepcopy(trace)
+        trace = [tr.copy() for tr in trace]
         if len(trace) > 1:
             stream = Stream(traces=trace)
             # Merge with 'interpolation'. In case of overlaps this method will
