@@ -412,6 +412,30 @@ class Trace(object):
         """
         return self.data[index]
 
+    def __mul__(self, num):
+        """
+        Creates a new Stream containing num copies of this trace.
+
+        :rtype num: int
+        :param num: Number of copies.
+        :returns: New ObsPy Stream object.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read
+        >>> tr = read()[0]
+        >>> st = tr * 5
+        >>> len(st)
+        5
+        """
+        if not isinstance(num, int):
+            return TypeError("Integer expected")
+        from obspy.core import Stream
+        st = Stream()
+        for _i in range(num):
+            st += self.copy()
+        return st
+
     def __add__(self, trace, method=0, interpolation_samples=0,
                 fill_value=None, sanity_checks=True):
         """
