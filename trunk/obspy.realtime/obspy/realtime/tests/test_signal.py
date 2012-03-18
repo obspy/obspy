@@ -3,10 +3,8 @@
 The obspy.realtime.signal test suite.
 """
 from obspy.core import read
-from obspy.realtime import RtTrace, _splitTrace
-from obspy.realtime.signal import calculateMwpMag, scale, tauc, boxcar, \
-    integrate, differentiate, mwpIntegral
-import math
+from obspy.core.stream import Stream
+from obspy.realtime import RtTrace, splitTrace, signal
 import numpy as np
 import os
 import unittest
@@ -14,185 +12,233 @@ import unittest
 
 # some debug flags
 PLOT_TRACES = False
-DISPLAY_PROCESSING_FUNCTIONS_DOC = False
-NUM_PAKETS = 3
 
 
 class RealTimeSignalTestCase(unittest.TestCase):
     """
     The obspy.realtime.signal test suite.
     """
-    trace_file_name = 'II.TLY.BHZ.SAC'
-    trace_file = os.path.join(os.path.dirname(__file__), 'data',
-                              trace_file_name)
-    trace_gain = 1.610210e+09
+    NUM_PAKETS = 3
 
-    # processing constants
-    scale_factor = 1000
-    tauc_window_width = 60
-    mwp_max_time = 120
-    mwp_mem_time = 2 * mwp_max_time
-    boxcar_width = 500
-
-    @classmethod
-    def setUpClass(cls):
-        if DISPLAY_PROCESSING_FUNCTIONS_DOC:
-            # display processing functions doc
-            print RtTrace.rtProcessFunctionsToString()
-        cls.data_trace = read(cls.trace_file)
-        cls.data_trace[0].write('trace_orig.sac', format='SAC')
-        # set needed values
-        cls.ref_time_offset = \
-            cls.data_trace[0].stats['sac']['a']
-        if math.fabs(cls.ref_time_offset - -12345.0) < 0.001:
-            print 'Error: sac.a value not set.'
-        cls.epicentral_distance = \
-            cls.data_trace[0].stats['sac']['gcarc']
-        if math.fabs(cls.epicentral_distance - -12345.0) < 0.001:
-            print 'Error: sac.gcarc value not set.'
-        if PLOT_TRACES:
-            cls.plotOriginal()
-
-    @classmethod
-    def tearDownClass(cls):
-        # cleanup
-        for file in os.listdir(os.path.dirname(__file__)):
-            if file.endswith('.sac'):
-                try:
-                    os.remove(file)
-                except:
-                    pass
+    def setUp(self):
+        # original trace
+        self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
+                              'II.TLY.BHZ.SAC'))[0]
+        # create set of contiguous packet data in an array of Trace objects
+        self.orig_trace_chunks = splitTrace(self.orig_trace, self.NUM_PAKETS)
+        # clear results
+        self.filt_trace_data = None
+        self.rt_trace = None
+        self.rt_appended_traces = []
 
     def tearDown(self):
-        if PLOT_TRACES:
-            self.plotResults()
+        # use results for debug plots if enabled
+        if PLOT_TRACES and self.filt_trace_data is not None and \
+           self.rt_trace is not None and self.rt_appended_traces:
+            self._plotResults()
 
     def test_square(self):
-        self.process_list = ['np.square']
-        self._processTrace()
-        np.testing.assert_array_equal(np.square(self.data_trace[0].data),
-                                      self.rt_trace.data)
+        """
+        Testing np.square function.
+        """
+        trace = self.orig_trace.copy()
+        options = {}
+        # filtering manual
+        self.filt_trace_data = np.square(trace, **options)
+        # filtering real time
+        process_list = [(np.square, options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+
+    def test_integrate(self):
+        """
+        Testing integrate function.
+        """
+        trace = self.orig_trace.copy()
+        options = {}
+        # filtering manual
+        self.filt_trace_data = signal.integrate(trace, **options)
+        # filtering real time
+        process_list = [('integrate', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+
+    def test_differentiate(self):
+        """
+        Testing differentiate function.
+        """
+        trace = self.orig_trace.copy()
+        options = {}
+        # filtering manual
+        self.filt_trace_data = signal.differentiate(trace, **options)
+        # filtering real time
+        process_list = [('differentiate', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_boxcar(self):
-        self.process_list = ['boxcar']
-        self._processTrace()
+        """
+        Testing boxcar function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'width': 500}
+        # filtering manual
+        self.filt_trace_data = signal.boxcar(trace, **options)
+        # filtering real time
+        process_list = [('boxcar', options)]
+        self._runRtProcess(process_list)
+        # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertAlmostEqual(peak, 566974.187, 3)
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_scale(self):
-        self.process_list = ['scale']
-        self._processTrace()
+        """
+        Testing scale function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'factor': 1000}
+        # filtering manual
+        self.filt_trace_data = signal.scale(trace, **options)
+        # filtering real time
+        process_list = [('scale', options)]
+        self._runRtProcess(process_list)
+        # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertEqual(peak, 1045236992)
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_abs(self):
-        self.process_list = ['np.abs']
-        self._processTrace()
+        """
+        Testing np.abs function.
+        """
+        trace = self.orig_trace.copy()
+        options = {}
+        # filtering manual
+        self.filt_trace_data = np.abs(trace, **options)
+        # filtering real time
+        process_list = [(np.abs, options)]
+        self._runRtProcess(process_list)
+        # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertEqual(peak, 1045237)
-        np.testing.assert_array_equal(np.abs(self.data_trace[0].data),
-                                      self.rt_trace.data)
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_tauc(self):
-        self.process_list = ['tauc']
-        self._processTrace()
+        """
+        Testing tauc function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'width': 60}
+        # filtering manual
+        self.filt_trace_data = signal.tauc(trace, **options)
+        # filtering real time
+        process_list = [('tauc', options)]
+        self._runRtProcess(process_list)
+        # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertAlmostEqual(peak, 114.296, 3)
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
+
+    def test_mwpIntegral(self):
+        """
+        Testing mwpIntegral functions.
+        """
+        trace = self.orig_trace.copy()
+        options = {'mem_time': 240,
+                   'ref_time': trace.stats.starttime + 301.506,
+                   'max_time': 120,
+                   'gain': 1.610210e+09}
+        # filtering manual
+        self.filt_trace_data = signal.mwpIntegral(self.orig_trace.copy(),
+                                                  **options)
+        # filtering real time
+        process_list = [('mwpIntegral', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
     def test_mwp(self):
-        self.process_list = ['integrate', 'mwpIntegral']
-        self._processTrace()
+        """
+        Testing Mwp calculation using two processing functions.
+        """
+        trace = self.orig_trace.copy()
+        epicentral_distance = 30.0855
+        options = {'mem_time': 240,
+                   'ref_time': trace.stats.starttime + 301.506,
+                   'max_time': 120,
+                   'gain': 1.610210e+09}
+        # filtering manual
+        trace.data = signal.integrate(trace)
+        self.filt_trace_data = signal.mwpIntegral(trace, **options)
+        # filtering real time
+        process_list = [('integrate', {}), ('mwpIntegral', options)]
+        self._runRtProcess(process_list)
+        # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        mwp = calculateMwpMag(peak, self.epicentral_distance)
-        self.assertAlmostEqual(mwp, 8.78902911791)
+        mwp = signal.calculateMwpMag(peak, epicentral_distance)
+        self.assertAlmostEqual(mwp, 8.78902911791, 5)
+        np.testing.assert_array_equal(self.filt_trace_data, self.rt_trace.data)
 
-    def _processTrace(self):
-        # apply normal obspy processing to original trace
-        # Filtering the Stream object
-        st_filt = self.data_trace[0].copy()
-        for process in self.process_list:
-            if process == 'scale':
-                st_filt.data = scale(st_filt, factor=self.scale_factor)
-            elif process == 'tauc':
-                st_filt.data = tauc(st_filt, width=self.tauc_window_width)
-            elif process == 'boxcar':
-                st_filt.data = boxcar(st_filt, width=self.boxcar_width)
-            elif process == 'integrate':
-                st_filt.data = integrate(st_filt)
-            elif process == 'differentiate':
-                st_filt.data = differentiate(st_filt)
-            elif process == 'mwpIntegral':
-                st_filt.data = mwpIntegral(st_filt, mem_time=self.mwp_mem_time,
-                    ref_time=(st_filt.stats.starttime + self.ref_time_offset),
-                    max_time=self.mwp_max_time, gain=self.trace_gain)
-            elif process == 'np.abs':
-                st_filt.data = np.abs(st_filt.data)
-            elif process == 'np.square':
-                st_filt.data = np.square(st_filt.data)
-            else:
-                print 'Warning: process:', process, \
-                    ': not supported by this function'
-        # save processed trace to disk
-        st_filt.write('trace.sac', format='SAC')
+    def _runRtProcess(self, process_list, max_length=None):
+        """
+        Helper function to create a RtTrace, register all given process
+        functions and run the real time processing.
+        """
+        # assemble real time trace
+        self.rt_trace = RtTrace(max_length=max_length)
 
-        # create set of contiguous packet data in an array of Trace objects
-        traces = _splitTrace(self.data_trace[0], NUM_PAKETS)
-
-        # assemble realtime trace
-        self.rt_trace = RtTrace()
-        #self.rt_trace = RtTrace(max_length=600)
-
-        for process in self.process_list:
-            if process == 'scale':
-                self.rt_trace.registerRtProcess('scale',
-                                                factor=self.scale_factor)
-            elif process == 'tauc':
-                self.rt_trace.registerRtProcess('tauc',
-                                                width=self.tauc_window_width)
-            elif process == 'boxcar':
-                self.rt_trace.registerRtProcess('boxcar',
-                                                width=self.boxcar_width)
-            elif process == 'integrate':
-                # 'int' is contained in 'integrate'
-                self.rt_trace.registerRtProcess('int')
-            elif process == 'differentiate':
-                self.rt_trace.registerRtProcess('diff')
-            elif process == 'mwpIntegral':
-                self.rt_trace.registerRtProcess('mwpIntegral',
-                    mem_time=self.mwp_max_time,
-                    ref_time=(self.data_trace[0].stats.starttime + \
-                              self.ref_time_offset),
-                    max_time=self.mwp_max_time, gain=self.trace_gain)
-            elif process == 'np.abs':
-                self.rt_trace.registerRtProcess(np.abs)
-            elif process == 'np.square':
-                self.rt_trace.registerRtProcess(np.square)
-            else:
-                self.rt_trace.registerRtProcess(process)
+        for (process, options) in process_list:
+            self.rt_trace.registerRtProcess(process, **options)
 
         # append packet data to RtTrace
-        for i, trace in enumerate(traces):
-            appended_trace = \
-                self.rt_trace.append(trace, gap_overlap_check=True)
-            appended_trace.write('appended_trace%d.sac' % (i), format='SAC')
-        self.rt_trace.write('rt_trace.sac', format='SAC')
+        self.rt_appended_traces = []
+        for trace in self.orig_trace_chunks:
+            # process single trace
+            result = self.rt_trace.append(trace, gap_overlap_check=True)
+            # add to list of appended traces
+            self.rt_appended_traces.append(result)
 
-    @classmethod
-    def plotOriginal(cls):
-        plt_stream = read('trace_orig.sac')
-        plt_stream.plot(automerge=False, size=(800, 1000), color='blue')
-
-    @classmethod
-    def plotResults(cls):
-        plt_stream = read('trace.sac')
-        plt_stream += read('rt_trace.sac')
-        for i in range(cls.num_pakets):
-            plt_stream += read('appended_trace%d.sac' % (i))
-        plt_stream.plot(automerge=False, size=(800, 1000), color='blue')
+    def _plotResults(self):
+        """
+        Plots original, filtered original and real time processed traces into
+        a single plot.
+        """
+        # plot only if test is started manually
+        if __name__ != '__main__':
+            return
+        # create empty stream
+        st = Stream()
+        st.label = self._testMethodName
+        # original trace
+        self.orig_trace.label = "Original Trace"
+        st += self.orig_trace
+        # use header information of original trace with filtered trace data
+        tr = self.orig_trace.copy()
+        tr.data = self.filt_trace_data
+        tr.label = "Filtered original Trace"
+        st += tr
+        # real processed chunks
+        for i, tr in enumerate(self.rt_appended_traces):
+            tr.label = "RT Chunk %02d" % (i + 1)
+            st += tr
+        # real time processed trace
+        self.rt_trace.label = "RT Trace"
+        st += self.rt_trace
+        st.plot(automerge=False, color='blue', equal_scale=False)
 
 
 def suite():
-    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
+    # skip test suite if obspy.sac is not installed
+    try:
+        import obspy.sac  # @UnusedImport
+    except ImportError:
+        pass
+    else:
+        return unittest.makeSuite(RealTimeSignalTestCase, 'test')
 
 
 if __name__ == '__main__':
