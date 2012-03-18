@@ -234,11 +234,12 @@ class WaveformTestCase(unittest.TestCase):
         st.plot(outfile=outfile, automerge=False)
 
     @skipIf(__name__ != '__main__', 'test must be started manually')
-    def test_plotWithLabel(self):
+    def test_plotWithLabels(self):
         """
         Plots with labels.
         """
         st = read()
+        st.label = u"Title #1 üöä?"
         st[0].label = 'Hello World!'
         st[1].label = u'Hällö Wörld & Marß'
         st[2].label = '*' * 80

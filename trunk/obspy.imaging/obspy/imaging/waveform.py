@@ -871,21 +871,24 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
-        # hide time information if set as option
-        if self.type == 'relative':
+        x = self.__getX(10)
+        y = self.__getY(15)
+        if hasattr(self.stream, 'label'):
+            suptitle = self.stream.label
+        elif self.type == 'relative':
+            # hide time information for relative plots
             return
-        if self.type == 'dayplot':
+        elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
-            self.fig.suptitle(suptitle, y=0.98, fontsize='small',
-                              horizontalalignment='left',
-                              x=self.fig.subplotpars.left)
+            x=self.fig.subplotpars.left
         else:
             pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
-            self.fig.suptitle(suptitle, x=self.__getX(10), y=self.__getY(15),
-                              fontsize='small', horizontalalignment='left')
+        # add suptitle
+        self.fig.suptitle(suptitle, x=x, y=y, fontsize='small',
+                          horizontalalignment='left')
 
     def __getY(self, dy):
         return (self.height - dy) * 1.0 / self.height

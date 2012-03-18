@@ -1,5 +1,5 @@
 dev:
- * Trace.label can be used to overwrite default label (id) of each trace
+ * Trace.label/Stream.label can be used to overwrite default labels
  * better support for huge/tiny y-ticks and plots containing multiple traces
  * adding 'equal_scale' option to plot() method
  * Limited localization support and the time axis(es) can be swapped.
