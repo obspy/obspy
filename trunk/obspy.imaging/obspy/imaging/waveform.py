@@ -129,7 +129,7 @@ class WaveformPlotting(object):
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
             self.color = kwargs.get('color', 'k')
-            self.number_of_ticks = kwargs.get('number_of_ticks', 5)
+            self.number_of_ticks = kwargs.get('number_of_ticks', 4)
         # Background and face color.
         self.background_color = kwargs.get('bgcolor', 'w')
         self.face_color = kwargs.get('face_color', 'w')

@@ -921,7 +921,7 @@ class Stream(object):
             will overwrite the bgcolor and face_color arguments.
             Defaults to ``False``.
         :param number_of_ticks: The number of ticks on the x-axis.
-            Defaults to ``5``.
+            Defaults to ``4``.
         :param tick_format: The way the time axis is formated.
             Defaults to ``'%H:%M:%S'``.
         :param tick_rotation: Tick rotation in degrees.
