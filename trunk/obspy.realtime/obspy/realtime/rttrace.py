@@ -413,7 +413,7 @@ def splitTrace(trace, num=3):
     tend = tstart + (trace.stats.delta * packet_length)
     traces = []
     for _i in range(num):
-        traces.append(trace.slice(tstart, tend))
+        traces.append(trace.slice(tstart, tend).copy())
         tstart = tend + trace.stats.delta
         tend = tstart + (trace.stats.delta * packet_length)
     return traces
