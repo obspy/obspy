@@ -28,7 +28,7 @@ WAVEFORM_ENTRY_POINTS = ENTRY_POINTS['waveform']
 
 
 def read(pathname_or_url=None, format=None, headonly=False,
-         nearest_sample=True, **kwargs):
+         nearest_sample=True, dtype=None, **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -67,6 +67,8 @@ def read(pathname_or_url=None, format=None, headonly=False,
     :param nearest_sample: Only applied if `starttime` or `endtime` is given.
         Select nearest sample or the one containing the specified time. For
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
+    :type dtype: :class:`numpy.dtype`, optional
+    :param dtype: Convert data of all traces into given numpy.dtype.
     :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -259,6 +261,9 @@ def read(pathname_or_url=None, format=None, headonly=False,
         st._ltrim(starttime, nearest_sample=nearest_sample)
     if endtime:
         st._rtrim(endtime, nearest_sample=nearest_sample)
+    if dtype:
+        for tr in st:
+            tr.data = np.require(tr.data, dtype)
     return st
 
 
