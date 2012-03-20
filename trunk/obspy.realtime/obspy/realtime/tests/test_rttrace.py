@@ -171,6 +171,36 @@ class RtTraceTestCase(unittest.TestCase):
         for trace in traces:
             rtr.append(trace)
 
+    def test_missingOrWrongArgumentInRtProcess(self):
+        """
+        Tests handling of missing/wrong arguments.
+        """
+        trace = Trace(np.arange(100))
+        # 1- function scale needs no additional arguments
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('scale')
+        rt_trace.append(trace)
+        # adding arbitrary arguments should fail
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('scale', muh='maeh')
+        self.assertRaises(TypeError, rt_trace.append, trace)
+        # 2- function tauc has one required argument
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('tauc', width=10)
+        rt_trace.append(trace)
+        # wrong argument should fail
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('tauc', xyz='xyz')
+        self.assertRaises(TypeError, rt_trace.append, trace)
+        # missing argument width should raise an exception
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('tauc')
+        self.assertRaises(TypeError, rt_trace.append, trace)
+        # adding arbitrary arguments should fail
+        rt_trace = RtTrace()
+        rt_trace.registerRtProcess('tauc', width=20, notexistingoption=True)
+        self.assertRaises(TypeError, rt_trace.append, trace)
+
 
 def suite():
     return unittest.makeSuite(RtTraceTestCase, 'test')
