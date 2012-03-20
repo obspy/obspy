@@ -1317,7 +1317,7 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         ax_FEG.set_xlim(0., ylim)
         ax_TPG.set_ylim(0., ylim)
         ax_FPG.set_xlim(0., ylim)
-        
+
         ax_sig.set_xlim(t[0], t[-1])
         ax_TEG.set_xlim(t[0], t[-1])
         ax_TPG.set_xlim(t[0], t[-1])
