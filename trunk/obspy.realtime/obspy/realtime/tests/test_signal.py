@@ -12,21 +12,21 @@ import unittest
 
 # some debug flags
 PLOT_TRACES = False
+NUM_PACKETS = 3
 
 
 class RealTimeSignalTestCase(unittest.TestCase):
     """
     The obspy.realtime.signal test suite.
     """
-    NUM_PACKETS = 3
+    def __init__(self, *args, **kwargs):
+        super(RealTimeSignalTestCase, self).__init__(*args, **kwargs)
+        # read test data as float64
+        self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
+                                            'II.TLY.BHZ.SAC'), dtype='f8')[0]
+        self.orig_trace_chunks = splitTrace(self.orig_trace, NUM_PACKETS)
 
     def setUp(self):
-        # original trace
-        self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
-                              'II.TLY.BHZ.SAC'))[0]
-        self.orig_trace.data = np.require(self.orig_trace.data, 'f8')
-        # create set of contiguous packet data in an array of Trace objects
-        self.orig_trace_chunks = splitTrace(self.orig_trace, self.NUM_PACKETS)
         # clear results
         self.filt_trace_data = None
         self.rt_trace = None
