@@ -328,8 +328,8 @@ class RtTrace(Trace):
             # predefined function
             num = REALTIME_PROCESS_FUNCTIONS[process_name][1]
             if num:
-                #rtmemory_list = [RtMemory()] * num
-                rtmemory_list = [RtMemory() for i in range(num)]
+                # make sure we have num new RtMemory instances
+                rtmemory_list = [RtMemory() for _i in range(num)]
             entry = (process_name, options, rtmemory_list)
         else:
             # check if process name is contained within a predefined function,
@@ -340,8 +340,8 @@ class RtTrace(Trace):
                 process_name = key
                 num = REALTIME_PROCESS_FUNCTIONS[process_name][1]
                 if num:
-                    #rtmemory_list = [RtMemory()] * num
-                    rtmemory_list = [RtMemory() for i in range(num)]
+                    # make sure we have num new RtMemory instances
+                    rtmemory_list = [RtMemory() for _i in range(num)]
                 entry = (process_name, options, rtmemory_list)
                 break
 

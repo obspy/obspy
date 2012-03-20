@@ -75,7 +75,7 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     if np.size(sample) < 1:
         return sample
 
-    delta_time = 1.0 / trace.stats.sampling_rate
+    delta_time = trace.stats.delta
 
     rtmemory = rtmemory_list[0]
 
@@ -94,7 +94,7 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
 
     rtmemory.output[0] = sum
 
-    return(sample)
+    return sample
 
 
 def differentiate(trace, rtmemory_list=[RtMemory()]):
@@ -118,7 +118,7 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     if np.size(sample) < 1:
         return(sample)
 
-    delta_time = 1.0 / trace.stats.sampling_rate
+    delta_time = trace.stats.delta
 
     rtmemory = rtmemory_list[0]
 
@@ -140,7 +140,7 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
 
     rtmemory.input[0] = previous_sample
 
-    return(sample)
+    return sample
 
 
 def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
@@ -219,7 +219,7 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
 
     rtmemory.updateInput(sample)
 
-    return(new_sample)
+    return new_sample
 
 
 def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
@@ -251,7 +251,7 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
         raise ValueError(msg)
 
     sample = trace.data
-    delta_time = 1.0 / trace.stats.sampling_rate
+    delta_time = trace.stats.delta
 
     rtmemory = rtmemory_list[0]
     rtmemory_dval = rtmemory_list[1]
@@ -315,7 +315,7 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     rtmemory_dval.output[0] = dval
     rtmemory_dval.updateInput(deriv)
 
-    return (new_sample)
+    return new_sample
 
 # memory object indices for storing specific values
 _AMP_AT_PICK = 0
@@ -367,7 +367,7 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
         raise ValueError(msg)
 
     sample = trace.data
-    delta_time = 1.0 / trace.stats.sampling_rate
+    delta_time = trace.stats.delta
 
     rtmemory = rtmemory_list[0]
 
@@ -448,7 +448,7 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     # update memory
     rtmemory.updateInput(sample)
 
-    return (new_sample)
+    return new_sample
 
 
 MWP_INVALID = -9.9
@@ -479,4 +479,4 @@ def calculateMwpMag(peak, epicentral_distance):
     mwp_mag = MWP_INVALID
     if moment > sys.float_info.min:
         mwp_mag = (2.0 / 3.0) * (math.log10(moment) - 9.1)
-    return (mwp_mag)
+    return mwp_mag

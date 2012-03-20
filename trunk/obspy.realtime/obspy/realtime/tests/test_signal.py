@@ -24,7 +24,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # original trace
         self.orig_trace = read(os.path.join(os.path.dirname(__file__), 'data',
                               'II.TLY.BHZ.SAC'))[0]
-        self.orig_trace.data = self.orig_trace.data.astype('f8')
+        self.orig_trace.data = np.require(self.orig_trace.data, 'f8')
         # create set of contiguous packet data in an array of Trace objects
         self.orig_trace_chunks = splitTrace(self.orig_trace, self.NUM_PACKETS)
         # clear results
@@ -49,7 +49,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         process_list = [(np.square, {})]
         self._runRtProcess(process_list)
         # check results
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_integrate(self):
         """
@@ -62,13 +63,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         process_list = [('integrate', {})]
         self._runRtProcess(process_list)
         # check results
-        try:
-            np.testing.assert_almost_equal(self.filt_trace_data,
-                                          self.rt_trace.data)
-        except:
-            print "test_integrate - max delta",
-            print max(np.abs(self.filt_trace_data - self.rt_trace.data))
-            raise
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_differentiate(self):
         """
@@ -81,7 +77,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         process_list = [('differentiate', {})]
         self._runRtProcess(process_list)
         # check results
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_boxcar(self):
         """
@@ -97,7 +94,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertAlmostEqual(peak, 566974.214, 3)
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_scale(self):
         """
@@ -113,7 +111,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertEqual(peak, 1045237000.0)
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_abs(self):
         """
@@ -128,7 +127,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
         self.assertEqual(peak, 1045237)
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_tauc(self):
         """
@@ -143,10 +143,9 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._runRtProcess(process_list)
         # check results
         peak = np.amax(np.abs(self.rt_trace.data))
-        #self.assertAlmostEqual(peak, 114.302, 3)
-        np.testing.assert_almost_equal(self.filt_trace_data[4227:4230],
-                                      self.rt_trace.data[4227:4230])
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        self.assertAlmostEqual(peak, 114.302, 3)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
 #    def test_mwpIntegral(self):
 #        """
@@ -164,7 +163,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
 #        process_list = [('mwpIntegral', options)]
 #        self._runRtProcess(process_list)
 #        # check results
-#        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+#        np.testing.assert_almost_equal(self.filt_trace_data,
+#                                       self.rt_trace.data)
 
     def test_mwp(self):
         """
@@ -186,9 +186,8 @@ class RealTimeSignalTestCase(unittest.TestCase):
         peak = np.amax(np.abs(self.rt_trace.data))
         mwp = signal.calculateMwpMag(peak, epicentral_distance)
         self.assertAlmostEqual(mwp, 8.78902911791, 5)
-        np.testing.assert_almost_equal(self.filt_trace_data[6030:6036],
-                                      self.rt_trace.data[6030:6036])
-        np.testing.assert_almost_equal(self.filt_trace_data, self.rt_trace.data)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
 #    def test_combined(self):
 #        """
