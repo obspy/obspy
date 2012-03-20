@@ -881,7 +881,7 @@ class WaveformPlotting(object):
         elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
-            x=self.fig.subplotpars.left
+            x = self.fig.subplotpars.left
         else:
             pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),

@@ -47,7 +47,7 @@ ENTRY_POINTS = {}
 
 
 if platform.system() != "Windows":
-    # Monkey patch CCompiler for Unix, Linux and Windows
+    # Monkey patch CCompiler for Unix, Linux and Mac
     # Pretend .f is a C extension and change corresponding compilation call
     CCompiler.language_map['.f'] = "c"
     # Monkey patch UnixCCompiler for Unix, Linux and MacOS

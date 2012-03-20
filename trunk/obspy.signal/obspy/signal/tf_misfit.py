@@ -895,7 +895,7 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
     >>> # Distorted signal:
     >>> # generate analytical signal (hilbert transform) and add phase shift
     >>> st1 = hilbert(st1)
-    >>> st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) + 
+    >>> st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) +
     ...                                     phase_shift * np.pi) * 1j))
     >>> plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.) # doctest: +SKIP
 
@@ -921,7 +921,7 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         # Distorted signal:
         # generate analytical signal (hilbert transform) and add phase shift
         st1 = hilbert(st1)
-        st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) + 
+        st1 = np.real(np.abs(st1) * np.exp((np.angle(st1) +
                                             phase_shift * np.pi) * 1j))
         plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
@@ -1149,7 +1149,7 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
 
     :return: If show is False, returns a maplotlib.pyplot.figure object (single
         component data) or a list of figure objects (multi component data)
-    
+
     .. rubric:: Example
 
     For a signal with pure amplitude error
