@@ -13,9 +13,12 @@ REM
 
 cd ..\..
 
-FOR %%M IN (core mseed arclink db earthworm gse2 imaging iris neries sac seg2 segy seisan seishub sh signal taup wav xseed) DO (
-cd obspy.%%M
-echo === obspy.%%M ===
+echo The Python interpreter is set to: %PYTHON%
+echo.
+
+FOR /f %%M IN ('dir /B /AD obspy.*') DO (
+cd %%M
+echo === %%M ===
 %PYTHON% setup.py -q clean --all >NUL 2>NUL
 IF [%1]==[] (
   %PYTHON% setup.py -q build develop
