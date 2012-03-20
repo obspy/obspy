@@ -267,7 +267,8 @@ class RtTrace(Trace):
             else:
                 # got predefined function
                 func = REALTIME_PROCESS_FUNCTIONS[process_name.lower()][0]
-                trace.data = func(trace, rtmemory_list, **options)
+                options['rtmemory_list'] = rtmemory_list
+                trace.data = func(trace, **options)
             # assure dtype is not changed
             trace.data = np.require(trace.data, dtype=dtype)
         # if first data, set stats

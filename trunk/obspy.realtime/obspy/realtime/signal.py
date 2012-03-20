@@ -32,18 +32,19 @@ _TWO_PI = 2.0 * math.pi
 _MIN_FLOAT_VAL = 1.0e-20
 
 
-def scale(trace, rtmemory_list=None, factor=1.0):  # @UnusedVariable
+def scale(trace, factor=1.0, rtmemory_list=None):  # @UnusedVariable
     """
     Scale array data samples by specified factor.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
-    :param rtmemory_list: Persistent memory used by this process for specified
-        trace.
     :type factor: float, optional
     :param factor: Scale factor (default is 1.0).
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -61,7 +62,8 @@ def integrate(trace, rtmemory_list=None):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
     :param rtmemory_list: Persistent memory used by this process for specified
         trace.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -107,7 +109,8 @@ def differentiate(trace, rtmemory_list=None):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
     :param rtmemory_list: Persistent memory used by this process for specified
         trace.
     :rtype: NumPy :class:`numpy.ndarray`
@@ -149,27 +152,24 @@ def differentiate(trace, rtmemory_list=None):
     return sample
 
 
-def boxcar(trace, rtmemory_list=None, width=-1):
+def boxcar(trace, width, rtmemory_list=None):
     """
     Apply boxcar smoothing to data in array sample.
 
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
-    :param rtmemory_list: Persistent memory used by this process for specified
-        trace.
     :type width: int
     :param width: Width in number of sample points for filter.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
-        raise ValueError(msg)
-
-    if not isinstance(width, int):
-        msg = "width parameter must be an int."
         raise ValueError(msg)
 
     if not width > 0:
@@ -231,7 +231,7 @@ def boxcar(trace, rtmemory_list=None, width=-1):
     return new_sample
 
 
-def tauc(trace, rtmemory_list=None, width=-1):
+def tauc(trace, width, rtmemory_list=None):
     """
     Calculate instantaneous period in a fixed window (Tau_c).
 
@@ -243,11 +243,12 @@ def tauc(trace, rtmemory_list=None, width=-1):
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
-    :param rtmemory_list: Persistent memory used by this process for specified
-        trace.
     :type width: int
     :param width: Width in number of sample points for tauc window.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """
@@ -338,8 +339,8 @@ _POLARITY = 4
 _MEMORY_SIZE_OUTPUT = 5
 
 
-def mwpIntegral(trace, rtmemory_list=None, mem_time=1.0,
-                ref_time=None, max_time=-1, gain=1.0):
+def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
+                rtmemory_list=None):
     """
     Calculate Mwp integral on a displacement trace.
 
@@ -348,21 +349,23 @@ def mwpIntegral(trace, rtmemory_list=None, mem_time=1.0,
     :type trace: :class:`~obspy.core.trace.Trace`
     :param trace:  :class:`~obspy.core.trace.Trace` object to append to this
         RtTrace
-    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`
-    :param rtmemory_list: Persistent memory used by this process for specified
-        trace.
-    :type mem_time: float
-    :param mem_time: Length in seconds of data memory (must be much larger
-        than maximum delay between pick declaration and pick time).
-    :type ref_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param ref_time: Reference date and time of the data sample
-        (e.g. P pick time) at which to begin Mwp integration.
     :type max_time: float
     :param max_time: Maximum time in seconds after ref_time to apply Mwp
         integration.
-    :type gain: float
+    :type ref_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param ref_time: Reference date and time of the data sample
+        (e.g. P pick time) at which to begin Mwp integration.
+    :type mem_time: float, optional
+    :param mem_time: Length in seconds of data memory (must be much larger
+        than maximum delay between pick declaration and pick time). Defaults
+        to ``1.0``.
+    :type gain: float, optional
     :param gain: Nominal gain to convert input displacement trace to meters
-        of ground displacement.
+        of ground displacement. Defaults to ``1.0``.
+    :type rtmemory_list: list of :class:`~obspy.realtime.rtmemory.RtMemory`,
+        optional
+    :param rtmemory_list: Persistent memory used by this process for specified
+        trace.
     :rtype: NumPy :class:`numpy.ndarray`
     :return: Processed trace data from appended Trace object.
     """

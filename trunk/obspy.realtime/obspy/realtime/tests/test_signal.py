@@ -147,24 +147,24 @@ class RealTimeSignalTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
-#    def test_mwpIntegral(self):
-#        """
-#        Testing mwpIntegral functions.
-#        """
-#        trace = self.orig_trace.copy()
-#        options = {'mem_time': 240,
-#                   'ref_time': trace.stats.starttime + 301.506,
-#                   'max_time': 120,
-#                   'gain': 1.610210e+09}
-#        # filtering manual
-#        self.filt_trace_data = signal.mwpIntegral(self.orig_trace.copy(),
-#                                                  **options)
-#        # filtering real time
-#        process_list = [('mwpIntegral', options)]
-#        self._runRtProcess(process_list)
-#        # check results
-#        np.testing.assert_almost_equal(self.filt_trace_data,
-#                                       self.rt_trace.data)
+    def test_mwpIntegral(self):
+        """
+        Testing mwpIntegral functions.
+        """
+        trace = self.orig_trace.copy()
+        options = {'mem_time': 240,
+                   'ref_time': trace.stats.starttime + 301.506,
+                   'max_time': 120,
+                   'gain': 1.610210e+09}
+        # filtering manual
+        self.filt_trace_data = signal.mwpIntegral(self.orig_trace.copy(),
+                                                  **options)
+        # filtering real time
+        process_list = [('mwpIntegral', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
 
     def test_mwp(self):
         """
@@ -202,9 +202,11 @@ class RealTimeSignalTestCase(unittest.TestCase):
         self._runRtProcess(process_list)
         # check results
         trace = self.orig_trace.copy()
-        np.testing.assert_almost_equal(self.filt_trace_data[1:], self.rt_trace.data[1:])
+        np.testing.assert_almost_equal(self.filt_trace_data[1:],
+                                       self.rt_trace.data[1:])
         np.testing.assert_almost_equal(trace.data[1:], self.rt_trace.data[1:])
-        np.testing.assert_almost_equal(trace.data[1:], self.filt_trace_data[1:])
+        np.testing.assert_almost_equal(trace.data[1:],
+                                       self.filt_trace_data[1:])
 
     def _runRtProcess(self, process_list, max_length=None):
         """
