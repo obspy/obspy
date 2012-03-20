@@ -256,12 +256,18 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     rtmemory = rtmemory_list[0]
     rtmemory_dval = rtmemory_list[1]
 
+    sample_last = 0.0
+
     # initialize memory object
     if not rtmemory.initialized:
         memory_size_input = width
         memory_size_output = 1
         rtmemory.initialize(sample.dtype, memory_size_input,
                             memory_size_output, 0, 0)
+        sample_last = sample[0]
+    else:
+        sample_last = rtmemory.input[width - 1]
+
     # initialize memory object
     if not rtmemory_dval.initialized:
         memory_size_input = width
@@ -272,7 +278,7 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     new_sample = np.zeros(np.size(sample), sample.dtype)
     deriv = np.zeros(np.size(sample), sample.dtype)
 
-    sample_last = rtmemory.input[width - 1]
+    #sample_last = rtmemory.input[width - 1]
     sample_d = 0.0
     deriv_d = 0.0
     xval = rtmemory.output[0]
