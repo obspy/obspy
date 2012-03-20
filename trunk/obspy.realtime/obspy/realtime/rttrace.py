@@ -164,9 +164,9 @@ class RtTrace(Trace):
         """
         Appends a Trace object to this RtTrace.
 
-        Registered real-time processing will be applied to appended Trace
-        object before it is appended.  This RtTrace will be truncated from
-        the beginning to RtTrace.max_length, if specified.
+        Registered real-time processing will be applied to copy of appended
+        Trace object before it is appended.  This RtTrace will be truncated
+        from the beginning to RtTrace.max_length, if specified.
         Sampling rate, data type and trace.id of both traces must match.
 
         :type trace: :class:`~obspy.core.trace.Trace`
@@ -259,6 +259,7 @@ class RtTrace(Trace):
                 for n in range(len(rtmemory_list)):
                     rtmemory_list[n] = RtMemory()
             # apply processing
+            trace = trace.copy()
             dtype = trace.data.dtype
             if hasattr(process_name, '__call__'):
                 # check if direct function call

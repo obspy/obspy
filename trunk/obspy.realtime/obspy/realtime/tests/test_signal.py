@@ -189,21 +189,22 @@ class RealTimeSignalTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
-#    def test_combined(self):
-#        """
-#        Testing combining integrate and differentiate functions.
-#        """
-#        trace = self.orig_trace.copy()
-#        # filtering manual
-#        trace.data = signal.integrate(trace)
-#        self.filt_trace_data = signal.differentiate(trace)
-#        # filtering real time
-#        process_list = [('int', {}), ('diff', {})]
-#        self._runRtProcess(process_list)
-#        # check results
-#        trace = self.orig_trace.copy()
-#        np.testing.assert_almost_equal(trace.data, self.rt_trace.data)
-#        np.testing.assert_almost_equal(trace.data, self.filt_trace_data)
+    def test_combined(self):
+        """
+        Testing combining integrate and differentiate functions.
+        """
+        trace = self.orig_trace.copy()
+        # filtering manual
+        trace.data = signal.integrate(trace)
+        self.filt_trace_data = signal.differentiate(trace)
+        # filtering real time
+        process_list = [('int', {}), ('diff', {})]
+        self._runRtProcess(process_list)
+        # check results
+        trace = self.orig_trace.copy()
+        np.testing.assert_almost_equal(self.filt_trace_data[1:], self.rt_trace.data[1:])
+        np.testing.assert_almost_equal(trace.data[1:], self.rt_trace.data[1:])
+        np.testing.assert_almost_equal(trace.data[1:], self.filt_trace_data[1:])
 
     def _runRtProcess(self, process_list, max_length=None):
         """

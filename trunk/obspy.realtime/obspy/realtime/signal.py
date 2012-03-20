@@ -32,7 +32,7 @@ _TWO_PI = 2.0 * math.pi
 _MIN_FLOAT_VAL = 1.0e-20
 
 
-def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
+def scale(trace, rtmemory_list=None, factor=1.0):  # @UnusedVariable
     """
     Scale array data samples by specified factor.
 
@@ -54,7 +54,7 @@ def scale(trace, rtmemory_list=[], factor=1.0):  # @UnusedVariable
     return trace.data
 
 
-def integrate(trace, rtmemory_list=[RtMemory()]):
+def integrate(trace, rtmemory_list=None):
     """
     Apply simple rectangular integration to array data.
 
@@ -70,6 +70,9 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
+
+    if not rtmemory_list:
+        rtmemory_list = [RtMemory()]
 
     sample = trace.data
     if np.size(sample) < 1:
@@ -97,7 +100,7 @@ def integrate(trace, rtmemory_list=[RtMemory()]):
     return sample
 
 
-def differentiate(trace, rtmemory_list=[RtMemory()]):
+def differentiate(trace, rtmemory_list=None):
     """
     Apply simple differentiation to array data.
 
@@ -113,6 +116,9 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     if not isinstance(trace, Trace):
         msg = "trace parameter must be an obspy.core.trace.Trace object."
         raise ValueError(msg)
+
+    if not rtmemory_list:
+        rtmemory_list = [RtMemory()]
 
     sample = trace.data
     if np.size(sample) < 1:
@@ -143,7 +149,7 @@ def differentiate(trace, rtmemory_list=[RtMemory()]):
     return sample
 
 
-def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
+def boxcar(trace, rtmemory_list=None, width=-1):
     """
     Apply boxcar smoothing to data in array sample.
 
@@ -169,6 +175,9 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     if not width > 0:
         msg = "width parameter not specified or < 1."
         raise ValueError(msg)
+
+    if not rtmemory_list:
+        rtmemory_list = [RtMemory()]
 
     sample = trace.data
 
@@ -222,7 +231,7 @@ def boxcar(trace, rtmemory_list=[RtMemory()], width=-1):
     return new_sample
 
 
-def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
+def tauc(trace, rtmemory_list=None, width=-1):
     """
     Calculate instantaneous period in a fixed window (Tau_c).
 
@@ -249,6 +258,9 @@ def tauc(trace, rtmemory_list=[RtMemory(), RtMemory()], width=-1):
     if not width > 0:
         msg = "tauc: width parameter not specified or < 1."
         raise ValueError(msg)
+
+    if not rtmemory_list:
+        rtmemory_list = [RtMemory(), RtMemory()]
 
     sample = trace.data
     delta_time = trace.stats.delta
@@ -326,7 +338,7 @@ _POLARITY = 4
 _MEMORY_SIZE_OUTPUT = 5
 
 
-def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
+def mwpIntegral(trace, rtmemory_list=None, mem_time=1.0,
                 ref_time=None, max_time=-1, gain=1.0):
     """
     Calculate Mwp integral on a displacement trace.
@@ -365,6 +377,9 @@ def mwpIntegral(trace, rtmemory_list=[RtMemory()], mem_time=1.0,
     if not max_time >= 0:
         msg = "max_time parameter not specified or < 0."
         raise ValueError(msg)
+
+    if not rtmemory_list:
+        rtmemory_list = [RtMemory()]
 
     sample = trace.data
     delta_time = trace.stats.delta
