@@ -3,8 +3,13 @@ debianized by the ObsPy Development Team. The source for this release was taken
 from:
 https://svn.obspy.org/trunk/obspy.realtime
 
-Program Copyright (C) 2012 The ObsPy Development Team <devs@obspy.org> and
-Anthony Lomax.
+Program Copyright (C) 2011-2012 The ObsPy Development Team <devs@obspy.org>,
+Anthony Lomax and Alberto Michelini.
+
+The obspy.realtime development has been supported by the NERA project (Network
+of European Research Infrastructures for Earthquake Risk Assessment and
+Mitigation) under the European Community's Seventh Framework Programme
+[FP7/2007-2013] grant agreement n° 262330.
 
 Copyright:
 
