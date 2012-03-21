@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+%:
+	dh $@
+
+binary:
+	dh binary --before dh_auto_install
+	dh_auto_install -- release
+	dh binary --after dh_auto_install --until dh_shlibdeps
+	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -type d -name src | xargs rm -rf \;
+	dh binary --after dh_shlibdeps
