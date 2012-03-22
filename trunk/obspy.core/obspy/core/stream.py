@@ -2356,10 +2356,10 @@ class Stream(object):
 
 def isPickle(filename):  # @UnusedVariable
     """
-    Checks whether a file is ASCII TSPAIR format.
+    Checks whether a file is a pickled ObsPy Stream file.
 
     :type filename: str
-    :param filename: Name of the ASCII TSPAIR file to be checked.
+    :param filename: Name of the pickled ObsPy Stream file to be checked.
     :rtype: bool
     :return: ``True`` if ASCII TSPAIR file.
 
@@ -2383,14 +2383,14 @@ def isPickle(filename):  # @UnusedVariable
 
 def readPickle(filename, **kwargs):  # @UnusedVariable
     """
-    Reads and returns pickled ObsPy Stream object.
+    Reads and returns Stream from pickled ObsPy Stream file.
 
     .. warning::
         This function should NOT be called directly, it registers via the
         ObsPy :func:`~obspy.core.stream.read` function, call this instead.
 
     :type filename: str
-    :param filename: ASCII file to be read.
+    :param filename: Name of the pickled ObsPy Stream file to be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
@@ -2414,7 +2414,7 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of file to write.
     :type protocol: int, optional
-    :param filename: Pickle protocol, defaults to ``2``.
+    :param protocol: Pickle protocol, defaults to ``2``.
     """
     if isinstance(filename, basestring):
         cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
