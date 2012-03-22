@@ -184,7 +184,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
 
-     (6) Using 'starttime' and 'endtime' parameters
+    (6) Using 'starttime' and 'endtime' parameters
 
         >>> from obspy.core import read, UTCDateTime
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
