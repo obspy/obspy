@@ -9,9 +9,11 @@
        :toctree: autogen
        :nosignatures:
 
+       client
        db
        feature
        indexer
+       util
 
     .. comment to end block
 
