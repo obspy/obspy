@@ -1545,6 +1545,51 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(st), 1)
         UTCDateTime.DEFAULT_PRECISION = 6
 
+    def test_readArguments(self):
+        """
+        Testing arguments on read function.
+        """
+        # 1 - default example
+        # dtype
+        tr = read(dtype='int64')[0]
+        self.assertEquals(tr.data.dtype, np.int64)
+        # start-/endtime
+        tr2 = read(starttime=tr.stats.starttime + 1,
+                   endtime=tr.stats.endtime - 2)[0]
+        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 1)
+        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 2)
+        # headonly
+        tr = read(headonly=True)[0]
+        self.assertFalse(tr.data)
+
+        # 2 - via http
+        # dtype
+        tr = read('http://examples.obspy.org/test.sac', dtype='int32')[0]
+        self.assertEquals(tr.data.dtype, np.int32)
+        # start-/endtime
+        tr2 = read('http://examples.obspy.org/test.sac',
+                   starttime=tr.stats.starttime + 1,
+                   endtime=tr.stats.endtime - 2)[0]
+        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 1)
+        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 2)
+        # headonly
+        tr = read('http://examples.obspy.org/test.sac', headonly=True)[0]
+        self.assertFalse(tr.data)
+
+        # 3 - some example within obspy
+        # dtype
+        tr = read('/path/to/slist_float.ascii', dtype='int32')[0]
+        self.assertEquals(tr.data.dtype, np.int32)
+        # start-/endtime
+        tr2 = read('/path/to/slist_float.ascii',
+                   starttime=tr.stats.starttime + 0.025,
+                   endtime=tr.stats.endtime - 0.05)[0]
+        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 0.025)
+        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 0.05)
+        # headonly
+        tr = read('/path/to/slist_float.ascii', headonly=True)[0]
+        self.assertFalse(tr.data)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

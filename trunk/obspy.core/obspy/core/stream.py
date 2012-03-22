@@ -27,8 +27,8 @@ import warnings
 WAVEFORM_ENTRY_POINTS = ENTRY_POINTS['waveform']
 
 
-def read(pathname_or_url=None, format=None, headonly=False,
-         nearest_sample=True, dtype=None, **kwargs):
+def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
+        endtime=None, nearest_sample=True, dtype=None, **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -194,9 +194,10 @@ def read(pathname_or_url=None, format=None, headonly=False,
         1 Trace(s) in Stream:
         .RJOB..Z | 2005-08-31T02:33:59.999999Z - ... | 200.0 Hz, 2001 samples
     """
-    # if no pathname or URL specified, make example stream
-    if not pathname_or_url:
-        return _createExampleStream(headonly=headonly)
+    # add default parameters to kwargs so sub-modules may handle them
+    kwargs['starttime'] = starttime
+    kwargs['endtime'] = endtime
+    kwargs['nearest_sample'] = nearest_sample
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and \
        pathname_or_url.startswith('/path/to/'):
@@ -207,7 +208,10 @@ def read(pathname_or_url=None, format=None, headonly=False,
             pass
     # create stream
     st = Stream()
-    if not isinstance(pathname_or_url, basestring):
+    if pathname_or_url is None:
+        # if no pathname or URL specified, return example stream
+        st = _createExampleStream(headonly=headonly)
+    elif not isinstance(pathname_or_url, basestring):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -249,18 +253,19 @@ def read(pathname_or_url=None, format=None, headonly=False,
             # no data in it.
             # XXX: Might cause problems if the data is faulty and the user
             # set starttime/endtime. Not sure what to do in this case.
-            elif not 'starttime' in kwargs and not 'endtime' in kwargs:
+            elif not starttime and not endtime:
                 raise Exception("Cannot open file/files: %s" % pathname)
     # Trim if times are given.
-    starttime = kwargs.get('starttime')
-    endtime = kwargs.get('endtime')
-    if headonly and (starttime or endtime):
-        msg = "Keyword headonly cannot be combined with starttime or endtime."
-        raise Exception(msg)
+    if headonly and (starttime or endtime or dtype):
+        msg = "Keyword headonly cannot be combined with starttime, endtime" + \
+            " or dtype."
+        warnings.warn(msg, UserWarning)
+        return st
     if starttime:
         st._ltrim(starttime, nearest_sample=nearest_sample)
     if endtime:
         st._rtrim(endtime, nearest_sample=nearest_sample)
+    # convert to dtype if given
     if dtype:
         for tr in st:
             tr.data = np.require(tr.data, dtype)
