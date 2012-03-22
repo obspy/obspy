@@ -47,8 +47,9 @@ ObsPy was partially funded by the
 * German Science Foundation (DFG) via grant DFG IG 16/9-1
 * German Ministry for Education and Research (BMBF), GEOTECHNOLOGIEN
   grant 03G0646H.
-* European Community's Seventh Framework Program [FP7/2007-2013] under
-  grant agreement n° 262330
+* NERA project (Network of European Research Infrastructures for Earthquake
+  Risk Assessment and Mitigation) under the European Community's Seventh
+  Framework Programme (FP7/2007-2013) grant agreement n° 262330
 * Leibniz Institute for Applied Geophysics (LIAG)
 
 .. rubric:: Quotes
