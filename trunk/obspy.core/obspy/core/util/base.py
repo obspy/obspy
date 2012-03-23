@@ -386,7 +386,9 @@ def getMatplotlibVersion():
     """
     try:
         import matplotlib
-        version = matplotlib.__version__.replace('svn', '')
+        # Workaround for matplotlib svn and git versions.
+        # XXX: Is the svn now obsolete?
+        version = matplotlib.__version__.replace('svn', '').replace('.x', '')
         version = map(toIntOrZero, version.split("."))
     except ImportError:
         version = None
