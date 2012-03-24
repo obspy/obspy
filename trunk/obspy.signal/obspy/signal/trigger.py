@@ -452,7 +452,7 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
 
 def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_sum,
                        trace_ids=None, max_trigger_length=1e6, delete_long_trigger=False,
-                       trigger_off_extension=0, **options):
+                       trigger_off_extension=0, details=False, **options):
     """
     Perform a network coincidence trigger.
 
@@ -492,6 +492,14 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     :type trigger_off_extension: int or float (optional)
     :param trigger_off_extension: Extends search window for next trigger
         on-time after last trigger off-time in coincidence sum computation.
+    :type details: bool (optional)
+    :param details: If set to ``True`` the output coincidence triggers contain
+        more detailed information: A list with the trace IDs (in addition to
+        only the station names), as well as lists with single station
+        characteristic function peak values and standard deviations in the
+        triggering interval and mean values of both, relatively weighted like
+        in the coincidence sum. These values can help to judge the reliability
+        of the trigger.
     :param options: Necessary keyword arguments for the respective trigger
         that will be passed on. For example ``sta`` and ``lta`` for any STA/LTA
         variant (e.g. ``sta=3``, ``lta=10``).
@@ -526,7 +534,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     kwargs = {'max_len_delete': delete_long_trigger}
     for tr in st:
         if tr.id not in trace_ids:
-            msg = "At least one trace's ID was not found in the" + \
+            msg = "At least one trace's ID was not found in the " + \
                   "trace ID list and was disregarded (%s)" % tr.id
             warnings.warn(msg)
             continue
@@ -534,9 +542,11 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
         kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
+             cft_peak = tr.data[on:off].max()
+             cft_std = tr.data[on:off].std()
              on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
              off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
-             triggers.append((on.timestamp, off.timestamp, tr.id))
+             triggers.append((on.timestamp, off.timestamp, tr.id, cft_peak, cft_std))
     triggers.sort()
 
     # the coincidence triggering and coincidence sum computation
@@ -544,15 +554,18 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     last_off_time = 0.0
     while triggers != []:
         # remove first trigger from list and look for overlaps
-        on, off, tr_id = triggers.pop(0)
+        on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
         event = {}
         event['time'] = UTCDateTime(on)
         event['stations'] = [tr_id.split(".")[1]]
         event['trace_ids'] = [tr_id]
         event['coincidence_sum'] = float(trace_ids[tr_id])
+        if details:
+            event['cft_peaks'] = [cft_peak]
+            event['cft_stds'] = [cft_std]
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
-            tmp_on, tmp_off, tmp_tr_id = trigger
+            tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
             # skip retriggering of already present station in current coincidence trigger
             if tmp_tr_id in event['trace_ids']:
                 continue
@@ -561,13 +574,15 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
                 event['stations'].append(tmp_tr_id.split(".")[1])
                 event['trace_ids'].append(tmp_tr_id)
                 event['coincidence_sum'] += trace_ids[tmp_tr_id]
+                if details:
+                    event['cft_peaks'].append(tmp_cft_peak)
+                    event['cft_stds'].append(tmp_cft_std)
                 # allow sets of triggers that overlap only on subsets of all
                 # stations (e.g. A overlaps with B and B overlaps with C => ABC)
                 off = max(off, tmp_off)
             # break if there is a gap in between the two triggers
             else:
                 break
-        event['duration'] = off - on
         # skip if coincidence sum threshold is not met
         if event['coincidence_sum'] < thr_coincidence_sum:
             continue
@@ -575,6 +590,13 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
         # (determined by a shared off-time, this is a bit sloppy)
         if off == last_off_time:
             continue
+        event['duration'] = off - on
+        if details:
+            weights = np.array([trace_ids[i] for i in event['trace_ids']])
+            weighted_values = np.array(event['cft_peaks']) * weights
+            event['cft_peak_wmean'] = weighted_values.sum() / weights.sum()
+            weighted_values = np.array(event['cft_stds']) * weights
+            event['cft_std_wmean'] = (np.array(event['cft_stds']) * weights).sum() / weights.sum()
         coincidence_triggers.append(event)
         last_off_time = off
     return coincidence_triggers

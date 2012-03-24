@@ -255,6 +255,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[3]['stations'] == ['UH3', 'UH1'])
         self.assertTrue(res[3]['coincidence_sum'] == 2.0)
         # 7. same as 3 but modify input trace ids and check output of trace_ids
+        # and other additional information with ``details=True``
         st2 = st.copy()
         st2[0].stats.network = "XX"
         st2[1].stats.location = "99"
@@ -268,7 +269,8 @@ class TriggerTestCase(unittest.TestCase):
         trace_ids = {'XX.UH1..SHZ': 0.4, '.UH2.99.': 0.35,
                      'BW.UH3..EHN': 0.4, '...': 0.25}
         res = coincidenceTrigger("recstalta", 3.5, 1, st2, 1.0,
-                                 trace_ids=trace_ids, sta=0.5, lta=10)
+                                 trace_ids=trace_ids, details=True,
+                                 sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
         self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -296,6 +298,23 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[2]['trace_ids'][2] == st2[0].id)
         self.assertTrue(res[2]['trace_ids'][3] == st2[3].id)
         self.assertTrue(res[2]['coincidence_sum'] == 1.4)
+        expected_keys = ['cft_peak_wmean', 'cft_std_wmean', 'cft_peaks',
+                         'cft_stds']
+        expected_types = [float, float, list, list]
+        for item in res:
+            for key, _type in zip(expected_keys, expected_types):
+                self.assertTrue(key in item)
+                self.assertTrue(isinstance(item[key], _type))
+        # check some of the detailed info
+        ev = res[-1]
+        self.assertEquals(ev['cft_peak_wmean'], 17.732482051463233)
+        self.assertEquals(ev['cft_std_wmean'], 4.8010641316806275)
+        peaks = [18.973097608513633, 16.852175794415011, 18.64005853900883,
+                 15.527803539977139]
+        self.assertEquals(ev['cft_peaks'], peaks)
+        stds = [4.8811165222946951, 4.4446373508521804, 5.3499401252675964,
+                4.2937762101187911]
+        self.assertEquals(ev['cft_stds'], stds)
         
 
 def suite():
