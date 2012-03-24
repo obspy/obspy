@@ -4,8 +4,10 @@ The obspy.signal.trigger test suite.
 """
 
 from ctypes import ArgumentError
-from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, arPick
+from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
+        arPick, coincidenceTrigger
 from obspy.signal.util import clibsignal
+from obspy.core import read, Stream, UTCDateTime
 import numpy as np
 import unittest
 import os
@@ -122,6 +124,48 @@ class TriggerTestCase(unittest.TestCase):
             plt.legend()
             plt.show()
 
+    def test_coincidenceTrigger(self):
+        """
+        Test network coincidence trigger.
+        """
+        st = Stream()
+        files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz"]
+        for filename in files:
+            st += read(filename)
+        # some prefiltering used for UH network
+        st.filter('bandpass', freqmin=10, freqmax=20)
+        # equal weighting, sensitive settings => 3 events, no false triggers
+        # for the first test we make some additional tests regarding types
+        res = coincidenceTrigger("recstalta", 3.5, 1, st,
+                ['UH1', 'UH2', 'UH3', 'UH4'], 3, sta=0.5, lta=10)
+        self.assertTrue(isinstance(res, list))
+        self.assertTrue(len(res) == 3)
+        expected_keys = ['time', 'coincidence_sum', 'duration', 'stations']
+        expected_types = [UTCDateTime, float, float, list]
+        for item in res:
+            self.assertTrue(isinstance(item, dict))
+            for key, _type in zip(expected_keys, expected_types):
+                self.assertTrue(key in item)
+                self.assertTrue(isinstance(item[key], _type))
+        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+        self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
+        self.assertTrue(4.0 < res[0]['duration'] < 4.6)
+        self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertTrue(res[0]['coincidence_sum'] == 4)
+        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:26:59"))
+        self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
+        self.assertTrue(3.3 < res[1]['duration'] < 3.9)
+        self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
+        self.assertTrue(res[1]['coincidence_sum'] == 3)
+        self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+        self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
+        self.assertTrue(4.0 < res[2]['duration'] < 4.6)
+        self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
+        self.assertTrue(res[2]['coincidence_sum'] == 4)
+        
 
 def suite():
     return unittest.makeSuite(TriggerTestCase, 'test')

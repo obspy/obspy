@@ -446,6 +446,54 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
         plt.show()
 
 
+def coincidenceTrigger(type, thr_on, thr_off, stream, stations,
+                       thr_coincidence_sum, max_trigger_length=None,
+                       trigger_time_extension=0, **options):
+    """
+    Perform a network coincidence trigger.
+
+    :param type: String that specifies which trigger is applied (e.g.
+        ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
+        further details.
+    :type type: str
+    :type thr_on: float
+    :param thr_on: threshold for switching single station trigger on
+    :type thr_off: float
+    :param thr_off: threshold for switching single station trigger off
+    :type stream: :class:`~obspy.core.stream.Stream`
+    :param stream: Stream containing waveform data for all stations. Currently
+            it is assumed that for every station exactly one Trace is included.
+            More than one trace per station can lead to unexpected results.
+    :type stations: list or dict
+    :param stations: Stations to be used in the network coincidence sum. If a
+        list of station names is provided, all station weights are set to 1. A
+        dictionary with station names as keys and station weights as values can
+        be provided.
+    :type thr_coincidence_sum: int or float
+    :param thr_coincidence_sum: Threshold for coincidence sum. The network
+        coincidence sum has to be at least equal to this value for a trigger to
+        be included in the returned trigger list.
+    :type max_trigger_length: int or float
+    :param max_trigger_length: Remove all single station triggers with a
+        duration greater or equal to this value before coincidence sum
+        computation.
+    :type trigger_time_extension: int or float
+    :param trigger_time_extension: Extends search window for next trigger
+        on-time after last trigger off-time in coincidence sum computation.
+    :param options: Necessary keyword arguments for the respective trigger
+        that will be passed on. For example ``sta`` and ``lta`` for any STA/LTA
+        variant (e.g. ``sta=3``, ``lta=10``).
+        Arguments ``sta`` and ``lta`` (seconds) will be mapped to ``nsta``
+        and ``nlta`` (samples) by multiplying with sampling rate of trace.
+        (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
+        seconds average, respectively)
+    :rtype: list
+    :returns: List of event triggers sorted chronologically.
+    """
+    trigger_list = []
+    return trigger_list
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
