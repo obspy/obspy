@@ -2,4 +2,4 @@ dev:
  * adding toolbox to calculate Time-Frequency Misfits
  * fixed bug in calculation of time derivatives
  * fixing a misleading entry point for trigger, adding a missing one
- 
+ * adding coincidence triggering routine
