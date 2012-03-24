@@ -482,9 +482,9 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
         lead to unexpected results. Waveform data with station codes not
         present in this list/dict are disregarded in the analysis.
     :type max_trigger_length: int or float
-    :param max_trigger_length: Maximum single station trigger length.
-        ``delete_long_trigger`` controls what happens to single station
-        triggers longer than this value.
+    :param max_trigger_length: Maximum single station trigger length (in
+        seconds). ``delete_long_trigger`` controls what happens to single
+        station triggers longer than this value.
     :type delete_long_trigger: bool (optional)
     :param delete_long_trigger: If ``False`` (default), single station
         triggers are manually released at ``max_trigger_length``, although the
@@ -546,37 +546,33 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     coincidence_triggers = []
     last_off_time = 0.0
     while len(triggers) > 1:
-        # compile the list of stations that overlap with the current trigger
         on, off, sta = triggers[0]
-        station_list = [sta]
+        event = {}
+        event['time'] = UTCDateTime(on)
+        event['stations'] = [sta]
+        event['coincidence_sum'] = float(stations[sta])
+        # compile the list of stations that overlap with the current trigger
         for trigger in triggers[1:]:
             tmp_on, tmp_off, tmp_sta = trigger
             # skip retriggering of already present station in current coincidence trigger
-            if tmp_sta in station_list:
+            if tmp_sta in event['stations']:
                 continue
             # check for overlapping trigger
             if tmp_on <= off + trigger_off_extension:
-                station_list.append(tmp_sta)
+                event['stations'].append(tmp_sta)
+                event['coincidence_sum'] += stations[tmp_sta]
                 # allow sets of triggers that overlap only on subsets of all
                 # stations (e.g. A overlaps with B and B overlaps with C => ABC)
                 off = max(off, tmp_off)
             # break if there is a gap in between the two triggers
             else:
                 break
-        # compute coincidence sum
-        coinc_sum = 0.0
-        for sta in station_list:
-            coinc_sum += stations[sta]
+        event['duration'] = off - on
         # add event to coincidence triggers if coincidence sum is high enough
-        if coinc_sum >= thr_coincidence_sum:
+        if event['coincidence_sum'] >= thr_coincidence_sum:
             # skip coincidence trigger if it is just a subset of the previous
             # (determined by a shared off-time)
             if off != last_off_time:
-                event = {}
-                event['time'] = UTCDateTime(on)
-                event['duration'] = off - on
-                event['stations'] = station_list
-                event['coincidence_sum'] = coinc_sum
                 coincidence_triggers.append(event)
                 last_off_time = off
         # shorten trigger list by only one and go on
