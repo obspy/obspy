@@ -174,8 +174,9 @@ But it also means that the trace's built-in methods can be used.
     tr.plot()
 
 For more examples check out the `triggering page`_ in the `Tutorial`_. For
-automated use and network coincidence there are some example scripts in the
-`svn repository`_.
+network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
+and the same page in the `Tutorial`_. For automated use there are some example
+scripts in the `svn repository`_.
 
 .. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org

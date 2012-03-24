@@ -16,7 +16,7 @@ carlSTATrig and the zDetect are implemented.
 Also includes picking routines, routines for evaluation and visualization of
 characteristic functions and a coincidence triggering routine.
 
-.. seealso:: [Withers1998]_, p. 98
+.. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -48,7 +48,7 @@ def recSTALTA(a, nsta, nlta):
     :rtype: numpy.ndarray dtype float64
     :return: Characteristic function of recursive STA/LTA
 
-    .. seealso:: [Withers1998]_, p. 98
+    .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
     # be nice and adapt type if necessary
     a = np.require(a, 'float64', ['C_CONTIGUOUS'])
@@ -77,7 +77,7 @@ def recSTALTAPy(a, nsta, nlta):
     :rtype: NumPy ndarray
     :return: Characteristic function of recursive STA/LTA
 
-    .. seealso:: [Withers1998]_, p. 98
+    .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
     try:
         a = a.tolist()
@@ -214,7 +214,7 @@ def delayedSTALTA(a, nsta, nlta):
     :rtype: NumPy ndarray
     :return: Characteristic function of delayed STA/LTA
 
-    .. seealso:: [Withers1998]_, p. 97
+    .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
     """
     m = len(a)
     #
@@ -260,7 +260,7 @@ def triggerOnset(charfct, thres1, thres2, max_len=9e99, max_len_delete=False):
     characteristic function.
 
     This method is written in pure Python and gets slow as soon as there
-    are more then 1e6 triggerings ("on" AND "of") in charfct --- normally
+    are more then 1e6 triggerings ("on" AND "off") in charfct --- normally
     this does not happen.
 
     :type charfct: NumPy ndarray
@@ -456,6 +456,22 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     """
     Perform a network coincidence trigger.
 
+    The routine works in the following steps:
+      * take every single trace in the stream
+      * apply specified triggering routine
+      * evaluate triggering results
+      * compile chronological overall list of all single station triggers
+      * find overlapping single station triggers
+      * calculate coincidence sum every individual overlapping trigger
+      * add to coincidence trigger list if it exceeds the given threshold
+      * return list of network coincidence triggers
+
+    .. note::
+        An example can be found in the
+        `Tutorial <http://docs.obspy.org/tutorial/trigger_tutorial.html>`_
+
+    .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
+
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
         further details.
@@ -509,16 +525,6 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
         seconds average, respectively)
     :rtype: list
     :returns: List of event triggers sorted chronologically.
-
-    The routine works in the following steps:
-      * take every single trace in the stream
-      * apply specified triggering routine
-      * evaluate triggering results
-      * compile chronological overall list of all single station triggers
-      * find overlapping single station triggers
-      * calculate coincidence sum every individual overlapping trigger
-      * add to coincidence trigger list if it exceeds the given threshold
-      * return list of network coincidence triggers
     """
     st = stream
     # if no trace ids are specified use all traces ids found in stream

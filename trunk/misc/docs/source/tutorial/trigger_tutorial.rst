@@ -6,10 +6,11 @@ This is a small tutorial for the UNESCO short course on triggering. Test data
 used in this tutorial can be downloaded here:
 `trigger_data.zip <http://examples.obspy.org/trigger_data.zip>`_.
 
-The triggers are implemented as described in [Withers1998]_. There
-are two scripts in the repository which we used for detection in the Bavarian
-network. They might be useful as reference code examples or serve as cookbook
-for similar applications.
+The triggers are implemented as described in [Withers1998]_. Information on
+finding the right trigger parameters for STA/LTA type triggers can be found in
+[Trnkoczy2012]_. There are two scripts in the repository which we used for
+detection in the Bavarian network. They might be useful as reference code
+examples or serve as cookbook for similar applications.
 
 * `branches/sandbox/stalta/stalta4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/stalta4baynet.py>`_
 * `branches/sandbox/stalta/coincidence4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/coincidence4baynet.py>`_
@@ -157,6 +158,95 @@ Delayed Sta Lta
     >>> plotTrigger(trace, cft, 5, 10)
 
 .. plot:: source/tutorial/trigger_tutorial_delayed_sta_lta.py
+
+-----------------------------------
+Network Coincidence Trigger Example
+-----------------------------------
+
+In this example we perform a coincidence trigger on a local scale network of 4
+stations.  For the single station triggers a recursive STA/LTA is used. The
+waveform data span about four minutes and includes four local events. Two are
+easily recognizable (Ml 1-2), the other two can only detected with very exact
+trigger settings (Ml <= 0).
+
+First we assemble a Stream object with all waveform data:
+
+    >>> from obspy.core import Stream, read
+    >>> st = Stream()
+    >>> files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
+    ...          "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
+    >>> for filename in files:
+    ...     st += read("http://examples.obspy.org/" + filename)
+
+After applying a bandpass filter we run the coincidence triggering on all data.
+In the example a recursive STA/LTA is used. The trigger parameters are set to
+0.5 and 10 second time windows, respectively. The on-threshold is set to 3.5,
+the off-threshold to 1. In this example every station gets a weight of 1 and
+the coincidence sum threshold is set to 3.
+Here we want to keep our original data so we make a copy of the stream:
+
+    >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
+    >>> from obspy.signal import coincidenceTrigger
+    >>> st2 = st.copy()
+    >>> trig = coincidenceTrigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10)
+
+Here we use pretty print to display the results:
+
+    >>> from pprint import pprint
+    >>> pprint(trig)
+    [{'coincidence_sum': 4.0,
+      'duration': 4.5299999713897705,
+      'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+      'time': UTCDateTime(2010, 5, 27, 16, 24, 33, 190000),
+      'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ',
+                    'BW.UH4..SHZ']},
+     {'coincidence_sum': 3.0,
+      'duration': 3.440000057220459,
+      'stations': ['UH2', 'UH3', 'UH1'],
+      'time': UTCDateTime(2010, 5, 27, 16, 27, 1, 260000),
+      'trace_ids': ['BW.UH2..SHZ', 'BW.UH3..SHZ', 'BW.UH1..SHZ']},
+     {'coincidence_sum': 4.0,
+      'duration': 4.7899999618530273,
+      'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+      'time': UTCDateTime(2010, 5, 27, 16, 27, 30, 490000),
+      'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ',
+                    'BW.UH4..SHZ']}]
+
+With these settings the coincidence trigger reports three events. For each
+(possible) event the start time and duration is provided.  Furthermore, a list
+of station names and trace IDs is provided, ordered by the time the stations
+triggered.
+We can request additional information by specifying ``details=True``:
+
+    >>> st2 = st.copy()
+    >>> trig = coincidenceTrigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10,
+    ...                           details=True)
+
+For clarity, we only display information on the first item in the results here:
+
+    >>> pprint(trig[0])
+    {'cft_peak_wmean': 19.561900329259956,
+     'cft_peaks': [19.535644192544272,
+                   19.872432918501264,
+                   19.622171410201297,
+                   19.217352795792998],
+     'cft_std_wmean': 5.4565629691954713,
+     'cft_stds': [5.292458320417178,
+                  5.6565387957966404,
+                  5.7582248973698507,
+                  5.1190298631982163],
+     'coincidence_sum': 4.0,
+     'duration': 4.5299999713897705,
+     'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+     'time': UTCDateTime(2010, 5, 27, 16, 24, 33, 190000),
+     'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ', 'BW.UH4..SHZ']}
+
+Here, some additional information on the peak values and standard deviations of
+the characteristic functions of the single station triggers is provided. Also,
+for both a weighted mean is calculated. These values can help to distinguish
+very certain from relatively unreliable network triggers.
 
 ---------------
 Picker Examples
