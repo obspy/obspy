@@ -451,7 +451,7 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
 
 
 def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_sum,
-                       stations=None, max_trigger_length=1e6, delete_long_trigger=False,
+                       trace_ids=None, max_trigger_length=1e6, delete_long_trigger=False,
                        trigger_off_extension=0, **options):
     """
     Perform a network coincidence trigger.
@@ -471,15 +471,12 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     :param thr_coincidence_sum: Threshold for coincidence sum. The network
         coincidence sum has to be at least equal to this value for a trigger to
         be included in the returned trigger list.
-    :type stations: list or dict (optional)
-    :param stations: Stations to be used in the network coincidence sum. A
-        dictionary with station names as keys and station weights as values can
-        be provided. If a list of station names is provided, all station
-        weights are set to 1. The default of ``None`` uses all stations present
-        in the provided stream. Currently, it is assumed that for a station
-        code one combination of network, location and channel code is present.
-        Having more than one combination of these for one station code might
-        lead to unexpected results. Waveform data with station codes not
+    :type trace_ids: list or dict (optional)
+    :param trace_ids: Trace IDs to be used in the network coincidence sum. A
+        dictionary with trace IDs as keys and weights as values can
+        be provided. If a list of trace IDs is provided, all
+        weights are set to 1. The default of ``None`` uses all traces present
+        in the provided stream. Waveform data with trace IDs not
         present in this list/dict are disregarded in the analysis.
     :type max_trigger_length: int or float
     :param max_trigger_length: Maximum single station trigger length (in
@@ -516,21 +513,21 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
       * return list of network coincidence triggers
     """
     st = stream
-    # if no stations are specified use all stations in found in stream
-    if stations is None:
-        stations = [tr.stats.station for tr in st]
-    # we always work with a dictionary with stations and weights later
-    if isinstance(stations, list) or isinstance(stations, tuple):
-        stations = dict.fromkeys(stations, 1)
+    # if no trace ids are specified use all traces ids found in stream
+    if trace_ids is None:
+        trace_ids = [tr.id for tr in st]
+    # we always work with a dictionary with trace ids and their weights later
+    if isinstance(trace_ids, list) or isinstance(trace_ids, tuple):
+        trace_ids = dict.fromkeys(trace_ids, 1)
 
     # the single station triggering
     triggers = []
     # prepare kwargs for triggerOnset
     kwargs = {'max_len_delete': delete_long_trigger}
     for tr in st:
-        if tr.stats.station not in stations:
-            msg = "At least one trace's station code was not found in " + \
-                  "station list and was disregarded (%s)" % tr.stats.station
+        if tr.id not in trace_ids:
+            msg = "At least one trace's ID was not found in the" + \
+                  "trace ID list and was disregarded (%s)" % tr.id
             warnings.warn(msg)
             continue
         tr.trigger(trigger_type, **options)
@@ -539,7 +536,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
         for on, off in tmp_triggers:
              on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
              off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
-             triggers.append((on.timestamp, off.timestamp, tr.stats.station))
+             triggers.append((on.timestamp, off.timestamp, tr.id))
     triggers.sort()
 
     # the coincidence triggering and coincidence sum computation
@@ -547,21 +544,23 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     last_off_time = 0.0
     while triggers != []:
         # remove first trigger from list and look for overlaps
-        on, off, sta = triggers.pop(0)
+        on, off, tr_id = triggers.pop(0)
         event = {}
         event['time'] = UTCDateTime(on)
-        event['stations'] = [sta]
-        event['coincidence_sum'] = float(stations[sta])
+        event['stations'] = [tr_id.split(".")[1]]
+        event['trace_ids'] = [tr_id]
+        event['coincidence_sum'] = float(trace_ids[tr_id])
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
-            tmp_on, tmp_off, tmp_sta = trigger
+            tmp_on, tmp_off, tmp_tr_id = trigger
             # skip retriggering of already present station in current coincidence trigger
-            if tmp_sta in event['stations']:
+            if tmp_tr_id in event['trace_ids']:
                 continue
             # check for overlapping trigger
             if tmp_on <= off + trigger_off_extension:
-                event['stations'].append(tmp_sta)
-                event['coincidence_sum'] += stations[tmp_sta]
+                event['stations'].append(tmp_tr_id.split(".")[1])
+                event['trace_ids'].append(tmp_tr_id)
+                event['coincidence_sum'] += trace_ids[tmp_tr_id]
                 # allow sets of triggers that overlap only on subsets of all
                 # stations (e.g. A overlaps with B and B overlaps with C => ABC)
                 off = max(off, tmp_off)
