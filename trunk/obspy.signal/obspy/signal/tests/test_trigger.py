@@ -130,9 +130,9 @@ class TriggerTestCase(unittest.TestCase):
         """
         st = Stream()
         files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH1..SHZ.D.2010.147.cut.slist.gz"]
+                 "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
             filename = os.path.join(self.path, filename)
             st += read(filename)
@@ -140,8 +140,8 @@ class TriggerTestCase(unittest.TestCase):
         st.filter('bandpass', freqmin=10, freqmax=20)
         # equal weighting, sensitive settings => 3 events, no false triggers
         # for the first test we make some additional tests regarding types
-        res = coincidenceTrigger("recstalta", 3.5, 1, st,
-                ['UH1', 'UH2', 'UH3', 'UH4'], 3, sta=0.5, lta=10)
+        res = coincidenceTrigger("recstalta", 3.5, 1, st, 3,
+                ['UH1', 'UH2', 'UH3', 'UH4'], sta=0.5, lta=10)
         self.assertTrue(isinstance(res, list))
         self.assertTrue(len(res) == 3)
         expected_keys = ['time', 'coincidence_sum', 'duration', 'stations']
