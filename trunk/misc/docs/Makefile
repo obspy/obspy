@@ -60,7 +60,7 @@ pep8:
 	@pep8 --show-source source/tutorial
 
 citations:
-	@python make_citations
+	@python make_citations.py
 
 html:
 	if [ ! -d $(BUILDDIR) ]; then mkdir $(BUILDDIR); fi
