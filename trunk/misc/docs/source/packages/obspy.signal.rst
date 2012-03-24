@@ -15,6 +15,7 @@
        ~filter.bandstop
        ~trigger.carlSTATrig
        ~trigger.classicSTALTA
+       ~trigger.coincidenceTrigger
        ~invsim.cornFreq2Paz
        ~invsim.cosTaper
        ~trigger.delayedSTALTA
