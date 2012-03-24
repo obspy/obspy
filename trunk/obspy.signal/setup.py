@@ -49,7 +49,8 @@ INSTALL_REQUIRES = ['obspy.core > 0.6.1', 'scipy']
 ENTRY_POINTS = {
     'obspy.plugin.trigger': [
         'recstalta = obspy.signal.trigger:recSTALTA',
-        'carlstatrig = obspy.signal.trigger:classicSTALTA',
+        'carlstatrig = obspy.signal.trigger:carlSTATrig',
+        'classicstalta = obspy.signal.trigger:classicSTALTA',
         'delayedstalta = obspy.signal.trigger:delayedSTALTA',
         'zdetect = obspy.signal.trigger:zDetect',
         'recstaltapy = obspy.signal.trigger:recSTALTAPy',
