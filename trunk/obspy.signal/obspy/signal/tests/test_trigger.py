@@ -140,8 +140,7 @@ class TriggerTestCase(unittest.TestCase):
         st.filter('bandpass', freqmin=10, freqmax=20)
         # equal weighting, sensitive settings => 3 events, no false triggers
         # for the first test we make some additional tests regarding types
-        res = coincidenceTrigger("recstalta", 3.5, 1, st, 3,
-                ['UH1', 'UH2', 'UH3', 'UH4'], sta=0.5, lta=10)
+        res = coincidenceTrigger("recstalta", 3.5, 1, st, 3, sta=0.5, lta=10)
         self.assertTrue(isinstance(res, list))
         self.assertTrue(len(res) == 3)
         expected_keys = ['time', 'coincidence_sum', 'duration', 'stations']
@@ -153,17 +152,17 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
         self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
-        self.assertTrue(4.0 < res[0]['duration'] < 4.6)
+        self.assertTrue(4.2 < res[0]['duration'] < 4.8)
         self.assertTrue(res[0]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[0]['coincidence_sum'] == 4)
         self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:26:59"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:03"))
-        self.assertTrue(3.3 < res[1]['duration'] < 3.9)
+        self.assertTrue(3.2 < res[1]['duration'] < 3.7)
         self.assertTrue(res[1]['stations'] == ['UH2', 'UH3', 'UH1'])
         self.assertTrue(res[1]['coincidence_sum'] == 3)
         self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.0 < res[2]['duration'] < 4.6)
+        self.assertTrue(4.5 < res[2]['duration'] < 5.1)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[2]['coincidence_sum'] == 4)
         
