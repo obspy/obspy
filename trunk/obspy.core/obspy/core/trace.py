@@ -26,11 +26,11 @@ class Stats(AttribDict):
     A container for additional header information of a ObsPy Trace object.
 
     A ``Stats`` object may contain all header information (also known as meta
-    data) of a :class:`~obspy.core.trace.Trace` object. Those headers may be
+    data) of a |~Trace| object. Those headers may be
     accessed or modified either in the dictionary style or directly via a
     corresponding attribute. There are various default attributes which are
     required by every waveform import and export modules within ObsPy such as
-    :mod:`obspy.mseed`.
+    |mseed|.
 
     :type header: dict or :class:`~obspy.core.trace.Stats`, optional
     :param header: Dictionary containing meta information of a single
@@ -221,7 +221,7 @@ class Trace(object):
     """
     An object containing data of a continuous series, such as a seismic trace.
 
-    :type data: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
+    :type data: |~ndarray| or :class:`~numpy.ma.MaskedArray`
     :param data: Array of data samples
     :type header: dict or :class:`~obspy.core.trace.Stats`
     :param header: Dictionary containing header fields
@@ -1221,22 +1221,26 @@ class Trace(object):
 
         .. rubric:: _`Supported Trigger`
 
-        ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
-
-        ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
+        ``'classicstalta'``
+            Computes the classic STA/LTA characteristic function (uses
             :func:`obspy.signal.trigger.classicSTALTA`).
 
-        ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
-
-        ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+        ``'recstalta'``
+            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
             :func:`obspy.signal.trigger.recSTALTAPy`).
+
+        ``'delayedstalta'``
+            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+
+        ``'carlstatrig'``
+            Computes the carlSTATrig characteristic function (uses
+            :func:`obspy.signal.trigger.carlSTATrig`).
+
+        ``'zdetect'``
+            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
 
         .. rubric:: Example
 

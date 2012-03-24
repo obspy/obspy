@@ -1829,22 +1829,26 @@ class Stream(object):
 
         .. rubric:: _`Supported Trigger`
 
-        ``'recstalta'``
-            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
-
-        ``'carlstatrig'``
-            Computes the carlSTATrig characteristic function (uses
+        ``'classicstalta'``
+            Computes the classic STA/LTA characteristic function (uses
             :func:`obspy.signal.trigger.classicSTALTA`).
 
-        ``'delayedstalta'``
-            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
-
-        ``'zdetect'``
-            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
+        ``'recstalta'``
+            Recursive STA/LTA (uses :func:`obspy.signal.trigger.recSTALTA`).
 
         ``'recstaltapy'``
             Recursive STA/LTA written in Python (uses
             :func:`obspy.signal.trigger.recSTALTAPy`).
+
+        ``'delayedstalta'``
+            Delayed STA/LTA. (uses :func:`obspy.signal.trigger.delayedSTALTA`).
+
+        ``'carlstatrig'``
+            Computes the carlSTATrig characteristic function (uses
+            :func:`obspy.signal.trigger.carlSTATrig`).
+
+        ``'zdetect'``
+            Z-detector (uses :func:`obspy.signal.trigger.zDetect`).
 
         .. rubric:: Example
 
