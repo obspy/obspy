@@ -545,14 +545,15 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
     # the coincidence triggering and coincidence sum computation
     coincidence_triggers = []
     last_off_time = 0.0
-    while len(triggers) > 1:
-        on, off, sta = triggers[0]
+    while triggers != []:
+        # remove first trigger from list and look for overlaps
+        on, off, sta = triggers.pop(0)
         event = {}
         event['time'] = UTCDateTime(on)
         event['stations'] = [sta]
         event['coincidence_sum'] = float(stations[sta])
         # compile the list of stations that overlap with the current trigger
-        for trigger in triggers[1:]:
+        for trigger in triggers:
             tmp_on, tmp_off, tmp_sta = trigger
             # skip retriggering of already present station in current coincidence trigger
             if tmp_sta in event['stations']:
@@ -568,15 +569,15 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_su
             else:
                 break
         event['duration'] = off - on
-        # add event to coincidence triggers if coincidence sum is high enough
-        if event['coincidence_sum'] >= thr_coincidence_sum:
-            # skip coincidence trigger if it is just a subset of the previous
-            # (determined by a shared off-time)
-            if off != last_off_time:
-                coincidence_triggers.append(event)
-                last_off_time = off
-        # shorten trigger list by only one and go on
-        triggers = triggers[1:]
+        # skip if coincidence sum threshold is not met
+        if event['coincidence_sum'] < thr_coincidence_sum:
+            continue
+        # skip coincidence trigger if it is just a subset of the previous
+        # (determined by a shared off-time, this is a bit sloppy)
+        if off == last_off_time:
+            continue
+        coincidence_triggers.append(event)
+        last_off_time = off
     return coincidence_triggers
 
 
