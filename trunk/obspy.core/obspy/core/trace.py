@@ -26,11 +26,11 @@ class Stats(AttribDict):
     A container for additional header information of a ObsPy Trace object.
 
     A ``Stats`` object may contain all header information (also known as meta
-    data) of a |~Trace| object. Those headers may be
+    data) of a :class:`~obspy.core.trace.Trace` object. Those headers may be
     accessed or modified either in the dictionary style or directly via a
     corresponding attribute. There are various default attributes which are
     required by every waveform import and export modules within ObsPy such as
-    |mseed|.
+    :mod:`obspy.mseed`.
 
     :type header: dict or :class:`~obspy.core.trace.Stats`, optional
     :param header: Dictionary containing meta information of a single
@@ -221,7 +221,7 @@ class Trace(object):
     """
     An object containing data of a continuous series, such as a seismic trace.
 
-    :type data: |~ndarray| or :class:`~numpy.ma.MaskedArray`
+    :type data: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
     :param data: Array of data samples
     :type header: dict or :class:`~obspy.core.trace.Stats`
     :param header: Dictionary containing header fields
