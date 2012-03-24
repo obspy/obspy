@@ -1,18 +1,20 @@
 #!/usr/bin/env python
 #-------------------------------------------------------------------
 # Filename: trigger.py
-#  Purpose: Python trigger routines for seismology.
-#   Author: Moritz Beyreuther
+#  Purpose: Python trigger/picker routines for seismology.
+#   Author: Moritz Beyreuther, Tobias Megies
 #    Email: moritz.beyreuther@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2008-2012 Moritz Beyreuther
+# Copyright (C) 2008-2012 Moritz Beyreuther, Tobias Megies
 #-------------------------------------------------------------------
 """
-Python trigger routines for seismology.
+Various routines related to triggering/picking
 
 Module implementing the Recursive STA/LTA. Two versions, a fast ctypes one and
-a bit slower python one. Further the classic and delayed STA/LTA, the
+a bit slower python one. Furthermore, the classic and delayed STA/LTA, the
 carlSTATrig and the zDetect are implemented.
+Also includes picking routines, routines for evaluation and visualization of
+characteristic functions and a coincidence triggering routine.
 
 .. seealso:: [Withers1998]_, p. 98
 
@@ -23,8 +25,10 @@ carlSTATrig and the zDetect are implemented.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import warnings
 import ctypes as C
 import numpy as np
+from obspy.core import UTCDateTime
 from obspy.signal.headers import clibsignal
 
 
@@ -446,39 +450,50 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
         plt.show()
 
 
-def coincidenceTrigger(type, thr_on, thr_off, stream, stations,
-                       thr_coincidence_sum, max_trigger_length=None,
-                       trigger_time_extension=0, **options):
+def coincidenceTrigger(trigger_type, thr_on, thr_off, stream, thr_coincidence_sum,
+                       stations=None, max_trigger_length=1e6, delete_long_trigger=False,
+                       trigger_off_extension=0, **options):
     """
     Perform a network coincidence trigger.
 
-    :param type: String that specifies which trigger is applied (e.g.
+    :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
         further details.
-    :type type: str
+    :type trigger_type: str
     :type thr_on: float
     :param thr_on: threshold for switching single station trigger on
     :type thr_off: float
     :param thr_off: threshold for switching single station trigger off
     :type stream: :class:`~obspy.core.stream.Stream`
-    :param stream: Stream containing waveform data for all stations. Currently
-            it is assumed that for every station exactly one Trace is included.
-            More than one trace per station can lead to unexpected results.
-    :type stations: list or dict
-    :param stations: Stations to be used in the network coincidence sum. If a
-        list of station names is provided, all station weights are set to 1. A
-        dictionary with station names as keys and station weights as values can
-        be provided.
+    :param stream: Stream containing waveform data for all stations. These
+        data are changed inplace, make a copy to keep the raw waveform data.
     :type thr_coincidence_sum: int or float
     :param thr_coincidence_sum: Threshold for coincidence sum. The network
         coincidence sum has to be at least equal to this value for a trigger to
         be included in the returned trigger list.
+    :type stations: list or dict (optional)
+    :param stations: Stations to be used in the network coincidence sum. A
+        dictionary with station names as keys and station weights as values can
+        be provided. If a list of station names is provided, all station
+        weights are set to 1. The default of ``None`` uses all stations present
+        in the provided stream. Currently, it is assumed that for a station
+        code one combination of network, location and channel code is present.
+        Having more than one combination of these for one station code might
+        lead to unexpected results. Waveform data with station codes not
+        present in this list/dict are disregarded in the analysis.
     :type max_trigger_length: int or float
-    :param max_trigger_length: Remove all single station triggers with a
-        duration greater or equal to this value before coincidence sum
-        computation.
-    :type trigger_time_extension: int or float
-    :param trigger_time_extension: Extends search window for next trigger
+    :param max_trigger_length: Maximum single station trigger length.
+        ``delete_long_trigger`` controls what happens to single station
+        triggers longer than this value.
+    :type delete_long_trigger: bool (optional)
+    :param delete_long_trigger: If ``False`` (default), single station
+        triggers are manually released at ``max_trigger_length``, although the
+        characteristic function has not dropped below ``thr_off``. If set to
+        ``True``, all single station triggers longer than
+        ``max_trigger_length`` will be removed and are excluded from
+        coincidence sum computation.
+    :type trigger_off_extension: int or float (optional)
+    :param trigger_off_extension: Extends search window for next trigger
         on-time after last trigger off-time in coincidence sum computation.
     :param options: Necessary keyword arguments for the respective trigger
         that will be passed on. For example ``sta`` and ``lta`` for any STA/LTA
@@ -489,9 +504,84 @@ def coincidenceTrigger(type, thr_on, thr_off, stream, stations,
         seconds average, respectively)
     :rtype: list
     :returns: List of event triggers sorted chronologically.
+
+    The routine works in the following steps:
+      * take every single trace in the stream
+      * apply specified triggering routine
+      * evaluate triggering results
+      * compile chronological overall list of all single station triggers
+      * find overlapping single station triggers
+      * calculate coincidence sum every individual overlapping trigger
+      * add to coincidence trigger list if it exceeds the given threshold
+      * return list of network coincidence triggers
     """
-    trigger_list = []
-    return trigger_list
+    st = stream
+    # if no stations are specified use all stations in found in stream
+    if stations is None:
+        stations = [tr.stats.station for tr in st]
+    # we always work with a dictionary with stations and weights later
+    if isinstance(stations, list) or isinstance(stations, tuple):
+        stations = dict.fromkeys(stations, 1)
+
+    # the single station triggering
+    triggers = []
+    # prepare kwargs for triggerOnset
+    kwargs = {'max_len_delete': delete_long_trigger}
+    for tr in st:
+        if tr.stats.station not in stations:
+            msg = "At least one trace's station code was not found in " + \
+                  "station list and was disregarded (%s)" % tr.stats.station
+            warnings.warn(msg)
+            continue
+        tr.trigger(trigger_type, **options)
+        kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
+        tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
+        for on, off in tmp_triggers:
+             on = tr.stats.starttime + float(on) / tr.stats.sampling_rate
+             off = tr.stats.starttime + float(off) / tr.stats.sampling_rate
+             triggers.append((on.timestamp, off.timestamp, tr.stats.station))
+    triggers.sort()
+
+    # the coincidence triggering and coincidence sum computation
+    coincidence_triggers = []
+    last_off_time = 0.0
+    while len(triggers) > 1:
+        # compile the list of stations that overlap with the current trigger
+        on, off, sta = triggers[0]
+        station_list = [sta]
+        for trigger in triggers[1:]:
+            tmp_on, tmp_off, tmp_sta = trigger
+            # skip retriggering of already present station in current coincidence trigger
+            if tmp_sta in station_list:
+                continue
+            # check for overlapping trigger
+            if tmp_on <= off + trigger_off_extension:
+                station_list.append(tmp_sta)
+                # allow sets of triggers that overlap only on subsets of all
+                # stations (e.g. A overlaps with B and B overlaps with C => ABC)
+                off = max(off, tmp_off)
+            # break if there is a gap in between the two triggers
+            else:
+                break
+        # compute coincidence sum
+        coinc_sum = 0.0
+        for sta in station_list:
+            coinc_sum += stations[sta]
+        # add event to coincidence triggers if coincidence sum is high enough
+        if coinc_sum >= thr_coincidence_sum:
+            # skip coincidence trigger if it is just a subset of the previous
+            # (determined by a shared off-time)
+            if off != last_off_time:
+                event = {}
+                event['time'] = UTCDateTime(on)
+                event['duration'] = off - on
+                event['stations'] = station_list
+                event['coincidence_sum'] = coinc_sum
+                coincidence_triggers.append(event)
+                last_off_time = off
+        # shorten trigger list by only one and go on
+        triggers = triggers[1:]
+    return coincidence_triggers
 
 
 if __name__ == '__main__':
