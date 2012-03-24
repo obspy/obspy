@@ -134,6 +134,7 @@ class TriggerTestCase(unittest.TestCase):
                  "BW.UH1..SHZ.D.2010.147.cut.slist.gz",
                  "BW.UH1..SHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
+            filename = os.path.join(self.path, filename)
             st += read(filename)
         # some prefiltering used for UH network
         st.filter('bandpass', freqmin=10, freqmax=20)
