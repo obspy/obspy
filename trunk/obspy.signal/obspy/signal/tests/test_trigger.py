@@ -129,10 +129,10 @@ class TriggerTestCase(unittest.TestCase):
         Test network coincidence trigger.
         """
         st = Stream()
-        files = ["BW.UH1..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH2..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH3..SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH4..SHZ.D.2010.147.cut.slist.gz"]
+        files = ["BW.UH1._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH2._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH3._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH4._.SHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
             filename = os.path.join(self.path, filename)
             st += read(filename)
@@ -241,8 +241,8 @@ class TriggerTestCase(unittest.TestCase):
         t1 = tr1.stats.starttime
         t2 = tr1.stats.endtime
         td = t2 - t1
-        tr1a = tr1.slice(starttime=t1, endtime=t1+0.45*td)
-        tr1b = tr1.slice(starttime=t1+0.6*td, endtime=t1+0.94*td)
+        tr1a = tr1.slice(starttime=t1, endtime=t1 + 0.45 * td)
+        tr1b = tr1.slice(starttime=t1 + 0.6 * td, endtime=t1 + 0.94 * td)
         st2.insert(1, tr1a)
         st2.insert(3, tr1b)
         res = coincidenceTrigger("recstalta", 2.5, 1, st2, 2,
@@ -307,15 +307,17 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertEquals(ev['cft_peak_wmean'], 17.732482051463233)
-        self.assertEquals(ev['cft_std_wmean'], 4.8010641316806275)
-        peaks = [18.973097608513633, 16.852175794415011, 18.64005853900883,
-                 15.527803539977139]
-        self.assertEquals(ev['cft_peaks'], peaks)
-        stds = [4.8811165222946951, 4.4446373508521804, 5.3499401252675964,
-                4.2937762101187911]
-        self.assertEquals(ev['cft_stds'], stds)
-        
+        self.assertAlmostEquals(ev['cft_peak_wmean'], 17.732482051463233)
+        self.assertAlmostEquals(ev['cft_std_wmean'], 4.8010641316806275)
+        self.assertAlmostEquals(ev['cft_peaks'][0], 18.973097608513633)
+        self.assertAlmostEquals(ev['cft_peaks'][1], 16.852175794415011)
+        self.assertAlmostEquals(ev['cft_peaks'][2], 18.64005853900883)
+        self.assertAlmostEquals(ev['cft_peaks'][3], 15.527803539977139)
+        self.assertAlmostEquals(ev['cft_stds'][0], 4.8811165222946951)
+        self.assertAlmostEquals(ev['cft_stds'][1], 4.4446373508521804)
+        self.assertAlmostEquals(ev['cft_stds'][2], 5.3499401252675964)
+        self.assertAlmostEquals(ev['cft_stds'][3], 4.2937762101187911)
+
 
 def suite():
     return unittest.makeSuite(TriggerTestCase, 'test')
