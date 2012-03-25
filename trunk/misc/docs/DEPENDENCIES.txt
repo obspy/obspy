@@ -3,7 +3,7 @@ General
   sphinx>=1.1
   coverage (for 'make coverage' only)
   pep8 (for 'make pep8' only)
-  pybtex (for 'make citations' only)
+  pybtex>=0.16 (for 'make citations' only)
 
 ObsPy Library
 =============

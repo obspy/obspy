@@ -9,6 +9,14 @@ import glob
 import os
 
 
+REPLACE_TOKEN = [
+  (u"\'{a}", u"á"),
+  (u"**{", u"**"),
+  (u"}**", u"**"),
+]
+
+
+
 @node
 def names(children, data, role, **kwargs):
     assert not children
@@ -86,31 +94,8 @@ formats = {
     ],
 }
 
-MACROS = [
-  (u"\'{a}", u"á"),
-  (u"{{", u"{"),
-  (u"}}", u"}"),
-]
 
-
-
-class BibTeXParser(bibtex.Parser):
-    def parse_stream(self, stream):
-        self.unnamed_entry_counter = 1
-        chunk = stream.read()
-        for (key, value) in MACROS:
-            chunk = chunk.replace(key, value)
-        try:
-            self.BibTeX_entry.searchString(chunk)
-        except ParseException, e:
-            print "%s: syntax error:" % getattr(stream, 'name', '<NO FILE>')
-            print e
-            import sys
-            sys.exit(1)
-        return self.data
-
-parser = BibTeXParser(encoding='utf8')
-
+parser = bibtex.Parser(encoding='utf8')
 
 for file in glob.glob(os.path.join('source', 'bibliography', '*.bib')):
     try:
@@ -147,6 +132,9 @@ for key in sorted(entries.keys()):
     line = line.replace(u'\xa0',' ')
     line = line.replace(u'–','-')
     line = line.replace(u'—','-')
+    line = line.replace(u'—','-')
+    for old, new in REPLACE_TOKEN:
+        line = line.replace(old, new)
     try:
         fh.write((out % (key, line)).encode('UTF-8'))
     except:
