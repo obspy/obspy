@@ -2,19 +2,13 @@
 Trigger/Picker Tutorial
 =======================
 
-This is a small tutorial for the UNESCO short course on triggering. Test data
-used in this tutorial can be downloaded here:
+This is a small tutorial that started as a practical for the UNESCO short
+course on triggering. Test data used in this tutorial can be downloaded here:
 `trigger_data.zip <http://examples.obspy.org/trigger_data.zip>`_.
 
 The triggers are implemented as described in [Withers1998]_. Information on
 finding the right trigger parameters for STA/LTA type triggers can be found in
-[Trnkoczy2012]_. There are two scripts in the repository which we used for
-detection in the Bavarian network. They might be useful as reference code
-examples or serve as cookbook for similar applications.
-
-* `branches/sandbox/stalta/stalta4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/stalta4baynet.py>`_
-* `branches/sandbox/stalta/coincidence4baynet.py <http://svn.obspy.org/branches/sandbox/stalta/coincidence4baynet.py>`_
-
+[Trnkoczy2012]_.
 
 .. seealso::
     Please note the convenience method of ObsPy's
