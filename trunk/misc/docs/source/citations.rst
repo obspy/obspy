@@ -63,6 +63,11 @@ Citations
    | **Observations and Modeling of Seismic Background Noise**,
    | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
    | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+.. [Snoke2009]  
+   | Snoke, J. A. (March/April 2009),
+   | **Traveltime Tables for iasp91 and ak135**,
+   | *Seismological Research Letters*, 80 (2), 260-262.
+   | http://srl.geoscienceworld.org/content/80/2/260.short
 .. [Spudich1995]  
    | Spudich, P., Steck, L. K., Hellweg, M., Fletcher, J. B., and Baker, L. M. (1995),
    | **Transient stresses at Parkfield, California, produced by the M 7.4 Landers earthquake of June 28, 1992: Observations from the UPSAR dense seismograph array**,
