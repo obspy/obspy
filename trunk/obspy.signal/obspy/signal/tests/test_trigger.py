@@ -132,7 +132,7 @@ class TriggerTestCase(unittest.TestCase):
         files = ["BW.UH1._.SHZ.D.2010.147.cut.slist.gz",
                  "BW.UH2._.SHZ.D.2010.147.cut.slist.gz",
                  "BW.UH3._.SHZ.D.2010.147.cut.slist.gz",
-                 "BW.UH4._.SHZ.D.2010.147.cut.slist.gz"]
+                 "BW.UH4._.EHZ.D.2010.147.cut.slist.gz"]
         for filename in files:
             filename = os.path.join(self.path, filename)
             st += read(filename)
@@ -165,12 +165,12 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[1]['coincidence_sum'] == 3)
         self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.5 < res[2]['duration'] < 5.1)
+        self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[2]['coincidence_sum'] == 4)
         # 2. no weighting, station selection
         # => 2 events, no false triggers
-        trace_ids = ['BW.UH1..SHZ', 'BW.UH3..SHZ', 'BW.UH4..SHZ']
+        trace_ids = ['BW.UH1..SHZ', 'BW.UH3..SHZ', 'BW.UH4..EHZ']
         res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
                                  trace_ids=trace_ids, sta=0.5, lta=10)
         self.assertTrue(len(res) == 2)
@@ -181,13 +181,13 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[0]['coincidence_sum'] == 3)
         self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.5 < res[1]['duration'] < 5.1)
+        self.assertTrue(4.2 < res[1]['duration'] < 4.4)
         self.assertTrue(res[1]['stations'] == ['UH3', 'UH1', 'UH4'])
         self.assertTrue(res[1]['coincidence_sum'] == 3)
         # 3. weighting, station selection
         # => 3 events, no false triggers
         trace_ids = {'BW.UH1..SHZ': 0.4, 'BW.UH2..SHZ': 0.35,
-                     'BW.UH3..SHZ': 0.4, 'BW.UH4..SHZ': 0.25}
+                     'BW.UH3..SHZ': 0.4, 'BW.UH4..EHZ': 0.25}
         res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.0,
                                  trace_ids=trace_ids, sta=0.5, lta=10)
         self.assertTrue(len(res) == 3)
@@ -203,7 +203,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[1]['coincidence_sum'] == 1.15)
         self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.5 < res[2]['duration'] < 5.1)
+        self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', 'UH4'])
         self.assertTrue(res[2]['coincidence_sum'] == 1.4)
         # 4. weighting, station selection, max_len
@@ -291,7 +291,7 @@ class TriggerTestCase(unittest.TestCase):
         self.assertTrue(res[1]['coincidence_sum'] == 1.15)
         self.assertTrue(res[2]['time'] > UTCDateTime("2010-05-27T16:27:27"))
         self.assertTrue(res[2]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.5 < res[2]['duration'] < 5.1)
+        self.assertTrue(4.2 < res[2]['duration'] < 4.4)
         self.assertTrue(res[2]['stations'] == ['UH3', 'UH2', 'UH1', ''])
         self.assertTrue(res[2]['trace_ids'][0] == st2[2].id)
         self.assertTrue(res[2]['trace_ids'][1] == st2[1].id)
@@ -307,16 +307,16 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEquals(ev['cft_peak_wmean'], 17.732482051463233)
-        self.assertAlmostEquals(ev['cft_std_wmean'], 4.8010641316806275)
+        self.assertAlmostEquals(ev['cft_peak_wmean'], 18.097582068353855)
+        self.assertAlmostEquals(ev['cft_std_wmean'], 4.7972436395074087)
         self.assertAlmostEquals(ev['cft_peaks'][0], 18.973097608513633)
         self.assertAlmostEquals(ev['cft_peaks'][1], 16.852175794415011)
         self.assertAlmostEquals(ev['cft_peaks'][2], 18.64005853900883)
-        self.assertAlmostEquals(ev['cft_peaks'][3], 15.527803539977139)
+        self.assertAlmostEquals(ev['cft_peaks'][3], 17.572363634564621)
         self.assertAlmostEquals(ev['cft_stds'][0], 4.8811165222946951)
         self.assertAlmostEquals(ev['cft_stds'][1], 4.4446373508521804)
         self.assertAlmostEquals(ev['cft_stds'][2], 5.3499401252675964)
-        self.assertAlmostEquals(ev['cft_stds'][3], 4.2937762101187911)
+        self.assertAlmostEquals(ev['cft_stds'][3], 4.2723814539487703)
 
 
 def suite():

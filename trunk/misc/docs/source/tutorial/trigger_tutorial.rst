@@ -165,11 +165,12 @@ Network Coincidence Trigger Example
 
 In this example we perform a coincidence trigger on a local scale network of 4
 stations.  For the single station triggers a recursive STA/LTA is used. The
-waveform data span about four minutes and includes four local events. Two are
-easily recognizable (Ml 1-2), the other two can only detected with very exact
-trigger settings (Ml <= 0).
+waveform data span about four minutes and include four local events. Two are
+easily recognizable (Ml 1-2), the other two can only be detected with well
+adjusted trigger settings (Ml <= 0).
 
-First we assemble a Stream object with all waveform data:
+First we assemble a Stream object with all waveform data, the data used in the
+example is available from our web server:
 
     >>> from obspy.core import Stream, read
     >>> st = Stream()
@@ -184,15 +185,16 @@ After applying a bandpass filter we run the coincidence triggering on all data.
 In the example a recursive STA/LTA is used. The trigger parameters are set to
 0.5 and 10 second time windows, respectively. The on-threshold is set to 3.5,
 the off-threshold to 1. In this example every station gets a weight of 1 and
-the coincidence sum threshold is set to 3.
-Here we want to keep our original data so we make a copy of the stream:
+the coincidence sum threshold is set to 3. For more complex network setups the
+weighting for every station/channel can be customized. We want to keep
+our original data so we work with a copy of the original stream:
 
     >>> st.filter('bandpass', freqmin=10, freqmax=20)  # optional prefiltering
     >>> from obspy.signal import coincidenceTrigger
     >>> st2 = st.copy()
     >>> trig = coincidenceTrigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10)
 
-Here we use pretty print to display the results:
+Using pretty print the results display like this:
 
     >>> from pprint import pprint
     >>> pprint(trig)
@@ -215,10 +217,10 @@ Here we use pretty print to display the results:
                     'BW.UH4..SHZ']}]
 
 With these settings the coincidence trigger reports three events. For each
-(possible) event the start time and duration is provided.  Furthermore, a list
+(possible) event the start time and duration is provided. Furthermore, a list
 of station names and trace IDs is provided, ordered by the time the stations
-triggered.
-We can request additional information by specifying ``details=True``:
+have triggered, which can give a first rough idea of the possible event
+location. We can request additional information by specifying ``details=True``:
 
     >>> st2 = st.copy()
     >>> trig = coincidenceTrigger("recstalta", 3.5, 1, st2, 3, sta=0.5, lta=10,
@@ -246,7 +248,10 @@ For clarity, we only display information on the first item in the results here:
 Here, some additional information on the peak values and standard deviations of
 the characteristic functions of the single station triggers is provided. Also,
 for both a weighted mean is calculated. These values can help to distinguish
-very certain from relatively unreliable network triggers.
+certain from questionable network triggers.
+
+For more information on all possible options see the documentation page for
+:func:`~obspy.signal.trigger.coincidenceTrigger`.
 
 ---------------
 Picker Examples
