@@ -67,7 +67,23 @@ formats = {
             optional ['ISBN: ', field('isbn')],
         ],
         optional ['\n   | ', field('url')]
-    ]
+    ],
+    'incollection': words(sep='') [
+        '\n   | ',
+        words(sep=' ')[
+            format_names('author'), brackets(field('year'))], ',',
+        '\n   | ',
+        bold(field('title')), ',',
+        '\n   | in ',
+        sentence(sep=', ')[
+            italic(field('booktitle')),
+            optional [field('chapter')],
+            optional [words(sep=' ')[
+                field('volume'), optional [brackets(field('number'))]]],
+            optional [field('pages')],
+        ],
+        optional ['\n   | ', field('url')]
+    ],
 }
 
 MACROS = [

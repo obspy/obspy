@@ -78,6 +78,11 @@ Citations
    | **Software for Inference of Dynamic Ground Strains and Rotations and Their Errors from Short Baseline Array Observations of Ground Motions**,
    | *Bulletin of the Seismological Society of America*, 99 (2B), 1480-1482.
    | http://www.bssaonline.org/content/99/2B/1480.abstract
+.. [Trnkoczy2012]  
+   | Trnkoczy, A. (2012),
+   | **Understanding and parameter setting of STA/LTA trigger algorithm**,
+   | in *New Manual of Seismological Observatory Practice 2 (NMSOP-2)*, IS 8.1, 20 pp.
+   | http://nmsop.gfz-potsdam.de
 .. [Tsuboi1995]  
    | Tsuboi, S., Abe, K., Takano, K., and Yamanaka, Y. (1995),
    | **Rapid determination of Mw from broadband P waveforms**,
