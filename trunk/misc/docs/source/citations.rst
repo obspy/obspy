@@ -64,7 +64,7 @@ Citations
    | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
    | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
 .. [Snoke2009]  
-   | Snoke, J. A. (March/April 2009),
+   | Snoke, J. A. (2009),
    | **Traveltime Tables for iasp91 and ak135**,
    | *Seismological Research Letters*, 80 (2), 260-262.
    | http://srl.geoscienceworld.org/content/80/2/260.short
