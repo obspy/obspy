@@ -116,7 +116,12 @@ Draws a beach ball diagram of an earthquake focal mechanism.
         Beachball(np1)
 
 (2) The focal mechanism can also be specified using the 6 independent
-    components of the moment tensor (Mxx, Myy, Mzz, Mxy, Mxz, Myz).
+    components of the moment tensor (M11, M22, M33, M12, M13, M23). For
+    :func:`obspy.imaging.beachball.Beachball` (1, 2, 3) corresponds to
+    (Up, South, East) which is equvalent to (r, theta, phi). For 
+    :func:`obspy.imaging.mopad_wrapper.Beachball` the coordinate system can be
+    chosen and includes the choices 'NED' (North, East, Down), 'USE' (Up,
+    South, East), 'NWU' (North, West, Up) or 'XYZ'.
 
     >>> from obspy.imaging.beachball import Beachball
     >>> mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
