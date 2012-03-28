@@ -68,6 +68,7 @@ ENTRY_POINTS = {
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',
+        'demean = scipy.signal:detrend',
     ],
     'obspy.plugin.integrate': [
         'trapz = scipy.integrate:trapz',
