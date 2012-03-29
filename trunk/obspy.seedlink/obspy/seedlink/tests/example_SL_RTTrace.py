@@ -8,6 +8,11 @@ from obspy.seedlink.slpacket import SLPacket
 import numpy as np
 import sys
 import traceback
+import logging
+
+
+# default logger
+logger = logging.getLogger('obspy.seedlink')
 
 
 class MySLClient(SLClient):
@@ -127,10 +132,7 @@ def main():
         slClient.initialize()
         slClient.run()
     except SeedLinkException as sle:
-        if slClient is not None and slClient.sllog is not None:
-            slClient.sllog.log(True, 0, sle)
-        else:
-            sys.stderr.write("Error: " + str(sle))
+        logger.critical(sle)
         traceback.print_exc()
         raise sle
     except Exception as e:

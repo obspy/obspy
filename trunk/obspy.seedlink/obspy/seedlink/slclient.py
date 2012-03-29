@@ -19,10 +19,14 @@ JSeedLink of Anthony Lomax
 
 from obspy.seedlink.client.seedlinkconnection import SeedLinkConnection
 from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.sllog import SLLog
 from obspy.seedlink.slpacket import SLPacket
+import logging
 import sys
 import traceback
+
+
+# default logger
+logger = logging.getLogger('obspy.seedlink')
 
 
 class SLClient(object):
@@ -56,8 +60,6 @@ class SLClient(object):
     :type  end_time: str
     :var infolevel: INFO LEVEL for info request only.
     :type  infolevel: str
-    :var sllog: Logging object.
-    :type  sllog SLLog
     """
     VERSION = "1.2.0X00"
     VERSION_YEAR = "2011"
@@ -67,12 +69,15 @@ class SLClient(object):
     VERSION_INFO = PROGRAM_NAME + " (" + VERSION_DATE + ")"
     BANNER = ["SLClient comes with ABSOLUTELY NO WARRANTY"]
 
-    def __init__(self, sllog=None):
+    def __init__(self, loglevel='DEBUG'):
         """
         Creates a new instance of SLClient with the specified logging object
-
-        :param: sllog logging object to handle messages.
         """
+        numeric_level = getattr(logging, loglevel.upper(), None)
+        if not isinstance(numeric_level, int):
+            raise ValueError('Invalid log level: %s' % loglevel)
+        logging.basicConfig(level=numeric_level)
+
         self.slconn = None
         self.verbose = 0
         self.ppackets = False
@@ -83,13 +88,11 @@ class SLClient(object):
         self.begin_time = None
         self.end_time = None
         self.infolevel = None
-        self.sllog = None
 
         ## for-while
         for line in SLClient.BANNER:
             print line
-        self.sllog = sllog
-        self.slconn = SeedLinkConnection(self.sllog)
+        self.slconn = SeedLinkConnection()
 
     def parseCmdLineArgs(self, args):
         """
@@ -163,15 +166,10 @@ class SLClient(object):
             message = "no SeedLink server specified"
             raise SeedLinkException(message)
 
-        if self.sllog is None:
-            self.sllog = SLLog(self.verbose, None, None, None, None)
-        self.slconn.setLog(self.sllog)
         if self.verbose >= 2:
             self.ppackets = True
-# XXX: java class InetAddress?
-#        if self.slconn.getSLAddress().startswith(":"):
-#            str(self.slconn.setSLAddress(InetAddress.getLocalHost()) + \
-#                self.slconn.getSLAddress())
+        if self.slconn.getSLAddress().startswith(":"):
+            self.slconn.setSLAddress("127.0.0.1" + self.slconn.getSLAddress())
         if self.streamfile is not None:
             self.slconn.readStreamList(self.streamfile, self.selectors)
         if self.multiselect is not None:
@@ -267,7 +265,7 @@ class SLClient(object):
         # process packet data
         trace = slpack.getTrace()
         if trace is not None:
-            print self.__class__.__name__ + ": blockette contains a trace: ",
+            print self.__class__.__name__ + ": blockette contains a trace: "
             print trace.id, trace.stats['starttime'],
             print " dt:" + str(1.0 / trace.stats['sampling_rate']),
             print " npts:" + str(trace.stats['npts']),
@@ -331,10 +329,7 @@ class SLClient(object):
             slClient.initialize()
             slClient.run()
         except Exception as e:
-            if slClient is not None and slClient.sllog is not None:
-                slClient.sllog.log(True, 0, e)
-            else:
-                sys.stderr.write("Error: " + e.value)
+            logger.critical(e)
             traceback.print_exc()
 
 

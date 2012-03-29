@@ -12,17 +12,19 @@ JSeedLink of Anthony Lomax
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-
-import time
-
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.seedlink.client.slnetstation import SLNetStation
 from obspy.seedlink.client.slstate import SLState
 from obspy.seedlink.seedlinkexception import SeedLinkException
-from obspy.seedlink.sllog import SLLog
 from obspy.seedlink.slpacket import SLPacket
 import select
 import socket
+import time
+import logging
+
+
+# default logger
+logger = logging.getLogger('obspy.seedlink')
 
 
 class SeedLinkConnection(object):
@@ -59,8 +61,6 @@ class SeedLinkConnection(object):
     :type netto: int
     :var netdly: Network reconnect delay (seconds)  (default is 30 sec).
     :type netdly: int
-    :var sllog: Logging object (default is sys.stdout).
-    :type sllog: :class:`~obspy.seedlink.SLLog`
     :var info_string: String containing concatination of contents of last
         terminated set of INFO packets.
     :type info_string: str
@@ -106,17 +106,14 @@ class SeedLinkConnection(object):
     DFT_READBUF_SIZE = 1024
     QUOTE_CHAR = '"'
 
-    def __init__(self, sllog=None):
+    def __init__(self):
         """
         Creates a new instance of SeedLinkConnection.
-
-        :param sllog: SLLoc object to control info and error message logging.
         """
         self.sladdr = None
         self.keepalive = 0
         self.netto = 120
         self.netdly = 30
-        self.sllog = None
         self.info_string = ""
         self.statefile = None
         self.lastpkttime = False
@@ -133,19 +130,7 @@ class SeedLinkConnection(object):
         self.socket = None
         self.state = None
         self.infoStrBuf = ""
-
         self.state = SLState()
-        if sllog is not None:
-            self.sllog = sllog
-        else:
-            self.sllog = SLLog()
-
-    def _log(self, is_error, verbosity, message):
-        """
-        Log helper method.
-        """
-        msg = "[%s] %s" % (self.sladdr, message)
-        self.sllog.log(is_error, verbosity, msg)
 
     def isConnected(self, timeout=1.0):
         """
@@ -164,23 +149,6 @@ class SeedLinkConnection(object):
         :return: the SLState state object
         """
         return self.state
-
-    def setLog(self, sllog):
-        """
-        Sets the SLLog logging object.
-
-        :param sllog: SLLoc object to control info and error message logging.
-        """
-        if sllog is not None:
-            self.sllog = sllog
-
-    def getLog(self):
-        """
-        Returns the SLLog logging object.
-
-        :return: the SLLoc object to control info and error message logging.
-        """
-        return self.sllog
 
     def setNetTimout(self, netto):
         """
@@ -240,6 +208,9 @@ class SeedLinkConnection(object):
         if sladdr.startswith(prefix):
             self.sladdr = len(sladdr[prefix:])
         self.sladdr = sladdr
+        # set logger format
+        name = " obspy.seedlink [%s]" % (sladdr)
+        logger.name = name
 
     def setLastpkttime(self, lastpkttime):
         """
@@ -324,17 +295,17 @@ class SeedLinkConnection(object):
         """
         retval = True
         if len(self.streams) < 1 and self.info_request_string is None:
-            self._log(True, 0, "stream chain AND info type are empty")
+            logger.error("stream chain AND info type are empty")
             retval = False
         ndx = 0
         if self.sladdr is None:
-            self._log(False, 1, "server address %s is empty" % (self.sladdr))
+            logger.info("server address %s is empty" % (self.sladdr))
             retval = False
         else:
             ndx = self.sladdr.find(':')
             if ndx < 1 or len(self.sladdr) < ndx + 2:
                 msg = "host address  %s is not in '[hostname]:port' format"
-                self._log(True, 0, msg % (self.sladdr))
+                logger.error(msg % (self.sladdr))
                 retval = False
         return retval
 
@@ -370,13 +341,13 @@ class SeedLinkConnection(object):
         try:
             streamfile_file = open(streamfile, 'r')
         except IOError as ioe:
-            self._log(True, 0, "cannot open state file %s" % (ioe))
+            logger.error("cannot open state file %s" % (ioe))
             return 0
         except Exception as e:
             msg = "%s: opening state file: %s" % (e, streamfile)
-            self._log(True, 0, msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
-        self._log(False, 1,
+        logger.info(
             "recovering connection state from state file %s" % (streamfile))
         linecount = 0
         stacount = 0
@@ -399,12 +370,12 @@ class SeedLinkConnection(object):
                 if net is None:
                     msg = "invalid or missing network string at line " + \
                         "%s of stream list file: %s"
-                    self._log(True, 0, msg % (linecount, streamfile))
+                    logger.error(msg % (linecount, streamfile))
                     continue
                 if station is None:
                     msg = "invalid or missing station string at line " + \
                         "%s of stream list file: %s"
-                    self._log(True, 0, msg % (linecount, streamfile))
+                    logger.error(msg % (linecount, streamfile))
                     continue
                 if selectors_str is not None:
                     self.addStream(net, station, selectors_str, -1, None)
@@ -413,13 +384,13 @@ class SeedLinkConnection(object):
                     self.addStream(net, station, defselect, -1, None)
                     stacount += 1
             if (stacount == 0):
-                self._log(True, 0, "no streams defined in %s" % (streamfile))
+                logger.error("no streams defined in %s" % (streamfile))
             else:
-                self._log(False, 2,
-                          "Read %s streams from %s" % (stacount, streamfile))
+                logger.debug("Read %s streams from %s" % (stacount,
+                                                          streamfile))
         except IOError as e:
             msg = "%s: reading stream list file: %s" % (e, streamfile)
-            self._log(True, 0, msg)
+            logger.crictical(msg)
             raise SeedLinkException(msg)
         finally:
             try:
@@ -462,28 +433,24 @@ class SeedLinkConnection(object):
             netStaTkz = reqToken.split("_")
             # Fill in the NET and STA fields
             if (len(netStaTkz) != 2):
-                self._log(True, 0,
-                    "not in NET_STA format: %s" % (reqToken))
+                logger.error("not in NET_STA format: %s" % (reqToken))
                 configure = False
             else:
                 # First token, should be a network code
                 net = netStaTkz[0]
                 if len(net) < 1:
-                    self._log(True, 0,
-                        "not in NET_STA format: %s" % (reqToken))
+                    logger.error("not in NET_STA format: %s" % (reqToken))
                     configure = False
                 else:
                     # Second token, should be a station code
                     station = netStaTkz[1]
                     if len(station) < 1:
-                        self._log(True, 0,
-                            "not in NET_STA format: %s" % (reqToken))
+                        logger.error("not in NET_STA format: %s" % (reqToken))
                         configure = False
                 if len(reqTkz) > 1:
                     staselect = reqTkz[1]
                     if len(staselect) < 1:
-                        self._log(True, 0,
-                            "empty selector: %s" % (reqToken))
+                        logger.error("empty selector: %s" % (reqToken))
                         configure = False
                 else:
                     # If no specific selectors, use the default
@@ -494,10 +461,10 @@ class SeedLinkConnection(object):
                     self.addStream(net, station, staselect, -1, None)
                     stacount += 1
         if stacount == 0:
-            self._log(True, 0, "no streams defined in stream list")
+            logger.error("no streams defined in stream list")
         elif stacount > 0:
             msg = "parsed %d streams from stream list" % (stacount)
-            self._log(False, 2, msg)
+            logger.debug(msg)
         return stacount
 
     def addStream(self, net, station, selectors_str, seqnum, timestamp):
@@ -528,7 +495,7 @@ class SeedLinkConnection(object):
             if stream.net == SeedLinkConnection.UNINETWORK and \
                stream.station == SeedLinkConnection.UNISTATION:
                 msg = "addStream called, but uni-station mode configured!"
-                self._log(True, 0, msg)
+                logger.crictical(msg)
                 raise SeedLinkException(msg)
 
         selectors = selectors_str.split()
@@ -565,7 +532,7 @@ class SeedLinkConnection(object):
             if not stream.net == SeedLinkConnection.UNINETWORK or \
                not stream.station == SeedLinkConnection.UNISTATION:
                 msg = "setUniParams called, but multi-station mode configured!"
-                self._log(True, 0, msg)
+                logger.critical(msg)
                 raise SeedLinkException(msg)
         selectors = None
         if selectors_str is not None and len(selectors_str) > 0:
@@ -605,16 +572,16 @@ class SeedLinkConnection(object):
         try:
             statefile_file = open(self.statefile, 'r')
         except IOError as ioe:
-            self._log(True, 0, "cannot open state file: %s" % (ioe))
+            logger.error("cannot open state file: %s" % (ioe))
             return 0
         except Exception as e:
             msg = "%s: opening state file: %s" % (e, statefile)
-            self._log(True, 0, msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
 
         # recover the state
         msg = "recovering connection state from state file: %s"
-        self._log(False, 1, msg % (self.statefile))
+        logger.info(msg % (self.statefile))
         linecount = 0
         stacount = 0
         try:
@@ -636,7 +603,7 @@ class SeedLinkConnection(object):
                 # check for completeness of read
                 if timeStr == "":
                     msg = "error parsing line of state file: %s" % (line)
-                    self._log(True, 0, msg)
+                    logger.error(msg)
                     continue
                 elif timeStr == "null":
                     continue
@@ -660,16 +627,16 @@ class SeedLinkConnection(object):
                         except Exception as e:
                             msg = "parsing timestamp in line %s of state " + \
                                 "file: %s"
-                            self._log(True, 0, msg % (linecount, e.value))
+                            logger.error(msg % (linecount, e.value))
             if (stacount == 0):
                 msg = "no matching streams found in %s"
-                self._log(True, 0, msg % (self.statefile))
+                logger.error(msg % (self.statefile))
             else:
                 msg = "recovered state for %s streams in %s"
-                self._log(False, 2, msg % (stacount,  self.statefile))
+                logger.debug(msg % (stacount,  self.statefile))
         except IOError as e:
             msg = "%s: reading state file: %s" % (e, self.statefile)
-            self._log(True, 0, msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
             try:
@@ -693,13 +660,13 @@ class SeedLinkConnection(object):
         try:
             statefile_file = open(self.statefile, 'w')
         except IOError as ioe:
-            self._log(True, 0, "cannot open state file: %s" % (ioe))
+            logger.error("cannot open state file: %s" % (ioe))
             return 0
         except Exception as e:
             msg = "%s: opening state file: %s" % (e, statefile)
-            self._log(True, 0, msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
-        self._log(False, 2, "saving connection state to state file")
+        logger.debug("saving connection state to state file")
         stacount = 0
         try:
             # Loop through the stream chain
@@ -712,7 +679,7 @@ class SeedLinkConnection(object):
                         " " + curstream.btime.formatSeedLink() + "\n")
         except IOError as e:
             msg = "%s: writing state file: %s" % (e, self.statefile)
-            self._log(True, 0, msg)
+            logger.critical(msg)
             raise SeedLinkException(msg)
         finally:
             try:
@@ -725,7 +692,7 @@ class SeedLinkConnection(object):
         """
         Terminate the collection loop.
         """
-        self._log(False, 0, "terminating collect loop")
+        logger.warn("terminating collect loop")
         self.disconnect()
         self.state = SLState()
         self.info_request_string = None
@@ -757,7 +724,7 @@ class SeedLinkConnection(object):
         if self.socket is None or not self.isConnected():
             if not self.checkslcd():
                 msg = "problems with the connection description"
-                self._log(True, 0, msg)
+                logger.critical(msg)
                 raise SeedLinkException(msg)
             self.state.previous_time = time.time()
             #print "DEBUG: self.state.previous_time set:",
@@ -769,7 +736,7 @@ class SeedLinkConnection(object):
         npass = 0
         while True:
 
-            self._log(False, 5, "primary loop pass %s" % (npass))
+            logger.debug("primary loop pass %s" % (npass))
             #print "DEBUG: self.state.state:", self.state.state
             npass += 1
 
@@ -785,7 +752,7 @@ class SeedLinkConnection(object):
             if self.state.state == SLState.SL_DATA and self.netto > 0 and \
                self.state.netto_trig > 0:
                 msg = "network timeout (%s), reconnecting in %ss"
-                self._log(False, 0, msg % (self.netto, self.netdly))
+                logger.warn(msg % (self.netto, self.netdly))
                 self.disconnect()
                 self.state.state = SLState.SL_DOWN
                 self.state.netto_trig = -1
@@ -795,7 +762,7 @@ class SeedLinkConnection(object):
             if self.state.state == SLState.SL_DATA and \
                not self.state.expect_info and self.keepalive > 0 and \
                self.state.keepalive_trig > 0:
-                self._log(False, 2, "sending: keepalive request")
+                logger.debug("sending: keepalive request")
                 try:
                     self.sendInfoRequest("ID", 3)
                     self.state.query_mode = SLState.KEEP_ALIVE_QUERY
@@ -803,7 +770,7 @@ class SeedLinkConnection(object):
                     self.state.keepalive_trig = -1
                 except IOError as ioe:
                     msg = "I/O error, reconnecting in %ss"
-                    self._log(False, 0, msg % (self.netdly))
+                    logger.warn(msg % (self.netdly))
                     self.disconnect()
                     self.state.state = SLState.SL_DOWN
 
@@ -818,7 +785,7 @@ class SeedLinkConnection(object):
                 except IOError as ioe:
                     self.state.query_mode = SLState.NO_QUERY
                     msg = "I/O error, reconnecting in %ss"
-                    self._log(False, 0, msg % (self.netdly))
+                    logger.warn(msg % (self.netdly))
                     self.disconnect()
                     self.state.state = SLState.SL_DOWN
                 self.info_request_string = None
@@ -835,7 +802,7 @@ class SeedLinkConnection(object):
                     self.connect()
                     self.state.state = SLState.SL_UP
                 except Exception as e:
-                    self._log(True, 0, e.value)
+                    logger.error(e.value)
                     #traceback.print_exc()
                 self.state.netto_trig = -1
                 self.state.netdly_trig = -1
@@ -852,11 +819,11 @@ class SeedLinkConnection(object):
                         self.state.expect_info = True
                     except IOError as ioe:
                         msg = "SeedLink version does not support INFO requests"
-                        self._log(False, 1, msg)
+                        logger.info(msg)
                         self.state.query_mode = SLState.NO_QUERY
                         self.state.expect_info = False
                         msg = "I/O error, reconnecting in %ss"
-                        self._log(False, 0, msg % (self.netdly))
+                        logger.warn(msg % (self.netdly))
                         self.disconnect()
                         self.state.state = SLState.SL_DOWN
                     self.info_request_string = None
@@ -869,7 +836,7 @@ class SeedLinkConnection(object):
                             self.state.state = SLState.SL_DATA
                         except Exception as e:
                             msg = "negotiation with remote SeedLink failed: %s"
-                            self._log(True, 0, msg % (e))
+                            logger.error(msg % (e))
                             self.disconnect()
                             self.state.state = SLState.SL_DOWN
                             self.state.netdly_trig = -1
@@ -891,7 +858,7 @@ class SeedLinkConnection(object):
                         terminator = chr(self.state.databuf[temp]) != '*'
                         if not self.state.expect_info:
                             msg = "unexpected INFO packet received, skipping"
-                            self._log(True, 0, msg)
+                            logger.error(msg)
                         else:
                             if terminator:
                                 self.state.expect_info = False
@@ -901,11 +868,10 @@ class SeedLinkConnection(object):
                                SLState.KEEP_ALIVE_QUERY:
                                 sendpacket = False
                                 if not terminator:
-                                    self._log(True, 0, "non-terminated " + \
-                                              "keep-alive packet received!?!")
+                                    logger.error("non-terminated " + \
+                                        "keep-alive packet received!?!")
                                 else:
-                                    self._log(False, 2,
-                                              "keepalive packet received")
+                                    logger.debug("keepalive packet received")
                             else:
                                 slpacket = self.state.getPacket()
                                 # construct info String
@@ -936,7 +902,7 @@ class SeedLinkConnection(object):
                             if self.statefile is not None:
                                 self.saveState(self.statefile)
                         except SeedLinkException as sle:
-                            self._log(True, 0, "bad packet: %s" % (sle))
+                            logger.error("bad packet: %s" % (sle))
                             sendpacket = False
 
                     # Increment the send pointer
@@ -958,7 +924,7 @@ class SeedLinkConnection(object):
                 # Catch cases where the data stream stopped
                 try:
                     if self.state.isError():
-                        self._log(True, 0,
+                        logger.error(
                             "SeedLink reported an error with the last command")
                         self.disconnect()
                         return SLPacket.SLERROR
@@ -966,8 +932,7 @@ class SeedLinkConnection(object):
                     pass  # not enough bytes to determine packet type
                 try:
                     if self.state.isEnd():
-                        self._log(False, 1,
-                            "end of buffer or selected time window")
+                        logger.info("end of buffer or selected time window")
                         self.disconnect()
                         return SLPacket.SLTERMINATE
                 except SeedLinkException as sle:
@@ -980,7 +945,7 @@ class SeedLinkConnection(object):
                                                  self.sladdr)
                 except IOError as ioe:
                     msg = "socket read error: %s, reconnecting in %sss"
-                    self._log(True, 0, msg % (ioe, self.netdly))
+                    logger.error(msg % (ioe, self.netdly))
                     self.disconnect()
                     self.state.state = SLState.SL_DOWN
                     self.state.netto_trig = -1
@@ -1078,7 +1043,7 @@ class SeedLinkConnection(object):
                 raise SeedLinkException(msg)
 
             # socket connected
-            self._log(False, 1, "network socket opened")
+            logger.info("network socket opened")
             self.socket.settimeout(self.netto)
 
         except Exception as e:
@@ -1112,9 +1077,9 @@ class SeedLinkConnection(object):
             try:
                 self.socket.close()
             except IOError as ioe:
-                self._log(True, 1, "network socket close failed: %s" % (ioe))
+                logger.error("network socket close failed: %s" % (ioe))
             self.socket = None
-            self._log(False, 1, "network socket closed")
+            logger.info("network socket closed")
 
         # make sure previous state is cleaned up
         self.state = SLState()
@@ -1125,13 +1090,13 @@ class SeedLinkConnection(object):
         the state to the statefile, if it exists.
         """
         if self.socket is not None:
-            self._log(False, 1, "closing SeedLinkConnection()")
+            logger.info("closing SeedLinkConnection()")
             self.disconnect()
         if self.statefile is not None:
             try:
                 self.saveState(self.statefile)
             except SeedLinkException as sle:
-                self._log(True, 0, sle.value)
+                logger.error(sle.value)
 
     def isConnectedImpl(self, sock, timeout):
         """
@@ -1225,7 +1190,7 @@ class SeedLinkConnection(object):
         # check for end or no bytes read
         if (nbytesread == -1):
             msg = "[%s] socket.read(): %s: TCP FIN or EOF received"
-            self._log(True, 1, msg % (code, nbytesread))
+            logger.error(msg % (code, nbytesread))
             return
         else:
             if (nbytesread == 0):
@@ -1243,7 +1208,7 @@ class SeedLinkConnection(object):
         :raise: IOException if an I/O error occurs.
         """
         sendStr = "HELLO"
-        self._log(False, 2, "sending: %s" % (sendStr))
+        logger.debug("sending: %s" % (sendStr))
         bytes = sendStr + "\r"
         bytesread = self.sendData(bytes, self.sladdr,
                                   SeedLinkConnection.DFT_READBUF_SIZE)
@@ -1270,7 +1235,7 @@ class SeedLinkConnection(object):
         # Check the response to HELLO
         if self.server_id.lower() == "seedlink":
             msg = "connected to: '" + servstr[0:servstr.find('\r')] + "'"
-            self._log(False, 1, msg)
+            logger.info(msg)
         else:
             msg = "ncorrect response to HELLO: '%s'" % (servstr)
             raise SeedLinkException(msg)
@@ -1305,7 +1270,10 @@ class SeedLinkConnection(object):
         if self.checkVersion(2.92) >= 0:
             bytes = "INFO " + infoLevel + "\r"
             msg = "sending: requesting INFO level %s" % (infoLevel)
-            self._log(False, verb_level, msg)
+            if verb_level == 1:
+                logger.info(msg)
+            else:
+                logger.debug(msg)
             self.sendData(bytes, self.sladdr, 0)
         else:
             msg = "detected SeedLink version %s does not support INFO requests"
@@ -1370,11 +1338,11 @@ class SeedLinkConnection(object):
         acceptsel = 0  # Count of accepted selectors
         for selector in selectors:
             if len(selector) > SLNetStation.MAX_SELECTOR_SIZE:
-                self._log(False, 0, "invalid selector: %s" % (selector))
+                logger.warn("invalid selector: %s" % (selector))
             else:
                 # Build SELECT command, send it and receive response
                 sendStr = "SELECT " + selector
-                self._log(False, 2, "sending: %s" % (sendStr))
+                logger.debug("sending: %s" % (sendStr))
                 bytes = sendStr + "\r"
                 bytesread = None
                 bytesread = self.sendData(bytes, self.sladdr,
@@ -1383,12 +1351,11 @@ class SeedLinkConnection(object):
 
                 # Check response to SELECT
                 if readStr == "OK\r\n":
-                    msg = "response: selector %s is OK"
-                    self._log(False, 2, msg % (selector))
+                    logger.debug("response: selector %s is OK" % (selector))
                     acceptsel += 1
                 elif readStr == "ERROR\r\n":
                     msg = "response: selector %s not accepted"
-                    self._log(True, 0, msg % (selector))
+                    logger.error(msg % (selector))
                 else:
                     msg = "response: invalid response to SELECT command: %s"
                     raise SeedLinkException(msg % (readStr))
@@ -1399,7 +1366,7 @@ class SeedLinkConnection(object):
             raise SeedLinkException()
 
         msg = "response: %s selector(s) accepted"
-        self._log(False, 2, msg % (acceptsel))
+        logger.debug(msg % (acceptsel))
 
         # Issue the DATA, FETCH or TIME action commands. A specified start (and
         # optionally, stop time) takes precedence over the resumption from any
@@ -1420,22 +1387,22 @@ class SeedLinkConnection(object):
                 sendStr += " " + hex(curstream.seqnum + 1) + " " + \
                     curstream.getSLTimeStamp()
                 msg = "requesting resume data from 0x%s (decimal: %s) at %s"
-                self._log(False, 1, msg % (hex(curstream.seqnum + 1).upper(),
-                                           curstream.seqnum + 1),
-                                           curstream.getSLTimeStamp())
+                logger.info(msg % (hex(curstream.seqnum + 1).upper(),
+                                   curstream.seqnum + 1),
+                                   curstream.getSLTimeStamp())
             else:
                 # Increment sequence number by 1
                 sendStr += " " + hex(curstream.seqnum + 1)
                 msg = "requesting resume data from 0x%s (decimal: %s)"
-                self._log(False, 1, msg % (hex(curstream.seqnum + 1).upper(),
-                                           curstream.seqnum + 1))
+                logger.info(msg % (hex(curstream.seqnum + 1).upper(),
+                                   curstream.seqnum + 1))
         elif self.begin_time is not None:
             # begin time specified (should only be at initial startup)
             if self.checkVersion(2.92) >= 0:
                 sendStr = "TIME " + self.begin_time.formatSeedLink()
                 if self.end_time is not None:
                     sendStr += " " + self.end_time.formatSeedLink()
-                self._log(False, 1, "requesting specified time window")
+                logger.info("requesting specified time window")
             else:
                 msg = "detected SeedLink version %s does not support " + \
                     "TIME windows"
@@ -1446,10 +1413,10 @@ class SeedLinkConnection(object):
                 sendStr = "FETCH"
             else:
                 sendStr = "DATA"
-            self._log(False, 1, "requesting next available data")
+            logger.info("requesting next available data")
 
         # Send action command and receive response
-        self._log(False, 2, "sending: %s" % (sendStr))
+        logger.debug("sending: %s" % (sendStr))
         bytes = sendStr + "\r"
         bytesread = None
         bytesread = self.sendData(bytes, self.sladdr,
@@ -1458,7 +1425,7 @@ class SeedLinkConnection(object):
         # Check response to DATA/FETCH/TIME
         readStr = str(bytesread)
         if readStr == "OK\r\n":
-            self._log(False, 2, "response: DATA/FETCH/TIME command is OK")
+            logger.debug("response: DATA/FETCH/TIME command is OK")
             acceptsel += 1
         elif readStr == "ERROR\r\n":
             msg = "response: DATA/FETCH/TIME command is not accepted"
@@ -1522,7 +1489,7 @@ class SeedLinkConnection(object):
 
             # Build STATION command, send it and receive response
             sendStr = "STATION  " + curstream.station + " " + curstream.net
-            self._log(False, 2, "sending: %s" % (sendStr))
+            logger.debug("sending: %s" % (sendStr))
             bytes = sendStr + "\r"
             bytesread = None
             bytesread = self.sendData(bytes, self.sladdr,
@@ -1531,9 +1498,9 @@ class SeedLinkConnection(object):
 
             # Check response to SELECT
             if readStr == "OK\r\n":
-                self._log(False, 2, "response: station is OK (selected)")
+                logger.debug("response: station is OK (selected)")
             elif readStr == "ERROR\r\n":
-                self._log(True, 0, "response: station not accepted, skipping")
+                logger.error("response: station not accepted, skipping")
                 continue
             else:
                 msg = "response: invalid response to STATION command: %s"
@@ -1543,7 +1510,7 @@ class SeedLinkConnection(object):
             try:
                 self.negotiateStation(curstream)
             except Exception as e:
-                self._log(True, 0, e.value)
+                logger.error(e.value)
                 continue
             acceptsta += 1
 
@@ -1551,11 +1518,11 @@ class SeedLinkConnection(object):
         if acceptsta < 1:
             raise SeedLinkException("no stations accepted")
 
-        self._log(False, 1, "%s station(s) accepted" % (acceptsta))
+        logger.info("%s station(s) accepted" % (acceptsta))
 
         # Issue END action command
         sendStr = "END"
-        self._log(False, 2, "sending: %s" % (sendStr))
+        logger.debug("sending: %s" % (sendStr))
         bytes = sendStr + "\r"
         self.sendData(bytes, self.sladdr, 0)
 
@@ -1626,5 +1593,4 @@ class SeedLinkConnection(object):
             stream.seqnum = seqnum
             stream.btime = btime
         elif not wildcarded:
-            msg = "unexpected data received: %s %s"
-            self._log(True, 0, msg % (net, station))
+            logger.error("unexpected data received: %s %s" % (net, station))

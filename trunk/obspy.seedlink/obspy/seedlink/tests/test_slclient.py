@@ -11,14 +11,12 @@ import unittest
 class SLClientTestCase(unittest.TestCase):
 
     def test_info(self):
-        slClient = SLClient()
+        slClient = SLClient(loglevel='DEBUG')
         slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
         slClient.infolevel = "ID"
         slClient.verbose = 2
         slClient.initialize()
         slClient.run()
-        print
-        print
 
     def test_time_window(self):
         slClient = SLClient()
