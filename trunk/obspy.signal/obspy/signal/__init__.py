@@ -188,7 +188,7 @@ from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
-        delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, coincidenceTrigger
+    delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, coincidenceTrigger
 from invsim import cosTaper, cornFreq2Paz
 from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
