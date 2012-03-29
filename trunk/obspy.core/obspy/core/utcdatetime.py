@@ -219,11 +219,13 @@ class UTCDateTime(object):
         elif len(args) == 1 and len(kwargs) == 0:
             value = args[0]
             # check types
-            if hasattr(value, '__float__'):
+            try:
                 # got a timestamp
-                self.timestamp = float(value)
+                self.timestamp = value.__float__()
                 return
-            elif isinstance(value, datetime.datetime):
+            except:
+                pass
+            if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
                 self._fromDateTime(value)
                 return

@@ -44,6 +44,25 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertRaises(Exception, UTCDateTime, "1970,001,12:23:34",
                           iso8601=True)
 
+    def test_fromNumPyString(self):
+        """
+        Tests importing from numpy strings.
+        """
+        # some strange patterns
+        dt = UTCDateTime(np.string_("1970-01-01 12:23:34"))
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime(np.string_("1970,01,01,12:23:34"))
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime(np.string_("1970,001,12:23:34"))
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 12, 23, 34))
+        dt = UTCDateTime(np.string_("20090701121212"))
+        self.assertEquals(dt, UTCDateTime(2009, 7, 1, 12, 12, 12))
+        dt = UTCDateTime(np.string_("19700101"))
+        self.assertEquals(dt, UTCDateTime(1970, 1, 1, 0, 0))
+        # non ISO8601 strings should raise an exception
+        self.assertRaises(Exception, UTCDateTime,
+                          np.string_("1970,001,12:23:34"), iso8601=True)
+
     def test_fromPythonDateTime(self):
         """
         Tests initialization from a given time string not ISO8601 compatible.
