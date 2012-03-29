@@ -46,7 +46,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
 
     def test_fromNumPyString(self):
         """
-        Tests importing from numpy strings.
+        Tests importing from NumPy strings.
         """
         # some strange patterns
         dt = UTCDateTime(np.string_("1970-01-01 12:23:34"))
