@@ -93,7 +93,6 @@ def load_npz(file_, data_dict, samp_int_dict):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
         else:
             data_dict[key] = npz_dict[key].tolist()
-    npz_dict.close()
 
 
 def main():
