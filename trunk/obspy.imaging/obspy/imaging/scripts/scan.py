@@ -14,6 +14,9 @@ Directories can also be used as arguments. By default they are scanned
 recursively (disable with "-n"). Symbolic links are followed by default
 (disable with "-i"). Detailed information on all files is printed using "-v".
 
+Gap data can be written to a numpy npz file. This file can be loaded later
+for optionally adding more data and plotting.
+
 Supported formats: All formats supported by ObsPy modules (currently: MSEED,
 GSE2, SAC, SACXY, WAV, SH-ASC, SH-Q, SEISAN).
 If the format is known beforehand, the reading speed can be increased
@@ -77,6 +80,21 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
         print("Problem with filename/dirname: %s" % (path))
     return counter
 
+def write_npz(file_, data_dict, samp_int_dict):
+    npz_dict = data_dict.copy()
+    for key in samp_int_dict.keys():
+        npz_dict[key + '_SAMP'] = samp_int_dict[key]
+    np.savez(file_, **npz_dict)
+
+def load_npz(file_, data_dict, samp_int_dict):
+    npz_dict = np.load(file_)
+    for key in npz_dict.keys():
+        if key.endswith('_SAMP'):
+            samp_int_dict[key[:-5]] = npz_dict[key].tolist()
+        else:
+            data_dict[key] = npz_dict[key].tolist()
+    npz_dict.close()
+
 
 def main():
     parser = OptionParser(__doc__.strip())
@@ -100,10 +118,18 @@ def main():
                       "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " + \
                       "These get marked by vertical lines in the plot. " + \
                       "Useful e.g. to mark event origin times.")
+    parser.add_option("-w", "--write", default=None,
+                      type="string", dest="write",
+                      help="Optional, npz file for writing data "
+                      "after scanning waveform files")
+    parser.add_option("-l", "--load", default=None,
+                      type="string", dest="load",
+                      help="Optional, npz file for loading data "
+                      "before scanning waveform files")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
-    if len(largs) == 0:
+    if len(largs) == 0 and options.load is None:
         parser.print_help()
         sys.exit(1)
 
@@ -129,15 +155,18 @@ def main():
     data = {}
     samp_int = {}
     counter = 1
+    if options.load:
+        load_npz(options.load, data, samp_int)
     for path in largs:
         counter = parse_func(data, samp_int, path, counter, options.format,
                              options.verbose, options.ignore_links)
-
     if not data:
         print("No waveform data found.")
         return
+    if options.write:
+        write_npz(options.write, data, samp_int)
 
-    # Loop throught this dictionary
+    # Loop through this dictionary
     ids = data.keys()
     ids = sorted(ids)
     for _i, _id in enumerate(ids):
