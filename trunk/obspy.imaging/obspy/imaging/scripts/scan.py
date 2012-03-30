@@ -80,11 +80,13 @@ def recursive_parse(data_dict, samp_int_dict, path, counter, format=None,
         print("Problem with filename/dirname: %s" % (path))
     return counter
 
+
 def write_npz(file_, data_dict, samp_int_dict):
     npz_dict = data_dict.copy()
     for key in samp_int_dict.keys():
         npz_dict[key + '_SAMP'] = samp_int_dict[key]
     np.savez(file_, **npz_dict)
+
 
 def load_npz(file_, data_dict, samp_int_dict):
     npz_dict = np.load(file_)
@@ -93,6 +95,8 @@ def load_npz(file_, data_dict, samp_int_dict):
             samp_int_dict[key[:-5]] = npz_dict[key].tolist()
         else:
             data_dict[key] = npz_dict[key].tolist()
+    if hasattr(npz_dict, "close"):
+        npz_dict.close()
 
 
 def main():
