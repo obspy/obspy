@@ -157,7 +157,7 @@ class SEG2(object):
         date = self.stream.stats.seg2.ACQUISITION_DATE
         time = time.strip().split(':')
         date = date.strip().split('/')
-        hour, minute, second = int(date[0]), int(time[1]), float(time[2])
+        hour, minute, second = int(time[0]), int(time[1]), float(time[2])
         day, month, year = int(date[0]), MONTHS[date[1].lower()], int(date[2])
         self.starttime = UTCDateTime(year, month, day, hour, minute, second)
 
