@@ -5,3 +5,4 @@ dev:
  * Limited localization support and the time axis(es) can be swapped.
  * traces with same id but different processing steps will not be merged
    anymore using the plot() method
+ * accept a list of two values for width of beachballs (using Ellipse patch)

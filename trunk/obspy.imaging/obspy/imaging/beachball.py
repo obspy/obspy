@@ -66,11 +66,18 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     :param bgcolor: The background color, usually white.
     :param alpha: The alpha level of the beach ball.
     :param xy: Origin position of the beach ball as tuple.
-    :param width: Symbol size of beach ball.
+    :type width: int (or float) or list of two ints (or floats)
+    :param width: Symbol size of beach ball. Specifying a single value draws
+        a circle, specifying a list of two values draws an Ellipse.
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
     """
+    # check if one or two widths are specified (Circle or Ellipse)
+    try:
+        assert(len(width) == 2)
+    except TypeError:
+        width = (width, width)
     mt = None
     np1 = None
     if isinstance(fm, MomentTensor):
@@ -187,9 +194,14 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
 
     .. _`Generic Mapping Tools (GMT)`: http://gmt.soest.hawaii.edu
     """
+    # check if one or two widths are specified (Circle or Ellipse)
+    try:
+        assert(len(width) == 2)
+    except TypeError:
+        width = (width, width)
     collect = []
     colors = []
-    res = width / float(size)
+    res = [value / float(size) for value in width]
     b = 1
     big_iso = 0
     j = 1
@@ -230,11 +242,11 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     if np.fabs(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) < EPSILON:
         # pure implosion-explosion
         if vi > 0.:
-            cir = patches.Circle(xy, radius=width / 2.0)
+            cir = patches.Ellipse(xy, width=width[0], height=width[1])
             collect.append(cir)
             colors.append('b')
         if vi < 0.:
-            cir = patches.Circle(xy, radius=width / 2.0)
+            cir = patches.Ellipse(xy, width=width[0], height=width[1])
             collect.append(cir)
             colors.append('w')
         return colors, collect
@@ -258,12 +270,12 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
     # between -1 and 1 - f there will be no nodes whatsoever
 
     if iso < -1:
-        cir = patches.Circle(xy, radius=width / 2.0)
+        cir = patches.Ellipse(xy, width=width[0], height=width[1])
         collect.append(cir)
         colors.append('w')
         return colors, collect
     elif iso > 1 - f:
-        cir = patches.Circle(xy, radius=width / 2.0)
+        cir = patches.Ellipse(xy, width=width[0], height=width[1])
         collect.append(cir)
         colors.append('b')
         return colors, collect
@@ -354,7 +366,7 @@ def plotMT(T, N, P, size=200, outline=True, plot_zerotrace=True,
         rgb1 = 'w'
         rgb2 = 'b'
 
-    cir = patches.Circle(xy, radius=width / 2.0)
+    cir = patches.Ellipse(xy, width=width[0], height=width[1])
     collect.append(cir)
     colors.append(rgb2)
     if n == 0:
@@ -502,6 +514,11 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     `bb.m <http://www.ceri.memphis.edu/people/olboyd/Software/Software.html>`_
     written by Andy Michael and Oliver Boyd.
     """
+    # check if one or two widths are specified (Circle or Ellipse)
+    try:
+        assert(len(width) == 2)
+    except TypeError:
+        width = (width, width)
     S1 = np1.strike
     D1 = np1.dip
     R1 = np1.rake
@@ -561,18 +578,23 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     Y = Y * D / 90
 
     # calculate resolution
-    res = width / float(size)
+    res = [value / float(size) for value in width]
 
     # construct the patches
-    collect = [patches.Circle(xy, radius=width / 2.0)]
+    collect = [patches.Ellipse(xy, width=width[0], height=width[1])]
     collect.append(xy2patch(Y, X, res, xy))
     return ['b', 'w'], collect
 
 
 def xy2patch(x, y, res, xy):
+    # check if one or two resolutions are specified (Circle or Ellipse)
+    try:
+        assert(len(res) == 2)
+    except TypeError:
+        res = (res, res)
     # transform into the Path coordinate system
-    x = x * res + xy[0]
-    y = y * res + xy[1]
+    x = x * res[0] + xy[0]
+    y = y * res[1] + xy[1]
     verts = zip(x.tolist(), y.tolist())
     codes = [mplpath.Path.MOVETO]
     codes.extend([mplpath.Path.LINETO] * (len(x) - 2))
