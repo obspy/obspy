@@ -330,7 +330,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             remove_sensitivity=True, simulate_sensitivity=True,
             water_level=600.0, zero_mean=True, taper=True,
             taper_fraction=0.05, pre_filt=None, seedresp=None,
-            nfft_pow2=False, pitsasim=True, sacsim=False, **_kwargs):
+            nfft_pow2=False, pitsasim=True, sacsim=False, shsim=False,
+            **_kwargs):
     """
     Simulate/Correct seismometer.
 
@@ -382,6 +383,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type sacsim: Boolean
     :param sacsim: Choose parameters to match
         instrument correction as done by SAC.
+    :type shsim: Boolean
+    :param shsim: Choose parameters to match
+        instrument correction as done by Seismic Handler.
     :return: The corrected data are returned as numpy.ndarray float64
         array. float64 is chosen to avoid numerical instabilities.
 
@@ -480,6 +484,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     if pitsasim:
         # linear detrend
         data = simpleDetrend(data)
+    if shsim:
+        # detrend using least squares
+        data = scipy.signal.detrend(data, type="linear")
     # correct for involved overall sensitivities
     if paz_remove and remove_sensitivity:
         data /= paz_remove['sensitivity']
