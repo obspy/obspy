@@ -2,16 +2,17 @@
 """
 The obspy.signal.trigger test suite.
 """
-
+from __future__ import with_statement
 from ctypes import ArgumentError
-from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
-        arPick, coincidenceTrigger
-from obspy.signal.util import clibsignal
 from obspy.core import read, Stream, UTCDateTime
-import numpy as np
-import unittest
-import os
+from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
+    coincidenceTrigger, arPick
+from obspy.signal.util import clibsignal
 import gzip
+import numpy as np
+import os
+import unittest
+import warnings
 
 
 class TriggerTestCase(unittest.TestCase):
@@ -171,19 +172,22 @@ class TriggerTestCase(unittest.TestCase):
         # 2. no weighting, station selection
         # => 2 events, no false triggers
         trace_ids = ['BW.UH1..SHZ', 'BW.UH3..SHZ', 'BW.UH4..EHZ']
-        res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
-                                 trace_ids=trace_ids, sta=0.5, lta=10)
-        self.assertTrue(len(res) == 2)
-        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
-        self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
-        self.assertTrue(4.2 < res[0]['duration'] < 4.8)
-        self.assertTrue(res[0]['stations'] == ['UH3', 'UH1', 'UH4'])
-        self.assertTrue(res[0]['coincidence_sum'] == 3)
-        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
-        self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(4.2 < res[1]['duration'] < 4.4)
-        self.assertTrue(res[1]['stations'] == ['UH3', 'UH1', 'UH4'])
-        self.assertTrue(res[1]['coincidence_sum'] == 3)
+        # ignore UserWarnings
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
+                                     trace_ids=trace_ids, sta=0.5, lta=10)
+            self.assertTrue(len(re) == 2)
+            self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+            self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
+            self.assertTrue(4.2 < re[0]['duration'] < 4.8)
+            self.assertTrue(re[0]['stations'] == ['UH3', 'UH1', 'UH4'])
+            self.assertTrue(re[0]['coincidence_sum'] == 3)
+            self.assertTrue(re[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+            self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
+            self.assertTrue(4.2 < re[1]['duration'] < 4.4)
+            self.assertTrue(re[1]['stations'] == ['UH3', 'UH1', 'UH4'])
+            self.assertTrue(re[1]['coincidence_sum'] == 3)
         # 3. weighting, station selection
         # => 3 events, no false triggers
         trace_ids = {'BW.UH1..SHZ': 0.4, 'BW.UH2..SHZ': 0.35,
@@ -209,20 +213,23 @@ class TriggerTestCase(unittest.TestCase):
         # 4. weighting, station selection, max_len
         # => 2 events, no false triggers, small event does not overlap anymore
         trace_ids = {'BW.UH1..SHZ': 0.6, 'BW.UH2..SHZ': 0.6}
-        res = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
-                                 trace_ids=trace_ids, max_trigger_length=0.13,
-                                 sta=0.5, lta=10)
-        self.assertTrue(len(res) == 2)
-        self.assertTrue(res[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
-        self.assertTrue(res[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
-        self.assertTrue(0.2 < res[0]['duration'] < 0.3)
-        self.assertTrue(res[0]['stations'] == ['UH2', 'UH1'])
-        self.assertTrue(res[0]['coincidence_sum'] == 1.2)
-        self.assertTrue(res[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
-        self.assertTrue(res[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
-        self.assertTrue(0.18 < res[1]['duration'] < 0.2)
-        self.assertTrue(res[1]['stations'] == ['UH2', 'UH1'])
-        self.assertTrue(res[1]['coincidence_sum'] == 1.2)
+        # ignore UserWarnings
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
+                                     trace_ids=trace_ids,
+                                     max_trigger_length=0.13, sta=0.5, lta=10)
+            self.assertTrue(len(re) == 2)
+            self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
+            self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
+            self.assertTrue(0.2 < re[0]['duration'] < 0.3)
+            self.assertTrue(re[0]['stations'] == ['UH2', 'UH1'])
+            self.assertTrue(re[0]['coincidence_sum'] == 1.2)
+            self.assertTrue(re[1]['time'] > UTCDateTime("2010-05-27T16:27:27"))
+            self.assertTrue(re[1]['time'] < UTCDateTime("2010-05-27T16:27:33"))
+            self.assertTrue(0.18 < re[1]['duration'] < 0.2)
+            self.assertTrue(re[1]['stations'] == ['UH2', 'UH1'])
+            self.assertTrue(re[1]['coincidence_sum'] == 1.2)
         # 5. station selection, extremely sensitive settings
         # => 4 events, 1 false triggers
         res = coincidenceTrigger("recstalta", 2.5, 1, st.copy(), 2,
