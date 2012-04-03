@@ -81,8 +81,8 @@ class CoreTestCase(unittest.TestCase):
             tr2 = read(testfile, format='WAV')[0]
             maxint = 2 ** (8 * width - 1) - 1
             self.assertEqual(maxint, abs(tr2.data).max())
-            np.testing.assert_array_equal(tr2.data, np.require(tr.data /\
-                abs(tr.data).max() * maxint, dtype='int32'))
+            np.testing.assert_array_almost_equal(tr2.data / 1000.0,
+                (tr.data / abs(tr.data).max() * maxint) / 1000.0, 3)
             os.remove(testfile)
 
     def test_writeStreamViaObsPy(self):
