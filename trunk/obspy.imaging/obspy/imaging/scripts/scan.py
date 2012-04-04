@@ -129,6 +129,9 @@ def main():
                       type="string", dest="load",
                       help="Optional, npz file for loading data "
                       "before scanning waveform files")
+    parser.add_option("--nox", default=False,
+                      action="store_true", dest="nox",
+                      help="Optional, Do not plot crosses.")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -176,8 +179,13 @@ def main():
         data[_id].sort()
         startend = np.array(data[_id])
         offset = np.ones(len(startend)) * _i  # generate list of y values
-        ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
-        ax.hlines(offset, startend[:, 0], startend[:, 1])
+        if not options.nox:
+            ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
+            ax.hlines(offset, startend[:, 0], startend[:, 1])
+        else:
+            ax.xaxis_date()
+            ax.hlines(offset, startend[:, 0], startend[:, 1], 'b',
+                      linewidth=2, zorder=3)
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gaps = startend[diffs > 1.8 * samp_int[_id], 1]
@@ -185,7 +193,6 @@ def main():
             offset = offset[:len(gaps)]
             ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)
 
-    #
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
