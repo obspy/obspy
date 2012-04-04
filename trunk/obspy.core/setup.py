@@ -65,6 +65,14 @@ ENTRY_POINTS = {
         'readFormat = obspy.core.stream:readPickle',
         'writeFormat = obspy.core.stream:writePickle',
     ],
+    'obspy.plugin.event': [
+        'QUAKEML = obspy.core.quakeml',
+    ],
+    'obspy.plugin.event.QUAKEML': [
+        'isFormat = obspy.core.quakeml:isQuakeML',
+        'readFormat = obspy.core.quakeml:readQuakeML',
+        'writeFormat = obspy.core.quakeml:writeQuakeML',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',

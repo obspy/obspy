@@ -12,12 +12,6 @@ class TraceTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.trace.Trace.
     """
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_len(self):
         """
         Tests the __len__ and count methods of the Trace class.

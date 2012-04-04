@@ -10,25 +10,19 @@ Module for handling ObsPy Catalog and Event objects.
 """
 
 from glob import glob, iglob, has_magic
-from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
 from obspy.core.util.attribdict import AttribDict
-import StringIO
+from obspy.core.util.base import _readFromPlugin
 import os
 import urllib2
-try:
-    # try using lxml as it is faster
-    from lxml import etree
-except ImportError:
-    from xml.etree import ElementTree as etree
 
 
-def readQuakeML(pathname_or_url=None):
+def readEvents(pathname_or_url=None):
     """
-    Read QuakeML files into an ObsPy Catalog object.
+    Read event files into an ObsPy Catalog object.
 
-    The :func:`~obspy.core.event.readQuakeML` function opens either one or
-    multiple QuakeML formated event files given via file name or URL using the
+    The :func:`~obspy.core.event.readEvents` function opens either one or
+    multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
     :type pathname_or_url: string, optional
@@ -58,13 +52,13 @@ def readQuakeML(pathname_or_url=None):
         fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
         fh.close()
-        cat.extend(_readQuakeML(fh.name).events)
+        cat.extend(_read(fh.name).events)
         os.remove(fh.name)
     else:
         # file name
         pathname = pathname_or_url
         for file in iglob(pathname):
-            cat.extend(_readQuakeML(file).events)
+            cat.extend(_read(file).events)
         if len(cat) == 0:
             # try to give more specific information why the stream is empty
             if has_magic(pathname) and not glob(pathname):
@@ -74,218 +68,22 @@ def readQuakeML(pathname_or_url=None):
     return cat
 
 
-def _readSeisHubEventXML(filename):
-    """
-    Reads a single SeisHub event XML file and returns a ObsPy Catalog object.
-    """
-    # XXX: very ugly way to add new root tags
-    lines = open(filename, 'rt').readlines()
-    lines.insert(2, '<quakeml xmlns="http://quakeml.org/xmlns/quakeml/1.0">\n')
-    lines.insert(3, '  <eventParameters>')
-    lines.append('  </eventParameters>\n')
-    lines.append('</quakeml>\n')
-    temp = StringIO.StringIO(''.join(lines))
-    return _readQuakeML(temp)
-
-
 @uncompressFile
-def _readQuakeML(filename):
+def _read(filename, format=None, **kwargs):
     """
-    Reads a single QuakeML file and returns a ObsPy Catalog object.
+    Reads a single event file into a ObsPy Catalog object.
     """
-    xml_doc = etree.parse(filename)
-    xml_root = xml_doc.getroot()
-    catalog = Catalog()
-    # check for namespace
-    for namespace in ['http://quakeml.org/xmlns/quakeml/1.0',
-                      'http://quakeml.org/xmlns/bed/1.2', '']:
-        obj = __xml2obj(xml_root, 'eventParameters', namespace=namespace)
-        if obj:
-            break
-    if not namespace:
-        raise Exception("Not a QuakeML compatible file: %s." % filename)
-    for event_xml in __xml2obj(xml_root, 'eventParameters/event',
-                               namespace=namespace):
-        # create new Event object
-        event = Event()
-        # preferred items
-        preferred_origin = __xml2obj(event_xml, 'preferredOriginID', str,
-                                     namespace=namespace)
-        preferred_magnitude = __xml2obj(event_xml, 'preferredMagnitudeID', str,
-                                        namespace=namespace)
-        preferred_focal_mechanism = \
-            __xml2obj(event_xml, 'preferredFocalMechanismID', str,
-                      namespace=namespace)
-        # event type
-        event.type = __xml2obj(event_xml, 'type', str, namespace=namespace)
-        # creation info
-        event.creation_info = AttribDict()
-        event.creation_info.agency_uri = \
-            __xml2obj(event_xml, 'creationInfo/agencyURI', str,
-                      namespace=namespace)
-        event.creation_info.author_uri = \
-            __xml2obj(event_xml, 'creationInfo/authorURI', str,
-                      namespace=namespace)
-        event.creation_info.creation_time = \
-            __xml2obj(event_xml, 'creationInfo/creationTime', UTCDateTime,
-                      namespace=namespace)
-        event.creation_info.version = \
-            __xml2obj(event_xml, 'creationInfo/version', str,
-                      namespace=namespace)
-        # description
-        event.description = AttribDict()
-        event.description.type = __xml2obj(event_xml, 'description/type', str,
-                                           namespace=namespace)
-        event.description.text = __xml2obj(event_xml, 'description/text', str,
-                                           namespace=namespace)
-        # origins
-        event.origins = []
-        for origin_xml in __xml2obj(event_xml, 'origin', namespace=namespace):
-            origin = Origin()
-            origin.public_id = origin_xml.get('publicID')
-            origin.time = __xml2obj(origin_xml, 'time/value', UTCDateTime,
-                                    namespace=namespace)
-            origin.time_uncertainty = \
-                __xml2obj(origin_xml, 'time/uncertainty', float,
-                          namespace=namespace)
-            origin.latitude = __xml2obj(origin_xml, 'latitude/value', float,
-                                        namespace=namespace)
-            origin.latitude_uncertainty = \
-                __xml2obj(origin_xml, 'latitude/uncertainty', float,
-                          namespace=namespace)
-            origin.longitude = __xml2obj(origin_xml, 'longitude/value', float,
-                                         namespace=namespace)
-            origin.longitude_uncertainty = \
-                __xml2obj(origin_xml, 'longitude/uncertainty', float,
-                          namespace=namespace)
-            origin.depth = __xml2obj(origin_xml, 'depth/value', float,
-                                     namespace=namespace)
-            origin.depth_uncertainty = \
-                __xml2obj(origin_xml, 'depth/uncertainty', float,
-                          namespace=namespace)
-            origin.depth_type = __xml2obj(origin_xml, 'depthType', str,
-                                          namespace=namespace)
-            origin.method_id = __xml2obj(origin_xml, 'depthType', str,
-                                         namespace=namespace)
-            # quality
-            origin.quality.used_station_count = \
-                __xml2obj(origin_xml, 'quality/usedStationCount', int,
-                          namespace=namespace)
-            origin.quality.standard_error = \
-                __xml2obj(origin_xml, 'quality/standardError', float,
-                          namespace=namespace)
-            origin.quality.azimuthal_gap = \
-                __xml2obj(origin_xml, 'quality/azimuthalGap', float,
-                          namespace=namespace)
-            origin.quality.maximum_distance = \
-                __xml2obj(origin_xml, 'quality/maximumDistance', float,
-                          namespace=namespace)
-            origin.quality.minimum_distance = \
-                __xml2obj(origin_xml, 'quality/minimumDistance', float,
-                          namespace=namespace)
-            origin.type = __xml2obj(origin_xml, 'type', str,
-                                    namespace=namespace)
-            origin.evaluation_mode = \
-                __xml2obj(origin_xml, 'evaluationMode', str,
-                          namespace=namespace)
-            origin.evaluation_status = \
-                __xml2obj(origin_xml, 'evaluationStatus', str,
-                          namespace=namespace)
-            origin.comment = __xml2obj(origin_xml, 'comment', str,
-                                       namespace=namespace)
-            # creationInfo
-            origin.creation_info.agency_uri = \
-                __xml2obj(origin_xml, 'creationInfo/agencyURI', str,
-                          namespace=namespace)
-            origin.creation_info.author_uri = \
-                __xml2obj(origin_xml, 'creationInfo/authorURI', str,
-                          namespace=namespace)
-            # originUncertainty
-            origin.origin_uncertainty.min_horizontal_uncertainty = \
-                __xml2obj(origin_xml,
-                          'originUncertainty/minHorizontalUncertainty', float,
-                          namespace=namespace)
-            origin.origin_uncertainty.max_horizontal_uncertainty = \
-                __xml2obj(origin_xml,
-                          'originUncertainty/maxHorizontalUncertainty', float,
-                          namespace=namespace)
-            origin.origin_uncertainty.azimuth_max_horizontal_uncertainty = \
-                __xml2obj(origin_xml,
-                          'originUncertainty/azimuthMaxHorizontalUncertainty',
-                          float, namespace=namespace)
-            # add preferred origin to front
-            if origin.public_id == preferred_origin:
-                event.origins.insert(0, origin)
-            else:
-                event.origins.append(origin)
-        # magnitudes
-        event.magnitudes = []
-        for mag_xml in __xml2obj(event_xml, 'magnitude', namespace=namespace):
-            magnitude = Origin()
-            magnitude.public_id = mag_xml.get('publicID')
-            magnitude.magnitude = __xml2obj(mag_xml, 'mag/value', float,
-                                            namespace=namespace)
-            magnitude.magnitude_uncertainty = \
-                __xml2obj(mag_xml, 'mag/uncertainty', float,
-                          namespace=namespace)
-            magnitude.type = __xml2obj(mag_xml, 'type', str,
-                                       namespace=namespace)
-            magnitude.origin_id = __xml2obj(mag_xml, 'originID', str,
-                                            namespace=namespace)
-            magnitude.station_count = __xml2obj(mag_xml, 'stationCount', int,
-                                                namespace=namespace)
-            # creationInfo
-            magnitude.creation_info.agency_uri = \
-                __xml2obj(origin_xml, 'creationInfo/agencyURI', str,
-                          namespace=namespace)
-            magnitude.creation_info.author_uri = \
-                __xml2obj(origin_xml, 'creationInfo/authorURI', str,
-                          namespace=namespace)
-            # add preferred magnitude to front
-            if magnitude.public_id == preferred_magnitude:
-                event.magnitudes.insert(0, magnitude)
-            else:
-                event.magnitudes.append(magnitude)
-        # add current event to catalog
-        catalog.append(event)
+    catalog, format = _readFromPlugin('event', filename, format=None, **kwargs)
+    for event in catalog:
+        event._format = format
     return catalog
-
-
-def writeQuakeML(catalog):
-    """
-    Writes a QuakeML file from given ObsPy Catalog or Event object.
-    """
-    raise NotImplementedError
-
-
-def __xml2obj(xml_doc, xpath, convert_to=None, namespace=''):
-    """
-    """
-    parts = xpath.split('/')
-    ns = '/{%s}' % (namespace)
-    xpath = (ns + ns.join(parts))[1:]
-    if convert_to is None:
-        return xml_doc.findall(xpath)
-    text = xml_doc.findtext(xpath)
-    # empty/not set datetimes should return None
-    if convert_to == UTCDateTime and not text:
-        return None
-    # str(None) should be ''
-    if convert_to == str and text is None:
-        return ''
-    # try to convert into requested type
-    try:
-        return convert_to(text)
-    except:
-        return None
 
 
 def _createExampleCatalog():
     """
     Create an example catalog.
     """
-    cat = Catalog()
-    return cat
+    return readEvents('/path/to/neries_events.xml')
 
 
 class Origin(AttribDict):
@@ -339,13 +137,15 @@ class Event(AttribDict):
     magnitudes = []
 
     def __str__(self):
-        out = '%s | %+7.3f, %+8.3f' % (self.preferred_origin.time,
-                                   self.preferred_origin.latitude,
-                                   self.preferred_origin.longitude)
+        out = ''
+        if self.preferred_origin:
+            out += '%s | %+7.3f, %+8.3f' % (self.preferred_origin.time,
+                                       self.preferred_origin.latitude,
+                                       self.preferred_origin.longitude)
         if self.preferred_magnitude:
             out += ' | %s %-2s' % (self.preferred_magnitude.magnitude,
                                    self.preferred_magnitude.type)
-        if self.preferred_origin.evaluation_mode:
+        if self.preferred_origin and self.preferred_origin.evaluation_mode:
             out += ' | %s' % (self.preferred_origin.evaluation_mode)
         return out
 
@@ -569,16 +369,5 @@ class Catalog(object):
 
 
 if __name__ == '__main__':
-    # neries
-    #from obspy.neries import Client
-    #data = Client(user='test@obspy.org').getLatestEvents(3)
-    #print data
-    #catalog = _readQuakeML(StringIO.StringIO(data))
-    # iris
-    from obspy.iris import Client
-    data = Client(user='test@obspy.org').event(minmag=9.1)
-    catalog = _readQuakeML(StringIO.StringIO(data))
-    # seishub
-    #cat = _readSeisHubEventXML('obspyck.xml')
-    print catalog
-    #catalog.plot()
+    import doctest
+    doctest.testmod(exclude_empty=True)

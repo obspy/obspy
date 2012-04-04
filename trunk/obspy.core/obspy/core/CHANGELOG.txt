@@ -1,4 +1,6 @@
 dev:
+ * new util.xmlwrapper module for uniform API for Python's default xml and lxml
+ * plugin hooks in setup.py for quakeml event files
  * stream.select works now case insensitive
  * support for initialization of UTCDateTime from numpy.string_ types
  * new dtype parameter on read method allows converting data into given dtype

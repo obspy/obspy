@@ -19,6 +19,7 @@ import numpy as np
 import os
 import sys
 import tempfile
+import warnings
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -332,8 +333,8 @@ ENTRY_POINTS = {
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                       'readFormat',
-                                       WAVEFORM_PREFERRED_ORDER)
+                                       'readFormat', WAVEFORM_PREFERRED_ORDER),
+    'event': _getEntryPoints('obspy.plugin.event', 'readFormat')
 }
 
 
@@ -393,6 +394,52 @@ def getMatplotlibVersion():
     except ImportError:
         version = None
     return version
+
+
+def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
+    """
+    Reads a single file from a plug-in's readFormat function.
+    """
+    EPS = ENTRY_POINTS[plugin_type]
+    # get format entry point
+    format_ep = None
+    if not format:
+        # auto detect format - go through all known formats in given sort order
+        for format_ep in EPS.values():
+            try:
+                # search isFormat for given entry point
+                isFormat = load_entry_point(format_ep.dist.key,
+                    'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
+                    'isFormat')
+            except ImportError, e:
+                # verbose error handling/parsing
+                msg = "Cannot load module %s:\n%s" % (format_ep.dist.key, e)
+                warnings.warn(msg, category=ImportWarning)
+                continue
+            # check format
+            if isFormat(filename):
+                break
+        else:
+            raise TypeError('Unknown format for file %s' % filename)
+    else:
+        # format given via argument
+        format = format.upper()
+        try:
+            format_ep = EPS[format]
+        except IndexError:
+            msg = "Format \"%s\" is not supported. Supported types: %s"
+            raise TypeError(msg % (format, ', '.join(EPS)))
+    # file format should be known by now
+    try:
+        # search readFormat for given entry point
+        readFormat = load_entry_point(format_ep.dist.key,
+            'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
+    except ImportError:
+        msg = "Format \"%s\" is not supported. Supported types: %s"
+        raise TypeError(msg % (format_ep.name, ', '.join(EPS)))
+    # read
+    list_obj = readFormat(filename, **kwargs)
+    return list_obj, format_ep.name
 
 
 if __name__ == '__main__':

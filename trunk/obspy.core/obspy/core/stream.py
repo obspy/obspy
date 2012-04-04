@@ -11,8 +11,9 @@ Module for handling ObsPy Stream objects.
 from glob import glob, iglob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
-from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util import NamedTemporaryFile, getExampleFile
+from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
+from obspy.core.util.decorator import uncompressFile
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -277,47 +278,11 @@ def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a single file into a ObsPy Stream object.
     """
-    # get format entry point
-    format_ep = None
-    if not format:
-        # auto detect format - go through all known formats in given sort order
-        for format_ep in WAVEFORM_ENTRY_POINTS.values():
-            try:
-                # search isFormat for given entry point
-                isFormat = load_entry_point(format_ep.dist.key,
-                    'obspy.plugin.waveform.%s' % (format_ep.name), 'isFormat')
-            except ImportError, e:
-                # verbose error handling/parsing
-                msg = "Cannot load module %s:\n%s" % (format_ep.dist.key, e)
-                warnings.warn(msg, category=ImportWarning)
-                continue
-            # check format
-            if isFormat(filename):
-                break
-        else:
-            raise TypeError('Unknown format for file %s' % filename)
-    else:
-        # format given via argument
-        format = format.upper()
-        try:
-            format_ep = WAVEFORM_ENTRY_POINTS[format]
-        except IndexError:
-            msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(WAVEFORM_ENTRY_POINTS)))
-    # file format should be known by now
-    try:
-        # search readFormat for given entry point
-        readFormat = load_entry_point(format_ep.dist.key,
-            'obspy.plugin.waveform.%s' % (format_ep.name), 'readFormat')
-    except ImportError:
-        msg = "Format \"%s\" is not supported. Supported types: %s"
-        raise TypeError(msg % (format_ep.name,
-                               ', '.join(WAVEFORM_ENTRY_POINTS)))
-    # read
-    stream = readFormat(filename, headonly=headonly, **kwargs)
-    # set _format identifier for each trace
+    stream, format = _readFromPlugin('waveform', filename, format=None,
+                                     headonly=headonly, **kwargs)
+    # set _format identifier for each element
     for trace in stream:
-        trace.stats._format = format_ep.name
+        trace.stats._format = format
     return stream
 
 
