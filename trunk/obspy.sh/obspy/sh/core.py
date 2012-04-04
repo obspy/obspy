@@ -42,7 +42,7 @@ SH_IDX = {
     'STATION': 'S001',
     'OPINFO': 'S002',
     'FILTER': 'S011',
-    'QUALITY': 'S012',
+    'QUAL': 'S012',
     'COMP': 'C000',
     'CHAN1': 'C001',
     'CHAN2': 'C002',
@@ -337,7 +337,10 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     for id in sorted(traces.keys()):
         # fetch headers
         header = {}
-        header['sh'] = {}
+        header['sh'] = {
+            "FROMQ": True,
+            "FILE": os.path.splitext(os.path.split(filename)[1])[0],
+        }
         channel = ['', '', '']
         npts = 0
         for item in traces[id].split('~'):
