@@ -1479,8 +1479,7 @@ class Stream(object):
         dictionary.
 
         If a string for ``component`` is given (should be a single letter) it
-        is tested (case insensitive) against the last letter of the
-        ``Trace.stats.channel`` entry.
+        is tested against the last letter of the ``Trace.stats.channel`` entry.
 
         Alternatively, ``channel`` may have the last one or two letters
         wildcarded (e.g. ``channel="EH*"``) to select all components with a
@@ -1490,32 +1489,37 @@ class Stream(object):
         location) may also contain Unix style wildcards (``*``, ``?``, ...).
         """
         # make given component letter uppercase (if e.g. "z" is given)
-        if component:
+        if component and channel:
             component = component.upper()
-            if channel and channel[-1] != "*" and component != channel[-1]:
+            channel = channel.upper()
+            if channel[-1] != "*" and component != channel[-1]:
                 msg = "Selection criteria for channel and component are " + \
                       "mutually exclusive!"
                 raise ValueError(msg)
         traces = []
         for trace in self:
             # skip trace if any given criterion is not matched
-            if id and not fnmatch.fnmatch(trace.id, id):
+            if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
-            if network and not fnmatch.fnmatch(trace.stats.network, network):
+            if network and not fnmatch.fnmatch(trace.stats.network.upper(),
+                                               network.upper()):
                 continue
-            if station and not fnmatch.fnmatch(trace.stats.station, station):
+            if station and not fnmatch.fnmatch(trace.stats.station.upper(),
+                                               station.upper()):
                 continue
-            if location and not fnmatch.fnmatch(trace.stats.location,
-                                                location):
+            if location and not fnmatch.fnmatch(trace.stats.location.upper(),
+                                                location.upper()):
                 continue
-            if channel and not fnmatch.fnmatch(trace.stats.channel, channel):
+            if channel and not fnmatch.fnmatch(trace.stats.channel.upper(),
+                                               channel.upper()):
                 continue
             if sampling_rate and \
                float(sampling_rate) != trace.stats.sampling_rate:
                 continue
             if npts and int(npts) != trace.stats.npts:
                 continue
-            if component and component != trace.stats.channel[-1]:
+            if component and \
+               component.upper() != trace.stats.channel[-1].upper():
                 continue
             traces.append(trace)
         return self.__class__(traces=traces)

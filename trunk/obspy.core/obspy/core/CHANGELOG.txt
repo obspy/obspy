@@ -1,4 +1,5 @@
 dev:
+ * stream.select works now case insensitive
  * support for initialization of UTCDateTime from numpy.string_ types
  * new dtype parameter on read method allows converting data into given dtype
  * implementation of __mul__ function for Trace and Stream objects

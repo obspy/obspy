@@ -439,7 +439,7 @@ class StreamTestCase(unittest.TestCase):
              'npts': 100},
             {'starttime': UTCDateTime(2010, 1, 1), 'network': 'AA',
              'station': 'XXXX', 'channel': 'EHZ', 'sampling_rate': 200.0,
-             'npts': 100}]
+             'npts': 100, 'location': '00'}]
         # Make stream object for test case
         traces = []
         for header in headers:
@@ -466,8 +466,8 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(stream2), 2)
         self.assertTrue(stream[1] in stream2)
         self.assertTrue(stream[3] in stream2)
-        stream2 = stream.select(channel='BHZ', component='Z',
-                sampling_rate='20.0', network='AA', station='ZZZZ', npts=100)
+        stream2 = stream.select(channel='BHZ', npts=100, sampling_rate='20.0',
+                                network='AA', component='Z', station='ZZZZ')
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='EHZ', station="XXXX")
@@ -509,6 +509,15 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(stream[3] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(station='[A-Y]??*', network='A?')
+        self.assertEquals(len(stream2), 1)
+        self.assertTrue(stream[4] in stream2)
+        # test case insensitivity
+        stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
+                                network='aA', station='ZzZz', )
+        self.assertEquals(len(stream2), 1)
+        self.assertTrue(stream[2] in stream2)
+        stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
+                                location='00', component='z')
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
 
