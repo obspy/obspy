@@ -189,7 +189,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         the same waveform file in parallel and compare the results which must
         be all the same.
         """
-        data = np.arange(0, 20000)
+        data = np.arange(0, 500)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)
         formats = _getEntryPoints('obspy.plugin.waveform', 'writeFormat')
         for format in formats:
@@ -214,7 +214,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tr.write(outfile, format=format)
             if format == 'Q':
                 outfile += '.QHD'
-            n_threads = 10
+            n_threads = 30
             streams = []
 
             def testFunction(streams):
