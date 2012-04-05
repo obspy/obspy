@@ -477,6 +477,11 @@ MWP_CONST *= 7900.0 * 7900.0 * 7900.0  # Pvel**3
 MWP_CONST *= 2.0  # FP average radiation pattern
 MWP_CONST *= (10000.0 / 90.0)  # distance deg -> km
 MWP_CONST *= 1000.0  # distance km -> meters
+# http://mail.python.org/pipermail/python-list/2010-February/1235196.html, ff.
+try:
+    FLOAT_MIN = sys.float_info.min
+except AttributeError:
+    FLOAT_MIN = 1.1e-37
 
 
 def calculateMwpMag(peak, epicentral_distance):
@@ -495,6 +500,6 @@ def calculateMwpMag(peak, epicentral_distance):
     """
     moment = MWP_CONST * peak * epicentral_distance
     mwp_mag = MWP_INVALID
-    if moment > sys.float_info.min:
+    if moment > FLOAT_MIN:
         mwp_mag = (2.0 / 3.0) * (math.log10(moment) - 9.1)
     return mwp_mag
