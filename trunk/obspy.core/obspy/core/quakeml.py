@@ -75,6 +75,7 @@ def readQuakeML(filename):
     for event_xml in p.xpath('eventParameters/event'):
         # create new Event object
         event = Event()
+        event.public_id = event_xml.get('publicID')
         # preferred items
         preferred_origin = p.xml2obj('preferredOriginID', event_xml, str)
         preferred_magnitude = p.xml2obj('preferredMagnitudeID', event_xml, str)

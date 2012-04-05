@@ -20,11 +20,19 @@ class QuakeMLTestCase(unittest.TestCase):
         # iris
         catalog = readQuakeML(self.iris_xml)
         self.assertEquals(len(catalog), 2)
-        # print catalog
+        self.assertEquals(catalog[0].id,
+                          'smi:www.iris.edu/ws/event/query?eventId=3279407')
+        self.assertEquals(catalog[1].id,
+                          'smi:www.iris.edu/ws/event/query?eventId=2318174')
         # neries
         catalog = readQuakeML(self.neries_xml)
         self.assertEquals(len(catalog), 3)
-        # print catalog
+        self.assertEquals(catalog[0].id,
+                          'quakeml:eu.emsc/event/20120404_0000041')
+        self.assertEquals(catalog[1].id,
+                          'quakeml:eu.emsc/event/20120404_0000038')
+        self.assertEquals(catalog[2].id,
+                          'quakeml:eu.emsc/event/20120404_0000039')
 
 
 def suite():

@@ -580,7 +580,7 @@ class Stream(object):
         self_sorted.sort()
         other_sorted = other.select()
         other_sorted.sort()
-        if not self_sorted.traces == other_sorted.traces:
+        if self_sorted.traces != other_sorted.traces:
             return False
 
         return True

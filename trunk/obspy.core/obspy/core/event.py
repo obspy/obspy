@@ -13,6 +13,7 @@ from glob import glob, iglob, has_magic
 from obspy.core.util import NamedTemporaryFile, getExampleFile, uncompressFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import _readFromPlugin
+import copy
 import os
 import urllib2
 
@@ -119,7 +120,7 @@ class Magnitude(AttribDict):
         return self._pretty_str(['magnitude'])
 
 
-class Event(AttribDict):
+class Event(object):
     """
     Seismological event containing origins, picks, magnitudes, etc.
     """
@@ -135,6 +136,19 @@ class Event(AttribDict):
     focal_mechanism = []
     origins = []
     magnitudes = []
+
+    def __eq__(self, other):
+        """
+        Implements rich comparison of Event objects for "==" operator.
+
+        Events are the same, if the have the same id.
+        """
+        # check if other object is a Trace
+        if not isinstance(other, Event):
+            return False
+        if self.id != other.id:
+            return False
+        return True
 
     def __str__(self):
         out = ''
@@ -216,6 +230,19 @@ class Event(AttribDict):
 
     magnitude_type = mag_type = property(_getMagnitudeType)
 
+    def getId(self):
+        """
+        Returns the identifier of the event.
+
+        :rtype: str
+        :return: event identifier
+        """
+        if self.public_id is None:
+            return ''
+        return "%s" % (self.public_id)
+
+    id = property(getId)
+
 
 class Catalog(object):
     """
@@ -228,6 +255,8 @@ class Catalog(object):
 
     def __init__(self, events=None):
         self.events = []
+        if isinstance(events, Event):
+            events = [events]
         if events:
             self.events.extend(events)
 
@@ -241,6 +270,57 @@ class Catalog(object):
             raise TypeError
         events = self.events + other.events
         return self.__class__(events=events)
+
+    def __delitem__(self, index):
+        """
+        Passes on the __delitem__ method to the underlying list of traces.
+        """
+        return self.events.__delitem__(index)
+
+    def __eq__(self, other):
+        """
+        __eq__ method of the Catalog object.
+
+        :type other: :class:`~obspy.core.event.Catalog`
+        :param other: Catalog object for comparison.
+        :rtype: bool
+        :return: ``True`` if both Catalogs contain the same events.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.event import readEvents
+        >>> cat = readEvents()
+        >>> cat2 = cat.copy()
+        >>> cat is cat2
+        False
+        >>> cat == cat2
+        True
+        """
+        if not isinstance(other, Catalog):
+            return False
+        if self.events != other.events:
+            return False
+        return True
+
+    def __getitem__(self, index):
+        """
+        __getitem__ method of the Catalog object.
+
+        :return: Event objects
+        """
+        if isinstance(index, slice):
+            return self.__class__(events=self.events.__getitem__(index))
+        else:
+            return self.events.__getitem__(index)
+
+    def __getslice__(self, i, j, k=1):
+        """
+        __getslice__ method of the Catalog object.
+
+        :return: Catalog object
+        """
+        # see also http://docs.python.org/reference/datamodel.html
+        return self.__class__(events=self.events[max(0, i):max(0, j):k])
 
     def __iadd__(self, other):
         """
@@ -280,6 +360,12 @@ class Catalog(object):
 
     count = __len__
 
+    def __setitem__(self, index, event):
+        """
+        __setitem__ method of the Catalog object.
+        """
+        self.events.__setitem__(index, event)
+
     def __str__(self):
         """
         Returns short summary string of the current catalog.
@@ -291,17 +377,6 @@ class Catalog(object):
         out = out + "\n".join([ev.__str__() for ev in self])
         return out
 
-    def __getitem__(self, index):
-        """
-        __getitem__ method of obspy.core.Catalog objects.
-
-        :return: Event objects
-        """
-        if isinstance(index, slice):
-            return self.__class__(events=self.events.__getitem__(index))
-        else:
-            return self.events.__getitem__(index)
-
     def append(self, event):
         """
         Appends a single Event object to the current Catalog object.
@@ -311,6 +386,59 @@ class Catalog(object):
         else:
             msg = 'Append only supports a single Event object as an argument.'
             raise TypeError(msg)
+
+    def clear(self):
+        """
+        Clears event list (convenient method).
+
+        .. rubric:: Example
+
+        >>> from obspy.core.event import readEvents
+        >>> cat = readEvents()
+        >>> len(cat)
+        3
+        >>> cat.clear()
+        >>> cat.events
+        []
+        """
+        self.events = []
+
+    def copy(self):
+        """
+        Returns a deepcopy of the Catalog object.
+
+        :rtype: :class:`~obspy.core.stream.Catalog`
+        :return: Copy of current catalog.
+
+        .. rubric:: Examples
+
+        1. Create a Catalog and copy it
+
+            >>> from obspy.core.event import readEvents
+            >>> cat = readEvents()
+            >>> cat2 = cat.copy()
+
+           The two objects are not the same:
+
+            >>> cat is cat2
+            False
+
+           But they have equal data:
+
+            >>> cat == cat2
+            True
+
+        2. The following example shows how to make an alias but not copy the
+           data. Any changes on ``st3`` would also change the contents of
+           ``st``.
+
+            >>> cat3 = cat
+            >>> cat is cat3
+            True
+            >>> cat == cat3
+            True
+        """
+        return copy.deepcopy(self)
 
     def extend(self, event_list):
         """
@@ -324,7 +452,7 @@ class Catalog(object):
                     raise TypeError(msg)
             self.events.extend(event_list)
         elif isinstance(event_list, Catalog):
-            self.extend(event_list.traces)
+            self.events.extend(event_list.events)
         else:
             msg = 'Extend only supports a list of Event objects as argument.'
             raise TypeError(msg)
