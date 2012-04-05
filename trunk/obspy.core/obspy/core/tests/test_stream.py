@@ -64,10 +64,13 @@ class StreamTestCase(unittest.TestCase):
         """
         Tests the __getitem__ method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = read()
         self.assertEqual(stream[0], stream.traces[0])
         self.assertEqual(stream[-1], stream.traces[-1])
-        self.assertEqual(stream[3], stream.traces[3])
+        self.assertEqual(stream[2], stream.traces[2])
+        # out of index should fail
+        self.assertRaises(IndexError, stream.__getitem__, 3)
+        self.assertRaises(IndexError, stream.__getitem__, -99)
 
     def test_add(self):
         """
@@ -159,16 +162,16 @@ class StreamTestCase(unittest.TestCase):
 
     def test_countAndLen(self):
         """
-        Tests the count method and __len__ attribute of the Stream object.
+        Tests the count and __len__ methods of the Stream object.
         """
         # empty stream without traces
         stream = Stream()
         self.assertEqual(len(stream), 0)
         self.assertEqual(stream.count(), 0)
         # stream with traces
-        stream = self.mseed_stream
-        self.assertEqual(len(stream), 4)
-        self.assertEqual(stream.count(), 4)
+        stream = read()
+        self.assertEqual(len(stream), 3)
+        self.assertEqual(stream.count(), 3)
 
     def test_extend(self):
         """
@@ -329,24 +332,22 @@ class StreamTestCase(unittest.TestCase):
 
     def test_slicing(self):
         """
-        Tests slicing of Stream object.
-        This is not the test for the Stream objects slice method which is
-        passed through to Trace object.
+        Tests the __getslice__ method of the Stream object.
         """
-        stream = self.mseed_stream
+        stream = read()
         self.assertEqual(stream[0:], stream[0:])
         self.assertEqual(stream[:2], stream[:2])
         self.assertEqual(stream[:], stream[:])
-        self.assertEqual(len(stream), 4)
+        self.assertEqual(len(stream), 3)
         new_stream = stream[1:3]
         self.assertTrue(isinstance(new_stream, Stream))
         self.assertEqual(len(new_stream), 2)
         self.assertEqual(new_stream[0].stats, stream[1].stats)
         self.assertEqual(new_stream[1].stats, stream[2].stats)
 
-    def test_slicing2(self):
+    def test_slicingWithStep(self):
         """
-        Slicing using a step should return Stream objects.
+        Tests the __getslice__ method of the Stream object with step.
         """
         tr1 = Trace()
         tr2 = Trace()
@@ -1597,6 +1598,17 @@ class StreamTestCase(unittest.TestCase):
         # headonly
         tr = read('/path/to/slist_float.ascii', headonly=True)[0]
         self.assertFalse(tr.data)
+
+    def test_copy(self):
+        """
+        Testing the copy method of the Stream object.
+        """
+        st = read()
+        st2 = st.copy()
+        self.assertTrue(st == st2)
+        self.assertTrue(st2 == st)
+        self.assertFalse(st is st2)
+        self.assertFalse(st2 is st)
 
 
 def suite():

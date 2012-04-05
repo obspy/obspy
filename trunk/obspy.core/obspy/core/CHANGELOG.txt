@@ -1,4 +1,5 @@
 dev:
+ * removing __hash__ fixture for Stream and Trace
  * new util.xmlwrapper module for uniform API for Python's default xml and lxml
  * plugin hooks in setup.py for quakeml event files
  * stream.select works now case insensitive

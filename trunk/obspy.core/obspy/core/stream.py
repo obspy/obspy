@@ -626,25 +626,9 @@ class Stream(object):
         """
         raise NotImplementedError("Too ambiguous, therefore not implemented.")
 
-    # Explicitly setting Stream object unhashable (mutable object).
-    # See also Python Language Reference (3.0 Data Model):
-    # http://docs.python.org/reference/datamodel.html
-    #
-    # Classes which inherit a __hash__() method from a parent class but change
-    # the meaning of __cmp__() or __eq__() such that [...] can explicitly flag
-    # themselves as being unhashable by setting __hash__ = None in the class
-    # definition. Doing so means that not only will instances of the class
-    # raise an appropriate TypeError when a program attempts to retrieve their
-    # hash value, but they will also be correctly identified as unhashable when
-    # checking isinstance(obj, collections.Hashable) (unlike classes which
-    # define their own __hash__() to explicitly raise TypeError).
-    __hash__ = None
-
     def __setitem__(self, index, trace):
         """
         __setitem__ method of obspy.Stream objects.
-
-        :return: Trace objects
         """
         self.traces.__setitem__(index, trace)
 
@@ -732,7 +716,7 @@ class Stream(object):
                     raise TypeError(msg)
             self.traces.extend(trace_list)
         elif isinstance(trace_list, Stream):
-            self.extend(trace_list.traces)
+            self.traces.extend(trace_list.traces)
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
@@ -2079,16 +2063,18 @@ class Stream(object):
 
     def normalize(self, global_max=False):
         """
-        Normalizes all trace in the stream. By default all traces are
-        normalized separately to their respective absolute maximum. By setting
-        ``global_max=True`` all traces get normalized to the global maximum of
-        all traces.
+        Normalizes all trace in the stream.
+
+        By default all traces are normalized separately to their respective
+        absolute maximum. By setting ``global_max=True`` all traces get
+        normalized to the global maximum of all traces.
 
         :param global_max: If set to ``True``, all traces are normalized with
                 respect to the global maximum of all traces in the stream
                 instead of normalizing every trace separately.
 
-        If ``data.dtype`` of a trace was integer it is changing to float.
+        .. note::
+            If ``data.dtype`` of a trace was integer it is changing to float.
 
         .. note::
 
@@ -2150,15 +2136,14 @@ class Stream(object):
 
     def copy(self):
         """
-        Returns a `deep copy <http://docs.python.org/library/copy.html>`_
-        of the stream.
+        Returns a deepcopy of the Stream object.
 
         :rtype: :class:`~obspy.core.stream.Stream`
         :return: Copy of current stream.
 
         .. rubric:: Examples
 
-        1. Make a Trace and copy it
+        1. Create a Stream and copy it
 
             >>> from obspy.core import read
             >>> st = read()
@@ -2166,12 +2151,12 @@ class Stream(object):
 
            The two objects are not the same:
 
-            >>> st2 is st
+            >>> st is st2
             False
 
            But they have equal data (before applying further processing):
 
-            >>> st2 == st
+            >>> st == st2
             True
 
         2. The following example shows how to make an alias but not copy the
@@ -2179,9 +2164,9 @@ class Stream(object):
            ``st``.
 
             >>> st3 = st
-            >>> st3 is st
+            >>> st is st3
             True
-            >>> st3 == st
+            >>> st == st3
             True
         """
         return copy.deepcopy(self)
@@ -2194,6 +2179,16 @@ class Stream(object):
         Stream object. Useful if there are references to the current
         Stream object that should not break. Otherwise simply use a new
         Stream() instance.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read
+        >>> st = read()
+        >>> len(st)
+        3
+        >>> st.clear()
+        >>> st.traces
+        []
         """
         self.traces = []
 
