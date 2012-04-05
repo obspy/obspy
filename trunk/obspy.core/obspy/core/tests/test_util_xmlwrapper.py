@@ -7,6 +7,23 @@ import os
 import unittest
 
 
+XML_DOC = """<?xml version="1.0"?>
+<arclink>
+  <request args="" ready="true" size="531" type="ROUTING">
+    <volume dcid="GFZ" size="531" status="OK">
+      <line content="2009,8,24,0,20,2 2009,8,24,0,20,34 BW RJOB . ."
+            message="" size="0" status="OK" />
+      <line content="2011,8,24,0,20,2 2011,8,24,0,20,34 BW RJOB . ."
+            message="" size="12" status="ERROR" />
+    </volume>
+  </request>
+  <request>
+    <test muh="kuh" />
+  </request>
+</arclink>
+"""
+
+
 class XMLWrapperTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.xmlwrapper
@@ -19,20 +36,20 @@ class XMLWrapperTestCase(unittest.TestCase):
 
     def test_init(self):
         """
-        Test the __init__ method of the XMLParser object.
+        Tests the __init__ method of the XMLParser object.
         """
         # parser accepts
         # 1 - filenames
         XMLParser(self.iris_xml)
         # 2 - XML strings
-        data = open(self.iris_xml, 'rt').read()
+        data = XML_DOC
         XMLParser(data)
         # 3 - file like objects
         fh = open(self.iris_xml, 'rt')
         XMLParser(fh)
         fh.close()
         # 4 - StringIO
-        data = StringIO.StringIO(data)
+        data = StringIO.StringIO(XML_DOC)
         XMLParser(data)
         # 5 - with xml parsed XML documents
         xml_doc = xml_etree.parse(self.iris_xml)
@@ -40,6 +57,46 @@ class XMLWrapperTestCase(unittest.TestCase):
         # 6 - with lxml parsed XML documents
         xml_doc = lxml_etree.parse(self.iris_xml)
         XMLParser(xml_doc)
+
+    def test_xpath(self):
+        """
+        Tests the xpath method of the XMLParser object.
+        """
+        parser = XMLParser(XML_DOC)
+        # 1st level
+        q = parser.xpath('notexisting')
+        self.assertEquals([e.tag for e in q], [])
+        q = parser.xpath('request')
+        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        q = parser.xpath('/request')
+        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        q = parser.xpath('*')
+        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        q = parser.xpath('/*')
+        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        # 2nd level
+        q = parser.xpath('*/*')
+        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        q = parser.xpath('/*/*')
+        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        q = parser.xpath('*/volume')
+        self.assertEquals([e.tag for e in q], ['volume'])
+        q = parser.xpath('request/*')
+        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        q = parser.xpath('request/volume')
+        self.assertEquals([e.tag for e in q], ['volume'])
+        q = parser.xpath('/request/volume')
+        self.assertEquals([e.tag for e in q], ['volume'])
+        # 3rd level
+        q = parser.xpath('*/*/*')
+        self.assertEquals([e.tag for e in q], ['line', 'line'])
+        q = parser.xpath('/request/test/doesnotexist')
+        self.assertEquals([e.tag for e in q], [])
+        # element selector (first element starts with 1)
+        q = parser.xpath('/*/*/*[2]')
+        self.assertEquals([e.tag for e in q], ['line'])
+        q = parser.xpath('/*/*/*[100]')
+        self.assertEquals([e.tag for e in q], [])
 
     def test_getRootNamespace(self):
         """
@@ -120,7 +177,7 @@ class XMLWrapperTestCase(unittest.TestCase):
         self.assertEquals(p._getElementNamespace(event),
                           "http://quakeml.org/xmlns/quakeml/1.0")
 
-    def test_xpath(self):
+    def test_xpathWithNamespace(self):
         """
         Tests for XMLParser.xpath
         """

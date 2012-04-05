@@ -6,6 +6,10 @@ try:
     from lxml import etree
 except ImportError:
     from xml.etree import ElementTree as etree  # @UnusedImport
+import re
+
+
+RE_ENDS_WITH_SELECTOR = re.compile('^.*/[/d/]$')
 
 
 class XMLParser:
@@ -13,6 +17,14 @@ class XMLParser:
     Unified wrapper around Python's default xml module and the lxml module.
     """
     def __init__(self, xml_doc, namespace=None):
+        """
+        Initializes a XMLPaser object.
+
+        :type xml_doc: str, filename, file-like object, parsed XML document
+        :param xml_doc: XML document
+        :type namespace: str, optional
+        :param namespace: Document-wide default namespace. Defaults to ``''``.
+        """
         if isinstance(xml_doc, basestring):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith('<?XML'):
@@ -24,7 +36,7 @@ class XMLParser:
         else:
             self.xml_doc = xml_doc
         self.xml_root = self.xml_doc.getroot()
-        self.namespace = str(namespace) or self._getRootNamespace()
+        self.namespace = namespace or self._getRootNamespace()
 
     def xml2obj(self, xpath, xml_doc=None, convert_to=None, namespace=None):
         """
@@ -64,7 +76,9 @@ class XMLParser:
 
     def xpath(self, xpath, xml_doc=None, namespace=None):
         """
-        XPath query.
+        Very limited XPath-like query.
+
+        .. note:: This method does not support the full XPath syntax!
 
         :type xpath: str
         :param xpath: XPath string, e.g. ``*/event``.
@@ -78,25 +92,47 @@ class XMLParser:
             xml_doc = self.xml_doc
         if namespace is None:
             namespace = self.namespace
-        # delete leading slash
-        if xpath.startswith('/'):
+        # namespace handling in lxml as well xml is very limited
+        # preserve prefix
+        if xpath.startswith('//'):
+            prefix = '//'
             xpath = xpath[1:]
-        # build up query
+        elif xpath.startswith('/'):
+            prefix = ''
+            xpath = xpath[1:]
+        else:
+            prefix = ''
+        # add namespace to each node
         parts = xpath.split('/')
         xpath = ''
         for part in parts:
             xpath += '/'
+            if part == '':
+                part = '*'
             if part != '*':
                 xpath += '%(ns)s'
             xpath += part
-        xpath = xpath[1:]
+        # restore prefix
+        xpath = prefix + xpath[1:]
         # lxml
         try:
             return xml_doc.xpath(xpath % ({'ns': 'ns:'}), {'ns': namespace})
         except:
             pass
-        # xml
-        return xml_doc.findall(xpath % ({'ns': '{' + namespace + '}'}))
+        if namespace:
+            xpath = xpath % ({'ns': '{' + namespace + '}'})
+        else:
+            xpath = xpath % ({'ns': ''})
+        # emulate supports for index selectors (only last element)!
+        selector = re.search('(.*)\[(\d+)\]$', xpath)
+        if not selector:
+            return xml_doc.findall(xpath)
+        xpath = selector.groups()[0]
+        list_of_nodes = xml_doc.findall(xpath)
+        try:
+            return [list_of_nodes[int(selector.groups()[1]) - 1]]
+        except IndexError:
+            return []
 
     def _getRootNamespace(self):
         return self._getElementNamespace()
