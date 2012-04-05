@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import StringIO
 import warnings
 try:
     # try using lxml as it is faster
@@ -11,10 +12,16 @@ class XMLParser:
     """
     Unified wrapper around Python's default xml module and the lxml module.
     """
-    def __init__(self, filename=None, xml_doc=None, namespace=None):
-        if filename:
-            self.xml_doc = etree.parse(filename)
-        elif xml_doc:
+    def __init__(self, xml_doc, namespace=None):
+        if isinstance(xml_doc, basestring):
+            # some string - check if it starts with <?xml
+            if xml_doc.strip()[0:5].upper().startswith('<?XML'):
+                xml_doc = StringIO.StringIO(xml_doc)
+            # parse XML
+            self.xml_doc = etree.parse(xml_doc)
+        elif hasattr(xml_doc, 'seek'):
+            self.xml_doc = etree.parse(xml_doc)
+        else:
             self.xml_doc = xml_doc
         self.xml_root = self.xml_doc.getroot()
         self.namespace = str(namespace) or self._getRootNamespace()
