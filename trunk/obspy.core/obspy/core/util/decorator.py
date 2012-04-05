@@ -100,7 +100,7 @@ def skipIfPython25(func):
     Decorator for skipping a unit test running under Python 2.5.x.
     """
     if sys.hexversion >= 0x02060000:
-        return func()
+        return func
 
     def decorator(test_item):
         test_item.__unittest_skip__ = True
