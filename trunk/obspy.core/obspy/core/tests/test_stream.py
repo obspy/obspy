@@ -4,12 +4,11 @@ from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 import cPickle
 import numpy as np
 import os
 import pickle
-import sys
 import unittest
 import warnings
 
@@ -1429,7 +1428,7 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_cleanup(self):
         """
         Test case for merging traces in the stream with method=-1. This only

@@ -16,7 +16,7 @@ from obspy.core.util.base import NamedTemporaryFile, add_doctests, \
     c_file_p, createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
     _getVersionString, NETWORK_MODULES
 from obspy.core.util.decorator import deprecated, deprecated_keywords, \
-    skip, skipIf, uncompressFile
+    skip, skipIf, skipIfPython25, uncompressFile
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     formatScientific, scoreatpercentile, toIntOrZero

@@ -3,6 +3,7 @@ from __future__ import with_statement
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
+from obspy.core.util.decorator import skipIfPython25, skipIf
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed, PyFile_FromFile
@@ -14,10 +15,6 @@ import os
 import sys
 import unittest
 import warnings
-try:
-    from unittest import skipIf
-except ImportError:
-    from obspy.core.util import skipIf
 
 
 # some Python version don't support negative timestamps
@@ -212,7 +209,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 encoding=10)
         os.remove(tempfile)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_writeWrongEncodingViaMseedStats(self):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
@@ -241,7 +238,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_readQualityInformationWarns(self):
         """
         Reading the quality information while reading the data files is no more
@@ -474,7 +471,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEquals(len(st2), 3)
         self.assertEquals(st, st2)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_issue332(self):
         """
         Tests issue #332

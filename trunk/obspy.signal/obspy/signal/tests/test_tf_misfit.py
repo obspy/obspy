@@ -4,16 +4,13 @@
 The tf_misfit test suite.
 """
 
+from obspy.core.util.decorator import skipIf
 from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
     tfpg, teg, feg, fpg, tpg, tfeg, tpm
 from scipy.signal import hilbert
 import numpy as np
 import os
 import unittest
-try:
-    from unittest import skipIf
-except ImportError:
-    from obspy.core.util import skipIf  # @UnusedImport
 
 
 # tests suite needs a recent NumPy version

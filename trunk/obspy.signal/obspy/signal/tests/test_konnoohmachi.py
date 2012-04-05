@@ -5,12 +5,11 @@ The polarization.core test suite.
 """
 
 from __future__ import with_statement
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \
     calculateSmoothingMatrix
 import numpy as np
-import sys
 import unittest
 import warnings
 
@@ -104,7 +103,7 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
         np.seterr(**temp)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_konnoOhmachiSmoothing(self):
         """
         Tests the actual smoothing matrix.

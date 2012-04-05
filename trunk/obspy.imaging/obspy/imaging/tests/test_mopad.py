@@ -3,14 +3,11 @@
 The obspy.imaging.mopad test suite.
 """
 
+from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
+import matplotlib.pyplot as plt
 import os
 import unittest
-import matplotlib.pyplot as plt
-try:
-    from unittest import skipIf
-except ImportError:
-    from obspy.core.util import skipIf
 
 
 class MopadTestCase(unittest.TestCase):

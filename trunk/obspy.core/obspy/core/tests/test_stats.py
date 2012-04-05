@@ -2,10 +2,9 @@
 from __future__ import with_statement
 from obspy.core import Stats, Stream, Trace
 from obspy.core.util import AttribDict
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 import copy
 import pickle
-import sys
 import unittest
 import warnings
 
@@ -194,7 +193,7 @@ class StatsTestCase(unittest.TestCase):
         stats2 = pickle.loads(temp)
         self.assertEquals(stats, stats2)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_setCalib(self):
         """
         Test to prevent setting a calibration factor of 0

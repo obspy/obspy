@@ -4,15 +4,12 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy.core import UTCDateTime, Stream, Trace
-import time
+from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
+import time
 import unittest
-try:
-    from unittest import skipIf
-except ImportError:
-    from obspy.core.util import skipIf
 
 
 class SpectrogramTestCase(unittest.TestCase):

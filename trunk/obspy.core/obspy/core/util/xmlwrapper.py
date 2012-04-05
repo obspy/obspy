@@ -80,16 +80,16 @@ class XMLParser:
         for part in parts:
             xpath += '/'
             if part != '*':
-                xpath += '{0}'
+                xpath += '%(ns)s'
             xpath += part
         xpath = xpath[1:]
         # lxml
         try:
-            return xml_doc.xpath(xpath.format('ns:'), {'ns': namespace})
+            return xml_doc.xpath(xpath % ({'ns': 'ns:'}), {'ns': namespace})
         except:
             pass
         # xml
-        return xml_doc.findall(xpath.format('{' + namespace + '}'))
+        return xml_doc.findall(xpath % ({'ns': '{' + namespace + '}'}))
 
     def _getRootNamespace(self):
         return self._getElementNamespace()

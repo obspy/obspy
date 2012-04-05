@@ -6,13 +6,10 @@ The obspy.imaging.waveform test suite.
 from copy import deepcopy
 from obspy.core import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
+from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import unittest
-try:
-    from unittest import skipIf
-except ImportError:
-    from obspy.core.util import skipIf
 
 
 class WaveformTestCase(unittest.TestCase):

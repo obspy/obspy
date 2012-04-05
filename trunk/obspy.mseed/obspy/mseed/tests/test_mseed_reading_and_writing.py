@@ -2,7 +2,7 @@
 from __future__ import with_statement
 from obspy.core import UTCDateTime, Stream, Trace, read, AttribDict
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -10,7 +10,6 @@ from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
-import sys
 import unittest
 import warnings
 
@@ -606,7 +605,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st.write(tempfile, format="MSEED")
         os.remove(tempfile)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
         Tests all data and endian types into a single file.
@@ -824,7 +823,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(isMSEED(file))
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_bizarreFiles(self):
         """
         Tests reading some bizarre MSEED files.

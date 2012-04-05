@@ -2,17 +2,17 @@
 """
 The obspy.realtime.rttrace test suite.
 """
+from __future__ import with_statement
 from obspy.core import Trace
 from obspy.core.stream import read
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
+from obspy.realtime.rttrace import splitTrace
 from obspy.signal import filter
 import numpy as np
-import sys
 import unittest
 import warnings
-from obspy.realtime.rttrace import splitTrace
 
 
 class RtTraceTestCase(unittest.TestCase):
@@ -112,7 +112,7 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertRaises(TypeError, rtr.append, 1)
         self.assertRaises(TypeError, rtr.append, "2323")
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_appendOverlap(self):
         """
         Appending overlapping traces should raise a UserWarning/TypeError
@@ -127,7 +127,7 @@ class RtTraceTestCase(unittest.TestCase):
         # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_appendGap(self):
         """
         Appending a traces with a time gap should raise a UserWarning/TypeError

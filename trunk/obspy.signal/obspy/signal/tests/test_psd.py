@@ -6,12 +6,11 @@ The psd test suite.
 
 from __future__ import with_statement
 from obspy.core import Trace, Stream, UTCDateTime
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import PPSD, psd
 from obspy.signal.psd import welch_window, welch_taper
 import numpy as np
 import os
-import sys
 import unittest
 import warnings
 
@@ -81,7 +80,7 @@ class PsdTestCase(unittest.TestCase):
             window_obspy = welch_window(N)
             np.testing.assert_array_almost_equal(window_pitsa, window_obspy)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_PPSD(self):
         """
         Test PPSD routine with some real data. Data was downsampled to 100Hz

@@ -6,7 +6,7 @@ from StringIO import StringIO
 from lxml import etree
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.decorator import skipIfPython25
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
@@ -15,7 +15,6 @@ from obspy.xseed.parser import Parser
 from obspy.xseed.utils import compareSEED, SEEDParserException
 import gzip
 import os
-import sys
 import unittest
 import warnings
 
@@ -31,7 +30,7 @@ class ParserTestCase(unittest.TestCase):
                 ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_issue165(self):
         """
         Test cases related to #165:
@@ -121,7 +120,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(strict=True)
         parser.read(data)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_multipleContinuedStationControlHeader(self):
         """
         """
@@ -292,7 +291,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_getPAZ(self):
         """
         Test extracting poles and zeros information
@@ -468,7 +467,7 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_missingRequiredDateTimes(self):
         """
         A warning should be raised if a blockette misses a required date.
@@ -513,7 +512,7 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(file)
         parser.getRESP()
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_issue319(self):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
@@ -528,7 +527,7 @@ class ParserTestCase(unittest.TestCase):
             parser = Parser(filename)
             self.assertEquals(parser.version, 2.3)
 
-    @skipIf(sys.hexversion < 0x02060000, "Python 2.5.x not supported")
+    @skipIfPython25
     def test_issue157(self):
         """
         Test case for issue #157: re-using parser object.
