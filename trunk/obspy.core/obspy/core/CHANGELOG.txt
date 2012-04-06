@@ -1,4 +1,8 @@
 dev:
+ * new obspy.core.util.types.Enum class 
+ * refactored obspy.core.util.ordereddict into obspy.core.util.types
+ * refactored kilometer2degrees and locations2degrees from obspy.taup into
+   obspy.core.util.geodetics
  * removing __hash__ fixture for Stream and Trace
  * new util.xmlwrapper module for uniform API for Python's default xml and lxml
  * plugin hooks in setup.py for quakeml event files

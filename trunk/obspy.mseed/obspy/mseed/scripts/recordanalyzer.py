@@ -25,7 +25,7 @@ A command-line tool to analyze Mini-SEED records.
 
 from copy import deepcopy
 from obspy.core import UTCDateTime
-from obspy.core.util.ordereddict import OrderedDict
+from obspy.core.util.types import OrderedDict
 from obspy.mseed import __version__
 from optparse import OptionParser
 from struct import unpack
