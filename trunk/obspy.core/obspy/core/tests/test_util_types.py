@@ -30,7 +30,7 @@ class UtilTypesTestCase(unittest.TestCase):
         # test in operator
         self.assertTrue("other" in units)
         self.assertTrue("ot21her" not in units)
-        # test typical dict method
+        # test typical dict methods
         self.assertEquals(units.values(), items)
         self.assertEquals(units.items(), zip(items, items))
         self.assertEquals(units.keys(), items)

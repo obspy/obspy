@@ -1,4 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Various types used in ObsPy.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 
 # try native OrderDict implementations first (Python >= 2.7.x)
 try:
@@ -133,3 +142,74 @@ except ImportError:
 
         def __ne__(self, other):
             return not self == other
+
+
+class Enum:
+    """
+    Enum implementation for Python.
+
+    :type enums: list of str
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import Enum
+    >>> units = Enum(["m", "s", "m/s", "m/(s*s)", "m*s", "other"])
+    >>> units.OTHER
+    'other'
+    >>> units("m*s")
+    'm*s'
+    >>> units[3]
+    'm/(s*s)'
+
+    >>> units.xxx  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    KeyError: 'xxx'
+
+    >>> units.m = 5  # doctest: +ELLIPSIS
+    Traceback (most recent call last):
+    ...
+    NotImplementedError
+    """
+    def __init__(self, enums):
+        self.__enums = OrderedDict(zip([str(e).lower() for e in enums], enums))
+
+    def __call__(self, enum):
+        return self.get(enum)
+
+    def get(self, key):
+        if isinstance(key, int):
+            return self.__enums.values()[key]
+        return self.__enums.__getitem__(key.lower())
+
+    __getattr__ = get
+    __getitem__ = get
+
+    def set(self, name, value):
+        if name == '_Enum__enums':
+            self.__dict__[name] = value
+            return
+        raise NotImplementedError
+
+    __setattr__ = set
+    __setitem__ = set
+
+    def __contains__(self, value):
+        return value.lower() in self.__enums
+
+    def values(self):
+        return self.__enums.values()
+
+    def keys(self):
+        return self.__enums.keys()
+
+    def items(self):
+        return self.__enums.items()
+
+    def iteritems(self):
+        return self.__enums.iteritems()
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

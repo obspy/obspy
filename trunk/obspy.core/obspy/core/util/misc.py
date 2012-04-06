@@ -215,7 +215,7 @@ def complexifyString(line):
 
 def toIntOrZero(value):
     """
-    Tries to converts given value to integer or returns 0 if it fails.
+    Converts given value to an integer or returns 0 if it fails.
 
     :param value: Arbitrary data type.
     :rtype: int

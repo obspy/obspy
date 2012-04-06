@@ -13,16 +13,19 @@
        ~base.NamedTemporaryFile
        ~base.createEmptyDataChunk
        ~base.getExampleFile
-       ~decorator.deprecated
-       ~decorator.deprecated_keywords
        ~geodetics.calcVincentyInverse
        ~geodetics.gps2DistAzimuth
+       ~geodetics.kilometer2degrees
+       ~geodetics.locations2degrees
        ~misc.BAND_CODE
        ~misc.complexifyString
        ~misc.guessDelta
        ~misc.formatScientific
        ~misc.scoreatpercentile
-       ~ordereddict.OrderedDict
+       ~misc.toIntOrZero
+       ~types.OrderedDict
+       ~types.Enum
+
 
     .. comment to end block
 
@@ -37,7 +40,7 @@
        decorator
        geodetics
        misc
-       ordereddict
+       types
 
     .. comment to end block
 

@@ -1,6 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Various utilities for ObsPy.
+obspy.core.util - Various utilities for ObsPy
+=============================================
+
+.. note:: Please import all utilities within your custom applications from this
+    module rather than from any sub module, e.g.
+
+    >>> from obspy.core.util import OrderedDict  # good
+
+    instead of
+
+    >>> from obspy.core.util.types import OrderedDict  # bad
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -21,4 +31,4 @@ from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     formatScientific, scoreatpercentile, toIntOrZero
-from obspy.core.util.ordereddict import OrderedDict
+from obspy.core.util.types import OrderedDict, Enum
