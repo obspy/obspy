@@ -9,9 +9,6 @@ except ImportError:
 import re
 
 
-RE_ENDS_WITH_SELECTOR = re.compile('^.*/[/d/]$')
-
-
 class XMLParser:
     """
     Unified wrapper around Python's default xml module and the lxml module.
