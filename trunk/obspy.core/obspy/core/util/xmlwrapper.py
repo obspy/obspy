@@ -38,7 +38,7 @@ class XMLParser:
         self.xml_root = self.xml_doc.getroot()
         self.namespace = namespace or self._getRootNamespace()
 
-    def xml2obj(self, xpath, xml_doc=None, convert_to=None, namespace=None):
+    def xml2obj(self, xpath, xml_doc=None, convert_to=str, namespace=None):
         """
         XPath query.
 
@@ -50,21 +50,12 @@ class XMLParser:
         :param namespace: Namespace used by query. Defaults to document-wide
             namespace set at root.
         """
-        if convert_to is None:
-            result = self.xpath(xpath, xml_doc=xml_doc, namespace=namespace)
-            return result
-        if xml_doc is None:
-            xml_doc = self.xml_doc
-        if namespace is None:
-            namespace = self.namespace
-        parts = xpath.split('/')
-        ns = '/{%s}' % (namespace)
-        xpath = (ns + ns.join(parts))[1:]
-        text = xml_doc.findtext(xpath)
-        # str(None) should be ''
-        if convert_to == str and text is None:
-            return ''
-        if text is None:
+        try:
+            text = self.xpath(xpath, xml_doc, namespace)[0].text
+        except IndexError:
+            # str(None) should be ''
+            if convert_to == str:
+                return ''
             return None
         # try to convert into requested type
         try:
@@ -87,6 +78,7 @@ class XMLParser:
         :type namespace: str, optional
         :param namespace: Namespace used by query. Defaults to document-wide
             namespace set at root.
+        :return: List of elements.
         """
         if xml_doc is None:
             xml_doc = self.xml_doc
@@ -128,9 +120,9 @@ class XMLParser:
         if not selector:
             return xml_doc.findall(xpath)
         xpath = selector.groups()[0]
-        list_of_nodes = xml_doc.findall(xpath)
+        list_of_elements = xml_doc.findall(xpath)
         try:
-            return [list_of_nodes[int(selector.groups()[1]) - 1]]
+            return [list_of_elements[int(selector.groups()[1]) - 1]]
         except IndexError:
             return []
 

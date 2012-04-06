@@ -34,7 +34,7 @@ def isQuakeML(filename):
     # check node "quakeml/eventParameters" for global namespace
     try:
         namespace = p._getFirstChildNamespace()
-        p.xml2obj('eventParameters', namespace=namespace)[0]
+        p.xpath('eventParameters', namespace=namespace)[0]
     except:
         return False
     return True
@@ -67,7 +67,7 @@ def readQuakeML(filename):
     # check node "quakeml/eventParameters" for global namespace
     try:
         namespace = p._getFirstChildNamespace()
-        obj = p.xml2obj('eventParameters', namespace=namespace)[0]
+        obj = p.xpath('eventParameters', namespace=namespace)[0]
     except:
         raise Exception("Not a QuakeML compatible file: %s." % filename)
     # set default namespace for parser
@@ -77,26 +77,26 @@ def readQuakeML(filename):
         event = Event()
         event.public_id = event_xml.get('publicID')
         # preferred items
-        preferred_origin = p.xml2obj('preferredOriginID', event_xml, str)
-        preferred_magnitude = p.xml2obj('preferredMagnitudeID', event_xml, str)
+        preferred_origin = p.xml2obj('preferredOriginID', event_xml)
+        preferred_magnitude = p.xml2obj('preferredMagnitudeID', event_xml)
         preferred_focal_mechanism = \
-            p.xml2obj('preferredFocalMechanismID', event_xml, str)
+            p.xml2obj('preferredFocalMechanismID', event_xml)
         # event type
-        event.type = p.xml2obj('type', event_xml, str)
+        event.type = p.xml2obj('type', event_xml)
         # creation info
         event.creation_info = AttribDict()
         event.creation_info.agency_uri = \
-            p.xml2obj('creationInfo/agencyURI', event_xml, str)
+            p.xml2obj('creationInfo/agencyURI', event_xml)
         event.creation_info.author_uri = \
-            p.xml2obj('creationInfo/authorURI', event_xml, str)
+            p.xml2obj('creationInfo/authorURI', event_xml)
         event.creation_info.creation_time = \
             p.xml2obj('creationInfo/creationTime', event_xml, UTCDateTime)
         event.creation_info.version = \
-            p.xml2obj('creationInfo/version', event_xml, str)
+            p.xml2obj('creationInfo/version', event_xml)
         # description
         event.description = AttribDict()
-        event.description.type = p.xml2obj('description/type', event_xml, str)
-        event.description.text = p.xml2obj('description/text', event_xml, str)
+        event.description.type = p.xml2obj('description/type', event_xml)
+        event.description.text = p.xml2obj('description/text', event_xml)
         # origins
         event.origins = []
         for origin_xml in p.xpath('origin', event_xml):
@@ -114,8 +114,8 @@ def readQuakeML(filename):
             origin.depth = p.xml2obj('depth/value', origin_xml, float)
             origin.depth_uncertainty = \
                 p.xml2obj('depth/uncertainty', origin_xml, float)
-            origin.depth_type = p.xml2obj('depthType', origin_xml, str)
-            origin.method_id = p.xml2obj('depthType', origin_xml, str)
+            origin.depth_type = p.xml2obj('depthType', origin_xml)
+            origin.method_id = p.xml2obj('depthType', origin_xml)
             # quality
             origin.quality.used_station_count = \
                 p.xml2obj('quality/usedStationCount', origin_xml, int)
@@ -127,17 +127,16 @@ def readQuakeML(filename):
                 p.xml2obj('quality/maximumDistance', origin_xml, float)
             origin.quality.minimum_distance = \
                 p.xml2obj('quality/minimumDistance', origin_xml, float)
-            origin.type = p.xml2obj('type', origin_xml, str)
-            origin.evaluation_mode = \
-                p.xml2obj('evaluationMode', origin_xml, str)
+            origin.type = p.xml2obj('type', origin_xml)
+            origin.evaluation_mode = p.xml2obj('evaluationMode', origin_xml)
             origin.evaluation_status = \
-                p.xml2obj('evaluationStatus', origin_xml, str)
-            origin.comment = p.xml2obj('comment', origin_xml, str)
+                p.xml2obj('evaluationStatus', origin_xml)
+            origin.comment = p.xml2obj('comment', origin_xml)
             # creationInfo
             origin.creation_info.agency_uri = \
-                p.xml2obj('creationInfo/agencyURI', origin_xml, str)
+                p.xml2obj('creationInfo/agencyURI', origin_xml)
             origin.creation_info.author_uri = \
-                p.xml2obj('creationInfo/authorURI', origin_xml, str)
+                p.xml2obj('creationInfo/authorURI', origin_xml)
             # originUncertainty
             origin.origin_uncertainty.min_horizontal_uncertainty = \
                 p.xml2obj('originUncertainty/minHorizontalUncertainty',
@@ -161,14 +160,14 @@ def readQuakeML(filename):
             magnitude.magnitude = p.xml2obj('mag/value', mag_xml, float)
             magnitude.magnitude_uncertainty = \
                 p.xml2obj('mag/uncertainty', mag_xml, float)
-            magnitude.type = p.xml2obj('type', mag_xml, str)
-            magnitude.origin_id = p.xml2obj('originID', mag_xml, str)
+            magnitude.type = p.xml2obj('type', mag_xml)
+            magnitude.origin_id = p.xml2obj('originID', mag_xml)
             magnitude.station_count = p.xml2obj('stationCount', mag_xml, int)
             # creationInfo
             magnitude.creation_info.agency_uri = \
-                p.xml2obj('creationInfo/agencyURI', origin_xml, str)
+                p.xml2obj('creationInfo/agencyURI', origin_xml)
             magnitude.creation_info.author_uri = \
-                p.xml2obj('creationInfo/authorURI', origin_xml, str)
+                p.xml2obj('creationInfo/authorURI', origin_xml)
             # add preferred magnitude to front
             if magnitude.public_id == preferred_magnitude:
                 event.magnitudes.insert(0, magnitude)
