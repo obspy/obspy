@@ -2,9 +2,7 @@
 """
 The obspy.taup test suite.
 """
-from obspy.taup.taup import getTravelTimes, kilometer2degrees
-from obspy.taup.taup import locations2degrees
-import math
+from obspy.taup.taup import getTravelTimes
 import os
 import unittest
 
@@ -128,54 +126,6 @@ class TauPTestCase(unittest.TestCase):
             self.assertAlmostEquals(item['dT/dh'], float(parts[4].strip()), 3)
             self.assertAlmostEquals(item['d2T/dD2'],
                                     float(parts[5].strip()), 2)
-
-    def test_kilometer2degrees(self):
-        """
-        Simple test of the convenience function.
-        """
-        # Test if it works.
-        self.assertEqual(kilometer2degrees(111.19492664455873, radius=6371),
-                         1.0)
-        # Test if setting the radius actually does something. Round to avoid
-        # some precision problems on different machines.
-        self.assertEqual(round(kilometer2degrees(111.19492664455873,
-                         radius=6381), 5), round(0.99843284751606332, 5))
-
-    def test_locations2degrees(self):
-        """
-        Test the location 2 degree conversion.
-        """
-        # Inline method to avoid messy code.
-        def assertLoc(lat1, long1, lat2, long2, approx_distance):
-            self.assertTrue( \
-            abs(math.radians(locations2degrees(lat1, long1, lat2, long2)) \
-                * 6371 - approx_distance) <= 20)
-
-        # Approximate values from the Great Circle Calculator:
-        #   http://williams.best.vwh.net/gccalc.htm
-
-        # Random location.
-        assertLoc(36.12, -86.67, 33.94, -118.40, 2893)
-        # Test several combinations of quadrants.
-        assertLoc(11.11, 22.22, 33.33, 44.44, 3346)
-        assertLoc(-11.11, -22.22, -33.33, -44.44, 3346)
-        assertLoc(11.11, 22.22, -33.33, -44.44, 8596)
-        assertLoc(-11.11, -22.22, 33.33, 44.44, 8596)
-        assertLoc(11.11, -22.22, 33.33, -44.44, 3346)
-        assertLoc(-11.11, 22.22, 33.33, 44.44, 5454)
-        assertLoc(11.11, -22.22, 33.33, 44.44, 7177)
-        assertLoc(11.11, 22.22, -33.33, 44.44, 5454)
-        assertLoc(11.11, 22.22, 33.33, -44.44, 7177)
-        # Test some extreme values.
-        assertLoc(90, 0, 0, 0, 10018)
-        assertLoc(180, 0, 0, 0, 20004)
-        assertLoc(0, 90, 0, 0, 10018)
-        assertLoc(0, 180, 0, 0, 20004)
-        assertLoc(0, 0, 90, 0, 10018)
-        assertLoc(0, 0, 180, 0, 20004)
-        assertLoc(0, 0, 0, 90, 10018)
-        assertLoc(0, 0, 0, 180, 20004)
-        assertLoc(11, 55, 11, 55, 0)
 
 
 def suite():

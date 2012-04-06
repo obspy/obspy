@@ -3,10 +3,10 @@
 obspy.taup - Travel time calculation tool
 """
 
+from obspy.core.util.decorator import deprecated
 from obspy.taup import __path__
 from obspy.taup.util import flibtaup as lib
 import ctypes as C
-import math
 import numpy as np
 import os
 
@@ -106,65 +106,22 @@ def getTravelTimes(delta, depth, model='iasp91'):
     return phases
 
 
+@deprecated
 def kilometer2degrees(kilometer, radius=6371):
     """
-    Convenience function to convert kilometers to degrees assuming a perfectly
-    spherical Earth.
-
-    :type kilometer: float
-    :param kilometer: Distance in kilometers
-    :type radius: int, optional
-    :param radius: Radius of the Earth used for the calculation.
-    :rtype: float
-    :return: Distance in degrees as a floating point number.
-
-    .. rubric:: Example
-
-    >>> from obspy.taup.taup import kilometer2degrees
-    >>> kilometer2degrees(300)
-    2.6979648177561915
+    DEPRECATED: Please use ``obspy.core.util.kilometer2degree()``.
     """
-    return kilometer / (2.0 * radius * math.pi / 360.0)
+    from obspy.core.util.geodetics import kilometer2degrees as func
+    return func(kilometer, radius)
 
 
+@deprecated
 def locations2degrees(lat1, long1, lat2, long2):
     """
-    Convenience function to calculate the great distance between two points on
-    a spherical Earth.
-
-    This method uses the Vincenty formula in the special case of a spherical
-    Earth. For more accurate values use the geodesic distance calculations of
-    geopy (http://code.google.com/p/geopy/).
-
-    :type lat1: float
-    :param lat1: Latitude of point 1 in degrees
-    :type long1: float
-    :param long1: Longitude of point 1 in degrees
-    :type lat2: float
-    :param lat2: Latitude of point 2 in degrees
-    :type long2: float
-    :param long2: Longitude of point 2 in degrees
-    :rtype: float
-    :return: Distance in degrees as a floating point number.
-
-    .. rubric:: Example
-
-    >>> from obspy.taup.taup import locations2degrees
-    >>> locations2degrees(5, 5, 10, 10)
-    7.0397014191753815
+    DEPRECATED: Please use ``obspy.core.util.locations2degrees()``.
     """
-    # Convert to radians.
-    lat1 = math.radians(lat1)
-    lat2 = math.radians(lat2)
-    long1 = math.radians(long1)
-    long2 = math.radians(long2)
-    long_diff = long2 - long1
-    gd = math.degrees(math.atan2(math.sqrt((math.cos(lat2) * \
-        math.sin(long_diff)) ** 2 + (math.cos(lat1) * math.sin(lat2) - \
-        math.sin(lat1) * math.cos(lat2) * math.cos(long_diff)) ** 2),
-        math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) * \
-        math.cos(long_diff)))
-    return gd
+    from obspy.core.util.geodetics import locations2degrees as func
+    return func(lat1, long1, lat2, long2)
 
 
 def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,

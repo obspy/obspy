@@ -9,7 +9,7 @@ Various geodetic utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from math import sqrt, pi, sin, cos, asin, tan, atan, atan2
+import math
 import numpy as np
 import warnings
 
@@ -90,16 +90,16 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
         return 0.0, 0.0, 0.0
 
     # convert latitudes and longitudes to radians:
-    lat1 = lat1 * 2.0 * pi / 360.
-    lon1 = lon1 * 2.0 * pi / 360.
-    lat2 = lat2 * 2.0 * pi / 360.
-    lon2 = lon2 * 2.0 * pi / 360.
+    lat1 = lat1 * 2.0 * math.pi / 360.
+    lon1 = lon1 * 2.0 * math.pi / 360.
+    lat2 = lat2 * 2.0 * math.pi / 360.
+    lon2 = lon2 * 2.0 * math.pi / 360.
 
-    TanU1 = (1 - f) * tan(lat1)
-    TanU2 = (1 - f) * tan(lat2)
+    TanU1 = (1 - f) * math.tan(lat1)
+    TanU2 = (1 - f) * math.tan(lat2)
 
-    U1 = atan(TanU1)
-    U2 = atan(TanU2)
+    U1 = math.atan(TanU1)
+    U2 = math.atan(TanU2)
 
     dlon = lon2 - lon1
     last_dlon = -4000000.0  # an impossible value
@@ -111,35 +111,40 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
     try:
         while (last_dlon < -3000000.0 or dlon != 0 and
                abs((last_dlon - dlon) / dlon) > 1.0e-9):
-            sqr_sin_sigma = pow(cos(U2) * sin(dlon), 2) + \
-                pow((cos(U1) * sin(U2) - sin(U1) * cos(U2) * cos(dlon)), 2)
-            Sin_sigma = sqrt(sqr_sin_sigma)
-            Cos_sigma = sin(U1) * sin(U2) + cos(U1) * cos(U2) * cos(dlon)
-            sigma = atan2(Sin_sigma, Cos_sigma)
-            Sin_alpha = cos(U1) * cos(U2) * sin(dlon) / sin(sigma)
-            alpha = asin(Sin_alpha)
-            Cos2sigma_m = cos(sigma) - \
-                (2 * sin(U1) * sin(U2) / pow(cos(alpha), 2))
-            C = (f / 16) * pow(cos(alpha), 2) * \
-                (4 + f * (4 - 3 * pow(cos(alpha), 2)))
+            sqr_sin_sigma = pow(math.cos(U2) * math.sin(dlon), 2) + \
+                pow((math.cos(U1) * math.sin(U2) - math.sin(U1) * \
+                     math.cos(U2) * math.cos(dlon)), 2)
+            Sin_sigma = math.sqrt(sqr_sin_sigma)
+            Cos_sigma = math.sin(U1) * math.sin(U2) + math.cos(U1) * \
+                math.cos(U2) * math.cos(dlon)
+            sigma = math.atan2(Sin_sigma, Cos_sigma)
+            Sin_alpha = math.cos(U1) * math.cos(U2) * math.sin(dlon) / \
+                math.sin(sigma)
+            alpha = math.asin(Sin_alpha)
+            Cos2sigma_m = math.cos(sigma) - (2 * math.sin(U1) * \
+                math.sin(U2) / pow(math.cos(alpha), 2))
+            C = (f / 16) * pow(math.cos(alpha), 2) * \
+                (4 + f * (4 - 3 * pow(math.cos(alpha), 2)))
             last_dlon = dlon
-            dlon = omega + (1 - C) * f * sin(alpha) * (sigma + C * \
-                sin(sigma) * (Cos2sigma_m + C * cos(sigma) * (-1 + 2 * \
-                pow(Cos2sigma_m, 2))))
+            dlon = omega + (1 - C) * f * math.sin(alpha) * (sigma + C * \
+                math.sin(sigma) * (Cos2sigma_m + C * math.cos(sigma) * \
+                                   (-1 + 2 * pow(Cos2sigma_m, 2))))
 
-            u2 = pow(cos(alpha), 2) * (a * a - b * b) / (b * b)
+            u2 = pow(math.cos(alpha), 2) * (a * a - b * b) / (b * b)
             A = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
             B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
             delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) * \
                 (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) * \
-                Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) * (-3 + 4 * \
-                pow(Cos2sigma_m, 2))))
+                Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) * \
+                (-3 + 4 * pow(Cos2sigma_m, 2))))
 
             dist = b * A * (sigma - delta_sigma)
-            alpha12 = atan2((cos(U2) * sin(dlon)), (cos(U1) * sin(U2) - \
-                sin(U1) * cos(U2) * cos(dlon)))
-            alpha21 = atan2((cos(U1) * sin(dlon)), (-sin(U1) * cos(U2) + \
-                cos(U1) * sin(U2) * cos(dlon)))
+            alpha12 = math.atan2((math.cos(U2) * math.sin(dlon)),
+                (math.cos(U1) * math.sin(U2) - math.sin(U1) * math.cos(U2) * \
+                 math.cos(dlon)))
+            alpha21 = math.atan2((math.cos(U1) * math.sin(dlon)),
+                (-math.sin(U1) * math.cos(U2) + math.cos(U1) * math.sin(U2) * \
+                 math.cos(dlon)))
             iterlimit -= 1
             if iterlimit < 0:
                 # iteration limit reached
@@ -149,20 +154,20 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
         raise StopIteration
 
     if alpha12 < 0.0:
-        alpha12 = alpha12 + (2.0 * pi)
-    if alpha12 > (2.0 * pi):
-        alpha12 = alpha12 - (2.0 * pi)
+        alpha12 = alpha12 + (2.0 * math.pi)
+    if alpha12 > (2.0 * math.pi):
+        alpha12 = alpha12 - (2.0 * math.pi)
 
-    alpha21 = alpha21 + pi
+    alpha21 = alpha21 + math.pi
 
     if alpha21 < 0.0:
-        alpha21 = alpha21 + (2.0 * pi)
-    if alpha21 > (2.0 * pi):
-        alpha21 = alpha21 - (2.0 * pi)
+        alpha21 = alpha21 + (2.0 * math.pi)
+    if alpha21 > (2.0 * math.pi):
+        alpha21 = alpha21 - (2.0 * math.pi)
 
     # convert to degrees:
-    alpha12 = alpha12 * 360 / (2.0 * pi)
-    alpha21 = alpha21 * 360 / (2.0 * pi)
+    alpha12 = alpha12 * 360 / (2.0 * math.pi)
+    alpha21 = alpha21 * 360 / (2.0 * math.pi)
 
     return dist, alpha12, alpha21
 
@@ -214,6 +219,67 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
         return (20004314.5, 0.0, 0.0)
     except ValueError, e:
         raise e
+
+
+def kilometer2degrees(kilometer, radius=6371):
+    """
+    Convenience function to convert kilometers to degrees assuming a perfectly
+    spherical Earth.
+
+    :type kilometer: float
+    :param kilometer: Distance in kilometers
+    :type radius: int, optional
+    :param radius: Radius of the Earth used for the calculation.
+    :rtype: float
+    :return: Distance in degrees as a floating point number.
+
+    .. rubric:: Example
+
+    >>> from obspy.taup.taup import kilometer2degrees
+    >>> kilometer2degrees(300)
+    2.6979648177561915
+    """
+    return kilometer / (2.0 * radius * math.pi / 360.0)
+
+
+def locations2degrees(lat1, long1, lat2, long2):
+    """
+    Convenience function to calculate the great distance between two points on
+    a spherical Earth.
+
+    This method uses the Vincenty formula in the special case of a spherical
+    Earth. For more accurate values use the geodesic distance calculations of
+    geopy (http://code.google.com/p/geopy/).
+
+    :type lat1: float
+    :param lat1: Latitude of point 1 in degrees
+    :type long1: float
+    :param long1: Longitude of point 1 in degrees
+    :type lat2: float
+    :param lat2: Latitude of point 2 in degrees
+    :type long2: float
+    :param long2: Longitude of point 2 in degrees
+    :rtype: float
+    :return: Distance in degrees as a floating point number.
+
+    .. rubric:: Example
+
+    >>> from obspy.taup.taup import locations2degrees
+    >>> locations2degrees(5, 5, 10, 10)
+    7.0397014191753815
+    """
+    # Convert to radians.
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    long1 = math.radians(long1)
+    long2 = math.radians(long2)
+    long_diff = long2 - long1
+    gd = math.degrees(math.atan2(math.sqrt((math.cos(lat2) * \
+        math.sin(long_diff)) ** 2 + (math.cos(lat1) * math.sin(lat2) - \
+        math.sin(lat1) * math.cos(lat2) * math.cos(long_diff)) ** 2),
+        math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) * \
+        math.cos(long_diff)))
+    return gd
 
 
 if __name__ == '__main__':

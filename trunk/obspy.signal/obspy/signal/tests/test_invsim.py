@@ -237,21 +237,21 @@ class InvSimTestCase(unittest.TestCase):
         fl3 = 30.
         fl4 = 35.
 
-        #Set the following if-clause to True to run
-        #the sac-commands that created the testing file
-        if False:
-            import subprocess as sp
-            p = sp.Popen('sac', stdin=sp.PIPE)
-            cd1 = p.stdin
-            print >>cd1, "r %s" % rawf
-            print >>cd1, "rmean"
-            print >>cd1, "taper type cosine width 0.05"
-            print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
-            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4)
-            print >>cd1, "w over %s" % evalrespf
-            print >>cd1, "quit"
-            cd1.close()
-            p.wait()
+#        #Set the following if-clause to True to run
+#        #the sac-commands that created the testing file
+#        if False:
+#            import subprocess as sp
+#            p = sp.Popen('sac', stdin=sp.PIPE)
+#            cd1 = p.stdin
+#            print >>cd1, "r %s" % rawf
+#            print >>cd1, "rmean"
+#            print >>cd1, "taper type cosine width 0.05"
+#            print >>cd1, "transfer from evalresp fname %s to vel freqlimits\
+#            %f %f %f %f" % (respf, fl1, fl2, fl3, fl4)
+#            print >>cd1, "w over %s" % evalrespf
+#            print >>cd1, "quit"
+#            cd1.close()
+#            p.wait()
 
         tr = read(rawf)[0]
         trtest = read(evalrespf)[0]
