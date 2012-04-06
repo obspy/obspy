@@ -278,7 +278,7 @@ def _read(filename, format=None, headonly=False, **kwargs):
     """
     Reads a single file into a ObsPy Stream object.
     """
-    stream, format = _readFromPlugin('waveform', filename, format=None,
+    stream, format = _readFromPlugin('waveform', filename, format=format,
                                      headonly=headonly, **kwargs)
     # set _format identifier for each element
     for trace in stream:
