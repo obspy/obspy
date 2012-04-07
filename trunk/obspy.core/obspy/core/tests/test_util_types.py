@@ -34,10 +34,12 @@ class UtilTypesTestCase(unittest.TestCase):
         self.assertEquals(units.values(), items)
         self.assertEquals(units.items(), zip(items, items))
         self.assertEquals(units.keys(), items)
-        # call will either return correct enum label or raise
+        # call will either return correct enum label or return None
         self.assertEquals(units('m'), 'm')
         self.assertEquals(units('m/(s*s)'), 'm/(s*s)')
-        self.assertRaises(Exception, units.__call__, '5')
+        self.assertEquals(units(5), 'dimensionless')
+        self.assertEquals(units(99), None)
+        self.assertEquals(units('xxx'), None)
 
 
 def suite():

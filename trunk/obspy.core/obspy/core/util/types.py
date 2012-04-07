@@ -146,7 +146,7 @@ except ImportError:
 
 class Enum:
     """
-    Enum implementation for Python.
+    Enumerated type (enum) implementation for Python.
 
     :type enums: list of str
 
@@ -154,28 +154,49 @@ class Enum:
 
     >>> from obspy.core.util import Enum
     >>> units = Enum(["m", "s", "m/s", "m/(s*s)", "m*s", "other"])
-    >>> units.OTHER
-    'other'
-    >>> units("m*s")
-    'm*s'
-    >>> units[3]
-    'm/(s*s)'
 
-    >>> units.xxx  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ...
-    KeyError: 'xxx'
+    There are different ways to access the correct enum values:
 
-    >>> units.m = 5  # doctest: +ELLIPSIS
-    Traceback (most recent call last):
-    ...
-    NotImplementedError
+        >>> units.get('m/s')
+        'm/s'
+        >>> units['S']
+        's'
+        >>> units.OTHER
+        'other'
+        >>> units[3]
+        'm/(s*s)'
+        >>> units.xxx  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        KeyError: 'xxx'
+
+    Changing enum values will not work:
+
+        >>> units.m = 5  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        NotImplementedError
+        >>> units['m'] = 'xxx'  # doctest: +ELLIPSIS
+        Traceback (most recent call last):
+        ...
+        NotImplementedError
+
+    Calling with a value will either return the mapped enum value or ``None``:
+
+        >>> units("M*s")
+        'm*s'
+        >>> units('xxx')
+        >>> units(5)
+        'other'
     """
     def __init__(self, enums):
         self.__enums = OrderedDict(zip([str(e).lower() for e in enums], enums))
 
     def __call__(self, enum):
-        return self.get(enum)
+        try:
+            return self.get(enum)
+        except:
+            return None
 
     def get(self, key):
         if isinstance(key, int):
