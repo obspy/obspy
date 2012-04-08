@@ -4,9 +4,46 @@ import warnings
 try:
     # try using lxml as it is faster
     from lxml import etree
+    from lxml.etree import register_namespace
 except ImportError:
     from xml.etree import ElementTree as etree  # @UnusedImport
+    try:
+        from xml.etree import register_namespace  # @UnusedImport
+    except ImportError:
+        def register_namespace(prefix, uri):
+            etree._namespace_map[uri] = prefix
 import re
+
+
+def tostring(element, xml_declaration=True, encoding="utf-8",
+             pretty_print=False, __etree=etree):
+    """
+    Generates a string representation of an XML element, including all
+    subelements.
+
+    :param element: Element instance.
+    :type xml_declaration: bool, optional
+    :param xml_declaration: Adds a XML declaration.. Defaults to ``True``.
+    :type encoding: str, optional
+    :param encoding: output encoding. Defaults to ''"utf-8"''. Note that
+        changing the encoding to a non UTF-8 compatible encoding will enable a
+        declaration by default.
+    :type pretty_print: bool, optional
+    :param pretty_print: Enables formatted XML. Defaults to ``False``.
+    :return: Encoded string containing the XML data.
+    """
+    try:
+        # use lxml
+        return __etree.tostring(element, xml_declaration=xml_declaration,
+                              method="xml", encoding=encoding,
+                              pretty_print=pretty_print)
+    except:
+        pass
+    # use xml
+    out = __etree.tostring(element, encoding=encoding)
+    if xml_declaration:
+        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding, out)
+    return out
 
 
 class XMLParser:
@@ -35,14 +72,19 @@ class XMLParser:
         self.xml_root = self.xml_doc.getroot()
         self.namespace = namespace or self._getRootNamespace()
 
-    def xml2obj(self, xpath, xml_doc=None, convert_to=str, namespace=None):
+    def xpath2obj(self, xpath, xml_doc=None, convert_to=str, namespace=None):
         """
-        XPath query.
+        Converts XPath-like query into an object given by convert_to.
+
+        Only the first element will be converted if multiple elements are
+        returned from the XPath query.
 
         :type xpath: str
         :param xpath: XPath string, e.g. ``*/event``.
         :type xml_doc: Element or ElementTree, optional
         :param xml_doc: XML document to query. Defaults to parsed XML document.
+        :type convert_to: any type
+        :param convert_to: Type to convert to. Defaults to ``str``.
         :type namespace: str, optional
         :param namespace: Namespace used by query. Defaults to document-wide
             namespace set at root.
@@ -50,9 +92,16 @@ class XMLParser:
         try:
             text = self.xpath(xpath, xml_doc, namespace)[0].text
         except IndexError:
-            # str(None) should be ''
-            if convert_to == str:
-                return ''
+            return None
+        # handle empty nodes
+        if text == '':
+            return None
+        # handle bool extra
+        if convert_to == bool:
+            if text in ["true", "1"]:
+                return True
+            elif text in ["false", "0"]:
+                return False
             return None
         # try to convert into requested type
         try:
@@ -94,24 +143,22 @@ class XMLParser:
         # add namespace to each node
         parts = xpath.split('/')
         xpath = ''
-        for part in parts:
-            xpath += '/'
-            if part == '':
-                part = '*'
-            if part != '*':
-                xpath += '%(ns)s'
-            xpath += part
+        if namespace:
+            for part in parts:
+                if part != '*':
+                    xpath += "/{%s}%s" % (namespace, part)
+                else:
+                    xpath += "/%s" % (part)
+            xpath = xpath[1:]
+        else:
+            xpath = '/'.join(parts)
         # restore prefix
-        xpath = prefix + xpath[1:]
+        xpath = prefix + xpath
         # lxml
         try:
-            return xml_doc.xpath(xpath % ({'ns': 'ns:'}), {'ns': namespace})
+            return xml_doc.xpath(xpath)
         except:
             pass
-        if namespace:
-            xpath = xpath % ({'ns': '{' + namespace + '}'})
-        else:
-            xpath = xpath % ({'ns': ''})
         # emulate supports for index selectors (only last element)!
         selector = re.search('(.*)\[(\d+)\]$', xpath)
         if not selector:

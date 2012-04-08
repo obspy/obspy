@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi://eu.emsc/unid">
+    <description>Catalog description</description>
+    <comment>
+      <text>Catalog comment</text>
+      <id>#1</id>
+    </comment>
+    <creationInfo>
+      <author>Erika Mustermann</author>
+      <version>3.x</version>
+    </creationInfo>
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <preferredOriginID>smi:ch.ethz.sed/origin/2054</preferredOriginID>
+      <preferredMagnitudeID>smi:ch.ethz.sed/magnitude/1015</preferredMagnitudeID>
+      <preferredFocalMechanismID>smi:ch.ethz.sed/fm/23151</preferredFocalMechanismID>
+      <type>earthquake</type>
+      <typeCertainty>suspected</typeCertainty>
+      <description>
+        <text>1906 San Francisco Earthquake</text>
+        <type>earthquake name</type>
+      </description>
+      <description>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <description>
+        <text>free-form string</text>
+      </description>
+      <comment>
+        <text>Relocated after re-evaluation</text>
+        <creationInfo>
+          <agencyID>EMSC</agencyID>
+        </creationInfo>
+      </comment>
+      <comment>
+        <text>Another comment</text>
+        <id>#3</id>
+      </comment>
+      <creationInfo>
+        <agencyID>EMSC</agencyID>
+        <agencyURI>smi:smi-registry/organization/EMSC</agencyURI>
+        <author>Erika Mustermann</author>
+        <authorURI>smi:smi-registry/organization/EMSC</authorURI>
+        <creationTime>2012-04-04T16:40:50+00:00</creationTime>
+        <version>1.0.1</version>
+      </creationInfo>
+    </event>
+  </eventParameters>
+</q:quakeml>

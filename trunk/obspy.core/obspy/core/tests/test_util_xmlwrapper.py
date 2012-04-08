@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from lxml import etree as lxml_etree
-from obspy.core.util.xmlwrapper import XMLParser
 from xml.etree import ElementTree as xml_etree
+from obspy.core.util.xmlwrapper import XMLParser, tostring
 import StringIO
 import os
 import unittest
@@ -221,6 +221,31 @@ class XMLWrapperTestCase(unittest.TestCase):
         result = p.xpath('eventParameters/event', namespace=ns)
         self.assertEquals(len(result), 3)
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
+
+    def test_tostring(self):
+        """
+        Test tostring function.
+        """
+        # lxml
+        el = lxml_etree.Element('test')
+        el.append(lxml_etree.Element('test2'))
+        result = tostring(el, __etree=lxml_etree)
+        self.assertTrue(result.startswith('<?xml'))
+        # xml
+        el = xml_etree.Element('test')
+        el.append(lxml_etree.Element('test2'))
+        result = tostring(el, __etree=xml_etree)
+        self.assertTrue(result.startswith('<?xml'))
+        # 2
+        el = lxml_etree.Element('test')
+        el.append(lxml_etree.Element('test2'))
+        result = tostring(el, xml_declaration=False, __etree=lxml_etree)
+        self.assertTrue(result.startswith('<test>'))
+        # xml
+        el = xml_etree.Element('test')
+        el.append(lxml_etree.Element('test2'))
+        result = tostring(el, xml_declaration=False, __etree=xml_etree)
+        self.assertTrue(result.startswith('<test>'))
 
 
 def suite():

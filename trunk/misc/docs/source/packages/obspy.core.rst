@@ -26,7 +26,9 @@
        trace
        stream
        utcdatetime
+       event
        ascii
+       quakeml
        util
        preview
 

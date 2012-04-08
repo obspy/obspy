@@ -22,14 +22,16 @@ class EventTestCase(unittest.TestCase):
         Testing the __eq__ method of the Event object.
         """
         # events are equal if the have the same public_id
-        ev1 = Event()
-        ev2 = Event()
+        ev1 = Event('id1')
+        ev2 = Event('id1')
+        ev3 = Event('id2')
         self.assertTrue(ev1 == ev2)
-        ev1.public_id = 'test'
-        self.assertFalse(ev1 == ev2)
+        self.assertTrue(ev2 == ev1)
+        self.assertFalse(ev1 == ev3)
+        self.assertFalse(ev3 == ev1)
         # comparing with other objects fails
         self.assertFalse(ev1 == 1)
-        self.assertFalse(ev2 == "test")
+        self.assertFalse(ev2 == "id1")
 
 
 class CatalogTestCase(unittest.TestCase):
