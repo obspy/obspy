@@ -185,6 +185,47 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = ''.join([l.strip() for l in processed.splitlines()[2:]])
         self.assertEquals(original, processed)
 
+    def test_magnitude(self):
+        """
+        Tests Magnitude object.
+        """
+        filename = os.path.join(self.path, 'quakeml_magnitude.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].magnitudes), 1)
+        mag = catalog[0].magnitudes[0]
+        self.assertEquals(mag.public_id, 'smi:ch.ethz.sed/magnitude/37465')
+        self.assertEquals(mag.mag.value, 5.5)
+        self.assertEquals(mag.mag.uncertainty, 0.1)
+        self.assertEquals(mag.type, 'MS')
+        self.assertTrue(mag.method_id.startswith('smi:ch.ethz.sed/magnitude'))
+        self.assertEquals(mag.station_count, 8)
+        self.assertEquals(mag.evaluation_status, 'preliminary')
+        # comments
+        self.assertEquals(len(mag.comments), 2)
+        c = mag.comments
+        self.assertEquals(c[0].text, 'Some comment')
+        self.assertEquals(c[0].id, "muh")
+        self.assertEquals(c[0].creation_info.author, 'EMSC')
+        self.assertEquals(c[1].creation_info.creation_time, None)
+        self.assertEquals(c[1].text, 'Another comment')
+        self.assertEquals(c[1].id, None)
+        self.assertEquals(c[1].creation_info.agency_id, None)
+        # creation info
+        self.assertEquals(mag.creation_info.author, "NEIC")
+        self.assertEquals(mag.creation_info.agency_id, None)
+        self.assertEquals(mag.creation_info.author_uri, None)
+        self.assertEquals(mag.creation_info.agency_uri, None)
+        self.assertEquals(mag.creation_info.creation_time, None)
+        self.assertEquals(mag.creation_info.version, None)
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        original = ''.join([l.strip() for l in original.splitlines()[2:]])
+        processed = _catalogToXML(catalog)
+        processed = ''.join([l.strip() for l in processed.splitlines()[2:]])
+        self.assertEquals(original, processed)
+
+
 #    def test_writeQuakeML(self):
 #        """
 #        Tests writing a QuakeML document.

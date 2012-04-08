@@ -514,21 +514,22 @@ class Origin(object):
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
         following:
-            * ``""manual"``
-            * ``""automatic"``
+            * ``"manual"``
+            * ``"automatic"``
     :type evaluation_status: str, optional
     :param evaluation_status: Evaluation status of Origin. Allowed values are
         the following:
-            * ``""preliminary"``
-            * ``""confirmed"``
-            * ``""reviewed"``
-            * ``""final"``
-            * ``""rejected"``
+            * ``"preliminary"``
+            * ``"confirmed"``
+            * ``"reviewed"``
+            * ``"final"``
+            * ``"rejected"``
+            * ``"reported"``
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
-        version, and creation time of the origin.
+        version, and creation time.
     """
     # QuakeML attributes
     public_id = ''
@@ -587,17 +588,77 @@ class Origin(object):
 
 class Magnitude(AttribDict):
     """
-    Contains a single earthquake magnitude.
+    Describes a magnitude which can, but need not be associated with an Origin.
+
+    Association with an origin is expressed with the optional attribute
+    ``origin_id``. It is either a combination of different magnitude
+    estimations, or it represents the reported magnitude for the given Event.
+
+    :type public_id: str
+    :param public_id: Resource identifier of Magnitude.
+    :type mag: float
+    :param mag: Resulting magnitude value from combining values of type
+        :class:`~obspy.core.event.StationMagnitude`. If no estimations are
+        available, this value can represent the reported magnitude.
+    :type type: str, optional
+    :param type: Describes the type of magnitude. This is a free-text field
+        because it is impossible to cover all existing magnitude type
+        designations with an enumeration. Possible values are
+            * unspecified magitude (``'M'``),
+            * local magnitude (``'ML'``),
+            * body wave magnitude (``'Mb'``),
+            * surface wave magnitude (``'MS'``),
+            * moment magnitude (``'Mw'``),
+            * duration magnitude (``'Md'``)
+            * coda magnitude (``'Mc'``)
+            * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+    :type origin_id: str, optional
+    :param origin_id: Reference to an origin’s public_id if the magnitude has
+        an associated Origin.
+    :type method_id: str, optional
+    :param method_id: Identifies the method of magnitude estimation. Users
+        should avoid to give contradictory information in method_id and type.
+    :type station_count, int, optional
+    :param station_count Number of used stations for this magnitude
+        computation.
+    :type azimuthal_gap: float, optional
+    :param azimuthal_gap: Azimuthal gap for this magnitude computation.
+        Unit: deg
+    :type evaluation_status: str, optional
+    :param evaluation_status: Evaluation status of Magnitude. Allowed values
+        are the following:
+            * ``"preliminary"``
+            * ``"confirmed"``
+            * ``"reviewed"``
+            * ``"final"``
+            * ``"rejected"``
+            * ``"reported"``
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
     """
-    def __init__(self, **kwargs):
-        self.public_id = None
-        self.magnitude = None
-        self.type = None
-        self.creation_info = AttribDict()
-        self.update(kwargs)
+    public_id = ''
+    mag = FloatQuantity()
+    type = None
+    origin_id = None
+    method_id = None
+    station_count = None
+    azimuthal_gap = None
+    comments = []
+    creation_info = CreationInfo()
 
     def __str__(self):
         return self._pretty_str(['magnitude'])
+
+    def _getEvaluationStatus(self):
+        return self.__dict__.get('evaluation_status', None)
+
+    def _setEvaluationStatus(self, value):
+        self.__dict__['evaluation_status'] = EvaluationStatus(value)
+
+    evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
 
 
 class EventDescription(AttribDict):
@@ -687,7 +748,7 @@ class Event(object):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
-        version, and creation time of the event.
+        version, and creation time.
     """
     # QuakeML attributes
     public_id = ''
@@ -744,7 +805,7 @@ class Event(object):
                                        self.preferred_origin.latitude.value,
                                        self.preferred_origin.longitude.value)
         if self.preferred_magnitude:
-            out += ' | %s %-2s' % (self.preferred_magnitude.magnitude.value,
+            out += ' | %s %-2s' % (self.preferred_magnitude.mag.value,
                                    self.preferred_magnitude.type)
         if self.preferred_origin and self.preferred_origin.evaluation_mode:
             out += ' | %s' % (self.preferred_origin.evaluation_mode)
@@ -841,7 +902,7 @@ class Catalog(object):
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
-        version, and creation time of the catalog.
+        version, and creation time.
     """
     # QuakeML attributes
     public_id = ''

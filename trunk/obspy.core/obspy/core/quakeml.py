@@ -258,7 +258,6 @@ def _toOrigin(parser, element):
     >>> origin = _toOrigin(parser, parser.xml_root)
     >>> origin.latitude.value
     34.23
-    >>> origin.longitude.value
     """
     origin = Origin()
     # required parameter
@@ -373,6 +372,71 @@ def _xmlOrigin(origin):
     return element
 
 
+def _toMagnitude(parser, element):
+    """
+    Converts an etree.Element into an Magnitude object.
+
+    :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
+    :type element: etree.Element
+    :rtype: :class:`~obspy.core.event.Magnitude`
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import XMLParser
+    >>> XML = '<?xml version="1.0" encoding="UTF-8"?>'
+    >>> XML += '<magnitude><mag><value>3.2</value></mag></magnitude>'
+    >>> parser = XMLParser(XML)
+    >>> magnitude = _toMagnitude(parser, parser.xml_root)
+    >>> magnitude.mag.value
+    3.2
+    """
+    mag = Magnitude()
+    # required parameter
+    mag.public_id = element.get('publicID')
+    mag.mag = __toFloatQuantity(parser, element, 'mag')
+    # optional parameter
+    mag.type = parser.xpath2obj('type', element)
+    mag.origin_id = parser.xpath2obj('originID', element)
+    mag.method_id = parser.xpath2obj('methodID', element)
+    mag.station_count = parser.xpath2obj('stationCount', element, int)
+    mag.azimuthal_gap = parser.xpath2obj('azimuthalGap', element, float)
+    mag.evaluation_status = parser.xpath2obj('evaluationStatus', element)
+    mag.creation_info = __toCreationInfo(parser, element)
+    mag.comments = __toComments(parser, element)
+    return mag
+
+
+def _xmlMagnitude(magnitude):
+    """
+    Converts an Magnitude into etree.Element object.
+
+    :type origin: :class:`~obspy.core.event.Magnitude`
+    :rtype: etree.Element
+
+    .. rubric:: Example
+
+    >>> from obspy.core.event import Magnitude
+    >>> magnitude = Magnitude()
+    >>> magnitude.mag.value = 3.2
+    >>> el = _xmlMagnitude(magnitude)
+    >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    <?xml version='1.0' encoding='utf-8'?>
+    <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
+    """
+    element = etree.Element('magnitude',
+                            attrib={'publicID': magnitude.public_id})
+    __xmlValueQuantity(magnitude.mag, element, 'mag', True)
+    __xmlStr(magnitude.type, element, 'type')
+    __xmlStr(magnitude.origin_id, element, 'originID')
+    __xmlStr(magnitude.method_id, element, 'methodID')
+    __xmlStr(magnitude.station_count, element, 'stationCount')
+    __xmlStr(magnitude.azimuthal_gap, element, 'azimuthalGap')
+    __xmlStr(magnitude.evaluation_status, element, 'evaluationStatus')
+    __xmlComments(magnitude.comments, element)
+    __xmlCreationInfo(magnitude.creation_info, element)
+    return element
+
+
 def readQuakeML(filename):
     """
     Reads a QuakeML file and returns a ObsPy Catalog object.
@@ -389,8 +453,8 @@ def readQuakeML(filename):
     .. rubric:: Example
 
     >>> from obspy.core.event import readEvents
-    >>> st = readEvents('/path/to/iris_events.xml')
-    >>> print st
+    >>> cat = readEvents('/path/to/iris_events.xml')
+    >>> print cat
     2 Event(s) in Catalog:
     2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
     2006-09-10T04:26:33.610000Z |  +9.614, +121.961 | 9.8 MS
@@ -438,15 +502,8 @@ def readQuakeML(filename):
                 event.origins.append(origin)
         # magnitudes
         event.magnitudes = []
-        for mag_el in p.xpath('magnitude', event_el):
-            magnitude = Magnitude()
-            magnitude.public_id = mag_el.get('publicID')
-            magnitude.magnitude = __toFloatQuantity(p, mag_el, 'mag')
-            magnitude.type = p.xpath2obj('type', mag_el)
-            magnitude.origin_id = p.xpath2obj('originID', mag_el)
-            magnitude.station_count = p.xpath2obj('stationCount', mag_el, int)
-            magnitude.creation_info = __toCreationInfo(p, mag_el)
-            magnitude.comments = __toComments(p, mag_el)
+        for magnitude_el in p.xpath('magnitude', event_el):
+            magnitude = _toMagnitude(p, magnitude_el)
             # add preferred magnitude to front
             if magnitude.public_id == event.preferred_magnitude_id:
                 event.magnitudes.insert(0, magnitude)
@@ -509,6 +566,9 @@ def _catalogToXML(catalog, pretty_print=True):
         # origins
         for origin in event.origins:
             event_el.append(_xmlOrigin(origin))
+        # origins
+        for magnitude in event.magnitudes:
+            event_el.append(_xmlMagnitude(magnitude))
         # add event node to catalog
         catalog_el.append(event_el)
     return tostring(root_el, pretty_print=pretty_print)
