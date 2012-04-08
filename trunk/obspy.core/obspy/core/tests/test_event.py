@@ -209,6 +209,8 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(cat2 == cat)
         self.assertFalse(cat is cat2)
         self.assertFalse(cat2 is cat)
+        self.assertTrue(cat.events[0] == cat2.events[0])
+        self.assertFalse(cat.events[0] is cat2.events[0])
 
 
 def suite():

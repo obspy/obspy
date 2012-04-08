@@ -1609,6 +1609,8 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(st2 == st)
         self.assertFalse(st is st2)
         self.assertFalse(st2 is st)
+        self.assertTrue(st.traces[0] == st2.traces[0])
+        self.assertFalse(st.traces[0] is st2.traces[0])
 
 
 def suite():

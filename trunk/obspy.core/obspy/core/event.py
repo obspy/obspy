@@ -458,7 +458,7 @@ class OriginUncertainty(AttribDict):
                                      _setOriginUncertaintyDescription)
 
 
-class Origin(AttribDict):
+class Origin(object):
     """
     This class represents the focal time and geographical location of an
     earthquake hypocenter, as well as additional meta-information.
@@ -620,10 +620,7 @@ class EventDescription(AttribDict):
             * ``"region name"``
     """
     text = ''
-
-    def __init__(self, text, type=None):
-        self.text = text
-        self.type = type
+    type = None
 
     def _getEventDescriptionType(self):
         return self.__dict__.get('type', None)
@@ -733,7 +730,7 @@ class Event(object):
 
         Events are the same, if the have the same id.
         """
-        # check if other object is a Trace
+        # check if other object is a Event
         if not isinstance(other, Event):
             return False
         if self.id != other.id:

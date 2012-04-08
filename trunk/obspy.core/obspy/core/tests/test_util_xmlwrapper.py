@@ -226,6 +226,7 @@ class XMLWrapperTestCase(unittest.TestCase):
         """
         Test tostring function.
         """
+        # default settings
         # lxml
         el = lxml_etree.Element('test')
         el.append(lxml_etree.Element('test2'))
@@ -236,7 +237,8 @@ class XMLWrapperTestCase(unittest.TestCase):
         el.append(lxml_etree.Element('test2'))
         result = tostring(el, __etree=xml_etree)
         self.assertTrue(result.startswith('<?xml'))
-        # 2
+        # 2 - w/o XML declaration
+        # lxml
         el = lxml_etree.Element('test')
         el.append(lxml_etree.Element('test2'))
         result = tostring(el, xml_declaration=False, __etree=lxml_etree)
