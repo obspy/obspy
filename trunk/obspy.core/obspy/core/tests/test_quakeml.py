@@ -2,9 +2,38 @@
 
 from obspy.core.quakeml import readQuakeML, _catalogToXML
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.xmlwrapper import compareStrings
 import os
 import unittest
+
+
+def _compareStrings(doc1, doc2, debug=True):
+    """
+    Simple helper function to compare two XML strings.
+
+    .. note:: This function does not respect document encoding. However you
+        should keep all XML documents UTF-8 encoded within ObsPy!
+    """
+    # remove newlines and leading/trailing whitespaces for each line
+    doc1 = ''.join([l.strip() for l in doc1.splitlines()])
+    doc2 = ''.join([l.strip() for l in doc2.splitlines()])
+    # strip XML declaration
+    if doc1.startswith('<?xml'):
+        doc1 = doc1.split('?>', 1)[1]
+    if doc2.startswith('<?xml'):
+        doc2 = doc2.split('?>', 1)[1]
+    # check order of namespaces at root element - lxml positions namespaces
+    # differently than xml
+    root1, rest1 = doc1.split('>', 1)
+    root2, rest2 = doc1.split('>', 1)
+    parts1 = root1.split(' ')
+    parts2 = root2.split(' ')
+    doc1 = "%s %s>%s" % (parts1[0], ' '.join(sorted(parts1[1:])), rest1)
+    doc2 = "%s %s>%s" % (parts2[0], ' '.join(sorted(parts2[1:])), rest2)
+    # compare
+    if doc1 != doc2 and debug:
+        print doc1
+        print doc2
+    assert doc1 == doc2
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -88,7 +117,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _catalogToXML(catalog)
-        compareStrings(original, processed)
+        _compareStrings(original, processed)
 
     def test_origin(self):
         """
@@ -180,7 +209,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _catalogToXML(catalog)
-        compareStrings(original, processed)
+        _compareStrings(original, processed)
 
     def test_magnitude(self):
         """
@@ -218,7 +247,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _catalogToXML(catalog)
-        compareStrings(original, processed)
+        _compareStrings(original, processed)
 
 
 #    def test_writeQuakeML(self):
