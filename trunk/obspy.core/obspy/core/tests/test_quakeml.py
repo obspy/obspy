@@ -2,6 +2,7 @@
 
 from obspy.core.quakeml import readQuakeML, _catalogToXML
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.xmlwrapper import compareStrings
 import os
 import unittest
 
@@ -86,10 +87,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        original = ''.join([l.strip() for l in original.splitlines()[2:]])
         processed = _catalogToXML(catalog)
-        processed = ''.join([l.strip() for l in processed.splitlines()[2:]])
-        self.assertEquals(original, processed)
+        compareStrings(original, processed)
 
     def test_origin(self):
         """
@@ -180,10 +179,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        original = ''.join([l.strip() for l in original.splitlines()[2:]])
         processed = _catalogToXML(catalog)
-        processed = ''.join([l.strip() for l in processed.splitlines()[2:]])
-        self.assertEquals(original, processed)
+        compareStrings(original, processed)
 
     def test_magnitude(self):
         """
@@ -220,10 +217,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        original = ''.join([l.strip() for l in original.splitlines()[2:]])
         processed = _catalogToXML(catalog)
-        processed = ''.join([l.strip() for l in processed.splitlines()[2:]])
-        self.assertEquals(original, processed)
+        compareStrings(original, processed)
 
 
 #    def test_writeQuakeML(self):

@@ -256,7 +256,7 @@ def _toOrigin(parser, element):
     >>> XML += '<origin><latitude><value>34.23</value></latitude></origin>'
     >>> parser = XMLParser(XML)
     >>> origin = _toOrigin(parser, parser.xml_root)
-    >>> origin.latitude.value
+    >>> print(origin.latitude.value)
     34.23
     """
     origin = Origin()
@@ -387,7 +387,7 @@ def _toMagnitude(parser, element):
     >>> XML += '<magnitude><mag><value>3.2</value></mag></magnitude>'
     >>> parser = XMLParser(XML)
     >>> magnitude = _toMagnitude(parser, parser.xml_root)
-    >>> magnitude.mag.value
+    >>> print(magnitude.mag.value)
     3.2
     """
     mag = Magnitude()

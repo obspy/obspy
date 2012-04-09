@@ -191,6 +191,27 @@ class XMLParser:
         return self._getElementNamespace(element)
 
 
+def compareStrings(doc1, doc2, debug=True):
+    """
+    Simple helper fucntion to compare two XML strings.
+
+    .. note:: This function does not respect document encoding. However you
+        should keep all XML documents UTF-8 encoded within ObsPy!
+    """
+    # remove newlines and leading/trailing whitespaces for each line
+    doc1 = ''.join([l.strip() for l in doc1.splitlines()])
+    doc2 = ''.join([l.strip() for l in doc2.splitlines()])
+    # strip XML declaration
+    if doc1.startswith('<?xml'):
+        doc1 = doc1.split('?>', 1)[1]
+    if doc2.startswith('<?xml'):
+        doc2 = doc2.split('?>', 1)[1]
+    if doc1 != doc2 and debug:
+        print doc1
+        print doc2
+    assert doc1 == doc2
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

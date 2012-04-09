@@ -235,7 +235,7 @@ class CreationInfo(AttribDict):
     version = None
 
 
-class ValueQuantity(AttribDict):
+class _ValueQuantity(AttribDict):
     """
     Physical quantities that can be expressed numerically — either as integers,
     floating point numbers or UTCDateTime objects — are represented by their
@@ -262,15 +262,15 @@ class ValueQuantity(AttribDict):
     confidence_level = None
 
 
-class TimeQuantity(ValueQuantity):
+class TimeQuantity(_ValueQuantity):
     value_type = UTCDateTime
 
 
-class FloatQuantity(ValueQuantity):
+class FloatQuantity(_ValueQuantity):
     value_type = float
 
 
-class IntegerQuantity(ValueQuantity):
+class IntegerQuantity(_ValueQuantity):
     value_type = int
 
 
