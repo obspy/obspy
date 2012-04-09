@@ -11,7 +11,8 @@ Module for handling ObsPy Catalog and Event objects.
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    IntegerQuantity, FloatQuantity, TimeQuantity, ConfidenceEllipsoid, Comment
+    IntegerQuantity, FloatQuantity, TimeQuantity, ConfidenceEllipsoid, \
+    StationMagnitude, Comment, WaveformStreamID
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree, \
     register_namespace
@@ -158,7 +159,7 @@ def __toValueQuantity(parser, element, name, quantity_type=FloatQuantity):
         el = parser.xpath(name, element)[0]
     except:
         return obj
-    obj.value = parser.xpath2obj('value', el, quantity_type.value_type)
+    obj.value = parser.xpath2obj('value', el, quantity_type._value_type)
     obj.uncertainty = parser.xpath2obj('uncertainty', el, float)
     obj.lower_uncertainty = parser.xpath2obj('lowerUncertainty', el, float)
     obj.upper_uncertainty = parser.xpath2obj('upperUncertainty', el, float)
@@ -241,6 +242,16 @@ def __toOriginUncertainty(parser, element):
     return obj
 
 
+def __toWaveformStreamID(parser, element):
+    obj = WaveformStreamID()
+    obj.network = parser.xpath2obj('waveformID/networkCode', element) or ''
+    obj.station = parser.xpath2obj('waveformID/stationCode', element) or ''
+    obj.location = parser.xpath2obj('waveformID/locationCode', element)
+    obj.channel = parser.xpath2obj('waveformID/channelCode', element)
+    obj.resource_uri = parser.xpath2obj('waveformID/resourceURI', element)
+    return obj
+
+
 def _toOrigin(parser, element):
     """
     Converts an etree.Element into an Origin object.
@@ -294,6 +305,7 @@ def _xmlOrigin(origin):
     .. rubric:: Example
 
     >>> from obspy.core.event import Origin
+    >>> from obspy.core.util import tostring
     >>> origin = Origin()
     >>> origin.latitude.value = 34.23
     >>> el = _xmlOrigin(origin)
@@ -301,10 +313,12 @@ def _xmlOrigin(origin):
     <?xml version='1.0' encoding='utf-8'?>
     <origin ...<latitude><value>34.23</value></latitude>...</origin>
     """
-    element = etree.Element('origin', attrib={'publicID': origin.public_id})
+    element = etree.Element('origin',
+                            attrib={'publicID': origin.public_id or ''})
     __xmlValueQuantity(origin.time, element, 'time', True)
     __xmlValueQuantity(origin.latitude, element, 'latitude', True)
     __xmlValueQuantity(origin.longitude, element, 'longitude', True)
+    # optional parameter
     __xmlValueQuantity(origin.depth, element, 'depth')
     __xmlStr(origin.depth_type, element, 'depthType')
     __xmlBool(origin.time_fixed, element, 'timeFixed')
@@ -416,6 +430,7 @@ def _xmlMagnitude(magnitude):
     .. rubric:: Example
 
     >>> from obspy.core.event import Magnitude
+    >>> from obspy.core.util import tostring
     >>> magnitude = Magnitude()
     >>> magnitude.mag.value = 3.2
     >>> el = _xmlMagnitude(magnitude)
@@ -424,14 +439,89 @@ def _xmlMagnitude(magnitude):
     <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
     """
     element = etree.Element('magnitude',
-                            attrib={'publicID': magnitude.public_id})
+                            attrib={'publicID': magnitude.public_id or ''})
     __xmlValueQuantity(magnitude.mag, element, 'mag', True)
+    # optional parameter
     __xmlStr(magnitude.type, element, 'type')
     __xmlStr(magnitude.origin_id, element, 'originID')
     __xmlStr(magnitude.method_id, element, 'methodID')
     __xmlStr(magnitude.station_count, element, 'stationCount')
     __xmlStr(magnitude.azimuthal_gap, element, 'azimuthalGap')
     __xmlStr(magnitude.evaluation_status, element, 'evaluationStatus')
+    __xmlComments(magnitude.comments, element)
+    __xmlCreationInfo(magnitude.creation_info, element)
+    return element
+
+
+def _toStationMagnitude(parser, element):
+    """
+    Converts an etree.Element into an StationMagnitude object.
+
+    :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
+    :type element: etree.Element
+    :rtype: :class:`~obspy.core.event.StationMagnitude`
+
+    .. rubric:: Example
+
+    >>> from obspy.core.util import XMLParser
+    >>> XML = '<?xml version="1.0" encoding="UTF-8"?><stationMagnitude>'
+    >>> XML += '<mag><value>3.2</value></mag></stationMagnitude>'
+    >>> parser = XMLParser(XML)
+    >>> station_mag = _toStationMagnitude(parser, parser.xml_root)
+    >>> print(station_mag.mag.value)
+    3.2
+    """
+    mag = StationMagnitude()
+    # required parameter
+    mag.public_id = element.get('publicID')
+    mag.origin_id = parser.xpath2obj('originID', element) or ''
+    mag.mag = __toFloatQuantity(parser, element, 'mag')
+    # optional parameter
+    mag.type = parser.xpath2obj('type', element)
+    mag.amplitude_id = parser.xpath2obj('amplitudeID', element)
+    mag.method_id = parser.xpath2obj('methodID', element)
+    mag.waveform_id = __toWaveformStreamID(parser, element)
+    mag.creation_info = __toCreationInfo(parser, element)
+    mag.comments = __toComments(parser, element)
+    return mag
+
+
+def _xmlStationMagnitude(magnitude):
+    """
+    Converts an StationMagnitude into etree.Element object.
+
+    :type origin: :class:`~obspy.core.event.StationMagnitude`
+    :rtype: etree.Element
+
+    .. rubric:: Example
+
+    >>> from obspy.core.event import StationMagnitude
+    >>> from obspy.core.util import tostring
+    >>> station_mag = StationMagnitude()
+    >>> station_mag.mag.value = 3.2
+    >>> el = _xmlStationMagnitude(station_mag)
+    >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    <?xml version='1.0' encoding='utf-8'?>
+    <stationMagnitude ...<mag><value>3.2</value></mag>...</stationMagnitude>
+    """
+    element = etree.Element('stationMagnitude',
+                            attrib={'publicID': magnitude.public_id or ''})
+    __xmlStr(magnitude.origin_id, element, 'originID', True)
+    __xmlValueQuantity(magnitude.mag, element, 'mag', True)
+    # optional parameter
+    __xmlStr(magnitude.type, element, 'type')
+    __xmlStr(magnitude.amplitude_id, element, 'amplitudeID')
+    __xmlStr(magnitude.method_id, element, 'methodID')
+    # waveform_id
+    wid = magnitude.waveform_id
+    wid_el = etree.Element('waveformID')
+    __xmlStr(wid.network, wid_el, 'networkCode')
+    __xmlStr(wid.station, wid_el, 'stationCode')
+    __xmlStr(wid.location, wid_el, 'locationCode')
+    __xmlStr(wid.channel, wid_el, 'channelCode')
+    __xmlStr(wid.resource_uri, wid_el, 'resourceURI')
+    if len(wid_el) > 0:
+        element.append(wid_el)
     __xmlComments(magnitude.comments, element)
     __xmlCreationInfo(magnitude.creation_info, element)
     return element
@@ -509,6 +599,11 @@ def readQuakeML(filename):
                 event.magnitudes.insert(0, magnitude)
             else:
                 event.magnitudes.append(magnitude)
+        # station magnitudes
+        event.station_magnitudes = []
+        for magnitude_el in p.xpath('stationMagnitude', event_el):
+            magnitude = _toStationMagnitude(p, magnitude_el)
+            event.station_magnitudes.append(magnitude)
         # add current event to catalog
         catalog.append(event)
     return catalog
@@ -531,7 +626,7 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     raise NotImplementedError
 
 
-def _catalogToXML(catalog, pretty_print=True):
+def _xmlCatalog(catalog, pretty_print=True):
     """
     Converts a Catalog object into XML string.
     """

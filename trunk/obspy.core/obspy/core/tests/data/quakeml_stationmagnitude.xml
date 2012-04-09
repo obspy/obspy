@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<q:quakeml xmlns="http://quakeml.org/xmlns/bed/1.2"
+  xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
+  <eventParameters publicID="smi://eu.emsc/unid">
+    <event publicID="smi:ch.ethz.sed/event/historical/1165">
+      <stationMagnitude publicID="smi:ch.ethz.sed/magnitude/station/881342">
+        <mag>
+          <value>6.5</value>
+          <uncertainty>0.2</uncertainty>
+        </mag>
+        <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
+        <amplitudeID>smi:ch.ethz.sed/amplitude/824315</amplitudeID>
+        <type>MS</type>
+        <waveformID>
+          <resourceURI>smi:ch.ethz.sed/waveform/201754</resourceURI>
+        </waveformID>
+      </stationMagnitude>
+    </event>
+  </eventParameters>
+</q:quakeml>

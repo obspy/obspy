@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from obspy.core.event import readEvents, Catalog, Event
+
+from obspy.core.event import readEvents, Catalog, Event, Origin, CreationInfo
+from obspy.core.utcdatetime import UTCDateTime
 import os
 import unittest
 
@@ -32,6 +34,53 @@ class EventTestCase(unittest.TestCase):
         # comparing with other objects fails
         self.assertFalse(ev1 == 1)
         self.assertFalse(ev2 == "id1")
+
+
+class OriginTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.Origin
+    """
+    def test_creationInfo(self):
+        # 1 - empty Origin class must create a correct creation_info attribute
+        orig = Origin()
+        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
+        # 2 - preset via dict or existing CreationInfo object
+        orig = Origin(creation_info={})
+        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
+        orig = Origin(creation_info=CreationInfo({'author': 'test2'}))
+        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
+        self.assertEquals(orig.creation_info.author, 'test2')
+        # 3 - setting to anything except dict and CreationInfo fails
+        self.assertRaises(TypeError, Origin, creation_info=None)
+        self.assertRaises(TypeError, Origin, creation_info='assasas')
+        # 4 - check set values
+        orig = Origin(creation_info={'author': 'test'})
+        self.assertEquals(orig.creation_info, orig['creation_info'])
+        self.assertEquals(orig.creation_info.author, 'test')
+        self.assertEquals(orig['creation_info']['author'], 'test')
+        orig.creation_info.agency_id = "muh"
+        self.assertEquals(orig.creation_info, orig['creation_info'])
+        self.assertEquals(orig.creation_info.agency_id, 'muh')
+        self.assertEquals(orig['creation_info']['agency_id'], 'muh')
+
+    def test_multipleOrigins(self):
+        """
+        Parameters of multiple origins should not interfere with each other.
+        """
+        origin = Origin()
+        origin.public_id = 'smi:ch.ethz.sed/origin/37465'
+        origin.time.value = UTCDateTime(0)
+        origin.latitude.value = 12
+        origin.latitude.confidence_level = 95
+        origin.longitude.value = 42
+        origin.depth_type = 'from location'
+        origin2 = Origin()
+        origin2.latitude.value = 13.4
+        self.assertEquals(origin2.depth_type, None)
+        self.assertEquals(origin2.public_id, '')
+        self.assertEquals(origin2.latitude.value, 13.4)
+        self.assertEquals(origin2.latitude.confidence_level, None)
+        self.assertEquals(origin2.longitude.value, None)
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -217,6 +266,7 @@ def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     return suite
 
 

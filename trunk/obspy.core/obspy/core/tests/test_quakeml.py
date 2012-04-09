@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.quakeml import readQuakeML, _catalogToXML
+from obspy.core.quakeml import readQuakeML, _xmlCatalog
 from obspy.core.utcdatetime import UTCDateTime
 import os
 import unittest
 
 
-def _compareStrings(doc1, doc2, debug=True):
+def _compareStrings(doc1, doc2, debug=False):
     """
     Simple helper function to compare two XML strings.
 
@@ -30,9 +30,11 @@ def _compareStrings(doc1, doc2, debug=True):
     doc1 = "%s %s>%s" % (parts1[0], ' '.join(sorted(parts1[1:])), rest1)
     doc2 = "%s %s>%s" % (parts2[0], ' '.join(sorted(parts2[1:])), rest2)
     # compare
-    if doc1 != doc2 and debug:
+    if debug:
+        print
         print doc1
         print doc2
+        print
     assert doc1 == doc2
 
 
@@ -116,7 +118,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _catalogToXML(catalog)
+        processed = _xmlCatalog(catalog)
         _compareStrings(original, processed)
 
     def test_origin(self):
@@ -208,7 +210,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _catalogToXML(catalog)
+        processed = _xmlCatalog(catalog)
         _compareStrings(original, processed)
 
     def test_magnitude(self):
@@ -246,7 +248,28 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _catalogToXML(catalog)
+        processed = _xmlCatalog(catalog)
+        _compareStrings(original, processed)
+
+    def test_stationmagnitude(self):
+        """
+        Tests StationMagnitude object.
+        """
+        filename = os.path.join(self.path, 'quakeml_stationmagnitude.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].station_magnitudes), 1)
+        mag = catalog[0].station_magnitudes[0]
+        self.assertTrue('magnitude/station/881342' in mag.public_id)
+        self.assertEquals(mag.mag.value, 6.5)
+        self.assertEquals(mag.mag.uncertainty, 0.2)
+        self.assertEquals(mag.type, 'MS')
+        self.assertTrue('generic/surface_wave_magnitude' in mag.method_id)
+        self.assertTrue('amplitude/824315' in mag.amplitude_id)
+        self.assertTrue('waveform/201754' in mag.waveform_id.resource_uri)
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = _xmlCatalog(catalog)
         _compareStrings(original, processed)
 
 

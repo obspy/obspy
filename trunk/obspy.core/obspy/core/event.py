@@ -255,6 +255,7 @@ class _ValueQuantity(AttribDict):
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
     """
+    _value_type = str
     value = None
     uncertainty = None
     lower_uncertainty = None
@@ -263,15 +264,15 @@ class _ValueQuantity(AttribDict):
 
 
 class TimeQuantity(_ValueQuantity):
-    value_type = UTCDateTime
+    _value_type = UTCDateTime
 
 
 class FloatQuantity(_ValueQuantity):
-    value_type = float
+    _value_type = float
 
 
 class IntegerQuantity(_ValueQuantity):
-    value_type = int
+    _value_type = int
 
 
 class CompositeTime(AttribDict):
@@ -296,12 +297,14 @@ class CompositeTime(AttribDict):
     :param second: Second and fraction of seconds or range of seconds with
         fraction of the event’s focal time.
     """
-    year = IntegerQuantity()
-    month = IntegerQuantity()
-    day = IntegerQuantity()
-    hour = IntegerQuantity()
-    minute = IntegerQuantity()
-    second = FloatQuantity()
+    def __init__(self, year={}, month={}, day={}, hour={}, minute={},
+                 second={}):
+        self.year = IntegerQuantity(year)
+        self.month = IntegerQuantity(month)
+        self.day = IntegerQuantity(day)
+        self.hour = IntegerQuantity(hour)
+        self.minute = IntegerQuantity(minute)
+        self.second = FloatQuantity(second)
 
 
 class Comment(AttribDict):
@@ -317,9 +320,36 @@ class Comment(AttribDict):
     :param creation_info: Creation info of comment (author, version, creation
         time).
     """
-    text = ''
-    id = None
-    creation_info = CreationInfo()
+    def __init__(self, text='', id=None, creation_info={}):
+        text = text
+        id = id
+        creation_info = CreationInfo(creation_info)
+
+
+class WaveformStreamID(AttribDict):
+    """
+    Pointer to a stream description in an inventory.
+
+    This is mostly equivalent to the combination of network_code, station_code,
+    location_code, and channel_code. However, additional information, e. g.,
+    sampling rate, can be referenced by the resource_uri.
+
+    :type network: str
+    :param network: Network code.
+    :type station: str
+    :param station: Station code.
+    :type location: str, optional
+    :param location: Location code.
+    :type channel: str, optional
+    :param channel: Channel code.
+    :type resource_uri: str, optional
+    :param resource_uri: Resource identifier for the waveform stream.
+    """
+    network = ''
+    station = ''
+    location = None
+    channel = None
+    resource_uri = None
 
 
 class OriginQuality(AttribDict):
@@ -458,7 +488,7 @@ class OriginUncertainty(AttribDict):
                                      _setOriginUncertaintyDescription)
 
 
-class Origin(object):
+class Origin(AttribDict):
     """
     This class represents the focal time and geographical location of an
     earthquake hypocenter, as well as additional meta-information.
@@ -530,28 +560,58 @@ class Origin(object):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
+
+    .. rubric:: Example
+
+    >>> from obspy.core.event import Origin
+    >>> origin = Origin()
+    >>> origin.public_id = 'smi:ch.ethz.sed/origin/37465'
+    >>> origin.time.value = UTCDateTime(0)
+    >>> origin.latitude.value = 12
+    >>> origin.latitude.confidence_level = 95
+    >>> origin.longitude.value = 42
+    >>> origin.depth_type = 'from location'
+    >>> print(origin)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+              public_id: smi:ch.ethz.sed/origin/37465
+                   time: TimeQuantity({'value': UTCDateTime(1970, 1, 1, 0, 0)})
+               latitude: FloatQuantity({'value': 12, 'confidence_level': 95})
+              longitude: FloatQuantity({'value': 42})
+               arrivals: []
+               comments: []
+        ...
     """
-    # QuakeML attributes
-    public_id = ''
-    time = TimeQuantity()
-    latitude = FloatQuantity()
-    longitude = FloatQuantity()
-    depth = FloatQuantity()
-    time_fixed = None
-    epicenter_fixed = None
-    reference_system_id = None
-    method_id = None
-    earth_model_id = None
-    composite_times = []
-    quality = OriginQuality()
-    origin_uncertainty = OriginUncertainty()
-    comments = []
-    creation_info = CreationInfo()
-    # child elements
-    arrivals = []
+    def __init__(self, public_id='', time={}, latitude={},
+                 longitude={}, depth={}, depth_type=None, time_fixed=None,
+                 epicenter_fixed=None, reference_system_id=None,
+                 method_id=None, earth_model_id=None, composite_times=None,
+                 quality={}, type=None, evaluation_mode=None,
+                 evaluation_status=None, origin_uncertainty={},
+                 comments=None, creation_info={}, arrivals=None):
+        # default attributes
+        self.public_id = public_id
+        self.time = TimeQuantity(time)
+        self.latitude = FloatQuantity(latitude)
+        self.longitude = FloatQuantity(longitude)
+        self.depth = FloatQuantity(depth)
+        self.depth_type = depth_type
+        self.time_fixed = time_fixed
+        self.epicenter_fixed = epicenter_fixed
+        self.reference_system_id = reference_system_id
+        self.method_id = method_id
+        self.earth_model_id = earth_model_id
+        self.composite_times = composite_times or []
+        self.quality = OriginQuality(quality)
+        self.type = type
+        self.evaluation_mode = evaluation_mode
+        self.evaluation_status = evaluation_status
+        self.origin_uncertainty = OriginUncertainty(origin_uncertainty)
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
+        # child elements
+        self.arrivals = arrivals or []
 
     def __str__(self):
-        return self._pretty_str(['time', 'latitude', 'longitude'])
+        return self._pretty_str(['public_id', 'time', 'latitude', 'longitude'])
 
     def _getOriginDepthType(self):
         return self.__dict__.get('depth_type', None)
@@ -596,7 +656,7 @@ class Magnitude(AttribDict):
 
     :type public_id: str
     :param public_id: Resource identifier of Magnitude.
-    :type mag: float
+    :type mag: :class:`~obspy.core.event.FloatQuantity`
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
@@ -639,18 +699,33 @@ class Magnitude(AttribDict):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    public_id = ''
-    mag = FloatQuantity()
-    type = None
-    origin_id = None
-    method_id = None
-    station_count = None
-    azimuthal_gap = None
-    comments = []
-    creation_info = CreationInfo()
+    def __init__(self, public_id='', mag={}, type=None, origin_id=None,
+                 method_id=None, station_count=None, azimuthal_gap=None,
+                 evaluation_status=None, comments=None, creation_info={}):
+        # default attributes
+        self.public_id = public_id
+        self.mag = FloatQuantity(mag)
+        self.type = type
+        self.origin_id = origin_id
+        self.method_id = method_id
+        self.station_count = station_count
+        self.azimuthal_gap = azimuthal_gap
+        self.evaluation_status = evaluation_status
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
 
     def __str__(self):
         return self._pretty_str(['magnitude'])
+
+    def _getMag(self):
+        return self.__dict__.get('mag', FloatQuantity())
+
+    def _setMag(self, value):
+        if not isinstance(value, FloatQuantity):
+            value = FloatQuantity(value)
+        self.__dict__['mag'] = value
+
+    mag = property(_getMag, _setMag)
 
     def _getEvaluationStatus(self):
         return self.__dict__.get('evaluation_status', None)
@@ -659,6 +734,60 @@ class Magnitude(AttribDict):
         self.__dict__['evaluation_status'] = EvaluationStatus(value)
 
     evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
+
+
+class StationMagnitude(AttribDict):
+    """
+    This class describes the magnitude derived from a single waveform stream.
+
+    :type public_id: str
+    :param public_id: Resource identifier of StationMagnitude.
+    :type origin_id: str, optional
+    :param origin_id: Reference to an origins’s ``public_id`` if the
+        StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
+    :type mag: :class:`~obspy.core.event.FloatQuantity`
+    :param mag: Estimated magnitude.
+    :type type: str, optional
+    :param type: Describes the type of magnitude. This is a free-text field
+        because it is impossible to cover all existing magnitude type
+        designations with an enumeration. Possible values are
+            * unspecified magitude (``'M'``),
+            * local magnitude (``'ML'``),
+            * body wave magnitude (``'Mb'``),
+            * surface wave magnitude (``'MS'``),
+            * moment magnitude (``'Mw'``),
+            * duration magnitude (``'Md'``)
+            * coda magnitude (``'Mc'``)
+            * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+    :type amplitude_id: str, optional
+    :param amplitude_id: Identifies the data source of the StationMagnitude.
+        For magnitudes derived from amplitudes in waveforms (e. g.,
+        local magnitude ML), amplitude_id points to public_id in class
+        :class:`obspy.core.event.Amplitude`.
+    :type method_id: str, optional
+    :param method_id: Identifies the method of magnitude estimation. Users
+        should avoid to give contradictory information in method_id and type.
+    :type waveform_id: str, optional
+    :param waveform_id: Identifies the waveform stream.
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
+    """
+    def __init__(self, public_id='', origin_id='', mag={}, type=None,
+                 amplitude_id=None, method_id=None, waveform_id={},
+                 comments=None, creation_info={}):
+        # default attributes
+        self.public_id = public_id
+        self.origin_id = origin_id
+        self.mag = FloatQuantity(mag)
+        self.type = type
+        self.amplitude_id = amplitude_id
+        self.method_id = method_id
+        self.waveform_id = WaveformStreamID(waveform_id)
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
 
 
 class EventDescription(AttribDict):
@@ -750,40 +879,30 @@ class Event(object):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    # QuakeML attributes
-    public_id = ''
-    preferred_origin_id = None
-    preferred_magnitude_id = None
-    preferred_focal_mechanism_id = None
-    __type = None
-    __type_certainty = None
-    descriptions = []
-    comments = []
-    creation_info = CreationInfo()
-    # child elements
-    origins = []
-    magnitudes = []
-    station_magnitudes = []
-    focal_mechanism = []
-    picks = []
-    amplitudes = []
-
     def __init__(self, public_id='', preferred_origin_id=None,
                  preferred_magnitude_id=None,
                  preferred_focal_mechanism_id=None, type=None,
                  type_certainty=None, descriptions=None, comments=None,
-                 creation_info=CreationInfo()):
+                 creation_info={}, origins=None, magnitudes=None,
+                 station_magnitudes=None, focal_mechanism=None, picks=None,
+                 amplitudes=None):
+        # default attributes
         self.public_id = public_id
         self.preferred_origin_id = preferred_origin_id
         self.preferred_magnitude_id = preferred_magnitude_id
         self.preferred_focal_mechanism_id = preferred_focal_mechanism_id
         self.type = type
         self.type_certainty = type_certainty
-        if descriptions is not None:
-            self.descriptions = list(descriptions)
-        if comments is not None:
-            self.comments = list(comments)
-        self.creation_info = creation_info
+        self.descriptions = descriptions or []
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
+        # child elements
+        self.origins = origins or []
+        self.magnitudes = magnitudes or []
+        self.station_magnitudes = station_magnitudes or []
+        self.focal_mechanism = focal_mechanism or []
+        self.picks = picks or []
+        self.amplitudes = amplitudes or []
 
     def __eq__(self, other):
         """
@@ -849,22 +968,22 @@ class Event(object):
     preferred_focal_mechanism = property(_getPreferredFocalMechanism)
 
     def _getTime(self):
-        return self.preferred_origin.time
+        return self.preferred_origin.time.value
 
     time = datetime = property(_getTime)
 
     def _getLatitude(self):
-        return self.preferred_origin.latitude
+        return self.preferred_origin.latitude.value
 
     latitude = lat = property(_getLatitude)
 
     def _getLongitude(self):
-        return self.preferred_origin.longitude
+        return self.preferred_origin.longitude.value
 
     longitude = lon = property(_getLongitude)
 
     def _getMagnitude(self):
-        return self.preferred_magnitude.magnitude
+        return self.preferred_magnitude.magnitude.value
 
     magnitude = mag = property(_getMagnitude)
 
@@ -904,28 +1023,18 @@ class Catalog(object):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    # QuakeML attributes
-    public_id = ''
-    description = None
-    comments = []
-    creation_info = CreationInfo()
-    # child elements
-    events = []
-
-    def __init__(self, events=[], public_id='', description=None,
-                 comments=[], creation_info=CreationInfo()):
+    def __init__(self, events=None, public_id='', description=None,
+                 comments=None, creation_info={}):
         """
         Initializes a Catalog object.
         """
-        self.events = []
-        if isinstance(events, Event):
-            events = [events]
-        if events:
-            self.events.extend(events)
+        # default attributes
         self.public_id = public_id
         self.description = description
-        self.comments = comments
-        self.creation_info = creation_info
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
+        # child elements
+        self.events = events or []
 
     def __add__(self, other):
         """
