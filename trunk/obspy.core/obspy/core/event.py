@@ -12,10 +12,15 @@ Module for handling ObsPy Catalog and Event objects.
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile, Enum, \
     uncompressFile, AttribDict, _readFromPlugin
+from obspy.core.util.base import ENTRY_POINTS
+from pkg_resources import load_entry_point
 import copy
 import glob
 import os
 import urllib2
+
+
+EVENT_ENTRY_POINTS = ENTRY_POINTS['waveform']
 
 
 def readEvents(pathname_or_url=None):
@@ -1433,11 +1438,58 @@ class Catalog(object):
             msg = 'Extend only supports a list of Event objects as argument.'
             raise TypeError(msg)
 
-    def write(self, filename, format):
+    def write(self, filename, format, **kwargs):
         """
-        Exports catalog to file system using given format.
+        Saves catalog into a file.
+
+        :type filename: string
+        :param filename: The name of the file to write.
+        :type format: string
+        :param format: The format to write must be specified. Depending on your
+            ObsPy installation one of ``"QUAKEML"``. See the
+            `Supported Formats`_ section below for a full list of supported
+            formats.
+        :param kwargs: Additional keyword arguments passed to the underlying
+            waveform writer method.
+
+        .. rubric:: Example
+
+        >>> from obspy.core.event import readEvents
+        >>> catalog = readEvents() # doctest: +SKIP
+        >>> catalog.write("example.xml", format="QUAKEML") # doctest: +SKIP
+
+        Writing single events into files with meaningful filenames can be done
+        e.g. using event.id
+
+        >>> for ev in catalog: #doctest: +SKIP
+        ...     ev.write("%s.xml" % ev.id, format="QUAKEML") #doctest: +SKIP
+
+        .. rubric:: _`Supported Formats`
+
+        Additional ObsPy modules extend the parameters of the
+        :meth:`~obspy.core.event.Catalog.write` method. The following
+        table summarizes all known formats currently available for ObsPy.
+
+        Please refer to the *Linked Function Call* of each module for any extra
+        options available.
+
+        =======  ===================  =====================================
+        Format   Required Module      Linked Function Call
+        =======  ===================  =====================================
+        QUAKEML  :mod:`obspy.mseed`   :func:`obspy.core.event.writeQUAKEML`
+        =======  ===================  =====================================
         """
-        raise NotImplementedError
+        format = format.upper()
+        try:
+            # get format specific entry point
+            format_ep = EVENT_ENTRY_POINTS[format]
+            # search writeFormat method for given entry point
+            writeFormat = load_entry_point(format_ep.dist.key,
+                'obspy.plugin.event.%s' % (format_ep.name), 'writeFormat')
+        except (IndexError, ImportError):
+            msg = "Format \"%s\" is not supported. Supported types: %s"
+            raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
+        writeFormat(self, filename, **kwargs)
 
     def plot(self, resolution='l', **kwargs):  # @UnusedVariable
         """

@@ -1204,7 +1204,8 @@ class Stream(object):
         >>> st = read() # doctest: +SKIP
         >>> st.write("example.mseed", format="MSEED") # doctest: +SKIP
 
-        Writing files with meaningful filenames can be done e.g. using trace.id
+        Writing single traces into files with meaningful filenames can be done
+        e.g. using trace.id
 
         >>> for tr in st: #doctest: +SKIP
         ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
