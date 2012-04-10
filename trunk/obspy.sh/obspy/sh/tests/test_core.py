@@ -221,6 +221,21 @@ class CoreTestCase(unittest.TestCase):
         os.remove(os.path.splitext(tempfile)[0] + '.QBN')
         os.remove(tempfile)
 
+    def test_skipASClines(self):
+        testfile = os.path.join(self.path, 'data', 'QFILE-TEST-ASC.ASC')
+        # read
+        stream = readASC(testfile, skip=100, delta=0.1, length=2)
+        stream.verify()
+        # skip force one trace only
+        self.assertEqual(len(stream), 1)
+        # headers
+        self.assertEqual(stream[0].stats.delta, 1.000000e-01)
+        self.assertEqual(stream[0].stats.npts, 2)
+        # check samples
+        self.assertEqual(len(stream[0].data), 2)
+        self.assertAlmostEqual(stream[0].data[0], 111.7009, 4)
+        self.assertAlmostEqual(stream[0].data[1], 119.5831, 4)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

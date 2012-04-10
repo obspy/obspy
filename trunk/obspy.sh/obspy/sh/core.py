@@ -82,7 +82,8 @@ def isASC(filename):
     return True
 
 
-def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
+def readASC(filename, headonly=False, skip=0, delta=None, length=None,
+                                                  **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
@@ -95,6 +96,14 @@ def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
+    :type skip: int, optional
+    :param skip: Number of lines to be skipped from top of file. If defined
+        only one trace is read from file.
+    :type delta: float, optional
+    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
+    :type length: int, optional
+    :param length: If "skip" is used, "length" defines the number of values to
+        be read.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -115,11 +124,11 @@ def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
     channels = []
     headers = {}
     data = StringIO()
-    for line in fh:
+    for line in fh.readlines()[skip:]:
         if line.isspace():
             # blank line
             # check if any data fetched yet
-            if len(headers) == 0:
+            if len(headers) == 0 and data.len == 0:
                 continue
             # append current channel
             data.seek(0)
@@ -127,6 +136,10 @@ def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
             # create new channel
             headers = {}
             data = StringIO()
+            if skip:
+                # if skip is set only one trace is read, everything else makes
+                # no sense.
+                break
             continue
         elif line[0].isalpha():
             # header entry
@@ -140,9 +153,16 @@ def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
     fh.close()
     # create ObsPy stream object
     stream = Stream()
+    # custom header
+    custom_header = {}
+    if skip and delta:
+        custom_header["delta"] = delta
+    if skip and length:
+        custom_header["npts"] = length
+
     for headers, data in channels:
         # create Stats
-        header = Stats()
+        header = Stats(custom_header)
         header['sh'] = {}
         channel = [' ', ' ', ' ']
         # generate headers
@@ -181,6 +201,12 @@ def readASC(filename, headonly=False, **kwargs):  # @UnusedVariable
         else:
             # read data
             data = np.loadtxt(data, dtype='float32')
+
+            # cut data if requested
+            if skip and length:
+                data = data[:length]
+                header["npts"] = len(data)
+
             stream.append(Trace(data=data, header=header))
     return stream
 
