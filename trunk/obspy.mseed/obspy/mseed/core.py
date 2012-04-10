@@ -325,8 +325,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         ObsPy :class:`~obspy.core.stream.Stream` object, call this instead.
 
     :type stream: :class:`~obspy.core.stream.Stream`
-    :param stream: A Stream object. Data in stream object must be of type
-        int32. NOTE: They are automatically adapted if necessary
+    :param stream: A Stream object.
     :type filename: str
     :param filename: Name of the output file
     :type encoding: int or str, optional
