@@ -155,9 +155,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     stream = Stream()
     # custom header
     custom_header = {}
-    if skip and delta:
+    if delta:
         custom_header["delta"] = delta
-    if skip and length:
+    if length:
         custom_header["npts"] = length
 
     for headers, data in channels:
@@ -205,7 +205,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             # cut data if requested
             if skip and length:
                 data = data[:length]
-                header["npts"] = len(data)
+
+            # use correct value in any case
+            header["npts"] = len(data)
 
             stream.append(Trace(data=data, header=header))
     return stream
