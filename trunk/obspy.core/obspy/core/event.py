@@ -482,13 +482,13 @@ class Arrival(AttribDict):
     the residual, respectively.  Additional pick attributes like the horizontal
     slowness and backazimuth of the observed wave - especially if derived from
     array data - may further constrain the nature of the arrival.
-    [from the QuakeML Basic Event Descrition, Version 1.1, page 38]
+    [from the QuakeML Basic Event Description, Version 1.1, page 38]
 
     :type pick_id: str
     :param pick_id: Refers to a public_id of a Pick.
     :type phase: str
     :param phase: Phase identification. Free-form text field describing the
-        phase. In QuakeML this is a seperate type but it just contains a single
+        phase. In QuakeML this is a separate type but it just contains a single
         field containing the phase as a string.
     :type time_corretion: :class:`~obspy.core.event.FloatQuantity`, optional
     :param time_correction: Time correction value in seconds.
@@ -531,8 +531,8 @@ class Arrival(AttribDict):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, pick_id='', phase='', time_corretion=None, azimuth=None,
-                 distance=None, time_residual=None,
+    def __init__(self, pick_id='', phase='', time_correction=None,
+                 azimuth=None, distance=None, time_residual=None,
                  horizontal_slowness_residual=None,
                  backazimuthal_residual=None, time_used=None,
                  horizontal_slowness_used=None, backazimuth_used=None,
