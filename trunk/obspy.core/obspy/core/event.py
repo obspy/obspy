@@ -321,9 +321,9 @@ class Comment(AttribDict):
         time).
     """
     def __init__(self, text='', id=None, creation_info={}):
-        text = text
-        id = id
-        creation_info = CreationInfo(creation_info)
+        self.text = text
+        self.id = id
+        self.creation_info = CreationInfo(creation_info)
 
 
 class WaveformStreamID(AttribDict):
