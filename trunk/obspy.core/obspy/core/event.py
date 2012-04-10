@@ -466,6 +466,92 @@ class Pick(AttribDict):
     evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
 
 
+class Arrival(AttribDict):
+    """
+    Successful association of a pick with an origin qualifies this pick as an
+    arrival. An arrival thus connects a pick with an origin and provides
+    additional attributes that describe this relationship. Usually
+    qualification of a pick as an arrival for a given origin is a hypothesis,
+    which is based on assumptions about the type of arrival (phase) as well as
+    observed and (on the basis of an earth model) computed arrival times, or
+    the residual, respectively.  Additional pick attributes like the horizontal
+    slowness and backazimuth of the observed wave - especially if derived from
+    array data - may further constrain the nature of the arrival.
+    [from the QuakeML Basic Event Descrition, Version 1.1, page 38]
+
+    :type pick_id: str
+    :param pick_id: Refers to a public_id of a Pick.
+    :type phase: str
+    :param phase: Phase identification. Free-form text field describing the
+        phase. In QuakeML this is a seperate type but it just contains a single
+        field containing the phase as a string.
+    :type time_corretion: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param time_correction: Time correction value in seconds.
+    :type azimuth: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param azimuth: Azimuth of station as seen from the epicenter in degree.
+    :type distance: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param distance: Epicentral distance in degree.
+    :type time_residual: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param time_residual: Residual between observed and expected arrival time
+        assuming proper phase identification and given the earth_model_id of
+        the Origin in seconds.
+    :type horizontal_slowness_residual:
+        :class:`~obspy.core.event.FloatQuantity`, optional
+    :param horizontal_slowness_residual: Residual of horizontal slowness in
+        seconds per degree.
+    :type backazimuthal_residual: :class:`~obspy.core.event.FloatQuantity`,
+        optional
+    :param backazimuthal_residual: Residual of backazimuth in degree.
+    :type time_used: bool, optional
+    :param time_used: Boolean flag. True if arrival time was used for
+        computation of the associated Origin.
+    :type horizontal_slowness_used: bool, optional
+    :param horizontal_slowness_used: Boolean flag. True if horizontal slowness
+        was used for computation of the associated Origin.
+    :type backazimuth_used: bool, optional
+    :param backazimuth_used: Boolean flag. True if backazimuth was used for
+        computation of the associated Origin.
+    :type weight: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param weight: Weight of this Arrival in the computation of the associated
+        Origin.
+    :type earth_model_id: str, optional
+    :param earth_model_id: Earth model which is used for the association of
+        Arrival to Pick and computation of the residuals.
+    :type preliminary: bool, optional
+    :param preliminary: Boolean flag. True if arrival designation is
+        preliminary.
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
+    """
+    def __init__(self, pick_id='', phase='', time_corretion=None, azimuth=None,
+                 distance=None, time_residual=None,
+                 horizontal_slowness_residual=None,
+                 backazimuthal_residual=None, time_used=None,
+                 horizontal_slowness_used=None, backazimuth_used=None,
+                 weight=None, earth_model_id=None, preliminary=None,
+                 comments=None, creation_info=None):
+        self.pick_id = pick_id
+        self.phase = phase
+        self.time_correction = FloatQuantity(time_correction)
+        self.azimuth = FloatQuantity(azimuth)
+        self.distance = FloatQuantity(distance)
+        self.time_residual = FloatQuantity(time_residual)
+        self.horizontal_slowness_residual = \
+            FloatQuantity(horizontal_slowness_residual)
+        self.backazimuthal_residual = FloatQuantity(backazimuthal_residual)
+        self.time_used = time_used
+        self.horizontal_slowness_used = horizontal_slowness_used
+        self.backazimuth_used = backazimuth_used
+        self.weight = FloatQuantity(weight)
+        self.earth_model_id = earth_model_id
+        self.preliminary = preliminary
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
+
+
 class OriginQuality(AttribDict):
     """
     This class contains various attributes commonly used to describe the
