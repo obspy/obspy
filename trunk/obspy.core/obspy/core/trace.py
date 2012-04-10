@@ -982,7 +982,7 @@ class Trace(object):
                 (self.stats.npts - 1) / float(self.stats.sampling_rate):
                 msg = "Endtime is not the time of the last sample."
                 raise Exception(msg)
-        elif self.stats.npts != 0:
+        elif self.stats.npts not in [0, 1]:
             msg = "Data size should be 0, but is %d"
             raise Exception(msg % self.stats.npts)
         if not isinstance(self.stats, Stats):

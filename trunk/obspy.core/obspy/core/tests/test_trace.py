@@ -948,6 +948,20 @@ class TraceTestCase(unittest.TestCase):
             # check endtimes
             self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
 
+    def test_verify(self):
+        """
+        Tests verify method.
+        """
+        # empty Trace
+        tr = Trace()
+        tr.verify()
+        # Trace with a single sample (issue #357)
+        tr = Trace(data=np.array([1]))
+        tr.verify()
+        # example Trace
+        tr = read()[0]
+        tr.verify()
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
