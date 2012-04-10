@@ -352,6 +352,120 @@ class WaveformStreamID(AttribDict):
     resource_uri = None
 
 
+class Pick(AttribDict):
+    """
+    This class contains various attributes commonly used to describe a single
+    pick, e.g. time, waveform id, onset, phase hint, polarity, etc
+
+    :type public_id: str
+    :param public_id: Resource identifier of Pick.
+    :type time: :class:`~obspy.core.event.TimeQuantity`
+    :param time: Pick time.
+    :type waveform_id: str
+    :param waveform_id: Identifies the waveform stream.
+    :type filter_id: str, optional
+    :param filter_id: Identifies the filter setup used.
+    :type method_id: str, optional
+    :param method_id: Identifies the method used to get the pick.
+    :type horizontal_slowness: :class:`~obspy.core.event.FloatQuantity`,
+        optional
+    :param horizontal_slowness: Describes the horizontal slowness of the Pick.
+    :type backazimuth: :class:`~obspy.core.event.FloatQuantity`, optional
+    :param backazimuth: Describes the backazimuth of the Pick.
+    :type slowness_method_id: str, optional
+    :param slowness_method_id: Identifies the method used to derive the
+        slowness.
+    :type onset: str, optional
+    :param onset: Describes the pick onset type. Allowed values are:
+            * ``"emergent"``
+            * ``"impulsive"``
+            * ``"questionable"``
+    :type phase_hint: str, optional
+    :param phase_hint: Free-form text field describing the phase. In QuakeML
+        this is a seperate type but it just contains a single field containing
+        the phase as a string.
+    :type polarity: str, optional
+    :param polarity: Describes the pick onset type. Allowed values are
+            * ``"positive"``
+            * ``"negative"``
+            * ``"undecidable"``
+    :type evaluation_mode: str, optional
+    :param evaluation_mode: Evaluation mode of Pick. Allowed values are the
+        following:
+            * ``"manual"``
+            * ``"automatic"``
+    :type evaluation_status: str, optional
+    :param evaluation_status: Evaluation status of Pick. Allowed values are
+        the following:
+            * ``"preliminary"``
+            * ``"confirmed"``
+            * ``"reviewed"``
+            * ``"final"``
+            * ``"rejected"``
+            * ``"reported"``
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
+    :type arrival: list of :class:`~obspy.core.event.Arrival` objects
+    :param arrival: Child elements of the Pick object.
+    """
+    def __init__(self, public_id='', time={}, waveform_id={}, filter_id=None,
+                 method_id=None, horizontal_slowness=None, backazimuth=None,
+                 slowness_method_id=None, onset=None, phase_hint=None,
+                 polarity=None, evaluation_mode=None, evaluation_status=None,
+                 comments=None, creation_info=None, arrivals=[]):
+        self.public_id = public_id
+        self.time = TimeQuantity(time)
+        self.waveform_id = WaveformStreamID(waveform_id)
+        self.filter_id = filter_id
+        self.method_id = method_id
+        self.horizontal_slowness = FloatQuantity(horizontal_slowness)
+        self.backazimuth = FloatQuantity(backazimuth)
+        self.slowness_method_id = slowness_method_id
+        self.onset = PickOnset(onset)
+        self.phase_hint = phase_hint
+        self.polarity = PickPolarity(polarity)
+        self.evaluation_mode = EvaluationMode(evaluation_mode)
+        self.evaluation_status = EvaluationStatus(evaluation_status)
+        self.comments = comments or []
+        self.creation_info = CreationInfo(creation_info)
+        self.arrivals = arrivals
+
+    def _getPickOnset(self):
+        return self.__dict__.get('onset', None)
+
+    def _setPickOnset(self, value):
+        self.__dict__['onset'] = PickOnset(value)
+
+    onset = property(_getPickOnset, _setPickOnset)
+
+    def _getPickPolarity(self):
+        return self.__dict__.get('polarity', None)
+
+    def _setPickPolarity(self, value):
+        self.__dict__['polarity'] = PickPolarity(value)
+
+    onset = property(_getPickPolarity, _setPickPolarity)
+
+    def _getEvaluationMode(self):
+        return self.__dict__.get('evaluation_mode', None)
+
+    def _setEvaluationMode(self, value):
+        self.__dict__['evaluation_mode'] = EvaluationMode(value)
+
+    evaluation_mode = property(_getEvaluationMode, _setEvaluationMode)
+
+    def _getEvaluationStatus(self):
+        return self.__dict__.get('evaluation_status', None)
+
+    def _setEvaluationStatus(self, value):
+        self.__dict__['evaluation_status'] = EvaluationStatus(value)
+
+    evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
+
+
 class OriginQuality(AttribDict):
     """
     This class contains various attributes commonly used to describe the
