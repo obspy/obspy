@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.event import readEvents, Catalog, Event, Origin, CreationInfo
+from obspy.core.event import readEvents, Catalog, Event, Origin, \
+        CreationInfo, WaveformStreamID
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.decorator import skipIfPython25
 import os
 import unittest
+import warnings
 
 
 class EventTestCase(unittest.TestCase):
@@ -262,11 +265,65 @@ class CatalogTestCase(unittest.TestCase):
         self.assertFalse(cat.events[0] is cat2.events[0])
 
 
+class WaveformStreamIDTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.WaveformStreamID.
+    """
+    def test_initialization(self):
+        """
+        Test the different initialization methods.
+        """
+        # Default init.
+        waveform_id = WaveformStreamID()
+        self.assertEqual(waveform_id.network, "")
+        self.assertEqual(waveform_id.station, "")
+        self.assertEqual(waveform_id.location, None)
+        self.assertEqual(waveform_id.channel, None)
+        # With seed string.
+        waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
+        self.assertEqual(waveform_id.network, "BW")
+        self.assertEqual(waveform_id.station, "FUR")
+        self.assertEqual(waveform_id.location, "01")
+        self.assertEqual(waveform_id.channel, "EHZ")
+        # As soon as any other argument is set, the seed_string will not be
+        # used and the default values will be used for any unset arguments.
+        waveform_id = WaveformStreamID(location="02",
+                                       seed_string="BW.FUR.01.EHZ")
+        self.assertEqual(waveform_id.network, "")
+        self.assertEqual(waveform_id.station, "")
+        self.assertEqual(waveform_id.location, "02")
+        self.assertEqual(waveform_id.channel, None)
+
+    @skipIfPython25
+    def test_initialization_with_invalid_seed_string(self):
+        """
+        Test initialization with an invalid seed string. Should raise a
+        warning.
+
+        Skipped for Python 2.5 because it does not have the catch_warnings
+        context manager.
+        """
+        # An invalid SEED string will issue a warning and fill the object with
+        # the default values.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, WaveformStreamID,
+                              seed_string="Invalid SEED string")
+            # Now ignore the warnings and test the default values.
+            warnings.simplefilter('ignore', UserWarning)
+            waveform_id = WaveformStreamID(seed_string="Invalid Seed String")
+            self.assertEqual(waveform_id.network, "")
+            self.assertEqual(waveform_id.station, "")
+            self.assertEqual(waveform_id.location, None)
+            self.assertEqual(waveform_id.channel, None)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     return suite
 
 

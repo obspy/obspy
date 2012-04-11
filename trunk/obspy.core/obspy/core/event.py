@@ -18,6 +18,7 @@ import copy
 import glob
 import os
 import urllib2
+import warnings
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['waveform']
@@ -349,12 +350,33 @@ class WaveformStreamID(AttribDict):
     :param channel: Channel code.
     :type resource_uri: str, optional
     :param resource_uri: Resource identifier for the waveform stream.
+    :type seed_string: str, optional
+    :param seed_string: Provides an alternative initialization way by passing a
+        SEED waveform string in the form network.station.location.channel, e.g.
+        BW.FUR..EHZ, which will be used to populate the WaveformStreamID's
+        attributes.
+        It will only be used if the network, station, location and channel
+        keyword argument are ALL None.
     """
-    network = ''
-    station = ''
-    location = None
-    channel = None
-    resource_uri = None
+    def __init__(self, network=None, station=None, location=None, channel=None,
+                 resource_uri=None, seed_string=None):
+        # Use the seed_string if it is given and everything else is not.
+        if (seed_string is not None) and (network is None) and \
+           (station is None) and (location is None) and (channel is None):
+            try:
+                self.network, self.station, self.location, self.channel = \
+                    seed_string.split('.')
+                self.resource_uri = 'resource_uri'
+                return
+            except ValueError:
+                warnings.warn("In WaveformStreamID.__init__(): " + \
+                              "seed_string was given but could not be parsed")
+                pass
+        self.network = network or ''
+        self.station = station or ''
+        self.location = location
+        self.channel = channel
+        self.resource_uri = resource_uri
 
 
 class Pick(AttribDict):
@@ -366,7 +388,7 @@ class Pick(AttribDict):
     :param public_id: Resource identifier of Pick.
     :type time: :class:`~obspy.core.event.TimeQuantity`
     :param time: Pick time.
-    :type waveform_id: str
+    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
     :type filter_id: str, optional
     :param filter_id: Identifies the filter setup used.
