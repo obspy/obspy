@@ -384,12 +384,15 @@ def getMatplotlibVersion():
 
     :returns: Matplotlib version as a list of three integers or ``None`` if
         matplotlib import fails.
+        The last version number can indicate different things like it being a
+        version from the old svn trunk, the latest git repo, some release
+        candidate version, ...
+        If the last number cannot be converted to an integer it will be set to
+        0.
     """
     try:
         import matplotlib
-        # Workaround for matplotlib svn and git versions.
-        # XXX: Is the svn now obsolete?
-        version = matplotlib.__version__.replace('svn', '').replace('.x', '')
+        version = matplotlib.__version__
         version = map(toIntOrZero, version.split("."))
     except ImportError:
         version = None

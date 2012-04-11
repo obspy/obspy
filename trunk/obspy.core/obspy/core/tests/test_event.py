@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, Origin, \
         CreationInfo, WaveformStreamID
 from obspy.core.utcdatetime import UTCDateTime

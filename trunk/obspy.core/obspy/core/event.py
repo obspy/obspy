@@ -439,10 +439,10 @@ class Pick(AttribDict):
     :param arrival: Child elements of the Pick object.
     """
     def __init__(self, public_id='', time={}, waveform_id={}, filter_id=None,
-                 method_id=None, horizontal_slowness=None, backazimuth=None,
+                 method_id=None, horizontal_slowness={}, backazimuth={},
                  slowness_method_id=None, onset=None, phase_hint=None,
                  polarity=None, evaluation_mode=None, evaluation_status=None,
-                 comments=None, creation_info=None, arrivals=[]):
+                 comments=None, creation_info={}, arrivals=[]):
         self.public_id = public_id
         self.time = TimeQuantity(time)
         self.waveform_id = WaveformStreamID(waveform_id)
