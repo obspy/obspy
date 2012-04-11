@@ -384,11 +384,11 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
                 header['calib'] = float(value)
             elif key == 'S001':
                 header['station'] = value
-            elif key == 'C000':
+            elif key == 'C000' and value:
                 channel[2] = value[0]
-            elif key == 'C001':
+            elif key == 'C001' and value:
                 channel[0] = value[0]
-            elif key == 'C002':
+            elif key == 'C002' and value:
                 channel[1] = value[0]
             elif key == 'C003':
                 if value == '<' or value == '>':
