@@ -181,6 +181,9 @@ class Client(object):
     def _fetch(self, request_type, request_data, route=True):
         # skip routing on request
         if not route:
+            # always use initial node if routing is disabled
+            self._client.host = self.init_host
+            self._client.port = self.init_port
             return self._request(request_type, request_data)
         # request routing table for given network/station/times combination
         # location and channel information are ignored by ArcLink
@@ -191,8 +194,8 @@ class Client(object):
         # search routes for network/station/location/channel
         table = self._findRoute(routes, request_data)
         if not table:
-            # retry first ArcLink node if host and port have been changed
-            if self._client.host != self.init_host and \
+            # retry first ArcLink node if host or port has been changed
+            if self._client.host != self.init_host or \
                self._client.port != self.init_port:
                 self._client.host = self.init_host
                 self._client.port = self.init_port
