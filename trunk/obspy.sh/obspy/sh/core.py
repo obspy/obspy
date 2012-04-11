@@ -100,8 +100,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     :param skip: Number of lines to be skipped from top of file. If defined
         only one trace is read from file.
     :type delta: float, optional
-    :param delta: fall-back information on values delta, used mainly if "skip"
-        is also set.
+    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
     :type length: int, optional
     :param length: If "skip" is used, "length" defines the number of values to
         be read.
@@ -156,9 +155,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     stream = Stream()
     # custom header
     custom_header = {}
-    if skip and delta:
+    if delta:
         custom_header["delta"] = delta
-    if skip and length:
+    if length:
         custom_header["npts"] = length
 
     for headers, data in channels:
@@ -204,9 +203,11 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             data = np.loadtxt(data, dtype='float32')
 
             # cut data if requested
-            if length:
+            if skip and length:
                 data = data[:length]
-                header["npts"] = len(data)
+
+            # use correct value in any case
+            header["npts"] = len(data)
 
             stream.append(Trace(data=data, header=header))
     return stream
