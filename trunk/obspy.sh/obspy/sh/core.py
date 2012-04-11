@@ -100,7 +100,8 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     :param skip: Number of lines to be skipped from top of file. If defined
         only one trace is read from file.
     :type delta: float, optional
-    :param delta: If "skip" is used, "delta" defines sample offset in seconds.
+    :param delta: fall-back information on values delta, used mainly if "skip"
+        is also set.
     :type length: int, optional
     :param length: If "skip" is used, "length" defines the number of values to
         be read.
@@ -155,9 +156,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     stream = Stream()
     # custom header
     custom_header = {}
-    if delta:
+    if skip and delta:
         custom_header["delta"] = delta
-    if length:
+    if skip and length:
         custom_header["npts"] = length
 
     for headers, data in channels:
@@ -203,11 +204,9 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             data = np.loadtxt(data, dtype='float32')
 
             # cut data if requested
-            if skip and length:
+            if length:
                 data = data[:length]
-
-            # use correct value in any case
-            header["npts"] = len(data)
+                header["npts"] = len(data)
 
             stream.append(Trace(data=data, header=header))
     return stream
@@ -431,7 +430,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='=',
+def writeQ(stream, filename, data_directory=None, byteorder='=', append=True,
            **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler Q file from given ObsPy Stream object.
@@ -451,6 +450,8 @@ def writeQ(stream, filename, data_directory=None, byteorder='=',
     :type byteorder: ``'<'``, ``'>'``, or ``'='``, optional
     :param byteorder: Enforce byte order for data file. Defaults to ``'='``
         (local byte order).
+    :type append: bool, optional
+    :param append: If filename exists append all data to file, default True.
     """
     if filename.endswith('.QHD'):
         filename = os.path.splitext(filename)[0]
@@ -459,8 +460,23 @@ def writeQ(stream, filename, data_directory=None, byteorder='=',
         filename_data = os.path.join(data_directory, temp + '.QBN')
     else:
         filename_data = filename
-    fh = open(filename + '.QHD', 'wb')
-    fh_data = open(filename_data + '.QBN', 'wb')
+    filename_header = filename + '.QHD'
+
+    # if the header file exists its assumed that the data is also there
+    if os.path.exists(filename_header) and append:
+        try:
+            trcs = readQ(filename_header, headonly=True)
+            mode = 'ab'
+            count_offset = len(trcs)
+        except:
+            raise Exception("Target filename '%s' not readable!" % filename)
+    else:
+        append = False
+        mode = 'wb'
+        count_offset = 0
+
+    fh = open(filename_header, mode)
+    fh_data = open(filename_data + '.QBN', mode)
 
     # build up header strings
     headers = []
@@ -499,16 +515,17 @@ def writeQ(stream, filename, data_directory=None, byteorder='=',
             minnol = nol
     # first line: magic number, cmtlines, trclines
     # XXX: comment lines are ignored
-    fh.write("43981 1 %d\n" % minnol)
+    if not append:
+        fh.write("43981 1 %d\n" % minnol)
 
     for i, trace in enumerate(stream):
         # write headers
         temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
         for j in xrange(0, minnol):
             try:
-                fh.write("%02d|%s\n" % ((i + 1) % 100, temp[j]))
+                fh.write("%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j]))
             except:
-                fh.write("%02d|\n" % ((i + 1) % 100))
+                fh.write("%02d|\n" % ((i + 1 + count_offset) % 100))
         # write data in given byte order
         dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)

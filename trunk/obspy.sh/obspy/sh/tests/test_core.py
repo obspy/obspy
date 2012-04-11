@@ -159,7 +159,7 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile(suffix='.QHD').name
-        writeQ(stream1, tempfile)
+        writeQ(stream1, tempfile, append=False)
         # read again
         stream2 = readQ(tempfile)
         stream2.verify()
@@ -175,7 +175,7 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile(suffix='.QHD').name
-        writeQ(stream1, tempfile, byteorder=">")
+        writeQ(stream1, tempfile, byteorder=">", append=False)
         # read again
         stream2 = readQ(tempfile, byteorder=">")
         stream2.verify()
@@ -196,7 +196,7 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile(suffix='.QHD').name
-        stream1.write(tempfile, format="Q")
+        stream1.write(tempfile, format="Q", append=False)
         # read again w/ auto detection
         stream2 = read(tempfile)
         stream2.verify()
@@ -212,7 +212,7 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile(suffix='.QHD').name
-        stream1.write(tempfile, format="Q", byteorder=">")
+        stream1.write(tempfile, format="Q", byteorder=">", append=False)
         # read again w/ auto detection
         stream2 = read(tempfile, byteorder=">")
         stream2.verify()
