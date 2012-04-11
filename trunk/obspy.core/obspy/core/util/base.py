@@ -393,6 +393,7 @@ def getMatplotlibVersion():
     try:
         import matplotlib
         version = matplotlib.__version__
+        version = version.split("~rc")[0]
         version = map(toIntOrZero, version.split("."))
     except ImportError:
         version = None
