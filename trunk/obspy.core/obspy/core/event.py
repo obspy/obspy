@@ -364,10 +364,7 @@ class WaveformStreamID(AttribDict):
         if (seed_string is not None) and (network is None) and \
            (station is None) and (location is None) and (channel is None):
             try:
-                self.network, self.station, self.location, self.channel = \
-                    seed_string.split('.')
-                self.resource_uri = 'resource_uri'
-                return
+                network, station, location, channel = seed_string.split('.')
             except ValueError:
                 warnings.warn("In WaveformStreamID.__init__(): " + \
                               "seed_string was given but could not be parsed")
