@@ -215,7 +215,8 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     return stream
 
 
-def writeASC(stream, filename, included_headers=None, npl=4, **kwargs):
+def writeASC(stream, filename, included_headers=None, npl=4,
+                custom_format=None, append=False, **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
@@ -234,11 +235,19 @@ def writeASC(stream, filename, included_headers=None, npl=4, **kwargs):
     :param included_headers: If set to a list, only these header entries will
         be written to file. DELTA and LENGTH are written in any case. If it's
         set to None, a basic set will be included.
+    :type custom_format: string, optional
+    :param custom_format: Parameter for number formatting of samples, defaults
+        to None. This will use ObsPy's formatScientific method.
+    :type append: bool, optional
+    :param append: If filename exists append all data to file, default False.
     """
     if included_headers is None:
         included_headers = STANDARD_ASC_HEADERS
 
-    fh = open(filename, 'wb')
+    if append:
+        fh = open(filename, 'ab')
+    else:
+        fh = open(filename, 'wb')
     for trace in stream:
         # write headers
         fh.write("DELTA: %s\n" % formatScientific("%-.6e" % trace.stats.delta))
@@ -270,7 +279,11 @@ def writeASC(stream, filename, included_headers=None, npl=4, **kwargs):
         delimiter = delimiter[:trace.stats.npts - 1]
         delimiter.append('\n')
         for (sample, delim) in zip(trace.data, delimiter):
-            fh.write("%s %s" % (formatScientific("%-.6e" % sample), delim))
+            if custom_format is None:
+                value = formatScientific("%-.6e" % sample)
+            else:
+                value = custom_format % sample
+            fh.write("%s %s" % (value, delim))
         fh.write("\n")
     fh.close()
 
@@ -449,7 +462,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     return stream
 
 
-def writeQ(stream, filename, data_directory=None, byteorder='=', append=True,
+def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
            **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler Q file from given ObsPy Stream object.
@@ -470,7 +483,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=True,
     :param byteorder: Enforce byte order for data file. Defaults to ``'='``
         (local byte order).
     :type append: bool, optional
-    :param append: If filename exists append all data to file, default True.
+    :param append: If filename exists append all data to file, default False.
     """
     if filename.endswith('.QHD'):
         filename = os.path.splitext(filename)[0]
