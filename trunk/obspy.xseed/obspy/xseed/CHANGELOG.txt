@@ -1,0 +1,2 @@
+dev:
+ * fixed a bug with exactly one pole or one zero in response information
