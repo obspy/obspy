@@ -454,6 +454,11 @@ class Parser(object):
                             channels[id]['poles'] = []
                         else:
                             raise e
+                    except TypeError, e:
+                        if resp.number_of_complex_poles == 1:
+                            channels[id]['poles'] = [complex(resp.real_pole, resp.imaginary_pole)]
+                        else:
+                            raise e
                     # Zeros
                     try:
                         channels[id]['zeros'] = \
@@ -462,6 +467,11 @@ class Parser(object):
                     except AttributeError, e:
                         if resp.number_of_complex_zeros == 0:
                             channels[id]['zeros'] = []
+                        else:
+                            raise e
+                    except TypeError, e:
+                        if resp.number_of_complex_zeros == 1:
+                            channels[id]['zeros'] = [complex(resp.real_zero, resp.imaginary_zero)]
                         else:
                             raise e
         # Remove channels with response of unsupported format
