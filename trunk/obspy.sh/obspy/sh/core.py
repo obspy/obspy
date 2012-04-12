@@ -53,6 +53,8 @@ SH_IDX = {
     'ORIGIN': 'S024'
 }
 
+STANDARD_ASC_HEADERS = ['START', 'COMP', 'CHAN1', 'CHAN2', 'STATION', 'CALIB']
+
 SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
 SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('R')]
 INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
@@ -213,7 +215,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     return stream
 
 
-def writeASC(stream, filename, **kwargs):  # @UnusedVariable
+def writeASC(stream, filename, included_headers=None, npl=4, **kwargs):
     """
     Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
@@ -226,7 +228,16 @@ def writeASC(stream, filename, **kwargs):  # @UnusedVariable
     :param stream: The ObsPy Stream object to write.
     :type filename: str
     :param filename: Name of the ASCII file to write.
+    :type npl: int, optional
+    :param npl: Number of data columns in file, default to four.
+    :type included_headers: list or None, optional
+    :param included_headers: If set to a list, only these header entries will
+        be written to file. DELTA and LENGTH are written in any case. If it's
+        set to None, a basic set will be included.
     """
+    if included_headers is None:
+        included_headers = STANDARD_ASC_HEADERS
+
     fh = open(filename, 'wb')
     for trace in stream:
         # write headers
@@ -234,22 +245,29 @@ def writeASC(stream, filename, **kwargs):  # @UnusedVariable
         fh.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
         for key, value in trace.stats.get('sh', {}).iteritems():
+            if included_headers and key not in included_headers:
+                continue
             fh.write("%s: %s\n" % (key, value))
         # special format for start time
-        dt = trace.stats.starttime
-        fh.write("START: %s\n" % fromUTCDateTime(dt))
+        if "START" in included_headers:
+            dt = trace.stats.starttime
+            fh.write("START: %s\n" % fromUTCDateTime(dt))
         # component must be split
-        if len(trace.stats.channel) > 2:
+        if len(trace.stats.channel) > 2 and "COMP" in included_headers:
             fh.write("COMP: %c\n" % trace.stats.channel[2])
-        if len(trace.stats.channel) > 0:
+        if len(trace.stats.channel) > 0 and "CHAN1" in included_headers:
             fh.write("CHAN1: %c\n" % trace.stats.channel[0])
-        if len(trace.stats.channel) > 1:
+        if len(trace.stats.channel) > 1 and "CHAN2" in included_headers:
             fh.write("CHAN2: %c\n" % trace.stats.channel[1])
-        fh.write("STATION: %s\n" % trace.stats.station)
-        fh.write("CALIB: %s\n" % formatScientific("%-.6e" % trace.stats.calib))
-        # write data in four columns
-        delimiter = ['', '', '', '\n'] * ((trace.stats.npts / 4) + 1)
-        delimiter = delimiter[0:trace.stats.npts - 1]
+        if "STATION" in included_headers:
+            fh.write("STATION: %s\n" % trace.stats.station)
+        if "CALIB" in included_headers:
+            fh.write("CALIB: %s\n" % formatScientific("%-.6e" % \
+                                                            trace.stats.calib))
+        # write data in npl columns
+        mask = ([''] * (npl - 1)) + ['\n']
+        delimiter = mask * ((trace.stats.npts / npl) + 1)
+        delimiter = delimiter[:trace.stats.npts - 1]
         delimiter.append('\n')
         for (sample, delim) in zip(trace.data, delimiter):
             fh.write("%s %s" % (formatScientific("%-.6e" % sample), delim))

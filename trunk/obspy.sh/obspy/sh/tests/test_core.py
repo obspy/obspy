@@ -2,7 +2,8 @@
 
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ
+from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
+                                                           STANDARD_ASC_HEADERS
 import numpy as np
 import os
 import unittest
@@ -118,7 +119,7 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile().name
-        writeASC(stream1, tempfile)
+        writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
         # read both files and compare the content
         text1 = open(origfile, 'rb').read()
         text2 = open(tempfile, 'rb').read()
@@ -140,7 +141,8 @@ class CoreTestCase(unittest.TestCase):
         self._compareStream(stream1)
         # write
         tempfile = NamedTemporaryFile().name
-        stream1.write(tempfile, format="SH_ASC")
+        hd = STANDARD_ASC_HEADERS + ['COMMENT']
+        stream1.write(tempfile, format="SH_ASC", included_headers=hd)
         # read again w/ auto detection
         stream2 = read(tempfile)
         stream2.verify()
