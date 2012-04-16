@@ -389,6 +389,43 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res_c = ResourceIdentifier(referred_object=UTCDateTime())
         self.assertEqual(len(res_list), 1)
 
+    def test_adding_a_referred_object_after_creation(self):
+        """
+        Check that the referred objects can also be made available after the
+        ResourceIdentifier instances have been created.
+        """
+        obj = UTCDateTime()
+        obj_id = id(obj)
+        res_id = "obspy.org/time/test"
+        ref_a = ResourceIdentifier(res_id)
+        ref_b = ResourceIdentifier(res_id)
+        ref_c = ResourceIdentifier(res_id)
+        # All three will have no resource attached.
+        self.assertEqual(ref_a.getReferredObject(), None)
+        self.assertEqual(ref_b.getReferredObject(), None)
+        self.assertEqual(ref_c.getReferredObject(), None)
+        # Setting the object for one will make it available to all other
+        # instances.
+        ref_b._referred_object = obj
+        self.assertEqual(id(ref_a.getReferredObject()), obj_id)
+        self.assertEqual(id(ref_b.getReferredObject()), obj_id)
+        self.assertEqual(id(ref_c.getReferredObject()), obj_id)
+
+    def test_resources_in_global_list_are_weak_refs(self):
+        """
+        Tests that the ResourceIdentifier in the class level resource list are
+        themselves weak references. Otherwise that would never get garbage
+        collected and hang around indefinitely.
+        """
+        obj_a = UTCDateTime()
+        obj_b = UTCDateTime()
+        ResourceIdentifier(referred_object=obj_a)
+        ResourceIdentifier(referred_object=obj_b)
+        # Now only dead reference should remain.
+        self.assertEqual([_i() for _i in \
+            ResourceIdentifier._ResourceIdentifier__resource_id_list if \
+            _i() is not None], [])
+
 
 def suite():
     suite = unittest.TestSuite()

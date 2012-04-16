@@ -378,6 +378,19 @@ class ResourceIdentifier(object):
     >>> items.sort()
     >>> print items # doctest:+ELLIPSIS
     [(<__main__.ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
+
+    Accessing the object the current instance points to (and not the global
+    one) works via the _referred_object attribute. This is only useful in very
+    special cases. Usually the getReferredObject() is the way to go.
+    >>> obj = Event()
+    >>> res_id = "test"
+    >>> res_a = ResourceIdentifier(res_id, referred_object=obj)
+    >>> res_b = ResourceIdentifier(res_id)
+    >>> # The two need not be identical. res_b.getReferredObject() actually get
+    >>> # returns the resource attached to res_a. res_b has no resource
+    >>> # attached.
+    >>> assert(res_b.getReferredObject() is obj)
+    >>> assert(res_b._referred_object is None)
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -402,39 +415,19 @@ class ResourceIdentifier(object):
         """
         Will return the object associated with the resource identifier. This
         works if either the current instance has a referred object or if any
-        previously created (in the Python run) ResourceIdentifier with the
+        previously created (in one Python run) ResourceIdentifier with the
         same resource_id has a referred object.
         """
         referred_object = self.__getReferredObject()
         if referred_object is not None:
             return referred_object
         res_list = self._ResourceIdentifier__resource_id_list
-        if self not in res_list:
+        self_weak_ref = weakref.ref(self)
+        if self_weak_ref not in res_list:
             return None
-        return res_list[res_list.index(self)]._referred_object
-
-    def __appendToGlobalReferenceList(self):
-        # If it does not contain a reference there is not need to append it to
-        # the global list.
-        if self._referred_object is None:
-            return
-        res_list = self._ResourceIdentifier__resource_id_list
-        # If it does not exist just append it to the class attribute.
-        if self not in res_list:
-            res_list.append(self)
-            return
-        # Otherwise the newly created instance will now carry the reference to
-        # the object. An eventually existing reference in the other instance
-        # will not be used anymore. A warning will be issued.
-        other_reference = res_list[res_list.index(self)]
-        if (other_reference._referred_object is not None) and \
-            (other_reference._referred_object is not self._referred_object):
-            msg = "The resource identifier already exists and points to " + \
-                  "another object. It will now point to the object " + \
-                  "referred to by the new resource identifier."
-            warnings.warn(msg)
-        res_list.remove(other_reference)
-        res_list.append(self)
+        res_id = res_list[res_list.index(self_weak_ref)]()
+        # The list also contains weak references. Resolve them.
+        return res_id._referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -460,8 +453,8 @@ class ResourceIdentifier(object):
         result = re.match(regex, str(self.resource_id))
         if result is not None:
             return
-        self.resource_id = 'smi:%s/%s' % (authority_id,
-                                          str(self.resource_id))
+        self.__setResourceID('smi:%s/%s' % (authority_id,
+                                            str(self.resource_id)))
         # Check once again just to be sure no weird symbols are stored in the
         # resource_id.
         result = re.match(regex, self.resource_id)
@@ -469,28 +462,39 @@ class ResourceIdentifier(object):
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
 
-    def __str__(self):
-        ret_str = 'ResourceIdentifier(resource_id="%s")' % self.resource_id
-        if self._referred_object is not None:
-            object_str = str(self._referred_object).split('\n')
-            ret_str += '\n'
-            ret_str += '\n\t'.join(object_str)
-        return ret_str
-
-    def __eq__(self, other):
-        # The type check is necessary due to the used hashing method.
-        if type(self) != type(other):
-            return False
-        if self.resource_id == other.resource_id:
-            return True
-        return False
-
-    def __hash__(self):
+    def __appendToGlobalReferenceList(self):
         """
-        Uses the same hash as the resource id. This means that class instances
-        can be used in dictionaries and other hashed types.
+        Appends the instance to the class level ResourceIdentifier list so it
+        can be used for global object retrieval.
+
+        Will make some checks before appending.
         """
-        return self.resource_id.__hash__()
+        # If it does not contain a reference there is not need to append it to
+        # the global list.
+        if self.__getReferredObject() is None:
+            return
+        res_list = self._ResourceIdentifier__resource_id_list
+        self_weak_ref = weakref.ref(self)
+
+        # If it does not exist just append it to the class attribute.
+        temp_list = [_i() for _i in res_list]
+        if self not in temp_list:
+            res_list.append(self_weak_ref)
+            return
+        # Otherwise the newly created instance will now carry the reference to
+        # the object. An eventually existing reference in the other instance
+        # will not be used anymore. A warning will be issued.
+        other_reference = temp_list[temp_list.index(self)]
+        if (other_reference._referred_object is not None) and \
+            (other_reference._referred_object is \
+            not self.__getReferredObject()):
+            msg = "The resource identifier already exists and points to " + \
+                  "another object. It will now point to the object " + \
+                  "referred to by the new resource identifier."
+            warnings.warn(msg)
+        res_list.remove(weakref.ref(other_reference))
+        res_list.append(self_weak_ref)
+
 
     def __getReferredObject(self):
         """
@@ -507,20 +511,21 @@ class ResourceIdentifier(object):
 
     def __setReferredObject(self, referred_object):
         """
-        Sets the refered object of the object.
+        Sets the referred object of the object.
 
         If it already a weak reference it will be used, otherwise one will be
         created. If the object is None, None will be set.
+
+        Will also append self again to the global class level reference list so
+        everything stays consistent.
         """
         if isinstance(referred_object, weakref.ref):
             self.__dict__['_referred_object'] = referred_object
-            return
         elif referred_object is None:
             self.__dict__['_referred_object'] = None
-            return
-        self.__dict__['_referred_object'] = weakref.ref(referred_object)
-
-    _referred_object = property(__getReferredObject, __setReferredObject)
+        else:
+            self.__dict__['_referred_object'] = weakref.ref(referred_object)
+        self.__appendToGlobalReferenceList()
 
     def __getResourceID(self):
         return self.__dict__.get("resource_id")
@@ -533,7 +538,29 @@ class ResourceIdentifier(object):
             raise ValueError(msg)
         self.__dict__["resource_id"] = resource_id
 
+    _referred_object = property(__getReferredObject, __setReferredObject)
     resource_id = property(__getResourceID, __setResourceID)
+
+    def __str__(self):
+        return 'ResourceIdentifier(resource_id="%s")' % self.resource_id
+
+    def __eq__(self, other):
+        # The type check is necessary due to the used hashing method.
+        if type(self) != type(other):
+            return False
+        if self.resource_id == other.resource_id:
+            return True
+        return False
+
+    def __hash__(self):
+        """
+        Uses the same hash as the resource id. This means that class instances
+        can be used in dictionaries and other hashed types.
+
+        Both the object and it's id can still be independently used as
+        dictionary keys.
+        """
+        return self.resource_id.__hash__()
 
 
 class CreationInfo(AttribDict):
