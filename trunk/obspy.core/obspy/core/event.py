@@ -235,7 +235,6 @@ class ResourceIdentifier(object):
 
     In this class it can be any hashable object, e.g. most immutable objects
     like numbers and strings.
-    It furthermore needs to have a resource type associated with it.
 
     :type resource_id: Any hashable object, e.g. numbers, strings, tuples, ...
         optional
@@ -244,35 +243,38 @@ class ResourceIdentifier(object):
         that. If no resource_id is given, uuid.uuid4() will be used to
         create one which assures uniqueness within one Python run.
     :type prefix: str, optional
-    :param prefix: Can be used to describe the type of resource it refers to
-        which is useful to group resources. Will also affect any possibly
-        created QuakeML URI if one is requested.
+    :param prefix: An optional identifier that will be put in front of any
+        automatically created resource_id. Will only have an effect if
+        resource_id is not given. Will make it easier to figure out which type
+        of resource it points to.
 
-    >>> res_ref = ResourceIdentifier('2012-04-11--385392', 'event')
-    >>> print res_ref.resource_id
+    >>> res_id = ResourceIdentifier('2012-04-11--385392')
+    >>> print res_id.resource_id
     2012-04-11--385392
-    >>> print res_ref.prefix
-    event
 
     If no resource_id is given it will be generated automatically.
-    >>> res_ref = ResourceIdentifier()
-    >>> print res_ref.prefix
-    None
-    >>> print "Resource id:", res_ref.resource_id # doctest:+ELLIPSIS
+    >>> res_id = ResourceIdentifier()
+    >>> print "Resource id:", res_id.resource_id # doctest:+ELLIPSIS
     Resource id: ...
 
+    Supplying a prefix will simply prefix the automatically generated
+    resource_id.
+    >>> res_id = ResourceIdentifier(prefix='event')
+    >>> print "Resource id:", res_id.resource_id # doctest:+ELLIPSIS
+    Resource id: event/...
+
     Any hashable type can be used as a resource_id.
-    >>> res_ref = ResourceIdentifier((1,3))
-    >>> print res_ref.resource_id == (1,3)
+    >>> res_id = ResourceIdentifier((1,3))
+    >>> print res_id.resource_id == (1,3)
     True
 
     Using a non-hashable resource_id will result in an error.
-    >>> res_ref = ResourceIdentifier([1,2])
+    >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
     ValueError: resource_id needs to be a hashable type.
-    >>> res_ref = ResourceIdentifier(prefix='origin')
-    >>> res_ref.resource_id = [1,2]
+    >>> res_id = ResourceIdentifier()
+    >>> res_id.resource_id = [1,2]
     Traceback (most recent call last):
         ...
     ValueError: resource_id needs to be a hashable type.
@@ -280,42 +282,59 @@ class ResourceIdentifier(object):
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
         smi:authority_id/prefix/resource_id
-    or
-        smi:authority_id/resource_id
-    if no prefix is given. The authority_id defaults to ``"local"``.
-    >>> res_ref.convertIDToQuakeMLURI(authority_id="obspy.org")
-    >>> print res_ref.resource_id # doctest:+ELLIPSIS
+    >>> res_id = ResourceIdentifier(prefix='origin')
+    >>> res_id.convertIDToQuakeMLURI(authority_id="obspy.org")
+    >>> print res_id.resource_id # doctest:+ELLIPSIS
     smi:obspy.org/origin/...
-    >>> res_ref = ResourceIdentifier('foo')
-    >>> res_ref.convertIDToQuakeMLURI()
-    >>> print res_ref.resource_id
+    >>> res_id = ResourceIdentifier('foo')
+    >>> res_id.convertIDToQuakeMLURI()
+    >>> print res_id.resource_id
     smi:local/foo
+
+    A good way to create a QuakeML compatibly ResourceIdentifier from scratch
+    is
+    >>> res_id = ResourceIdentifier(prefix='pick')
+    >>> res_id.convertIDToQuakeMLURI(authority_id='obspy.org')
+    >>> print res_id.resource_id # doctest:+ELLIPSIS
+    smi:obspy.org/pick/...
 
     If the given resource_id is already a valid QuakeML ResourceIdentifier
     nothing will happen.
-    >>> res_ref = ResourceIdentifier('smi:test.org/subdir/id')
-    >>> print res_ref.resource_id
+    >>> res_id = ResourceIdentifier('smi:test.org/subdir/id')
+    >>> print res_id.resource_id
     smi:test.org/subdir/id
-    >>> res_ref.convertIDToQuakeMLURI()
-    >>> print res_ref.resource_id
+    >>> res_id.convertIDToQuakeMLURI()
+    >>> print res_id.resource_id
     smi:test.org/subdir/id
 
-    ResourceIdentifiers are considered identical if both the prefix
-    and the resource_id are identical.
+    ResourceIdentifiers are considered identical if the resource_ids are
+    the same.
     >>> # Create two different resource_ids.
-    >>> res_ref_1 = ResourceIdentifier(prefix='pick')
-    >>> res_ref_2 = ResourceIdentifier(prefix='pick')
-    >>> print res_ref_1 == res_ref_2
+    >>> res_id_1 = ResourceIdentifier()
+    >>> res_id_2 = ResourceIdentifier()
+    >>> print res_id_1 == res_id_2
     False
     >>> # Equalize the resource_ids. NEVER do this. This just an example.
-    >>> res_ref_2.resource_id = res_ref_1.resource_id = 1
-    >>> print res_ref_1 == res_ref_2
+    >>> res_id_2.resource_id = res_id_1.resource_id = 1
+    >>> print res_id_1 == res_id_2
     True
+
+    ResourceIdentifier instances can be used as dictionary keys.
+    >>> dictionary = {}
+    >>> res_id = ResourceIdentifier(resource_id="foo")
+    >>> dictionary[res_id] = "bar"
+    >>> # The same resource_id can still be used as a key.
+    >>> dictionary["foo"] = "bar"
+    >>> items = dictionary.items()
+    >>> items.sort()
+    >>> print items # doctest:+ELLIPSIS
+    [(<__main__.ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
     """
     def __init__(self, resource_id=None, prefix=None):
-        self.prefix = prefix
         if resource_id is None:
-            resource_id = uuid4()
+            resource_id = str(uuid4())
+            if prefix is not None:
+                resource_id = prefix + '/' + resource_id
         self._setResourceID(resource_id)
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
@@ -327,9 +346,6 @@ class ResourceIdentifier(object):
 
         The resulting resource_id will be of the form
             smi:authority_id/prefix/resource_id
-        or
-            smi:authority_id/resource_id
-        if no prefix attribute is given to the instance.
 
         :type authority_id: str, optional
         :param authority_id: The base url of the resulting string. Defaults to
@@ -343,24 +359,29 @@ class ResourceIdentifier(object):
         result = re.match(regex, str(self.resource_id))
         if result is not None:
             return
-        if self.prefix is None:
-            self.resource_id = 'smi:%s/%s' % (authority_id,
-                                              str(self.resource_id))
-        else:
-            self.resource_id = 'smi:%s/%s/%s' % (authority_id, self.prefix,
-                                                 str(self.resource_id))
+        self.resource_id = 'smi:%s/%s' % (authority_id,
+                                          str(self.resource_id))
         # Check once again just to be sure no weird symbols are stored in the
-        # prefix and/or resource_id.
+        # resource_id.
         result = re.match(regex, self.resource_id)
         if result is None:
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
 
     def __eq__(self, other):
-        if (self.resource_id == other.resource_id) and \
-           (self.prefix == other.prefix):
+        # The type check is necessary due to the used hashing method.
+        if type(self) != type(other):
+            return False
+        if self.resource_id == other.resource_id:
             return True
         return False
+
+    def __hash__(self):
+        """
+        Uses the same hash as the resource id. This means that class instances
+        can be used in dictionaries and other hashed types.
+        """
+        return self.resource_id.__hash__()
 
     def _getResourceID(self):
         return self.__dict__.get("resource_id")
