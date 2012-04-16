@@ -378,60 +378,68 @@ class ResourceIdentifier(object):
     >>> items.sort()
     >>> print items # doctest:+ELLIPSIS
     [(<__main__.ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
-
-    Accessing the object the current instance points to (and not the global
-    one) works via the _referred_object attribute. This is only useful in very
-    special cases. Usually the getReferredObject() is the way to go.
-    >>> obj = Event()
-    >>> res_id = "test"
-    >>> res_a = ResourceIdentifier(res_id, referred_object=obj)
-    >>> res_b = ResourceIdentifier(res_id)
-    >>> # The two need not be identical. res_b.getReferredObject() actually get
-    >>> # returns the resource attached to res_a. res_b has no resource
-    >>> # attached.
-    >>> assert(res_b.getReferredObject() is obj)
-    >>> assert(res_b._referred_object is None)
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
     # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
-    __resource_id_list = []
+    __resource_id_weak_dict = weakref.WeakValueDictionary()
 
     def __init__(self, resource_id=None, prefix=None, referred_object=None):
+        # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
             if prefix is not None:
-                resource_id = prefix + '/' + resource_id
+                resource_id = "%s/%s" % (prefix, resource_id)
+        # Use the setter to assure only hashable ids are set.
         self.__setResourceID(resource_id)
-
-        # Create a weak reference to the object being referred to.
-        self.__setReferredObject(referred_object)
-        # Append to the global reference set that keeps track of all resource
-        # identifiers.
-        self.__appendToGlobalReferenceList()
+        # Append the referred object in case one is given to the class level
+        # reference dictionary.
+        if referred_object is not None:
+            self.setReferredObject(referred_object)
 
     def getReferredObject(self):
         """
-        Will return the object associated with the resource identifier. This
-        works if either the current instance has a referred object or if any
-        previously created (in one Python run) ResourceIdentifier with the
-        same resource_id has a referred object.
+        Returns the object associated with the resource identifier.
+
+        This works as long as at least one ResourceIdentifier with the same
+        resource_id as this instance has an associate object.
+
+        Will return None if no object could be found.
         """
-        referred_object = self.__getReferredObject()
-        if referred_object is not None:
-            return referred_object
-        res_list = self._ResourceIdentifier__resource_id_list
-        self_weak_ref = weakref.ref(self)
-        if self_weak_ref not in res_list:
+        try:
+            return ResourceIdentifier.__resource_id_weak_dict[self]
+        except KeyError:
             return None
-        res_id = res_list[res_list.index(self_weak_ref)]()
-        # The list also contains weak references. Resolve them.
-        return res_id._referred_object
+
+    def setReferredObject(self, referred_object):
+        """
+        Sets the object the ResourceIdentifier refers to.
+
+        If it already a weak reference it will be used, otherwise one will be
+        created. If the object is None, None will be set.
+
+        Will also append self again to the global class level reference list so
+        everything stays consistent.
+        """
+        # If it does not yet exists simply set it.
+        if not self in ResourceIdentifier.__resource_id_weak_dict:
+            ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+            return
+        # Otherwise check if the existing element the same as the new one. If
+        # it is do nothing, otherwise raise a warning and set the new object as
+        # the referred object.
+        if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
+            return
+        msg = "The resource identifier already exists and points to " + \
+              "another object. It will now point to the object " + \
+              "referred to by the new resource identifier."
+        warnings.warn(msg)
+        ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
-        Takes the current resource_id and converts it to a valid QuakeML URI.
+        Converts the current resource_id to a valid QuakeML URI.
 
         Only an invalid QuakeML ResourceIdentifier string it will be converted
         to a valid one.  Otherwise nothing will happen but after calling this
@@ -462,73 +470,16 @@ class ResourceIdentifier(object):
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
 
-    def __appendToGlobalReferenceList(self):
-        """
-        Appends the instance to the class level ResourceIdentifier list so it
-        can be used for global object retrieval.
-
-        Will make some checks before appending.
-        """
-        # If it does not contain a reference there is not need to append it to
-        # the global list.
-        if self.__getReferredObject() is None:
-            return
-        res_list = self._ResourceIdentifier__resource_id_list
-        self_weak_ref = weakref.ref(self)
-
-        # If it does not exist just append it to the class attribute.
-        temp_list = [_i() for _i in res_list]
-        if self not in temp_list:
-            res_list.append(self_weak_ref)
-            return
-        # Otherwise the newly created instance will now carry the reference to
-        # the object. An eventually existing reference in the other instance
-        # will not be used anymore. A warning will be issued.
-        other_reference = temp_list[temp_list.index(self)]
-        if (other_reference._referred_object is not None) and \
-            (other_reference._referred_object is \
-            not self.__getReferredObject()):
-            msg = "The resource identifier already exists and points to " + \
-                  "another object. It will now point to the object " + \
-                  "referred to by the new resource identifier."
-            warnings.warn(msg)
-        res_list.remove(weakref.ref(other_reference))
-        res_list.append(self_weak_ref)
-
-
-    def __getReferredObject(self):
-        """
-        Returns the referred object if it exists of the current instance.
-
-        Not the global referred object. Returns None otherwise.
-        """
-        if self.__dict__['_referred_object'] is None:
-            return None
-        # Return the actual reference of the object. Can still be None if the
-        # object does not exists anymore, e.g. it has been garbage collected or
-        # deleted manually.
-        return self.__dict__['_referred_object']()
-
-    def __setReferredObject(self, referred_object):
-        """
-        Sets the referred object of the object.
-
-        If it already a weak reference it will be used, otherwise one will be
-        created. If the object is None, None will be set.
-
-        Will also append self again to the global class level reference list so
-        everything stays consistent.
-        """
-        if isinstance(referred_object, weakref.ref):
-            self.__dict__['_referred_object'] = referred_object
-        elif referred_object is None:
-            self.__dict__['_referred_object'] = None
-        else:
-            self.__dict__['_referred_object'] = weakref.ref(referred_object)
-        self.__appendToGlobalReferenceList()
 
     def __getResourceID(self):
         return self.__dict__.get("resource_id")
+
+    def __delResourceID(self):
+        """
+        Deleting is forbidden and will not work.
+        """
+        msg = "The resource id cannot be deleted."
+        raise Exception(msg)
 
     def __setResourceID(self, resource_id):
         # Check if the resource id is a hashable type.
@@ -538,8 +489,8 @@ class ResourceIdentifier(object):
             raise ValueError(msg)
         self.__dict__["resource_id"] = resource_id
 
-    _referred_object = property(__getReferredObject, __setReferredObject)
-    resource_id = property(__getResourceID, __setResourceID)
+    resource_id = property(__getResourceID, __setResourceID, __delResourceID,
+                           "unique identifier of the current instance")
 
     def __str__(self):
         return 'ResourceIdentifier(resource_id="%s")' % self.resource_id

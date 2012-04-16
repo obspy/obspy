@@ -5,6 +5,7 @@ from obspy.core.event import readEvents, Catalog, Event, Origin, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 import os
+import sys
 import unittest
 import warnings
 
@@ -323,9 +324,9 @@ class ResourceIdentifierTestCase(unittest.TestCase):
     Test suite for obspy.core.event.ResourceIdentifier.
     """
     def setUp(self):
-        # Clear the Resource Identifier list for the tests. NEVER do this
+        # Clear the Resource Identifier dict for the tests. NEVER do this
         # otherwise.
-        ResourceIdentifier._ResourceIdentifier__resource_id_list[:] = []
+        ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
 
     @skipIfPython25
     def test_same_resource_id_different_referred_object(self):
@@ -354,40 +355,41 @@ class ResourceIdentifierTestCase(unittest.TestCase):
             warnings.simplefilter('ignore', UserWarning)
             res_b = ResourceIdentifier(resource_id=resource_id,
                                        referred_object=object_b)
-        # The resource identifiers themselves will still contain a reference to
-        # the object they where created with.
-        self.assertEqual(object_a is res_a._referred_object, True)
-        self.assertEqual(object_a is res_a.getReferredObject(), True)
-        self.assertEqual(object_b is res_b._referred_object, True)
+        # Object b was the last to added, thus all resource identifiers will
+        # now point to it.
+        self.assertEqual(object_b is res_a.getReferredObject(), True)
         self.assertEqual(object_b is res_b.getReferredObject(), True)
-        # But the global resource identifier "manager" will now only contain a
-        # reference to the latest object added.
-        self.assertEqual(True,
-            object_b is ResourceIdentifier(resource_id).getReferredObject())
 
     def test_objects_garbage_collection(self):
         """
-        Test that the ResourceIdentifier do not mess with the garbage
+        Test that the ResourceIdentifier class does not mess with the garbage
         collection of the attached objects.
         """
         object_a = UTCDateTime()
-        ResourceIdentifier(referred_object=object_a)
+        ref_count = sys.getrefcount(object_a)
+        res_id = ResourceIdentifier(referred_object=object_a)
+        self.assertEqual(sys.getrefcount(object_a), ref_count)
 
     def test_id_without_reference_not_in_global_list(self):
         """
         This tests some internal workings of the ResourceIdentifier class.
-        NEVER modify the resource_id_list!
+        NEVER modify the __resource_id_weak_dict!
 
-        A ResourceIdentifier without an associated object should not get stored
-        in the class level resource_id_list.
+        Only those ResourceIdentifiers that have a reference to an object that
+        is refered to somewhere else should stay in the dictionary.
         """
-        res_list = ResourceIdentifier._ResourceIdentifier__resource_id_list
-        res_a = ResourceIdentifier()
-        res_b = ResourceIdentifier()
-        self.assertEqual(len(res_list), 0)
-        # Adding a ResourceIdentifier with an object should get added.
-        res_c = ResourceIdentifier(referred_object=UTCDateTime())
-        self.assertEqual(len(res_list), 1)
+        r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
+        ResourceIdentifier()
+        self.assertEqual(len(r_dict.keys()), 0)
+        # Adding a ResourceIdentifier with an object that has a reference
+        # somewhere will have no effect because it gets garbage collected
+        # pretty much immediatly.
+        ResourceIdentifier(referred_object=UTCDateTime())
+        self.assertEqual(len(r_dict.keys()), 0)
+        # Give it a reference and it will stick around.
+        obj = UTCDateTime()
+        ResourceIdentifier(referred_object=obj)
+        self.assertEqual(len(r_dict.keys()), 1)
 
     def test_adding_a_referred_object_after_creation(self):
         """
@@ -406,25 +408,27 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(ref_c.getReferredObject(), None)
         # Setting the object for one will make it available to all other
         # instances.
-        ref_b._referred_object = obj
+        ref_b.setReferredObject(obj)
         self.assertEqual(id(ref_a.getReferredObject()), obj_id)
         self.assertEqual(id(ref_b.getReferredObject()), obj_id)
         self.assertEqual(id(ref_c.getReferredObject()), obj_id)
 
-    def test_resources_in_global_list_are_weak_refs(self):
+    def test_resources_in_global_dict_get_garbage_colleted(self):
         """
-        Tests that the ResourceIdentifier in the class level resource list are
-        themselves weak references. Otherwise that would never get garbage
-        collected and hang around indefinitely.
+        Tests that the ResourceIdentifiers in the class level resource dict get
+        deleted if they have no other reference and the object they refer to
+        goes out of scope.
         """
         obj_a = UTCDateTime()
         obj_b = UTCDateTime()
         ResourceIdentifier(referred_object=obj_a)
         ResourceIdentifier(referred_object=obj_b)
-        # Now only dead reference should remain.
-        self.assertEqual([_i() for _i in \
-            ResourceIdentifier._ResourceIdentifier__resource_id_list if \
-            _i() is not None], [])
+        # Now two keys should be in the global dict.
+        rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
+        self.assertEqual(len(rdict.keys()), 2)
+        # Deleting the objects should also remove the from the dictionary.
+        del obj_a, obj_b
+        self.assertEqual(len(rdict.keys()), 0)
 
 
 def suite():
