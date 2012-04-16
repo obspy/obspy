@@ -226,11 +226,14 @@ class ResourceIdentifier(object):
     the same purpose in the obspy.core.event classes.
 
     In QuakeML it has to be of the following regex form:
-    (smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~']
+
+        (smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~']
         [\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*
 
-    e.g. smi:sub.website.org/event/12345678
-         quakeml:google.org/pick/unique_pick_id
+    e.g.
+
+    * smi:sub.website.org/event/12345678
+    * quakeml:google.org/pick/unique_pick_id
 
     smi stands for "seismological meta-information".
 
@@ -246,30 +249,76 @@ class ResourceIdentifier(object):
     :type prefix: str, optional
     :param prefix: An optional identifier that will be put in front of any
         automatically created resource_id. Will only have an effect if
-        resource_id is not given. Will make it easier to figure out which type
-        of resource it points to.
+        resource_id is not given. Makes automatically generated resource_ids
+        more reasonable.
+    :type referred_object: Python object, optional
+    :param referred_object: The object this instance refers to. All instances
+        created with the same resource_id will be able to access the object as
+        long as at least one instance actual has a reference to it.
+
+    General usage:
 
     >>> res_id = ResourceIdentifier('2012-04-11--385392')
-    >>> print res_id.resource_id
-    2012-04-11--385392
+    >>> print res_id
+    ResourceIdentifier(resource_id="2012-04-11--385392")
+    >>> # If no resource_id is given it will be generated automatically.
+    >>> print res_id # doctest:+ELLIPSIS
+    ResourceIdentifier(resource_id="...")
+    >>> # Supplying a prefix will simply prefix the automatically generated
+    >>> # resource_id.
+    >>> print ResourceIdentifier(prefix='event') # doctest:+ELLIPSIS
+    ResourceIdentifier(resource_id="event/...")
 
-    If no resource_id is given it will be generated automatically.
-    >>> res_id = ResourceIdentifier()
-    >>> print "Resource id:", res_id.resource_id # doctest:+ELLIPSIS
-    Resource id: ...
+    ResourceIdentifiers can, and oftentimes should, carry a reference to the
+    object they refer to. This is a weak reference which means that if the
+    object get deleted or runs out of scope, e.g. gets garbage collected, the
+    reference will cease to exist.
 
-    Supplying a prefix will simply prefix the automatically generated
-    resource_id.
-    >>> res_id = ResourceIdentifier(prefix='event')
-    >>> print "Resource id:", res_id.resource_id # doctest:+ELLIPSIS
-    Resource id: event/...
+    >>> event = Event()
+    >>> import sys
+    >>> ref_count = sys.getrefcount(event)
+    >>> res_id = ResourceIdentifier(referred_object=event)
+    >>> # The reference does not changed the reference count of the object.
+    >>> print ref_count == sys.getrefcount(event)
+    True
+    >>> # It actually is the same object.
+    >>> print event is res_id.getReferredObject()
+    True
+    >>> # Deleting it, or letting the garbage collector handle the object will
+    >>> # invalidate the reference.
+    >>> del event
+    >>> print res_id.getReferredObject()
+    None
+
+    The most powerful ability (and reason why one would want to use a resource
+    identifier class in the first place) is that once a ResourceIdentifer with
+    an attached referred object has been created, any other ResourceIdentifier
+    instances with the same resource_id can retrieve that object. This works
+    across all ResourceIdentifiers that have been instantiated within one
+    Python run.
+    This enables, e.g. the resource references between the different QuakeML
+    elements to work in a rather natural way.
+
+    >>> event_object = Event()
+    >>> obj_id = id(event_object)
+    >>> res_id = "obspy.org/event/test"
+    >>> ref_a = ResourceIdentifier(res_id)
+    >>> # The object is refers to cannot be found yet. Because no instance that
+    >>> # an attached object has been created so far.
+    >>> print ref_a.getReferredObject()
+    None
+    >>> # This instance has an attached object.
+    >>> ref_b = ResourceIdentifier(res_id, referred_object=event_object)
+    >>> ref_c = ResourceIdentifier(res_id)
+    >>> # All ResourceIdentifiers will refer to the same object.
+    >>> assert(id(ref_a.getReferredObject()) == obj_id)
+    >>> assert(id(ref_b.getReferredObject()) == obj_id)
+    >>> assert(id(ref_c.getReferredObject()) == obj_id)
 
     Any hashable type can be used as a resource_id.
-    >>> res_id = ResourceIdentifier((1,3))
-    >>> print res_id.resource_id == (1,3)
-    True
 
-    Using a non-hashable resource_id will result in an error.
+    >>> res_id = ResourceIdentifier((1,3))
+    >>> # Using a non-hashable resource_id will result in an error.
     >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
@@ -283,44 +332,43 @@ class ResourceIdentifier(object):
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
         smi:authority_id/prefix/resource_id
+
     >>> res_id = ResourceIdentifier(prefix='origin')
     >>> res_id.convertIDToQuakeMLURI(authority_id="obspy.org")
-    >>> print res_id.resource_id # doctest:+ELLIPSIS
-    smi:obspy.org/origin/...
+    >>> print res_id # doctest:+ELLIPSIS
+    ResourceIdentifier(resource_id="smi:obspy.org/origin/...")
     >>> res_id = ResourceIdentifier('foo')
     >>> res_id.convertIDToQuakeMLURI()
-    >>> print res_id.resource_id
-    smi:local/foo
-
-    A good way to create a QuakeML compatibly ResourceIdentifier from scratch
-    is
+    >>> print res_id
+    ResourceIdentifier(resource_id="smi:local/foo")
+    >>> # A good way to create a QuakeML compatibly ResourceIdentifier from
+    >>> # scratch is
     >>> res_id = ResourceIdentifier(prefix='pick')
     >>> res_id.convertIDToQuakeMLURI(authority_id='obspy.org')
-    >>> print res_id.resource_id # doctest:+ELLIPSIS
-    smi:obspy.org/pick/...
-
-    If the given resource_id is already a valid QuakeML ResourceIdentifier
-    nothing will happen.
+    >>> print res_id # doctest:+ELLIPSIS
+    ResourceIdentifier(resource_id="smi:obspy.org/pick/...")
+    >>> # If the given resource_id is already a valid QuakeML
+    >>> # ResourceIdentifier, nothing will happen.
     >>> res_id = ResourceIdentifier('smi:test.org/subdir/id')
-    >>> print res_id.resource_id
-    smi:test.org/subdir/id
+    >>> print res_id
+    ResourceIdentifier(resource_id="smi:test.org/subdir/id")
     >>> res_id.convertIDToQuakeMLURI()
-    >>> print res_id.resource_id
-    smi:test.org/subdir/id
+    >>> print res_id
+    ResourceIdentifier(resource_id="smi:test.org/subdir/id")
 
     ResourceIdentifiers are considered identical if the resource_ids are
     the same.
+
     >>> # Create two different resource_ids.
     >>> res_id_1 = ResourceIdentifier()
     >>> res_id_2 = ResourceIdentifier()
-    >>> print res_id_1 == res_id_2
-    False
+    >>> assert(res_id_1 != res_id_2)
     >>> # Equalize the resource_ids. NEVER do this. This just an example.
     >>> res_id_2.resource_id = res_id_1.resource_id = 1
-    >>> print res_id_1 == res_id_2
-    True
+    >>> assert(res_id_1 == res_id_2)
 
     ResourceIdentifier instances can be used as dictionary keys.
+
     >>> dictionary = {}
     >>> res_id = ResourceIdentifier(resource_id="foo")
     >>> dictionary[res_id] = "bar"
@@ -330,49 +378,10 @@ class ResourceIdentifier(object):
     >>> items.sort()
     >>> print items # doctest:+ELLIPSIS
     [(<__main__.ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
-
-    ResourceIdentifiers can, and oftentimes should, carry a reference to the
-    object they refer to. This is a weak reference which means that if the
-    object get deleted or runs out of scope, e.g. gets garbage collected, the
-    reference will be no more existing.
-    >>> event = Event()
-    >>> import sys
-    >>> ref_count = sys.getrefcount(event)
-    >>> res_id = ResourceIdentifier(referred_object=event)
-    >>> # The reference does not changed the reference count of the object.
-    >>> print ref_count == sys.getrefcount(event)
-    True
-    >>> # It actually is the same object.
-    >>> print event is res_id.referred_object
-    True
-    >>> # Deleting it, or letting the garbage collector handle the object will
-    >>> # invalidate the reference.
-    >>> del event
-    >>> print res_id.referred_object
-    None
-
-    The most powerful ability (and reason why one would want to use a resource
-    identifier class in the first place) is that once a ResourceIdentifer with
-    an attached referred object has been created, any other ResourceIdentifier
-    instances with the same resource_id can retrieve that object. This works
-    across all ResourceIdentifiers that have been instantiated within one Python
-    run.
-    This enables, e.g. the resource reference between the different QuakeML
-    elements to work in a rather natural way.
-    >>> event_object = Event()
-    >>> reference_a = ResourceIdentifier(resource_id="obspy.org/event/test")
-    >>> reference_b = ResourceIdentifier(resource_id="obspy.org/event/test", \
-            referred_object=event_object)
-    >>> reference_c = ResourceIdentifier(resource_id="obspy.org/event/test")
-    >>> print id(reference_a.getReferredObject()) == id(event_object)
-    True
-    >>> print id(reference_b.getReferredObject()) == \
-              id(reference_c.getReferredObject())
-    True
     """
-    # Class (not instance) attribute that keeps track of all resource identifier
-    # throughout one Python run. Will only store weak references and therefore
-    # does not interfere with the garbage collection.
+    # Class (not instance) attribute that keeps track of all resource
+    # identifier throughout one Python run. Will only store weak references and
+    # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_list = []
 
@@ -381,13 +390,13 @@ class ResourceIdentifier(object):
             resource_id = str(uuid4())
             if prefix is not None:
                 resource_id = prefix + '/' + resource_id
-        self._setResourceID(resource_id)
+        self.__setResourceID(resource_id)
 
         # Create a weak reference to the object being referred to.
-        self._setReferredObject(referred_object)
+        self.__setReferredObject(referred_object)
         # Append to the global reference set that keeps track of all resource
         # identifiers.
-        self._appendToGlobalReferenceSet()
+        self.__appendToGlobalReferenceList()
 
     def getReferredObject(self):
         """
@@ -396,29 +405,30 @@ class ResourceIdentifier(object):
         previously created (in the Python run) ResourceIdentifier with the
         same resource_id has a referred object.
         """
-        referred_object = self._getReferredObject()
+        referred_object = self.__getReferredObject()
         if referred_object is not None:
             return referred_object
         res_list = self._ResourceIdentifier__resource_id_list
-        return res_list[res_list.index(self)].referred_object
+        if self not in res_list:
+            return None
+        return res_list[res_list.index(self)]._referred_object
 
-    def _appendToGlobalReferenceSet(self):
+    def __appendToGlobalReferenceList(self):
+        # If it does not contain a reference there is not need to append it to
+        # the global list.
+        if self._referred_object is None:
+            return
         res_list = self._ResourceIdentifier__resource_id_list
         # If it does not exist just append it to the class attribute.
         if self not in res_list:
             res_list.append(self)
             return
-        # If the current object has no associated reference the old one is
-        # either identical or actually has a reference. Therefore no need to do
-        # anything.
-        if self.referred_object is None:
-            return
         # Otherwise the newly created instance will now carry the reference to
         # the object. An eventually existing reference in the other instance
         # will not be used anymore. A warning will be issued.
         other_reference = res_list[res_list.index(self)]
-        if (other_reference.referred_object is not None) and \
-            (other_reference.referred_object is not self.referred_object):
+        if (other_reference._referred_object is not None) and \
+            (other_reference._referred_object is not self._referred_object):
             msg = "The resource identifier already exists and points to " + \
                   "another object. It will now point to the object " + \
                   "referred to by the new resource identifier."
@@ -428,10 +438,12 @@ class ResourceIdentifier(object):
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
-        Takes the current resource_id and if it is an invalid QuakeML
-        ResourceIdentifier string it will be converted to a valid one.
-        Otherwise nothing will happen but after calling this method the user
-        can be sure that the resource_id is a valid QuakeML URI.
+        Takes the current resource_id and converts it to a valid QuakeML URI.
+
+        Only an invalid QuakeML ResourceIdentifier string it will be converted
+        to a valid one.  Otherwise nothing will happen but after calling this
+        method the user can be sure that the resource_id is a valid QuakeML
+        URI.
 
         The resulting resource_id will be of the form
             smi:authority_id/prefix/resource_id
@@ -457,6 +469,14 @@ class ResourceIdentifier(object):
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
 
+    def __str__(self):
+        ret_str = 'ResourceIdentifier(resource_id="%s")' % self.resource_id
+        if self._referred_object is not None:
+            object_str = str(self._referred_object).split('\n')
+            ret_str += '\n'
+            ret_str += '\n\t'.join(object_str)
+        return ret_str
+
     def __eq__(self, other):
         # The type check is necessary due to the used hashing method.
         if type(self) != type(other):
@@ -472,37 +492,40 @@ class ResourceIdentifier(object):
         """
         return self.resource_id.__hash__()
 
-    def _getReferredObject(self):
+    def __getReferredObject(self):
         """
-        Returns the referred object if it exists. Returns None otherwise.
+        Returns the referred object if it exists of the current instance.
+
+        Not the global referred object. Returns None otherwise.
         """
-        if self.__dict__['referred_object'] is None:
+        if self.__dict__['_referred_object'] is None:
             return None
         # Return the actual reference of the object. Can still be None if the
         # object does not exists anymore, e.g. it has been garbage collected or
         # deleted manually.
-        return self.__dict__['referred_object']()
+        return self.__dict__['_referred_object']()
 
-    def _setReferredObject(self, referred_object):
+    def __setReferredObject(self, referred_object):
         """
-        Sets the refered object. If it already a weak reference it will be
-        used, otherwise one will be created. If the object is None, None will
-        be set.
+        Sets the refered object of the object.
+
+        If it already a weak reference it will be used, otherwise one will be
+        created. If the object is None, None will be set.
         """
         if isinstance(referred_object, weakref.ref):
-            self.__dict__['referred_object'] = referred_object
+            self.__dict__['_referred_object'] = referred_object
             return
         elif referred_object is None:
-            self.__dict__['referred_object'] = None
+            self.__dict__['_referred_object'] = None
             return
-        self.__dict__['referred_object'] = weakref.ref(referred_object)
+        self.__dict__['_referred_object'] = weakref.ref(referred_object)
 
-    referred_object = property(_getReferredObject, _setReferredObject)
+    _referred_object = property(__getReferredObject, __setReferredObject)
 
-    def _getResourceID(self):
+    def __getResourceID(self):
         return self.__dict__.get("resource_id")
 
-    def _setResourceID(self, resource_id):
+    def __setResourceID(self, resource_id):
         # Check if the resource id is a hashable type.
         if not hasattr(resource_id, '__hash__') or \
            not callable(resource_id.__hash__):
@@ -510,7 +533,7 @@ class ResourceIdentifier(object):
             raise ValueError(msg)
         self.__dict__["resource_id"] = resource_id
 
-    resource_id = property(_getResourceID, _setResourceID)
+    resource_id = property(__getResourceID, __setResourceID)
 
 
 class CreationInfo(AttribDict):

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, Origin, \
-        CreationInfo, WaveformStreamID
+        CreationInfo, WaveformStreamID, ResourceIdentifier
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 import os
@@ -318,12 +318,85 @@ class WaveformStreamIDTestCase(unittest.TestCase):
             self.assertEqual(waveform_id.channel, None)
 
 
+class ResourceIdentifierTestCase(unittest.TestCase):
+    """
+    Test suite for obspy.core.event.ResourceIdentifier.
+    """
+    def setUp(self):
+        # Clear the Resource Identifier list for the tests. NEVER do this
+        # otherwise.
+        ResourceIdentifier._ResourceIdentifier__resource_id_list[:] = []
+
+    @skipIfPython25
+    def test_same_resource_id_different_referred_object(self):
+        """
+        Tests the handling of the case that different ResourceIdentifier
+        instances are created that have the same resource id but different
+        objects. This should not happen and thus a warning should be emitted.
+
+        Skipped for Python 2.5 because it does not have the catch_warnings
+        context manager.
+        """
+        object_a = UTCDateTime()
+        object_b = UTCDateTime()
+        self.assertEqual(object_a is object_b, False)
+        resource_id = 'obspy.org/tests/test_resource'
+        res_a = ResourceIdentifier(resource_id=resource_id,
+                                   referred_object=object_a)
+        # Now create a new resource with the same id but a different object.
+        # This will raise a warning.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, ResourceIdentifier,
+                      resource_id=resource_id, referred_object=object_b)
+            # Now ignore the warning and actually create the new
+            # ResourceIdentifier.
+            warnings.simplefilter('ignore', UserWarning)
+            res_b = ResourceIdentifier(resource_id=resource_id,
+                                       referred_object=object_b)
+        # The resource identifiers themselves will still contain a reference to
+        # the object they where created with.
+        self.assertEqual(object_a is res_a._referred_object, True)
+        self.assertEqual(object_a is res_a.getReferredObject(), True)
+        self.assertEqual(object_b is res_b._referred_object, True)
+        self.assertEqual(object_b is res_b.getReferredObject(), True)
+        # But the global resource identifier "manager" will now only contain a
+        # reference to the latest object added.
+        self.assertEqual(True,
+            object_b is ResourceIdentifier(resource_id).getReferredObject())
+
+    def test_objects_garbage_collection(self):
+        """
+        Test that the ResourceIdentifier do not mess with the garbage
+        collection of the attached objects.
+        """
+        object_a = UTCDateTime()
+        ResourceIdentifier(referred_object=object_a)
+
+    def test_id_without_reference_not_in_global_list(self):
+        """
+        This tests some internal workings of the ResourceIdentifier class.
+        NEVER modify the resource_id_list!
+
+        A ResourceIdentifier without an associated object should not get stored
+        in the class level resource_id_list.
+        """
+        res_list = ResourceIdentifier._ResourceIdentifier__resource_id_list
+        res_a = ResourceIdentifier()
+        res_b = ResourceIdentifier()
+        self.assertEqual(len(res_list), 0)
+        # Adding a ResourceIdentifier with an object should get added.
+        res_c = ResourceIdentifier(referred_object=UTCDateTime())
+        self.assertEqual(len(res_list), 1)
+
+
 def suite():
     suite = unittest.TestSuite()
     suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
     suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
     return suite
 
 
