@@ -1,4 +1,29 @@
-2010.304: 2.6.2
+2012.105: 2.7rc1
+	- Add many type casts to quiet newer GCC and MSVC compilers.
+	For 32-bit programs there are some places, mostly in packing routines,
+	where 64-bit integers are converted to 32-bit values for sample buffer
+	sizes and counts leaving the potential for overflow.  This will become
+	a problem when byte counts for sample buffers are beyond 2^31, for
+	32-bit integer sample values that is more than 536 million samples.
+	So programmer beware if using such buffer sizes for packing miniSEED.
+
+2012.088:
+	- When parsing records copy the ASCII string fields (sequence number,
+	network, station, location, channel) directly without removing spaces.
+	This makes the parser more lenient to unallowed characters and
+	synchronizes read and write capabilities.
+
+	- For sampling rates above 32,767 Hz only print a warning for high
+	verbosity settings and set the sample rate factor and multipler to zero.
+	Previously an error was printed during rational approximation.
+	The expectation is that a record with such a high sample rate will
+	include a blockette 100 to specify the actual sample rate.
+	This is not an official convention for SEED, but is a kludge to
+	support extremly high sample rates without printing errors.
+
+	- Fix conversion to doubles in examples/msrepack.c.
+
+2011.304: 2.6.2
 	- Increase precision of sample rate in SYNC printing routines to
 	avoid trucation of rate values.
 

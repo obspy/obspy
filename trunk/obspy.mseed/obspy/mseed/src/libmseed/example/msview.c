@@ -27,11 +27,11 @@
 #define VERSION "[libmseed " LIBMSEED_VERSION " example]"
 #define PACKAGE "msview"
 
-static short int verbose   = 0;
-static short int ppackets  = 0;
-static short int basicsum  = 0;
-static int   reclen        = -1;
-static char *inputfile     = 0;
+static flag  verbose    = 0;
+static flag  ppackets   = 0;
+static flag  basicsum   = 0;
+static int   reclen     = -1;
+static char *inputfile  = 0;
 
 static int parameter_proc (int argcount, char **argvec);
 static void usage (void);
@@ -43,8 +43,8 @@ main (int argc, char **argv)
   MSRecord *msr = 0;
 
   int dataflag   = 0;
-  int totalrecs  = 0;
-  int totalsamps = 0;
+  int64_t totalrecs  = 0;
+  int64_t totalsamps = 0;
   int retcode;
 
 #ifndef WIN32
@@ -85,7 +85,8 @@ main (int argc, char **argv)
   ms_readmsr (&msr, NULL, 0, NULL, NULL, 0, 0, 0);
   
   if ( basicsum )
-    ms_log (1, "Records: %d, Samples: %d\n", totalrecs, totalsamps);
+    ms_log (1, "Records: %lld, Samples: %lld\n",
+	    (long long int)totalrecs, (long long int)totalsamps);
   
   return 0;
 }  /* End of main() */

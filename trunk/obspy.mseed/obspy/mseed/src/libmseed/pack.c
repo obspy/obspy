@@ -7,7 +7,7 @@
  * Written by Chad Trabant,
  *   IRIS Data Management Center
  *
- * modified: 2011.129
+ * modified: 2012.090
  ***************************************************************************/
 
 #include <stdio.h>
@@ -23,7 +23,7 @@ static int msr_pack_header_raw (MSRecord *msr, char *rawrec, int maxheaderlen,
 				flag swapflag, flag normalize,
 				struct blkt_1001_s **blkt1001, flag verbose);
 static int msr_update_header (MSRecord * msr, char *rawrec, flag swapflag,
-			      struct blkt_1001_s *blkt1001, flag verbose);
+			      struct blkt_1001_s *blkt1001, flag verbose);   
 static int msr_pack_data (void *dest, void *src, int maxsamples, int maxdatabytes,
 			  int *packsamples, int32_t *lastintsample, flag comphistory,
 			  char sampletype, flag encoding, flag swapflag,
@@ -335,7 +335,7 @@ msr_pack ( MSRecord * msr, void (*record_handler) (char *, int, void *),
     {
       packret = msr_pack_data (rawrec + dataoffset,
 			       (char *) msr->datasamples + packoffset,
-			       (msr->numsamples - totalpackedsamples), maxdatabytes,
+			       (int)(msr->numsamples - totalpackedsamples), maxdatabytes,
 			       &packsamples, &msr->ststate->lastintsample, msr->ststate->comphistory,
 			       msr->sampletype, msr->encoding, dataswapflag, verbose);
       

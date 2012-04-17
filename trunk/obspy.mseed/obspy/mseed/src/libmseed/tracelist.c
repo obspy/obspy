@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2011.304
+ * modified: 2012.105
  ***************************************************************************/
 
 #include <stdio.h>
@@ -635,14 +635,14 @@ mstl_msr2seg (MSRecord *msr, hptime_t endtime)
     {
       samplesize = ms_samplesize (msr->sampletype);
       
-      if ( ! (seg->datasamples = malloc (samplesize * msr->numsamples)) )
+      if ( ! (seg->datasamples = malloc ((size_t) (samplesize * msr->numsamples))) )
 	{
 	  ms_log (2, "mstl_msr2seg(): Error allocating memory\n");
 	  return 0;
 	}
       
       /* Copy data samples from MSRecord to MSTraceSeg */
-      memcpy (seg->datasamples, msr->datasamples, samplesize * msr->numsamples);
+      memcpy (seg->datasamples, msr->datasamples, (size_t) (samplesize * msr->numsamples));
     }
   
   return seg;
@@ -686,7 +686,7 @@ mstl_addmsrtoseg (MSTraceSeg *seg, MSRecord *msr, hptime_t endtime, flag whence)
 	  return 0;
 	}
       
-      if ( ! (newdatasamples = realloc (seg->datasamples, (seg->numsamples + msr->numsamples) * samplesize)) )
+      if ( ! (newdatasamples = realloc (seg->datasamples, (size_t)((seg->numsamples + msr->numsamples) * samplesize))) )
 	{
 	  ms_log (2, "mstl_addmsrtoseg(): Error allocating memory\n");
 	  return 0;
@@ -705,7 +705,7 @@ mstl_addmsrtoseg (MSTraceSeg *seg, MSRecord *msr, hptime_t endtime, flag whence)
 	{
 	  memcpy ((char *)seg->datasamples + (seg->numsamples * samplesize),
                   msr->datasamples,
-                  msr->numsamples * samplesize);
+                  (size_t) (msr->numsamples * samplesize));
 	  
 	  seg->numsamples += msr->numsamples;
 	}
@@ -720,11 +720,11 @@ mstl_addmsrtoseg (MSTraceSeg *seg, MSRecord *msr, hptime_t endtime, flag whence)
 	{
 	  memmove ((char *)seg->datasamples + (msr->numsamples * samplesize),
 		   seg->datasamples,
-		   seg->numsamples * samplesize);
+		   (size_t) (seg->numsamples * samplesize));
 	  
 	  memcpy (seg->datasamples,
                   msr->datasamples,
-                  msr->numsamples * samplesize);
+                  (size_t) (msr->numsamples * samplesize));
 	  
 	  seg->numsamples += msr->numsamples;
 	}
@@ -771,7 +771,7 @@ mstl_addsegtoseg (MSTraceSeg *seg1, MSTraceSeg *seg2)
 	  return 0;
 	}
       
-      if ( ! (newdatasamples = realloc (seg1->datasamples, (seg1->numsamples + seg2->numsamples) * samplesize)) )
+      if ( ! (newdatasamples = realloc (seg1->datasamples, (size_t) ((seg1->numsamples + seg2->numsamples) * samplesize))) )
 	{
 	  ms_log (2, "mstl_addsegtoseg(): Error allocating memory\n");
 	  return 0;
@@ -788,7 +788,7 @@ mstl_addsegtoseg (MSTraceSeg *seg1, MSTraceSeg *seg2)
     {
       memcpy ((char *)seg1->datasamples + (seg1->numsamples * samplesize),
 	      seg2->datasamples,
-	      seg2->numsamples * samplesize);
+	      (size_t) (seg2->numsamples * samplesize));
       
       seg1->numsamples += seg2->numsamples;
     }

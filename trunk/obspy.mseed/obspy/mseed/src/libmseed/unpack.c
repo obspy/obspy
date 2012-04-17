@@ -13,7 +13,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2011.129
+ * modified: 2012.105
  ***************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -173,13 +173,13 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
     }
   
   /* Populate some of the common header fields */
-  ms_strncpclean (sequence_number, msr->fsdh->sequence_number, 6);
+  strncpy (sequence_number, msr->fsdh->sequence_number, 6);
   msr->sequence_number = (int32_t) strtol (sequence_number, NULL, 10);
   msr->dataquality = msr->fsdh->dataquality;
-  ms_strncpclean (msr->network, msr->fsdh->network, 2);
-  ms_strncpclean (msr->station, msr->fsdh->station, 5);
-  ms_strncpclean (msr->location, msr->fsdh->location, 2);
-  ms_strncpclean (msr->channel, msr->fsdh->channel, 3);
+  strncpy (msr->network, msr->fsdh->network, 2);
+  strncpy (msr->station, msr->fsdh->station, 5);
+  strncpy (msr->location, msr->fsdh->location, 2);
+  strncpy (msr->channel, msr->fsdh->channel, 3);
   msr->samplecnt = msr->fsdh->numsamples;
   
   /* Generate source name for MSRecord */
@@ -207,7 +207,7 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
   blkt_offset = msr->fsdh->blockette_offset;
   
   while ((blkt_offset != 0) &&
-	 (blkt_offset < reclen) &&
+	 ((int)blkt_offset < reclen) &&
 	 (blkt_offset < MAXRECLEN))
     {
       /* Every blockette has a similar 4 byte header: type and next */
@@ -235,7 +235,7 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
 	}
       
       /* Make sure blockette is contained within the msrecord buffer */
-      if ( (blkt_offset - 4 + blkt_length) > reclen )
+      if ( (int)(blkt_offset - 4 + blkt_length) > reclen )
 	{
 	  ms_log (2, "msr_unpack(%s): Blockette %d extends beyond record size, truncated?\n",
 		  UNPACK_SRCNAME, blkt_type);
@@ -774,7 +774,7 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
     }
   
   /* Calculate buffer size needed for unpacked samples */
-  unpacksize = msr->samplecnt * samplesize;
+  unpacksize = (int) msr->samplecnt * samplesize;
   
   /* (Re)Allocate space for the unpacked data */
   if ( unpacksize > 0 )

@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2011.124
+ * modified: 2012.088
  ***************************************************************************/
 
 #include <stdio.h>
@@ -1081,7 +1081,7 @@ ms_genfactmult (double samprate, int16_t *factor, int16_t *multiplier)
   
   /* This routine does not support very high or negative sample rates,
      even though high rates are possible in Mini-SEED */
-  if ( samprate > 32727.0 || samprate < 0.0 )
+  if ( samprate > 32767.0 || samprate < 0.0 )
     {
       ms_log (2, "ms_genfactmult(): samprate out of range: %g\n", samprate);
       return -1;
@@ -1098,7 +1098,7 @@ ms_genfactmult (double samprate, int16_t *factor, int16_t *multiplier)
     }
   else
     {
-      ms_ratapprox (samprate, &num, &den, 32727, 1e-12);
+      ms_ratapprox (samprate, &num, &den, 32767, 1e-12);
       
       /* Negate the multiplier to denote a division factor */
       *factor = (int16_t ) num;

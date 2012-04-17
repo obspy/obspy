@@ -118,11 +118,6 @@ extern "C" {
     #define fileno _fileno
   #endif
 
-  #if defined(__MINGW32__)
-    #define fstat _fstat
-    #define stat _stat
-  #endif
-
   typedef signed char int8_t;
   typedef unsigned char uint8_t;
   typedef signed short int int16_t;

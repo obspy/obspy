@@ -9,7 +9,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified 2011.164
+ * modified 2012.105
  ***************************************************************************/
 
 #include <stdio.h>
@@ -28,9 +28,9 @@
 #define VERSION "[libmseed " LIBMSEED_VERSION " example]"
 #define PACKAGE "msrepack"
 
-static short int verbose   = 0;
-static short int ppackets  = 0;
-static short int tracepack = 1;
+static flag  verbose       = 0;
+static flag  ppackets      = 0;
+static flag  tracepack     = 1;
 static int   reclen        = 0;
 static int   packreclen    = -1;
 static char *encodingstr   = 0;
@@ -54,10 +54,8 @@ main (int argc, char **argv)
   MSTrace *mst;
   int retcode;
 
-  int totalrecs  = 0;
-  int totalsamps = 0;
   int64_t packedsamples;
-  int packedrecords;
+  int64_t packedrecords;
   int lastrecord;
   int iseqnum = 1;
   
@@ -103,9 +101,6 @@ main (int argc, char **argv)
   while ( (retcode = ms_readmsr (&msr, inputfile, reclen, NULL, &lastrecord,
 				 1, 1, verbose)) == MS_NOERROR )
     {
-      totalrecs++;
-      totalsamps += msr->samplecnt;
-      
       msr_print (msr, ppackets);
       
       /* Convert sample type as needed for packencoding */
@@ -359,7 +354,7 @@ convertsamples (MSRecord *msr, int packencoding)
 		}
 	      
 	      /* Reallocate buffer for reduced size needed */
-	      if ( realloc (msr->datasamples, (msr->numsamples * sizeof(int32_t))) )
+	      if ( ! (msr->datasamples = realloc (msr->datasamples,(size_t)(msr->numsamples * sizeof(int32_t)))) )
 		{
 		  ms_log (2, "Error, cannot re-allocate buffer for sample conversion\n");
 		  return -1;
@@ -383,7 +378,7 @@ convertsamples (MSRecord *msr, int packencoding)
 		fdata[idx] = (float) ddata[idx];
 	      
 	      /* Reallocate buffer for reduced size needed */
-	      if ( realloc (msr->datasamples, (msr->numsamples * sizeof(float))) )
+	      if ( ! (msr->datasamples = realloc (msr->datasamples, (size_t)(msr->numsamples * sizeof(float)))) )
 		{
 		  ms_log (2, "Error, cannot re-allocate buffer for sample conversion\n");
 		  return -1;
@@ -396,7 +391,7 @@ convertsamples (MSRecord *msr, int packencoding)
       /* Convert to doubles */
       else if ( encodingtype == 'd' )
 	{
-	  if ( (ddata = (double *) malloc (msr->sampletype * sizeof(double))) )
+	  if ( ! (ddata = (double *) malloc ((size_t)(msr->numsamples * sizeof(double)))) )
 	    {
 	      ms_log (2, "Error, cannot allocate buffer for sample conversion to doubles\n");
 	      return -1;
@@ -423,7 +418,7 @@ convertsamples (MSRecord *msr, int packencoding)
     }
   
   return 0;
-}  /* End of packencoding() */
+}  /* End of convertsamples() */
 
 
 /***************************************************************************
@@ -542,7 +537,7 @@ parameter_proc (int argcount, char **argvec)
   /* Make sure network code is valid */
   if ( netcode )
     {
-      if ( strlen(netcode) > 2 || strlen(netcode) < 0 )
+      if ( strlen(netcode) > 2 || strlen(netcode) < 1 )
 	{
 	  ms_log (2, "Error, invalid output network code: '%s'\n", netcode);
 	  exit (1);

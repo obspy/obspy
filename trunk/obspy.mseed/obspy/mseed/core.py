@@ -271,10 +271,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     while True:
         # Init header with the essential information.
-        header = {'network': currentID.network,
-                  'station': currentID.station,
-                  'location': currentID.location,
-                  'channel': currentID.channel,
+        header = {'network': currentID.network.strip(),
+                  'station': currentID.station.strip(),
+                  'location': currentID.location.strip(),
+                  'channel': currentID.channel.strip(),
                   'mseed': {'dataquality': currentID.dataquality}}
         # Loop over segments.
         try:

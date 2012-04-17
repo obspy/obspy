@@ -5,7 +5,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2011.304
+ * modified: 2012.105
  ***************************************************************************/
 
 #include <stdio.h>
@@ -473,8 +473,7 @@ mst_addmsr ( MSTrace *mst, MSRecord *msr, flag whence )
 	}
       
       mst->datasamples = realloc (mst->datasamples,
-				  mst->numsamples * samplesize +
-				  msr->numsamples * samplesize );
+				  (size_t) (mst->numsamples * samplesize + msr->numsamples * samplesize) );
       
       if ( mst->datasamples == NULL )
 	{
@@ -490,7 +489,7 @@ mst_addmsr ( MSTrace *mst, MSRecord *msr, flag whence )
 	{
 	  memcpy ((char *)mst->datasamples + (mst->numsamples * samplesize),
 		  msr->datasamples,
-		  msr->numsamples * samplesize);
+		  (size_t) (msr->numsamples * samplesize));
 	  
 	  mst->numsamples += msr->numsamples;
 	}
@@ -514,12 +513,12 @@ mst_addmsr ( MSTrace *mst, MSRecord *msr, flag whence )
 	    {
 	      memmove ((char *)mst->datasamples + (msr->numsamples * samplesize),
 		       mst->datasamples,
-		       mst->numsamples * samplesize);
+		       (size_t) (mst->numsamples * samplesize));
 	    }
 
 	  memcpy (mst->datasamples,
 		  msr->datasamples,
-		  msr->numsamples * samplesize);
+		  (size_t) (msr->numsamples * samplesize));
 	  
 	  mst->numsamples += msr->numsamples;
 	}
@@ -578,8 +577,7 @@ mst_addspan ( MSTrace *mst, hptime_t starttime, hptime_t endtime,
 	}
       
       mst->datasamples = realloc (mst->datasamples,
-				  mst->numsamples * samplesize +
-				  numsamples * samplesize);
+				  (size_t) (mst->numsamples * samplesize + numsamples * samplesize));
       
       if ( mst->datasamples == NULL )
 	{
@@ -595,7 +593,7 @@ mst_addspan ( MSTrace *mst, hptime_t starttime, hptime_t endtime,
 	{
 	  memcpy ((char *)mst->datasamples + (mst->numsamples * samplesize),
 		  datasamples,
-		  numsamples * samplesize);
+		  (size_t) (numsamples * samplesize));
 	  
 	  mst->numsamples += numsamples;
 	}
@@ -613,12 +611,12 @@ mst_addspan ( MSTrace *mst, hptime_t starttime, hptime_t endtime,
 	    {
 	      memmove ((char *)mst->datasamples + (numsamples * samplesize),
 		       mst->datasamples,
-		       mst->numsamples * samplesize);
+		       (size_t) (mst->numsamples * samplesize));
 	    }
 	  
 	  memcpy (mst->datasamples,
 		  datasamples,
-		  numsamples * samplesize);
+		  (size_t) (numsamples * samplesize));
 	  
 	  mst->numsamples += numsamples;
 	}
@@ -1359,7 +1357,7 @@ void
 mst_printgaplist (MSTraceGroup *mstg, flag timeformat,
 		  double *mingap, double *maxgap)
 {
-  MSTrace *mst, *pmst;
+  MSTrace *mst;
   char src1[50], src2[50];
   char time1[30], time2[30];
   char gapstr[30];
@@ -1376,7 +1374,6 @@ mst_printgaplist (MSTraceGroup *mstg, flag timeformat,
     return;
   
   mst = mstg->traces;
-  pmst = mst;
   
   ms_log (0, "   Source                Last Sample              Next Sample       Gap  Samples\n");
   
@@ -1390,7 +1387,6 @@ mst_printgaplist (MSTraceGroup *mstg, flag timeformat,
 	  /* Skip MSTraces with 0 sample rate, usually from SOH records */
 	  if ( mst->samprate == 0.0 )
 	    {
-	      pmst = mst;
 	      mst = mst->next;
 	      continue;
 	    }
@@ -1473,7 +1469,6 @@ mst_printgaplist (MSTraceGroup *mstg, flag timeformat,
 	    }
 	}
       
-      pmst = mst;
       mst = mst->next;
     }
   
@@ -1613,9 +1608,9 @@ mst_pack ( MSTrace *mst, void (*record_handler) (char *, int, void *),
 	{
 	  memmove (mst->datasamples,
 		   (char *) mst->datasamples + (trpackedsamples * samplesize),
-		   bufsize);
+		   (size_t) bufsize);
 	  
-	  mst->datasamples = realloc (mst->datasamples, bufsize);
+	  mst->datasamples = realloc (mst->datasamples, (size_t) bufsize);
 	  
 	  if ( mst->datasamples == NULL )
 	    {

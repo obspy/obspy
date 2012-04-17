@@ -7,7 +7,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2011.129
+ * modified: 2012.088
  ***************************************************************************/
 
 #include <stdio.h>
@@ -286,7 +286,22 @@ msr_normalize_header ( MSRecord *msr, flag verbose )
       ms_strncpopen (msr->fsdh->location, msr->location, 2);
       ms_strncpopen (msr->fsdh->channel, msr->channel, 3);
       ms_hptime2btime (msr->starttime, &(msr->fsdh->start_time));
-      ms_genfactmult (msr->samprate, &(msr->fsdh->samprate_fact), &(msr->fsdh->samprate_mult));
+      
+      /* When the sampling rate is <= 32767 Hertz determine the factor
+       * and multipler through rational approximation.  For higher rates
+       * set the factor and multiplier to 0. */
+      if ( msr->samprate <= 32767.0 )
+	{
+	  ms_genfactmult (msr->samprate, &(msr->fsdh->samprate_fact), &(msr->fsdh->samprate_mult));
+	}
+      else
+	{
+	  if ( verbose > 1 )
+	    ms_log (1, "Sampling rate too high to approximate factor & multiplier: %g\n",
+		    msr->samprate);
+	  msr->fsdh->samprate_fact = 0;
+	  msr->fsdh->samprate_mult = 0;
+	}
       
       offset += 48;
       
@@ -441,15 +456,15 @@ msr_duplicate (MSRecord *msr, flag datadup)
 	}
       
       /* Allocate memory for new data array */
-      if ( (dupmsr->datasamples = (void *) malloc (msr->numsamples * samplesize)) == NULL )
+      if ( (dupmsr->datasamples = (void *) malloc ((size_t)(msr->numsamples * samplesize))) == NULL )
 	{
 	  ms_log (2, "msr_duplicate(): Error allocating memory\n");
 	  free (dupmsr);
-	  return NULL;	  
+	  return NULL;
 	}
       
       /* Copy the data array */
-      memcpy (dupmsr->datasamples, msr->datasamples, (msr->numsamples * samplesize));
+      memcpy (dupmsr->datasamples, msr->datasamples, ((size_t)(msr->numsamples * samplesize)));
     }
   /* Otherwise make sure the sample array and count are zero */
   else
