@@ -6,7 +6,9 @@ from __future__ import with_statement
 from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
+from StringIO import StringIO
 from struct import unpack
+import sys
 import ctypes as C
 import numpy as np
 import warnings
@@ -496,6 +498,166 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples
+
+
+def shiftTimeOfFile(input_file, output_file, timeshift):
+    """
+    Takes a MiniSEED file and shifts the time of every record by the given
+    amount.
+
+    The same could be achieved by reading the MiniSEED file with ObsPy,
+    modifying the starttime and writing it again. The problem with this
+    approach is that some record specific flags and special blockettes might
+    not be conserved. This function directly operates on the file and simply
+    changes some header fields, not touching the rest, thus preserving it.
+
+    Will only work correctly if all records have the same record length which
+    usually should be the case.
+
+    All times are in 0.0001 seconds, that is in 1/10000 seconds. NOT ms but one
+    order of magnitude smaller! This is due to the way time corrections are
+    stored in the MiniSEED format.
+
+    :type input_file: str
+    :param input_file: The input filename.
+    :type output_file: str
+    :param output_file: The output filename.
+    :type timeshift: int
+    :param timeshift: The time-shift to be applied in 0.0001, e.g. 1E-4
+        seconds. Use an integer number.
+
+    Please do NOT use identical input and output files because if something
+    goes wrong, your data WILL be corrupted/destroyed. Also always check the
+    resulting output file.
+
+    .. rubric:: Technical details
+
+    The function will loop over every record and change the "Time correction"
+    field in the fixed section of the MiniSEED data header by the specified
+    amount. Unfortunately a further flag (bit 1 in the "Activity flags" field)
+    determines whether or not the time correction has already been applied to
+    the record start time. If it has not, all is fine and changing the "Time
+    correction" field is enough. Otherwise the actual time also needs to be
+    changed.
+
+    One further detail: If bit 1 in the "Activity flags" field is 1 (True) and
+    the "Time correction" field is 0, then the bit will be set to 0 and only
+    the time correction will be changed thus avoiding the need to change the
+    record start time which is preferable.
+    """
+    timeshift = int(timeshift)
+    # A timeshift of zero makes no sense.
+    if timeshift == 0:
+        msg = "The timeshift must to be not equal to 0."
+        raise ValueError(msg)
+
+    # Get the necessary information from the file.
+    info = getRecordInformation(input_file)
+    record_length = info["record_length"]
+
+    byteorder = info["byteorder"]
+    sys_byteorder = "<" if (sys.byteorder == "little") else ">"
+    doSwap = False if (byteorder == sys_byteorder) else True
+
+    # This is in this scenario somewhat easier to use than StringIO because one
+    # can directly modify the data array.
+    data = np.fromfile(input_file, dtype="uint8")
+    array_length = len(data)
+    record_offset = 0
+    # Loop over every record.
+    while True:
+        remaining_bytes = array_length - record_offset
+        if remaining_bytes < 48:
+            if remaining_bytes > 0:
+                msg = "%i excessive byte(s) in the file. " % remaining_bytes
+                msg += "They will be appended to the output file."
+                warnings.warn(msg)
+            break
+        # Use a slice for the current record.
+        current_record = data[record_offset: record_offset + record_length]
+        record_offset += record_length
+
+        activity_flags = current_record[36]
+        is_time_correction_applied = bool(activity_flags & 2)
+
+        current_time_shift = current_record[40:44]
+        current_time_shift.dtype = np.int32
+        if doSwap:
+            current_time_shift = current_time_shift.byteswap(False)
+        current_time_shift = current_time_shift[0]
+
+        # If the time correction has been applied, but there is no actual
+        # time correction, then simply set the time correction applied
+        # field to false and process normally.
+        # This should rarely be the case.
+        if current_time_shift == 0 and is_time_correction_applied:
+            # This sets bit 2 of the activity flags to 0.
+            current_record[36] = current_record[36] & (~2)
+            is_time_correction_applied = False
+        # This is the case if the time correction has been applied. This
+        # requires some more work by changing both, the actual time and the
+        # time correction field.
+        elif is_time_correction_applied:
+            msg = "The timeshift can only be applied by actually changing the "
+            msg += "time. This is experimental. Please make sure the output "
+            msg += "file is correct."
+            warnings.warn(msg)
+            # The whole process is not particularly fast or optimized but
+            # instead intends to avoid errors.
+            # Get the time variables.
+            time = current_record[20:30]
+            year = time[0:2]
+            julday = time[2:4]
+            hour = time[4:5]
+            minute = time[5:6]
+            second = time[6:7]
+            msecs = time[8:10]
+            # Change dtype of multibyte values.
+            year.dtype = np.uint16
+            julday.dtype = np.uint16
+            msecs.dtype = np.uint16
+            if doSwap:
+                year = year.byteswap(False)
+                julday = julday.byteswap(False)
+                msecs = msecs.byteswap(False)
+            dtime = UTCDateTime(year=year[0], julday=julday[0], hour=hour[0],
+                               minute=minute[0], second=second[0],
+                               microsecond=msecs[0] * 100)
+            dtime += (float(timeshift) / 10000)
+            year[0] = dtime.year
+            julday[0] = dtime.julday
+            hour[0] = dtime.hour
+            minute[0] = dtime.minute
+            second[0] = dtime.second
+            msecs[0] = dtime.microsecond / 100
+            # Swap again.
+            if doSwap:
+                year = year.byteswap(False)
+                julday = julday.byteswap(False)
+                msecs = msecs.byteswap(False)
+            # Change dtypes back.
+            year.dtype = np.uint8
+            julday.dtype = np.uint8
+            msecs.dtype = np.uint8
+            # Write to current record.
+            time[0:2] = year[:]
+            time[2:4] = julday[:]
+            time[4] = hour[:]
+            time[5] = minute[:]
+            time[6] = second[:]
+            time[8:10] = msecs[:]
+            current_record[20:30] = time[:]
+
+        # Now modify the time correction flag.
+        current_time_shift += timeshift
+        current_time_shift = np.array([current_time_shift], np.int32)
+        if doSwap:
+            current_time_shift = current_time_shift.byteswap(False)
+        current_time_shift.dtype = np.uint8
+        current_record[40:44] = current_time_shift[:]
+
+    # Write to the output file.
+    data.tofile(output_file)
 
 
 if __name__ == '__main__':

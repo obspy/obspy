@@ -4,11 +4,14 @@ from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
+from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skipIfPython25
 import numpy as np
 import os
 import random
 import sys
 import unittest
+import warnings
 
 
 class MSEEDUtilTestCase(unittest.TestCase):
@@ -195,6 +198,90 @@ class MSEEDUtilTestCase(unittest.TestCase):
                                    verbose=0)
         data_record = readMSEED(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
+
+    def test_time_shifting(self):
+        """
+        Tests the shiftTimeOfFile() function.
+        """
+        output_filename = NamedTemporaryFile().name
+        # Test a normal file first.
+        filename = os.path.join(self.path, 'data',
+                                "BW.BGLD.__.EHE.D.2008.001.first_10_records")
+        # Shift by one second.
+        util.shiftTimeOfFile(filename, output_filename, 10000)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime += 1
+        self.assertEqual(st_before, st_after)
+        # Shift by 22 seconds in the other direction.
+        util.shiftTimeOfFile(filename, output_filename, -220000)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime -= 22
+        self.assertEqual(st_before, st_after)
+        # Shift by 11.33 seconds.
+        util.shiftTimeOfFile(filename, output_filename, 113300)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime += 11.33
+        self.assertEqual(st_before, st_after)
+
+        # Test a special case with the time correction applied flag set but no
+        # actual time correction in the field.
+        filename = os.path.join(self.path, 'data',
+                    "one_record_time_corr_applied_but_time_corr_is_zero.mseed")
+        # Positive shift.
+        util.shiftTimeOfFile(filename, output_filename, 22000)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime += 2.2
+        self.assertEqual(st_before, st_after)
+        # Negative shift.
+        util.shiftTimeOfFile(filename, output_filename, -333000)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime -= 33.3
+        self.assertEqual(st_before, st_after)
+
+        # Remove the file after everything it done.
+        os.remove(output_filename)
+
+    @skipIfPython25
+    def test_time_shifting_special_case(self):
+        """
+        Sometimes actually changing the time value is necessary. This works but
+        is considered experimental and thus emits a warning. Therefore Python
+        >= 2.6 only.
+        """
+        output_filename = NamedTemporaryFile().name
+        # This file was created only for testing purposes.
+        filename = os.path.join(self.path, 'data',
+            "one_record_already_applied_time_correction.mseed")
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, util.shiftTimeOfFile,
+                              input_file=filename, output_file=output_filename,
+                              timeshift=123400)
+            # Now ignore the warnings and test the default values.
+            warnings.simplefilter('ignore', UserWarning)
+            util.shiftTimeOfFile(input_file=filename,
+                                 output_file=output_filename, timeshift=123400)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime += 12.34
+        self.assertEqual(st_before, st_after)
+
+        # Test negative shifts.
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', UserWarning)
+            util.shiftTimeOfFile(input_file=filename,
+                                 output_file=output_filename, timeshift=-22222)
+        st_before = readMSEED(filename)
+        st_after = readMSEED(output_filename)
+        st_before[0].stats.starttime -= 2.2222
+        self.assertEqual(st_before, st_after)
+
+        os.remove(output_filename)
 
 
 def suite():
