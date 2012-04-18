@@ -377,7 +377,7 @@ class ResourceIdentifier(object):
     >>> items = dictionary.items()
     >>> items.sort()
     >>> print items # doctest:+ELLIPSIS
-    [(<__main__.ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
+    [(<...ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -469,7 +469,6 @@ class ResourceIdentifier(object):
         if result is None:
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
-
 
     def __getResourceID(self):
         return self.__dict__.get("resource_id")
