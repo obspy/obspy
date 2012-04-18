@@ -16,7 +16,6 @@ if defined PYTHON (
 )
 
 if defined BUILD_FLAGS (
-    set BUILD_FLAGS=-q build -c mingw32
     echo BUILD_FLAGS=%BUILD_FLAGS%
 ) else (
     set BUILD_FLAGS=-q
