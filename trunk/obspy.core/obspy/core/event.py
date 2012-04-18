@@ -770,7 +770,7 @@ class Pick(AttribDict):
     def _setPickPolarity(self, value):
         self.__dict__['polarity'] = PickPolarity(value)
 
-    onset = property(_getPickPolarity, _setPickPolarity)
+    polarity = property(_getPickPolarity, _setPickPolarity)
 
     def _getEvaluationMode(self):
         return self.__dict__.get('evaluation_mode', None)
