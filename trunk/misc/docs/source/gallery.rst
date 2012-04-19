@@ -91,6 +91,11 @@ Gallery
     :target: tutorial/basemap_plot_with_beachballs.html
     :alt: Basemap Plot with Beachballs
 
+.. plot:: source/tutorial/basemap_plot_with_beachballs2.py
+    :width: 300px
+    :target: tutorial/basemap_plot_with_beachballs.html
+    :alt: Second Basemap Plot with Beachballs
+
 .. plot:: source/tutorial/merging_seismograms.py
     :width: 300px
     :target: tutorial/merging_seismograms.html
