@@ -43,3 +43,11 @@ The first lines of our SRTM data file (from
 .. _GDAL: http://trac.osgeo.org/gdal/wiki/GdalOgrInPython
 .. _ASTER: http://www.gdem.aster.ersdac.or.jp/search.jsp
 .. _plotmap_shaded.py: http://matplotlib.svn.sourceforge.net/viewvc/matplotlib/trunk/toolkits/basemap/examples/plotmap_shaded.py
+
+
+Here is another beachball example, which plots the beachball on the globe.
+
+.. include:: basemap_plot_with_beachballs2.py
+   :literal:
+
+.. plot:: source/tutorial/basemap_plot_with_beachballs2.py
