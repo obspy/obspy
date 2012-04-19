@@ -445,7 +445,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
         # set channel code
         header['channel'] = ''.join(channel)
         # remember record number
-        header['sh', 'RECNO'] = len(stream) + 1
+        header['sh']['RECNO'] = len(stream) + 1
         if headonly:
             # skip data
             stream.append(Trace(header=header))
