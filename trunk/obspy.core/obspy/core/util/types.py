@@ -198,6 +198,14 @@ class Enum:
         except:
             return None
 
+    def __dir__(self):
+        """
+        >>> enum = Enum(["a", "b"])
+        >>> temp = dir(enum)
+        >>> assert("a" in temp and "b" in temp)
+        """
+        return self.__enums.keys()
+
     def get(self, key):
         if isinstance(key, int):
             return self.__enums.values()[key]
@@ -229,6 +237,18 @@ class Enum:
 
     def iteritems(self):
         return self.__enums.iteritems()
+
+    def __str__(self):
+        """
+        >>> enum = Enum(["c", "a", "b"])
+        >>> print enum
+        Enum(["c", "a", "b"])
+        """
+        keys = self.__enums.keys()
+        return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
+
+    def __repr__(self):
+        return self.__str__()
 
 
 if __name__ == '__main__':
