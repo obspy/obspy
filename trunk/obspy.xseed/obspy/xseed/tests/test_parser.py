@@ -550,6 +550,16 @@ class ParserTestCase(unittest.TestCase):
             result = parser.getCoordinates("BW.FURT..EHZ", t)
             self.assertEqual(expected, result)
 
+    def test_issue358(self):
+        """
+        Test case for issue #358.
+        """
+        filename = os.path.join(self.path, 'CL.AIO.dataless')
+        parser = Parser()
+        parser.read(filename)
+        dt = UTCDateTime('2012-01-01')
+        parser.getPAZ('CL.AIO.00.EHZ', dt)
+
     @skipIfPython25
     def test_issue361(self):
         """

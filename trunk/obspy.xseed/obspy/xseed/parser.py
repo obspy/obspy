@@ -13,7 +13,6 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
-from obspy.core import UTCDateTime
 from obspy.core.util import getExampleFile
 import math
 import os
@@ -486,35 +485,21 @@ class Parser(object):
                 # A0_normalization_factor
                 data['gain'] = resp.A0_normalization_factor
                 # Poles
-                try:
-                    data['poles'] = [complex(x, y) for x, y in
-                                     zip(resp.real_pole, resp.imaginary_pole)]
-                except AttributeError, e:
-                    if resp.number_of_complex_poles == 0:
-                        data['poles'] = []
-                    else:
-                        raise e
-                except TypeError, e:
-                    if resp.number_of_complex_poles == 1:
-                        data['poles'] = [complex(resp.real_pole,
-                                                 resp.imaginary_pole)]
-                    else:
-                        raise e
+                data['poles'] = []
+                for i in range(resp.number_of_complex_poles):
+                    try:
+                        p = complex(resp.real_pole[i], resp.imaginary_pole[i])
+                    except TypeError:
+                        p = complex(resp.real_pole, resp.imaginary_pole)
+                    data['poles'].append(p)
                 # Zeros
-                try:
-                    data['zeros'] = [complex(x, y) for x, y in
-                                     zip(resp.real_zero, resp.imaginary_zero)]
-                except AttributeError, e:
-                    if resp.number_of_complex_zeros == 0:
-                        data['zeros'] = []
-                    else:
-                        raise e
-                except TypeError, e:
-                    if resp.number_of_complex_zeros == 1:
-                        data['zeros'] = [complex(resp.real_zero,
-                                                 resp.imaginary_zero)]
-                    else:
-                        raise e
+                data['zeros'] = []
+                for i in range(resp.number_of_complex_zeros):
+                    try:
+                        z = complex(resp.real_zero[i], resp.imaginary_zero[i])
+                    except TypeError:
+                        z = complex(resp.real_zero, resp.imaginary_zero)
+                    data['zeros'].append(z)
         return data
 
     def getCoordinates(self, seed_id, datetime=None):
