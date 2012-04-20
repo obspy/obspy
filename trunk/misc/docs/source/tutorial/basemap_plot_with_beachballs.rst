@@ -2,6 +2,9 @@
 Basemap Plot with Beachballs
 ============================
 
+Basemap Plot of a Local Area
+============================
+
 The following example shows how to plot beachballs into a basemap plot together
 with some stations. The example requires the basemap_ package (download_ site)
 to be installed. The SRTM file used can be downloaded here_.
@@ -45,7 +48,8 @@ The first lines of our SRTM data file (from
 .. _plotmap_shaded.py: http://matplotlib.svn.sourceforge.net/viewvc/matplotlib/trunk/toolkits/basemap/examples/plotmap_shaded.py
 
 
-Here is another beachball example, which plots the beachball on the globe.
+Basemap Plot of the Globe
+=========================
 
 .. include:: basemap_plot_with_beachballs2.py
    :literal:
