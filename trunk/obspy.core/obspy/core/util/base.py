@@ -356,25 +356,28 @@ def _getFunctionFromEntryPoint(group, type):
     """
     ep_dict = ENTRY_POINTS[group]
     try:
-        # get detrend specific entry point
+        # get entry point
         if type in ep_dict:
             entry_point = ep_dict[type]
         else:
             # search using lower cases only
             entry_point = [v for k, v in ep_dict.items()
                            if k.lower() == type.lower()][0]
-        func = load_entry_point(entry_point.dist.key,
-            'obspy.plugin.%s' % (group), entry_point.name)
-    except (KeyError, ImportError, IndexError):
-        # check if any detrend is available at all
+    except (KeyError, IndexError):
+        # check if any entry points are available at all
         if not ep_dict:
             msg = "Your current ObsPy installation does not support " + \
                   "any %s functions. Please make sure obspy.signal " + \
                   "and SciPy are installed properly."
             raise ImportError(msg % (group.capitalize()))
-        # ok we have detrend, but given detrend is not supported
+        # ok we have entry points, but specified function is not supported
         msg = "%s type \"%s\" is not supported. Supported types: %s"
         raise ValueError(msg % (group.capitalize(), type, ', '.join(ep_dict)))
+    # import function point
+    # any issue during import of entry point should be raised, so the user has
+    # a chance to correct the problem
+    func = load_entry_point(entry_point.dist.key,
+            'obspy.plugin.%s' % (group), entry_point.name)
     return func
 
 
