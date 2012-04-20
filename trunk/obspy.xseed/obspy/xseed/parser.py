@@ -13,7 +13,7 @@ from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
-from obspy.core.util import getExampleFile
+from obspy.core.util import getExampleFile, deprecated_keywords
 import math
 import os
 import warnings
@@ -432,6 +432,7 @@ class Parser(object):
             raise SEEDParserException(msg % (seed_id))
         return blockettes
 
+    @deprecated_keywords({'channel_id': 'seed_id'})
     def getPAZ(self, seed_id, datetime=None):
         """
         Return PAZ.

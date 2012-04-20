@@ -380,6 +380,19 @@ class ParserTestCase(unittest.TestCase):
                   'zeros': [0j, 0j],
                   'digitizer_gain':  1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
+        # last test again, check arg name changed in [3722]
+        paz = sp.getPAZ(channel_id="BW.RJOB..EHZ", datetime=UTCDateTime("2010-01-01"))
+        result = {'gain': 60077000.0,
+                  'poles': [(-0.037004000000000002 + 0.037016j),
+                            (-0.037004000000000002 - 0.037016j),
+                            (-251.33000000000001 + 0j),
+                            (-131.03999999999999 - 467.29000000000002j),
+                            (-131.03999999999999 + 467.29000000000002j)],
+                  'seismometer_gain': 1500.0,
+                  'sensitivity': 2516800000.0,
+                  'zeros': [0j, 0j],
+                  'digitizer_gain':  1677850.0}
+        self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_getPAZFromXSEED(self):
         """

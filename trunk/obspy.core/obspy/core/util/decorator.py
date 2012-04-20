@@ -43,6 +43,9 @@ def deprecated(func, warning_msg=None):
 def deprecated_keywords(keywords):
     """
     Decorator for marking keywords as deprecated.
+
+    :type keywords: dict
+    :param keywords: old/new keyword names as key/value pairs.
     """
     def fdec(func):
         fname = func.func_name
