@@ -381,7 +381,8 @@ class ParserTestCase(unittest.TestCase):
                   'digitizer_gain':  1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         # last test again, check arg name changed in [3722]
-        paz = sp.getPAZ(channel_id="BW.RJOB..EHZ", datetime=UTCDateTime("2010-01-01"))
+        paz = sp.getPAZ(channel_id="BW.RJOB..EHZ",
+                        datetime=UTCDateTime("2010-01-01"))
         result = {'gain': 60077000.0,
                   'poles': [(-0.037004000000000002 + 0.037016j),
                             (-0.037004000000000002 - 0.037016j),
