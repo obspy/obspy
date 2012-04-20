@@ -565,12 +565,12 @@ class ParserTestCase(unittest.TestCase):
         # 2 - G.SPB.00.BHZ - raises exception because of multiple results
         self.assertRaises(SEEDParserException, parser.getPAZ, 'G.SPB.00.BHZ')
         # 3 - G.SPB.00.BHZ with datetime - again no Laplace transform
-        dt = UTCDateTime('2006-11-02T11:12:00.000000Z')
+        dt = UTCDateTime('2007-01-01')
         with warnings.catch_warnings(record=True):
             warnings.simplefilter("error", UserWarning)
             self.assertRaises(UserWarning, parser.getPAZ, 'G.SPB.00.BHZ', dt)
         # 4 - G.SPB.00.BHZ with later datetime works
-        dt = UTCDateTime('2011-12-10T00:00:00.000000Z')
+        dt = UTCDateTime('2012-01-01')
         parser.getPAZ('G.SPB.00.BHZ', dt)
 
 

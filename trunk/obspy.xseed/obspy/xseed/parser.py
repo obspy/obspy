@@ -372,24 +372,9 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def getPAZ(self, seed_id, datetime=None):
+    def _select(self, seed_id, datetime=None):
         """
-        Return PAZ.
-
-        .. note:: Currently only the Laplace transform is supported, that
-            is blockettes 43 and 53. A UserWarning will be raised for
-            unsupported response blockettes, however all other values, such
-            as overall sensitivity, normalization constant, etc. will be still
-            returned if found.
-
-        :type seed_id: str
-        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
-            ``"EHE"``.
-        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param datetime: Timestamp of requested PAZ values
-        :return: Dictionary containing PAZ as well as the overall
-            sensitivity, the gain in the dictionary is the A0 normalization
-            constant
+        Selects all blockettes related to given SEED id and datetime.
         """
         # parse blockettes if not SEED
         if self._format != 'SEED':
@@ -446,19 +431,41 @@ class Parser(object):
         elif len(b50s) > 1 or len(b52s) > 1:
             msg = 'More than one channel found with the given SEED id: %s'
             raise SEEDParserException(msg % (seed_id))
-        channel = {}
+        return blockettes
+
+    def getPAZ(self, seed_id, datetime=None):
+        """
+        Return PAZ.
+
+        .. note:: Currently only the Laplace transform is supported, that
+            is blockettes 43 and 53. A UserWarning will be raised for
+            unsupported response blockettes, however all other values, such
+            as overall sensitivity, normalization constant, etc. will be still
+            returned if found.
+
+        :type seed_id: str
+        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
+            ``"EHE"``.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Timestamp of requested PAZ values
+        :return: Dictionary containing PAZ as well as the overall
+            sensitivity, the gain in the dictionary is the A0 normalization
+            constant
+        """
+        blockettes = self._select(seed_id, datetime)
+        data = {}
         for blockette in blockettes:
             if blockette.id == 58:
                 if blockette.stage_sequence_number == 0:
-                    channel['sensitivity'] = blockette.sensitivity_gain
+                    data['sensitivity'] = blockette.sensitivity_gain
                 elif blockette.stage_sequence_number == 1:
-                    channel['seismometer_gain'] = blockette.sensitivity_gain
+                    data['seismometer_gain'] = blockette.sensitivity_gain
                 elif blockette.stage_sequence_number == 2:
-                    channel['digitizer_gain'] = blockette.sensitivity_gain
+                    data['digitizer_gain'] = blockette.sensitivity_gain
             elif blockette.id == 53 or blockette.id == 60:
                 if blockette.id == 60:
                     abbreviation = blockette.stages[0][1]
-                    channel['seismometer_gain'] = \
+                    data['seismometer_gain'] = \
                         [blk.sensitivity_gain for blk in self.abbreviations
                          if hasattr(blk, 'response_lookup_key') and \
                             blk.response_lookup_key == abbreviation][0]
@@ -477,97 +484,60 @@ class Parser(object):
                     warnings.warn(msg, UserWarning)
                     continue
                 # A0_normalization_factor
-                channel['gain'] = resp.A0_normalization_factor
+                data['gain'] = resp.A0_normalization_factor
                 # Poles
                 try:
-                    channel['poles'] = \
-                        [complex(x, y) for x, y in \
-                         zip(resp.real_pole, resp.imaginary_pole)]
+                    data['poles'] = [complex(x, y) for x, y in
+                                     zip(resp.real_pole, resp.imaginary_pole)]
                 except AttributeError, e:
                     if resp.number_of_complex_poles == 0:
-                        channel['poles'] = []
+                        data['poles'] = []
                     else:
                         raise e
                 except TypeError, e:
                     if resp.number_of_complex_poles == 1:
-                        channel['poles'] = \
-                            [complex(resp.real_pole, resp.imaginary_pole)]
+                        data['poles'] = [complex(resp.real_pole,
+                                                 resp.imaginary_pole)]
                     else:
                         raise e
                 # Zeros
                 try:
-                    channel['zeros'] = \
-                        [complex(x, y) for x, y in \
-                         zip(resp.real_zero, resp.imaginary_zero)]
+                    data['zeros'] = [complex(x, y) for x, y in
+                                     zip(resp.real_zero, resp.imaginary_zero)]
                 except AttributeError, e:
                     if resp.number_of_complex_zeros == 0:
-                        channel['zeros'] = []
+                        data['zeros'] = []
                     else:
                         raise e
                 except TypeError, e:
                     if resp.number_of_complex_zeros == 1:
-                        channel['zeros'] = \
-                            [complex(resp.real_zero, resp.imaginary_zero)]
+                        data['zeros'] = [complex(resp.real_zero,
+                                                 resp.imaginary_zero)]
                     else:
                         raise e
-        return channel
+        return data
 
-    def getCoordinates(self, channel_id, datetime=None):
+    def getCoordinates(self, seed_id, datetime=None):
         """
         Return Coordinates (from blockette 52)
-        No multiple stations or locations codes in the same XSEED volume are
-        allowed.
 
-        :param channel_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
-        :param datetime: UTCDateTime of requested Coordinate information
+        :type seed_id: str
+        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
+            ``"EHE"``.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Timestamp of requested PAZ values
         :return: Dictionary containing Coordinates (latitude, longitude,
-                elevation)
+            elevation)
         """
-        # parse blockettes if not SEED
-        if self._format != 'SEED':
-            self.__init__(self.getSEED())
-        channels = {}
-        dates = {}
-        for station in self.stations:
-            for blockette in station:
-                if blockette.id == 50:
-                    station_id = "%s.%s" % (blockette.network_code,
-                                            blockette.station_call_letters)
-                    start = blockette.start_effective_date
-                    if not start:
-                        msg = "Missing start effective date in Station " + \
-                              "Identifier Blockette (50) for station " + \
-                              "%s" % station_id
-                        raise SEEDParserException(msg)
-                    end = blockette.end_effective_date or UTCDateTime()
-                elif blockette.id == 52:
-                    id = "%s.%s.%s/%e/%e" % (station_id,
-                                             blockette.location_identifier,
-                                             blockette.channel_identifier,
-                                             start.timestamp,
-                                             end.timestamp)
-                    channels[id] = {}
-                    channels[id]['latitude'] = blockette.latitude
-                    channels[id]['longitude'] = blockette.longitude
-                    channels[id]['elevation'] = blockette.elevation
-                    dates[id] = {}
-                    dates[id]['start'] = start
-                    dates[id]['end'] = end
-        # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
-        if datetime:
-            channel = [cha for cha in channel \
-                       if dates[cha]['end'] >= datetime \
-                       and dates[cha]['start'] <= datetime]
-        if len(channel) == 0:
-            msg = 'No channel with the given description:' \
-                + ', '.join(channel)
-            raise SEEDParserException(msg)
-        elif len(channel) > 1:
-            msg = 'More than one channel with the given description:' \
-                + ', '.join(channel)
-            raise SEEDParserException(msg)
-        return channels[channel[0]]
+        blockettes = self._select(seed_id, datetime)
+        data = {}
+        for blockette in blockettes:
+            if blockette.id == 52:
+                data['latitude'] = blockette.latitude
+                data['longitude'] = blockette.longitude
+                data['elevation'] = blockette.elevation
+                break
+        return data
 
     def writeRESP(self, folder, zipped=False):
         """
