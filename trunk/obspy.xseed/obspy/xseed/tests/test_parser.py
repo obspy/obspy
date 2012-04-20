@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# With statement for Python 2.5. Necessary although not used in Python 2.5.
 from __future__ import with_statement
 from StringIO import StringIO
 from lxml import etree
@@ -61,8 +60,11 @@ class ParserTestCase(unittest.TestCase):
                       'seismometer_gain': 1.01885, 'sensitivity': 427336.0,
                       'zeros': []}
             self.assertEqual(paz, result)
-            self.assertRaises(SEEDParserException, parser.getPAZ,
-                              "NZ.DCZ.10.HHZ", t)
+            # triggers a UserWarning but still returns some results
+            paz = parser.getPAZ("NZ.DCZ.10.HHZ", t)
+            result = {'sensitivity': 838861000.0, 'seismometer_gain': 2000.0,
+                      'digitizer_gain': 419430.0}
+            self.assertEqual(paz, result)
 
     def test_invalidStartHeader(self):
         """
@@ -323,14 +325,13 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(paz['seismometer_gain'], 4.00000E+02)
         # Raise exception for undefined channels
         self.assertRaises(SEEDParserException, sp.getPAZ, 'BHE')
-        # Raise exception if not a Laplacian transfer function ('A').
+        # Raise UserWarning if not a Laplacian transfer function ('A').
         # Modify transfer_fuction_type on the fly
         for blk in sp.blockettes[53]:
             blk.transfer_function_types = 'X'
         with warnings.catch_warnings(record=True):
-            # parser will also warn that only LaPlacian transfer may be used
-            warnings.simplefilter("ignore")
-            self.assertRaises(SEEDParserException, sp.getPAZ, 'EHE')
+            warnings.simplefilter("error", UserWarning)
+            self.assertRaises(UserWarning, sp.getPAZ, 'EHE')
         #
         # And the same for yet another dataless file
         #
@@ -548,6 +549,29 @@ class ParserTestCase(unittest.TestCase):
             parser.read(filename1)
             result = parser.getCoordinates("BW.FURT..EHZ", t)
             self.assertEqual(expected, result)
+
+    @skipIfPython25
+    def test_issue361(self):
+        """
+        Test case for issue #361.
+        """
+        filename = os.path.join(self.path, 'G.SPB.dataless')
+        parser = Parser()
+        parser.read(filename)
+        # 1 - G.SPB..BHZ - raises UserWarning - no Laplace transform
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error", UserWarning)
+            self.assertRaises(UserWarning, parser.getPAZ, 'G.SPB..BHZ')
+        # 2 - G.SPB.00.BHZ - raises exception because of multiple results
+        self.assertRaises(SEEDParserException, parser.getPAZ, 'G.SPB.00.BHZ')
+        # 3 - G.SPB.00.BHZ with datetime - again no Laplace transform
+        dt = UTCDateTime('2006-11-02T11:12:00.000000Z')
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter("error", UserWarning)
+            self.assertRaises(UserWarning, parser.getPAZ, 'G.SPB.00.BHZ', dt)
+        # 4 - G.SPB.00.BHZ with later datetime works
+        dt = UTCDateTime('2011-12-10T00:00:00.000000Z')
+        parser.getPAZ('G.SPB.00.BHZ', dt)
 
 
 def suite():

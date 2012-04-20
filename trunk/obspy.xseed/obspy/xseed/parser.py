@@ -372,14 +372,14 @@ class Parser(object):
                 new_resp_list.append(channel_list[0])
         return new_resp_list
 
-    def getPAZ(self, channel_id, datetime=None):
+    def getPAZ(self, seed_id, datetime=None):
         """
         Return PAZ, currently only the Laplace transform is supported, that
         is blockettes 43 and 53.
         No multiple stations or locations codes in the same XSEED volume are
         allowed.
 
-        :param channel_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
+        :param seed_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
         :param datetime: UTCDateTime of requested PAZ values
         :return: Dictionary containing PAZ as well as the overall
             sensitivity, the gain in the dictionary is the A0 normalization
@@ -388,110 +388,123 @@ class Parser(object):
         # parse blockettes if not SEED
         if self._format != 'SEED':
             self.__init__(self.getSEED())
-        channels = {}
-        dates = {}
-        channel_ids_unsupported = []
-        for station in self.stations:
-            for blockette in station:
-                if blockette.id == 50:
-                    station_id = "%s.%s" % (blockette.network_code,
-                                            blockette.station_call_letters)
-                    start = blockette.start_effective_date
-                    end = blockette.end_effective_date or UTCDateTime()
-                elif blockette.id == 52:
-                    id = "%s.%s.%s/%e/%e" % (station_id,
-                                             blockette.location_identifier,
-                                             blockette.channel_identifier,
-                                             start.timestamp,
-                                             end.timestamp)
-                    channels[id] = {}
-                    dates[id] = {}
-                    dates[id]['start'] = start
-                    dates[id]['end'] = end
-                elif blockette.id == 58:
-                    if blockette.stage_sequence_number == 0:
-                        channels[id]['sensitivity'] = \
-                            blockette.sensitivity_gain
-                    elif blockette.stage_sequence_number == 1:
-                        channels[id]['seismometer_gain'] = \
-                            blockette.sensitivity_gain
-                    elif blockette.stage_sequence_number == 2:
-                        channels[id]['digitizer_gain'] = \
-                            blockette.sensitivity_gain
-                elif blockette.id == 53 or blockette.id == 60:
-                    if blockette.id == 60:
-                        abbreviation = blockette.stages[0][1]
-                        channels[id]['seismometer_gain'] = \
-                            [blk.sensitivity_gain for blk in self.abbreviations
-                             if hasattr(blk, 'response_lookup_key') and \
-                                blk.response_lookup_key == abbreviation][0]
-                        abbreviation = blockette.stages[0][0]
-                        resp = \
-                            [blk for blk in self.abbreviations
-                             if hasattr(blk, 'response_lookup_key') and \
-                                blk.response_lookup_key == abbreviation][0]
-                        label = 'response_type'
-                    else:
-                        resp = blockette
-                        label = 'transfer_function_types'
-                    # Check if Laplace transform
-                    if getattr(resp, label) != "A":
-                        msg = 'Only supporting Laplace transform response ' + \
-                              'type. Skipping other response information.'
-                        warnings.warn(msg)
-                        channel_ids_unsupported.append(id)
+        # split id
+        if '.' in seed_id:
+            net, sta, loc, cha = seed_id.split('.')
+        else:
+            cha = seed_id
+            net = sta = loc = None
+        # create a copy of station list
+        stations = list(self.stations)
+        # filter blockettes list by given SEED id
+        station_flag = False
+        channel_flag = False
+        blockettes = []
+        for station in stations:
+            for blk in station:
+                if blk.id == 50:
+                    station_flag = False
+                    if net is not None and blk.network_code != net:
                         continue
-                        #raise SEEDParserException(msg)
-                    # A0_normalization_factor
-                    channels[id]['gain'] = resp.A0_normalization_factor
-                    # Poles
-                    try:
-                        channels[id]['poles'] = \
-                            [complex(x, y) for x, y in \
-                             zip(resp.real_pole, resp.imaginary_pole)]
-                    except AttributeError, e:
-                        if resp.number_of_complex_poles == 0:
-                            channels[id]['poles'] = []
-                        else:
-                            raise e
-                    except TypeError, e:
-                        if resp.number_of_complex_poles == 1:
-                            channels[id]['poles'] = [complex(resp.real_pole, resp.imaginary_pole)]
-                        else:
-                            raise e
-                    # Zeros
-                    try:
-                        channels[id]['zeros'] = \
-                            [complex(x, y) for x, y in \
-                             zip(resp.real_zero, resp.imaginary_zero)]
-                    except AttributeError, e:
-                        if resp.number_of_complex_zeros == 0:
-                            channels[id]['zeros'] = []
-                        else:
-                            raise e
-                    except TypeError, e:
-                        if resp.number_of_complex_zeros == 1:
-                            channels[id]['zeros'] = [complex(resp.real_zero, resp.imaginary_zero)]
-                        else:
-                            raise e
-        # Remove channels with response of unsupported format
-        for id in channel_ids_unsupported:
-            channels.pop(id)
-        # Returns only the keys.
-        channel = [cha for cha in channels if channel_id in cha.split('/')[0]]
-        if datetime:
-            channel = [cha for cha in channel \
-                       if dates[cha]['end'] >= datetime \
-                       and dates[cha]['start'] <= datetime]
-        if len(channel) == 0:
-            msg = 'No channel with the given description:' \
-                + ', '.join(channel)
-            raise SEEDParserException(msg)
-        elif len(channel) > 1:
-            msg = 'More than one channel with the given description:' \
-                + ', '.join(channel)
-            raise SEEDParserException(msg)
-        return channels[channel[0]]
+                    if sta is not None and blk.station_call_letters != sta:
+                        continue
+                    if datetime is not None:
+                        if blk.start_effective_date > datetime:
+                            continue
+                        if blk.end_effective_date and \
+                           blk.end_effective_date < datetime:
+                            continue
+                    station_flag = True
+                    blockettes.append(blk)
+                elif blk.id == 52 and station_flag:
+                    channel_flag = False
+                    if loc is not None and blk.location_identifier != loc:
+                        continue
+                    if blk.channel_identifier != cha:
+                        continue
+                    if datetime is not None:
+                        if blk.start_date > datetime:
+                            continue
+                        if blk.end_date and blk.end_date < datetime:
+                            continue
+                    channel_flag = True
+                    blockettes.append(blk)
+                elif channel_flag:
+                    blockettes.append(blk)
+        # check number of selected channels (equals number of blockette 52)
+        b50s = [b for b in blockettes if b.id == 50]
+        b52s = [b for b in blockettes if b.id == 52]
+        if len(b50s) == 0 or len(b52s) == 0:
+            msg = 'No channel found with the given SEED id: %s'
+            raise SEEDParserException(msg % (seed_id))
+        elif len(b50s) > 1 or len(b52s) > 1:
+            msg = 'More than one channel found with the given SEED id: %s'
+            raise SEEDParserException(msg % (seed_id))
+        channel = {}
+        for blockette in blockettes:
+            if blockette.id == 58:
+                if blockette.stage_sequence_number == 0:
+                    channel['sensitivity'] = blockette.sensitivity_gain
+                elif blockette.stage_sequence_number == 1:
+                    channel['seismometer_gain'] = blockette.sensitivity_gain
+                elif blockette.stage_sequence_number == 2:
+                    channel['digitizer_gain'] = blockette.sensitivity_gain
+            elif blockette.id == 53 or blockette.id == 60:
+                if blockette.id == 60:
+                    abbreviation = blockette.stages[0][1]
+                    channel['seismometer_gain'] = \
+                        [blk.sensitivity_gain for blk in self.abbreviations
+                         if hasattr(blk, 'response_lookup_key') and \
+                            blk.response_lookup_key == abbreviation][0]
+                    abbreviation = blockette.stages[0][0]
+                    resp = [blk for blk in self.abbreviations
+                            if hasattr(blk, 'response_lookup_key') and \
+                               blk.response_lookup_key == abbreviation][0]
+                    label = 'response_type'
+                else:
+                    resp = blockette
+                    label = 'transfer_function_types'
+                # Check if Laplace transform
+                if getattr(resp, label) != "A":
+                    msg = 'Only supporting Laplace transform response ' + \
+                          'type. Skipping other response information.'
+                    warnings.warn(msg, UserWarning)
+                    continue
+                # A0_normalization_factor
+                channel['gain'] = resp.A0_normalization_factor
+                # Poles
+                try:
+                    channel['poles'] = \
+                        [complex(x, y) for x, y in \
+                         zip(resp.real_pole, resp.imaginary_pole)]
+                except AttributeError, e:
+                    if resp.number_of_complex_poles == 0:
+                        channel['poles'] = []
+                    else:
+                        raise e
+                except TypeError, e:
+                    if resp.number_of_complex_poles == 1:
+                        channel['poles'] = \
+                            [complex(resp.real_pole, resp.imaginary_pole)]
+                    else:
+                        raise e
+                # Zeros
+                try:
+                    channel['zeros'] = \
+                        [complex(x, y) for x, y in \
+                         zip(resp.real_zero, resp.imaginary_zero)]
+                except AttributeError, e:
+                    if resp.number_of_complex_zeros == 0:
+                        channel['zeros'] = []
+                    else:
+                        raise e
+                except TypeError, e:
+                    if resp.number_of_complex_zeros == 1:
+                        channel['zeros'] = \
+                            [complex(resp.real_zero, resp.imaginary_zero)]
+                    else:
+                        raise e
+        return channel
 
     def getCoordinates(self, channel_id, datetime=None):
         """
