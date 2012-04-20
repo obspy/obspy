@@ -406,9 +406,7 @@ class Parser(object):
                             continue
                     station_flag = True
                     blockettes.append(blk)
-                elif blk.id == 52:
-                    if not station_flag:
-                        continue
+                elif blk.id == 52 and station_flag:
                     channel_flag = False
                     if loc is not None and blk.location_identifier != loc:
                         continue
@@ -421,7 +419,7 @@ class Parser(object):
                             continue
                     channel_flag = True
                     blockettes.append(blk)
-                elif channel_flag:
+                elif channel_flag and station_flag:
                     blockettes.append(blk)
         # check number of selected channels (equals number of blockette 52)
         b50s = [b for b in blockettes if b.id == 50]
