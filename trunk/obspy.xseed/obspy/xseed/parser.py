@@ -503,6 +503,7 @@ class Parser(object):
                     data['zeros'].append(z)
         return data
 
+    @deprecated_keywords({'channel_id': 'seed_id'})
     def getCoordinates(self, seed_id, datetime=None):
         """
         Return Coordinates (from blockette 52)
