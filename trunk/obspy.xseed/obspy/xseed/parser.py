@@ -406,7 +406,9 @@ class Parser(object):
                             continue
                     station_flag = True
                     blockettes.append(blk)
-                elif blk.id == 52 and station_flag:
+                elif blk.id == 52:
+                    if not station_flag:
+                        continue
                     channel_flag = False
                     if loc is not None and blk.location_identifier != loc:
                         continue
