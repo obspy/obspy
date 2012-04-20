@@ -8,7 +8,6 @@ from obspy.core.stream import read
 from obspy.core.util.decorator import skipIfPython25
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
-from obspy.realtime.rttrace import splitTrace
 from obspy.signal import filter
 import numpy as np
 import unittest
@@ -166,7 +165,7 @@ class RtTraceTestCase(unittest.TestCase):
         """
         tr = read()[0]
         tr.data = np.require(tr.data, dtype='>f4')
-        traces = splitTrace(tr, 3)
+        traces = tr / 3
         rtr = RtTrace()
         for trace in traces:
             rtr.append(trace)

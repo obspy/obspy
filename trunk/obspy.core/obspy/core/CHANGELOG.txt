@@ -1,15 +1,17 @@
 dev:
+ * Trace.__mul__ (splits Trace into Stream containing traces with num samples)
+ * Trace.__div__ (splits Trace into Stream containing num traces)
  * new obspy.core.util.types.Enum class 
  * refactored obspy.core.util.ordereddict into obspy.core.util.types
  * refactored kilometer2degrees and locations2degrees from obspy.taup into
    obspy.core.util.geodetics
  * removing __hash__ fixture for Stream and Trace
  * new util.xmlwrapper module for uniform API for Python's default xml and lxml
- * plugin hooks in setup.py for quakeml event files
+ * plugin hooks in setup.py for QuakeML event files
  * stream.select works now case insensitive
  * support for initialization of UTCDateTime from numpy.string_ types
  * new dtype parameter on read method allows converting data into given dtype
- * implementation of __mul__ function for Trace and Stream objects
+ * implementation of __mul__ method for Trace and Stream objects
  * adding 'equal_scale' option to plot() method
  * new formatSeedLink method for UTCDateTime object
  * new split method for transforming streams containing masked arrays into

@@ -58,7 +58,7 @@ class RtTrace(Trace):
        offset and epicentral distance of an earthquake::
 
         >>> import numpy as np
-        >>> from obspy.realtime import RtTrace, splitTrace
+        >>> from obspy.realtime import RtTrace
         >>> from obspy.core import read
         >>> from obspy.realtime.signal import calculateMwpMag
         >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
@@ -73,7 +73,7 @@ class RtTrace(Trace):
 
     2. Split given trace into a list of three sub-traces::
 
-        >>> traces = splitTrace(data_trace, num=3)
+        >>> traces = data_trace / 3
         >>> [len(tr) for tr in traces]
         [4228, 4228, 4228]
 
@@ -370,57 +370,6 @@ class RtTrace(Trace):
         new = copy.deepcopy(self, *args, **kwargs)
         new.processing = temp
         return new
-
-
-def splitTrace(trace, num=3):
-    """
-    Helper functions to split given Trace into num Traces of the same size.
-
-    :type trace: :class:`obspy.core.trace.Trace`
-    :param trace: ObsPy Trace object.
-    :type num: int
-    :param num: number of returned traces, default to ``3``.
-    :return: list of traces.
-
-    .. rubric:: Example
-
-    >>> from obspy.core import read, Stream
-    >>> original_trace = read()[0]
-    >>> print(original_trace)  # doctest: +ELLIPSIS
-    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
-    >>> len(original_trace)
-    3000
-    >>> traces = splitTrace(original_trace, 7)
-    >>> [len(tr) for tr in traces]
-    [429, 429, 429, 429, 429, 429, 426]
-    >>> st = Stream(traces)
-    >>> print(st)  # doctest: +ELLIPSIS
-    7 Trace(s) in Stream:
-    BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:11.580000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:15.870000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:20.160000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:24.450000Z - ... | 100.0 Hz, 429 samples
-    BW.RJOB..EHZ | 2009-08-24T00:20:28.740000Z - ... | 100.0 Hz, 426 samples
-    >>> st.merge(-1)
-    >>> st[0] == original_trace
-    True
-    """
-    total_length = np.size(trace.data)
-    rest_length = total_length % num
-    if rest_length:
-        packet_length = (total_length // num)
-    else:
-        packet_length = (total_length // num) - 1
-    tstart = trace.stats.starttime
-    tend = tstart + (trace.stats.delta * packet_length)
-    traces = []
-    for _i in range(num):
-        traces.append(trace.slice(tstart, tend).copy())
-        tstart = tend + trace.stats.delta
-        tend = tstart + (trace.stats.delta * packet_length)
-    return traces
 
 
 if __name__ == '__main__':

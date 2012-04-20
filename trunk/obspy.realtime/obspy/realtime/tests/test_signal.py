@@ -4,7 +4,7 @@ The obspy.realtime.signal test suite.
 """
 from obspy.core import read
 from obspy.core.stream import Stream
-from obspy.realtime import RtTrace, splitTrace, signal
+from obspy.realtime import RtTrace, signal
 import numpy as np
 import os
 import unittest
@@ -26,7 +26,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
                                             'II.TLY.BHZ.SAC'), dtype='f8')[0]
         # make really sure test data is float64
         self.orig_trace.data = np.require(self.orig_trace.data, 'f8')
-        self.orig_trace_chunks = splitTrace(self.orig_trace, NUM_PACKETS)
+        self.orig_trace_chunks = self.orig_trace / NUM_PACKETS
 
     def setUp(self):
         # clear results

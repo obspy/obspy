@@ -422,6 +422,91 @@ class Trace(object):
             st += self.copy()
         return st
 
+    def __div__(self, num):
+        """
+        Splits Trace into new Stream containing num Traces of the same size.
+
+        :type num: int
+        :param num: Number of traces in returned Stream. Last trace may contain
+            lesser samples.
+        :returns: New ObsPy Stream object.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read
+        >>> tr = read()[0]
+        >>> print tr  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> st = tr / 7
+        >>> print st  # doctest: +ELLIPSIS
+        7 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:11.580000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:15.870000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:20.160000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:24.450000Z ... | 100.0 Hz, 429 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:28.740000Z ... | 100.0 Hz, 426 samples
+        """
+        if not isinstance(num, int):
+            return TypeError("Integer expected")
+        from obspy.core import Stream
+        total_length = np.size(self.data)
+        rest_length = total_length % num
+        if rest_length:
+            packet_length = (total_length // num)
+        else:
+            packet_length = (total_length // num) - 1
+        tstart = self.stats.starttime
+        tend = tstart + (self.stats.delta * packet_length)
+        st = Stream()
+        for _i in range(num):
+            st.append(self.slice(tstart, tend).copy())
+            tstart = tend + self.stats.delta
+            tend = tstart + (self.stats.delta * packet_length)
+        return st
+
+    def __mod__(self, num):
+        """
+        Splits Trace into new Stream containing Traces with num samples.
+
+        :type num: int
+        :param num: Number of samples in each trace in returned Stream. Last
+            trace may contain lesser samples.
+        :returns: New ObsPy Stream object.
+
+        .. rubric:: Example
+
+        >>> from obspy.core import read
+        >>> tr = read()[0]
+        >>> print tr  # doctest: +ELLIPSIS
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> st = tr % 800
+        >>> print st  # doctest: +ELLIPSIS
+        4 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 800 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 800 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:19.000000Z ... | 100.0 Hz, 800 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:27.000000Z ... | 100.0 Hz, 600 samples
+        """
+        if not isinstance(num, int):
+            return TypeError("Integer expected")
+        from obspy.core import Stream
+        st = Stream()
+        total_length = np.size(self.data)
+        if num >= total_length:
+            st.append(tr.copy())
+            return st
+        tstart = self.stats.starttime
+        tend = tstart + (self.stats.delta * (num - 1))
+        while True:
+            st.append(self.slice(tstart, tend).copy())
+            tstart = tend + self.stats.delta
+            tend = tstart + (self.stats.delta * (num - 1))
+            if tstart > self.stats.endtime:
+                break
+        return st
+
     def __add__(self, trace, method=0, interpolation_samples=0,
                 fill_value=None, sanity_checks=True):
         """
