@@ -374,13 +374,19 @@ class Parser(object):
 
     def getPAZ(self, seed_id, datetime=None):
         """
-        Return PAZ, currently only the Laplace transform is supported, that
-        is blockettes 43 and 53.
-        No multiple stations or locations codes in the same XSEED volume are
-        allowed.
+        Return PAZ.
 
-        :param seed_id: Channel/Component to extract e.g. "BW.RJOB..EHZ"
-        :param datetime: UTCDateTime of requested PAZ values
+        .. note:: Currently only the Laplace transform is supported, that
+            is blockettes 43 and 53. A UserWarning will be raised for
+            unsupported response blockettes, however all other values, such
+            as overall sensitivity, normalization constant, etc. will be still
+            returned if found.
+
+        :type seed_id: str
+        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
+            ``"EHE"``.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param datetime: Timestamp of requested PAZ values
         :return: Dictionary containing PAZ as well as the overall
             sensitivity, the gain in the dictionary is the A0 normalization
             constant
