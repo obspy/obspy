@@ -1,0 +1,2 @@
+dev:
+ * new Client.getEvents method able to return a ObsPy catalog object

@@ -93,11 +93,27 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('STATION    (KSTNM): ANMO' in data)
         os.remove(tempfile)
 
+    def test_getEvents(self):
+        """
+        Tests getEvents method.
+        """
+        client = Client()
+        # 1
+        cat = client.getEvents(mindepth=34.9, maxdepth=35.1,
+                               catalog="NEIC PDE", contributor="NEIC PDE-Q",
+                               magtype="MB", lat=-56.1, lon=-26.7, maxradius=1)
+        self.assertEquals(len(cat), 1)
+        ev = cat[0]
+        self.assertEquals(len(ev.origins), 1)
+        self.assertEquals(len(ev.magnitudes), 1)
+        self.assertEquals(ev.origins[0].depth.value, 35.0)
+        self.assertEquals(ev.origins[0].latitude.value, -55.404)
+        self.assertEquals(ev.origins[0].longitude.value, -27.895)
+        self.assertEquals(ev.magnitudes[0].type, 'MB')
+
     def test_sacpz(self):
         """
         Fetches SAC poles and zeros information.
-        Can not be tested in docstring because creation date on server is
-        included in resulting text.
         """
         client = Client()
         # 1
