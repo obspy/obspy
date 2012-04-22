@@ -11,11 +11,13 @@ NERIES Web service client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core import UTCDateTime, read, Stream
+from obspy.core.event import readEvents
 from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
+import StringIO
 import functools
 import os
 import platform
@@ -196,7 +198,7 @@ class Client(object):
                   max_latitude=None, min_depth=None, max_depth=None,
                   min_magnitude=None, max_magnitude=None, magnitude_type=None,
                   author=None, sort_by="datetime", sort_direction="ASC",
-                  max_results=100, format="list", **kwargs):
+                  max_results=100, format=None, **kwargs):
         """
         Gets a list of events.
 
@@ -237,15 +239,19 @@ class Client(object):
             attribute ``format`` is set to ``"list"``.
         :type sort_direction: str
         :param sort_direction: Sort direction. Format: ``"ASC"`` or ``"DESC"``.
-        :type format: ``'list'`` or ``'xml'``, optional
-        :param format: Format of returned results. Defaults to ``'xml'``.
+        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
+        :param format: Format of returned results. Defaults to ``'list'``.
 
             .. note::
                 The JSON-formatted queries only look at preferred origin
                 parameters, whereas QuakeML queries search all associated
                 origins.
 
-        :return: List of event dictionaries or QuakeML string.
+        :rtype: :class:`~obspy.core.event.Catalog`, list or str
+        :return: Method will return either an ObsPy
+            :class:`~obspy.core.event.Catalog` object, a list of event
+            dictionaries or a QuakeML string depending on the ``format``
+            keyword.
 
         .. seealso:: http://www.seismicportal.eu/services/event/search/info/
 
@@ -255,7 +261,7 @@ class Client(object):
         >>> client = Client()
         >>> events = client.getEvents(min_datetime="2004-12-01",
         ...                           max_datetime="2005-01-01",
-        ...                           min_magnitude=9)
+        ...                           min_magnitude=9, format="list")
         >>> len(events)
         1
         >>> events  #doctest: +SKIP
@@ -265,6 +271,14 @@ class Client(object):
           'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
           'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
         """
+        # deprecation warning if format is not set
+        if format is None:
+            msg = "The default setting format='list' for obspy.neries." + \
+                "Client.getEvents() will be changed in the future to " + \
+                "format='catalog'. Please call this function with the " + \
+                "format keyword in order to hide this deprecation warning."
+            warnings.warn(msg, category=DeprecationWarning)
+            format = "list"
         # map request format string "list" -> "json"
         if format == "list":
             kwargs['format'] = "json"
@@ -278,10 +292,12 @@ class Client(object):
         # format output
         if format == "list":
             return self._json2list(data)
+        elif format == "catalog":
+            return readEvents(StringIO.StringIO(data), 'QUAKEML')
         else:
             return data
 
-    def getLatestEvents(self, num=10, format="xml"):
+    def getLatestEvents(self, num=10, format=None):
         """
         Gets a list of recent events.
 
@@ -291,9 +307,13 @@ class Client(object):
             .. note::
                 Absolute maximum is 2500 events.
 
-        :type format: ``'list'`` or ``'xml'``, optional
+        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
         :param format: Format of returned results. Defaults to ``'xml'``.
-        :return: List of event dictionaries or QuakeML string.
+        :rtype: :class:`~obspy.core.event.Catalog`, list or str
+        :return: Method will return either an ObsPy
+            :class:`~obspy.core.event.Catalog` object, a list of event
+            dictionaries or a QuakeML string depending on the ``format``
+            keyword.
 
         .. seealso:: http://www.seismicportal.eu/services/event/latest/info/
 
@@ -311,6 +331,14 @@ class Client(object):
           'magnitude': 9.3, 'magnitude_type': u'mw', 'latitude': 3.498,
           'flynn_region': u'OFF W COAST OF NORTHERN SUMATRA'}]
         """
+        # deprecation warning if format is not set
+        if format is None:
+            msg = "The default setting format='xml' for obspy.neries." + \
+                "Client.getLatestEvents() will be changed in the future " + \
+                "to format='catalog'. Please call this function with the " + \
+                "format keyword in order to hide this deprecation warning."
+            warnings.warn(msg, category=DeprecationWarning)
+            format = "xml"
         # parse parameters
         kwargs = {}
         try:
@@ -326,10 +354,12 @@ class Client(object):
         # format output
         if format == "list":
             return self._json2list(data)
+        elif format == "catalog":
+            return readEvents(StringIO.StringIO(data), 'QUAKEML')
         else:
             return data
 
-    def getEventDetail(self, uri, format="xml"):
+    def getEventDetail(self, uri, format=None):
         """
         Gets event detail information.
 
@@ -337,9 +367,13 @@ class Client(object):
         :param uri: Event identifier as either a EMSC event unique identifier,
             e.g. ``"19990817_0000001"`` or a QuakeML-formatted event URI, e.g.
             ``"quakeml:eu.emsc/event#19990817_0000001"``.
-        :type format: ``'list'`` or ``'xml'``, optional
+        :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
         :param format: Format of returned results. Defaults to ``'xml'``.
-        :return: List of event dictionaries or QuakeML string.
+        :rtype: :class:`~obspy.core.event.Catalog`, list or str
+        :return: Method will return either an ObsPy
+            :class:`~obspy.core.event.Catalog` object, a list of event
+            dictionaries or a QuakeML string depending on the ``format``
+            keyword.
 
         .. seealso:: http://www.seismicportal.eu/services/event/detail/info/
 
@@ -356,6 +390,14 @@ class Client(object):
          'datetime': UTCDateTime(1999, 8, 17, 0, 1, 35), 'depth': -10.0,
          'magnitude': 6.7, 'magnitude_type': u'mw', 'latitude': 40.749}
         """
+        # deprecation warning if format is not set
+        if format is None:
+            msg = "The default setting format='xml' for obspy.neries." + \
+                "Client.getEventDetail() will be changed in the future to " + \
+                "format='catalog'. Please call this function with the " + \
+                "format keyword in order to hide this deprecation warning."
+            warnings.warn(msg, category=DeprecationWarning)
+            format = "xml"
         # parse parameters
         kwargs = {}
         if format == 'list':
@@ -373,6 +415,8 @@ class Client(object):
         # format output
         if format == "list":
             return self._json2list(data)
+        elif format == "catalog":
+            return readEvents(StringIO.StringIO(data), 'QUAKEML')
         else:
             return data
 

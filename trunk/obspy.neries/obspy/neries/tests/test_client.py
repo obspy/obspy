@@ -4,6 +4,7 @@ The obspy.neries.client test suite.
 """
 
 from obspy.core import UTCDateTime, read
+from obspy.core.event import Catalog
 from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client
 import os
@@ -14,7 +15,7 @@ class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.neries.client.Client.
     """
-    def test_getEvents(self):
+    def test_getEventsList(self):
         """
         Testing event request method.
         """
@@ -109,50 +110,66 @@ class ClientTestCase(unittest.TestCase):
         results = client.getEvents(format="xml", min_depth=-700,
                                    max_datetime=UTCDateTime("2005-01-01"))
         self.assertTrue(isinstance(results, basestring))
-        # check for event id
+        # check for origin id
         self.assertTrue('1347097' in results)
+
+    def test_getEventsAsCatalog(self):
+        """
+        Testing event request with Catalog as output format.
+        """
+        client = Client()
+        cat = client.getEvents(format="catalog", min_depth=-700,
+                               max_datetime=UTCDateTime("2005-01-01"))
+        self.assertTrue(isinstance(cat, Catalog))
+        # check for origin id
+        self.assertTrue(cat[0].preferred_origin_id.endswith('1347097'))
 
     def test_getEventDetail(self):
         """
         Testing event detail request method.
         """
         client = Client()
-        # default format & EMSC identifier
-        data = client.getEventDetail("19990817_0000001")
-        self.assertTrue(isinstance(data, basestring))
-        self.assertTrue(data.startswith('<?xml'))
-        # list format
-        data = client.getEventDetail("19990817_0000001", format='list')
-        self.assertTrue(isinstance(data, list))
-        # XML format
+        # EMSC identifier
+        # xml
         data = client.getEventDetail("19990817_0000001", format='xml')
         self.assertTrue(isinstance(data, basestring))
         self.assertTrue(data.startswith('<?xml'))
-        # default format & QuakeML identifier
-        data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001")
+        # list
+        data = client.getEventDetail("19990817_0000001", format='list')
+        self.assertTrue(isinstance(data, list))
+        # catalog
+        data = client.getEventDetail("19990817_0000001", format='catalog')
+        self.assertTrue(isinstance(data, Catalog))
+        # QuakeML identifier
+        # xml
+        data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001",
+                                     format='xml')
         self.assertTrue(data.startswith('<?xml'))
-        # list format
+        # list
         data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001",
                                      format='list')
         self.assertTrue(isinstance(data, list))
+        # catalog
+        data = client.getEventDetail("quakeml:eu.emsc/event#19990817_0000001",
+                                     format='catalog')
+        self.assertTrue(isinstance(data, Catalog))
 
     def test_getLatestEvents(self):
         """
         Testing request method for latest events.
         """
         client = Client()
-        # default format
-        data = client.getLatestEvents(5)
-        self.assertTrue(isinstance(data, basestring))
-        self.assertTrue(data.startswith('<?xml'))
-        # list format
-        data = client.getLatestEvents(5, format='list')
-        self.assertTrue(isinstance(data, list))
-        self.assertEquals(len(data), 5)
-        # XML format
+        # xml
         data = client.getLatestEvents(5, format='xml')
         self.assertTrue(isinstance(data, basestring))
         self.assertTrue(data.startswith('<?xml'))
+        # list
+        data = client.getLatestEvents(5, format='list')
+        self.assertTrue(isinstance(data, list))
+        self.assertEquals(len(data), 5)
+        # catalog
+        data = client.getLatestEvents(5, format='catalog')
+        self.assertTrue(isinstance(data, Catalog))
         # no given number of events should default to 10
         data = client.getLatestEvents(format='list')
         self.assertEquals(len(data), 10)

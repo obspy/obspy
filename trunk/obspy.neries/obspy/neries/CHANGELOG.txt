@@ -1,0 +1,3 @@
+dev:
+ * new format 'catalog' for getEvents, getEventDetail and getLatestEvents
+   methods - deprecating old format defaults 
