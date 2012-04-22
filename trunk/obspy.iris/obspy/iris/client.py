@@ -473,12 +473,8 @@ class Client(object):
         ...                              starttime=t1, endtime=t2, level="net")
         >>> print(station_xml) # doctest: +ELLIPSIS
         <BLANKLINE>
-        <StaMessage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ...>
-         <Source>IRIS-DMC</Source>
-         <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: http://www.iris.edu/ws/station</Module>
-         <ModuleURI>http://www.iris.edu/ws/station/query?...</ModuleURI>
-         <SentDate>...</SentDate>
+        <StaMessage ...>
+         ...
          <Network net_code="IU">
           <StartDate>1988-01-01T00:00:00</StartDate>
           <EndDate>2500-12-12T23:59:59</EndDate>
