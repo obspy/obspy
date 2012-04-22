@@ -1260,16 +1260,6 @@ class Magnitude(AttribDict):
     def __str__(self):
         return self._pretty_str(['magnitude'])
 
-    def _getMag(self):
-        return self.__dict__.get('mag', FloatQuantity())
-
-    def _setMag(self, value):
-        if not isinstance(value, FloatQuantity):
-            value = FloatQuantity(value)
-        self.__dict__['mag'] = value
-
-    mag = property(_getMag, _setMag)
-
     def _getEvaluationStatus(self):
         return self.__dict__.get('evaluation_status', None)
 
