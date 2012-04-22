@@ -27,7 +27,7 @@ import weakref
 EVENT_ENTRY_POINTS = ENTRY_POINTS['waveform']
 
 
-def readEvents(pathname_or_url=None):
+def readEvents(pathname_or_url=None, format=None, **kwargs):
     """
     Read event files into an ObsPy Catalog object.
 
@@ -35,16 +35,16 @@ def readEvents(pathname_or_url=None):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: string, optional
-    :param pathname_or_url: String containing a file name or a URL. Wildcards
-        are allowed for a file name. If this attribute is omitted, a Catalog
-        object with an example data set will be created.
-    :type format: string, optional
+    :type pathname_or_url: str or StringIO.StringIO, optional
+    :param pathname_or_url: String containing a file name or a URL or a open
+        file-like object. Wildcards are allowed for a file name. If this
+        attribute is omitted, an example :class:`~obspy.core.event.Catalog`
+        object will be returned.
+    :type format: str, optional
+    :param format: Format of the file to read, currently only ``"QUAKEML"`` is
+        supported.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
     """
-    # if no pathname or URL specified, make example stream
-    if not pathname_or_url:
-        return _createExampleCatalog()
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and \
        pathname_or_url.startswith('/path/to/'):
@@ -55,20 +55,40 @@ def readEvents(pathname_or_url=None):
             pass
     # create catalog
     cat = Catalog()
-    if "://" in pathname_or_url:
+    if pathname_or_url is None:
+        # if no pathname or URL specified, return example catalog
+        cat = _createExampleCatalog()
+    elif not isinstance(pathname_or_url, basestring):
+        # not a string - we assume a file-like object
+        pathname_or_url.seek(0)
+        try:
+            # first try reading directly
+            catalog = _read(pathname_or_url, format, **kwargs)
+            cat.extend(catalog.events)
+        except TypeError:
+            # if this fails, create a temporary file which is read directly
+            # from the file system
+            pathname_or_url.seek(0)
+            fh = NamedTemporaryFile()
+            fh.write(pathname_or_url.read())
+            fh.close()
+            cat.extend(_read(fh.name, format, **kwargs).events)
+            os.remove(fh.name)
+        pathname_or_url.seek(0)
+    elif "://" in pathname_or_url:
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         # some URL
         fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
         fh.close()
-        cat.extend(_read(fh.name).events)
+        cat.extend(_read(fh.name, format, **kwargs).events)
         os.remove(fh.name)
     else:
         # file name
         pathname = pathname_or_url
         for file in glob.iglob(pathname):
-            cat.extend(_read(file).events)
+            cat.extend(_read(file, format, **kwargs).events)
         if len(cat) == 0:
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob(pathname):
