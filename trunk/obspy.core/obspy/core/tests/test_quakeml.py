@@ -20,9 +20,9 @@ class QuakeMLTestCase(unittest.TestCase):
         Simple helper function to compare two XML strings.
         """
         obj1 = fromstring(doc1)
-        str1 = tostring(obj1)
+        str1 = ''.join([s.strip() for s in tostring(obj1).splitlines()])
         obj2 = fromstring(doc2)
-        str2 = tostring(obj2)
+        str2 = ''.join([s.strip() for s in tostring(obj2).splitlines()])
         self.assertEquals(str1, str2)
 
     def test_readQuakeML(self):
