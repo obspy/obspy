@@ -4,38 +4,7 @@ from obspy.core.quakeml import readQuakeML, _xmlCatalog
 from obspy.core.utcdatetime import UTCDateTime
 import os
 import unittest
-
-
-def _compareStrings(doc1, doc2, debug=False):
-    """
-    Simple helper function to compare two XML strings.
-
-    .. note:: This function does not respect document encoding. However you
-        should keep all XML documents UTF-8 encoded within ObsPy!
-    """
-    # remove newlines and leading/trailing whitespaces for each line
-    doc1 = ''.join([l.strip() for l in doc1.splitlines()])
-    doc2 = ''.join([l.strip() for l in doc2.splitlines()])
-    # strip XML declaration
-    if doc1.startswith('<?xml'):
-        doc1 = doc1.split('?>', 1)[1]
-    if doc2.startswith('<?xml'):
-        doc2 = doc2.split('?>', 1)[1]
-    # check order of namespaces at root element - lxml positions namespaces
-    # differently than xml
-    root1, rest1 = doc1.split('>', 1)
-    root2, rest2 = doc1.split('>', 1)
-    parts1 = root1.split(' ')
-    parts2 = root2.split(' ')
-    doc1 = "%s %s>%s" % (parts1[0], ' '.join(sorted(parts1[1:])), rest1)
-    doc2 = "%s %s>%s" % (parts2[0], ' '.join(sorted(parts2[1:])), rest2)
-    # compare
-    if debug:
-        print
-        print doc1
-        print doc2
-        print
-    assert doc1 == doc2
+from xml.etree.ElementTree import tostring, fromstring
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -45,6 +14,16 @@ class QuakeMLTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
+
+    def _compareStrings(self, doc1, doc2):
+        """
+        Simple helper function to compare two XML strings.
+        """
+        obj1 = fromstring(doc1)
+        str1 = tostring(obj1)
+        obj2 = fromstring(doc2)
+        str2 = tostring(obj2)
+        self.assertEquals(str1, str2)
 
     def test_readQuakeML(self):
         """
@@ -119,7 +98,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _xmlCatalog(catalog)
-        _compareStrings(original, processed)
+        self._compareStrings(original, processed)
 
     def test_origin(self):
         """
@@ -211,7 +190,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _xmlCatalog(catalog)
-        _compareStrings(original, processed)
+        self._compareStrings(original, processed)
 
     def test_magnitude(self):
         """
@@ -249,7 +228,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _xmlCatalog(catalog)
-        _compareStrings(original, processed)
+        self._compareStrings(original, processed)
 
     def test_stationmagnitude(self):
         """
@@ -260,6 +239,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].station_magnitudes), 1)
         mag = catalog[0].station_magnitudes[0]
+        self.assertEquals(mag.origin_id, 'some id')
         self.assertTrue('magnitude/station/881342' in mag.public_id)
         self.assertEquals(mag.mag.value, 6.5)
         self.assertEquals(mag.mag.uncertainty, 0.2)
@@ -270,8 +250,56 @@ class QuakeMLTestCase(unittest.TestCase):
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
         processed = _xmlCatalog(catalog)
-        _compareStrings(original, processed)
+        self._compareStrings(original, processed)
 
+    def test_arrival(self):
+        """
+        Tests Arrival object.
+        """
+        filename = os.path.join(self.path, 'quakeml_arrival.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].origins[0].arrivals), 2)
+        ar = catalog[0].origins[0].arrivals[0]
+        self.assertEquals(ar.pick_id, 'smi:ch.ethz.sed/pick/117634')
+        self.assertEquals(ar.phase, 'Pn')
+        self.assertEquals(ar.azimuth, 12.0)
+        self.assertEquals(ar.distance, 0.5)
+        self.assertEquals(ar.earth_model_id, 'smi:ch.ethz.sed/earthmodel/U21')
+        self.assertEquals(len(ar.comments), 1)
+        self.assertEquals(ar.creation_info.author, "Erika Mustermann")
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = _xmlCatalog(catalog)
+        self._compareStrings(original, processed)
+
+    def test_pick(self):
+        """
+        Tests Pick object.
+        """
+        filename = os.path.join(self.path, 'quakeml_pick.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].picks), 2)
+        pick = catalog[0].picks[0]
+        self.assertEquals(pick.public_id, 'smi:ch.ethz.sed/pick/117634')
+        self.assertEquals(pick.time.value, UTCDateTime('2005-09-18T22:04:35Z'))
+        self.assertEquals(pick.time.uncertainty, 0.012)
+        self.assertTrue('waveform/201754' in pick.waveform_id.resource_uri)
+        self.assertTrue('filter/lowpass/standard' in pick.filter_id)
+        self.assertTrue('picker/autopicker/6.0.2' in pick.method_id)
+        self.assertEquals(pick.backazimuth.value, 44.0)
+        self.assertEquals(pick.onset, 'impulsive')
+        self.assertEquals(pick.phase_hint, 'Pn')
+        self.assertEquals(pick.polarity, 'positive')
+        self.assertEquals(pick.evaluation_mode, "manual")
+        self.assertEquals(pick.evaluation_status, "confirmed")
+        self.assertEquals(len(pick.comments), 2)
+        self.assertEquals(pick.creation_info.author, "Erika Mustermann")
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = _xmlCatalog(catalog)
+        self._compareStrings(original, processed)
 
 #    def test_writeQuakeML(self):
 #        """

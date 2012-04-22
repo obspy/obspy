@@ -4,16 +4,15 @@
   <eventParameters publicID="smi://eu.emsc/unid">
     <event publicID="smi:ch.ethz.sed/event/historical/1165">
       <stationMagnitude publicID="smi:ch.ethz.sed/magnitude/station/881342">
+        <originID>some id</originID>
         <mag>
           <value>6.5</value>
           <uncertainty>0.2</uncertainty>
         </mag>
-        <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
-        <amplitudeID>smi:ch.ethz.sed/amplitude/824315</amplitudeID>
         <type>MS</type>
-        <waveformID>
-          <resourceURI>smi:ch.ethz.sed/waveform/201754</resourceURI>
-        </waveformID>
+        <amplitudeID>smi:ch.ethz.sed/amplitude/824315</amplitudeID>
+        <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
+        <waveformID>smi:ch.ethz.sed/waveform/201754</waveformID>
       </stationMagnitude>
     </event>
   </eventParameters>

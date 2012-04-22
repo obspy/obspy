@@ -12,9 +12,8 @@
         <methodID>smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude</methodID>
         <stationCount>8</stationCount>
         <evaluationStatus>preliminary</evaluationStatus>
-        <comment>
+        <comment id="muh">
           <text>Some comment</text>
-          <id>muh</id>
           <creationInfo>
             <author>EMSC</author>
           </creationInfo>

@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Module for handling ObsPy Catalog and Event objects.
+QuakeML read and write support.
+
+QuakeML is a flexible, extensible and modular XML representation of
+seismological data which is intended to cover a broad range of fields of
+application in modern seismology. QuakeML is an open standard and is developed
+by a distributed team in a transparent collaborative manner.
+
+.. seealso:: https://quake.ethz.ch/quakeml/
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -12,15 +19,10 @@ Module for handling ObsPy Catalog and Event objects.
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     IntegerQuantity, FloatQuantity, TimeQuantity, ConfidenceEllipsoid, \
-    StationMagnitude, Comment, WaveformStreamID
+    StationMagnitude, Comment, WaveformStreamID, Arrival, Pick
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.xmlwrapper import XMLParser, tostring, etree, \
-    register_namespace
+from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
-
-
-# global QuakeML namespace
-register_namespace('q', 'http://quakeml.org/xmlns/quakeml/1.2')
 
 
 def isQuakeML(filename):
@@ -137,7 +139,7 @@ def __toComments(parser, element):
     for el in parser.xpath('comment', element):
         comment = Comment()
         comment.text = parser.xpath2obj('text', el)
-        comment.id = parser.xpath2obj('id', el) or None
+        comment.id = el.get('id')
         comment.creation_info = __toCreationInfo(parser, el)
         obj.append(comment)
     return obj
@@ -145,10 +147,11 @@ def __toComments(parser, element):
 
 def __xmlComments(comments, element):
     for comment in comments:
-        comment_el = etree.Element('comment')
-        etree.SubElement(comment_el, 'text').text = comment.text
+        attrib = {}
         if comment.id:
-            etree.SubElement(comment_el, 'id').text = comment.id
+            attrib['id'] = comment.id
+        comment_el = etree.Element('comment', attrib=attrib)
+        etree.SubElement(comment_el, 'text').text = comment.text
         __xmlCreationInfo(comment.creation_info, comment_el)
         element.append(comment_el)
 
@@ -244,12 +247,155 @@ def __toOriginUncertainty(parser, element):
 
 def __toWaveformStreamID(parser, element):
     obj = WaveformStreamID()
-    obj.network = parser.xpath2obj('waveformID/networkCode', element) or ''
-    obj.station = parser.xpath2obj('waveformID/stationCode', element) or ''
-    obj.location = parser.xpath2obj('waveformID/locationCode', element)
-    obj.channel = parser.xpath2obj('waveformID/channelCode', element)
-    obj.resource_uri = parser.xpath2obj('waveformID/resourceURI', element)
+    try:
+        wid_el = parser.xpath('waveformID', element)[0]
+    except:
+        return obj
+    obj.network = wid_el.get('networkCode') or ''
+    obj.station = wid_el.get('stationCode') or ''
+    obj.location = wid_el.get('locationCode')
+    obj.channel = wid_el.get('channelCode')
+    obj.resource_uri = wid_el.text
     return obj
+
+
+def __xmlWaveformStreamID(obj, element, required=True):  # @UnusedVariable
+    attrib = {}
+    if obj.network or obj.resource_uri is None:
+        attrib['networkCode'] = obj.network or ''
+    if obj.station or obj.resource_uri is None:
+        attrib['stationCode'] = obj.station or ''
+    if obj.location:
+        attrib['locationCode'] = obj.location
+    if obj.channel:
+        attrib['channelCode'] = obj.channel
+    subelement = etree.Element('waveformID', attrib=attrib)
+    if obj.resource_uri:
+        subelement.text = obj.resource_uri
+    element.append(subelement)
+
+
+def _toArrival(parser, element):
+    """
+    Converts an etree.Element into an Arrival object.
+
+    :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
+    :type element: etree.Element
+    :rtype: :class:`~obspy.core.event.Arrival`
+    """
+    obj = Arrival()
+    # required parameter
+    obj.pick_id = parser.xpath2obj('pickID', element) or ''
+    obj.phase = parser.xpath2obj('phase', element) or ''
+    # optional parameter
+    obj.time_correction = parser.xpath2obj('timeCorrection', element, float)
+    obj.azimuth = parser.xpath2obj('azimuth', element, float)
+    obj.distance = parser.xpath2obj('distance', element, float)
+    obj.time_residual = parser.xpath2obj('timeResidual', element, float)
+    obj.horizontal_slowness_residual = \
+        parser.xpath2obj('horizontalSlownessResidual', element, float)
+    obj.backazimuth_residual = \
+        parser.xpath2obj('backazimuthResidual', element, float)
+    obj.time_used = parser.xpath2obj('timeUsed', element, bool)
+    obj.horizontal_slowness_used = \
+        parser.xpath2obj('horizontalSlownessUsed', element, bool)
+    obj.backazimuth_used = parser.xpath2obj('backazimuthUsed', element, bool)
+    obj.time_weight = parser.xpath2obj('timeWeight', element, float)
+    obj.earth_model_id = parser.xpath2obj('earthModelID', element)
+    obj.preliminary = element.get('preliminary')
+    obj.comments = __toComments(parser, element)
+    obj.creation_info = __toCreationInfo(parser, element)
+    return obj
+
+
+def _xmlArrival(arrival):
+    """
+    Converts an Arrival into etree.Element object.
+
+    :type arrival: :class:`~obspy.core.event.Arrival`
+    :rtype: etree.Element
+    """
+    attrib = {}
+    if arrival.preliminary:
+        attrib['preliminary'] = arrival.preliminary
+    element = etree.Element('arrival', attrib=attrib)
+    # required parameter
+    __xmlStr(arrival.pick_id, element, 'pickID', True)
+    __xmlStr(arrival.phase, element, 'phase', True)
+    # optional parameter
+    __xmlStr(arrival.time_correction, element, 'timeCorrection')
+    __xmlStr(arrival.azimuth, element, 'azimuth')
+    __xmlStr(arrival.distance, element, 'distance')
+    __xmlStr(arrival.time_residual, element, 'timeResidual')
+    __xmlStr(arrival.horizontal_slowness_residual, element,
+             'horizontalSlownessResidual')
+    __xmlStr(arrival.backazimuth_residual, element, 'backazimuthResidual')
+    __xmlBool(arrival.time_used, element, 'timeUsed')
+    __xmlBool(arrival.horizontal_slowness_used, element,
+              'horizontalSlownessUsed')
+    __xmlBool(arrival.backazimuth_used, element, 'backazimuthUsed')
+    __xmlStr(arrival.time_weight, element, 'timeWeight')
+    __xmlStr(arrival.earth_model_id, element, 'earthModelID')
+    __xmlComments(arrival.comments, element)
+    __xmlCreationInfo(arrival.creation_info, element)
+    return element
+
+
+def _toPick(parser, element):
+    """
+    Converts an etree.Element into a Pick object.
+
+    :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
+    :type element: etree.Element
+    :rtype: :class:`~obspy.core.event.Pick`
+    """
+    obj = Pick()
+    # required parameter
+    obj.public_id = element.get('publicID')
+    obj.time = __toTimeQuantity(parser, element, 'time')
+    obj.waveform_id = __toWaveformStreamID(parser, element)
+    # optional parameter
+    obj.filter_id = parser.xpath2obj('filterID', element)
+    obj.method_id = parser.xpath2obj('methodID', element)
+    obj.horizontal_slowness = \
+        __toFloatQuantity(parser, element, 'horizontalSlowness')
+    obj.backazimuth = __toFloatQuantity(parser, element, 'backazimuth')
+    obj.slowness_method_id = parser.xpath2obj('slownessMethodID', element)
+    obj.onset = parser.xpath2obj('onset', element)
+    obj.phase_hint = parser.xpath2obj('phaseHint', element)
+    obj.polarity = parser.xpath2obj('polarity', element)
+    obj.evaluation_mode = parser.xpath2obj('evaluationMode', element)
+    obj.evaluation_status = parser.xpath2obj('evaluationStatus', element)
+    obj.comments = __toComments(parser, element)
+    obj.creation_info = __toCreationInfo(parser, element)
+    return obj
+
+
+def _xmlPick(pick):
+    """
+    Converts a Pick into etree.Element object.
+
+    :type pick: :class:`~obspy.core.event.Pick`
+    :rtype: etree.Element
+    """
+    element = etree.Element('pick', attrib={'publicID': pick.public_id or ''})
+    # required parameter
+    __xmlValueQuantity(pick.time, element, 'time', True)
+    __xmlWaveformStreamID(pick.waveform_id, element, True)
+    # optional parameter
+    __xmlStr(pick.filter_id, element, 'filterID')
+    __xmlStr(pick.method_id, element, 'methodID')
+    __xmlValueQuantity(pick.horizontal_slowness, element, 'horizontalSlowness')
+    __xmlValueQuantity(pick.backazimuth, element, 'backazimuth')
+    __xmlStr(pick.slowness_method_id, element, 'slownessMethodID')
+    __xmlStr(pick.onset, element, 'onset')
+    __xmlStr(pick.phase_hint, element, 'phaseHint')
+    __xmlStr(pick.polarity, element, 'polarity')
+    __xmlStr(pick.evaluation_mode, element, 'evaluationMode')
+    __xmlStr(pick.evaluation_status, element, 'evaluationStatus')
+    __xmlComments(pick.comments, element)
+    __xmlCreationInfo(pick.creation_info, element)
+    return element
 
 
 def _toOrigin(parser, element):
@@ -270,29 +416,29 @@ def _toOrigin(parser, element):
     >>> print(origin.latitude.value)
     34.23
     """
-    origin = Origin()
+    obj = Origin()
     # required parameter
-    origin.public_id = element.get('publicID')
-    origin.time = __toTimeQuantity(parser, element, 'time')
-    origin.latitude = __toFloatQuantity(parser, element, 'latitude')
-    origin.longitude = __toFloatQuantity(parser, element, 'longitude')
+    obj.public_id = element.get('publicID')
+    obj.time = __toTimeQuantity(parser, element, 'time')
+    obj.latitude = __toFloatQuantity(parser, element, 'latitude')
+    obj.longitude = __toFloatQuantity(parser, element, 'longitude')
     # optional parameter
-    origin.depth = __toFloatQuantity(parser, element, 'depth')
-    origin.depth_type = parser.xpath2obj('depthType', element)
-    origin.time_fixed = parser.xpath2obj('timeFixed', element, bool)
-    origin.epicenter_fixed = parser.xpath2obj('epicenterFixed', element, bool)
-    origin.reference_system_id = parser.xpath2obj('referenceSystemID', element)
-    origin.method_id = parser.xpath2obj('methodID', element)
-    origin.earth_model_id = parser.xpath2obj('earthModelID', element)
-    origin.composite_times = __toCompositeTimes(parser, element)
-    origin.quality = __toOriginQuality(parser, element)
-    origin.type = parser.xpath2obj('type', element)
-    origin.evaluation_mode = parser.xpath2obj('evaluationMode', element)
-    origin.evaluation_status = parser.xpath2obj('evaluationStatus', element)
-    origin.creation_info = __toCreationInfo(parser, element)
-    origin.comments = __toComments(parser, element)
-    origin.origin_uncertainty = __toOriginUncertainty(parser, element)
-    return origin
+    obj.depth = __toFloatQuantity(parser, element, 'depth')
+    obj.depth_type = parser.xpath2obj('depthType', element)
+    obj.time_fixed = parser.xpath2obj('timeFixed', element, bool)
+    obj.epicenter_fixed = parser.xpath2obj('epicenterFixed', element, bool)
+    obj.reference_system_id = parser.xpath2obj('referenceSystemID', element)
+    obj.method_id = parser.xpath2obj('methodID', element)
+    obj.earth_model_id = parser.xpath2obj('earthModelID', element)
+    obj.composite_times = __toCompositeTimes(parser, element)
+    obj.quality = __toOriginQuality(parser, element)
+    obj.type = parser.xpath2obj('type', element)
+    obj.evaluation_mode = parser.xpath2obj('evaluationMode', element)
+    obj.evaluation_status = parser.xpath2obj('evaluationStatus', element)
+    obj.creation_info = __toCreationInfo(parser, element)
+    obj.comments = __toComments(parser, element)
+    obj.origin_uncertainty = __toOriginUncertainty(parser, element)
+    return obj
 
 
 def _xmlOrigin(origin):
@@ -383,12 +529,15 @@ def _xmlOrigin(origin):
     # add origin uncertainty to origin only if anything is set
     if len(ou_el) > 0:
         element.append(ou_el)
+    # arrivals
+    for ar in origin.arrivals:
+        element.append(_xmlArrival(ar))
     return element
 
 
 def _toMagnitude(parser, element):
     """
-    Converts an etree.Element into an Magnitude object.
+    Converts an etree.Element into a Magnitude object.
 
     :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
     :type element: etree.Element
@@ -404,27 +553,27 @@ def _toMagnitude(parser, element):
     >>> print(magnitude.mag.value)
     3.2
     """
-    mag = Magnitude()
+    obj = Magnitude()
     # required parameter
-    mag.public_id = element.get('publicID')
-    mag.mag = __toFloatQuantity(parser, element, 'mag')
+    obj.public_id = element.get('publicID')
+    obj.mag = __toFloatQuantity(parser, element, 'mag')
     # optional parameter
-    mag.type = parser.xpath2obj('type', element)
-    mag.origin_id = parser.xpath2obj('originID', element)
-    mag.method_id = parser.xpath2obj('methodID', element)
-    mag.station_count = parser.xpath2obj('stationCount', element, int)
-    mag.azimuthal_gap = parser.xpath2obj('azimuthalGap', element, float)
-    mag.evaluation_status = parser.xpath2obj('evaluationStatus', element)
-    mag.creation_info = __toCreationInfo(parser, element)
-    mag.comments = __toComments(parser, element)
-    return mag
+    obj.type = parser.xpath2obj('type', element)
+    obj.origin_id = parser.xpath2obj('originID', element)
+    obj.method_id = parser.xpath2obj('methodID', element)
+    obj.station_count = parser.xpath2obj('stationCount', element, int)
+    obj.azimuthal_gap = parser.xpath2obj('azimuthalGap', element, float)
+    obj.evaluation_status = parser.xpath2obj('evaluationStatus', element)
+    obj.creation_info = __toCreationInfo(parser, element)
+    obj.comments = __toComments(parser, element)
+    return obj
 
 
 def _xmlMagnitude(magnitude):
     """
     Converts an Magnitude into etree.Element object.
 
-    :type origin: :class:`~obspy.core.event.Magnitude`
+    :type magnitude: :class:`~obspy.core.event.Magnitude`
     :rtype: etree.Element
 
     .. rubric:: Example
@@ -455,7 +604,7 @@ def _xmlMagnitude(magnitude):
 
 def _toStationMagnitude(parser, element):
     """
-    Converts an etree.Element into an StationMagnitude object.
+    Converts an etree.Element into a StationMagnitude object.
 
     :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
     :type element: etree.Element
@@ -471,26 +620,26 @@ def _toStationMagnitude(parser, element):
     >>> print(station_mag.mag.value)
     3.2
     """
-    mag = StationMagnitude()
+    obj = StationMagnitude()
     # required parameter
-    mag.public_id = element.get('publicID')
-    mag.origin_id = parser.xpath2obj('originID', element) or ''
-    mag.mag = __toFloatQuantity(parser, element, 'mag')
+    obj.public_id = element.get('publicID')
+    obj.origin_id = parser.xpath2obj('originID', element) or ''
+    obj.mag = __toFloatQuantity(parser, element, 'mag')
     # optional parameter
-    mag.type = parser.xpath2obj('type', element)
-    mag.amplitude_id = parser.xpath2obj('amplitudeID', element)
-    mag.method_id = parser.xpath2obj('methodID', element)
-    mag.waveform_id = __toWaveformStreamID(parser, element)
-    mag.creation_info = __toCreationInfo(parser, element)
-    mag.comments = __toComments(parser, element)
-    return mag
+    obj.type = parser.xpath2obj('type', element)
+    obj.amplitude_id = parser.xpath2obj('amplitudeID', element)
+    obj.method_id = parser.xpath2obj('methodID', element)
+    obj.waveform_id = __toWaveformStreamID(parser, element)
+    obj.creation_info = __toCreationInfo(parser, element)
+    obj.comments = __toComments(parser, element)
+    return obj
 
 
 def _xmlStationMagnitude(magnitude):
     """
     Converts an StationMagnitude into etree.Element object.
 
-    :type origin: :class:`~obspy.core.event.StationMagnitude`
+    :type magnitude: :class:`~obspy.core.event.StationMagnitude`
     :rtype: etree.Element
 
     .. rubric:: Example
@@ -512,16 +661,7 @@ def _xmlStationMagnitude(magnitude):
     __xmlStr(magnitude.type, element, 'type')
     __xmlStr(magnitude.amplitude_id, element, 'amplitudeID')
     __xmlStr(magnitude.method_id, element, 'methodID')
-    # waveform_id
-    wid = magnitude.waveform_id
-    wid_el = etree.Element('waveformID')
-    __xmlStr(wid.network, wid_el, 'networkCode')
-    __xmlStr(wid.station, wid_el, 'stationCode')
-    __xmlStr(wid.location, wid_el, 'locationCode')
-    __xmlStr(wid.channel, wid_el, 'channelCode')
-    __xmlStr(wid.resource_uri, wid_el, 'resourceURI')
-    if len(wid_el) > 0:
-        element.append(wid_el)
+    __xmlWaveformStreamID(magnitude.waveform_id, element)
     __xmlComments(magnitude.comments, element)
     __xmlCreationInfo(magnitude.creation_info, element)
     return element
@@ -585,25 +725,28 @@ def readQuakeML(filename):
         event.origins = []
         for origin_el in p.xpath('origin', event_el):
             origin = _toOrigin(p, origin_el)
-            # add preferred origin to front
-            if origin.public_id == event.preferred_origin_id:
-                event.origins.insert(0, origin)
-            else:
-                event.origins.append(origin)
+            # arrivals
+            origin.arrivals = []
+            for arrival_el in p.xpath('arrival', origin_el):
+                arrival = _toArrival(p, arrival_el)
+                origin.arrivals.append(arrival)
+            # append origin with arrivals
+            event.origins.append(origin)
         # magnitudes
         event.magnitudes = []
         for magnitude_el in p.xpath('magnitude', event_el):
             magnitude = _toMagnitude(p, magnitude_el)
-            # add preferred magnitude to front
-            if magnitude.public_id == event.preferred_magnitude_id:
-                event.magnitudes.insert(0, magnitude)
-            else:
-                event.magnitudes.append(magnitude)
+            event.magnitudes.append(magnitude)
         # station magnitudes
         event.station_magnitudes = []
         for magnitude_el in p.xpath('stationMagnitude', event_el):
             magnitude = _toStationMagnitude(p, magnitude_el)
             event.station_magnitudes.append(magnitude)
+        # picks
+        event.picks = []
+        for pick_el in p.xpath('pick', event_el):
+            pick = _toPick(p, pick_el)
+            event.picks.append(pick)
         # add current event to catalog
         catalog.append(event)
     return catalog
@@ -661,9 +804,15 @@ def _xmlCatalog(catalog, pretty_print=True):
         # origins
         for origin in event.origins:
             event_el.append(_xmlOrigin(origin))
-        # origins
+        # magnitudes
         for magnitude in event.magnitudes:
             event_el.append(_xmlMagnitude(magnitude))
+        # station magnitudes
+        for magnitude in event.station_magnitudes:
+            event_el.append(_xmlStationMagnitude(magnitude))
+        # picks
+        for pick in event.picks:
+            event_el.append(_xmlPick(pick))
         # add event node to catalog
         catalog_el.append(event_el)
     return tostring(root_el, pretty_print=pretty_print)

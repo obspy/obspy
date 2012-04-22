@@ -854,23 +854,25 @@ class Arrival(AttribDict):
                  horizontal_slowness_residual=None,
                  backazimuthal_residual=None, time_used=None,
                  horizontal_slowness_used=None, backazimuth_used=None,
-                 weight=None, earth_model_id=None, preliminary=None,
-                 comments=None, creation_info=None):
+                 time_weight=None, earth_model_id=None, preliminary=None,
+                 comments=None, creation_info={}):
         self.pick_id = pick_id
         self.phase = phase
-        self.time_correction = FloatQuantity(time_correction)
-        self.azimuth = FloatQuantity(azimuth)
-        self.distance = FloatQuantity(distance)
-        self.time_residual = FloatQuantity(time_residual)
-        self.horizontal_slowness_residual = \
-            FloatQuantity(horizontal_slowness_residual)
-        self.backazimuthal_residual = FloatQuantity(backazimuthal_residual)
+        self.time_correction = time_correction
+        self.azimuth = azimuth
+        self.distance = distance
+        self.time_residual = time_residual
+        self.horizontal_slowness_residual = horizontal_slowness_residual
+        self.backazimuthal_residual = backazimuthal_residual
         self.time_used = time_used
         self.horizontal_slowness_used = horizontal_slowness_used
         self.backazimuth_used = backazimuth_used
-        self.weight = FloatQuantity(weight)
+        self.time_weight = time_weight  # timeWeight in XSD file, weight in PDF
         self.earth_model_id = earth_model_id
-        self.preliminary = preliminary
+        if preliminary is not None:
+            self.preliminary = bool(preliminary)
+        else:
+            self.preliminary = None
         self.comments = comments or []
         self.creation_info = CreationInfo(creation_info)
 

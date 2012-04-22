@@ -3,9 +3,8 @@
   xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
   <eventParameters publicID="smi://eu.emsc/unid">
     <description>Catalog description</description>
-    <comment>
+    <comment id="#1">
       <text>Catalog comment</text>
-      <id>#1</id>
     </comment>
     <creationInfo>
       <author>Erika Mustermann</author>
@@ -34,9 +33,8 @@
           <agencyID>EMSC</agencyID>
         </creationInfo>
       </comment>
-      <comment>
+      <comment id="#3">
         <text>Another comment</text>
-        <id>#3</id>
       </comment>
       <creationInfo>
         <agencyID>EMSC</agencyID>
