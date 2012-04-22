@@ -751,8 +751,8 @@ class Pick(AttribDict):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
-    :type arrival: list of :class:`~obspy.core.event.Arrival` objects
-    :param arrival: Child elements of the Pick object.
+    :type arrivals: list of :class:`~obspy.core.event.Arrival` objects
+    :param arrivals: Child elements of the Pick object.
     """
     def __init__(self, public_id='', time={}, waveform_id={}, filter_id=None,
                  method_id=None, horizontal_slowness={}, backazimuth={},
@@ -828,22 +828,20 @@ class Arrival(AttribDict):
     :param phase: Phase identification. Free-form text field describing the
         phase. In QuakeML this is a separate type but it just contains a single
         field containing the phase as a string.
-    :type time_corretion: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type time_correction: float, optional
     :param time_correction: Time correction value in seconds.
-    :type azimuth: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type azimuth: float, optional
     :param azimuth: Azimuth of station as seen from the epicenter in degree.
-    :type distance: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type distance: float, optional
     :param distance: Epicentral distance in degree.
-    :type time_residual: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type time_residual: float, optional
     :param time_residual: Residual between observed and expected arrival time
         assuming proper phase identification and given the earth_model_id of
         the Origin in seconds.
-    :type horizontal_slowness_residual:
-        :class:`~obspy.core.event.FloatQuantity`, optional
+    :type horizontal_slowness_residual: float, optional
     :param horizontal_slowness_residual: Residual of horizontal slowness in
         seconds per degree.
-    :type backazimuthal_residual: :class:`~obspy.core.event.FloatQuantity`,
-        optional
+    :type backazimuthal_residual: float, optional
     :param backazimuthal_residual: Residual of backazimuth in degree.
     :type time_used: bool, optional
     :param time_used: Boolean flag. True if arrival time was used for
@@ -854,9 +852,9 @@ class Arrival(AttribDict):
     :type backazimuth_used: bool, optional
     :param backazimuth_used: Boolean flag. True if backazimuth was used for
         computation of the associated Origin.
-    :type weight: :class:`~obspy.core.event.FloatQuantity`, optional
-    :param weight: Weight of this Arrival in the computation of the associated
-        Origin.
+    :type time_weight: float, optional
+    :param time_weight: Weight of this Arrival in the computation of the
+        associated Origin.
     :type earth_model_id: str, optional
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
