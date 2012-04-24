@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.quakeml import readQuakeML, _xmlCatalog
+from obspy.core.quakeml import readQuakeML, Pickler
 from obspy.core.utcdatetime import UTCDateTime
 import os
 import unittest
@@ -97,7 +97,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
     def test_origin(self):
@@ -189,7 +189,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
     def test_magnitude(self):
@@ -227,7 +227,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
     def test_stationmagnitude(self):
@@ -249,7 +249,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertTrue('waveform/201754' in mag.waveform_id.resource_uri)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
     def test_arrival(self):
@@ -270,7 +270,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
     def test_pick(self):
@@ -298,7 +298,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
-        processed = _xmlCatalog(catalog)
+        processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
 #    def test_writeQuakeML(self):

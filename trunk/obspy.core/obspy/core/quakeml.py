@@ -52,23 +52,368 @@ def isQuakeML(filename):
     return True
 
 
-def __xmlStr(value, root, tag, always_create=False):
-    if always_create is False and value is None:
-        return
-    etree.SubElement(root, tag).text = "%s" % (value)
+#class Unpickler(object):
+#    """
+#    De-serializes a QuakeML string into an ObsPy Catalog object.
+#    """
+#    def load(self, file):
+#        """
+#        """
+#        return quakeml
+#
+#    def loads(self, string):
+#        """
+#        """
+#        return quakeml
 
 
-def __xmlBool(value, root, tag, always_create=False):
-    if always_create is False and value is None:
-        return
-    etree.SubElement(root, tag).text = str(bool(value)).lower()
+class Pickler(object):
+    """
+    Serializes an ObsPy Catalog object into QuakeML string.
+    """
+    def dump(self, catalog, file):
+        """
+        """
+        return self._serialize(catalog)
 
+    def dumps(self, catalog):
+        """
+        """
+        return self._serialize(catalog)
 
-def __xmlTime(value, root, tag, always_create=False):
-    if always_create is False and value is None:
-        return
-    dt = value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-    etree.SubElement(root, tag).text = dt
+    def _str(self, value, root, tag, always_create=False):
+        if always_create is False and value is None:
+            return
+        etree.SubElement(root, tag).text = "%s" % (value)
+
+    def _bool(self, value, root, tag, always_create=False):
+        if always_create is False and value is None:
+            return
+        etree.SubElement(root, tag).text = str(bool(value)).lower()
+
+    def _time(self, value, root, tag, always_create=False):
+        if always_create is False and value is None:
+            return
+        dt = value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+        etree.SubElement(root, tag).text = dt
+
+    def _value(self, quantity, element, tag, always_create=False):
+        if always_create is False and quantity.value is None:
+            return
+        subelement = etree.Element(tag)
+        self._str(quantity.value, subelement, 'value')
+        self._str(quantity.uncertainty, subelement, 'uncertainty')
+        self._str(quantity.lower_uncertainty, subelement, 'lowerUncertainty')
+        self._str(quantity.upper_uncertainty, subelement, 'upperUncertainty')
+        self._str(quantity.confidence_level, subelement, 'confidenceLevel')
+        element.append(subelement)
+
+    def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
+        attrib = {}
+        if obj.network or obj.resource_uri is None:
+            attrib['networkCode'] = obj.network or ''
+        if obj.station or obj.resource_uri is None:
+            attrib['stationCode'] = obj.station or ''
+        if obj.location:
+            attrib['locationCode'] = obj.location
+        if obj.channel:
+            attrib['channelCode'] = obj.channel
+        subelement = etree.Element('waveformID', attrib=attrib)
+        if obj.resource_uri:
+            subelement.text = obj.resource_uri
+        element.append(subelement)
+
+    def _creation_info(self, creation_info, element):
+        subelement = etree.Element('creationInfo')
+        self._str(creation_info.agency_id, subelement, 'agencyID')
+        self._str(creation_info.agency_uri, subelement, 'agencyURI')
+        self._str(creation_info.author, subelement, 'author')
+        self._str(creation_info.author_uri, subelement, 'authorURI')
+        self._time(creation_info.creation_time, subelement, 'creationTime')
+        self._str(creation_info.version, subelement, 'version')
+        # append only if any information is set
+        if len(subelement) > 0:
+            element.append(subelement)
+
+    def _comments(self, comments, element):
+        for comment in comments:
+            attrib = {}
+            if comment.id:
+                attrib['id'] = comment.id
+            comment_el = etree.Element('comment', attrib=attrib)
+            etree.SubElement(comment_el, 'text').text = comment.text
+            self._creation_info(comment.creation_info, comment_el)
+            element.append(comment_el)
+
+    def _arrival(self, arrival):
+        """
+        Converts an Arrival into etree.Element object.
+
+        :type arrival: :class:`~obspy.core.event.Arrival`
+        :rtype: etree.Element
+        """
+        attrib = {}
+        if arrival.preliminary:
+            attrib['preliminary'] = arrival.preliminary
+        element = etree.Element('arrival', attrib=attrib)
+        # required parameter
+        self._str(arrival.pick_id, element, 'pickID', True)
+        self._str(arrival.phase, element, 'phase', True)
+        # optional parameter
+        self._str(arrival.time_correction, element, 'timeCorrection')
+        self._str(arrival.azimuth, element, 'azimuth')
+        self._str(arrival.distance, element, 'distance')
+        self._str(arrival.time_residual, element, 'timeResidual')
+        self._str(arrival.horizontal_slowness_residual, element,
+                 'horizontalSlownessResidual')
+        self._str(arrival.backazimuth_residual, element, 'backazimuthResidual')
+        self._bool(arrival.time_used, element, 'timeUsed')
+        self._bool(arrival.horizontal_slowness_used, element,
+                  'horizontalSlownessUsed')
+        self._bool(arrival.backazimuth_used, element, 'backazimuthUsed')
+        self._str(arrival.time_weight, element, 'timeWeight')
+        self._str(arrival.earth_model_id, element, 'earthModelID')
+        self._comments(arrival.comments, element)
+        self._creation_info(arrival.creation_info, element)
+        return element
+
+    def _magnitude(self, magnitude):
+        """
+        Converts an Magnitude into etree.Element object.
+
+        :type magnitude: :class:`~obspy.core.event.Magnitude`
+        :rtype: etree.Element
+
+        .. rubric:: Example
+
+        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.core.event import Magnitude
+        >>> from obspy.core.util import tostring
+        >>> magnitude = Magnitude()
+        >>> magnitude.mag.value = 3.2
+        >>> el = Pickler()._magnitude(magnitude)
+        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        <?xml version='1.0' encoding='utf-8'?>
+        <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
+        """
+        element = etree.Element('magnitude',
+                                attrib={'publicID': magnitude.public_id or ''})
+        self._value(magnitude.mag, element, 'mag', True)
+        # optional parameter
+        self._str(magnitude.type, element, 'type')
+        self._str(magnitude.origin_id, element, 'originID')
+        self._str(magnitude.method_id, element, 'methodID')
+        self._str(magnitude.station_count, element, 'stationCount')
+        self._str(magnitude.azimuthal_gap, element, 'azimuthalGap')
+        self._str(magnitude.evaluation_status, element, 'evaluationStatus')
+        self._comments(magnitude.comments, element)
+        self._creation_info(magnitude.creation_info, element)
+        return element
+
+    def _station_magnitude(self, magnitude):
+        """
+        Converts an StationMagnitude into etree.Element object.
+
+        :type magnitude: :class:`~obspy.core.event.StationMagnitude`
+        :rtype: etree.Element
+
+        .. rubric:: Example
+
+        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.core.event import StationMagnitude
+        >>> from obspy.core.util import tostring
+        >>> station_mag = StationMagnitude()
+        >>> station_mag.mag.value = 3.2
+        >>> el = Pickler()._station_magnitude(station_mag)
+        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        <?xml version='1.0' encoding='utf-8'?>
+        <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
+        """
+        element = etree.Element('stationMagnitude',
+                                attrib={'publicID': magnitude.public_id or ''})
+        self._str(magnitude.origin_id, element, 'originID', True)
+        self._value(magnitude.mag, element, 'mag', True)
+        # optional parameter
+        self._str(magnitude.type, element, 'type')
+        self._str(magnitude.amplitude_id, element, 'amplitudeID')
+        self._str(magnitude.method_id, element, 'methodID')
+        self._waveform_id(magnitude.waveform_id, element)
+        self._comments(magnitude.comments, element)
+        self._creation_info(magnitude.creation_info, element)
+        return element
+
+    def _origin(self, origin):
+        """
+        Converts an Origin into etree.Element object.
+
+        :type origin: :class:`~obspy.core.event.Origin`
+        :rtype: etree.Element
+
+        .. rubric:: Example
+
+        >>> from obspy.core.quakeml import Pickler
+        >>> from obspy.core.event import Origin
+        >>> from obspy.core.util import tostring
+        >>> origin = Origin()
+        >>> origin.latitude.value = 34.23
+        >>> el = Pickler()._origin(origin)
+        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        <?xml version='1.0' encoding='utf-8'?>
+        <origin ...<latitude><value>34.23</value></latitude>...</origin>
+        """
+        element = etree.Element('origin',
+                                attrib={'publicID': origin.public_id or ''})
+        self._value(origin.time, element, 'time', True)
+        self._value(origin.latitude, element, 'latitude', True)
+        self._value(origin.longitude, element, 'longitude', True)
+        # optional parameter
+        self._value(origin.depth, element, 'depth')
+        self._str(origin.depth_type, element, 'depthType')
+        self._bool(origin.time_fixed, element, 'timeFixed')
+        self._bool(origin.epicenter_fixed, element, 'epicenterFixed')
+        self._str(origin.reference_system_id, element, 'referenceSystemID')
+        self._str(origin.method_id, element, 'methodID')
+        self._str(origin.earth_model_id, element, 'earthModelID')
+        # compositeTime
+        for ctime in origin.composite_times:
+            ct_el = etree.Element('compositeTime')
+            self._value(ctime.year, ct_el, 'year')
+            self._value(ctime.month, ct_el, 'month')
+            self._value(ctime.day, ct_el, 'day')
+            self._value(ctime.hour, ct_el, 'hour')
+            self._value(ctime.minute, ct_el, 'minute')
+            self._value(ctime.second, ct_el, 'second')
+            if len(ct_el) > 0:
+                element.append(ct_el)
+        # quality
+        qu = origin.quality
+        qu_el = etree.Element('quality')
+        self._str(qu.associated_phase_count, qu_el, 'associatedPhaseCount')
+        self._str(qu.used_phase_count, qu_el, 'usedPhaseCount')
+        self._str(qu.associated_station_count, qu_el, 'associatedStationCount')
+        self._str(qu.used_station_count, qu_el, 'usedStationCount')
+        self._str(qu.depth_phase_count, qu_el, 'depthPhaseCount')
+        self._str(qu.standard_error, qu_el, 'standardError')
+        self._str(qu.azimuthal_gap, qu_el, 'azimuthalGap')
+        self._str(qu.secondary_azimuthal_gap, qu_el, 'secondaryAzimuthalGap')
+        self._str(qu.ground_truth_level, qu_el, 'groundTruthLevel')
+        self._str(qu.minimum_distance, qu_el, 'minimumDistance')
+        self._str(qu.maximum_distance, qu_el, 'maximumDistance')
+        self._str(qu.median_distance, qu_el, 'medianDistance')
+        if len(qu_el) > 0:
+            element.append(qu_el)
+        self._str(origin.type, element, 'type')
+        self._str(origin.evaluation_mode, element, 'evaluationMode')
+        self._str(origin.evaluation_status, element, 'evaluationStatus')
+        self._comments(origin.comments, element)
+        self._creation_info(origin.creation_info, element)
+        # origin uncertainty
+        ou = origin.origin_uncertainty
+        ou_el = etree.Element('originUncertainty')
+        self._str(ou.preferred_description, ou_el, 'preferredDescription')
+        self._str(ou.horizontal_uncertainty, ou_el, 'horizontalUncertainty')
+        self._str(ou.min_horizontal_uncertainty, ou_el,
+                  'minHorizontalUncertainty')
+        self._str(ou.max_horizontal_uncertainty, ou_el,
+                  'maxHorizontalUncertainty')
+        self._str(ou.azimuth_max_horizontal_uncertainty, ou_el,
+                 'azimuthMaxHorizontalUncertainty')
+        ce = ou.confidence_ellipsoid
+        ce_el = etree.Element('confidenceEllipsoid')
+        self._str(ce.semi_major_axis_length, ce_el, 'semiMajorAxisLength')
+        self._str(ce.semi_minor_axis_length, ce_el, 'semiMinorAxisLength')
+        self._str(ce.semi_intermediate_axis_length, ce_el,
+                 'semiIntermediateAxisLength')
+        self._str(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
+        self._str(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
+        self._str(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
+        # add confidence ellipsoid to origin uncertainty only if set
+        if len(ce_el) > 0:
+            ou_el.append(ce_el)
+        # add origin uncertainty to origin only if anything is set
+        if len(ou_el) > 0:
+            element.append(ou_el)
+        # arrivals
+        for ar in origin.arrivals:
+            element.append(self._arrival(ar))
+        return element
+
+    def _pick(self, pick):
+        """
+        Converts a Pick into etree.Element object.
+
+        :type pick: :class:`~obspy.core.event.Pick`
+        :rtype: etree.Element
+        """
+        element = etree.Element('pick',
+                                attrib={'publicID': pick.public_id or ''})
+        # required parameter
+        self._value(pick.time, element, 'time', True)
+        self._waveform_id(pick.waveform_id, element, True)
+        # optional parameter
+        self._str(pick.filter_id, element, 'filterID')
+        self._str(pick.method_id, element, 'methodID')
+        self._value(pick.horizontal_slowness, element, 'horizontalSlowness')
+        self._value(pick.backazimuth, element, 'backazimuth')
+        self._str(pick.slowness_method_id, element, 'slownessMethodID')
+        self._str(pick.onset, element, 'onset')
+        self._str(pick.phase_hint, element, 'phaseHint')
+        self._str(pick.polarity, element, 'polarity')
+        self._str(pick.evaluation_mode, element, 'evaluationMode')
+        self._str(pick.evaluation_status, element, 'evaluationStatus')
+        self._comments(pick.comments, element)
+        self._creation_info(pick.creation_info, element)
+        return element
+
+    def _serialize(self, catalog, pretty_print=True):
+        """
+        Converts a Catalog object into XML string.
+        """
+        root_el = etree.Element(
+            '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
+            attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
+        catalog_el = etree.Element('eventParameters',
+                                  attrib={'publicID': catalog.public_id})
+        # optional catalog parameters
+        self._str(catalog.description, catalog_el, 'description')
+        self._comments(catalog.comments, catalog_el)
+        self._creation_info(catalog.creation_info, catalog_el)
+        root_el.append(catalog_el)
+        for event in catalog:
+            # create event node
+            event_el = etree.Element('event',
+                                     attrib={'publicID': event.public_id})
+            # optional event attributes
+            self._str(event.preferred_origin_id, event_el, 'preferredOriginID')
+            self._str(event.preferred_magnitude_id, event_el,
+                     'preferredMagnitudeID')
+            self._str(event.preferred_focal_mechanism_id, event_el,
+                     'preferredFocalMechanismID')
+            self._str(event.type, event_el, 'type')
+            self._str(event.type_certainty, event_el, 'typeCertainty')
+            # event descriptions
+            for description in event.descriptions:
+                el = etree.Element('description')
+                self._str(description.text, el, 'text', True)
+                self._str(description.type, el, 'type')
+                event_el.append(el)
+            self._comments(event.comments, event_el)
+            self._creation_info(event.creation_info, event_el)
+            # origins
+            for origin in event.origins:
+                event_el.append(self._origin(origin))
+            # magnitudes
+            for magnitude in event.magnitudes:
+                event_el.append(self._magnitude(magnitude))
+            # station magnitudes
+            for magnitude in event.station_magnitudes:
+                event_el.append(self._station_magnitude(magnitude))
+            # picks
+            for pick in event.picks:
+                event_el.append(self._pick(pick))
+            # add event node to catalog
+            catalog_el.append(event_el)
+        return tostring(root_el, pretty_print=pretty_print)
 
 
 def __toCreationInfo(parser, element):
@@ -81,19 +426,6 @@ def __toCreationInfo(parser, element):
         element, UTCDateTime)
     obj.version = parser.xpath2obj('creationInfo/version', element)
     return obj
-
-
-def __xmlCreationInfo(creation_info, element):
-    subelement = etree.Element('creationInfo')
-    __xmlStr(creation_info.agency_id, subelement, 'agencyID')
-    __xmlStr(creation_info.agency_uri, subelement, 'agencyURI')
-    __xmlStr(creation_info.author, subelement, 'author')
-    __xmlStr(creation_info.author_uri, subelement, 'authorURI')
-    __xmlTime(creation_info.creation_time, subelement, 'creationTime')
-    __xmlStr(creation_info.version, subelement, 'version')
-    # append only if any information is set
-    if len(subelement) > 0:
-        element.append(subelement)
 
 
 def __toOriginQuality(parser, element):
@@ -145,17 +477,6 @@ def __toComments(parser, element):
     return obj
 
 
-def __xmlComments(comments, element):
-    for comment in comments:
-        attrib = {}
-        if comment.id:
-            attrib['id'] = comment.id
-        comment_el = etree.Element('comment', attrib=attrib)
-        etree.SubElement(comment_el, 'text').text = comment.text
-        __xmlCreationInfo(comment.creation_info, comment_el)
-        element.append(comment_el)
-
-
 def __toValueQuantity(parser, element, name, quantity_type=FloatQuantity):
     obj = quantity_type()
     try:
@@ -168,18 +489,6 @@ def __toValueQuantity(parser, element, name, quantity_type=FloatQuantity):
     obj.upper_uncertainty = parser.xpath2obj('upperUncertainty', el, float)
     obj.confidence_level = parser.xpath2obj('confidenceLevel', el, float)
     return obj
-
-
-def __xmlValueQuantity(quantity, element, tag, always_create=False):
-    if always_create is False and quantity.value is None:
-        return
-    subelement = etree.Element(tag)
-    __xmlStr(quantity.value, subelement, 'value')
-    __xmlStr(quantity.uncertainty, subelement, 'uncertainty')
-    __xmlStr(quantity.lower_uncertainty, subelement, 'lowerUncertainty')
-    __xmlStr(quantity.upper_uncertainty, subelement, 'upperUncertainty')
-    __xmlStr(quantity.confidence_level, subelement, 'confidenceLevel')
-    element.append(subelement)
 
 
 def __toFloatQuantity(parser, element, name):
@@ -259,22 +568,6 @@ def __toWaveformStreamID(parser, element):
     return obj
 
 
-def __xmlWaveformStreamID(obj, element, required=True):  # @UnusedVariable
-    attrib = {}
-    if obj.network or obj.resource_uri is None:
-        attrib['networkCode'] = obj.network or ''
-    if obj.station or obj.resource_uri is None:
-        attrib['stationCode'] = obj.station or ''
-    if obj.location:
-        attrib['locationCode'] = obj.location
-    if obj.channel:
-        attrib['channelCode'] = obj.channel
-    subelement = etree.Element('waveformID', attrib=attrib)
-    if obj.resource_uri:
-        subelement.text = obj.resource_uri
-    element.append(subelement)
-
-
 def _toArrival(parser, element):
     """
     Converts an etree.Element into an Arrival object.
@@ -308,39 +601,6 @@ def _toArrival(parser, element):
     return obj
 
 
-def _xmlArrival(arrival):
-    """
-    Converts an Arrival into etree.Element object.
-
-    :type arrival: :class:`~obspy.core.event.Arrival`
-    :rtype: etree.Element
-    """
-    attrib = {}
-    if arrival.preliminary:
-        attrib['preliminary'] = arrival.preliminary
-    element = etree.Element('arrival', attrib=attrib)
-    # required parameter
-    __xmlStr(arrival.pick_id, element, 'pickID', True)
-    __xmlStr(arrival.phase, element, 'phase', True)
-    # optional parameter
-    __xmlStr(arrival.time_correction, element, 'timeCorrection')
-    __xmlStr(arrival.azimuth, element, 'azimuth')
-    __xmlStr(arrival.distance, element, 'distance')
-    __xmlStr(arrival.time_residual, element, 'timeResidual')
-    __xmlStr(arrival.horizontal_slowness_residual, element,
-             'horizontalSlownessResidual')
-    __xmlStr(arrival.backazimuth_residual, element, 'backazimuthResidual')
-    __xmlBool(arrival.time_used, element, 'timeUsed')
-    __xmlBool(arrival.horizontal_slowness_used, element,
-              'horizontalSlownessUsed')
-    __xmlBool(arrival.backazimuth_used, element, 'backazimuthUsed')
-    __xmlStr(arrival.time_weight, element, 'timeWeight')
-    __xmlStr(arrival.earth_model_id, element, 'earthModelID')
-    __xmlComments(arrival.comments, element)
-    __xmlCreationInfo(arrival.creation_info, element)
-    return element
-
-
 def _toPick(parser, element):
     """
     Converts an etree.Element into a Pick object.
@@ -369,33 +629,6 @@ def _toPick(parser, element):
     obj.comments = __toComments(parser, element)
     obj.creation_info = __toCreationInfo(parser, element)
     return obj
-
-
-def _xmlPick(pick):
-    """
-    Converts a Pick into etree.Element object.
-
-    :type pick: :class:`~obspy.core.event.Pick`
-    :rtype: etree.Element
-    """
-    element = etree.Element('pick', attrib={'publicID': pick.public_id or ''})
-    # required parameter
-    __xmlValueQuantity(pick.time, element, 'time', True)
-    __xmlWaveformStreamID(pick.waveform_id, element, True)
-    # optional parameter
-    __xmlStr(pick.filter_id, element, 'filterID')
-    __xmlStr(pick.method_id, element, 'methodID')
-    __xmlValueQuantity(pick.horizontal_slowness, element, 'horizontalSlowness')
-    __xmlValueQuantity(pick.backazimuth, element, 'backazimuth')
-    __xmlStr(pick.slowness_method_id, element, 'slownessMethodID')
-    __xmlStr(pick.onset, element, 'onset')
-    __xmlStr(pick.phase_hint, element, 'phaseHint')
-    __xmlStr(pick.polarity, element, 'polarity')
-    __xmlStr(pick.evaluation_mode, element, 'evaluationMode')
-    __xmlStr(pick.evaluation_status, element, 'evaluationStatus')
-    __xmlComments(pick.comments, element)
-    __xmlCreationInfo(pick.creation_info, element)
-    return element
 
 
 def _toOrigin(parser, element):
@@ -441,100 +674,6 @@ def _toOrigin(parser, element):
     return obj
 
 
-def _xmlOrigin(origin):
-    """
-    Converts an Origin into etree.Element object.
-
-    :type origin: :class:`~obspy.core.event.Origin`
-    :rtype: etree.Element
-
-    .. rubric:: Example
-
-    >>> from obspy.core.event import Origin
-    >>> from obspy.core.util import tostring
-    >>> origin = Origin()
-    >>> origin.latitude.value = 34.23
-    >>> el = _xmlOrigin(origin)
-    >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    <?xml version='1.0' encoding='utf-8'?>
-    <origin ...<latitude><value>34.23</value></latitude>...</origin>
-    """
-    element = etree.Element('origin',
-                            attrib={'publicID': origin.public_id or ''})
-    __xmlValueQuantity(origin.time, element, 'time', True)
-    __xmlValueQuantity(origin.latitude, element, 'latitude', True)
-    __xmlValueQuantity(origin.longitude, element, 'longitude', True)
-    # optional parameter
-    __xmlValueQuantity(origin.depth, element, 'depth')
-    __xmlStr(origin.depth_type, element, 'depthType')
-    __xmlBool(origin.time_fixed, element, 'timeFixed')
-    __xmlBool(origin.epicenter_fixed, element, 'epicenterFixed')
-    __xmlStr(origin.reference_system_id, element, 'referenceSystemID')
-    __xmlStr(origin.method_id, element, 'methodID')
-    __xmlStr(origin.earth_model_id, element, 'earthModelID')
-    # compositeTime
-    for ctime in origin.composite_times:
-        ct_el = etree.Element('compositeTime')
-        __xmlValueQuantity(ctime.year, ct_el, 'year')
-        __xmlValueQuantity(ctime.month, ct_el, 'month')
-        __xmlValueQuantity(ctime.day, ct_el, 'day')
-        __xmlValueQuantity(ctime.hour, ct_el, 'hour')
-        __xmlValueQuantity(ctime.minute, ct_el, 'minute')
-        __xmlValueQuantity(ctime.second, ct_el, 'second')
-        if len(ct_el) > 0:
-            element.append(ct_el)
-    # quality
-    quality = origin.quality
-    qu_el = etree.Element('quality')
-    __xmlStr(quality.associated_phase_count, qu_el, 'associatedPhaseCount')
-    __xmlStr(quality.used_phase_count, qu_el, 'usedPhaseCount')
-    __xmlStr(quality.associated_station_count, qu_el, 'associatedStationCount')
-    __xmlStr(quality.used_station_count, qu_el, 'usedStationCount')
-    __xmlStr(quality.depth_phase_count, qu_el, 'depthPhaseCount')
-    __xmlStr(quality.standard_error, qu_el, 'standardError')
-    __xmlStr(quality.azimuthal_gap, qu_el, 'azimuthalGap')
-    __xmlStr(quality.secondary_azimuthal_gap, qu_el, 'secondaryAzimuthalGap')
-    __xmlStr(quality.ground_truth_level, qu_el, 'groundTruthLevel')
-    __xmlStr(quality.minimum_distance, qu_el, 'minimumDistance')
-    __xmlStr(quality.maximum_distance, qu_el, 'maximumDistance')
-    __xmlStr(quality.median_distance, qu_el, 'medianDistance')
-    if len(qu_el) > 0:
-        element.append(qu_el)
-    __xmlStr(origin.type, element, 'type')
-    __xmlStr(origin.evaluation_mode, element, 'evaluationMode')
-    __xmlStr(origin.evaluation_status, element, 'evaluationStatus')
-    __xmlComments(origin.comments, element)
-    __xmlCreationInfo(origin.creation_info, element)
-    # origin uncertainty
-    ou = origin.origin_uncertainty
-    ou_el = etree.Element('originUncertainty')
-    __xmlStr(ou.preferred_description, ou_el, 'preferredDescription')
-    __xmlStr(ou.horizontal_uncertainty, ou_el, 'horizontalUncertainty')
-    __xmlStr(ou.min_horizontal_uncertainty, ou_el, 'minHorizontalUncertainty')
-    __xmlStr(ou.max_horizontal_uncertainty, ou_el, 'maxHorizontalUncertainty')
-    __xmlStr(ou.azimuth_max_horizontal_uncertainty, ou_el,
-             'azimuthMaxHorizontalUncertainty')
-    ce = ou.confidence_ellipsoid
-    ce_el = etree.Element('confidenceEllipsoid')
-    __xmlStr(ce.semi_major_axis_length, ce_el, 'semiMajorAxisLength')
-    __xmlStr(ce.semi_minor_axis_length, ce_el, 'semiMinorAxisLength')
-    __xmlStr(ce.semi_intermediate_axis_length, ce_el,
-             'semiIntermediateAxisLength')
-    __xmlStr(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
-    __xmlStr(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
-    __xmlStr(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
-    # add confidence ellipsoid to origin uncertainty only if anything is set
-    if len(ce_el) > 0:
-        ou_el.append(ce_el)
-    # add origin uncertainty to origin only if anything is set
-    if len(ou_el) > 0:
-        element.append(ou_el)
-    # arrivals
-    for ar in origin.arrivals:
-        element.append(_xmlArrival(ar))
-    return element
-
-
 def _toMagnitude(parser, element):
     """
     Converts an etree.Element into a Magnitude object.
@@ -569,39 +708,6 @@ def _toMagnitude(parser, element):
     return obj
 
 
-def _xmlMagnitude(magnitude):
-    """
-    Converts an Magnitude into etree.Element object.
-
-    :type magnitude: :class:`~obspy.core.event.Magnitude`
-    :rtype: etree.Element
-
-    .. rubric:: Example
-
-    >>> from obspy.core.event import Magnitude
-    >>> from obspy.core.util import tostring
-    >>> magnitude = Magnitude()
-    >>> magnitude.mag.value = 3.2
-    >>> el = _xmlMagnitude(magnitude)
-    >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    <?xml version='1.0' encoding='utf-8'?>
-    <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
-    """
-    element = etree.Element('magnitude',
-                            attrib={'publicID': magnitude.public_id or ''})
-    __xmlValueQuantity(magnitude.mag, element, 'mag', True)
-    # optional parameter
-    __xmlStr(magnitude.type, element, 'type')
-    __xmlStr(magnitude.origin_id, element, 'originID')
-    __xmlStr(magnitude.method_id, element, 'methodID')
-    __xmlStr(magnitude.station_count, element, 'stationCount')
-    __xmlStr(magnitude.azimuthal_gap, element, 'azimuthalGap')
-    __xmlStr(magnitude.evaluation_status, element, 'evaluationStatus')
-    __xmlComments(magnitude.comments, element)
-    __xmlCreationInfo(magnitude.creation_info, element)
-    return element
-
-
 def _toStationMagnitude(parser, element):
     """
     Converts an etree.Element into a StationMagnitude object.
@@ -633,38 +739,6 @@ def _toStationMagnitude(parser, element):
     obj.creation_info = __toCreationInfo(parser, element)
     obj.comments = __toComments(parser, element)
     return obj
-
-
-def _xmlStationMagnitude(magnitude):
-    """
-    Converts an StationMagnitude into etree.Element object.
-
-    :type magnitude: :class:`~obspy.core.event.StationMagnitude`
-    :rtype: etree.Element
-
-    .. rubric:: Example
-
-    >>> from obspy.core.event import StationMagnitude
-    >>> from obspy.core.util import tostring
-    >>> station_mag = StationMagnitude()
-    >>> station_mag.mag.value = 3.2
-    >>> el = _xmlStationMagnitude(station_mag)
-    >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-    <?xml version='1.0' encoding='utf-8'?>
-    <stationMagnitude ...<mag><value>3.2</value></mag>...</stationMagnitude>
-    """
-    element = etree.Element('stationMagnitude',
-                            attrib={'publicID': magnitude.public_id or ''})
-    __xmlStr(magnitude.origin_id, element, 'originID', True)
-    __xmlValueQuantity(magnitude.mag, element, 'mag', True)
-    # optional parameter
-    __xmlStr(magnitude.type, element, 'type')
-    __xmlStr(magnitude.amplitude_id, element, 'amplitudeID')
-    __xmlStr(magnitude.method_id, element, 'methodID')
-    __xmlWaveformStreamID(magnitude.waveform_id, element)
-    __xmlComments(magnitude.comments, element)
-    __xmlCreationInfo(magnitude.creation_info, element)
-    return element
 
 
 def readQuakeML(filename):
@@ -767,55 +841,6 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     :param filename: Name of file to write.
     """
     raise NotImplementedError
-
-
-def _xmlCatalog(catalog, pretty_print=True):
-    """
-    Converts a Catalog object into XML string.
-    """
-    root_el = etree.Element('{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
-        attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
-    catalog_el = etree.Element('eventParameters',
-                              attrib={'publicID': catalog.public_id})
-    # optional catalog parameters
-    __xmlStr(catalog.description, catalog_el, 'description')
-    __xmlComments(catalog.comments, catalog_el)
-    __xmlCreationInfo(catalog.creation_info, catalog_el)
-    root_el.append(catalog_el)
-    for event in catalog:
-        # create event node
-        event_el = etree.Element('event', attrib={'publicID': event.public_id})
-        # optional event attributes
-        __xmlStr(event.preferred_origin_id, event_el, 'preferredOriginID')
-        __xmlStr(event.preferred_magnitude_id, event_el,
-                 'preferredMagnitudeID')
-        __xmlStr(event.preferred_focal_mechanism_id, event_el,
-                 'preferredFocalMechanismID')
-        __xmlStr(event.type, event_el, 'type')
-        __xmlStr(event.type_certainty, event_el, 'typeCertainty')
-        # event descriptions
-        for description in event.descriptions:
-            el = etree.Element('description')
-            __xmlStr(description.text, el, 'text', True)
-            __xmlStr(description.type, el, 'type')
-            event_el.append(el)
-        __xmlComments(event.comments, event_el)
-        __xmlCreationInfo(event.creation_info, event_el)
-        # origins
-        for origin in event.origins:
-            event_el.append(_xmlOrigin(origin))
-        # magnitudes
-        for magnitude in event.magnitudes:
-            event_el.append(_xmlMagnitude(magnitude))
-        # station magnitudes
-        for magnitude in event.station_magnitudes:
-            event_el.append(_xmlStationMagnitude(magnitude))
-        # picks
-        for pick in event.picks:
-            event_el.append(_xmlPick(pick))
-        # add event node to catalog
-        catalog_el.append(event_el)
-    return tostring(root_el, pretty_print=pretty_print)
 
 
 def readSeisHubEventXML(filename):
