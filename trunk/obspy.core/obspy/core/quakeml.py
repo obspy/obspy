@@ -120,7 +120,8 @@ class Pickler(object):
             attrib['channelCode'] = obj.channe_code
         subelement = etree.Element('waveformID', attrib=attrib)
         if obj.resource_id:
-            subelement.text = obj.resource_uri
+            subelement.text = obj.resource_id.getQuakeMLURI() \
+                if obj.resource_id is not None else ""
         element.append(subelement)
 
     def _creation_info(self, creation_info, element):
@@ -140,8 +141,9 @@ class Pickler(object):
     def _comments(self, comments, element):
         for comment in comments:
             attrib = {}
-            if comment.id:
-                attrib['id'] = comment.id
+            if comment.resource_id:
+                attrib['id'] = comment.resource_id.getQuakeMLURI() \
+                    if comment.resource_id is not None else ""
             comment_el = etree.Element('comment', attrib=attrib)
             etree.SubElement(comment_el, 'text').text = comment.text
             self._creation_info(comment.creation_info, comment_el)
@@ -156,7 +158,7 @@ class Pickler(object):
         """
         attrib = {}
         if arrival.preliminary:
-            attrib['preliminary'] = arrival.preliminary
+            attrib['preliminary'] = str(arrival.preliminary).lower()
         element = etree.Element('arrival', attrib=attrib)
         # required parameter
         self._str(arrival.pick_id, element, 'pickID', True)
@@ -199,7 +201,8 @@ class Pickler(object):
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
         element = etree.Element('magnitude',
-                                attrib={'publicID': magnitude.resource_id or ''})
+            attrib={'publicID': magnitude.resource_id.getQuakeMLURI() \
+            if magnitude.resource_id is not None else ""})
         self._value(magnitude.mag, element, 'mag', True)
         # optional parameter
         self._str(magnitude.magnitude_type, element, 'type')
@@ -232,7 +235,8 @@ class Pickler(object):
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
         element = etree.Element('stationMagnitude',
-                                attrib={'publicID': magnitude.resource_id or ''})
+            attrib={'publicID': magnitude.resource_id.getQuakeMLURI() \
+            if magnitude.resource_id is not None else ""})
         self._str(magnitude.origin_id, element, 'originID', True)
         self._value(magnitude.mag, element, 'mag', True)
         # optional parameter
@@ -352,7 +356,8 @@ class Pickler(object):
         :rtype: etree.Element
         """
         element = etree.Element('pick',
-                                attrib={'publicID': pick.resource_id or ''})
+        attrib={'publicID': pick.resource_id.getQuakeMLURI() \
+                if pick.resource_id is not None else None})
         # required parameter
         self._value(pick.time, element, 'time', True)
         self._waveform_id(pick.waveform_id, element, True)
@@ -379,7 +384,8 @@ class Pickler(object):
             '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
             attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
         catalog_el = etree.Element('eventParameters',
-                                  attrib={'publicID': catalog.resource_id})
+            attrib={'publicID': catalog.resource_id.getQuakeMLURI() \
+                if catalog.resource_id is not None else None})
         # optional catalog parameters
         self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
@@ -388,7 +394,8 @@ class Pickler(object):
         for event in catalog:
             # create event node
             event_el = etree.Element('event',
-                                     attrib={'publicID': event.resource_id})
+                attrib={'publicID': event.resource_id.getQuakeMLURI() \
+                if event.resource_id is not None else ""})
             # optional event attributes
             self._str(event.preferred_origin_id, event_el, 'preferredOriginID')
             self._str(event.preferred_magnitude_id, event_el,
@@ -401,7 +408,7 @@ class Pickler(object):
             for description in event.descriptions:
                 el = etree.Element('description')
                 self._str(description.text, el, 'text', True)
-                self._str(description.type, el, 'type')
+                self._str(description.event_description_type, el, 'type')
                 event_el.append(el)
             self._comments(event.comments, event_el)
             self._creation_info(event.creation_info, event_el)
@@ -423,6 +430,13 @@ class Pickler(object):
 
 
 def __toCreationInfo(parser, element):
+    has_creation_info = False
+    for child in element.iterchildren():
+        if 'creationInfo' in child.tag:
+            has_creation_info = True
+            break
+    if not has_creation_info:
+        return None
     obj = CreationInfo()
     obj.agency_uri = parser.xpath2obj('creationInfo/agencyURI', element)
     obj.author_uri = parser.xpath2obj('creationInfo/authorURI', element)
@@ -477,7 +491,7 @@ def __toComments(parser, element):
     for el in parser.xpath('comment', element):
         comment = Comment()
         comment.text = parser.xpath2obj('text', el)
-        comment.id = el.get('id')
+        comment.resource_id = el.get('id')
         comment.creation_info = __toCreationInfo(parser, el)
         obj.append(comment)
     return obj
@@ -570,7 +584,7 @@ def __toWaveformStreamID(parser, element):
     obj.station = wid_el.get('stationCode') or ''
     obj.location = wid_el.get('locationCode')
     obj.channel = wid_el.get('channelCode')
-    obj.resource_uri = wid_el.text
+    obj.resource_id = wid_el.text
     return obj
 
 
@@ -671,7 +685,7 @@ def _toOrigin(parser, element):
     obj.earth_model_id = parser.xpath2obj('earthModelID', element)
     obj.composite_times = __toCompositeTimes(parser, element)
     obj.quality = __toOriginQuality(parser, element)
-    obj.type = parser.xpath2obj('type', element)
+    obj.origin_type = parser.xpath2obj('type', element)
     obj.evaluation_mode = parser.xpath2obj('evaluationMode', element)
     obj.evaluation_status = parser.xpath2obj('evaluationStatus', element)
     obj.creation_info = __toCreationInfo(parser, element)
@@ -738,7 +752,7 @@ def _toStationMagnitude(parser, element):
     obj.origin_id = parser.xpath2obj('originID', element) or ''
     obj.mag = __toFloatQuantity(parser, element, 'mag')
     # optional parameter
-    obj.type = parser.xpath2obj('type', element)
+    obj.station_magnitude_type = parser.xpath2obj('type', element)
     obj.amplitude_id = parser.xpath2obj('amplitudeID', element)
     obj.method_id = parser.xpath2obj('methodID', element)
     obj.waveform_id = __toWaveformStreamID(parser, element)

@@ -288,6 +288,27 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                 return True
             return False
 
+        def __eq__(self, other):
+            """
+            Two instances are considered equal if all attributes and all lists
+            are identical.
+            """
+            # Looping should be quicker on average than a list comprehension
+            # because only the first non-equal attribute will already return.
+            for attrib in self.__attributes:
+                if not hasattr(other, attrib) or \
+                   (getattr(self, attrib) != getattr(other, attrib)):
+                    return False
+            for container in self.__containers:
+                if not hasattr(other, container) or \
+                   (getattr(self, container) != getattr(other, container)):
+                    return False
+            return True
+
+        def __ne__(self, other):
+            return not self.__eq__(other)
+
+
     # Use this awkward construct to get around a problem with closures. See
     # http://code.activestate.com/recipes/502271/
     def _create_getter_and_setter(attrib_name, attrib_type):
@@ -1608,8 +1629,14 @@ class Event(__Event):
             out += ' | %s' % (self.origins[0].evaluation_mode)
         return out
 
+__Catalog = _eventTypeClassFactory("__Catalog",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("description", str),
+                      ("creation_info", CreationInfo)],
+    class_contains=["events", "comments"])
 
-class Catalog(object):
+
+class Catalog(__Catalog):
     """
     This class serves as a container for Event objects.
 
@@ -1626,19 +1653,6 @@ class Catalog(object):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, events=None, resource_id='', description=None,
-                 comments=None, creation_info={}):
-        """
-        Initializes a Catalog object.
-        """
-        # default attributes
-        self.resource_id = resource_id
-        self.description = description
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
-        # child elements
-        self.events = events or []
-
     def __add__(self, other):
         """
         Method to add two catalogs.

@@ -3,7 +3,7 @@
   xmlns:q="http://quakeml.org/xmlns/quakeml/1.2">
   <eventParameters publicID="smi://eu.emsc/unid">
     <description>Catalog description</description>
-    <comment id="#1">
+    <comment id="number_1">
       <text>Catalog comment</text>
     </comment>
     <creationInfo>
@@ -33,7 +33,7 @@
           <agencyID>EMSC</agencyID>
         </creationInfo>
       </comment>
-      <comment id="#3">
+      <comment id="number_3">
         <text>Another comment</text>
       </comment>
       <creationInfo>

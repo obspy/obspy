@@ -19,7 +19,7 @@
           <azimuth>12.0</azimuth>
           <distance>0.5</distance>
           <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
-          <comment id="#3">
+          <comment id="number_3">
             <text>Another comment</text>
           </comment>
           <creationInfo>
