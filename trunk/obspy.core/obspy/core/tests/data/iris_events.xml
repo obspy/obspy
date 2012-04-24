@@ -9,6 +9,7 @@
         <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
       </description>
       <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=7680412</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=13949593</preferredMagnitudeID>
       <origin xmlns:iris="http://www.iris.edu/ws/event"
         publicID="smi:www.iris.edu/ws/event/query?originId=7680412"
         iris:contributor="NEIC PDE-W" iris:catalog="NEIC PDE">
@@ -46,6 +47,7 @@
         <text>SULU SEA</text>
       </description>
       <preferredOriginID>smi:www.iris.edu/ws/event/query?originId=3881858</preferredOriginID>
+      <preferredMagnitudeID>smi:www.iris.edu/ws/event/query?magnitudeId=9764891</preferredMagnitudeID>
       <origin xmlns:iris="http://www.iris.edu/ws/event"
         publicID="smi:www.iris.edu/ws/event/query?originId=3881858"
         iris:contributorOriginId="8182061" iris:contributorEventId="9514154"

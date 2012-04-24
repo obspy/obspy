@@ -41,9 +41,30 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read, currently only ``"QUAKEML"`` is
-        supported.
+    :param format: Format of the file to read. Depending on your ObsPy
+        installation one of ``"QUAKEML"``. See the `Supported Formats`_ section
+        below for a full list of supported formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
+
+    .. rubric:: _`Supported Formats`
+
+    Additional ObsPy modules extend the functionality of the
+    :func:`~obspy.core.event.readEvents` function. The following table
+    summarizes all known file formats currently supported by ObsPy.
+
+    Please refer to the `Linked Function Call`_ of each module for any extra
+    options available at the import stage.
+
+    =======  ===================  ======================================
+    Format   Required Module      _`Linked Function Call`
+    =======  ===================  ======================================
+    QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.readQuakeML`
+    =======  ===================  ======================================
+
+    Next to the :func:`~obspy.core.event.readEvents` function the
+    :meth:`~obspy.core.event.Catalog.write` method of the returned
+    :class:`~obspy.core.event.Catalog` object can be used to export the data
+    to the file system.
     """
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and \
@@ -1479,55 +1500,78 @@ class Event(object):
 
     type_certainty = property(_getEventTypeCertainty, _setEventTypeCertainty)
 
-    def _getPreferredMagnitude(self):
-        if self.magnitudes:
-            return self.magnitudes[0]
+    @property
+    def preferred_magnitude(self):
+        """
+        Returns preferred magnitude if set.
+        """
+        if self.preferred_magnitude_id and self.magnitudes:
+            for obj in self.magnitudes:
+                if obj.public_id == self.preferred_magnitude_id:
+                    return obj
         return None
 
-    preferred_magnitude = property(_getPreferredMagnitude)
-
-    def _getPreferredOrigin(self):
-        if self.origins:
-            return self.origins[0]
+    @property
+    def preferred_origin(self):
+        """
+        Returns preferred origin if set.
+        """
+        if self.preferred_origin_id and self.origins:
+            for obj in self.origins:
+                if obj.public_id == self.preferred_origin_id:
+                    return obj
         return None
 
-    preferred_origin = property(_getPreferredOrigin)
-
-    def _getPreferredFocalMechanism(self):
-        if self.focal_mechanism:
-            return self.focal_mechanism[0]
+    @property
+    def preferred_focal_mechanism(self):
+        """
+        Returns preferred focal mechanism if set.
+        """
+        if self.preferred_focal_mechanism_id and self.focal_mechanisms:
+            for obj in self.focal_mechanisms:
+                if obj.public_id == self.preferred_focal_mechanism_id:
+                    return obj
         return None
 
-    preferred_focal_mechanism = property(_getPreferredFocalMechanism)
-
-    def _getTime(self):
+    @property
+    def time(self):
+        """
+        Returns focal time value of preferred origin.
+        """
         return self.preferred_origin.time.value
 
-    time = datetime = property(_getTime)
-
-    def _getLatitude(self):
+    @property
+    def latitude(self):
+        """
+        Returns latitude value of preferred origin.
+        """
         return self.preferred_origin.latitude.value
 
-    latitude = lat = property(_getLatitude)
-
-    def _getLongitude(self):
+    @property
+    def longitude(self):
+        """
+        Returns longitude value of preferred origin.
+        """
         return self.preferred_origin.longitude.value
 
-    longitude = lon = property(_getLongitude)
-
-    def _getMagnitude(self):
+    @property
+    def magnitude(self):
+        """
+        Returns magnitude value of preferred magnitude.
+        """
         return self.preferred_magnitude.magnitude.value
 
-    magnitude = mag = property(_getMagnitude)
-
-    def _getMagnitudeType(self):
+    @property
+    def magnitude_type(self):
+        """
+        Returns magnitude type of preferred magnitude.
+        """
         return self.preferred_magnitude.type
 
-    magnitude_type = mag_type = property(_getMagnitudeType)
-
-    def getId(self):
+    @property
+    def id(self):
         """
-        Returns the identifier of the event.
+        Returns the identifier of this event.
 
         :rtype: str
         :return: event identifier
@@ -1535,8 +1579,6 @@ class Event(object):
         if self.public_id is None:
             return ''
         return "%s" % (self.public_id)
-
-    id = property(getId)
 
 
 class Catalog(object):
@@ -1804,7 +1846,7 @@ class Catalog(object):
         =======  ===================  =====================================
         Format   Required Module      Linked Function Call
         =======  ===================  =====================================
-        QUAKEML  :mod:`obspy.mseed`   :func:`obspy.core.event.writeQUAKEML`
+        QUAKEML  :mod:`obspy.core`   :func:`obspy.core.event.writeQUAKEML`
         =======  ===================  =====================================
         """
         format = format.upper()
