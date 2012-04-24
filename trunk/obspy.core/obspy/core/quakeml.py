@@ -462,7 +462,7 @@ def __toEventDescription(parser, element):
     for el in parser.xpath('description', element):
         text = parser.xpath2obj('text', el)
         type = parser.xpath2obj('type', el)
-        out.append(EventDescription({'text': text, 'type': type}))
+        out.append(EventDescription(text=text, event_description_type=type))
     return out
 
 

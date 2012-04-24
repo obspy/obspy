@@ -10,9 +10,10 @@ Module for handling ObsPy Catalog and Event objects.
 """
 
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, getExampleFile, Enum, \
-    uncompressFile, AttribDict, _readFromPlugin
+from obspy.core.util import NamedTemporaryFile, getExampleFile, \
+        uncompressFile, _readFromPlugin
 from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.event_header import *
 from pkg_resources import load_entry_point
 import copy
 import glob
@@ -63,8 +64,8 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
 
     Next to the :func:`~obspy.core.event.readEvents` function the
     :meth:`~obspy.core.event.Catalog.write` method of the returned
-    :class:`~obspy.core.event.Catalog` object can be used to export the data
-    to the file system.
+    :class:`~obspy.core.event.Catalog` object can be used to export the data to
+    the file system.
     """
     # if pathname starts with /path/to/ try to search in examples
     if isinstance(pathname_or_url, basestring) and \
@@ -138,124 +139,189 @@ def _createExampleCatalog():
     return readEvents('/path/to/neries_events.xml')
 
 
-OriginUncertaintyDescription = Enum([
-    "horizontal uncertainty",
-    "uncertainty ellipse",
-    "confidence ellipsoid",
-    "probability density function",
-])
-AmplitudeCategory = Enum([
-    "point",
-    "mean",
-    "duration",
-    "period",
-    "integral",
-    "other",
-])
-OriginDepthType = Enum([
-    "from location",
-    "from moment tensor inversion",
-    "from modeling of broad-band P waveforms",
-    "constrained by depth phases",
-    "constrained by direct phases",
-    "operator assigned",
-    "other",
-])
-OriginType = Enum([
-    "hypocenter",
-    "centroid",
-    "amplitude",
-    "macroseismic",
-    "rupture start",
-    "rupture end",
-])
-MTInversionType = Enum([
-    "general",
-    "zero trace",
-    "double couple",
-])
-EvaluationMode = Enum([
-    "manual",
-    "automatic",
-])
-EvaluationStatus = Enum([
-    "preliminary",
-    "confirmed",
-    "reviewed",
-    "final",
-    "rejected",
-])
-PickOnset = Enum([
-    "emergent",
-    "impulsive",
-    "questionable",
-])
-DataUsedWaveType = Enum([
-    "P waves",
-    "body waves",
-    "surface waves",
-    "mantle waves",
-    "combined",
-    "unknown",
-])
-AmplitudeUnit = Enum([
-    "m",
-    "s",
-    "m/s",
-    "m/(s*s)",
-    "m*s",
-    "dimensionless",
-    "other",
-])
-EventDescriptionType = Enum([
-    "felt report",
-    "Flinn-Engdahl region",
-    "local time",
-    "tectonic summary",
-    "nearest cities",
-    "earthquake name",
-    "region name",
-])
-MomentTensorCategory = Enum([
-    "teleseismic",
-    "regional",
-])
-EventType = Enum([
-    "earthquake",
-    "induced earthquake",
-    "quarry blast",
-    "explosion",
-    "chemical explosion",
-    "nuclear explosion",
-    "landslide",
-    "rockslide",
-    "snow avalanche",
-    "debris avalanche",
-    "mine collapse",
-    "building collapse",
-    "volcanic eruption",
-    "meteor impact",
-    "plane crash",
-    "sonic boom",
-    "not existing",
-    "other",
-    "null",
-])
-EventTypeCertainty = Enum([
-    "known",
-    "suspected",
-])
-SourceTimeFunctionType = Enum([
-    "box car",
-    "triangle",
-    "trapezoid",
-    "unknown",
-])
-PickPolarity = Enum([
-    "positive",
-    "negative",
-    "undecidable",
-])
+def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
+    """
+    Class factory to unify the creation of all the types needed for the event
+    handling in ObsPy.
+
+    The types oftentimes share attributes and setting them manually every time
+    is cumbersome, error-prone and hard to do consistently.
+
+    Usage to create a new class type:
+
+    >>> ABCEnum = Enum(["a", "b", "c"])
+    >>> # For every fixed type attribute, corresponding getter/setter methods
+    >>> # will be created and the attribute will be a property of the resulting
+    >>> # class.
+    >>> # The third item in the tuple is interpreted as "is allowed to be
+    >>> # None". Thus, if False, it will initialise with given types default
+    >>> # constructor. Use only for types is makes sense.
+    >>> class_attributes = [ \
+            ("resource_id", ResourceIdentifier, False), \
+            ("creation_info", CreationInfo), \
+            ("some_letters", ABCEnum), \
+            ("description", str)]
+    >>> # Furthermore the class can contain lists of other objects. These will
+    >>> # just be list class attributes and nothing else so far.
+    >>> class_contains = ["comments"]
+    >>> TestEventClass = _eventTypeClassFactory( \
+            "TestEventClass", \
+            class_attributes=class_attributes, \
+            class_contains=class_contains)
+    >>> assert(TestEventClass.__name__ == "TestEventClass")
+
+    Now the new class type can be used.
+
+    >>> test_event = TestEventClass(resource_id="event/123456", \
+                        creation_info={"author": "obspy.org", \
+                                       "version": "0.1"})
+    >>> # All given arguments will be converted to the right type.
+    >>> print test_event.resource_id
+    ResourceIdentifier(resource_id="event/123456")
+    >>> print test_event.creation_info
+    CreationInfo(author='obspy.org', version='0.1')
+    >>> # All others will be set to None.
+    >>> assert(test_event.description is None)
+    >>> assert(test_event.some_letters is None)
+    >>> # They can be set later and be converted to appropriate type if
+    >>> # possible.
+    >>> test_event.description = 1
+    >>> assert(test_event.description is "1")
+    >>> # Trying to set with an inappropriate value will raise an error.
+    >>> test_event.some_letters = "d" # doctest:+ELLIPSIS
+    Traceback (most recent call last):
+        ...
+    ValueError: Setting attribute "some_letters" failed. ...
+
+    >>> # If you pass ``"False"`` as the third tuple item for the
+    >>> # class_attributes, the type will be initialized even if no value was
+    >>> # given.
+    >>> TestEventClass = _eventTypeClassFactory("TestEventClass",\
+            class_attributes=[("time_1", UTCDateTime, False),\
+                               ("time_2", UTCDateTime)])
+    >>> test_event = TestEventClass()
+    >>> print test_event.time_1.__repr__() # doctest:+ELLIPSIS
+    UTCDateTime(...)
+    >>> print test_event.time_2
+    None
+    """
+    class AbstractEventType(object):
+        def __init__(self, *args, **kwargs):
+            # Store a list of all attributes to be able to get a nice string
+            # representation of the object.
+            self.__attributes = []
+            self.__containers = []
+            # Make sure the args work as expected. This means any given args
+            # will overwrite the kwargs if they are given.
+            for _i, item in enumerate(args):
+                kwargs[class_attributes[_i][0]] = item
+            for attrib in class_attributes:
+                attrib_name = attrib[0]
+                if len(attrib) == 3 and attrib[2] is False:
+                    attrib_type = attrib[1]
+                    setattr(self, attrib_name, kwargs.get(attrib_name,
+                                                          attrib_type()))
+                else:
+                    setattr(self, attrib_name, kwargs.get(attrib_name, None))
+                self.__attributes.append(attrib_name)
+            for list_name in class_contains:
+                setattr(self, list_name, list(kwargs.get(list_name, [])))
+                self.__containers.append(list_name)
+
+        def __str__(self):
+            """
+            Fairly extensive in an attempt to cover several use cases. It is
+            always possible to change it in the child class.
+            """
+            attributes = [_i for _i in self.__attributes if getattr(self, _i)]
+            containers = [_i for _i in self.__containers if getattr(self, _i)]
+            # Get the longest attribute/container name to print all of them
+            # nicely aligned.
+            max_length = max(max([len(_i) for _i in attributes]) \
+                                 if attributes else 0,
+                             max([len(_i) for _i in containers]) \
+                             if containers else 0) + 1
+
+            ret_str = self.__class__.__name__
+            attrib_count = len([_i for _i in self.__attributes \
+                                   if getattr(self, _i)])
+            container_count = len([_i for _i in self.__containers \
+                                   if getattr(self, _i)])
+            if not attrib_count and not container_count:
+                return ret_str + "()"
+
+            # First print a representation of all attributes that are not None.
+            if attrib_count:
+                # A small number of attributes and no containers will just
+                # print a single line.
+                if attrib_count <= 6 and not self.__containers:
+                    att_strs = ["%s=%s" % (_i, getattr(self, _i).__repr__()) \
+                                for _i in self.__attributes \
+                                if getattr(self, _i)]
+                    ret_str += "(%s)" % ", ".join(att_strs)
+                else:
+                    format_str = "%" + str(max_length) + "s: %s"
+                    att_strs = [format_str % (_i,
+                                              getattr(self, _i).__repr__()) \
+                                for _i in self.__attributes \
+                                if getattr(self, _i)]
+                    ret_str += "\n\t" + "\n\t".join(att_strs)
+
+            # For the containers just print the number of elements in each.
+            if container_count:
+                # Print delimiter only if there are attributes.
+                if self.__attributes:
+                    ret_str += '\n\t---------'
+                element_str = "%" + str(max_length) + "s: %i Elements"
+                ret_str += "\n\t" + \
+                    "\n\t".join([element_str % \
+                    (_i, len(getattr(self, _i))) \
+                    for _i in self.__containers])
+            return ret_str
+
+        def __repr__(self):
+            return self.__str__()
+
+        def __nonzero__(self):
+            if any([bool(getattr(self, _i)) \
+                    for _i in self.__attributes + self.__containers]):
+                return True
+            return False
+
+    # Use this awkward construct to get around a problem with closures. See
+    # http://code.activestate.com/recipes/502271/
+    def _create_getter_and_setter(attrib_name, attrib_type):
+        # The getter function does not do much.
+        def getter(instance):
+            return instance.__dict__[attrib_name]
+
+        def setter(instance, value):
+            # If the value is None or already the correct type just set it.
+            if (value is not None) and (type(value) is not attrib_type):
+                # If it is a dict, and the attrib_type is no dict, than all
+                # values will be assumed to be keyword arguments.
+                if isinstance(value, dict):
+                    value = attrib_type(**value)
+                else:
+                    value = attrib_type(value)
+                if value is None:
+                    msg = 'Setting attribute "%s" failed. ' % (attrib_name)
+                    msg += '"%s" could not be converted to type "%s"' % \
+                        (str(value), str(attrib_type))
+                    raise ValueError(msg)
+            instance.__dict__[attrib_name] = value
+        return (getter, setter)
+
+    # Now actually set the class properties.
+    for attrib in class_attributes:
+        attrib_name = attrib[0]
+        attrib_type = attrib[1]
+        getter, setter = _create_getter_and_setter(attrib_name, attrib_type)
+        setattr(AbstractEventType, attrib_name, property(getter, setter))
+
+    # Set the class type name.
+    setattr(AbstractEventType, "__name__", type_name)
+    return AbstractEventType
 
 
 class ResourceIdentifier(object):
@@ -332,7 +398,7 @@ class ResourceIdentifier(object):
     None
 
     The most powerful ability (and reason why one would want to use a resource
-    identifier class in the first place) is that once a ResourceIdentifer with
+    identifier class in the first place) is that once a ResourceIdentifier with
     an attached referred object has been created, any other ResourceIdentifier
     instances with the same resource_id can retrieve that object. This works
     across all ResourceIdentifiers that have been instantiated within one
@@ -363,12 +429,12 @@ class ResourceIdentifier(object):
     >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
-    ValueError: resource_id needs to be a hashable type.
+    TypeError: resource_id needs to be a hashable type.
     >>> res_id = ResourceIdentifier()
     >>> res_id.resource_id = [1,2]
     Traceback (most recent call last):
         ...
-    ValueError: resource_id needs to be a hashable type.
+    TypeError: resource_id needs to be a hashable type.
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
@@ -417,8 +483,8 @@ class ResourceIdentifier(object):
     >>> dictionary["foo"] = "bar"
     >>> items = dictionary.items()
     >>> items.sort()
-    >>> print items # doctest:+ELLIPSIS
-    [(<...ResourceIdentifier object at ...>, 'bar'), ('foo', 'bar')]
+    >>> print items
+    [(ResourceIdentifier(resource_id="foo"), 'bar'), ('foo', 'bar')]
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -526,7 +592,7 @@ class ResourceIdentifier(object):
         if not hasattr(resource_id, '__hash__') or \
            not callable(resource_id.__hash__):
             msg = "resource_id needs to be a hashable type."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.__dict__["resource_id"] = resource_id
 
     resource_id = property(__getResourceID, __setResourceID, __delResourceID,
@@ -535,6 +601,9 @@ class ResourceIdentifier(object):
     def __str__(self):
         return 'ResourceIdentifier(resource_id="%s")' % self.resource_id
 
+    def __repr__(self):
+        return self.__str__()
+
     def __eq__(self, other):
         # The type check is necessary due to the used hashing method.
         if type(self) != type(other):
@@ -542,6 +611,9 @@ class ResourceIdentifier(object):
         if self.resource_id == other.resource_id:
             return True
         return False
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
     def __hash__(self):
         """
@@ -554,7 +626,13 @@ class ResourceIdentifier(object):
         return self.resource_id.__hash__()
 
 
-class CreationInfo(AttribDict):
+__CreationInfo = _eventTypeClassFactory("__CreationInfo",
+    class_attributes=[("agency_id", str), ("agency_uri", ResourceIdentifier),
+                      ("author", str), ("author_uri", ResourceIdentifier),
+                      ("creation_time", UTCDateTime), ("version", str)])
+
+
+class CreationInfo(__CreationInfo):
     """
     CreationInfo is used to describe author, version, and creation time of a
     resource.
@@ -572,25 +650,87 @@ class CreationInfo(AttribDict):
     :param creation_time: Time of creation of a resource.
     :type version: str, optional
     :param version: Version string of a resource.
+
+    >>> info = CreationInfo(author="obspy.org", version="0.0.1")
+    >>> print info
+    CreationInfo(author='obspy.org', version='0.0.1')
     """
-    agency_id = None
-    agency_uri = None
-    author = None
-    author_uri = None
-    creation_time = None
-    version = None
 
 
-class _ValueQuantity(AttribDict):
+__TimeQuantity = _eventTypeClassFactory("__TimeQuantity",
+    class_attributes=[("value", UTCDateTime), ("uncertainty", float),
+        ("lower_uncertainty", float), ("upper_uncertainty", float),
+        ("confidence_level", float)])
+
+
+class TimeQuantity(__TimeQuantity):
     """
-    Physical quantities that can be expressed numerically — either as integers,
-    floating point numbers or UTCDateTime objects — are represented by their
-    measured or computed values and optional values for symmetric or upper and
-    lower uncertainties.
+    A Physical quantity represented by its measured or computed value and
+    optional values for symmetric or upper and lower uncertainties.
 
-    :type value: int, float or :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param value: Value of the quantity. The unit is implicitly defined and
-        depends on the context.
+    :type value: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param value: Value of the quantity.
+    :type uncertainty: float, optional
+    :param uncertainty: Symmetric uncertainty or boundary.
+    :type lower_uncertainty: float, optional
+    :param lower_uncertainty: Relative lower uncertainty or boundary.
+    :type upper_uncertainty: float, optional
+    :param upper_uncertainty: Relative upper uncertainty or boundary.
+    :type confidence_level: float, optional
+    :param confidence_level: Confidence level of the uncertainty, given in
+        percent.
+
+    >>> time = TimeQuantity("2012-01-01", uncertainty=1.0)
+    >>> print time
+    TimeQuantity(value=UTCDateTime(2012, 1, 1, 0, 0), uncertainty=1.0)
+    >>> time.value = 0.0
+    >>> print time
+    TimeQuantity(value=UTCDateTime(1970, 1, 1, 0, 0), uncertainty=1.0)
+    """
+    # Provided for backwards compatibility.
+    _value_type = UTCDateTime
+
+
+__IntegerQuantity = _eventTypeClassFactory("__IntegerQuantity",
+    class_attributes=[("value", int), ("uncertainty", int),
+        ("lower_uncertainty", int), ("upper_uncertainty", int),
+        ("confidence_level", float)])
+
+
+class IntegerQuantity(__IntegerQuantity):
+    """
+    A Physical quantity represented by its measured or computed value and
+    optional values for symmetric or upper and lower uncertainties.
+
+    :type value: int
+    :param value: Value of the quantity.
+    :type uncertainty: int, optional
+    :param uncertainty: Symmetric uncertainty or boundary.
+    :type lower_uncertainty: int, optional
+    :param lower_uncertainty: Relative lower uncertainty or boundary.
+    :type upper_uncertainty: int, optional
+    :param upper_uncertainty: Relative upper uncertainty or boundary.
+    :type confidence_level: float, optional
+    :param confidence_level: Confidence level of the uncertainty, given in
+        percent.
+    """
+    # Provided for backwards compatibility.
+    _value_type = int
+
+
+__FloatQuantity = _eventTypeClassFactory("__FloatQuantity",
+    class_attributes=[("value", float), ("uncertainty", float),
+        ("lower_uncertainty", float), ("upper_uncertainty", float),
+        ("confidence_level", float)])
+
+
+class FloatQuantity(__FloatQuantity):
+    """
+    A Physical quantity represented by its measured or computed value and
+    optional values for symmetric or upper and lower uncertainties.
+
+    :type value: float
+    :param value: Value of the quantity.
     :type uncertainty: float, optional
     :param uncertainty: Symmetric uncertainty or boundary.
     :type lower_uncertainty: float, optional
@@ -601,27 +741,20 @@ class _ValueQuantity(AttribDict):
     :param confidence_level: Confidence level of the uncertainty, given in
         percent.
     """
-    _value_type = str
-    value = None
-    uncertainty = None
-    lower_uncertainty = None
-    upper_uncertainty = None
-    confidence_level = None
-
-
-class TimeQuantity(_ValueQuantity):
-    _value_type = UTCDateTime
-
-
-class FloatQuantity(_ValueQuantity):
+    # Provided for backwards compatibility.
     _value_type = float
 
 
-class IntegerQuantity(_ValueQuantity):
-    _value_type = int
+__CompositeTime = _eventTypeClassFactory("__CompositeTime",
+    class_attributes=[("year", IntegerQuantity, False),
+                      ("month", IntegerQuantity, False),
+                      ("day", IntegerQuantity, False),
+                      ("hour", IntegerQuantity, False),
+                      ("minute", IntegerQuantity, False),
+                      ("second", FloatQuantity, False)])
 
 
-class CompositeTime(AttribDict):
+class CompositeTime(__CompositeTime):
     """
     Focal times differ significantly in their precision. While focal times of
     instrumentally located earthquakes are estimated precisely down to seconds,
@@ -641,38 +774,55 @@ class CompositeTime(AttribDict):
     :param minute: Minute or range of minutes of the event’s focal time.
     :type second: :class:`~obspy.core.event.FloatQuantity`
     :param second: Second and fraction of seconds or range of seconds with
-        fraction of the event’s focal time.
+
+    >>> time = CompositeTime(2011, 1, 1)
+    >>> print time # doctest:+ELLIPSIS
+    CompositeTime(year=IntegerQuantity(value=2011), month=IntegerQuantity(...
+    >>> # Can also be instantiated with the uncertainties.
+    >>> time = CompositeTime(year={"value":2011, "uncertainty":1})
+    >>> print time
+    CompositeTime(year=IntegerQuantity(value=2011, uncertainty=1))
     """
-    def __init__(self, year={}, month={}, day={}, hour={}, minute={},
-                 second={}):
-        self.year = IntegerQuantity(year)
-        self.month = IntegerQuantity(month)
-        self.day = IntegerQuantity(day)
-        self.hour = IntegerQuantity(hour)
-        self.minute = IntegerQuantity(minute)
-        self.second = FloatQuantity(second)
 
 
-class Comment(AttribDict):
+__Comment = _eventTypeClassFactory("__Comment",
+    class_attributes=[("text", str), ("resource_id", ResourceIdentifier),
+                      ("creation_info", CreationInfo)])
+
+
+class Comment(__Comment):
     """
     Comment holds information on comments to a resource as well as author and
     creation time information.
 
-    :type text: str
+    :type text: str, optional
     :param text: Text of comment.
-    :type id: str or None, optional
-    :param id: Identifier of comment, in QuakeML resource identifier format.
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :param resource_id: Identifier of comment.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`
-    :param creation_info: Creation info of comment (author, version, creation
-        time).
+    :param creation_info: Creation info of comment.
+
+    >>> comment = Comment("Some comment")
+    >>> print comment
+    Comment(text='Some comment')
+    >>> comment.resource_id = "comments/obspy-comment-123456"
+    >>> print comment # doctest:+ELLIPSIS
+    Comment(text='Some comment', resource_id=ResourceIdentifier(...))
+    >>> comment.creation_info = {"author": "obspy.org"}
+    >>> print comment.creation_info
+    CreationInfo(author='obspy.org')
     """
-    def __init__(self, text='', id=None, creation_info={}):
-        self.text = text
-        self.id = id
-        self.creation_info = CreationInfo(creation_info)
 
 
-class WaveformStreamID(AttribDict):
+__WaveformStreamID = _eventTypeClassFactory("__WaveformStreamID",
+    class_attributes=[("network_code", str),
+                      ("station_code", str),
+                      ("channel_code", str),
+                      ("location_code", str),
+                      ("resource_id", ResourceIdentifier)])
+
+
+class WaveformStreamID(__WaveformStreamID):
     """
     Pointer to a stream description in an inventory.
 
@@ -697,32 +847,78 @@ class WaveformStreamID(AttribDict):
         attributes.
         It will only be used if the network, station, location and channel
         keyword argument are ALL None.
+
+    .. rubric:: Example
+
+    >>> # Can be initialized with a SEED string or with individual components.
+    >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR", \
+                                     location_code="", channel_code="EHZ")
+    >>> print stream_id
+    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
+    >>> print stream_id
+    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> # Can also return the SEED string.
+    print stream_id.getSEEDString()
+    BW.FUR..EHZ
     """
-    def __init__(self, network=None, station=None, location=None, channel=None,
-                 resource_uri=None, seed_string=None):
+    def __init__(self, network_code=None, station_code=None,
+                 location_code=None, channel_code=None, resource_id=None,
+                 seed_string=None):
         # Use the seed_string if it is given and everything else is not.
-        if (seed_string is not None) and (network is None) and \
-           (station is None) and (location is None) and (channel is None):
+        if (seed_string is not None) and (network_code is None) and \
+           (station_code is None) and (location_code is None) and \
+           (channel_code is None):
             try:
-                network, station, location, channel = seed_string.split('.')
+                network_code, station_code, location_code, channel_code = \
+                    seed_string.split('.')
             except ValueError:
                 warnings.warn("In WaveformStreamID.__init__(): " + \
                               "seed_string was given but could not be parsed")
                 pass
-        self.network = network or ''
-        self.station = station or ''
-        self.location = location
-        self.channel = channel
-        self.resource_uri = resource_uri
+            if not any([bool(_i) for _i in [network_code, station_code,
+                                            location_code, channel_code]]):
+                network_code, station_code, location_code, channel_code = \
+                        4 * [None]
+        super(WaveformStreamID, self).__init__(network_code=network_code,
+                                               station_code=station_code,
+                                               location_code=location_code,
+                                               channel_code=channel_code,
+                                               resource_id=resource_id)
+
+    def getSEEDString(self):
+        return "%s.%s.%s.%s" % (\
+            self.network_code if self.network_code else "",
+            self.station_code if self.station_code else "",
+            self.location_code if self.location_code else "",
+            self.channel_code if self.channel_code else "")
 
 
-class Pick(AttribDict):
+__Pick = _eventTypeClassFactory("__Pick",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("time", TimeQuantity, False),
+                      ("waveform_id", WaveformStreamID, False),
+                      ("filter_id", ResourceIdentifier),
+                      ("method_id", ResourceIdentifier),
+                      ("horizontal_slowness", FloatQuantity, False),
+                      ("backazimuth", FloatQuantity, False),
+                      ("slowness_method_id", ResourceIdentifier),
+                      ("pick_onset", PickOnset),
+                      ("phase_hint", str),
+                      ("pick_polarity", PickPolarity),
+                      ("evaluation_mode", EvaluationMode),
+                      ("evaluation_status", EvaluationStatus),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments"])
+
+
+class Pick(__Pick):
     """
     This class contains various attributes commonly used to describe a single
     pick, e.g. time, waveform id, onset, phase hint, polarity, etc
 
-    :type public_id: str
-    :param public_id: Resource identifier of Pick.
+    :type resource_id: str
+    :param resource_id: Resource identifier of Pick.
     :type time: :class:`~obspy.core.event.TimeQuantity`
     :param time: Pick time.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
@@ -772,65 +968,29 @@ class Pick(AttribDict):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
-    :type arrivals: list of :class:`~obspy.core.event.Arrival` objects
-    :param arrivals: Child elements of the Pick object.
     """
-    def __init__(self, public_id='', time={}, waveform_id={}, filter_id=None,
-                 method_id=None, horizontal_slowness={}, backazimuth={},
-                 slowness_method_id=None, onset=None, phase_hint=None,
-                 polarity=None, evaluation_mode=None, evaluation_status=None,
-                 comments=None, creation_info={}, arrivals=[]):
-        self.public_id = public_id
-        self.time = TimeQuantity(time)
-        self.waveform_id = WaveformStreamID(waveform_id)
-        self.filter_id = filter_id
-        self.method_id = method_id
-        self.horizontal_slowness = FloatQuantity(horizontal_slowness)
-        self.backazimuth = FloatQuantity(backazimuth)
-        self.slowness_method_id = slowness_method_id
-        self.onset = PickOnset(onset)
-        self.phase_hint = phase_hint
-        self.polarity = PickPolarity(polarity)
-        self.evaluation_mode = EvaluationMode(evaluation_mode)
-        self.evaluation_status = EvaluationStatus(evaluation_status)
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
-        self.arrivals = arrivals
-
-    def _getPickOnset(self):
-        return self.__dict__.get('onset', None)
-
-    def _setPickOnset(self, value):
-        self.__dict__['onset'] = PickOnset(value)
-
-    onset = property(_getPickOnset, _setPickOnset)
-
-    def _getPickPolarity(self):
-        return self.__dict__.get('polarity', None)
-
-    def _setPickPolarity(self, value):
-        self.__dict__['polarity'] = PickPolarity(value)
-
-    polarity = property(_getPickPolarity, _setPickPolarity)
-
-    def _getEvaluationMode(self):
-        return self.__dict__.get('evaluation_mode', None)
-
-    def _setEvaluationMode(self, value):
-        self.__dict__['evaluation_mode'] = EvaluationMode(value)
-
-    evaluation_mode = property(_getEvaluationMode, _setEvaluationMode)
-
-    def _getEvaluationStatus(self):
-        return self.__dict__.get('evaluation_status', None)
-
-    def _setEvaluationStatus(self, value):
-        self.__dict__['evaluation_status'] = EvaluationStatus(value)
-
-    evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
 
 
-class Arrival(AttribDict):
+__Arrival = _eventTypeClassFactory("__Arrival",
+    class_attributes=[("pick_id", ResourceIdentifier),
+                      ("phase", str),
+                      ("time_correction", float),
+                      ("azimuth", float),
+                      ("distance", float),
+                      ("time_residual", float),
+                      ("horizontal_slowness_residual", float),
+                      ("backazimuthal_residual", float),
+                      ("time_used", bool),
+                      ("horizontal_slowness_used", bool),
+                      ("backazimuth_used", bool),
+                      ("time_weight", float),
+                      ("earth_model_id", ResourceIdentifier),
+                      ("preliminary", bool),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments"])
+
+
+class Arrival(__Arrival):
     """
     Successful association of a pick with an origin qualifies this pick as an
     arrival. An arrival thus connects a pick with an origin and provides
@@ -844,7 +1004,7 @@ class Arrival(AttribDict):
     [from the QuakeML Basic Event Description, Version 1.1, page 38]
 
     :type pick_id: str
-    :param pick_id: Refers to a public_id of a Pick.
+    :param pick_id: Refers to a resource_id of a Pick.
     :type phase: str
     :param phase: Phase identification. Free-form text field describing the
         phase. In QuakeML this is a separate type but it just contains a single
@@ -873,9 +1033,9 @@ class Arrival(AttribDict):
     :type backazimuth_used: bool, optional
     :param backazimuth_used: Boolean flag. True if backazimuth was used for
         computation of the associated Origin.
-    :type time_weight: float, optional
+    :type time_weight: :class:`~obspy.core.event.FloatQuantity`, optional
     :param time_weight: Weight of this Arrival in the computation of the
-        associated Origin.
+        associated Origin. (timeWeight in XSD file, weight in PDF).
     :type earth_model_id: str, optional
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
@@ -888,38 +1048,28 @@ class Arrival(AttribDict):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, pick_id='', phase='', time_correction=None,
-                 azimuth=None, distance=None, time_residual=None,
-                 horizontal_slowness_residual=None,
-                 backazimuthal_residual=None, time_used=None,
-                 horizontal_slowness_used=None, backazimuth_used=None,
-                 time_weight=None, earth_model_id=None, preliminary=None,
-                 comments=None, creation_info={}):
-        self.pick_id = pick_id
-        self.phase = phase
-        self.time_correction = time_correction
-        self.azimuth = azimuth
-        self.distance = distance
-        self.time_residual = time_residual
-        self.horizontal_slowness_residual = horizontal_slowness_residual
-        self.backazimuthal_residual = backazimuthal_residual
-        self.time_used = time_used
-        self.horizontal_slowness_used = horizontal_slowness_used
-        self.backazimuth_used = backazimuth_used
-        self.time_weight = time_weight  # timeWeight in XSD file, weight in PDF
-        self.earth_model_id = earth_model_id
-        if preliminary is not None:
-            self.preliminary = bool(preliminary)
-        else:
-            self.preliminary = None
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
 
 
-class OriginQuality(AttribDict):
+__OriginQuality = _eventTypeClassFactory("__OriginQuality",
+    class_attributes=[("associated_phase_count", int),
+                      ("used_phase_count", int),
+                      ("associated_station_count", int),
+                      ("used_station_count", int),
+                      ("depth_phase_count", int),
+                      ("standard_error", float),
+                      ("azimuthal_gap", float),
+                      ("secondary_azimuthal_gap", float),
+                      ("ground_truth_level", str),
+                      ("maximum_distance", float),
+                      ("minimum_distance", float),
+                      ("median_distance", float)])
+
+
+class OriginQuality(__OriginQuality):
     """
-    This class contains various attributes commonly used to describe the
-    quality of an origin, e. g., errors, azimuthal coverage, etc.
+    This type contains various attributes commonly used to describe the quality
+    of an origin, e.g., errors, azimuthal coverage, etc. Origin objects have
+    an optional attribute of the type OriginQuality.
 
     :type associated_phase_count: int, optional
     :param associated_phase_count: Number of associated phases, regardless of
@@ -960,21 +1110,18 @@ class OriginQuality(AttribDict):
     :param median_distance: Distance Median epicentral distance of used
         stations. Unit: deg
     """
-    associated_phase_count = None
-    used_phase_count = None
-    associated_station_count = None
-    used_station_count = None
-    depth_phase_count = None
-    standard_error = None
-    azimuthal_gap = None
-    secondary_azimuthal_gap = None
-    ground_truth_level = None
-    minimum_distance = None
-    maximum_distance = None
-    median_distance = None
 
 
-class ConfidenceEllipsoid(AttribDict):
+__ConfidenceEllipsoid = _eventTypeClassFactory("__ConfidenceEllipsoid",
+    class_attributes=[("semi_major_axis_length", float),
+                      ("semi_minor_axis_length", float),
+                      ("semi_intermediate_axis_length", float),
+                      ("major_axis_plunge", float),
+                      ("major_axis_azimuth", float),
+                      ("major_axis_rotation", float)])
+
+
+class ConfidenceEllipsoid(__ConfidenceEllipsoid):
     """
     This class represents a description of the location uncertainty as a
     confidence ellipsoid with arbitrary orientation in space.
@@ -995,15 +1142,18 @@ class ConfidenceEllipsoid(AttribDict):
         means that the minor axis lies in the plane spanned by the major axis
         and the vertical. Unit: deg
     """
-    semi_major_axis_length = None
-    semi_minor_axis_length = None
-    semi_intermediate_axis_length = None
-    major_axis_plunge = None
-    major_axis_azimuth = None
-    major_axis_rotation = None
 
 
-class OriginUncertainty(AttribDict):
+__OriginUncertainty = _eventTypeClassFactory("__OriginUncertainty",
+    class_attributes=[("horizontal_uncertainty", float),
+                      ("min_horizontal_uncertainty", float),
+                      ("max_horizontal_uncertainty", float),
+                      ("azimuth_max_horizontal_uncertainty", float),
+                      ("confidence_ellipsoid", ConfidenceEllipsoid),
+                      ("preferred_description", OriginUncertaintyDescription)])
+
+
+class OriginUncertainty(__OriginUncertainty):
     """
     This class describes the location uncertainties of an origin.
 
@@ -1012,13 +1162,6 @@ class OriginUncertainty(AttribDict):
     ellipsoid. The preferred variant can be given in the attribute
     ``preferred_description``.
 
-    :type preferred_description: str, optional
-    :param preferred_description: Preferred uncertainty description. Allowed
-        values are the following::
-            * horizontal uncertainty
-            * uncertainty ellipse
-            * confidence ellipsoid
-            * probability density function
     :type horizontal_uncertainty: float, optional
     :param horizontal_uncertainty: Circular confidence region, given by single
         value of horizontal uncertainty. Unit: m
@@ -1034,31 +1177,43 @@ class OriginUncertainty(AttribDict):
     :type confidence_ellipsoid: :class:`~obspy.core.event.ConfidenceEllipsoid`,
         optional
     :param confidence_ellipsoid: Confidence ellipsoid
+    :type preferred_description: str, optional
+    :param preferred_description: Preferred uncertainty description. Allowed
+        values are the following::
+            * horizontal uncertainty
+            * uncertainty ellipse
+            * confidence ellipsoid
+            * probability density function
     """
-    horizontal_uncertainty = None
-    min_horizontal_uncertainty = None
-    max_horizontal_uncertainty = None
-    azimuth_max_horizontal_uncertainty = None
-    confidence_ellipsoid = ConfidenceEllipsoid()
 
-    def _getOriginUncertaintyDescription(self):
-        return self.__dict__.get('preferred_description', None)
+__Origin = _eventTypeClassFactory("__Origin",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("time", TimeQuantity, False),
+                      ("latitude", FloatQuantity, False),
+                      ("longitude", FloatQuantity, False),
+                      ("depth", FloatQuantity, False),
+                      ("depth_type", OriginDepthType),
+                      ("time_fixed", bool),
+                      ("epicenter_fixed", bool),
+                      ("reference_system_id", ResourceIdentifier),
+                      ("method_id", ResourceIdentifier),
+                      ("earth_model_id", ResourceIdentifier),
+                      ("quality", OriginQuality),
+                      ("origin_type", OriginType),
+                      ("origin_uncertainty", OriginUncertainty),
+                      ("evaluation_mode", EvaluationMode),
+                      ("evaluation_status", EvaluationStatus),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments", "arrivals", "composite_times"])
 
-    def _setOriginUncertaintyDescription(self, value):
-        self.__dict__['preferred_description'] = \
-            OriginUncertaintyDescription(value)
 
-    preferred_description = property(_getOriginUncertaintyDescription,
-                                     _setOriginUncertaintyDescription)
-
-
-class Origin(AttribDict):
+class Origin(__Origin):
     """
     This class represents the focal time and geographical location of an
     earthquake hypocenter, as well as additional meta-information.
 
-    :type public_id: str
-    :param public_id: Resource identifier of Origin.
+    :type resource_id: str
+    :param resource_id: Resource identifier of Origin.
     :type time: :class:`~obspy.core.event.TimeQuantity`
     :param time: Focal time.
     :type latitude: :class:`~obspy.core.event.FloatQuantity`
@@ -1129,88 +1284,57 @@ class Origin(AttribDict):
 
     >>> from obspy.core.event import Origin
     >>> origin = Origin()
-    >>> origin.public_id = 'smi:ch.ethz.sed/origin/37465'
-    >>> origin.time.value = UTCDateTime(0)
-    >>> origin.latitude.value = 12
-    >>> origin.latitude.confidence_level = 95
-    >>> origin.longitude.value = 42
+    >>> origin.resource_id = 'smi:ch.ethz.sed/origin/37465'
+    >>> origin.time = UTCDateTime(0)
+    >>> origin.latitude = {"value": 12, "confidence_level": 95}
+    >>> origin.longitude = 42
     >>> origin.depth_type = 'from location'
     >>> print(origin)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
-              public_id: smi:ch.ethz.sed/origin/37465
-                   time: TimeQuantity({'value': UTCDateTime(1970, 1, 1, 0, 0)})
-               latitude: FloatQuantity({'value': 12, 'confidence_level': 95})
-              longitude: FloatQuantity({'value': 42})
-               arrivals: []
-               comments: []
-        ...
+    Origin
+        resource_id: ResourceIdentifier(resource_id="smi:ch.ethz.sed/...")
+               time: TimeQuantity(value=UTCDateTime(1970, 1, 1, 0, 0))
+           latitude: FloatQuantity(value=12.0, confidence_level=95.0)
+          longitude: FloatQuantity(value=42.0)
+         depth_type: 'from location'
     """
-    def __init__(self, public_id='', time={}, latitude={},
-                 longitude={}, depth={}, depth_type=None, time_fixed=None,
-                 epicenter_fixed=None, reference_system_id=None,
-                 method_id=None, earth_model_id=None, composite_times=None,
-                 quality={}, type=None, evaluation_mode=None,
-                 evaluation_status=None, origin_uncertainty={},
-                 comments=None, creation_info={}, arrivals=None):
-        # default attributes
-        self.public_id = public_id
-        self.time = TimeQuantity(time)
-        self.latitude = FloatQuantity(latitude)
-        self.longitude = FloatQuantity(longitude)
-        self.depth = FloatQuantity(depth)
-        self.depth_type = depth_type
-        self.time_fixed = time_fixed
-        self.epicenter_fixed = epicenter_fixed
-        self.reference_system_id = reference_system_id
-        self.method_id = method_id
-        self.earth_model_id = earth_model_id
-        self.composite_times = composite_times or []
-        self.quality = OriginQuality(quality)
-        self.type = type
-        self.evaluation_mode = evaluation_mode
-        self.evaluation_status = evaluation_status
-        self.origin_uncertainty = OriginUncertainty(origin_uncertainty)
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
-        # child elements
-        self.arrivals = arrivals or []
-
-    def __str__(self):
-        return self._pretty_str(['public_id', 'time', 'latitude', 'longitude'])
-
-    def _getOriginDepthType(self):
-        return self.__dict__.get('depth_type', None)
-
-    def _setOriginDepthType(self, value):
-        self.__dict__['depth_type'] = OriginDepthType(value)
-
-    depth_type = property(_getOriginDepthType, _setOriginDepthType)
-
-    def _getOriginType(self):
-        return self.__dict__.get('type', None)
-
-    def _setOriginType(self, value):
-        self.__dict__['type'] = OriginType(value)
-
-    type = property(_getOriginType, _setOriginType)
-
-    def _getEvaluationMode(self):
-        return self.__dict__.get('evaluation_mode', None)
-
-    def _setEvaluationMode(self, value):
-        self.__dict__['evaluation_mode'] = EvaluationMode(value)
-
-    evaluation_mode = property(_getEvaluationMode, _setEvaluationMode)
-
-    def _getEvaluationStatus(self):
-        return self.__dict__.get('evaluation_status', None)
-
-    def _setEvaluationStatus(self, value):
-        self.__dict__['evaluation_status'] = EvaluationStatus(value)
-
-    evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
 
 
-class Magnitude(AttribDict):
+__StationMagnitudeContribution = _eventTypeClassFactory(\
+    "__StationMagnitudeContribution",
+    class_attributes=[("station_magnitude_id", ResourceIdentifier),
+                      ("residual", float),
+                      ("weight", float)])
+
+
+class StationMagnitudeContribution(__StationMagnitudeContribution):
+    """
+    This class describes the weighting of magnitude values from Magnitude
+    estimations.
+
+    :type station_magnitude_id: ResourceIdentifier, optional
+    :param station_magnitude_id: Refers to the resource_id of a
+        StationMagnitude object.
+    :type residual: float, optional
+    :param residual: Residual of magnitude computation.
+    :type weight: float, optional
+    :param weight: Weight of the magnitude value from a StationMagnitude object
+        for computing the magnitude value in class Magnitude.
+    """
+
+__Magnitude = _eventTypeClassFactory("__Magnitude",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("mag", FloatQuantity, False),
+                      ("magnitude_type", str),
+                      ("origin_id", ResourceIdentifier),
+                      ("method_id", ResourceIdentifier),
+                      ("station_count", int),
+                      ("azimuthal_gap", float),
+                      ("evaluation_status", EvaluationStatus),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments", "station_magnitude_contribution"])
+
+
+class Magnitude(__Magnitude):
     """
     Describes a magnitude which can, but need not be associated with an Origin.
 
@@ -1218,15 +1342,15 @@ class Magnitude(AttribDict):
     ``origin_id``. It is either a combination of different magnitude
     estimations, or it represents the reported magnitude for the given Event.
 
-    :type public_id: str
-    :param public_id: Resource identifier of Magnitude.
+    :type resource_id: str
+    :param resource_id: Resource identifier of Magnitude.
     :type mag: :class:`~obspy.core.event.FloatQuantity`
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
-    :type type: str, optional
-    :param type: Describes the type of magnitude. This is a free-text field
-        because it is impossible to cover all existing magnitude type
+    :type magnitude_type: str, optional
+    :param magnitude_type: Describes the type of magnitude. This is a free-text
+        field because it is impossible to cover all existing magnitude type
         designations with an enumeration. Possible values are
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
@@ -1236,10 +1360,10 @@ class Magnitude(AttribDict):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
-    :type origin_id: str, optional
-    :param origin_id: Reference to an origin’s public_id if the magnitude has
+    :type origin_id: ResourceIdentifier, optional
+    :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
-    :type method_id: str, optional
+    :type method_id: ResourceIdentifier, optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and type.
     :type station_count, int, optional
@@ -1248,7 +1372,8 @@ class Magnitude(AttribDict):
     :type azimuthal_gap: float, optional
     :param azimuthal_gap: Azimuthal gap for this magnitude computation.
         Unit: deg
-    :type evaluation_status: str, optional
+    :type evaluation_status: :class:`~obspy.core.event.EvaluationStatus`,
+        optional
     :param evaluation_status: Evaluation status of Magnitude. Allowed values
         are the following:
             * ``"preliminary"``
@@ -1259,52 +1384,42 @@ class Magnitude(AttribDict):
             * ``"reported"``
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
+    :type station_magnitude_contributions: list of
+        :class:`~obspy.core.event.StationMagnitudeContribution`.
+    :param station_magnitude_contributions: StationMagnitudeContribution
+        instances associated with the Magnitude.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, public_id='', mag={}, type=None, origin_id=None,
-                 method_id=None, station_count=None, azimuthal_gap=None,
-                 evaluation_status=None, comments=None, creation_info={}):
-        # default attributes
-        self.public_id = public_id
-        self.mag = FloatQuantity(mag)
-        self.type = type
-        self.origin_id = origin_id
-        self.method_id = method_id
-        self.station_count = station_count
-        self.azimuthal_gap = azimuthal_gap
-        self.evaluation_status = evaluation_status
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
 
-    def __str__(self):
-        return self._pretty_str(['magnitude'])
-
-    def _getEvaluationStatus(self):
-        return self.__dict__.get('evaluation_status', None)
-
-    def _setEvaluationStatus(self, value):
-        self.__dict__['evaluation_status'] = EvaluationStatus(value)
-
-    evaluation_status = property(_getEvaluationStatus, _setEvaluationStatus)
+__StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("origin_id", ResourceIdentifier),
+                      ("mag", FloatQuantity, False),
+                      ("station_magnitude_type", str),
+                      ("amplitude_id", ResourceIdentifier),
+                      ("method_id", ResourceIdentifier),
+                      ("waveform_id", WaveformStreamID, False),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments"])
 
 
-class StationMagnitude(AttribDict):
+class StationMagnitude(__StationMagnitude):
     """
     This class describes the magnitude derived from a single waveform stream.
 
-    :type public_id: str
-    :param public_id: Resource identifier of StationMagnitude.
-    :type origin_id: str, optional
-    :param origin_id: Reference to an origins’s ``public_id`` if the
+    :type resource_id: ResourceIdentifier, optional
+,   :param resource_id: Resource identifier of StationMagnitude.
+    :type origin_id: ResourceIdentifier, optional
+    :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: :class:`~obspy.core.event.FloatQuantity`
     :param mag: Estimated magnitude.
-    :type type: str, optional
-    :param type: Describes the type of magnitude. This is a free-text field
-        because it is impossible to cover all existing magnitude type
-        designations with an enumeration. Possible values are
+    :type station_magnitude_type: str, optional
+    :param station_magnitude_type: Describes the type of magnitude. This is a
+        free-text field because it is impossible to cover all existing
+        magnitude type designations with an enumeration. Possible values are
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
@@ -1313,15 +1428,15 @@ class StationMagnitude(AttribDict):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
-    :type amplitude_id: str, optional
+    :type amplitude_id: ResourceIdentifier, optional
     :param amplitude_id: Identifies the data source of the StationMagnitude.
         For magnitudes derived from amplitudes in waveforms (e. g.,
-        local magnitude ML), amplitude_id points to public_id in class
+        local magnitude ML), amplitude_id points to resource_id in class
         :class:`obspy.core.event.Amplitude`.
-    :type method_id: str, optional
+    :type method_id: ResourceIdentifier, optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and type.
-    :type waveform_id: str, optional
+    :type waveform_id: WaveformStreamID, optional
     :param waveform_id: Identifies the waveform stream.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
@@ -1329,31 +1444,23 @@ class StationMagnitude(AttribDict):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, public_id='', origin_id='', mag={}, type=None,
-                 amplitude_id=None, method_id=None, waveform_id={},
-                 comments=None, creation_info={}):
-        # default attributes
-        self.public_id = public_id
-        self.origin_id = origin_id
-        self.mag = FloatQuantity(mag)
-        self.type = type
-        self.amplitude_id = amplitude_id
-        self.method_id = method_id
-        self.waveform_id = WaveformStreamID(waveform_id)
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
+
+__EventDescription = _eventTypeClassFactory("__EventDescription",
+    class_attributes=[("text", str), ("event_description_type",
+                                      EventDescriptionType)])
 
 
-class EventDescription(AttribDict):
+class EventDescription(__EventDescription):
     """
     Free-form string with additional event description. This can be a
     well-known name, like 1906 San Francisco Earthquake. A number of categories
     can be given in type.
 
-    :type text: str
+    :type text: str, optional
     :param text: Free-form text with earthquake description.
-    :type type: str, optional
-    :param type: Category of earthquake description. Values can be taken from
+    :type event_description_type: str, optional
+    :param event_description_type: Category of earthquake description. Values
+        can be taken from
         the following:
             * ``"felt report"``
             * ``"Flinn-Engdahl region"``
@@ -1362,20 +1469,21 @@ class EventDescription(AttribDict):
             * ``"nearest cities"``
             * ``"earthquake name"``
             * ``"region name"``
+
+    .. rubric:: Example
     """
-    text = ''
-    type = None
 
-    def _getEventDescriptionType(self):
-        return self.__dict__.get('type', None)
+__Event = _eventTypeClassFactory("__Event",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("event_type", EventType),
+                      ("event_type_certainty", EventTypeCertainty),
+                      ("creation_info", CreationInfo)],
+    class_contains=['event-descriptions', 'comments', 'picks', 'amplitudes',
+                    'station_magnitudes', 'focal_mechanisms', 'origins',
+                    'magnitudes'])
 
-    def _setEventDescriptionType(self, value):
-        self.__dict__['type'] = EventDescriptionType(value)
 
-    type = property(_getEventDescriptionType, _setEventDescriptionType)
-
-
-class Event(object):
+class Event(__Event):
     """
     The class Event describes a seismic event which does not necessarily need
     to be a tectonic earthquake. An event is usually associated with one or
@@ -1386,19 +1494,10 @@ class Event(object):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type public_id: str, optional
-    :param public_id: Resource identifier of Event.
-    :type preferred_origin_id: str, optional
-    :param preferred_origin_id: Refers to the ``public_id`` of the preferred
-        :class:`~obspy.core.event.Origin` object.
-    :type preferred_magnitude_id: str, optional
-    :param preferred_magnitude_id: Refers to the ``public_id`` of the preferred
-        :class:`~obspy.core.event.Magnitude` object.
-    :type preferred_focal_mechanism_id: str, optional
-    :param preferred_focal_mechanism_id: Refers to the ``public_id`` of the
-        preferred :class:`~obspy.core.event.FocalMechanism` object.
-    :type type: str, optional
-    :param type: Describes the type of an event. Allowed values are the
+    :type resource_id: ResourceIdentifier, optional
+    :param resource_id: Resource identifier of Event.
+    :type event_type: str, optional
+    :param event_type: Describes the type of an event. Allowed values are the
         following:
             * ``"earthquake"``
             * ``"induced earthquake"``
@@ -1419,45 +1518,36 @@ class Event(object):
             * ``"not existing"``
             * ``"null"``
             * ``"other"``
-    :type type_certainty: str, optional
-    :param type_certainty: Denotes how certain the information on event type
-        is. Allowed values are the following:
+    :type event_type_certainty: str, optional
+    :param event_type_certainty: Denotes how certain the information on event
+        type is. Allowed values are the following:
             * ``"suspected"``
             * ``"known"``
-    :type description: list of :class:`~obspy.core.event.EventDescription`
-    :param description: Additional event description, like earthquake name,
-        Flinn-Engdahl region, etc.
-    :type comments: list of :class:`~obspy.core.event.Comment`, optional
-    :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
-    """
-    def __init__(self, public_id='', preferred_origin_id=None,
-                 preferred_magnitude_id=None,
-                 preferred_focal_mechanism_id=None, type=None,
-                 type_certainty=None, descriptions=None, comments=None,
-                 creation_info={}, origins=None, magnitudes=None,
-                 station_magnitudes=None, focal_mechanism=None, picks=None,
-                 amplitudes=None):
-        # default attributes
-        self.public_id = public_id
-        self.preferred_origin_id = preferred_origin_id
-        self.preferred_magnitude_id = preferred_magnitude_id
-        self.preferred_focal_mechanism_id = preferred_focal_mechanism_id
-        self.type = type
-        self.type_certainty = type_certainty
-        self.descriptions = descriptions or []
-        self.comments = comments or []
-        self.creation_info = CreationInfo(creation_info)
-        # child elements
-        self.origins = origins or []
-        self.magnitudes = magnitudes or []
-        self.station_magnitudes = station_magnitudes or []
-        self.focal_mechanism = focal_mechanism or []
-        self.picks = picks or []
-        self.amplitudes = amplitudes or []
 
+    :type event_descriptions: list of
+        :class:`~obspy.core.event.EventDescription`
+    :param event_descriptions: Additional event description, like earthquake
+        name, Flinn-Engdahl region, etc.
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+
+    :type picks: list of :class:`~obspy.core.event.Pick`
+    :param picks: Picks associated with the event.
+    :type amplitudes: list of :class:`~obspy.core.event.Amplitude`
+    :param amplitudes: Amplitudes associated with the event.
+    :type station_magnitudes: list of
+        :class:`~obspy.core.event.StationMagnitude`
+    :param station_magnitudes: Station magnitudes associated with the event
+    :type focal_mechanisms: list of :class:`~obspy.core.event.FocalMechanism`
+    :param focal_mechanisms: Focal mechanisms associated with the event
+    :type origins: list of :class:`~obspy.core.event.Origin`
+    :param origins: Origins associated with the event.
+    :type magnitudes: list of :class:`~obspy.core.event.Magnitude`
+    :param magnitudes: Magnitudes associated with the event.
+    """
     def __eq__(self, other):
         """
         Implements rich comparison of Event objects for "==" operator.
@@ -1467,118 +1557,29 @@ class Event(object):
         # check if other object is a Event
         if not isinstance(other, Event):
             return False
-        if self.id != other.id:
+        if (self.resource_id != other.resource_id):
             return False
         return True
 
-    def __str__(self):
+    def short_str(self):
+        """
+        Returns a short string representation of the current Event.
+
+        Example:
+        Time | Lat | Long | Magnitude of the first origin, e.g.
+        2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
+        """
         out = ''
-        if self.preferred_origin:
-            out += '%s | %+7.3f, %+8.3f' % (self.preferred_origin.time.value,
-                                       self.preferred_origin.latitude.value,
-                                       self.preferred_origin.longitude.value)
-        if self.preferred_magnitude:
-            out += ' | %s %-2s' % (self.preferred_magnitude.mag.value,
-                                   self.preferred_magnitude.type)
-        if self.preferred_origin and self.preferred_origin.evaluation_mode:
-            out += ' | %s' % (self.preferred_origin.evaluation_mode)
+        if self.origins:
+            out += '%s | %+7.3f, %+8.3f' % (self.origins[0].time.value,
+                                            self.origins[0].latitude.value,
+                                            self.origins[0].longitude.value)
+        if self.magnitudes:
+            out += ' | %s %-2s' % (self.magnitudes[0].mag.value,
+                                   self.magnitudes[0].type)
+        if self.origins and self.origins[0].evaluation_mode:
+            out += ' | %s' % (self.origins[0].evaluation_mode)
         return out
-
-    def _getEventType(self):
-        return self.__type
-
-    def _setEventType(self, value):
-        self.__type = EventType(value)
-
-    type = property(_getEventType, _setEventType)
-
-    def _getEventTypeCertainty(self):
-        return self.__type_certainty
-
-    def _setEventTypeCertainty(self, value):
-        self.__type_certainty = EventTypeCertainty(value)
-
-    type_certainty = property(_getEventTypeCertainty, _setEventTypeCertainty)
-
-    @property
-    def preferred_magnitude(self):
-        """
-        Returns preferred magnitude if set.
-        """
-        if self.preferred_magnitude_id and self.magnitudes:
-            for obj in self.magnitudes:
-                if obj.public_id == self.preferred_magnitude_id:
-                    return obj
-        return None
-
-    @property
-    def preferred_origin(self):
-        """
-        Returns preferred origin if set.
-        """
-        if self.preferred_origin_id and self.origins:
-            for obj in self.origins:
-                if obj.public_id == self.preferred_origin_id:
-                    return obj
-        return None
-
-    @property
-    def preferred_focal_mechanism(self):
-        """
-        Returns preferred focal mechanism if set.
-        """
-        if self.preferred_focal_mechanism_id and self.focal_mechanisms:
-            for obj in self.focal_mechanisms:
-                if obj.public_id == self.preferred_focal_mechanism_id:
-                    return obj
-        return None
-
-    @property
-    def time(self):
-        """
-        Returns focal time value of preferred origin.
-        """
-        return self.preferred_origin.time.value
-
-    @property
-    def latitude(self):
-        """
-        Returns latitude value of preferred origin.
-        """
-        return self.preferred_origin.latitude.value
-
-    @property
-    def longitude(self):
-        """
-        Returns longitude value of preferred origin.
-        """
-        return self.preferred_origin.longitude.value
-
-    @property
-    def magnitude(self):
-        """
-        Returns magnitude value of preferred magnitude.
-        """
-        return self.preferred_magnitude.magnitude.value
-
-    @property
-    def magnitude_type(self):
-        """
-        Returns magnitude type of preferred magnitude.
-        """
-        return self.preferred_magnitude.type
-
-    @property
-    def id(self):
-        """
-        Returns the identifier of this event.
-
-        :rtype: str
-        :return: event identifier
-        """
-        if self.public_id is None:
-            return ''
-        return "%s" % (self.public_id)
 
 
 class Catalog(object):
@@ -1587,8 +1588,8 @@ class Catalog(object):
 
     :type events: list of :class:`~obspy.core.event.Event`, optional
     :param events: List of events
-    :type public_id: str, optional
-    :param public_id: Resource identifier of the catalog.
+    :type resource_id: str, optional
+    :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the
         earthquake catalog, or collection of events.
@@ -1598,13 +1599,13 @@ class Catalog(object):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, events=None, public_id='', description=None,
+    def __init__(self, events=None, resource_id='', description=None,
                  comments=None, creation_info={}):
         """
         Initializes a Catalog object.
         """
         # default attributes
-        self.public_id = public_id
+        self.resource_id = resource_id
         self.description = description
         self.comments = comments or []
         self.creation_info = CreationInfo(creation_info)
@@ -1725,7 +1726,7 @@ class Catalog(object):
         value of each Event's :meth:`~obspy.core.event.Event.__str__` method.
         """
         out = str(len(self.events)) + ' Event(s) in Catalog:\n'
-        out = out + "\n".join([ev.__str__() for ev in self])
+        out = out + "\n".join([ev.short_str() for ev in self])
         return out
 
     def append(self, event):

@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
 from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, Origin, \
-        CreationInfo, WaveformStreamID, ResourceIdentifier
+        CreationInfo, WaveformStreamID, ResourceIdentifier, \
+        _eventTypeClassFactory
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
+from obspy.core.util import Enum
 import os
 import sys
 import unittest
 import warnings
+
+
+class EventTypeFactoryTestCase(unittest.TestCase):
+    """
+    """
+    pass
 
 
 class EventTestCase(unittest.TestCase):
@@ -19,7 +27,7 @@ class EventTestCase(unittest.TestCase):
         Testing the __str__ method of the Event object.
         """
         event = readEvents()[1]
-        s = event.__str__()
+        s = event.short_str()
         self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" + \
                           " | 4.3 ML | manual", s)
 
@@ -276,24 +284,24 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         """
         # Default init.
         waveform_id = WaveformStreamID()
-        self.assertEqual(waveform_id.network, "")
-        self.assertEqual(waveform_id.station, "")
-        self.assertEqual(waveform_id.location, None)
-        self.assertEqual(waveform_id.channel, None)
+        self.assertEqual(waveform_id.network_code, None)
+        self.assertEqual(waveform_id.station_code, None)
+        self.assertEqual(waveform_id.location_code, None)
+        self.assertEqual(waveform_id.channel_code, None)
         # With seed string.
         waveform_id = WaveformStreamID(seed_string="BW.FUR.01.EHZ")
-        self.assertEqual(waveform_id.network, "BW")
-        self.assertEqual(waveform_id.station, "FUR")
-        self.assertEqual(waveform_id.location, "01")
-        self.assertEqual(waveform_id.channel, "EHZ")
+        self.assertEqual(waveform_id.network_code, "BW")
+        self.assertEqual(waveform_id.station_code, "FUR")
+        self.assertEqual(waveform_id.location_code, "01")
+        self.assertEqual(waveform_id.channel_code, "EHZ")
         # As soon as any other argument is set, the seed_string will not be
         # used and the default values will be used for any unset arguments.
-        waveform_id = WaveformStreamID(location="02",
+        waveform_id = WaveformStreamID(location_code="02",
                                        seed_string="BW.FUR.01.EHZ")
-        self.assertEqual(waveform_id.network, "")
-        self.assertEqual(waveform_id.station, "")
-        self.assertEqual(waveform_id.location, "02")
-        self.assertEqual(waveform_id.channel, None)
+        self.assertEqual(waveform_id.network_code, None)
+        self.assertEqual(waveform_id.station_code, None)
+        self.assertEqual(waveform_id.location_code, "02")
+        self.assertEqual(waveform_id.channel_code, None)
 
     @skipIfPython25
     def test_initialization_with_invalid_seed_string(self):
@@ -313,10 +321,10 @@ class WaveformStreamIDTestCase(unittest.TestCase):
             # Now ignore the warnings and test the default values.
             warnings.simplefilter('ignore', UserWarning)
             waveform_id = WaveformStreamID(seed_string="Invalid Seed String")
-            self.assertEqual(waveform_id.network, "")
-            self.assertEqual(waveform_id.station, "")
-            self.assertEqual(waveform_id.location, None)
-            self.assertEqual(waveform_id.channel, None)
+            self.assertEqual(waveform_id.network_code, None)
+            self.assertEqual(waveform_id.station_code, None)
+            self.assertEqual(waveform_id.location_code, None)
+            self.assertEqual(waveform_id.channel_code, None)
 
 
 class ResourceIdentifierTestCase(unittest.TestCase):
@@ -433,9 +441,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(EventTypeFactoryTestCase, 'test'))
+    # suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
-    suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
+    # suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
     return suite
