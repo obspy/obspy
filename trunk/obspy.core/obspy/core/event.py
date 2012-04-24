@@ -746,7 +746,7 @@ class Pick(AttribDict):
             * ``"questionable"``
     :type phase_hint: str, optional
     :param phase_hint: Free-form text field describing the phase. In QuakeML
-        this is a seperate type but it just contains a single field containing
+        this is a separate type but it just contains a single field containing
         the phase as a string.
     :type polarity: str, optional
     :param polarity: Describes the pick onset type. Allowed values are
@@ -1228,7 +1228,7 @@ class Magnitude(AttribDict):
     :param type: Describes the type of magnitude. This is a free-text field
         because it is impossible to cover all existing magnitude type
         designations with an enumeration. Possible values are
-            * unspecified magitude (``'M'``),
+            * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
             * surface wave magnitude (``'MS'``),
@@ -1305,7 +1305,7 @@ class StationMagnitude(AttribDict):
     :param type: Describes the type of magnitude. This is a free-text field
         because it is impossible to cover all existing magnitude type
         designations with an enumeration. Possible values are
-            * unspecified magitude (``'M'``),
+            * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
             * surface wave magnitude (``'MS'``),
