@@ -577,6 +577,19 @@ class ResourceIdentifier(object):
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
 
+    def copy(self):
+        """
+        Returns a copy of the ResourceIdentifier.
+
+        >>> res_id = ResourceIdentifier()
+        >>> res_id_2 = res_id.copy()
+        >>> print res_id is res_id_2
+        False
+        >>> print res_id == res_id_2
+        True
+        """
+        return ResourceIdentifier(resource_id=self.resource_id)
+
     def __getResourceID(self):
         return self.__dict__.get("resource_id")
 
