@@ -110,20 +110,22 @@ class Pickler(object):
 
     def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
         attrib = {}
-        if obj.network or obj.resource_uri is None:
-            attrib['networkCode'] = obj.network or ''
-        if obj.station or obj.resource_uri is None:
-            attrib['stationCode'] = obj.station or ''
-        if obj.location:
-            attrib['locationCode'] = obj.location
-        if obj.channel:
-            attrib['channelCode'] = obj.channel
+        if obj.network_code:
+            attrib['networkCode'] = obj.network_code
+        if obj.station_code:
+            attrib['stationCode'] = obj.station_code
+        if obj.location_code:
+            attrib['locationCode'] = obj.location_code
+        if obj.channel_code:
+            attrib['channelCode'] = obj.channe_code
         subelement = etree.Element('waveformID', attrib=attrib)
-        if obj.resource_uri:
+        if obj.resource_id:
             subelement.text = obj.resource_uri
         element.append(subelement)
 
     def _creation_info(self, creation_info, element):
+        if creation_info is None:
+            return
         subelement = etree.Element('creationInfo')
         self._str(creation_info.agency_id, subelement, 'agencyID')
         self._str(creation_info.agency_uri, subelement, 'agencyURI')
@@ -197,10 +199,10 @@ class Pickler(object):
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
         element = etree.Element('magnitude',
-                                attrib={'publicID': magnitude.public_id or ''})
+                                attrib={'publicID': magnitude.resource_id or ''})
         self._value(magnitude.mag, element, 'mag', True)
         # optional parameter
-        self._str(magnitude.type, element, 'type')
+        self._str(magnitude.magnitude_type, element, 'type')
         self._str(magnitude.origin_id, element, 'originID')
         self._str(magnitude.method_id, element, 'methodID')
         self._str(magnitude.station_count, element, 'stationCount')
@@ -230,11 +232,11 @@ class Pickler(object):
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
         element = etree.Element('stationMagnitude',
-                                attrib={'publicID': magnitude.public_id or ''})
+                                attrib={'publicID': magnitude.resource_id or ''})
         self._str(magnitude.origin_id, element, 'originID', True)
         self._value(magnitude.mag, element, 'mag', True)
         # optional parameter
-        self._str(magnitude.type, element, 'type')
+        self._str(magnitude.station_magnitude_type, element, 'type')
         self._str(magnitude.amplitude_id, element, 'amplitudeID')
         self._str(magnitude.method_id, element, 'methodID')
         self._waveform_id(magnitude.waveform_id, element)
@@ -262,7 +264,8 @@ class Pickler(object):
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
         element = etree.Element('origin',
-                                attrib={'publicID': origin.public_id or ''})
+            attrib={'publicID': origin.resource_id.getQuakeMLURI() \
+                    if origin.resource_id is not None else ""})
         self._value(origin.time, element, 'time', True)
         self._value(origin.latitude, element, 'latitude', True)
         self._value(origin.longitude, element, 'longitude', True)
@@ -287,52 +290,55 @@ class Pickler(object):
                 element.append(ct_el)
         # quality
         qu = origin.quality
-        qu_el = etree.Element('quality')
-        self._str(qu.associated_phase_count, qu_el, 'associatedPhaseCount')
-        self._str(qu.used_phase_count, qu_el, 'usedPhaseCount')
-        self._str(qu.associated_station_count, qu_el, 'associatedStationCount')
-        self._str(qu.used_station_count, qu_el, 'usedStationCount')
-        self._str(qu.depth_phase_count, qu_el, 'depthPhaseCount')
-        self._str(qu.standard_error, qu_el, 'standardError')
-        self._str(qu.azimuthal_gap, qu_el, 'azimuthalGap')
-        self._str(qu.secondary_azimuthal_gap, qu_el, 'secondaryAzimuthalGap')
-        self._str(qu.ground_truth_level, qu_el, 'groundTruthLevel')
-        self._str(qu.minimum_distance, qu_el, 'minimumDistance')
-        self._str(qu.maximum_distance, qu_el, 'maximumDistance')
-        self._str(qu.median_distance, qu_el, 'medianDistance')
-        if len(qu_el) > 0:
-            element.append(qu_el)
-        self._str(origin.type, element, 'type')
+        if qu:
+            qu_el = etree.Element('quality')
+            self._str(qu.associated_phase_count, qu_el, 'associatedPhaseCount')
+            self._str(qu.used_phase_count, qu_el, 'usedPhaseCount')
+            self._str(qu.associated_station_count, qu_el, 'associatedStationCount')
+            self._str(qu.used_station_count, qu_el, 'usedStationCount')
+            self._str(qu.depth_phase_count, qu_el, 'depthPhaseCount')
+            self._str(qu.standard_error, qu_el, 'standardError')
+            self._str(qu.azimuthal_gap, qu_el, 'azimuthalGap')
+            self._str(qu.secondary_azimuthal_gap, qu_el, 'secondaryAzimuthalGap')
+            self._str(qu.ground_truth_level, qu_el, 'groundTruthLevel')
+            self._str(qu.minimum_distance, qu_el, 'minimumDistance')
+            self._str(qu.maximum_distance, qu_el, 'maximumDistance')
+            self._str(qu.median_distance, qu_el, 'medianDistance')
+            if len(qu_el) > 0:
+                element.append(qu_el)
+        self._str(origin.origin_type, element, 'type')
         self._str(origin.evaluation_mode, element, 'evaluationMode')
         self._str(origin.evaluation_status, element, 'evaluationStatus')
         self._comments(origin.comments, element)
         self._creation_info(origin.creation_info, element)
         # origin uncertainty
         ou = origin.origin_uncertainty
-        ou_el = etree.Element('originUncertainty')
-        self._str(ou.preferred_description, ou_el, 'preferredDescription')
-        self._str(ou.horizontal_uncertainty, ou_el, 'horizontalUncertainty')
-        self._str(ou.min_horizontal_uncertainty, ou_el,
-                  'minHorizontalUncertainty')
-        self._str(ou.max_horizontal_uncertainty, ou_el,
-                  'maxHorizontalUncertainty')
-        self._str(ou.azimuth_max_horizontal_uncertainty, ou_el,
-                 'azimuthMaxHorizontalUncertainty')
-        ce = ou.confidence_ellipsoid
-        ce_el = etree.Element('confidenceEllipsoid')
-        self._str(ce.semi_major_axis_length, ce_el, 'semiMajorAxisLength')
-        self._str(ce.semi_minor_axis_length, ce_el, 'semiMinorAxisLength')
-        self._str(ce.semi_intermediate_axis_length, ce_el,
-                 'semiIntermediateAxisLength')
-        self._str(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
-        self._str(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
-        self._str(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
-        # add confidence ellipsoid to origin uncertainty only if set
-        if len(ce_el) > 0:
-            ou_el.append(ce_el)
-        # add origin uncertainty to origin only if anything is set
-        if len(ou_el) > 0:
-            element.append(ou_el)
+        if ou is not None:
+            ou_el = etree.Element('originUncertainty')
+            self._str(ou.preferred_description, ou_el, 'preferredDescription')
+            self._str(ou.horizontal_uncertainty, ou_el, 'horizontalUncertainty')
+            self._str(ou.min_horizontal_uncertainty, ou_el,
+                      'minHorizontalUncertainty')
+            self._str(ou.max_horizontal_uncertainty, ou_el,
+                      'maxHorizontalUncertainty')
+            self._str(ou.azimuth_max_horizontal_uncertainty, ou_el,
+                     'azimuthMaxHorizontalUncertainty')
+            ce = ou.confidence_ellipsoid
+            if ce is not None:
+                ce_el = etree.Element('confidenceEllipsoid')
+                self._str(ce.semi_major_axis_length, ce_el, 'semiMajorAxisLength')
+                self._str(ce.semi_minor_axis_length, ce_el, 'semiMinorAxisLength')
+                self._str(ce.semi_intermediate_axis_length, ce_el,
+                         'semiIntermediateAxisLength')
+                self._str(ce.major_axis_plunge, ce_el, 'majorAxisPlunge')
+                self._str(ce.major_axis_azimuth, ce_el, 'majorAxisAzimuth')
+                self._str(ce.major_axis_rotation, ce_el, 'majorAxisRotation')
+                # add confidence ellipsoid to origin uncertainty only if set
+                if len(ce_el) > 0:
+                    ou_el.append(ce_el)
+            # add origin uncertainty to origin only if anything is set
+            if len(ou_el) > 0:
+                element.append(ou_el)
         # arrivals
         for ar in origin.arrivals:
             element.append(self._arrival(ar))
@@ -346,7 +352,7 @@ class Pickler(object):
         :rtype: etree.Element
         """
         element = etree.Element('pick',
-                                attrib={'publicID': pick.public_id or ''})
+                                attrib={'publicID': pick.resource_id or ''})
         # required parameter
         self._value(pick.time, element, 'time', True)
         self._waveform_id(pick.waveform_id, element, True)
@@ -373,7 +379,7 @@ class Pickler(object):
             '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
             attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
         catalog_el = etree.Element('eventParameters',
-                                  attrib={'publicID': catalog.public_id})
+                                  attrib={'publicID': catalog.resource_id})
         # optional catalog parameters
         self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
@@ -382,7 +388,7 @@ class Pickler(object):
         for event in catalog:
             # create event node
             event_el = etree.Element('event',
-                                     attrib={'publicID': event.public_id})
+                                     attrib={'publicID': event.resource_id})
             # optional event attributes
             self._str(event.preferred_origin_id, event_el, 'preferredOriginID')
             self._str(event.preferred_magnitude_id, event_el,
@@ -611,7 +617,7 @@ def _toPick(parser, element):
     """
     obj = Pick()
     # required parameter
-    obj.public_id = element.get('publicID')
+    obj.resource_id = element.get('publicID')
     obj.time = __toTimeQuantity(parser, element, 'time')
     obj.waveform_id = __toWaveformStreamID(parser, element)
     # optional parameter
@@ -651,7 +657,7 @@ def _toOrigin(parser, element):
     """
     obj = Origin()
     # required parameter
-    obj.public_id = element.get('publicID')
+    obj.resource_id = element.get('publicID')
     obj.time = __toTimeQuantity(parser, element, 'time')
     obj.latitude = __toFloatQuantity(parser, element, 'latitude')
     obj.longitude = __toFloatQuantity(parser, element, 'longitude')
@@ -694,7 +700,7 @@ def _toMagnitude(parser, element):
     """
     obj = Magnitude()
     # required parameter
-    obj.public_id = element.get('publicID')
+    obj.resource_id = element.get('publicID')
     obj.mag = __toFloatQuantity(parser, element, 'mag')
     # optional parameter
     obj.type = parser.xpath2obj('type', element)
@@ -728,7 +734,7 @@ def _toStationMagnitude(parser, element):
     """
     obj = StationMagnitude()
     # required parameter
-    obj.public_id = element.get('publicID')
+    obj.resource_id = element.get('publicID')
     obj.origin_id = parser.xpath2obj('originID', element) or ''
     obj.mag = __toFloatQuantity(parser, element, 'mag')
     # optional parameter
@@ -775,15 +781,15 @@ def readQuakeML(filename):
     # create catalog
     catalog = Catalog()
     # optional catalog attributes
-    catalog.public_id = catalog_el.get('publicID')
+    catalog.resource_id = catalog_el.get('publicID')
     catalog.description = p.xpath2obj('description', catalog_el)
     catalog.comments = __toComments(p, catalog_el)
     catalog.creation_info = __toCreationInfo(p, catalog_el)
     # loop over all events
     for event_el in p.xpath('event', catalog_el):
         # create new Event object
-        public_id = event_el.get('publicID')
-        event = Event(public_id)
+        resource_id = event_el.get('publicID')
+        event = Event(resource_id)
         # optional event attributes
         event.preferred_origin_id = p.xpath2obj('preferredOriginID', event_el)
         event.preferred_magnitude_id = \
