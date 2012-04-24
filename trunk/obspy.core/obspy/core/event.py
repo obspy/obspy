@@ -560,22 +560,36 @@ class ResourceIdentifier(object):
         :param authority_id: The base url of the resulting string. Defaults to
             ``"local"``.
         """
-        # Straight copy from the QuakeML xsd file. Compiling the regex is not
-        # worthwhile because recent expressions are cached within the re
-        # module.
+        quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
+        if quakeml_uri == self.resource_id:
+            return
+        self.__setResourceID(quakeml_uri)
+
+    def getQuakeMLURI(self, authority_id="local"):
+        """
+        Returns the resource_id as a valid QuakeML URI if possible. Does not
+        change the resource_id itself.
+
+        >>> res_id = ResourceIdentifier("some_id")
+        >>> print res_id.getQuakeMLURI()
+        smi:local/some_id
+        >>> # Did not change the actual resource id.
+        >>> print res_id.resource_id
+        some_id
+        """
         regex = r"(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
                 r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*"
         result = re.match(regex, str(self.resource_id))
         if result is not None:
-            return
-        self.__setResourceID('smi:%s/%s' % (authority_id,
-                                            str(self.resource_id)))
+            return self.resource_id
+        resource_id = 'smi:%s/%s' % (authority_id, str(self.resource_id))
         # Check once again just to be sure no weird symbols are stored in the
         # resource_id.
-        result = re.match(regex, self.resource_id)
+        result = re.match(regex, resource_id)
         if result is None:
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise Exception(msg)
+        return resource_id
 
     def copy(self):
         """
