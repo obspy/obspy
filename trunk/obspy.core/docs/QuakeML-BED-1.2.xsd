@@ -353,9 +353,19 @@
     </xs:sequence>
     <xs:anyAttribute namespace="##other" processContents="lax"/>
   </xs:complexType>
+
+  <xs:simpleType name="HelperElement_EmptyStringType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\s*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="HelperElement_ResourceReference_or_EmptyString">
+      <xs:union memberTypes="bed:ResourceReference HelperElement_EmptyStringType" />
+  </xs:simpleType>
+
   <xs:complexType name="WaveformStreamID">
     <xs:simpleContent>
-      <xs:extension base="bed:ResourceReference">
+      <xs:extension base="HelperElement_ResourceReference_or_EmptyString">
         <xs:attribute name="networkCode" use="required">
           <xs:simpleType>
             <xs:restriction base="xs:string">
