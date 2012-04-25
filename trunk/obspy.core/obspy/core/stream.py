@@ -1500,6 +1500,9 @@ class Stream(object):
         dtype = {}
         calib = {}
         for trace in self.traces:
+            # skip empty traces
+            if len(trace) == 0:
+                continue
             # Check sampling rate.
             sr.setdefault(trace.id, trace.stats.sampling_rate)
             if trace.stats.sampling_rate != sr[trace.id]:
@@ -1578,6 +1581,9 @@ class Stream(object):
         try:
             while True:
                 trace = self.traces.pop(0)
+                # skip empty traces
+                if len(trace) == 0:
+                    continue
                 _id = trace.getId()
                 if _id not in traces_dict:
                     traces_dict[_id] = [trace]

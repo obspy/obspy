@@ -1612,6 +1612,21 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(st.traces[0] == st2.traces[0])
         self.assertFalse(st.traces[0] is st2.traces[0])
 
+    def test_merge_with_empty_trace(self):
+        """
+        Merging a stream containing a empty trace with a differing sampling
+        rate should not fail.
+        """
+        # preparing a dataset
+        tr = read()[0]
+        st = tr / 3
+        # empty and change sampling rate of second trace
+        st[1].stats.sampling_rate = 0
+        st[1].data = np.array([])
+        # merge
+        st.merge(fill_value='interpolate')
+        self.assertEquals(len(st), 1)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
