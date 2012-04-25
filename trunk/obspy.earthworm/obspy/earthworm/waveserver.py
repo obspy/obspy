@@ -15,13 +15,6 @@ import struct
 import socket
 import numpy
 
-
-DATATYPE_KEY = {
-    't4': ['f', '>', 4], 't8': ['d', '>', 8],
-    's4': ['i', '>', 4], 's2': ['h', '>', 2],
-    'f4': ['f', '<', 4], 'f8': ['d', '<', 8],
-    'i4': ['i', '<', 4], 'i2': ['h', '<', 2]
-}
 RETURNFLAG_KEY = {
     'F': 'success',
     'FR': 'requested data right (later) than tank contents',
@@ -33,13 +26,27 @@ RETURNFLAG_KEY = {
     'FU': 'unknown error'
 }
 
+def getNumpyType(tpstr):
+    """
+    given a tracebuf2 type string from header, 
+    return appropriate numpy.dtype object
+    """
+    DATATYPE_KEY = {
+        't4': '>f4', 't8':'>f8',
+        's4': '>i4', 's2':'>i2',
+        'f4': '<f4', 'f8':'<f8',
+        'i4': '<i4', 'i2':'<i2'
+        }
+    dtypestr=DATATYPE_KEY[tpstr]
+    tp=numpy.dtype(dtypestr)
+    return tp
 
 class tracebuf2:
     """
     """
     byteswap = False
-    ndata = 0  # number of samples in instance
-    inputType = None
+    ndata = 0           # number of samples in instance
+    inputType = None    # numpy data type
 
     def readTB2(self, tb2):
         """
@@ -50,7 +57,7 @@ class tracebuf2:
             return 0   # not enough array to hold header
         head = tb2[:64]
         self.parseHeader(head)
-        nbytes = 64 + self.ndata * self.tbtype[2]
+        nbytes = 64 + self.ndata * self.inputType.itemsize
         if len(tb2) < nbytes:
             return 0   # not enough array to hold data specified in header
         dat = tb2[64:nbytes]
@@ -63,11 +70,16 @@ class tracebuf2:
         """
         packStr = '2i3d7s9s4s3s2s3s2s2s'
         dtype = head[-7:-5]
-        self.tbtype = DATATYPE_KEY[dtype]
+        if dtype[0] in 'ts':
+            endian = '>'
+        elif dtype[0] in 'if':
+            endian = '<'
+        else: raise ValueError
+        self.inputType = getNumpyType(dtype)
         (self.pinno, self.ndata, ts, te, self.rate,
          self.sta, self.net, self.chan, self.loc,
          self.version, tp, self.qual, _pad
-        ) = struct.unpack(self.tbtype[1] + packStr, head)
+        ) = struct.unpack(endian + packStr, head)
         if not tp.startswith(dtype):
             print 'Error parsing header: %s!=%s' % (dtype, tp)
         self.start = UTCDateTime(ts)
@@ -78,19 +90,7 @@ class tracebuf2:
         """
         Parse tracebuf char array data into self.data
         """
-        native = sys.byteorder
-        databytes = self.ndata * self.tbtype[2]
-        if native == 'big':
-            native = '>'
-        elif native == 'little':
-            native = '<'
-        else:
-            print 'could not interpret system endian %s in tracebuf2' % native
-            return None
-        self.data = array.array(self.tbtype[0])
-        self.data.fromstring(dat[:databytes])
-        if not native == self.tbtype[1]:
-            self.data.byteswap()
+        self.data = numpy.fromstring(dat,self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
             print 'data count in header (%d) != data count (%d)' % (self.nsamp,
@@ -114,7 +114,7 @@ class tracebuf2:
         stat.starttime = UTCDateTime(self.start)
         stat.sampling_rate = self.rate
         stat.npts = len(self.data)
-        return Trace(data=numpy.array(self.data), header=stat)
+        return Trace(data=self.data, header=stat)
 
 
 def sendSockReq(server, port, reqStr):
