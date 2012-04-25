@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://quakeml.org/xmlns/quakeml/1.2"
+           xmlns="http://quakeml.org/xmlns/quakeml/1.2"
+           xmlns:bed="http://quakeml.org/xmlns/bed/1.2"
+           elementFormDefault="qualified" 
+           attributeFormDefault="unqualified">
+           
+  <xs:import namespace="http://quakeml.org/xmlns/bed/1.2" schemaLocation="QuakeML-BED-1.2.xsd"/>
+  
+  <xs:complexType name="Quakeml">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="1">
+        <xs:element ref="bed:eventParameters" minOccurs="0" maxOccurs="1"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  
+  <xs:element name="quakeml" type="Quakeml"/>
+  
+</xs:schema>
