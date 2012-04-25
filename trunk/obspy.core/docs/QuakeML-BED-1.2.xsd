@@ -631,6 +631,7 @@
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:attribute name="preliminary" type="xs:boolean"/>
     <xs:anyAttribute namespace="##other" processContents="lax"/>
   </xs:complexType>
   <xs:complexType name="Origin">
