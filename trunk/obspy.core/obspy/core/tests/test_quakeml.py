@@ -81,11 +81,11 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(len(event.descriptions), 3)
         d = event.descriptions
         self.assertEquals(d[0].text, '1906 San Francisco Earthquake')
-        self.assertEquals(d[0].event_description_type, 'earthquake name')
+        self.assertEquals(d[0].type, 'earthquake name')
         self.assertEquals(d[1].text, 'NEAR EAST COAST OF HONSHU, JAPAN')
-        self.assertEquals(d[1].event_description_type, 'Flinn-Engdahl region')
+        self.assertEquals(d[1].type, 'Flinn-Engdahl region')
         self.assertEquals(d[2].text, 'free-form string')
-        self.assertEquals(d[2].event_description_type, None)
+        self.assertEquals(d[2].type, None)
         # creation info
         self.assertEquals(event.creation_info.author, "Erika Mustermann")
         self.assertEquals(event.creation_info.agency_id, "EMSC")

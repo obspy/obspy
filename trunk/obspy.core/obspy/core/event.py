@@ -9,18 +9,21 @@ Module for handling ObsPy Catalog and Event objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
+    EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
+    EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
+    AmplitudeCategory, AmplitudeUnit
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, getExampleFile, \
-        uncompressFile, _readFromPlugin
+from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
+    NamedTemporaryFile
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.event_header import *
-from pkg_resources import load_entry_point
+from pkg_resources import load_entry_point  # @UnresolvedImport
+from uuid import uuid4
 import copy
 import glob
 import os
 import re
 import urllib2
-from uuid import uuid4
 import warnings
 import weakref
 
@@ -149,12 +152,13 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
 
     Usage to create a new class type:
 
+    >>> from obspy.core.util.types import Enum
     >>> ABCEnum = Enum(["a", "b", "c"])
     >>> # For every fixed type attribute, corresponding getter/setter methods
     >>> # will be created and the attribute will be a property of the resulting
     >>> # class.
     >>> # The third item in the tuple is interpreted as "is allowed to be
-    >>> # None". Thus, if False, it will initialise with given types default
+    >>> # None". Thus, if False, it will initialize with given types default
     >>> # constructor. Use only for types is makes sense.
     >>> class_attributes = [ \
             ("resource_id", ResourceIdentifier, False), \
@@ -176,7 +180,7 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                         creation_info={"author": "obspy.org", \
                                        "version": "0.1"})
     >>> # All given arguments will be converted to the right type.
-    >>> print test_event.resource_id
+    >>> test_event.resource_id
     ResourceIdentifier(resource_id="event/123456")
     >>> print test_event.creation_info
     CreationInfo(author='obspy.org', version='0.1')
@@ -308,7 +312,6 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
         def __ne__(self, other):
             return not self.__eq__(other)
 
-
     # Use this awkward construct to get around a problem with closures. See
     # http://code.activestate.com/recipes/502271/
     def _create_getter_and_setter(attrib_name, attrib_type):
@@ -387,14 +390,14 @@ class ResourceIdentifier(object):
     General usage:
 
     >>> res_id = ResourceIdentifier('2012-04-11--385392')
-    >>> print res_id
+    >>> res_id
     ResourceIdentifier(resource_id="2012-04-11--385392")
     >>> # If no resource_id is given it will be generated automatically.
-    >>> print res_id # doctest:+ELLIPSIS
+    >>> res_id # doctest:+ELLIPSIS
     ResourceIdentifier(resource_id="...")
     >>> # Supplying a prefix will simply prefix the automatically generated
     >>> # resource_id.
-    >>> print ResourceIdentifier(prefix='event') # doctest:+ELLIPSIS
+    >>> ResourceIdentifier(prefix='event') # doctest:+ELLIPSIS
     ResourceIdentifier(resource_id="event/...")
 
     ResourceIdentifiers can, and oftentimes should, carry a reference to the
@@ -463,25 +466,25 @@ class ResourceIdentifier(object):
 
     >>> res_id = ResourceIdentifier(prefix='origin')
     >>> res_id.convertIDToQuakeMLURI(authority_id="obspy.org")
-    >>> print res_id # doctest:+ELLIPSIS
+    >>> res_id # doctest:+ELLIPSIS
     ResourceIdentifier(resource_id="smi:obspy.org/origin/...")
     >>> res_id = ResourceIdentifier('foo')
     >>> res_id.convertIDToQuakeMLURI()
-    >>> print res_id
+    >>> res_id
     ResourceIdentifier(resource_id="smi:local/foo")
     >>> # A good way to create a QuakeML compatibly ResourceIdentifier from
     >>> # scratch is
     >>> res_id = ResourceIdentifier(prefix='pick')
     >>> res_id.convertIDToQuakeMLURI(authority_id='obspy.org')
-    >>> print res_id # doctest:+ELLIPSIS
+    >>> res_id  # doctest:+ELLIPSIS
     ResourceIdentifier(resource_id="smi:obspy.org/pick/...")
     >>> # If the given resource_id is already a valid QuakeML
     >>> # ResourceIdentifier, nothing will happen.
     >>> res_id = ResourceIdentifier('smi:test.org/subdir/id')
-    >>> print res_id
+    >>> res_id
     ResourceIdentifier(resource_id="smi:test.org/subdir/id")
     >>> res_id.convertIDToQuakeMLURI()
-    >>> print res_id
+    >>> res_id
     ResourceIdentifier(resource_id="smi:test.org/subdir/id")
 
     ResourceIdentifiers are considered identical if the resource_ids are
@@ -675,9 +678,12 @@ class ResourceIdentifier(object):
 
 
 __CreationInfo = _eventTypeClassFactory("__CreationInfo",
-    class_attributes=[("agency_id", str), ("agency_uri", ResourceIdentifier),
-                      ("author", str), ("author_uri", ResourceIdentifier),
-                      ("creation_time", UTCDateTime), ("version", str)])
+    class_attributes=[("agency_id", str, False),
+                      ("agency_uri", ResourceIdentifier, False),
+                      ("author", str, False),
+                      ("author_uri", ResourceIdentifier, False),
+                      ("creation_time", UTCDateTime, False),
+                      ("version", str, False)])
 
 
 class CreationInfo(__CreationInfo):
@@ -739,10 +745,31 @@ class TimeQuantity(__TimeQuantity):
     _value_type = UTCDateTime
 
 
+__TimeWindow = _eventTypeClassFactory("__TimeWindow",
+    class_attributes=[("begin", float),
+                      ("end", float),
+                      ("reference", UTCDateTime)])
+
+
+class TimeWindow(__TimeWindow):
+    """
+    Describes a time window for amplitude measurements.
+
+    :type begin: float
+    :param begin: Time interval before reference point in time window. Unit: s
+    :type end: float
+    :param end: Time interval after reference point in time window. Unit: s
+    :type reference: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param reference: Reference point in time (“central” point).
+    """
+
+
 __IntegerQuantity = _eventTypeClassFactory("__IntegerQuantity",
-    class_attributes=[("value", int), ("uncertainty", int),
-        ("lower_uncertainty", int), ("upper_uncertainty", int),
-        ("confidence_level", float)])
+    class_attributes=[("value", int),
+                      ("uncertainty", int, False),
+                      ("lower_uncertainty", int, False),
+                      ("upper_uncertainty", int, False),
+                      ("confidence_level", float, False)])
 
 
 class IntegerQuantity(__IntegerQuantity):
@@ -767,9 +794,11 @@ class IntegerQuantity(__IntegerQuantity):
 
 
 __FloatQuantity = _eventTypeClassFactory("__FloatQuantity",
-    class_attributes=[("value", float), ("uncertainty", float),
-        ("lower_uncertainty", float), ("upper_uncertainty", float),
-        ("confidence_level", float)])
+    class_attributes=[("value", float),
+                      ("uncertainty", float, False),
+                      ("lower_uncertainty", float, False),
+                      ("upper_uncertainty", float, False),
+                      ("confidence_level", float, False)])
 
 
 class FloatQuantity(__FloatQuantity):
@@ -834,8 +863,9 @@ class CompositeTime(__CompositeTime):
 
 
 __Comment = _eventTypeClassFactory("__Comment",
-    class_attributes=[("text", str), ("resource_id", ResourceIdentifier),
-                      ("creation_info", CreationInfo)])
+    class_attributes=[("text", str),
+                      ("resource_id", ResourceIdentifier),
+                      ("creation_info", CreationInfo, False)])
 
 
 class Comment(__Comment):
@@ -865,9 +895,9 @@ class Comment(__Comment):
 __WaveformStreamID = _eventTypeClassFactory("__WaveformStreamID",
     class_attributes=[("network_code", str),
                       ("station_code", str),
-                      ("channel_code", str),
-                      ("location_code", str),
-                      ("resource_id", ResourceIdentifier)])
+                      ("channel_code", str, False),
+                      ("location_code", str, False),
+                      ("resource_id", ResourceIdentifier, False)])
 
 
 class WaveformStreamID(__WaveformStreamID):
@@ -942,6 +972,120 @@ class WaveformStreamID(__WaveformStreamID):
             self.channel_code if self.channel_code else "")
 
 
+__Amplitude = _eventTypeClassFactory("__Amplitude",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("generic_amplitude", FloatQuantity),
+                      ("type", str, False),
+                      ("category", AmplitudeCategory),
+                      ("unit", AmplitudeUnit),
+                      ("method_id", ResourceIdentifier),
+                      ("period", FloatQuantity, False),
+                      ("snr", float, False),
+                      ("time_window", TimeWindow, False),
+                      ("pick_id", ResourceIdentifier),
+                      ("waveform_id", ResourceIdentifier),
+                      ("filter_id", ResourceIdentifier),
+                      ("scaling_time", TimeQuantity, False),
+                      ("magnitude_hint", str, False),
+                      ("evaluation_mode", EvaluationMode),
+                      ("evaluation_status", EvaluationStatus),
+                      ("creation_info", CreationInfo)],
+    class_contains=["comments"])
+
+
+class Amplitude(__Amplitude):
+    """
+    This class represents a single amplitude measurement or a measurement of
+    the visible end of a record for duration magnitudes.
+
+    :type resource_id: str
+    :param resource_id: Resource identifier of Pick.
+    :type generic_amplitude: :class:`~obspy.core.event.FloatQuantity`
+    :param generic_amplitude: Amplitude value.
+    :type type: str, optional
+    :param type: Describes the type of amplitude using the nomenclature from
+        Storchak et al. (2003). Possible values are:
+            * unspecified amplitude reading (``'A'``),
+            * amplitude reading for local magnitude (``'AL'``),
+            * amplitude reading for body wave magnitude (``'AB'``),
+            * amplitude reading for surface wave magnitude (``'AS'``), and
+            * time of visible end of record for duration magnitude (``'END'``).
+    :type category: str, optional
+    :param category: Amplitude category. Possible values
+        are:
+            * ``"point"``,
+            * ``"mean"``,
+            * ``"duration"``,
+            * ``"period"``,
+            * ``"integral"``,
+            * ``"other"``
+    :type unit: str, optional
+    :param unit: Amplitude unit. Possible values
+        are:
+            * ``"m"``,
+            * ``"s"``,
+            * ``"m/s"``,
+            * ``"m/(s*s)"``,
+            * ``"m*s"``,
+            * ``"dimensionless"``,
+            * ``"other"``
+    :type method_id: str, optional
+    :param method_id: Describes the method of amplitude determination.
+    :type period: float, optional
+    :param period: Measured period in the ``time_window`` in case of amplitude
+        measurements. Not used for duration magnitude. Unit: s
+    :type snr: float, optional
+    :param snr: Signal-to-noise ratio of the spectrogram at the location the
+        amplitude was measured.
+    :type time_window: :class:`~obspy.core.event.TimeWindow`, optional
+    :param time_window: Description of the time window used for amplitude
+        measurement. Mandatory for duration magnitudes.
+    :type pick_id: str, optional
+    :param pick_id: Refers to the ``resource_id`` of an associated
+        :class:`~obspy.core.event.Pick` object.
+    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
+    :param waveform_id: Identifies the waveform stream on which the amplitude
+        was measured.
+    :type filter_id: str, optional
+    :param filter_id: Identifies the filter or filter setup used for filtering
+        the waveform stream referenced by ``waveform_id``.
+    :type scaling_time: :class:`~obspy.core.event.TimeQuantity`, optional
+    :param scaling_time: Scaling time for amplitude measurement.
+    :type magnitude_hint: str, optional
+    :param magnitude_hint: Type of magnitude the amplitude measurement is used
+        for.  This is a free-text field because it is impossible to cover all
+        existing magnitude type designations with an enumeration. Possible
+        values are:
+            * unspecified magnitude (``'M'``),
+            * local magnitude (``'ML'``),
+            * body wave magnitude (``'Mb'``),
+            * surface wave magnitude (``'MS'``),
+            * moment magnitude (``'Mw'``),
+            * duration magnitude (``'Md'``)
+            * coda magnitude (``'Mc'``)
+            * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
+    :type evaluation_mode: str, optional
+    :param evaluation_mode: Evaluation mode of Amplitude. Allowed values are
+        the following:
+            * ``"manual"``
+            * ``"automatic"``
+    :type evaluation_status: str, optional
+    :param evaluation_status: Evaluation status of Amplitude. Allowed values
+        are the following:
+            * ``"preliminary"``
+            * ``"confirmed"``
+            * ``"reviewed"``
+            * ``"final"``
+            * ``"rejected"``
+            * ``"reported"``
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
+    """
+
+
 __Pick = _eventTypeClassFactory("__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", TimeQuantity, False),
@@ -993,7 +1137,7 @@ class Pick(__Pick):
         this is a separate type but it just contains a single field containing
         the phase as a string.
     :type polarity: str, optional
-    :param polarity: Describes the pick onset type. Allowed values are
+    :param polarity: Describes the pick onset type. Allowed values are:
             * ``"positive"``
             * ``"negative"``
             * ``"undecidable"``
@@ -1100,18 +1244,18 @@ class Arrival(__Arrival):
 
 
 __OriginQuality = _eventTypeClassFactory("__OriginQuality",
-    class_attributes=[("associated_phase_count", int),
-                      ("used_phase_count", int),
-                      ("associated_station_count", int),
-                      ("used_station_count", int),
-                      ("depth_phase_count", int),
-                      ("standard_error", float),
-                      ("azimuthal_gap", float),
-                      ("secondary_azimuthal_gap", float),
-                      ("ground_truth_level", str),
-                      ("maximum_distance", float),
-                      ("minimum_distance", float),
-                      ("median_distance", float)])
+    class_attributes=[("associated_phase_count", int, False),
+                      ("used_phase_count", int, False),
+                      ("associated_station_count", int, False),
+                      ("used_station_count", int, False),
+                      ("depth_phase_count", int, False),
+                      ("standard_error", float, False),
+                      ("azimuthal_gap", float, False),
+                      ("secondary_azimuthal_gap", float, False),
+                      ("ground_truth_level", str, False),
+                      ("maximum_distance", float, False),
+                      ("minimum_distance", float, False),
+                      ("median_distance", float, False)])
 
 
 class OriginQuality(__OriginQuality):
@@ -1228,12 +1372,13 @@ class OriginUncertainty(__OriginUncertainty):
     :param confidence_ellipsoid: Confidence ellipsoid
     :type preferred_description: str, optional
     :param preferred_description: Preferred uncertainty description. Allowed
-        values are the following::
+        values are the following:
             * horizontal uncertainty
             * uncertainty ellipse
             * confidence ellipsoid
             * probability density function
     """
+
 
 __Origin = _eventTypeClassFactory("__Origin",
     class_attributes=[("resource_id", ResourceIdentifier),
@@ -1351,8 +1496,8 @@ class Origin(__Origin):
 __StationMagnitudeContribution = _eventTypeClassFactory(\
     "__StationMagnitudeContribution",
     class_attributes=[("station_magnitude_id", ResourceIdentifier),
-                      ("residual", float),
-                      ("weight", float)])
+                      ("residual", float, False),
+                      ("weight", float, False)])
 
 
 class StationMagnitudeContribution(__StationMagnitudeContribution):
@@ -1370,6 +1515,7 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
         for computing the magnitude value in class Magnitude.
     """
 
+
 __Magnitude = _eventTypeClassFactory("__Magnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("mag", FloatQuantity, False),
@@ -1378,6 +1524,7 @@ __Magnitude = _eventTypeClassFactory("__Magnitude",
                       ("method_id", ResourceIdentifier),
                       ("station_count", int),
                       ("azimuthal_gap", float),
+                      ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("creation_info", CreationInfo)],
     class_contains=["comments", "station_magnitude_contribution"])
@@ -1400,7 +1547,7 @@ class Magnitude(__Magnitude):
     :type magnitude_type: str, optional
     :param magnitude_type: Describes the type of magnitude. This is a free-text
         field because it is impossible to cover all existing magnitude type
-        designations with an enumeration. Possible values are
+        designations with an enumeration. Possible values are:
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
@@ -1421,6 +1568,11 @@ class Magnitude(__Magnitude):
     :type azimuthal_gap: float, optional
     :param azimuthal_gap: Azimuthal gap for this magnitude computation.
         Unit: deg
+    :type evaluation_mode: str, optional
+    :param evaluation_mode: Evaluation mode of Magnitude. Allowed values are
+        the following:
+            * ``"manual"``
+            * ``"automatic"``
     :type evaluation_status: :class:`~obspy.core.event.EvaluationStatus`,
         optional
     :param evaluation_status: Evaluation status of Magnitude. Allowed values
@@ -1442,6 +1594,7 @@ class Magnitude(__Magnitude):
         version, and creation time.
     """
 
+
 __StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("origin_id", ResourceIdentifier),
@@ -1459,7 +1612,7 @@ class StationMagnitude(__StationMagnitude):
     This class describes the magnitude derived from a single waveform stream.
 
     :type resource_id: ResourceIdentifier, optional
-,   :param resource_id: Resource identifier of StationMagnitude.
+    :param resource_id: Resource identifier of StationMagnitude.
     :type origin_id: ResourceIdentifier, optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
@@ -1468,7 +1621,7 @@ class StationMagnitude(__StationMagnitude):
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: Describes the type of magnitude. This is a
         free-text field because it is impossible to cover all existing
-        magnitude type designations with an enumeration. Possible values are
+        magnitude type designations with an enumeration. Possible values are:
             * unspecified magnitude (``'M'``),
             * local magnitude (``'ML'``),
             * body wave magnitude (``'Mb'``),
@@ -1494,9 +1647,10 @@ class StationMagnitude(__StationMagnitude):
         version, and creation time.
     """
 
+
 __EventDescription = _eventTypeClassFactory("__EventDescription",
-    class_attributes=[("text", str), ("event_description_type",
-                                      EventDescriptionType)])
+    class_attributes=[("text", str),
+                      ("type", EventDescriptionType)])
 
 
 class EventDescription(__EventDescription):
@@ -1509,8 +1663,7 @@ class EventDescription(__EventDescription):
     :param text: Free-form text with earthquake description.
     :type event_description_type: str, optional
     :param event_description_type: Category of earthquake description. Values
-        can be taken from
-        the following:
+        can be taken from the following:
             * ``"felt report"``
             * ``"Flinn-Engdahl region"``
             * ``"local time"``
@@ -1518,16 +1671,15 @@ class EventDescription(__EventDescription):
             * ``"nearest cities"``
             * ``"earthquake name"``
             * ``"region name"``
-
-    .. rubric:: Example
     """
+
 
 __Event = _eventTypeClassFactory("__Event",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
                       ("creation_info", CreationInfo)],
-    class_contains=['event-descriptions', 'comments', 'picks', 'amplitudes',
+    class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'station_magnitudes', 'focal_mechanisms', 'origins',
                     'magnitudes'])
 
@@ -1575,14 +1727,12 @@ class Event(__Event):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation information used to describe author,
         version, and creation time.
-
     :type event_descriptions: list of
         :class:`~obspy.core.event.EventDescription`
     :param event_descriptions: Additional event description, like earthquake
         name, Flinn-Engdahl region, etc.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
-
     :type picks: list of :class:`~obspy.core.event.Pick`
     :param picks: Picks associated with the event.
     :type amplitudes: list of :class:`~obspy.core.event.Amplitude`
@@ -1629,6 +1779,7 @@ class Event(__Event):
         if self.origins and self.origins[0].evaluation_mode:
             out += ' | %s' % (self.origins[0].evaluation_mode)
         return out
+
 
 __Catalog = _eventTypeClassFactory("__Catalog",
     class_attributes=[("resource_id", ResourceIdentifier),

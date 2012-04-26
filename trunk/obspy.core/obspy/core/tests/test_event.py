@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
+
 from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, Origin, \
-        CreationInfo, WaveformStreamID, ResourceIdentifier, \
-        _eventTypeClassFactory
+        CreationInfo, WaveformStreamID, ResourceIdentifier
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
-from obspy.core.util import Enum
 import os
 import sys
 import unittest
