@@ -25,7 +25,7 @@ import warnings
 import weakref
 
 
-EVENT_ENTRY_POINTS = ENTRY_POINTS['waveform']
+EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
 
 
 def readEvents(pathname_or_url=None, format=None, **kwargs):
@@ -647,10 +647,10 @@ class ResourceIdentifier(object):
                            "unique identifier of the current instance")
 
     def __str__(self):
-        return 'ResourceIdentifier(resource_id="%s")' % self.resource_id
+        return self.resource_id
 
     def __repr__(self):
-        return self.__str__()
+        return 'ResourceIdentifier(resource_id="%s")' % self.resource_id
 
     def __eq__(self, other):
         # The type check is necessary due to the used hashing method.
@@ -1020,7 +1020,8 @@ class Pick(__Pick):
 
 
 __Arrival = _eventTypeClassFactory("__Arrival",
-    class_attributes=[("pick_id", ResourceIdentifier),
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("pick_id", ResourceIdentifier),
                       ("phase", str),
                       ("time_correction", float),
                       ("azimuth", float),
@@ -1624,7 +1625,7 @@ class Event(__Event):
                                             self.origins[0].longitude.value)
         if self.magnitudes:
             out += ' | %s %-2s' % (self.magnitudes[0].mag.value,
-                                   self.magnitudes[0].type)
+                                   self.magnitudes[0].magnitude_type)
         if self.origins and self.origins[0].evaluation_mode:
             out += ' | %s' % (self.origins[0].evaluation_mode)
         return out

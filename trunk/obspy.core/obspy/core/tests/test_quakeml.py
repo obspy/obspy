@@ -24,6 +24,10 @@ class QuakeMLTestCase(unittest.TestCase):
         str1 = ''.join([s.strip() for s in tostring(obj1).splitlines()])
         obj2 = fromstring(doc2)
         str2 = ''.join([s.strip() for s in tostring(obj2).splitlines()])
+        if str1 != str2:
+            print
+            print str1
+            print str2
         self.assertEquals(str1, str2)
 
     def test_readQuakeML(self):
@@ -70,7 +74,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(c[0].resource_id, None)
         self.assertEquals(c[0].creation_info.agency_id, 'EMSC')
         self.assertEquals(c[1].text, 'Another comment')
-        self.assertEquals(c[1].resource_id, ResourceIdentifier('number_3'))
+        self.assertEquals(c[1].resource_id,
+            ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
         self.assertEquals(c[1].creation_info, None)
         # event descriptions
         self.assertEquals(len(event.descriptions), 3)
@@ -118,13 +123,13 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(origin.depth.confidence_level, 50.0)
         self.assertEquals(origin.depth_type, "from location")
         self.assertEquals(origin.method_id,
-            ResourceIdentifier("method/NA"))
+            ResourceIdentifier(resource_id="smi:some/method/NA"))
         self.assertEquals(origin.time_fixed, None)
         self.assertEquals(origin.epicenter_fixed, False)
         self.assertEquals(origin.reference_system_id,
-            ResourceIdentifier("muh"))
+            ResourceIdentifier(resource_id="smi:some/reference/muh"))
         self.assertEquals(origin.earth_model_id,
-            ResourceIdentifier("maeh"))
+            ResourceIdentifier(resource_id="smi:same/model/maeh"))
         self.assertEquals(origin.evaluation_mode, "manual")
         self.assertEquals(origin.evaluation_status, "preliminary")
         self.assertEquals(origin.origin_type, "hypocenter")
@@ -159,7 +164,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(len(origin.comments), 2)
         c = origin.comments
         self.assertEquals(c[0].text, 'Some comment')
-        self.assertEquals(c[0].resource_id, ResourceIdentifier("muh"))
+        self.assertEquals(c[0].resource_id,
+            ResourceIdentifier(resource_id="smi:some/comment/reference"))
         self.assertEquals(c[0].creation_info.author, 'EMSC')
         self.assertEquals(c[1].resource_id, None)
         self.assertEquals(c[1].creation_info, None)
@@ -204,7 +210,7 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier('smi:ch.ethz.sed/magnitude/37465'))
         self.assertEquals(mag.mag.value, 5.5)
         self.assertEquals(mag.mag.uncertainty, 0.1)
-        self.assertEquals(mag.type, 'MS')
+        self.assertEquals(mag.magnitude_type, 'MS')
         self.assertEquals(mag.method_id,
             ResourceIdentifier(\
             'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
@@ -214,7 +220,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(len(mag.comments), 2)
         c = mag.comments
         self.assertEquals(c[0].text, 'Some comment')
-        self.assertEquals(c[0].resource_id, ResourceIdentifier("muh"))
+        self.assertEquals(c[0].resource_id,
+            ResourceIdentifier(resource_id="smi:some/comment/id/muh"))
         self.assertEquals(c[0].creation_info.author, 'EMSC')
         self.assertEquals(c[1].creation_info, None)
         self.assertEquals(c[1].text, 'Another comment')
@@ -243,18 +250,20 @@ class QuakeMLTestCase(unittest.TestCase):
         # Assert the actual StationMagnitude object. Everything that is not set
         # in the QuakeML file should be set to None.
         self.assertEqual(mag.resource_id,
-             ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342"))
-        self.assertEquals(mag.origin_id, ResourceIdentifier('smi:some/example/id'))
+            ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342"))
+        self.assertEquals(mag.origin_id,
+            ResourceIdentifier('smi:some/example/id'))
         self.assertEquals(mag.mag.value, 6.5)
         self.assertEquals(mag.mag.uncertainty, 0.2)
         self.assertEquals(mag.station_magnitude_type, 'MS')
         self.assertEqual(mag.amplitude_id,
-             ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
+            ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
         self.assertEqual(mag.method_id,
-             ResourceIdentifier(\
+            ResourceIdentifier(\
                 "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude"))
         self.assertEqual(mag.waveform_id,
-                WaveformStreamID(resource_id="smi:ch.ethz.sed/waveform/201754"))
+            WaveformStreamID(network_code='BW', station_code='FUR',
+                             resource_id="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
@@ -309,7 +318,8 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime('2005-09-18T22:04:35Z'))
         self.assertEquals(pick.time.uncertainty, 0.012)
         self.assertEquals(pick.waveform_id,
-            WaveformStreamID(resource_id='smi:ch.ethz.sed/waveform/201754'))
+            WaveformStreamID(network_code='BW', station_code='FUR',
+                             resource_id='smi:ch.ethz.sed/waveform/201754'))
         self.assertEquals(pick.filter_id,
             ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard'))
         self.assertEquals(pick.method_id,
