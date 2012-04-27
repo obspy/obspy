@@ -173,7 +173,7 @@ def xcorr_max(fct, abs_max=True):
     Return shift and value of maximum xcorr function
 
     :type fct: :class:`~numpy.ndarray`
-    :param fct: xcorr function e.g. returned bei xcorr
+    :param fct: xcorr function e.g. returned by xcorr
     :type abs_max: bool
     :param abs_max: determines if the absolute maximum should be used.
     :return: **shift, value** - Shift and value of maximum xcorr.
