@@ -21,6 +21,7 @@ from pkg_resources import load_entry_point  # @UnresolvedImport
 from uuid import uuid4
 import copy
 import glob
+import numpy as np
 import os
 import re
 import urllib2
@@ -280,7 +281,7 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                 ret_str += "\n\t" + \
                     "\n\t".join([element_str % \
                     (_i, len(getattr(self, _i))) \
-                    for _i in self.__containers])
+                    for _i in containers])
             return ret_str
 
         def __repr__(self):
@@ -1780,6 +1781,13 @@ class Event(__Event):
             out += ' | %s' % (self.origins[0].evaluation_mode)
         return out
 
+    def __str__(self):
+        """
+        Print a short summary at the top.
+        """
+        return "Event:\t%s\n\n%s" % (self.short_str(),
+                       "\n".join(super(Event, self).__str__().split("\n")[1:]))
+
 
 __Catalog = _eventTypeClassFactory("__Catalog",
     class_attributes=[("resource_id", ResourceIdentifier),
@@ -1911,15 +1919,27 @@ class Catalog(__Catalog):
         """
         self.events.__setitem__(index, event)
 
-    def __str__(self):
+    def __str__(self, print_all=False):
         """
         Returns short summary string of the current catalog.
 
         It will contain the number of Events in the Catalog and the return
         value of each Event's :meth:`~obspy.core.event.Event.__str__` method.
+
+        :type print_all: bool, optional
+        :param print_all: If True, all events will be printed, otherwise a
+            maximum of ten event will be printed.
+            Defaults to False.
         """
         out = str(len(self.events)) + ' Event(s) in Catalog:\n'
-        out = out + "\n".join([ev.short_str() for ev in self])
+        if len(self) <= 10 or print_all is True:
+            out += "\n".join([ev.short_str() for ev in self])
+        else:
+            out += "\n".join([ev.short_str() for ev in self[:2]])
+            out += "\n...\n"
+            out += "\n".join([ev.short_str() for ev in self[-2:]])
+            out += "\nTo see all events call " + \
+                   "'print CatalogObject.__str__(print_all=True)'"
         return out
 
     def append(self, event):
@@ -2055,36 +2075,131 @@ class Catalog(__Catalog):
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
         writeFormat(self, filename, **kwargs)
 
-    def plot(self, resolution='l', **kwargs):  # @UnusedVariable
+    def plot(self, projection='cyl', resolution='l',
+             continent_fill_color='0.8',
+             water_fill_color='white',
+             date_colormap=None, **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
+
+        :type projection: str, optional
+        :param projection: The map projection. Currently supported are
+            * ``"cyl"`` (Will plot the whole world.)
+            * ``"ortho"`` (Will center around the mean lat/long.)
+            Defaults to "cyl"
+        :type resolution: str, optional
+        :param resolution: Resolution of the boundary database to use. Will be
+            based directly to the basemap module. Possible values are
+            * ``"c"`` (crude)
+            * ``"l"`` (low)
+            * ``"i"`` (intermediate)
+            * ``"h"`` (high)
+            * ``"f"`` (full)
+            Defaults to ``"l"``
+        :type continent_fill_color: Valid matplotlib color, optional
+        :param continent_fill_color:  Color of the continents. Defaults to
+            ``"0.8"`` which is a light gray.
+        :type water_fill_color: Valid matplotlib color, optional
+        :param water_fill_color: Color of all water bodies.
+            Defaults to ``"white"``.
+        :type date_colormap: str, optional, any matplotlib colormap
+        :param date_colormap: The events will be color-coded based on the
+            origin time. The very first occuring event will have the color of
+            one end of the colormap and the latest event the color of the other
+            end with all other events in between.
+            Defaults to None which will use the default colormap.
+
+        .. rubric:: Example
+
+        >>> cat = readEvents(\ # doctest:+SKIP
+            "http://www.seismicportal.eu/services/event/search?magMin=8.0") 
+        >>> cat.plot() # doctest:+SKIP
         """
         from mpl_toolkits.basemap import Basemap
         import matplotlib.pyplot as plt
-        fig = plt.figure()
-        fig.add_axes([0, 0, 1, 1])
-        map = Basemap(resolution=resolution)
-        # draw coast lines, country boundaries, fill continents.
-        map.drawcoastlines()
-        map.drawcountries()
-        map.fillcontinents(color='0.8')
-        # draw the edge of the map projection region (the projection limb)
-        map.drawmapboundary()
-        # lat/lon coordinates
+        from matplotlib.colors import Normalize
+        from matplotlib.cm import ScalarMappable
+        import matplotlib as mpl
+
+        # lat/lon coordinates, magnitudes, dates
         lats = []
         lons = []
         labels = []
-        for i, event in enumerate(self.events):
+        mags = []
+        dates = []
+        for event in self:
             lats.append(event.origins[0].latitude.value)
             lons.append(event.origins[0].longitude.value)
-            labels.append(' #%d' % i)
+            mag = event.magnitudes[0].mag.value
+            mags.append(mag)
+            labels.append(('    %.1f' % mag) if mag else "")
+            dates.append(event.origins[0].time.value)
+        min_date = min(dates)
+        max_date = max(dates)
+
+        # Create the colormap for date based plotting.
+        colormap = plt.get_cmap(date_colormap)
+        scal_map = ScalarMappable(norm=Normalize(min_date, max_date),
+                                  cmap=plt.get_cmap(date_colormap))
+        scal_map.set_array(np.linspace(0, 1, 1))
+
+        fig = plt.figure()
+        map_ax = fig.add_axes([0.03, 0.13, 0.94, 0.82])
+        cm_ax = fig.add_axes([0.03, 0.05, 0.94, 0.05])
+        plt.sca(map_ax)
+
+        if projection == 'cyl':
+            map = Basemap(resolution=resolution)
+        elif projection == 'ortho':
+            map = Basemap(projection='ortho', resolution=resolution,
+                          area_thresh=1000.0, lat_0=sum(lats)/len(lats),
+                          lon_0=sum(lons)/len(lons))
+        else:
+            msg = "Projection %s not supported." % projection
+            raise ValueError(msg)
+
+        # draw coast lines, country boundaries, fill continents.
+        map.drawcoastlines()
+        map.drawcountries()
+        map.fillcontinents(color=continent_fill_color,
+                           lake_color=water_fill_color)
+        # draw the edge of the map projection region (the projection limb)
+        map.drawmapboundary(fill_color=water_fill_color)
+        # draw lat/lon grid lines every 30 degrees.
+        map.drawmeridians(np.arange(-180, 180, 30))
+        map.drawparallels(np.arange(-90, 90, 30))
+
         # compute the native map projection coordinates for events.
         x, y = map(lons, lats)
-        # plot filled circles at the locations of the events.
-        map.plot(x, y, 'ro')
         # plot labels
-        for name, xpt, ypt in zip(labels, x, y):
-            plt.text(xpt, ypt, name, size='small')
+        for name, xpt, ypt, datept in zip(labels, x, y, dates):
+            plt.text(xpt, ypt, name, weight="heavy",
+                     color=scal_map.to_rgba(datept))
+        min_size = 5
+        max_size = 18
+        min_mag = min(mags)
+        max_mag = max(mags)
+        # plot filled circles at the locations of the events.
+        for _i in xrange(len(x)):
+            frac = (mags[_i] - min_mag) / (max_mag - min_mag)
+            mag = min_size + frac * (max_size - min_size)
+            map.plot(x[_i], y[_i], 'ro', markersize=mag,
+                     color=scal_map.to_rgba(dates[_i]))
+        times = [event.origins[0].time.value for event in self.events]
+        plt.title(("%i events (%s to %s)" % (len(self),
+             str(min(times).strftime("%Y-%m-%d")),
+             str(max(times).strftime("%Y-%m-%d")))) + \
+                 " - Color codes origin time, size the magnitude")
+
+        cb = mpl.colorbar.ColorbarBase(ax=cm_ax, orientation='horizontal')
+        cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
+        date_range = max_date - min_date
+        cb.set_ticklabels([_i.strftime('%Y-%b-%d') \
+            for _i in [min_date, min_date + date_range * 0.25,
+                       min_date + date_range * 0.50,
+                       min_date + date_range * 0.75, max_date]])
+
+        # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()
 
 
