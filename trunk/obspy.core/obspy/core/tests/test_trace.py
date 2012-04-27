@@ -968,7 +968,7 @@ class TraceTestCase(unittest.TestCase):
         """
         tr = Trace()
         tr.stats.station = '%t3u'
-        print tr
+        self.assertTrue(tr.__str__().startswith(".%t3u.. | 1970"))
 
 
 def suite():
