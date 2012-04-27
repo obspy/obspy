@@ -2075,8 +2075,8 @@ class Catalog(__Catalog):
         lons = []
         labels = []
         for i, event in enumerate(self.events):
-            lats.append(event.preferred_origin.latitude)
-            lons.append(event.preferred_origin.longitude)
+            lats.append(event.origins[0].latitude.value)
+            lons.append(event.origins[0].longitude.value)
             labels.append(' #%d' % i)
         # compute the native map projection coordinates for events.
         x, y = map(lons, lats)
