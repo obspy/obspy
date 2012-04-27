@@ -1968,6 +1968,99 @@ class Catalog(__Catalog):
         """
         self.events = []
 
+    def filter(self, *args):
+        """
+        Returns a new Catalog object only containing Events which match the
+        specified filter rules.
+
+        :rtype: :class:`~obspy.core.stream.Catalog`
+        :return: Filtered catalog. Only the Catalog object is a copy, the
+            events are only references.
+
+        >>> from obspy.core.event import readEvents
+        >>> cat = readEvents()
+        >>> print cat
+        3 Event(s) in Catalog:
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
+        >>> cat2 = cat.filter("magnitude >= 4.0", "latitude < 40.0")
+        >>> print cat2
+        1 Event(s) in Catalog:
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        >>> cat3 = cat.filter("time > 2012-04-04T14:10", \
+                              "time < 2012-04-04T14:20")
+        >>> print cat3
+        1 Event(s) in Catalog:
+        2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        """
+        # Helper functions.
+        def __is_smaller(value_1, value_2):
+            if value_1 < value_2:
+                return True
+            return False
+
+        def __is_smaller_or_equal(value_1, value_2):
+            if value_1 <= value_2:
+                return True
+            return False
+
+        def __is_greater(value_1, value_2):
+            if value_1 > value_2:
+                return True
+            return False
+
+        def __is_greater_or_equal(value_1, value_2):
+            if value_1 >= value_2:
+                return True
+            return False
+
+        # Map the function to the operators.
+        operator_map = {"<": __is_smaller,
+                        "<=": __is_smaller_or_equal,
+                        ">": __is_greater,
+                        ">=": __is_greater_or_equal}
+
+        events = list(self.events)
+        for arg in args:
+            try:
+                key, operator, value = arg.split(" ")
+            except ValueError:
+                msg = "%s is not a valid filter rule."
+                raise ValueError(msg)
+            if key == "magnitude":
+                temp_events = []
+                for event in events:
+                    if operator_map[operator](event.magnitudes[0].mag.value,
+                                              float(value)):
+                        temp_events.append(event)
+                    events = temp_events
+            elif key == "longitude":
+                temp_events = []
+                for event in events:
+                    if operator_map[operator](event.origins[0].longitude.value,
+                                              float(value)):
+                        temp_events.append(event)
+                    events = temp_events
+            elif key == "latitude":
+                temp_events = []
+                for event in events:
+                    if operator_map[operator](event.origins[0].latitude.value,
+                                              float(value)):
+                        temp_events.append(event)
+                    events = temp_events
+            elif key == "time":
+                temp_events = []
+                for event in events:
+                    if operator_map[operator](event.origins[0].time.value,
+                                              UTCDateTime(value)):
+                        temp_events.append(event)
+                    events = temp_events
+            else:
+                msg = "%s is not a valid filter key" % key
+                raise ValueError(msg)
+        return Catalog(events=events)
+
     def copy(self):
         """
         Returns a deepcopy of the Catalog object.
@@ -2112,7 +2205,7 @@ class Catalog(__Catalog):
         .. rubric:: Example
 
         >>> cat = readEvents(\ # doctest:+SKIP
-            "http://www.seismicportal.eu/services/event/search?magMin=8.0") 
+            "http://www.seismicportal.eu/services/event/search?magMin=8.0")
         >>> cat.plot() # doctest:+SKIP
         """
         from mpl_toolkits.basemap import Basemap
@@ -2152,8 +2245,8 @@ class Catalog(__Catalog):
             map = Basemap(resolution=resolution)
         elif projection == 'ortho':
             map = Basemap(projection='ortho', resolution=resolution,
-                          area_thresh=1000.0, lat_0=sum(lats)/len(lats),
-                          lon_0=sum(lons)/len(lons))
+                          area_thresh=1000.0, lat_0=sum(lats) / len(lats),
+                          lon_0=sum(lons) / len(lons))
         else:
             msg = "Projection %s not supported." % projection
             raise ValueError(msg)
