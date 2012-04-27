@@ -331,9 +331,10 @@ class Trace(object):
         # set fixed id width
         if id_length:
             out = "%%-%ds" % (id_length)
-            out = out % (self.id)
+            trace_id = out % self.id
         else:
-            out = "%s" % (self.id)
+            trace_id = "%s" % self.id
+        out = ''
         # output depending on delta or sampling rate bigger than one
         if self.stats.sampling_rate < 0.1:
             if hasattr(self.stats, 'preview')  and self.stats.preview:
@@ -356,7 +357,7 @@ class Trace(object):
         # check for masked array
         if np.ma.count_masked(self.data):
             out += ' (masked)'
-        return out % (self.stats)
+        return trace_id + out % (self.stats)
 
     def __len__(self):
         """

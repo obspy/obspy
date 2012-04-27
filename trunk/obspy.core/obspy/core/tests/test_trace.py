@@ -962,6 +962,14 @@ class TraceTestCase(unittest.TestCase):
         tr = read()[0]
         tr.verify()
 
+    def test_percent_in_str(self):
+        """
+        Tests if __str__ method is working with percent sign (%).
+        """
+        tr = Trace()
+        tr.stats.station = '%t3u'
+        print tr
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
