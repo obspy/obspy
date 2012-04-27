@@ -938,7 +938,7 @@ class WaveformStreamID(__WaveformStreamID):
     >>> print stream_id
     WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
     >>> # Can also return the SEED string.
-    print stream_id.getSEEDString()
+    >>> print stream_id.getSEEDString()
     BW.FUR..EHZ
     """
     def __init__(self, network_code=None, station_code=None,
