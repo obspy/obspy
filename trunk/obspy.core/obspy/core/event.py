@@ -678,12 +678,12 @@ class ResourceIdentifier(object):
 
 
 __CreationInfo = _eventTypeClassFactory("__CreationInfo",
-    class_attributes=[("agency_id", str, False),
-                      ("agency_uri", ResourceIdentifier, False),
-                      ("author", str, False),
-                      ("author_uri", ResourceIdentifier, False),
-                      ("creation_time", UTCDateTime, False),
-                      ("version", str, False)])
+    class_attributes=[("agency_id", str),
+                      ("agency_uri", ResourceIdentifier),
+                      ("author", str),
+                      ("author_uri", ResourceIdentifier),
+                      ("creation_time", UTCDateTime),
+                      ("version", str)])
 
 
 class CreationInfo(__CreationInfo):
@@ -766,10 +766,10 @@ class TimeWindow(__TimeWindow):
 
 __IntegerQuantity = _eventTypeClassFactory("__IntegerQuantity",
     class_attributes=[("value", int),
-                      ("uncertainty", int, False),
-                      ("lower_uncertainty", int, False),
-                      ("upper_uncertainty", int, False),
-                      ("confidence_level", float, False)])
+                      ("uncertainty", int),
+                      ("lower_uncertainty", int),
+                      ("upper_uncertainty", int),
+                      ("confidence_level", float)])
 
 
 class IntegerQuantity(__IntegerQuantity):
@@ -795,10 +795,10 @@ class IntegerQuantity(__IntegerQuantity):
 
 __FloatQuantity = _eventTypeClassFactory("__FloatQuantity",
     class_attributes=[("value", float),
-                      ("uncertainty", float, False),
-                      ("lower_uncertainty", float, False),
-                      ("upper_uncertainty", float, False),
-                      ("confidence_level", float, False)])
+                      ("uncertainty", float),
+                      ("lower_uncertainty", float),
+                      ("upper_uncertainty", float),
+                      ("confidence_level", float)])
 
 
 class FloatQuantity(__FloatQuantity):
@@ -823,12 +823,12 @@ class FloatQuantity(__FloatQuantity):
 
 
 __CompositeTime = _eventTypeClassFactory("__CompositeTime",
-    class_attributes=[("year", IntegerQuantity, False),
-                      ("month", IntegerQuantity, False),
-                      ("day", IntegerQuantity, False),
-                      ("hour", IntegerQuantity, False),
-                      ("minute", IntegerQuantity, False),
-                      ("second", FloatQuantity, False)])
+    class_attributes=[("year", IntegerQuantity),
+                      ("month", IntegerQuantity),
+                      ("day", IntegerQuantity),
+                      ("hour", IntegerQuantity),
+                      ("minute", IntegerQuantity),
+                      ("second", FloatQuantity)])
 
 
 class CompositeTime(__CompositeTime):
@@ -865,7 +865,7 @@ class CompositeTime(__CompositeTime):
 __Comment = _eventTypeClassFactory("__Comment",
     class_attributes=[("text", str),
                       ("resource_id", ResourceIdentifier),
-                      ("creation_info", CreationInfo, False)])
+                      ("creation_info", CreationInfo)])
 
 
 class Comment(__Comment):
@@ -895,9 +895,9 @@ class Comment(__Comment):
 __WaveformStreamID = _eventTypeClassFactory("__WaveformStreamID",
     class_attributes=[("network_code", str),
                       ("station_code", str),
-                      ("channel_code", str, False),
-                      ("location_code", str, False),
-                      ("resource_id", ResourceIdentifier, False)])
+                      ("channel_code", str),
+                      ("location_code", str),
+                      ("resource_id", ResourceIdentifier)])
 
 
 class WaveformStreamID(__WaveformStreamID):
@@ -975,18 +975,18 @@ class WaveformStreamID(__WaveformStreamID):
 __Amplitude = _eventTypeClassFactory("__Amplitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("generic_amplitude", FloatQuantity),
-                      ("type", str, False),
+                      ("type", str),
                       ("category", AmplitudeCategory),
                       ("unit", AmplitudeUnit),
                       ("method_id", ResourceIdentifier),
                       ("period", FloatQuantity, False),
-                      ("snr", float, False),
-                      ("time_window", TimeWindow, False),
+                      ("snr", float),
+                      ("time_window", TimeWindow),
                       ("pick_id", ResourceIdentifier),
                       ("waveform_id", ResourceIdentifier),
                       ("filter_id", ResourceIdentifier),
                       ("scaling_time", TimeQuantity, False),
-                      ("magnitude_hint", str, False),
+                      ("magnitude_hint", str),
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("creation_info", CreationInfo)],
@@ -1089,7 +1089,7 @@ class Amplitude(__Amplitude):
 __Pick = _eventTypeClassFactory("__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", TimeQuantity, False),
-                      ("waveform_id", WaveformStreamID, False),
+                      ("waveform_id", WaveformStreamID),
                       ("filter_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
                       ("horizontal_slowness", FloatQuantity, False),
@@ -1244,18 +1244,18 @@ class Arrival(__Arrival):
 
 
 __OriginQuality = _eventTypeClassFactory("__OriginQuality",
-    class_attributes=[("associated_phase_count", int, False),
-                      ("used_phase_count", int, False),
-                      ("associated_station_count", int, False),
-                      ("used_station_count", int, False),
-                      ("depth_phase_count", int, False),
-                      ("standard_error", float, False),
-                      ("azimuthal_gap", float, False),
-                      ("secondary_azimuthal_gap", float, False),
-                      ("ground_truth_level", str, False),
-                      ("maximum_distance", float, False),
-                      ("minimum_distance", float, False),
-                      ("median_distance", float, False)])
+    class_attributes=[("associated_phase_count", int),
+                      ("used_phase_count", int),
+                      ("associated_station_count", int),
+                      ("used_station_count", int),
+                      ("depth_phase_count", int),
+                      ("standard_error", float),
+                      ("azimuthal_gap", float),
+                      ("secondary_azimuthal_gap", float),
+                      ("ground_truth_level", str),
+                      ("maximum_distance", float),
+                      ("minimum_distance", float),
+                      ("median_distance", float)])
 
 
 class OriginQuality(__OriginQuality):
@@ -1496,8 +1496,8 @@ class Origin(__Origin):
 __StationMagnitudeContribution = _eventTypeClassFactory(\
     "__StationMagnitudeContribution",
     class_attributes=[("station_magnitude_id", ResourceIdentifier),
-                      ("residual", float, False),
-                      ("weight", float, False)])
+                      ("residual", float),
+                      ("weight", float)])
 
 
 class StationMagnitudeContribution(__StationMagnitudeContribution):
@@ -1602,7 +1602,7 @@ __StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
                       ("station_magnitude_type", str),
                       ("amplitude_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
-                      ("waveform_id", WaveformStreamID, False),
+                      ("waveform_id", WaveformStreamID),
                       ("creation_info", CreationInfo)],
     class_contains=["comments"])
 

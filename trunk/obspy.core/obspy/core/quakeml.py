@@ -540,6 +540,8 @@ class Pickler(object):
 
     def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
         attrib = {}
+        if obj is None:
+            return
         if obj.network_code:
             attrib['networkCode'] = obj.network_code
         if obj.station_code:
