@@ -1,5 +1,5 @@
 dev:
- * Trace.__mul__ (splits Trace into Stream containing traces with num samples)
+ * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
  * Trace.__div__ (splits Trace into Stream containing num traces)
  * new obspy.core.util.types.Enum class 
  * refactored obspy.core.util.ordereddict into obspy.core.util.types
