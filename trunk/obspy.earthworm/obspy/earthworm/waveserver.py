@@ -8,12 +8,12 @@ Low-level Earthworm Wave Server tools.
     GNU General Public License (GPLv2)
     (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 """
+
 from obspy.core import Trace, UTCDateTime, Stats, Stream
-import sys
-import array
 import struct
 import socket
-import numpy
+import numpy as np
+
 
 RETURNFLAG_KEY = {
     'F': 'success',
@@ -26,20 +26,23 @@ RETURNFLAG_KEY = {
     'FU': 'unknown error'
 }
 
+DATATYPE_KEY = {
+    't4': '>f4', 't8': '>f8',
+    's4': '>i4', 's2': '>i2',
+    'f4': '<f4', 'f8': '<f8',
+    'i4': '<i4', 'i2': '<i2'
+}
+
+
 def getNumpyType(tpstr):
     """
-    given a tracebuf2 type string from header, 
+    given a tracebuf2 type string from header,
     return appropriate numpy.dtype object
     """
-    DATATYPE_KEY = {
-        't4': '>f4', 't8':'>f8',
-        's4': '>i4', 's2':'>i2',
-        'f4': '<f4', 'f8':'<f8',
-        'i4': '<i4', 'i2':'<i2'
-        }
-    dtypestr=DATATYPE_KEY[tpstr]
-    tp=numpy.dtype(dtypestr)
+    dtypestr = DATATYPE_KEY[tpstr]
+    tp = np.dtype(dtypestr)
     return tp
+
 
 class tracebuf2:
     """
@@ -74,12 +77,12 @@ class tracebuf2:
             endian = '>'
         elif dtype[0] in 'if':
             endian = '<'
-        else: raise ValueError
+        else:
+            raise ValueError
         self.inputType = getNumpyType(dtype)
-        (self.pinno, self.ndata, ts, te, self.rate,
-         self.sta, self.net, self.chan, self.loc,
-         self.version, tp, self.qual, _pad
-        ) = struct.unpack(endian + packStr, head)
+        (self.pinno, self.ndata, ts, te, self.rate, self.sta, self.net,
+         self.chan, self.loc, self.version, tp, self.qual, _pad) = \
+            struct.unpack(endian + packStr, head)
         if not tp.startswith(dtype):
             print 'Error parsing header: %s!=%s' % (dtype, tp)
         self.start = UTCDateTime(ts)
@@ -90,7 +93,7 @@ class tracebuf2:
         """
         Parse tracebuf char array data into self.data
         """
-        self.data = numpy.fromstring(dat,self.inputType)
+        self.data = np.fromstring(dat, self.inputType)
         ndat = len(self.data)
         if self.ndata != ndat:
             print 'data count in header (%d) != data count (%d)' % (self.nsamp,
