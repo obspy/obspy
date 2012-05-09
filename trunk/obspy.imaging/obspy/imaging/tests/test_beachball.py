@@ -211,7 +211,7 @@ class BeachballTestCase(unittest.TestCase):
               [150, 87, 1]]
 
         # Initialize figure
-        fig = plt.figure(1, figsize=(3, 3), dpi=100)
+        fig = plt.figure(1, figsize=(6, 6), dpi=300)
         ax = fig.add_subplot(111, aspect='equal')
 
         # Plot the stations or borders
@@ -221,8 +221,7 @@ class BeachballTestCase(unittest.TestCase):
         y = -100
         for i, t in enumerate(mt):
             # add the beachball (a collection of two patches) to the axis
-            ax.add_collection(Beach(t, size=100, width=30, xy=(x, y),
-                                    linewidth=.6))
+            ax.add_collection(Beach(t, width=30, xy=(x, y), linewidth=.6))
             x += 50
             if (i + 1) % 5 == 0:
                 x = -100

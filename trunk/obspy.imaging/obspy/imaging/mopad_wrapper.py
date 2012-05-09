@@ -8,8 +8,14 @@
 # Copyright (C) 2008-2012 ObsPy Development Team
 #-----------------------------------------------
 """
-ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (mopad)
+ObsPy wrapper to the *Moment tensor Plotting and Decomposition tool* (MoPaD)
 written by Lars Krieger and Sebastian Heimann.
+
+.. seealso:: [Krieger2012]_
+
+.. warning:: The MoPaD wrapper does not yet provide the full functionality of
+    MoPaD. Please consider using the command line script ``obspy-mopad`` for
+    now if you need the full power of MoPaD.
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -18,7 +24,6 @@ written by Lars Krieger and Sebastian Heimann.
     (http://www.gnu.org/licenses/gpl.txt)
 """
 
-import warnings
 import numpy as np
 from matplotlib import patches, collections
 from obspy.imaging.scripts.mopad import BeachBall as mopad_BeachBall
@@ -43,45 +48,61 @@ KWARG_MAP = {
 
 
 def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
-          alpha=1.0, xy=(0, 0), width=200, size=80, nofill=False,
+          alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
           zorder=100, mopad_basis='USE'):
     """
     Return a beach ball as a collection which can be connected to an
-    current matplotlib axes instance (ax.add_collection). Based on mopad.
+    current matplotlib axes instance (ax.add_collection). Based on MoPaD.
 
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
     :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
-        (strike, dip, and rake) or NM x 6 (Mxx, Myy, Mzz, Mxy, Mxz, Myz - the
-        six independent components of the moment tensor). The strike is of the
-        first plane, clockwise relative to north.
+        (strike, dip, and rake) or NM x 6 (M11, M22, M33, M12, M13, M23 - the
+        six independent components of the moment tensor, where the coordinate
+        system is 1,2,3 = Up,South,East which equals r,theta,phi). The strike
+        is of the first plane, clockwise relative to north.
         The dip is of the first plane, defined clockwise and perpendicular to
         strike, relative to horizontal such that 0 is horizontal and 90 is
         vertical. The rake is of the first focal plane solution. 90 moves the
         hanging wall up-dip (thrust), 0 moves it in the strike direction
         (left-lateral), -90 moves it down-dip (normal), and 180 moves it
         opposite to strike (right-lateral).
-    :param size: Controls the number of interpolation points for the
-        curves. Defaults to 80, note that this and especially smaller
-        values might produce artifacts, however it makes the plotting much
-        faster. Use 360 for full resolution and no artifacts.
     :param facecolor: Color to use for quadrants of tension; can be a string,
-        e.g. 'r', 'b' or three component color vector, [R G B].
-    :param edgecolor: Color of the edges.
-    :param bgcolor: The background color, usually white.
-    :param alpha: The alpha level of the beach ball.
-    :param xy: Origin position of the beach ball as tuple.
-    :param width: Symbol size of beach ball.
+        e.g. ``'r'``, ``'b'`` or three component color vector, [R G B].
+        Defaults to ``'b'`` (blue).
+    :param bgcolor: The background color. Defaults to ``'w'`` (white).
+    :param edgecolor: Color of the edges. Defaults to ``'k'`` (black).
+    :param alpha: The alpha level of the beach ball. Defaults to ``1.0``
+        (opaque).
+    :param xy: Origin position of the beach ball as tuple. Defaults to
+        ``(0, 0)``.
+    :type width: int
+    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :param size: Controls the number of interpolation points for the
+        curves. Minimum is automatically set to ``100``.
     :param nofill: Do not fill the beach ball, but only plot the planes.
     :param zorder: Set zorder. Artists with lower zorder values are drawn
         first.
-    :param mopad_basis: The system which may be chosen as 'NED' (North, East
-        Down), 'USE' (Up, South, East), 'NWU' (North, West, Up) or 'XYZ'. 'USE'
-        mimics the ObsPy Beachball behaviour.
+    :param mopad_basis: The basis system. Defaults to ``'USE'``. See the
+        `Supported Basis Systems`_ section below for a full list of supported
+        systems.
+
+    .. rubric:: _`Supported Basis Systems`
+
+    ========= =================== =============================================
+    Short     Basis vectors       Usage
+    ========= =================== =============================================
+    ``'NED'`` North, East, Down   Jost and Herrmann 1989
+    ``'USE'`` Up, South, East     Global CMT Catalog, Larson et al. 2010
+    ``'XYZ'`` East, North, Up     General formulation, Jost and Herrmann 1989
+    ``'RT'``  Radial, Transverse, psmeca (GMT), Wessel and Smith 1999
+              Tangential
+    ``'NWU'`` North, West, Up     Stein and Wysession 2003
+    ========= =================== =============================================
     """
     # initialize beachball
-    mt = mopad_MomentTensor(fm, mopad_basis)
+    mt = mopad_MomentTensor(fm, system=mopad_basis)
     bb = mopad_BeachBall(mt, npoints=size)
     bb._setup_BB(unit_circle=False)
 
@@ -145,34 +166,95 @@ def Beach(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
     # the appropriate attributes
     collection = collections.PatchCollection(coll, match_original=False)
     collection.set_facecolors(fc)
+    collection.set_edgecolors(edgecolor)
     collection.set_alpha(alpha)
     collection.set_linewidth(linewidth)
     collection.set_zorder(zorder)
     return collection
 
 
-def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
-              bgcolor='w', alpha=1.0, xy=(0, 0), width=200, outfile=None,
-              format=None, nofill=False, fig=None, mopad_basis='USE'):
+def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
+              alpha=1.0, xy=(0, 0), width=200, size=100, nofill=False,
+              zorder=100, mopad_basis='USE', outfile=None, format=None,
+              fig=None):
     """
     Draws a beach ball diagram of an earthquake focal mechanism. Based on
-    mopad.
+    MoPaD.
 
     S1, D1, and R1, the strike, dip and rake of one of the focal planes, can
     be vectors of multiple focal mechanisms.
 
-    :param size: Draw with this diameter.
+    :param fm: Focal mechanism that is either number of mechanisms (NM) by 3
+        (strike, dip, and rake) or NM x 6 (M11, M22, M33, M12, M13, M23 - the
+        six independent components of the moment tensor, where the coordinate
+        system is 1,2,3 = Up,South,East which equals r,theta,phi). The strike
+        is of the first plane, clockwise relative to north.
+        The dip is of the first plane, defined clockwise and perpendicular to
+        strike, relative to horizontal such that 0 is horizontal and 90 is
+        vertical. The rake is of the first focal plane solution. 90 moves the
+        hanging wall up-dip (thrust), 0 moves it in the strike direction
+        (left-lateral), -90 moves it down-dip (normal), and 180 moves it
+        opposite to strike (right-lateral).
+    :param facecolor: Color to use for quadrants of tension; can be a string,
+        e.g. ``'r'``, ``'b'`` or three component color vector, [R G B].
+        Defaults to ``'b'`` (blue).
+    :param bgcolor: The background color. Defaults to ``'w'`` (white).
+    :param edgecolor: Color of the edges. Defaults to ``'k'`` (black).
+    :param alpha: The alpha level of the beach ball. Defaults to ``1.0``
+        (opaque).
+    :param xy: Origin position of the beach ball as tuple. Defaults to
+        ``(0, 0)``.
+    :type width: int
+    :param width: Symbol size of beach ball. Defaults to ``200``.
+    :param size: Controls the number of interpolation points for the
+        curves. Minimum is automatically set to ``100``.
+    :param nofill: Do not fill the beach ball, but only plot the planes.
+    :param zorder: Set zorder. Artists with lower zorder values are drawn
+        first.
+    :param mopad_basis: The basis system. Defaults to ``'USE'``. See the
+        `Supported Basis Systems`_ section below for a full list of supported
+        systems.
+    :param outfile: Output file string. Also used to automatically
+        determine the output format. Supported file formats depend on your
+        matplotlib backend. Most backends support png, pdf, ps, eps and
+        svg. Defaults to ``None``.
+    :param format: Format of the graph picture. If no format is given the
+        outfile parameter will be used to try to automatically determine
+        the output format. If no format is found it defaults to png output.
+        If no outfile is specified but a format is, than a binary
+        imagestring will be returned.
+        Defaults to ``None``.
     :param fig: Give an existing figure instance to plot into. New Figure if
-        set to None.
-    :param format: If specified the format in which the plot should be saved,
-        e.g. pdf, png, jpg, or eps.
+        set to ``None``.
 
-    For info on the remaining parameters see the
-    :func:`~obspy.imaging.beachball.Beach` function of this module.
+    .. rubric:: _`Supported Basis Systems`
+
+    ========= =================== =============================================
+    Short     Basis vectors       Usage
+    ========= =================== =============================================
+    ``'NED'`` North, East, Down   Jost and Herrmann 1989
+    ``'USE'`` Up, South, East     Global CMT Catalog, Larson et al. 2010
+    ``'XYZ'`` East, North, Up     General formulation, Jost and Herrmann 1989
+    ``'RT'``  Radial, Transverse, psmeca (GMT), Wessel and Smith 1999
+              Tangential
+    ``'NWU'`` North, West, Up     Stein and Wysession 2003
+    ========= =================== =============================================
+
+    .. rubric:: Examples
+
+    (1) Using basis system ``'NED'``.
+
+        >>> from obspy.imaging.mopad_wrapper import Beachball
+        >>> mt = [1, 2, 3, -4, -5, -10]
+        >>> Beachball(mt, mopad_basis='NED') #doctest: +ELLIPSIS
+        <matplotlib.figure.Figure object at 0x...>
+
+        .. plot::
+
+            from obspy.imaging.mopad_wrapper import Beachball
+            mt = [1, 2, 3, -4, -5, -10]
+            Beachball(mt, mopad_basis='NED')
     """
-    msg = "mopad wrapping is still beta stage!"
-    warnings.warn(msg)
-
     mopad_kwargs = {}
     loc = locals()
     # map to kwargs used in mopad
@@ -186,8 +268,8 @@ def Beachball(fm, size=200, linewidth=2, facecolor='b', edgecolor='k',
         mopad_kwargs[key] = mopad_kwargs[key] / 100.0 * 2.54
     # use nofill kwarg
 
-    mt = mopad_MomentTensor(fm, mopad_basis)
-    bb = mopad_BeachBall(mt)
+    mt = mopad_MomentTensor(fm, system=mopad_basis)
+    bb = mopad_BeachBall(mt, npoints=size)
 
     # show plot in a window
     if outfile is None:

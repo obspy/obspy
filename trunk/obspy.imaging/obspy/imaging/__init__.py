@@ -75,12 +75,12 @@ Draws a beach ball diagram of an earthquake focal mechanism.
         Andy Michael and Oliver Boyd, which both have known limitations.
     (2) :mod:`obspy.imaging.mopad_wrapper`
         is based on the the *Moment tensor Plotting and Decomposition tool*
-        (mopad) written by Lars Krieger and Sebastian Heimann. Mopad is more
-        correct, however it consumes much more processing time.
+        (MoPaD) [Krieger2012]_. MoPaD is more correct, however it consumes much
+        more processing time.
 
     The function calls for creating beachballs are similar in both modules. The
     following examples are based on the first module, however those example
-    will also work with mopad by using
+    will also work with MoPaD by using
 
     >>> from obspy.imaging.mopad_wrapper import Beachball
 
