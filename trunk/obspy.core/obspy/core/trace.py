@@ -1361,7 +1361,7 @@ class Trace(object):
         :param sampling_rate: The sampling rate of the resampled signal.
         :type window: array_like, callable, string, float, or tuple, optional
         :param window: Specifies the window applied to the signal in the
-            Fourier domain. Defaults ``'hanning'`` window. See
+            Fourier domain. Defaults to ``'hanning'`` window. See
             :func:`scipy.signal.resample` for details.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which endtime of trace
@@ -1402,8 +1402,14 @@ class Trace(object):
             raise ValueError(msg)
         # do automatic lowpass filtering
         if not no_filter:
-            # XXX
-            raise NotImplementedError
+            # be sure filter still behaves good
+            if factor > 16:
+                msg = "Automatic filter design is unstable for resampling " + \
+                      "factors (current sampling rate/new sampling rate) " + \
+                      "above 16. Manual resampling is necessary."
+                raise ArithmeticError(msg)
+            freq = self.stats.sampling_rate * 0.5 / float(factor)
+            self.filter('lowpassCheby2', freq=freq, maxorder=12)
         # resample
         num = int(self.stats.npts / factor)
         self.data = resample(self.data, num, window=window)
