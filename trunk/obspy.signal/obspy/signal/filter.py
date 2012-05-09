@@ -28,8 +28,7 @@ def bandpass(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandpass Filter.
 
-    Filter data from freqmin to freqmax using
-    corners corners.
+    Filter data from ``freqmin`` to ``freqmax`` using ``corners`` corners.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Pass band low corner frequency.
@@ -67,8 +66,8 @@ def bandstop(data, freqmin, freqmax, df, corners=4, zerophase=False):
     """
     Butterworth-Bandstop Filter.
 
-    Filter data removing data between frequencies freqmin and freqmax using
-    corners corners.
+    Filter data removing data between frequencies ``freqmin`` and ``freqmax``
+    using ``corners`` corners.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freqmin: Stop band low corner frequency.
@@ -106,7 +105,7 @@ def lowpass(data, freq, df, corners=4, zerophase=False):
     """
     Butterworth-Lowpass Filter.
 
-    Filter data removing data over certain frequency freq using corners
+    Filter data removing data over certain frequency ``freq`` using ``corners``
     corners.
 
     :param data: Data to filter, type numpy.ndarray.
@@ -140,7 +139,8 @@ def highpass(data, freq, df, corners=4, zerophase=False):
     """
     Butterworth-Highpass Filter.
 
-    Filter data removing data below certain frequency freq using corners.
+    Filter data removing data below certain frequency ``freq`` using
+    ``corners`` corners.
 
     :param data: Data to filter, type numpy.ndarray.
     :param freq: Filter corner frequency.
