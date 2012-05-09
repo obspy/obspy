@@ -38,6 +38,11 @@ Citations
    | **Ground-motion characteristics estimated from spectral ratio between horizontal and vertical components of microtremor**,
    | *Bulletin of the Seismological Society of America*, 88 (1), 228-241.
    | http://www.bssaonline.org/content/88/1/228.abstract
+.. [Krieger2012]  
+   | Krieger, L. and Heimann, S. (May/June 2012),
+   | **MoPaD-Moment Tensor Plotting and Decomposition: A Tool for Graphical and Numerical Analysis of Seismic Moment Tensors**,
+   | *Seismological Research Letters*, 83 (3), 589-595.
+   | http://srl.geoscienceworld.org/content/83/3/589.short
 .. [Kristekova2006]  
    | Kristekov\á, M., Kristek, J., Moczo, P., and Day, S. M. (2006),
    | **Misfit Criteria for Quantitative Comparison of Seismograms**,
