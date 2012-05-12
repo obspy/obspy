@@ -246,8 +246,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
 
         >>> from obspy.imaging.mopad_wrapper import Beachball
         >>> mt = [1, 2, 3, -4, -5, -10]
-        >>> Beachball(mt, mopad_basis='NED') #doctest: +ELLIPSIS
-        <matplotlib.figure.Figure object at 0x...>
+        >>> Beachball(mt, mopad_basis='NED') #doctest: +SKIP
 
         .. plot::
 
