@@ -15,6 +15,7 @@ from lxml.etree import Element, SubElement, tostring
 from math import log
 from obspy.core import UTCDateTime
 from obspy.core.util import guessDelta
+from obspy.xseed import Parser
 import httplib
 import os
 import pickle
@@ -23,6 +24,7 @@ import time
 import urllib
 import urllib2
 import warnings
+import functools
 
 
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
@@ -34,6 +36,50 @@ HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
 KEYWORDS = {'network': 'network_id', 'station': 'station_id',
             'location': 'location_id', 'channel': 'channel_id',
             'starttime': 'start_datetime', 'endtime': 'end_datetime'}
+
+
+def _callChangeGetPAZ(func):
+    """
+    This is a decorator to intercept a change in the arg list for
+    seishub.client.station.getPAZ() with revision [3778].
+    
+    * throw a DeprecationWarning
+    * make the correct call
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        # function itself is first arg so len(args) == 3 means we got 2 args.
+        if len(args) > 3:
+            msg = "The arg/kwarg call syntax of getPAZ() has changed. " + \
+                  "Please update your code! The old call syntax has been " + \
+                  "deprecated and will stop working with the next version."
+            warnings.warn(msg, DeprecationWarning)
+            _self = args[0]
+            network = args[1]
+            station = args[2]
+            datetime = args[3]
+            args = args[4:]
+            if len(args) == 0:
+                location = kwargs.get('location', '')
+                channel = kwargs.get('channel', '')
+            elif len(args) == 1:
+                location = args[0]
+                channel = kwargs.get('channel', '')
+            elif len(args) == 2:
+                location = args[0]
+                channel = args[1]
+            if channel == "":
+                msg = "Requesting PAZ for empty channel codes is not " + \
+                      "supported anymore."
+                warnings.warn(msg, UserWarning)
+            seed_id = ".".join((network, station, location, channel))
+            args = [_self, seed_id, datetime]
+            kwargs = {}
+        return func(*args, **kwargs)
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 
 class Client(object):
@@ -466,19 +512,17 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         if channel:
             stream.trim(trim_start, trim_end)
         if getPAZ:
-            paz = self.client.station.getPAZ(network=network, station=station,
-                            location=location, channel=channel,
-                            datetime=starttime)
-            if metadata_timecheck:
-                paz_check = self.client.station.getPAZ(network=network,
-                        station=station, location=location, channel=channel,
-                        datetime=endtime)
-                if paz != paz_check:
-                    msg = "PAZ information changing from start time to " + \
-                          "end time."
-                    raise Exception(msg)
             for tr in stream:
-                tr.stats['paz'] = paz.copy()
+                paz = self.client.station.getPAZ(seed_id=tr.id, datetime=starttime)
+                if metadata_timecheck:
+                    paz_check = self.client.station.getPAZ(seed_id=tr.id,
+                                                           datetime=endtime)
+                    if paz != paz_check:
+                        msg = "PAZ information changing from start time to " + \
+                              "end time."
+                        raise Exception(msg)
+                tr.stats['paz'] = paz
+
         if getCoordinates:
             coords = self.client.station.getCoordinates(network=network,
                     station=station, location=location,
@@ -633,33 +677,25 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
             coords[key] = metadata[key]
         return coords
 
-    def getPAZ(self, network, station, datetime, location='', channel='',
-               seismometer_gain=False):
+    @_callChangeGetPAZ
+    def getPAZ(self, seed_id, datetime):
         """
         Get PAZ for a station at given time span. Gain is the A0 normalization
         constant for the poles and zeros.
 
-        :type network: str
-        :param network: Network code, e.g. ``'BW'``.
-        :type station: str
-        :param station: Station code, e.g. ``'MANZ'``.
+        :type seed_id: str
+        :param seed_id: SEED or channel id, e.g. ``"BW.RJOB..EHZ"`` or
+            ``"EHE"``.
         :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param datetime: Time for which the PAZ is requested,
             e.g. ``'2010-01-01 12:00:00'``.
-        :type location: str
-        :param location: Location code, e.g. ``'00'``.
-        :type channel: str
-        :param channel: Channel code, e.g. ``'EHE'``.
-        :type seismometer_gain: bool, optional
-        :param seismometer_gain: Adds seismometer gain to dictionary. Defaults
-            to ``True``.
         :rtype: dict
         :return: Dictionary containing zeros, poles, gain and sensitivity.
 
         .. rubric:: Example
 
         >>> c = Client()
-        >>> paz = c.station.getPAZ('BW', 'MANZ', '20090707', channel='EHZ')
+        >>> paz = c.station.getPAZ('BW.MANZ..EHZ', '20090707')
         >>> paz['zeros']
         [0j, 0j]
         >>> len(paz['poles'])
@@ -671,69 +707,26 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
         >>> paz['sensitivity']
         2516800000.0
         """
+        network, station, location, channel = seed_id.split(".")
         # request station information
         station_list = self.getList(network=network, station=station,
                                     datetime=datetime)
         if not station_list:
             return {}
-        # don't allow wild cards - either search over exact one node or all
-        for t in ['*', '?']:
-            if t in channel:
-                channel = ''
-            if t in location:
-                location = ''
+        # don't allow wild cards
+        for wildcard in ['*', '?']:
+            if wildcard in seed_id:
+                msg = "Wildcards in seed_id are not allowed."
+                raise ValueError(msg)
 
         if len(station_list) > 1:
-            warnings.warn("Received more than one PAZ file. Using first.")
+            warnings.warn("Received more than one XSEED file. Using first.")
+
         xml_doc = station_list[0]
-        # request station resource
-        res = self.client.station.getXMLResource(xml_doc['resource_name'])
-        base_node = res.station_control_header
-        # search for nodes with correct channel and location code
-        if channel or location:
-            # fetch next following response_poles_and_zeros node
-            xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel + "' and location_identifier='" + location + \
-                "']/following-sibling::response_poles_and_zeros"
-            paz_node = base_node.xpath(xpath_expr)[0]
-            # fetch next following channel_sensitivity_node with
-            # stage_sequence_number == 0
-            xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel + "' and location_identifier='" + location + \
-                "']/following-sibling::channel_sensitivity_" + \
-                "gain[stage_sequence_number='0']"
-            sensitivity_node = base_node.xpath(xpath_expr)[0]
-            # fetch seismometer gain following channel_sensitivity_node with
-            # stage_sequence_number == 1
-            xpath_expr = "channel_identifier[channel_identifier='" + \
-                channel + "' and location_identifier='" + location + \
-                "']/following-sibling::channel_sensitivity_" + \
-                "gain[stage_sequence_number='1']"
-            seismometer_gain_node = base_node.xpath(xpath_expr)[0]
-        else:
-            # just take first existing nodes
-            paz_node = base_node.response_poles_and_zeros[0]
-            sensitivity_node = base_node.channel_sensitivity_gain[-1]
-            seismometer_gain_node = base_node.channel_sensitivity_gain[0]
-        paz = {}
-        # poles
-        poles_real = paz_node.complex_pole.real_pole[:]
-        poles_imag = paz_node.complex_pole.imaginary_pole[:]
-        poles = zip(poles_real, poles_imag)
-        paz['poles'] = [complex(p[0], p[1]) for p in poles]
-        # zeros
-        zeros_real = paz_node.complex_zero.real_zero[:][:]
-        zeros_imag = paz_node.complex_zero.imaginary_zero[:][:]
-        zeros = zip(zeros_real, zeros_imag)
-        paz['zeros'] = [complex(z[0], z[1]) for z in zeros]
-        # gain
-        paz['gain'] = paz_node.A0_normalization_factor.pyval
-        # sensitivity
-        paz['sensitivity'] = sensitivity_node.sensitivity_gain.pyval
-        # paz['name'] = name
-        if seismometer_gain:
-            paz['seismometer_gain'] = \
-                seismometer_gain_node.sensitivity_gain.pyval
+        res = self.client.station.getResource(xml_doc['resource_name'])
+        parser = Parser(res)
+        #seed_id = ".".join((network, station, location, channel))
+        paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
 
 

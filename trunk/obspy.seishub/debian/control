@@ -12,6 +12,6 @@ Package: python-obspy-seishub
 Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-lxml (>= 2.1), python-obspy-core, python-obspy-mseed,
- python-setuptools (>= 0.6)
+ python-obspy-xseed, python-setuptools (>= 0.6)
 Description: SeisHub database client for ObsPy
  For more information visit http://www.obspy.org.

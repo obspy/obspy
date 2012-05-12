@@ -7,6 +7,7 @@ The obspy.seishub.client test suite.
 from obspy.seishub import Client
 import unittest
 from obspy.core import UTCDateTime, AttribDict
+from obspy.xseed.utils import SEEDParserException
 
 
 class ClientTestCase(unittest.TestCase):
@@ -158,18 +159,33 @@ class ClientTestCase(unittest.TestCase):
 
     def test_getPAZ(self):
         t = UTCDateTime('20090808')
-        data = self.client.station.getPAZ('BW', 'MANZ', t)
+        c = self.client
+        # test the deprecated call too for one/two releases
+        data = c.station.getPAZ('BW.MANZ..EHZ', t)
         self.assertEqual(data['zeros'], [0j, 0j])
         self.assertEqual(data['sensitivity'], 2516800000.0)
         self.assertEqual(len(data['poles']), 5)
-        self.assertEqual(data['poles'][0], (-0.037004000000000002 + 0.037016j))
-        self.assertEqual(data['poles'][1], (-0.037004000000000002 - 0.037016j))
-        self.assertEqual(data['poles'][2], (-251.33000000000001 + 0j))
+        self.assertEqual(data['poles'][0], (-0.037004 + 0.037016j))
+        self.assertEqual(data['poles'][1], (-0.037004 - 0.037016j))
+        self.assertEqual(data['poles'][2], (-251.33 + 0j))
         self.assertEqual(data['poles'][3],
                          (-131.03999999999999 - 467.29000000000002j))
         self.assertEqual(data['poles'][4],
                          (-131.03999999999999 + 467.29000000000002j))
         self.assertEqual(data['gain'], 60077000.0)
+        # test some not allowed wildcards
+        t = UTCDateTime('20120501')
+        self.assertRaises(ValueError, c.station.getPAZ, "BW.RLAS..BJ*", t)
+        self.assertRaises(ValueError, c.station.getPAZ, "BW.RLAS..*", t)
+        self.assertRaises(ValueError, c.station.getPAZ, "BW.RLAS..BJ?", t)
+        self.assertRaises(ValueError, c.station.getPAZ, "BW.R*..BJZ", t)
+        # test with a XSEED file with a referenced PAZ response info (see #364)
+        t = UTCDateTime("2012-05-10")
+        result = AttribDict({'gain': 1.0, 'poles': [0j],
+                'seismometer_gain': 6319120000000.0,
+                'sensitivity': 6319120000000.0, 'zeros': [0j]})
+        data = c.station.getPAZ("BW.RLAS..BJZ", t)
+        self.assertEqual(data, result)
 
     def test_getCoordinates(self):
         t = UTCDateTime("2010-05-03T23:59:30")
@@ -193,12 +209,31 @@ class ClientTestCase(unittest.TestCase):
         result = AttribDict({'zeros': [0j, 0j, 0j], 'sensitivity': 251650000.0,
                              'poles': [(-0.88 + 0.88j), (-0.88 - 0.88j),
                                        (-0.22 + 0j)],
-                             'gain': 1.0})
+                             'gain': 1.0,
+                             'seismometer_gain': 400.0,
+                             'digitizer_gain': 629121.0})
         self.assertEqual(st[0].stats.paz, result)
         result = AttribDict({'latitude': 48.081493000000002,
                              'elevation': 500.0,
                              'longitude': 11.636093000000001})
         self.assertEqual(st[0].stats.coordinates, result)
+
+    def test_getPAZCallChange(self):
+        t = UTCDateTime("2012-05-10")
+        c = self.client
+        datas = []
+        result = AttribDict({'gain': 1.0, 'poles': [0j],
+                'seismometer_gain': 6319120000000.0,
+                'sensitivity': 6319120000000.0, 'zeros': [0j]})
+        # test that the old/deprecated call syntax is still working
+        self.assertRaises(SEEDParserException, c.station.getPAZ, "BW", "RLAS", t)
+        datas.append(c.station.getPAZ("BW", "RLAS", t, "", "BJZ"))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, "", channel="BJZ"))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, location="", channel="BJZ"))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ", location=""))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ"))
+        for data in datas:
+            self.assertEqual(data, result)
 
 
 def suite():

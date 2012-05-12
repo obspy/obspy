@@ -37,7 +37,7 @@ AUTHOR = 'The ObsPy Development Team'
 AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'SeisHub']
-INSTALL_REQUIRES = ['obspy.core', 'obspy.mseed', 'lxml']
+INSTALL_REQUIRES = ['obspy.core', 'obspy.mseed', 'lxml', 'obspy.xseed']
 ENTRY_POINTS = {}
 
 
