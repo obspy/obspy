@@ -226,11 +226,14 @@ class ClientTestCase(unittest.TestCase):
                 'seismometer_gain': 6319120000000.0,
                 'sensitivity': 6319120000000.0, 'zeros': [0j]})
         # test that the old/deprecated call syntax is still working
-        self.assertRaises(SEEDParserException, c.station.getPAZ, "BW", "RLAS", t)
+        self.assertRaises(SEEDParserException, c.station.getPAZ, "BW", "RLAS",
+                          t)
         datas.append(c.station.getPAZ("BW", "RLAS", t, "", "BJZ"))
         datas.append(c.station.getPAZ("BW", "RLAS", t, "", channel="BJZ"))
-        datas.append(c.station.getPAZ("BW", "RLAS", t, location="", channel="BJZ"))
-        datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ", location=""))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, location="",
+                channel="BJZ"))
+        datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ",
+                location=""))
         datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ"))
         for data in datas:
             self.assertEqual(data, result)

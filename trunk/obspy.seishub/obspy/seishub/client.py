@@ -42,7 +42,7 @@ def _callChangeGetPAZ(func):
     """
     This is a decorator to intercept a change in the arg list for
     seishub.client.station.getPAZ() with revision [3778].
-    
+
     * throw a DeprecationWarning
     * make the correct call
     """
@@ -513,13 +513,14 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
             stream.trim(trim_start, trim_end)
         if getPAZ:
             for tr in stream:
-                paz = self.client.station.getPAZ(seed_id=tr.id, datetime=starttime)
+                paz = self.client.station.getPAZ(seed_id=tr.id,
+                                                 datetime=starttime)
                 if metadata_timecheck:
                     paz_check = self.client.station.getPAZ(seed_id=tr.id,
                                                            datetime=endtime)
                     if paz != paz_check:
-                        msg = "PAZ information changing from start time to " + \
-                              "end time."
+                        msg = "PAZ information changing from start time to" + \
+                              " end time."
                         raise Exception(msg)
                 tr.stats['paz'] = paz
 
@@ -725,7 +726,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
         xml_doc = station_list[0]
         res = self.client.station.getResource(xml_doc['resource_name'])
         parser = Parser(res)
-        #seed_id = ".".join((network, station, location, channel))
         paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
 
