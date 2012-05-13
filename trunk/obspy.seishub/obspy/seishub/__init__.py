@@ -71,7 +71,7 @@ Advanced Examples
   </item>
 </metadata>
 
->>> paz = client.station.getPAZ('BW', 'MANZ', UTCDateTime('20090808'))
+>>> paz = client.station.getPAZ('BW.MANZ..EHZ', UTCDateTime('20090808'))
 >>> paz = paz.items()
 >>> sorted(paz)  # doctest: +SKIP
 [('gain', 60077000.0),
