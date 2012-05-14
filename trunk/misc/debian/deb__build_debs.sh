@@ -94,8 +94,8 @@ done
 cd $BASEDIR
 svn revert control
 ex control << EOF
-g/Standards-Version/s/[x0-9.]\+/$VERSION/
-g/^Version/s/[x0-9.]\+/${METAPACKAGE_VERSION}-${DEBVERSION}\~${CODENAME}/
+g/^Standards-Version: /s/ .*/ ${METAPACKAGE_VERSION}/
+g/^Version: /s/ .*/ ${METAPACKAGE_VERSION}-${DEBVERSION}\~${CODENAME}/
 wq
 EOF
 equivs-build control
