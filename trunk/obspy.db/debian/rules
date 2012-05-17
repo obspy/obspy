@@ -9,7 +9,7 @@ binary:
 	dh binary
 
 override_dh_auto_install:
-	dh_auto_install -- release
+	dh_auto_install #-- release
 
 override_dh_installdeb:
 	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
