@@ -12,7 +12,8 @@
 # Tags are supposed to be checked out as "tags" subdirectory
 
 METAPACKAGE_VERSION=0.6.0
-DEBVERSION=1
+METAPACKAGE_DEBVERSION=1
+DEBVERSION=2
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
 # Setting PATH to correct python distribution, avoid to use virtualenv
@@ -95,7 +96,7 @@ cd $BASEDIR
 svn revert control
 ex control << EOF
 g/^Standards-Version: /s/ .*/ ${METAPACKAGE_VERSION}/
-g/^Version: /s/ .*/ ${METAPACKAGE_VERSION}-${DEBVERSION}\~${CODENAME}/
+g/^Version: /s/ .*/ ${METAPACKAGE_VERSION}-${METAPACKAGE_DEBVERSION}\~${CODENAME}/
 wq
 EOF
 equivs-build control
