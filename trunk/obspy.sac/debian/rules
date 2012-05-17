@@ -6,9 +6,13 @@
 	dh $@
 
 binary:
-	dh binary --before dh_auto_install
+	dh binary
+
+override_dh_auto_install:
 	dh_auto_install -- release
-	dh binary --after dh_auto_install --until dh_shlibdeps
+
+override_dh_installdeb:
 	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
 	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
-	dh binary --after dh_shlibdeps
+	find $(CURDIR)/debian -type d -name src | xargs rm -rf \; # in principle only needed for some modules
+	dh_installdeb
