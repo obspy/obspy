@@ -48,7 +48,7 @@ MODULES=`ls $TAGSDIR`
 for MODULE in $MODULES; do
     echo "#### Working on $MODULE"
     MODULEDIR=$TAGSDIR/$MODULE
-    TAGS=`ls $MODULEDIR`
+    TAGS=`ls -1 $MODULEDIR | tail -1`
     for TAG in $TAGS; do
         echo "#### Working on $MODULE $TAG"
         TAGDIR=$MODULEDIR/$TAG
