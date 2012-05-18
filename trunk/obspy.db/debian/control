@@ -13,5 +13,5 @@ Architecture: all
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-sqlalchemy, python-obspy-core,
  python-obspy-mseed, python-setuptools (>= 0.6)
-Description: A waveform database for ObsPy
+Description: Waveform database for ObsPy
  For more information visit http://www.obspy.org.

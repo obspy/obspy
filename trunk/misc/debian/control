@@ -13,6 +13,6 @@ Depends: python-obspy-core, python-obspy-gse2, python-obspy-mseed,
  python-obspy-earthworm, python-obspy-seg2, python-obspy-realtime,
  python-obspy-seedlink
 Suggests: python-obspy-fissures
-Description: A metapackage which installs all ObsPy packages
+Description: Metapackage which installs all ObsPy packages
  .
  For more information visit http://www.obspy.org.
