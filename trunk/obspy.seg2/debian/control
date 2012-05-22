@@ -2,7 +2,8 @@ Source: python-obspy-seg2
 Section: python
 Priority: extra
 Maintainer: ObsPy Development Team <devs@obspy.org>
-Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1)
+Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
+ python-numpy
 Standards-Version: x.x.x
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.seg2
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.seg2
