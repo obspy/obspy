@@ -30,4 +30,5 @@ Dependencies
 ------------
 * obspy.core
 * obspy.mseed
+* obspy.xseed
 * lxml
