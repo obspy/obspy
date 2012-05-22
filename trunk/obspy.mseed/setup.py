@@ -20,22 +20,8 @@ For more information visit http://www.obspy.org.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license:
-    GNU General Public License (GPL)
-
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-    02110-1301, USA.
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 
 from distutils.ccompiler import get_default_compiler
@@ -55,7 +41,7 @@ VERSION = open(os.path.join(LOCAL_PATH, 'obspy', 'mseed',
 NAME = 'obspy.mseed'
 AUTHOR = 'The ObsPy Development Team & Chad Trabant'
 AUTHOR_EMAIL = 'devs@obspy.org'
-LICENSE = 'GNU General Public License (GPL)'
+LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'MSEED', 'MiniSEED', 'waveform',
             'seismograms']
 INSTALL_REQUIRES = ['obspy.core']
@@ -145,6 +131,7 @@ def convert2to3():
     # create a new 2to3 directory for converted source files
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
+
     # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
@@ -196,7 +183,8 @@ def setupPackage():
         namespace_packages=['obspy'],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME, NAME),
+        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME,
+                                                                    NAME),
         include_package_data=True,
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,

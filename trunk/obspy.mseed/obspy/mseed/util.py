@@ -6,7 +6,6 @@ from __future__ import with_statement
 from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile
-from StringIO import StringIO
 from struct import unpack
 import sys
 import ctypes as C
