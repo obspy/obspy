@@ -1,3 +1,15 @@
+2012.138: 2.7
+	Add define for MINGW32 to use _fstat and _stat.
+
+2012.114: 2.7rc2
+	- Change record parsing code to trim trailing spaces from network,
+	station, location and channel parameters.  Spaces in between non-space
+	characters remain.
+
+2012.111:
+	- Update example/test.mseed to new data with an earthquake to make it
+	more recognizable compared to ambient noise in the previous example.
+
 2012.105: 2.7rc1
 	- Add many type casts to quiet newer GCC and MSVC compilers.
 	For 32-bit programs there are some places, mostly in packing routines,

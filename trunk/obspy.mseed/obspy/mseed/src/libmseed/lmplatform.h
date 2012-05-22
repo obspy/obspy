@@ -18,7 +18,7 @@
  *
  * Written by Chad Trabant, IRIS Data Management Center
  *
- * modified: 2010.304
+ * modified: 2012.138
  ***************************************************************************/
 
 #ifndef LMPLATFORM_H
@@ -117,6 +117,11 @@ extern "C" {
     #define strdup _strdup
     #define fileno _fileno
   #endif
+
+  #if defined(__MINGW32__) 
+    #define fstat _fstat 
+    #define stat _stat 
+  #endif 
 
   typedef signed char int8_t;
   typedef unsigned char uint8_t;

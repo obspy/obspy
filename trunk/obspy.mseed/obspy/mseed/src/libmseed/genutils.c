@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2012.088
+ * modified: 2012.114
  ***************************************************************************/
 
 #include <stdio.h>
@@ -217,6 +217,52 @@ ms_strncpclean (char *dest, const char *source, int length)
   
   return didx;
 }  /* End of ms_strncpclean() */
+
+
+/***************************************************************************
+ * ms_strncpcleantail:
+ *
+ * Copy up to 'length' characters from 'source' to 'dest' without any
+ * trailing spaces.  The result is left justified and always null
+ * terminated.  The destination string must have enough room needed
+ * for the characters within 'length' and the null terminator, a
+ * maximum of 'length + 1'.
+ *
+ * Returns the number of characters (not including the null terminator) in
+ * the destination string.
+ ***************************************************************************/
+int
+ms_strncpcleantail (char *dest, const char *source, int length)
+{
+  int idx, pretail;
+  
+  if ( ! dest )
+    return 0;
+  
+  if ( ! source )
+    {
+      *dest = '\0';
+      return 0;
+    }
+  
+  *(dest+length) = '\0';
+  
+  pretail = 0;
+  for ( idx=length-1; idx >= 0 ; idx-- )
+    {
+      if ( ! pretail && *(source+idx) == ' ' )
+	{
+	  *(dest+idx) = '\0';
+	}
+      else
+	{
+	  pretail++;
+	  *(dest+idx) = *(source+idx);
+	}
+    }
+  
+  return pretail;
+}  /* End of ms_strncpcleantail() */
 
 
 /***************************************************************************

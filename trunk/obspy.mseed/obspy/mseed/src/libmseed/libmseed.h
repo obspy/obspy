@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.7rc1"
-#define LIBMSEED_RELEASE "2012.105"
+#define LIBMSEED_VERSION "2.7"
+#define LIBMSEED_RELEASE "2012.138"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -629,6 +629,7 @@ extern int      mst_writemseedgroup ( MSTraceGroup *mstg, char *msfile, flag ove
 extern char*    ms_recsrcname (char *record, char *srcname, flag quality);
 extern int      ms_splitsrcname (char *srcname, char *net, char *sta, char *loc, char *chan, char *qual);
 extern int      ms_strncpclean (char *dest, const char *source, int length);
+extern int      ms_strncpcleantail (char *dest, const char *source, int length);
 extern int      ms_strncpopen (char *dest, const char *source, int length);
 extern int      ms_doy2md (int year, int jday, int *month, int *mday);
 extern int      ms_md2doy (int year, int month, int mday, int *jday);

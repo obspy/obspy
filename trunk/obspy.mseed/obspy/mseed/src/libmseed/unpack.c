@@ -13,7 +13,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2012.105
+ * modified: 2012.114
  ***************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -176,10 +176,10 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
   strncpy (sequence_number, msr->fsdh->sequence_number, 6);
   msr->sequence_number = (int32_t) strtol (sequence_number, NULL, 10);
   msr->dataquality = msr->fsdh->dataquality;
-  strncpy (msr->network, msr->fsdh->network, 2);
-  strncpy (msr->station, msr->fsdh->station, 5);
-  strncpy (msr->location, msr->fsdh->location, 2);
-  strncpy (msr->channel, msr->fsdh->channel, 3);
+  ms_strncpcleantail (msr->network, msr->fsdh->network, 2);
+  ms_strncpcleantail (msr->station, msr->fsdh->station, 5);
+  ms_strncpcleantail (msr->location, msr->fsdh->location, 2);
+  ms_strncpcleantail (msr->channel, msr->fsdh->channel, 3);
   msr->samplecnt = msr->fsdh->numsamples;
   
   /* Generate source name for MSRecord */
