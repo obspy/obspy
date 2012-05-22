@@ -68,8 +68,8 @@ def welch(data, win, Nfft, L=0, over=0):
     :param Nfft: Number of points for FFT.
     :type L: int, optional
     :param L: Length of windows to be averaged, defaults to ``0``.
-    :type over: int, optional
-    :param over: Overlap of windows to be averaged, defaults to ``0``.
+    :type over: float, optional
+    :param over: Overlap of windows to be averaged 0<over<1, defaults to ``0``.
     :return: Spectrum.
     """
     if (L == 0):
@@ -80,7 +80,7 @@ def welch(data, win, Nfft, L=0, over=0):
     nsect = 1 + int(np.floor((len(data) - L) / (n0)))
     Px = 0
     for _i in xrange(nsect):
-        Px = Px + mper(data, win, Nfft) / nsect
+        Px = Px + mper(data, win, Nfft, n1, n2) / nsect
         n1 = n1 + n0
         n2 = n2 + n0
     return Px
