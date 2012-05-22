@@ -76,7 +76,7 @@ def welch(data, win, Nfft, L=0, over=0):
         L = len(data)
     n1 = 0
     n2 = L
-    n0 = (1 - over) * L
+    n0 = (1. - float(over)) * L
     nsect = 1 + int(np.floor((len(data) - L) / (n0)))
     Px = 0
     for _i in xrange(nsect):
