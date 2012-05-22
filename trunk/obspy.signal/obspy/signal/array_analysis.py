@@ -907,8 +907,9 @@ def get_geometry(stream, coordsys='lonlat', return_center=False,
         raise ValueError("Coordsys must be one of 'lonlat', 'xy'")
 
     if return_center:
-        geometry, (center_lon, center_lat, center_h)
-    return geometry
+        return np.c_[geometry.T, np.array((center_lon, center_lat, center_h))].T
+    else:
+        return geometry
 
 
 def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
