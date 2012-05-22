@@ -39,3 +39,4 @@ for i, lab in enumerate(labels):
 
 fig.autofmt_xdate()
 fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
+plt.show()

@@ -6,7 +6,7 @@ The following code example shows how to use the
 :class:`~obspy.signal.psd.PPSD` class defined in :mod:`obspy.signal`. The
 routine is useful for interpretation of e.g. noise measurements for site
 quality control checks. For more information on the topic see
-`McNamara and Buland 2004`_.
+[McNamara2004]_.
 
 .. doctest::
 
@@ -83,7 +83,7 @@ window..
 .. plot:: source/tutorial/probabilistic_power_spectral_density.py
 
 Below the actual PPSD (for a detailed discussion see
-`McNamara and Buland 2004`_) is a visualization of the data basis for the PPSD
+[McNamara2004]_) is a visualization of the data basis for the PPSD
 (can also be switched off during plotting). The top row shows data fed into the
 PPSD, green patches represent available data, red patches represent gaps in
 streams that were added to the PPSD. The bottom row in blue shows the single
@@ -95,6 +95,3 @@ lines.
    
    Providing metadata from e.g. a Dataless SEED volume is safer than specifying
    static poles and zeros information (see :class:`~obspy.signal.psd.PPSD`). 
-
-
-.. _`McNamara and Buland 2004`: http://bssa.geoscienceworld.org/cgi/content/abstract/94/4/1517
