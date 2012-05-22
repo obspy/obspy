@@ -13,8 +13,8 @@ by Chad Trabant and interfaced via Python :mod:`ctypes`.
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & Chad Trabant
 :license:
-    GNU General Public License (GPLv2)
-    (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 
 Reading
 -------
