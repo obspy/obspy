@@ -31,8 +31,6 @@ import sys
 import os
 from obspy.core import read, UTCDateTime
 from optparse import OptionParser
-from matplotlib.dates import date2num
-from matplotlib.pyplot import figure, show
 import numpy as np
 
 
@@ -132,6 +130,10 @@ def main():
     parser.add_option("--nox", default=False,
                       action="store_true", dest="nox",
                       help="Optional, Do not plot crosses.")
+    parser.add_option("-o", "--output", default=None,
+                      type="string", dest="output",
+                      help="Save plot to image file (e.g. out.pdf, " + \
+                      "out.png) instead of opening a window.")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -145,7 +147,14 @@ def main():
     else:
         parse_func = parse_file_to_dict
 
-    fig = figure()
+    if options.output is not None:
+        import matplotlib
+        matplotlib.use("agg")
+    global date2num
+    from matplotlib.dates import date2num
+    import matplotlib.pyplot as plt
+
+    fig = plt.figure()
     ax = fig.add_subplot(111)
 
     # Plot vertical lines if option 'event_times' was specified
@@ -175,6 +184,7 @@ def main():
     # Loop through this dictionary
     ids = data.keys()
     ids = sorted(ids)
+    labels = [""] * len(ids)
     for _i, _id in enumerate(ids):
         data[_id].sort()
         startend = np.array(data[_id])
@@ -188,6 +198,10 @@ def main():
                       linewidth=2, zorder=3)
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
+        gapsum = diffs[diffs > 0].sum()
+        timerange = startend[:, 1].max() - startend[:, 0].min()
+        perc = (timerange - gapsum) / timerange
+        labels[_i] = ids[_i] + "\n%.1f%%" % (perc * 100)
         gaps = startend[diffs > 1.8 * samp_int[_id], 1]
         if len(gaps) > 0:
             offset = offset[:len(gaps)]
@@ -196,9 +210,13 @@ def main():
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
-    ax.set_yticklabels(ids)
+    ax.set_yticklabels(labels, family="monospace", ha="right")
     fig.autofmt_xdate()  # rotate date
-    show()
+    plt.subplots_adjust(left=0.2)
+    if options.output is None:
+        plt.show()
+    else:
+        fig.savefig(options.output)
     sys.stdout.write('\n')
 
 
