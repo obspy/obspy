@@ -39,3 +39,4 @@ will give you a good idea of the library’s flavor and style.
    time_frequency_misfit
    visualize_data_availability_of_local_waveform_archive
    travel_time_plot
+   obspyDMT: Retrieving, Processing and Management of Large Seismic Datasets
