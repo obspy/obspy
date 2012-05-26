@@ -216,6 +216,21 @@ def main():
     if options.output is None:
         plt.show()
     else:
+        fig.set_dpi(72)
+        height = len(ids) * 0.5
+        height = max(4, height)
+        fig.set_figheight(height)
+        # tight_layout() only available from matplotlib >= 1.1
+        try:
+            plt.tight_layout()
+            days = ax.get_xlim()
+            days = days[1] - days[0]
+            width = max(6, days/30.)
+            fig.set_figwidth(width)
+            plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
+            plt.tight_layout()
+        except:
+            pass
         fig.savefig(options.output)
     sys.stdout.write('\n')
 
