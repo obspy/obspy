@@ -183,7 +183,7 @@ def main():
 
     # Loop through this dictionary
     ids = data.keys()
-    ids = sorted(ids)
+    ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
     for _i, _id in enumerate(ids):
         data[_id].sort()
