@@ -5,6 +5,7 @@ Standards-Version: 0.6.1
 Version: 0.6.1-1~squeeze
 Architecture: all
 Maintainer: The ObsPy Development Team <devs@obspy.org>
+Homepage: http://www.obspy.org
 Depends: python-obspy-core, python-obspy-gse2, python-obspy-mseed,
  python-obspy-sac, python-obspy-seisan, python-obspy-sh, python-obspy-wav,
  python-obspy-signal, python-obspy-xseed, python-obspy-imaging,
