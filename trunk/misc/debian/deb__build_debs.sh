@@ -79,11 +79,6 @@ python-${MODULE/./-} (${VERSION}-${DEBVERSION}~${CODENAME}) unstable; urgency=lo
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
-        # update also Standards-Version: 0.3.3
-        ex debian/control << EOF
-g/Standards-Version/s/[x0-9.]\+/$VERSION/
-wq
-EOF
         # build the package
         fakeroot ./debian/rules clean build binary
         mv ../python-${MODULE/./-}_*.deb $PACKAGEDIR/
@@ -95,7 +90,6 @@ done
 cd $BASEDIR
 svn revert control
 ex control << EOF
-g/^Standards-Version: /s/ .*/ ${METAPACKAGE_VERSION}/
 g/^Version: /s/ .*/ ${METAPACKAGE_VERSION}-${METAPACKAGE_DEBVERSION}\~${CODENAME}/
 wq
 EOF

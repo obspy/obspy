@@ -1,16 +1,18 @@
 Source: python-obspy-taup
+Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
-Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5), gcc, gfortran, python (>= 2.5),
  python-support (>= 0.7.1), python-numpy
-Standards-Version: x.x.x
+Standards-Version: 3.9.3
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.taup
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.taup
 Homepage: http://www.obspy.org
 
 Package: python-obspy-taup
 Architecture: any
+Section: python
+Priority: extra
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), ${shlibs:Depends}, python-matplotlib (>= 0.98.1),
  python-obspy-core, python-setuptools (>= 0.6)
@@ -27,3 +29,4 @@ Description: Travel time calculation tool for ObsPy
  for seismology.
  .
  For more information visit http://www.obspy.org.
+Homepage: http://www.obspy.org

@@ -1,16 +1,18 @@
 Source: python-obspy-iris
+Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
-Maintainer: ObsPy Development Team <devs@obspy.org>
 Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
  python-numpy
-Standards-Version: x.x.x
+Standards-Version: 3.9.3
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.iris
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.iris
 Homepage: http://www.obspy.org
 
 Package: python-obspy-iris
 Architecture: all
+Section: python
+Priority: extra
 Depends: python (>= 2.5), python (<< 3), ${python:Depends},
  python (>= 2.6) | python-json (>=3.4-2) | python-simplejson (>=1.9),
  python-numpy (>= 1:1.1), python-obspy-core, python-obspy-mseed,
@@ -26,3 +28,4 @@ Description: IRIS web service client for ObsPy
  project is to facilitate rapid application development for seismology. 
  .
  For more information visit http://www.obspy.org.
+Homepage: http://www.obspy.org
