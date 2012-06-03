@@ -17,7 +17,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
     NamedTemporaryFile
 from obspy.core.util.base import ENTRY_POINTS
-from pkg_resources import load_entry_point  # @UnresolvedImport
+from pkg_resources import load_entry_point
 from uuid import uuid4
 import copy
 import glob
@@ -153,62 +153,70 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
 
     Usage to create a new class type:
 
-    >>> from obspy.core.util.types import Enum
-    >>> ABCEnum = Enum(["a", "b", "c"])
-    >>> # For every fixed type attribute, corresponding getter/setter methods
-    >>> # will be created and the attribute will be a property of the resulting
-    >>> # class.
-    >>> # The third item in the tuple is interpreted as "is allowed to be
-    >>> # None". Thus, if False, it will initialize with given types default
-    >>> # constructor. Use only for types is makes sense.
-    >>> class_attributes = [ \
-            ("resource_id", ResourceIdentifier, False), \
-            ("creation_info", CreationInfo), \
-            ("some_letters", ABCEnum), \
-            ("description", str)]
-    >>> # Furthermore the class can contain lists of other objects. These will
-    >>> # just be list class attributes and nothing else so far.
-    >>> class_contains = ["comments"]
-    >>> TestEventClass = _eventTypeClassFactory( \
-            "TestEventClass", \
-            class_attributes=class_attributes, \
-            class_contains=class_contains)
-    >>> assert(TestEventClass.__name__ == "TestEventClass")
+        >>> from obspy.core.util.types import Enum
+        >>> ABCEnum = Enum(["a", "b", "c"])
+
+    For every fixed type attribute, corresponding getter/setter methods will be
+    created and the attribute will be a property of the resulting class.
+    The third item in the tuple is interpreted as "is allowed to be None".
+    Thus, if False, it will initialize with given types default constructor.
+    Use only for types is makes sense.
+
+        >>> class_attributes = [ \
+                ("resource_id", ResourceIdentifier, False), \
+                ("creation_info", CreationInfo), \
+                ("some_letters", ABCEnum), \
+                ("description", str)]
+
+    Furthermore the class can contain lists of other objects. These will just
+    be list class attributes and nothing else so far.
+
+        >>> class_contains = ["comments"]
+        >>> TestEventClass = _eventTypeClassFactory("TestEventClass", \
+                class_attributes=class_attributes, \
+                class_contains=class_contains)
+        >>> assert(TestEventClass.__name__ == "TestEventClass")
 
     Now the new class type can be used.
 
-    >>> test_event = TestEventClass(resource_id="event/123456", \
-                        creation_info={"author": "obspy.org", \
-                                       "version": "0.1"})
-    >>> # All given arguments will be converted to the right type.
-    >>> test_event.resource_id
-    ResourceIdentifier(resource_id="event/123456")
-    >>> print test_event.creation_info
-    CreationInfo(author='obspy.org', version='0.1')
-    >>> # All others will be set to None.
-    >>> assert(test_event.description is None)
-    >>> assert(test_event.some_letters is None)
-    >>> # They can be set later and be converted to appropriate type if
-    >>> # possible.
-    >>> test_event.description = 1
-    >>> assert(test_event.description is "1")
-    >>> # Trying to set with an inappropriate value will raise an error.
-    >>> test_event.some_letters = "d" # doctest:+ELLIPSIS
-    Traceback (most recent call last):
-        ...
-    ValueError: Setting attribute "some_letters" failed. ...
+        >>> test_event = TestEventClass(resource_id="event/123456", \
+                creation_info={"author": "obspy.org", "version": "0.1"})
 
-    >>> # If you pass ``"False"`` as the third tuple item for the
-    >>> # class_attributes, the type will be initialized even if no value was
-    >>> # given.
-    >>> TestEventClass = _eventTypeClassFactory("TestEventClass",\
-            class_attributes=[("time_1", UTCDateTime, False),\
-                               ("time_2", UTCDateTime)])
-    >>> test_event = TestEventClass()
-    >>> print test_event.time_1.__repr__() # doctest:+ELLIPSIS
-    UTCDateTime(...)
-    >>> print test_event.time_2
-    None
+    All given arguments will be converted to the right type.
+
+        >>> test_event.resource_id
+        ResourceIdentifier(resource_id="event/123456")
+        >>> print test_event.creation_info
+        CreationInfo(author='obspy.org', version='0.1')
+
+    All others will be set to None.
+
+        >>> assert(test_event.description is None)
+        >>> assert(test_event.some_letters is None)
+
+    They can be set later and be converted to appropriate type if possible.
+
+        >>> test_event.description = 1
+        >>> assert(test_event.description is "1")
+
+    Trying to set with an inappropriate value will raise an error.
+
+        >>> test_event.some_letters = "d" # doctest:+ELLIPSIS
+        Traceback (most recent call last):
+            ...
+        ValueError: Setting attribute "some_letters" failed. ...
+
+    If you pass ``"False"`` as the third tuple item for the class_attributes,
+    the type will be initialized even if no value was given.
+
+        >>> TestEventClass = _eventTypeClassFactory("TestEventClass",\
+                class_attributes=[("time_1", UTCDateTime, False),\
+                                  ("time_2", UTCDateTime)])
+        >>> test_event = TestEventClass()
+        >>> print test_event.time_1.__repr__() # doctest:+ELLIPSIS
+        UTCDateTime(...)
+        >>> print test_event.time_2
+        None
     """
     class AbstractEventType(object):
         def __init__(self, *args, **kwargs):
@@ -388,7 +396,7 @@ class ResourceIdentifier(object):
         created with the same resource_id will be able to access the object as
         long as at least one instance actual has a reference to it.
 
-    General usage:
+    .. rubric:: General Usage
 
     >>> res_id = ResourceIdentifier('2012-04-11--385392')
     >>> res_id
@@ -641,8 +649,9 @@ class ResourceIdentifier(object):
 
     def __setResourceID(self, resource_id):
         # Check if the resource id is a hashable type.
-        if not hasattr(resource_id, '__hash__') or \
-           not callable(resource_id.__hash__):
+        try:
+            hash(resource_id)
+        except TypeError:
             msg = "resource_id needs to be a hashable type."
             raise TypeError(msg)
         self.__dict__["resource_id"] = resource_id
@@ -1786,7 +1795,7 @@ class Event(__Event):
         Print a short summary at the top.
         """
         return "Event:\t%s\n\n%s" % (self.short_str(),
-                       "\n".join(super(Event, self).__str__().split("\n")[1:]))
+            "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
 
 __Catalog = _eventTypeClassFactory("__Catalog",
@@ -2233,7 +2242,7 @@ class Catalog(__Catalog):
         # Create the colormap for date based plotting.
         colormap = plt.get_cmap(date_colormap)
         scal_map = ScalarMappable(norm=Normalize(min_date, max_date),
-                                  cmap=plt.get_cmap(date_colormap))
+                                  cmap=colormap)
         scal_map.set_array(np.linspace(0, 1, 1))
 
         fig = plt.figure()
