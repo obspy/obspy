@@ -225,7 +225,7 @@ def main():
             plt.tight_layout()
             days = ax.get_xlim()
             days = days[1] - days[0]
-            width = max(6, days/30.)
+            width = max(6, days / 30.)
             fig.set_figwidth(width)
             plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
             plt.tight_layout()
