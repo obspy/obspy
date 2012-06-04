@@ -41,7 +41,7 @@ AUTHOR_EMAIL = 'devs@obspy.org'
 LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ObsPy', 'seismology', 'NERIES', 'Waveform', 'events',
             'earthquakes']
-INSTALL_REQUIRES = ['obspy.core', 'suds']
+INSTALL_REQUIRES = ['obspy.core', 'suds>=0.4']
 ENTRY_POINTS = {}
 
 # Python<2.6.x needs simplejson as additional dependency
