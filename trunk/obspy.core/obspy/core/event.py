@@ -30,6 +30,7 @@ import weakref
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
+ATTRIBUTE_HAS_ERRORS = True
 
 
 def readEvents(pathname_or_url=None, format=None, **kwargs):
@@ -143,6 +144,13 @@ def _createExampleCatalog():
     return readEvents('/path/to/neries_events.xml')
 
 
+class QuantityError(AttribDict):
+    uncertainty = None
+    lower_uncertainty = None
+    upper_uncertainty = None
+    confidence_level = None
+
+
 def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     """
     Class factory to unify the creation of all the types needed for the event
@@ -167,7 +175,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 ("resource_id", ResourceIdentifier), \
                 ("creation_info", CreationInfo), \
                 ("some_letters", ABCEnum), \
-                ("some_error_quantity", float, "attribute_has_errors"), \
+                ("some_error_quantity", float, ATTRIBUTE_HAS_ERRORS), \
                 ("description", str)]
 
     Furthermore the class can contain lists of other objects. There is not much
@@ -209,13 +217,13 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             ...
         ValueError: Setting attribute "some_letters" failed. ...
 
-    If you pass ``"attribute_has_errors"`` as the third tuple item for the
-    class_attributes, an error AttribDict will be be created that will be named
-    like the attribute with "_errors" appended.
+    If you pass ``ATTRIBUTE_HAS_ERRORS`` as the third tuple item for the
+    class_attributes, an error QuantityError will be be created that will be
+    named like the attribute with "_errors" appended.
 
         >>> assert(hasattr(test_event, "some_error_quantity_errors"))
-        >>> print type(test_event.some_error_quantity_errors).__name__
-        AttribDict
+        >>> test_event.some_error_quantity_errors  # doctest: +ELLIPSIS
+        QuantityError(...)
     """
     class AbstractEventType(AttribDict):
         # Keep the class attributes in a class level list for a manual property
@@ -223,9 +231,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         _properties = []
         for item in class_attributes:
             _properties.append((item[0], item[1]))
-            if len(item) == 3 and \
-               item[2] == "attribute_has_errors":
-                _properties.append((item[0] + "_errors", AttribDict))
+            if len(item) == 3 and item[2] == ATTRIBUTE_HAS_ERRORS:
+                _properties.append((item[0] + "_errors", QuantityError))
         _property_keys = [_i[0] for _i in _properties]
         _property_dict = {}
         for key, value in _properties:
@@ -241,16 +248,16 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 # polluted be the error quantities.
                 kwargs[class_attributes[_i][0]] = item
             # Set all property values to None or the kwarg value.
-            for key, value in self._properties:
+            for key, _ in self._properties:
                 setattr(self, key, kwargs.get(key, None))
             # Containers currently are simple lists.
             for name in self._containers:
                 setattr(self, name, list(kwargs.get(name, [])))
             # All errors are AttribDicts. If they are not set yet, set them
             # now.
-            for key, value in self._properties:
+            for key, _ in self._properties:
                 if key.endswith("_errors") and getattr(self, key) is None:
-                    setattr(self, key, AttribDict())
+                    setattr(self, key, QuantityError())
 
         def __str__(self):
             """
@@ -761,12 +768,12 @@ class TimeWindow(__TimeWindow):
 
 
 __CompositeTime = _eventTypeClassFactory("__CompositeTime",
-    class_attributes=[("year", int, "attribute_has_errors"),
-                      ("month", int, "attribute_has_errors"),
-                      ("day", int, "attribute_has_errors"),
-                      ("hour", int, "attribute_has_errors"),
-                      ("minute", int, "attribute_has_errors"),
-                      ("second", float, "attribute_has_errors")])
+    class_attributes=[("year", int, ATTRIBUTE_HAS_ERRORS),
+                      ("month", int, ATTRIBUTE_HAS_ERRORS),
+                      ("day", int, ATTRIBUTE_HAS_ERRORS),
+                      ("hour", int, ATTRIBUTE_HAS_ERRORS),
+                      ("minute", int, ATTRIBUTE_HAS_ERRORS),
+                      ("second", float, ATTRIBUTE_HAS_ERRORS)])
 
 
 class CompositeTime(__CompositeTime):
@@ -922,7 +929,7 @@ class WaveformStreamID(__WaveformStreamID):
 
 __Amplitude = _eventTypeClassFactory("__Amplitude",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("generic_amplitude", float, "attribute_has_errors"),
+                      ("generic_amplitude", float, ATTRIBUTE_HAS_ERRORS),
                       ("type", str),
                       ("category", AmplitudeCategory),
                       ("unit", AmplitudeUnit),
@@ -933,7 +940,7 @@ __Amplitude = _eventTypeClassFactory("__Amplitude",
                       ("pick_id", ResourceIdentifier),
                       ("waveform_id", ResourceIdentifier),
                       ("filter_id", ResourceIdentifier),
-                      ("scaling_time", UTCDateTime, "attribute_has_errors"),
+                      ("scaling_time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
                       ("magnitude_hint", str),
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
@@ -1040,12 +1047,12 @@ class Amplitude(__Amplitude):
 
 __Pick = _eventTypeClassFactory("__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("time", UTCDateTime, "attribute_has_errors"),
+                      ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
                       ("waveform_id", WaveformStreamID),
                       ("filter_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
-                      ("horizontal_slowness", float, "attribute_has_errors"),
-                      ("backazimuth", float, "attribute_has_errors"),
+                      ("horizontal_slowness", float, ATTRIBUTE_HAS_ERRORS),
+                      ("backazimuth", float, ATTRIBUTE_HAS_ERRORS),
                       ("slowness_method_id", ResourceIdentifier),
                       ("pick_onset", PickOnset),
                       ("phase_hint", str),
@@ -1133,7 +1140,7 @@ __Arrival = _eventTypeClassFactory("__Arrival",
                       ("time_used", bool),
                       ("horizontal_slowness_used", bool),
                       ("backazimuth_used", bool),
-                      ("time_weight", float, "attribute_has_errors"),
+                      ("time_weight", float, ATTRIBUTE_HAS_ERRORS),
                       ("earth_model_id", ResourceIdentifier),
                       ("preliminary", bool),
                       ("creation_info", CreationInfo)],
@@ -1341,10 +1348,10 @@ class OriginUncertainty(__OriginUncertainty):
 
 __Origin = _eventTypeClassFactory("__Origin",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("time", UTCDateTime, "attribute_has_errors"),
-                      ("latitude", float, "attribute_has_errors"),
-                      ("longitude", float, "attribute_has_errors"),
-                      ("depth", float, "attribute_has_errors"),
+                      ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
+                      ("latitude", float, ATTRIBUTE_HAS_ERRORS),
+                      ("longitude", float, ATTRIBUTE_HAS_ERRORS),
+                      ("depth", float, ATTRIBUTE_HAS_ERRORS),
                       ("depth_type", OriginDepthType),
                       ("time_fixed", bool),
                       ("epicenter_fixed", bool),
@@ -1486,7 +1493,7 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
 
 __Magnitude = _eventTypeClassFactory("__Magnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("mag", float, "attribute_has_errors"),
+                      ("mag", float, ATTRIBUTE_HAS_ERRORS),
                       ("magnitude_type", str),
                       ("origin_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
@@ -1568,7 +1575,7 @@ class Magnitude(__Magnitude):
 __StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("origin_id", ResourceIdentifier),
-                      ("mag", float, "attribute_has_errors"),
+                      ("mag", float, ATTRIBUTE_HAS_ERRORS),
                       ("station_magnitude_type", str),
                       ("amplitude_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
@@ -1777,15 +1784,18 @@ class Catalog(object):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
-    def __init__(self, **kwargs):
-        self.events = kwargs.get("events", [])
+    def __init__(self, events=None, **kwargs):
+        if not events:
+            self.events = []
+        else:
+            self.events = events
         self.comments = kwargs.get("comments", [])
         self._set_resource_id(kwargs.get("resource_id", None))
         self.description = kwargs.get("description", "")
         self._set_creation_info(kwargs.get("creation_info", None))
 
     def _get_resource_id(self):
-        return self.resource_id
+        return self.__dict__['resource_id']
 
     def _set_resource_id(self, value):
         if value is None:
@@ -1799,7 +1809,7 @@ class Catalog(object):
     resource_id = property(_get_resource_id, _set_resource_id)
 
     def _get_creation_info(self):
-        return self.creation_info
+        self.__dict__['creation_info']
 
     def _set_creation_info(self, value):
         if value is None:
@@ -1887,7 +1897,7 @@ class Catalog(object):
         :param other: Catalog or Event object to add.
         """
         if isinstance(other, Event):
-            other = Catalog([other])
+            other = Catalog(events=[other])
         if not isinstance(other, Catalog):
             raise TypeError
         self.extend(other.events)

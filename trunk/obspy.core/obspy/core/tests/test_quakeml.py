@@ -33,7 +33,7 @@ class QuakeMLTestCase(unittest.TestCase):
     def test_readQuakeML(self):
         """
         """
-        # iris
+        # IRIS
         filename = os.path.join(self.path, 'iris_events.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 2)
@@ -43,7 +43,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(catalog[1].resource_id,
             ResourceIdentifier(\
                 'smi:www.iris.edu/ws/event/query?eventId=2318174'))
-        # neries
+        # NERIES
         filename = os.path.join(self.path, 'neries_events.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 3)
@@ -113,14 +113,13 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(origin.resource_id,
             ResourceIdentifier(\
             'smi:www.iris.edu/ws/event/query?originId=7680412'))
-        self.assertEquals(origin.time.value,
-                          UTCDateTime("2011-03-11T05:46:24.1200"))
-        self.assertEquals(origin.latitude.value, 38.297)
-        self.assertEquals(origin.latitude.lower_uncertainty, None)
-        self.assertEquals(origin.longitude.value, 142.373)
-        self.assertEquals(origin.longitude.uncertainty, None)
-        self.assertEquals(origin.depth.value, 29.0)
-        self.assertEquals(origin.depth.confidence_level, 50.0)
+        self.assertEquals(origin.time, UTCDateTime("2011-03-11T05:46:24.1200"))
+        self.assertEquals(origin.latitude, 38.297)
+        self.assertEquals(origin.latitude_errors.lower_uncertainty, None)
+        self.assertEquals(origin.longitude, 142.373)
+        self.assertEquals(origin.longitude_errors.uncertainty, None)
+        self.assertEquals(origin.depth, 29.0)
+        self.assertEquals(origin.depth_errors.confidence_level, 50.0)
         self.assertEquals(origin.depth_type, "from location")
         self.assertEquals(origin.method_id,
             ResourceIdentifier(resource_id="smi:some/method/NA"))
@@ -136,18 +135,18 @@ class QuakeMLTestCase(unittest.TestCase):
         # composite times
         self.assertEquals(len(origin.composite_times), 2)
         c = origin.composite_times
-        self.assertEquals(c[0].year.value, 2029)
-        self.assertEquals(c[0].month.value, None)
-        self.assertEquals(c[0].day.value, None)
-        self.assertEquals(c[0].hour.value, 12)
-        self.assertEquals(c[0].minute.value, None)
-        self.assertEquals(c[0].second.value, None)
-        self.assertEquals(c[1].year.value, None)
-        self.assertEquals(c[1].month.value, None)
-        self.assertEquals(c[1].day.value, None)
-        self.assertEquals(c[1].hour.value, 1)
-        self.assertEquals(c[1].minute.value, None)
-        self.assertEquals(c[1].second.value, 29.124234)
+        self.assertEquals(c[0].year, 2029)
+        self.assertEquals(c[0].month, None)
+        self.assertEquals(c[0].day, None)
+        self.assertEquals(c[0].hour, 12)
+        self.assertEquals(c[0].minute, None)
+        self.assertEquals(c[0].second, None)
+        self.assertEquals(c[1].year, None)
+        self.assertEquals(c[1].month, None)
+        self.assertEquals(c[1].day, None)
+        self.assertEquals(c[1].hour, 1)
+        self.assertEquals(c[1].minute, None)
+        self.assertEquals(c[1].second, 29.124234)
         # quality
         self.assertEquals(origin.quality.used_station_count, 16)
         self.assertEquals(origin.quality.standard_error, 0)
@@ -208,8 +207,8 @@ class QuakeMLTestCase(unittest.TestCase):
         mag = catalog[0].magnitudes[0]
         self.assertEquals(mag.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/magnitude/37465'))
-        self.assertEquals(mag.mag.value, 5.5)
-        self.assertEquals(mag.mag.uncertainty, 0.1)
+        self.assertEquals(mag.mag, 5.5)
+        self.assertEquals(mag.mag_errors.uncertainty, 0.1)
         self.assertEquals(mag.magnitude_type, 'MS')
         self.assertEquals(mag.method_id,
             ResourceIdentifier(\
@@ -253,8 +252,8 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342"))
         self.assertEquals(mag.origin_id,
             ResourceIdentifier('smi:some/example/id'))
-        self.assertEquals(mag.mag.value, 6.5)
-        self.assertEquals(mag.mag.uncertainty, 0.2)
+        self.assertEquals(mag.mag, 6.5)
+        self.assertEquals(mag.mag_errors.uncertainty, 0.2)
         self.assertEquals(mag.station_magnitude_type, 'MS')
         self.assertEqual(mag.amplitude_id,
             ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
@@ -314,9 +313,8 @@ class QuakeMLTestCase(unittest.TestCase):
         pick = catalog[0].picks[0]
         self.assertEquals(pick.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/pick/117634'))
-        self.assertEquals(pick.time.value,
-            UTCDateTime('2005-09-18T22:04:35Z'))
-        self.assertEquals(pick.time.uncertainty, 0.012)
+        self.assertEquals(pick.time, UTCDateTime('2005-09-18T22:04:35Z'))
+        self.assertEquals(pick.time_errors.uncertainty, 0.012)
         self.assertEquals(pick.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
                              resource_id='smi:ch.ethz.sed/waveform/201754'))
@@ -324,7 +322,7 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard'))
         self.assertEquals(pick.method_id,
             ResourceIdentifier('smi:ch.ethz.sed/picker/autopicker/6.0.2'))
-        self.assertEquals(pick.backazimuth.value, 44.0)
+        self.assertEquals(pick.backazimuth, 44.0)
         self.assertEquals(pick.onset, 'impulsive')
         self.assertEquals(pick.phase_hint, 'Pn')
         self.assertEquals(pick.polarity, 'positive')

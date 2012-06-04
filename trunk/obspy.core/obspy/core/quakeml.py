@@ -157,7 +157,6 @@ class Unpickler(object):
         return out
 
     def _value(self, element, name, quantity_type=float):
-        obj = quantity_type()
         try:
             el = self._xpath(name, element)[0]
         except:
@@ -166,15 +165,20 @@ class Unpickler(object):
         value = self._xpath2obj('value', el, quantity_type)
         # All errors are attrib dicts.
         error = AttribDict()
-        error.uncertainty = self._xpath2obj('uncertainty', el, float)
-        error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el, float)
-        error.upper_uncertainty = self._xpath2obj('upperUncertainty', el, float)
         error.confidence_level = self._xpath2obj('confidenceLevel', el, float)
-        # Integer quantities store integer uncertainties.
-        if quantity_type == int:
-            error.uncertainty = int(error.uncertainty)
-            error.lower_uncertainty = int(error.lower_uncertainty)
-            error.upper_uncertainty = int(error.upper_uncertainty)
+        if quantity_type != int:
+            error.uncertainty = self._xpath2obj('uncertainty', el, float)
+            error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el,
+                                                      float)
+            error.upper_uncertainty = self._xpath2obj('upperUncertainty', el,
+                                                      float)
+        else:
+            # Integer quantities store integer uncertainties.
+            error.uncertainty = self._xpath2obj('uncertainty', el, int)
+            error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el,
+                                                      int)
+            error.upper_uncertainty = self._xpath2obj('upperUncertainty', el,
+                                                      int)
         return value, error
 
     def _float_value(self, element, name):
@@ -190,12 +194,12 @@ class Unpickler(object):
         obj = []
         for el in self._xpath('compositeTime', element):
             ct = CompositeTime()
-            ct.year, ct.year_error = self._int_value(el, 'year')
-            ct.month, ct.month_error = self._int_value(el, 'month')
-            ct.day, ct.day_error = self._int_value(el, 'day')
-            ct.hour, ct.hour_error = self._int_value(el, 'hour')
-            ct.minute, ct.minute_error = self._int_value(el, 'minute')
-            ct.second, ct.second_error = self._float_value(el, 'second')
+            ct.year, ct.year_errors = self._int_value(el, 'year')
+            ct.month, ct.month_errors = self._int_value(el, 'month')
+            ct.day, ct.day_errors = self._int_value(el, 'day')
+            ct.hour, ct.hour_errors = self._int_value(el, 'hour')
+            ct.minute, ct.minute_errors = self._int_value(el, 'minute')
+            ct.second, ct.second_errors = self._float_value(el, 'second')
             obj.append(ct)
         return obj
 
@@ -294,15 +298,15 @@ class Unpickler(object):
         obj = Pick()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.time, obj.time_error = self._time_value(element, 'time')
+        obj.time, obj.time_errors = self._time_value(element, 'time')
         obj.waveform_id = self._waveform_id(element)
         # optional parameter
         obj.filter_id = self._xpath2obj('filterID', element)
         obj.method_id = self._xpath2obj('methodID', element)
-        obj.horizontal_slowness, obj.horizontal_slowness_error = \
+        obj.horizontal_slowness, obj.horizontal_slowness_errors = \
             self._float_value(element, 'horizontalSlowness')
-        obj.backazimuth, obj.backazimuth_error = self._float_value(element,
-                                                                   'backazimuth')
+        obj.backazimuth, obj.backazimuth_errors = \
+            self._float_value(element, 'backazimuth')
         obj.slowness_method_id = self._xpath2obj('slownessMethodID', element)
         obj.onset = self._xpath2obj('onset', element)
         obj.phase_hint = self._xpath2obj('phaseHint', element)
@@ -335,11 +339,13 @@ class Unpickler(object):
         obj = Origin()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.time, obj.time_error = self._time_value(element, 'time')
-        obj.latitude, obj.latitude_error = self._float_value(element, 'latitude')
-        obj.longitude, obj.longitude_error = self._float_value(element, 'longitude')
+        obj.time, obj.time_errors = self._time_value(element, 'time')
+        obj.latitude, obj.latitude_errors = \
+            self._float_value(element, 'latitude')
+        obj.longitude, obj.longitude_errors = \
+            self._float_value(element, 'longitude')
         # optional parameter
-        obj.depth, obj.depth_error = self._float_value(element, 'depth')
+        obj.depth, obj.depth_errors = self._float_value(element, 'depth')
         obj.depth_type = self._xpath2obj('depthType', element)
         obj.time_fixed = self._xpath2obj('timeFixed', element, bool)
         obj.epicenter_fixed = self._xpath2obj('epicenterFixed', element, bool)
@@ -378,7 +384,7 @@ class Unpickler(object):
         obj = Magnitude()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.mag, obj.mag_error = self._float_value(element, 'mag')
+        obj.mag, obj.mag_errors = self._float_value(element, 'mag')
         # optional parameter
         obj.magnitude_type = self._xpath2obj('type', element)
         obj.origin_id = self._xpath2obj('originID', element)
@@ -413,7 +419,7 @@ class Unpickler(object):
         # required parameter
         obj.resource_id = element.get('publicID')
         obj.origin_id = self._xpath2obj('originID', element) or ''
-        obj.mag, obj.mag_error = self._float_value(element, 'mag')
+        obj.mag, obj.mag_errors = self._float_value(element, 'mag')
         # optional parameter
         obj.station_magnitude_type = self._xpath2obj('type', element)
         obj.amplitude_id = self._xpath2obj('amplitudeID', element)
@@ -537,15 +543,16 @@ class Pickler(object):
         dt = value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
         etree.SubElement(root, tag).text = "%s" % (dt)
 
-    def _value(self, quantity, element, tag, always_create=False):
-        if always_create is False and quantity.value is None:
+    def _value(self, quantity, error, element, tag, always_create=False):
+        if always_create is False and quantity is None:
             return
         subelement = etree.Element(tag)
-        self._str(quantity.value, subelement, 'value')
-        self._str(quantity.uncertainty, subelement, 'uncertainty')
-        self._str(quantity.lower_uncertainty, subelement, 'lowerUncertainty')
-        self._str(quantity.upper_uncertainty, subelement, 'upperUncertainty')
-        self._str(quantity.confidence_level, subelement, 'confidenceLevel')
+        self._str(quantity, subelement, 'value')
+        if error:
+            self._str(error.uncertainty, subelement, 'uncertainty')
+            self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
+            self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
+            self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
@@ -574,7 +581,7 @@ class Pickler(object):
         self._str(creation_info.author_uri, subelement, 'authorURI')
         self._time(creation_info.creation_time, subelement, 'creationTime')
         self._str(creation_info.version, subelement, 'version')
-        # append only if any information is set
+        # append only if at least one sub-element is set
         if len(subelement) > 0:
             element.append(subelement)
 
@@ -641,7 +648,7 @@ class Pickler(object):
         """
         element = etree.Element('magnitude',
             attrib={'publicID': self._id(magnitude.resource_id)})
-        self._value(magnitude.mag, element, 'mag', True)
+        self._value(magnitude.mag, magnitude.mag_errors, element, 'mag', True)
         # optional parameter
         self._str(magnitude.magnitude_type, element, 'type')
         self._str(magnitude.origin_id, element, 'originID')
@@ -675,7 +682,7 @@ class Pickler(object):
         element = etree.Element('stationMagnitude',
             attrib={'publicID': self._id(magnitude.resource_id)})
         self._str(magnitude.origin_id, element, 'originID', True)
-        self._value(magnitude.mag, element, 'mag', True)
+        self._value(magnitude.mag, magnitude.mag_errors, element, 'mag', True)
         # optional parameter
         self._str(magnitude.station_magnitude_type, element, 'type')
         self._str(magnitude.amplitude_id, element, 'amplitudeID')
@@ -706,11 +713,13 @@ class Pickler(object):
         """
         element = etree.Element('origin',
             attrib={'publicID': self._id(origin.resource_id)})
-        self._value(origin.time, element, 'time', True)
-        self._value(origin.latitude, element, 'latitude', True)
-        self._value(origin.longitude, element, 'longitude', True)
+        self._value(origin.time, origin.time_errors, element, 'time', True)
+        self._value(origin.latitude, origin.latitude_errors, element,
+                    'latitude', True)
+        self._value(origin.longitude, origin.longitude_errors, element,
+                    'longitude', True)
         # optional parameter
-        self._value(origin.depth, element, 'depth')
+        self._value(origin.depth, origin.depth_errors, element, 'depth')
         self._str(origin.depth_type, element, 'depthType')
         self._bool(origin.time_fixed, element, 'timeFixed')
         self._bool(origin.epicenter_fixed, element, 'epicenterFixed')
@@ -720,12 +729,12 @@ class Pickler(object):
         # compositeTime
         for ctime in origin.composite_times:
             ct_el = etree.Element('compositeTime')
-            self._value(ctime.year, ct_el, 'year')
-            self._value(ctime.month, ct_el, 'month')
-            self._value(ctime.day, ct_el, 'day')
-            self._value(ctime.hour, ct_el, 'hour')
-            self._value(ctime.minute, ct_el, 'minute')
-            self._value(ctime.second, ct_el, 'second')
+            self._value(ctime.year, ctime.year_errors, ct_el, 'year')
+            self._value(ctime.month, ctime.month_errors, ct_el, 'month')
+            self._value(ctime.day, ctime.day_errors, ct_el, 'day')
+            self._value(ctime.hour, ctime.hour_errors, ct_el, 'hour')
+            self._value(ctime.minute, ctime.minute_errors, ct_el, 'minute')
+            self._value(ctime.second, ctime.second_errors, ct_el, 'second')
             if len(ct_el) > 0:
                 element.append(ct_el)
         # quality
@@ -799,13 +808,15 @@ class Pickler(object):
         element = etree.Element('pick',
         attrib={'publicID': self._id(pick.resource_id)})
         # required parameter
-        self._value(pick.time, element, 'time', True)
+        self._value(pick.time, pick.time_errors, element, 'time', True)
         self._waveform_id(pick.waveform_id, element, True)
         # optional parameter
         self._str(pick.filter_id, element, 'filterID')
         self._str(pick.method_id, element, 'methodID')
-        self._value(pick.horizontal_slowness, element, 'horizontalSlowness')
-        self._value(pick.backazimuth, element, 'backazimuth')
+        self._value(pick.horizontal_slowness, pick.horizontal_slowness_errors,
+                    element, 'horizontalSlowness')
+        self._value(pick.backazimuth, pick.backazimuth_errors, element,
+                    'backazimuth')
         self._str(pick.slowness_method_id, element, 'slownessMethodID')
         self._str(pick.onset, element, 'onset')
         self._str(pick.phase_hint, element, 'phaseHint')

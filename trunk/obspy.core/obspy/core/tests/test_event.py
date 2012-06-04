@@ -1,20 +1,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import with_statement
-from obspy.core.event import readEvents, Catalog, Event, Origin, \
-        CreationInfo, WaveformStreamID, ResourceIdentifier
+from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
+    Origin, CreationInfo, ResourceIdentifier
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 import os
 import sys
 import unittest
 import warnings
-
-
-class EventTypeFactoryTestCase(unittest.TestCase):
-    """
-    """
-    pass
 
 
 class EventTestCase(unittest.TestCase):
@@ -52,9 +46,9 @@ class OriginTestCase(unittest.TestCase):
     Test suite for obspy.core.event.Origin
     """
     def test_creationInfo(self):
-        # 1 - empty Origin class must create a correct creation_info attribute
+        # 1 - empty Origin class will set creation_info to None
         orig = Origin()
-        self.assertTrue(isinstance(orig.creation_info, CreationInfo))
+        self.assertEquals(orig.creation_info, None)
         # 2 - preset via dict or existing CreationInfo object
         orig = Origin(creation_info={})
         self.assertTrue(isinstance(orig.creation_info, CreationInfo))
@@ -87,11 +81,12 @@ class OriginTestCase(unittest.TestCase):
         origin.depth_type = 'from location'
         self.assertEquals(origin.latitude, 12)
         self.assertEquals(origin.latitude_errors.confidence_level, 95)
+        self.assertEquals(origin.latitude_errors.uncertainty, None)
         self.assertEquals(origin.longitude, 42)
         origin2 = Origin()
         origin2.latitude = 13.4
         self.assertEquals(origin2.depth_type, None)
-        self.assertEquals(origin2.public_id, '')
+        self.assertEquals(origin2.resource_id, None)
         self.assertEquals(origin2.latitude, 13.4)
         self.assertEquals(origin2.latitude_errors.confidence_level, None)
         self.assertEquals(origin2.longitude, None)
@@ -377,7 +372,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         object_a = UTCDateTime()
         ref_count = sys.getrefcount(object_a)
-        res_id = ResourceIdentifier(referred_object=object_a)
+        _res_id = ResourceIdentifier(referred_object=object_a)
         self.assertEqual(sys.getrefcount(object_a), ref_count)
 
     def test_id_without_reference_not_in_global_list(self):
@@ -393,7 +388,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         self.assertEqual(len(r_dict.keys()), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
-        # pretty much immediatly.
+        # pretty much immediately.
         ResourceIdentifier(referred_object=UTCDateTime())
         self.assertEqual(len(r_dict.keys()), 0)
         # Give it a reference and it will stick around.
@@ -443,10 +438,9 @@ class ResourceIdentifierTestCase(unittest.TestCase):
 
 def suite():
     suite = unittest.TestSuite()
-    suite.addTest(unittest.makeSuite(EventTypeFactoryTestCase, 'test'))
-    # suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(CatalogTestCase, 'test'))
     suite.addTest(unittest.makeSuite(EventTestCase, 'test'))
-    # suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
+    suite.addTest(unittest.makeSuite(OriginTestCase, 'test'))
     suite.addTest(unittest.makeSuite(WaveformStreamIDTestCase, 'test'))
     suite.addTest(unittest.makeSuite(ResourceIdentifierTestCase, 'test'))
     return suite
