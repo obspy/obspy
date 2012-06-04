@@ -941,10 +941,10 @@ class TraceTestCase(unittest.TestCase):
             self.assertEquals(traces[i].stats.delta, org_trace.stats.delta)
             self.assertEquals(sum_trace.stats.delta, org_trace.stats.delta)
             # check sampling rates
-            self.assertEquals(traces[i].stats.sampling_rate,
-                              org_trace.stats.sampling_rate)
-            self.assertEquals(sum_trace.stats.sampling_rate,
-                              org_trace.stats.sampling_rate)
+            self.assertAlmostEquals(traces[i].stats.sampling_rate,
+                                    org_trace.stats.sampling_rate)
+            self.assertAlmostEquals(sum_trace.stats.sampling_rate,
+                                    org_trace.stats.sampling_rate)
             # check endtimes
             self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
 
