@@ -80,18 +80,21 @@ class OriginTestCase(unittest.TestCase):
         """
         origin = Origin()
         origin.public_id = 'smi:ch.ethz.sed/origin/37465'
-        origin.time.value = UTCDateTime(0)
-        origin.latitude.value = 12
-        origin.latitude.confidence_level = 95
-        origin.longitude.value = 42
+        origin.time = UTCDateTime(0)
+        origin.latitude = 12
+        origin.latitude_errors.confidence_level = 95
+        origin.longitude = 42
         origin.depth_type = 'from location'
+        self.assertEquals(origin.latitude, 12)
+        self.assertEquals(origin.latitude_errors.confidence_level, 95)
+        self.assertEquals(origin.longitude, 42)
         origin2 = Origin()
-        origin2.latitude.value = 13.4
+        origin2.latitude = 13.4
         self.assertEquals(origin2.depth_type, None)
         self.assertEquals(origin2.public_id, '')
-        self.assertEquals(origin2.latitude.value, 13.4)
-        self.assertEquals(origin2.latitude.confidence_level, None)
-        self.assertEquals(origin2.longitude.value, None)
+        self.assertEquals(origin2.latitude, 13.4)
+        self.assertEquals(origin2.latitude_errors.confidence_level, None)
+        self.assertEquals(origin2.longitude, None)
 
 
 class CatalogTestCase(unittest.TestCase):

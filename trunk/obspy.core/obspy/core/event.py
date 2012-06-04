@@ -15,7 +15,7 @@ from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     AmplitudeCategory, AmplitudeUnit
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
-    NamedTemporaryFile
+    NamedTemporaryFile, AttribDict
 from obspy.core.util.base import ENTRY_POINTS
 from pkg_resources import load_entry_point
 from uuid import uuid4
@@ -143,33 +143,35 @@ def _createExampleCatalog():
     return readEvents('/path/to/neries_events.xml')
 
 
-def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
+def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     """
     Class factory to unify the creation of all the types needed for the event
     handling in ObsPy.
 
     The types oftentimes share attributes and setting them manually every time
-    is cumbersome, error-prone and hard to do consistently.
+    is cumbersome, error-prone and hard to do consistently. The classes created
+    with this method will inherit from :class:`~obspy.core.util.AttribDict`.
 
     Usage to create a new class type:
 
+    The created class will assure that any given (key, type) attribute pairs
+    will always be of the given type and will attempt to convert any given
+    value to the correct type and raise an error otherwise. This happens to
+    values given during initialization as well as values set when the object
+    has already been created. A useful type are Enums if you want to restrict
+    the acceptable values.
+
         >>> from obspy.core.util.types import Enum
         >>> ABCEnum = Enum(["a", "b", "c"])
-
-    For every fixed type attribute, corresponding getter/setter methods will be
-    created and the attribute will be a property of the resulting class.
-    The third item in the tuple is interpreted as "is allowed to be None".
-    Thus, if False, it will initialize with given types default constructor.
-    Use only for types is makes sense.
-
         >>> class_attributes = [ \
-                ("resource_id", ResourceIdentifier, False), \
+                ("resource_id", ResourceIdentifier), \
                 ("creation_info", CreationInfo), \
                 ("some_letters", ABCEnum), \
+                ("some_error_quantity", float, "attribute_has_errors"), \
                 ("description", str)]
 
-    Furthermore the class can contain lists of other objects. These will just
-    be list class attributes and nothing else so far.
+    Furthermore the class can contain lists of other objects. There is not much
+    to it so far. Giving the name of the created class is mandatory.
 
         >>> class_contains = ["comments"]
         >>> TestEventClass = _eventTypeClassFactory("TestEventClass", \
@@ -182,7 +184,7 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
         >>> test_event = TestEventClass(resource_id="event/123456", \
                 creation_info={"author": "obspy.org", "version": "0.1"})
 
-    All given arguments will be converted to the right type.
+    All given arguments will be converted to the right type upon setting them.
 
         >>> test_event.resource_id
         ResourceIdentifier(resource_id="event/123456")
@@ -194,7 +196,8 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
         >>> assert(test_event.description is None)
         >>> assert(test_event.some_letters is None)
 
-    They can be set later and be converted to appropriate type if possible.
+    They can be set later and will be converted to the appropriate type if
+    possible.
 
         >>> test_event.description = 1
         >>> assert(test_event.description is "1")
@@ -206,48 +209,61 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
             ...
         ValueError: Setting attribute "some_letters" failed. ...
 
-    If you pass ``"False"`` as the third tuple item for the class_attributes,
-    the type will be initialized even if no value was given.
+    If you pass ``"attribute_has_errors"`` as the third tuple item for the
+    class_attributes, an error AttribDict will be be created that will be named
+    like the attribute with "_errors" appended.
 
-        >>> TestEventClass = _eventTypeClassFactory("TestEventClass",\
-                class_attributes=[("time_1", UTCDateTime, False),\
-                                  ("time_2", UTCDateTime)])
-        >>> test_event = TestEventClass()
-        >>> print test_event.time_1.__repr__() # doctest:+ELLIPSIS
-        UTCDateTime(...)
-        >>> print test_event.time_2
-        None
+        >>> assert(hasattr(test_event, "some_error_quantity_errors"))
+        >>> print type(test_event.some_error_quantity_errors).__name__
+        AttribDict
     """
-    class AbstractEventType(object):
+    class AbstractEventType(AttribDict):
+        # Keep the class attributes in a class level list for a manual property
+        # implementation that works when inheriting from AttribDict.
+        _properties = []
+        for item in class_attributes:
+            _properties.append((item[0], item[1]))
+            if len(item) == 3 and \
+               item[2] == "attribute_has_errors":
+                _properties.append((item[0] + "_errors", AttribDict))
+        _property_keys = [_i[0] for _i in _properties]
+        _property_dict = {}
+        for key, value in _properties:
+            _property_dict[key] = value
+        _containers = class_contains
+
         def __init__(self, *args, **kwargs):
-            # Store a list of all attributes to be able to get a nice string
-            # representation of the object.
-            self.__attributes = []
-            self.__containers = []
-            # Make sure the args work as expected. This means any given args
-            # will overwrite the kwargs if they are given.
+            # Make sure the args work as expected. Therefore any specified
+            # arg will overwrite a potential kwarg, e.g. arg at position 0 will
+            # overwrite kwargs class_attributes[0].
             for _i, item in enumerate(args):
+                # Use the class_attributes list here because it is not yet
+                # polluted be the error quantities.
                 kwargs[class_attributes[_i][0]] = item
-            for attrib in class_attributes:
-                attrib_name = attrib[0]
-                if len(attrib) == 3 and attrib[2] is False:
-                    attrib_type = attrib[1]
-                    setattr(self, attrib_name, kwargs.get(attrib_name,
-                                                          attrib_type()))
-                else:
-                    setattr(self, attrib_name, kwargs.get(attrib_name, None))
-                self.__attributes.append(attrib_name)
-            for list_name in class_contains:
-                setattr(self, list_name, list(kwargs.get(list_name, [])))
-                self.__containers.append(list_name)
+            # Set all property values to None or the kwarg value.
+            for key, value in self._properties:
+                setattr(self, key, kwargs.get(key, None))
+            # Containers currently are simple lists.
+            for name in self._containers:
+                setattr(self, name, list(kwargs.get(name, [])))
+            # All errors are AttribDicts. If they are not set yet, set them
+            # now.
+            for key, value in self._properties:
+                if key.endswith("_errors") and getattr(self, key) is None:
+                    setattr(self, key, AttribDict())
 
         def __str__(self):
             """
             Fairly extensive in an attempt to cover several use cases. It is
             always possible to change it in the child class.
             """
-            attributes = [_i for _i in self.__attributes if getattr(self, _i)]
-            containers = [_i for _i in self.__containers if getattr(self, _i)]
+            # Get the attribute and containers that are to be printed. Only not
+            # None attributes and non-error attributes are printed. The errors
+            # will appear behind the actual value.
+            attributes = [_i for _i in self._property_keys if not \
+                          _i.endswith("_errors") and getattr(self, _i)]
+            containers = [_i for _i in self._containers if getattr(self, _i)]
+
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
             max_length = max(max([len(_i) for _i in attributes]) \
@@ -256,34 +272,41 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                              if containers else 0) + 1
 
             ret_str = self.__class__.__name__
-            attrib_count = len([_i for _i in self.__attributes \
-                                   if getattr(self, _i)])
-            container_count = len([_i for _i in self.__containers \
-                                   if getattr(self, _i)])
-            if not attrib_count and not container_count:
+
+            # Case 1: Empty object.
+            if not attributes and not containers:
                 return ret_str + "()"
 
-            # First print a representation of all attributes that are not None.
-            if attrib_count:
-                # A small number of attributes and no containers will just
-                # print a single line.
-                if attrib_count <= 6 and not self.__containers:
-                    att_strs = ["%s=%s" % (_i, getattr(self, _i).__repr__()) \
-                                for _i in self.__attributes \
-                                if getattr(self, _i)]
-                    ret_str += "(%s)" % ", ".join(att_strs)
-                else:
-                    format_str = "%" + str(max_length) + "s: %s"
-                    att_strs = [format_str % (_i,
-                                              getattr(self, _i).__repr__()) \
-                                for _i in self.__attributes \
-                                if getattr(self, _i)]
-                    ret_str += "\n\t" + "\n\t".join(att_strs)
+            def get_value_repr(key):
+                repr_str = getattr(self, key).__repr__()
+                # Print any associated errors.
+                error_key = key + "_errors"
+                if hasattr(self, error_key) and getattr(self, error_key):
+                    err_items = getattr(self, error_key).items()
+                    err_items.sort()
+                    repr_str += " [%s]" % ', '.join([str(key) + "=" + \
+                                str(value) for key, value in err_items])
+                return repr_str
+
+            # Case 2: Short representation for small objects. Will just print a
+            # single line.
+            if len(attributes) <= 3 and not containers:
+                att_strs = ["%s=%s" % (_i, get_value_repr(_i)) \
+                            for _i in attributes if getattr(self, _i)]
+                ret_str += "(%s)" % ", ".join(att_strs)
+                return ret_str
+
+            # Case 3: Verbose string representation for large object.
+            if attributes:
+                format_str = "%" + str(max_length) + "s: %s"
+                att_strs = [format_str % (_i, get_value_repr(_i)) \
+                            for _i in attributes if getattr(self, _i)]
+                ret_str += "\n\t" + "\n\t".join(att_strs)
 
             # For the containers just print the number of elements in each.
-            if container_count:
+            if containers:
                 # Print delimiter only if there are attributes.
-                if self.__attributes:
+                if attributes:
                     ret_str += '\n\t---------'
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
@@ -292,12 +315,15 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                     for _i in containers])
             return ret_str
 
+        def copy(self):
+            return copy.deepcopy(self)
+
         def __repr__(self):
             return self.__str__()
 
         def __nonzero__(self):
             if any([bool(getattr(self, _i)) \
-                    for _i in self.__attributes + self.__containers]):
+                    for _i in self._property_keys + self._containers]):
                 return True
             return False
 
@@ -308,11 +334,11 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
             """
             # Looping should be quicker on average than a list comprehension
             # because only the first non-equal attribute will already return.
-            for attrib in self.__attributes:
+            for attrib in self._property_keys:
                 if not hasattr(other, attrib) or \
                    (getattr(self, attrib) != getattr(other, attrib)):
                     return False
-            for container in self.__containers:
+            for container in self._containers:
                 if not hasattr(other, container) or \
                    (getattr(self, container) != getattr(other, container)):
                     return False
@@ -321,14 +347,16 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
         def __ne__(self, other):
             return not self.__eq__(other)
 
-    # Use this awkward construct to get around a problem with closures. See
-    # http://code.activestate.com/recipes/502271/
-    def _create_getter_and_setter(attrib_name, attrib_type):
-        # The getter function does not do much.
-        def getter(instance):
-            return instance.__dict__[attrib_name]
-
-        def setter(instance, value):
+        def __setattr__(self, name, value):
+            """
+            Custom property implementation that works if the class is
+            inheriting from AttribDict.
+            """
+            # Pass to the parent method if not a custom property.
+            if name not in self._property_dict.keys():
+                AttribDict.__setattr__(self, name, value)
+                return
+            attrib_type = self._property_dict[name]
             # If the value is None or already the correct type just set it.
             if (value is not None) and (type(value) is not attrib_type):
                 # If it is a dict, and the attrib_type is no dict, than all
@@ -338,22 +366,14 @@ def _eventTypeClassFactory(type_name, class_attributes=[], class_contains=[]):
                 else:
                     value = attrib_type(value)
                 if value is None:
-                    msg = 'Setting attribute "%s" failed. ' % (attrib_name)
+                    msg = 'Setting attribute "%s" failed. ' % (name)
                     msg += '"%s" could not be converted to type "%s"' % \
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
-            instance.__dict__[attrib_name] = value
-        return (getter, setter)
-
-    # Now actually set the class properties.
-    for attrib in class_attributes:
-        attrib_name = attrib[0]
-        attrib_type = attrib[1]
-        getter, setter = _create_getter_and_setter(attrib_name, attrib_type)
-        setattr(AbstractEventType, attrib_name, property(getter, setter))
+            AttribDict.__setattr__(self, name, value)
 
     # Set the class type name.
-    setattr(AbstractEventType, "__name__", type_name)
+    setattr(AbstractEventType, "__name__", class_name)
     return AbstractEventType
 
 
@@ -721,40 +741,6 @@ class CreationInfo(__CreationInfo):
     """
 
 
-__TimeQuantity = _eventTypeClassFactory("__TimeQuantity",
-    class_attributes=[("value", UTCDateTime), ("uncertainty", float),
-        ("lower_uncertainty", float), ("upper_uncertainty", float),
-        ("confidence_level", float)])
-
-
-class TimeQuantity(__TimeQuantity):
-    """
-    A Physical quantity represented by its measured or computed value and
-    optional values for symmetric or upper and lower uncertainties.
-
-    :type value: :class:`~obspy.core.utcdatetime.UTCDateTime`
-    :param value: Value of the quantity.
-    :type uncertainty: float, optional
-    :param uncertainty: Symmetric uncertainty or boundary.
-    :type lower_uncertainty: float, optional
-    :param lower_uncertainty: Relative lower uncertainty or boundary.
-    :type upper_uncertainty: float, optional
-    :param upper_uncertainty: Relative upper uncertainty or boundary.
-    :type confidence_level: float, optional
-    :param confidence_level: Confidence level of the uncertainty, given in
-        percent.
-
-    >>> time = TimeQuantity("2012-01-01", uncertainty=1.0)
-    >>> print time
-    TimeQuantity(value=UTCDateTime(2012, 1, 1, 0, 0), uncertainty=1.0)
-    >>> time.value = 0.0
-    >>> print time
-    TimeQuantity(value=UTCDateTime(1970, 1, 1, 0, 0), uncertainty=1.0)
-    """
-    # Provided for backwards compatibility.
-    _value_type = UTCDateTime
-
-
 __TimeWindow = _eventTypeClassFactory("__TimeWindow",
     class_attributes=[("begin", float),
                       ("end", float),
@@ -774,71 +760,13 @@ class TimeWindow(__TimeWindow):
     """
 
 
-__IntegerQuantity = _eventTypeClassFactory("__IntegerQuantity",
-    class_attributes=[("value", int),
-                      ("uncertainty", int),
-                      ("lower_uncertainty", int),
-                      ("upper_uncertainty", int),
-                      ("confidence_level", float)])
-
-
-class IntegerQuantity(__IntegerQuantity):
-    """
-    A Physical quantity represented by its measured or computed value and
-    optional values for symmetric or upper and lower uncertainties.
-
-    :type value: int
-    :param value: Value of the quantity.
-    :type uncertainty: int, optional
-    :param uncertainty: Symmetric uncertainty or boundary.
-    :type lower_uncertainty: int, optional
-    :param lower_uncertainty: Relative lower uncertainty or boundary.
-    :type upper_uncertainty: int, optional
-    :param upper_uncertainty: Relative upper uncertainty or boundary.
-    :type confidence_level: float, optional
-    :param confidence_level: Confidence level of the uncertainty, given in
-        percent.
-    """
-    # Provided for backwards compatibility.
-    _value_type = int
-
-
-__FloatQuantity = _eventTypeClassFactory("__FloatQuantity",
-    class_attributes=[("value", float),
-                      ("uncertainty", float),
-                      ("lower_uncertainty", float),
-                      ("upper_uncertainty", float),
-                      ("confidence_level", float)])
-
-
-class FloatQuantity(__FloatQuantity):
-    """
-    A Physical quantity represented by its measured or computed value and
-    optional values for symmetric or upper and lower uncertainties.
-
-    :type value: float
-    :param value: Value of the quantity.
-    :type uncertainty: float, optional
-    :param uncertainty: Symmetric uncertainty or boundary.
-    :type lower_uncertainty: float, optional
-    :param lower_uncertainty: Relative lower uncertainty or boundary.
-    :type upper_uncertainty: float, optional
-    :param upper_uncertainty: Relative upper uncertainty or boundary.
-    :type confidence_level: float, optional
-    :param confidence_level: Confidence level of the uncertainty, given in
-        percent.
-    """
-    # Provided for backwards compatibility.
-    _value_type = float
-
-
 __CompositeTime = _eventTypeClassFactory("__CompositeTime",
-    class_attributes=[("year", IntegerQuantity),
-                      ("month", IntegerQuantity),
-                      ("day", IntegerQuantity),
-                      ("hour", IntegerQuantity),
-                      ("minute", IntegerQuantity),
-                      ("second", FloatQuantity)])
+    class_attributes=[("year", int, "attribute_has_errors"),
+                      ("month", int, "attribute_has_errors"),
+                      ("day", int, "attribute_has_errors"),
+                      ("hour", int, "attribute_has_errors"),
+                      ("minute", int, "attribute_has_errors"),
+                      ("second", float, "attribute_has_errors")])
 
 
 class CompositeTime(__CompositeTime):
@@ -849,26 +777,36 @@ class CompositeTime(__CompositeTime):
     contradictory information about the rupture time exist. The CompositeTime
     type allows for such complex descriptions.
 
-    :type year: :class:`~obspy.core.event.IntegerQuantity`
-    :param year: Year or range of years of the event’s focal time.
-    :type month: :class:`~obspy.core.event.IntegerQuantity`
+    :type year: int
+    :param year: Year or range of years of the event’s focal time
+    :type year_errors: :class:`~obspy.core.util.AttribDict`
+    :param year_errors: AttribDict containing error quantities.
+    :type month: int
     :param month: Month or range of months of the event’s focal time.
-    :type day: :class:`~obspy.core.event.IntegerQuantity`
+    :type month_errors: :class:`~obspy.core.util.AttribDict`
+    :param month_errors: AttribDict containing error quantities.
+    :type day: int
     :param day: Day or range of days of the event’s focal time.
-    :type hour: :class:`~obspy.core.event.IntegerQuantity`
+    :type day_errors: :class:`~obspy.core.util.AttribDict`
+    :param day_errors: AttribDict containing error quantities.
+    :type hour: int
     :param hour: Hour or range of hours of the event’s focal time.
-    :type minute: :class:`~obspy.core.event.IntegerQuantity`
+    :type hour_errors: :class:`~obspy.core.util.AttribDict`
+    :param hour_errors: AttribDict containing error quantities.
+    :type minute: int
     :param minute: Minute or range of minutes of the event’s focal time.
-    :type second: :class:`~obspy.core.event.FloatQuantity`
+    :type minute_errors: :class:`~obspy.core.util.AttribDict`
+    :param minute_errors: AttribDict containing error quantities.
+    :type second: float
     :param second: Second and fraction of seconds or range of seconds with
+    :type second_errors: :class:`~obspy.core.util.AttribDict`
+    :param second_errors: AttribDict containing error quantities.
 
-    >>> time = CompositeTime(2011, 1, 1)
-    >>> print time # doctest:+ELLIPSIS
-    CompositeTime(year=IntegerQuantity(value=2011), month=IntegerQuantity(...
+    >>> print CompositeTime(2011, 1, 1)
+    CompositeTime(year=2011, month=1, day=1)
     >>> # Can also be instantiated with the uncertainties.
-    >>> time = CompositeTime(year={"value":2011, "uncertainty":1})
-    >>> print time
-    CompositeTime(year=IntegerQuantity(value=2011, uncertainty=1))
+    >>> print CompositeTime(year=2011, year_errors={"uncertainty":1})
+    CompositeTime(year=2011 [uncertainty=1])
     """
 
 
@@ -984,18 +922,18 @@ class WaveformStreamID(__WaveformStreamID):
 
 __Amplitude = _eventTypeClassFactory("__Amplitude",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("generic_amplitude", FloatQuantity),
+                      ("generic_amplitude", float, "attribute_has_errors"),
                       ("type", str),
                       ("category", AmplitudeCategory),
                       ("unit", AmplitudeUnit),
                       ("method_id", ResourceIdentifier),
-                      ("period", FloatQuantity, False),
+                      ("period", float),
                       ("snr", float),
                       ("time_window", TimeWindow),
                       ("pick_id", ResourceIdentifier),
                       ("waveform_id", ResourceIdentifier),
                       ("filter_id", ResourceIdentifier),
-                      ("scaling_time", TimeQuantity, False),
+                      ("scaling_time", UTCDateTime, "attribute_has_errors"),
                       ("magnitude_hint", str),
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
@@ -1010,8 +948,10 @@ class Amplitude(__Amplitude):
 
     :type resource_id: str
     :param resource_id: Resource identifier of Pick.
-    :type generic_amplitude: :class:`~obspy.core.event.FloatQuantity`
+    :type generic_amplitude: float
     :param generic_amplitude: Amplitude value.
+    :type generic_amplitude_errors: :class:`~obspy.core.util.AttribDict`
+    :param generic_amplitude_errors: AttribDict containing error quantities.
     :type type: str, optional
     :param type: Describes the type of amplitude using the nomenclature from
         Storchak et al. (2003). Possible values are:
@@ -1059,8 +999,10 @@ class Amplitude(__Amplitude):
     :type filter_id: str, optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
-    :type scaling_time: :class:`~obspy.core.event.TimeQuantity`, optional
+    :type scaling_time: :class:`~obspy.core.UTCDateTime`, optional
     :param scaling_time: Scaling time for amplitude measurement.
+    :type scaling_time_errors: :class:`~obspy.core.util.AttribDict`
+    :param scaling_time_errors: AttribDict containing error quantities.
     :type magnitude_hint: str, optional
     :param magnitude_hint: Type of magnitude the amplitude measurement is used
         for.  This is a free-text field because it is impossible to cover all
@@ -1098,12 +1040,12 @@ class Amplitude(__Amplitude):
 
 __Pick = _eventTypeClassFactory("__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("time", TimeQuantity, False),
+                      ("time", UTCDateTime, "attribute_has_errors"),
                       ("waveform_id", WaveformStreamID),
                       ("filter_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
-                      ("horizontal_slowness", FloatQuantity, False),
-                      ("backazimuth", FloatQuantity, False),
+                      ("horizontal_slowness", float, "attribute_has_errors"),
+                      ("backazimuth", float, "attribute_has_errors"),
                       ("slowness_method_id", ResourceIdentifier),
                       ("pick_onset", PickOnset),
                       ("phase_hint", str),
@@ -1121,19 +1063,24 @@ class Pick(__Pick):
 
     :type resource_id: str
     :param resource_id: Resource identifier of Pick.
-    :type time: :class:`~obspy.core.event.TimeQuantity`
+    :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Pick time.
+    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
     :type filter_id: str, optional
     :param filter_id: Identifies the filter setup used.
     :type method_id: str, optional
     :param method_id: Identifies the method used to get the pick.
-    :type horizontal_slowness: :class:`~obspy.core.event.FloatQuantity`,
-        optional
+    :type horizontal_slowness: float, optional
     :param horizontal_slowness: Describes the horizontal slowness of the Pick.
-    :type backazimuth: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type horizontal_slowness_errors: :class:`~obspy.core.util.AttribDict`
+    :param horizontal_slowness_errors: AttribDict containing error quantities.
+    :type backazimuth: float, optional
     :param backazimuth: Describes the backazimuth of the Pick.
+    :type backazimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :param backazimuth_errors: AttribDict containing error quantities.
     :type slowness_method_id: str, optional
     :param slowness_method_id: Identifies the method used to derive the
         slowness.
@@ -1186,7 +1133,7 @@ __Arrival = _eventTypeClassFactory("__Arrival",
                       ("time_used", bool),
                       ("horizontal_slowness_used", bool),
                       ("backazimuth_used", bool),
-                      ("time_weight", float),
+                      ("time_weight", float, "attribute_has_errors"),
                       ("earth_model_id", ResourceIdentifier),
                       ("preliminary", bool),
                       ("creation_info", CreationInfo)],
@@ -1236,9 +1183,11 @@ class Arrival(__Arrival):
     :type backazimuth_used: bool, optional
     :param backazimuth_used: Boolean flag. True if backazimuth was used for
         computation of the associated Origin.
-    :type time_weight: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type time_weight: float, optional
     :param time_weight: Weight of this Arrival in the computation of the
         associated Origin. (timeWeight in XSD file, weight in PDF).
+    :type time_weight_errors: :class:`~obspy.core.util.AttribDict`
+    :param time_weight_errors: AttribDict containing error quantities.
     :type earth_model_id: str, optional
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
@@ -1392,10 +1341,10 @@ class OriginUncertainty(__OriginUncertainty):
 
 __Origin = _eventTypeClassFactory("__Origin",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("time", TimeQuantity, False),
-                      ("latitude", FloatQuantity, False),
-                      ("longitude", FloatQuantity, False),
-                      ("depth", FloatQuantity, False),
+                      ("time", UTCDateTime, "attribute_has_errors"),
+                      ("latitude", float, "attribute_has_errors"),
+                      ("longitude", float, "attribute_has_errors"),
+                      ("depth", float, "attribute_has_errors"),
                       ("depth_type", OriginDepthType),
                       ("time_fixed", bool),
                       ("epicenter_fixed", bool),
@@ -1418,14 +1367,22 @@ class Origin(__Origin):
 
     :type resource_id: str
     :param resource_id: Resource identifier of Origin.
-    :type time: :class:`~obspy.core.event.TimeQuantity`
+    :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Focal time.
-    :type latitude: :class:`~obspy.core.event.FloatQuantity`
+    :type time_errors: :class:`~obspy.core.util.AttribDict`
+    :param time_errors: AttribDict containing error quantities.
+    :type latitude: float
     :param latitude: Hypocenter latitude. Unit: deg
-    :type longitude: :class:`~obspy.core.event.FloatQuantity`
+    :type latitude_errors: :class:`~obspy.core.util.AttribDict`
+    :param latitude_errors: AttribDict containing error quantities.
+    :type longitude: float
     :param longitude: Hypocenter longitude. Unit: deg
-    :type depth: :class:`~obspy.core.event.FloatQuantity`, optional
+    :type longitude_errors: :class:`~obspy.core.util.AttribDict`
+    :param longitude_errors: AttribDict containing error quantities.
+    :type depth: float, optional
     :param depth: Depth of hypocenter. Unit: m
+    :type depth_errors: :class:`~obspy.core.util.AttribDict`
+    :param depth_errors: AttribDict containing error quantities.
     :type depth_type: str, optional
     :param depth_type: Type of depth determination. Allowed values are the
         following:
@@ -1490,15 +1447,16 @@ class Origin(__Origin):
     >>> origin = Origin()
     >>> origin.resource_id = 'smi:ch.ethz.sed/origin/37465'
     >>> origin.time = UTCDateTime(0)
-    >>> origin.latitude = {"value": 12, "confidence_level": 95}
+    >>> origin.latitude = 12
+    >>> origin.latitude_errors.confidence_level = 95.0
     >>> origin.longitude = 42
     >>> origin.depth_type = 'from location'
     >>> print(origin)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     Origin
         resource_id: ResourceIdentifier(resource_id="smi:ch.ethz.sed/...")
-               time: TimeQuantity(value=UTCDateTime(1970, 1, 1, 0, 0))
-           latitude: FloatQuantity(value=12.0, confidence_level=95.0)
-          longitude: FloatQuantity(value=42.0)
+               time: UTCDateTime(1970, 1, 1, 0, 0)
+           latitude: 12.0 [confidence_level=95.0]
+          longitude: 42.0
          depth_type: 'from location'
     """
 
@@ -1528,7 +1486,7 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
 
 __Magnitude = _eventTypeClassFactory("__Magnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("mag", FloatQuantity, False),
+                      ("mag", float, "attribute_has_errors"),
                       ("magnitude_type", str),
                       ("origin_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
@@ -1550,10 +1508,12 @@ class Magnitude(__Magnitude):
 
     :type resource_id: str
     :param resource_id: Resource identifier of Magnitude.
-    :type mag: :class:`~obspy.core.event.FloatQuantity`
+    :type mag: float
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
         available, this value can represent the reported magnitude.
+    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :param mag_errors: AttribDict containing error quantities.
     :type magnitude_type: str, optional
     :param magnitude_type: Describes the type of magnitude. This is a free-text
         field because it is impossible to cover all existing magnitude type
@@ -1608,7 +1568,7 @@ class Magnitude(__Magnitude):
 __StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("origin_id", ResourceIdentifier),
-                      ("mag", FloatQuantity, False),
+                      ("mag", float, "attribute_has_errors"),
                       ("station_magnitude_type", str),
                       ("amplitude_id", ResourceIdentifier),
                       ("method_id", ResourceIdentifier),
@@ -1626,8 +1586,10 @@ class StationMagnitude(__StationMagnitude):
     :type origin_id: ResourceIdentifier, optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
-    :type mag: :class:`~obspy.core.event.FloatQuantity`
+    :type mag: float
     :param mag: Estimated magnitude.
+    :type mag_errors: :class:`~obspy.core.util.AttribDict`
+    :param mag_errors: AttribDict containing error quantities.
     :type station_magnitude_type: str, optional
     :param station_magnitude_type: Describes the type of magnitude. This is a
         free-text field because it is impossible to cover all existing
@@ -1780,11 +1742,11 @@ class Event(__Event):
         """
         out = ''
         if self.origins:
-            out += '%s | %+7.3f, %+8.3f' % (self.origins[0].time.value,
-                                            self.origins[0].latitude.value,
-                                            self.origins[0].longitude.value)
+            out += '%s | %+7.3f, %+8.3f' % (self.origins[0].time,
+                                            self.origins[0].latitude,
+                                            self.origins[0].longitude)
         if self.magnitudes:
-            out += ' | %s %-2s' % (self.magnitudes[0].mag.value,
+            out += ' | %s %-2s' % (self.magnitudes[0].mag,
                                    self.magnitudes[0].magnitude_type)
         if self.origins and self.origins[0].evaluation_mode:
             out += ' | %s' % (self.origins[0].evaluation_mode)
@@ -1798,14 +1760,7 @@ class Event(__Event):
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
 
-__Catalog = _eventTypeClassFactory("__Catalog",
-    class_attributes=[("resource_id", ResourceIdentifier),
-                      ("description", str),
-                      ("creation_info", CreationInfo)],
-    class_contains=["events", "comments"])
-
-
-class Catalog(__Catalog):
+class Catalog(object):
     """
     This class serves as a container for Event objects.
 
@@ -1822,6 +1777,41 @@ class Catalog(__Catalog):
     :param creation_info: Creation information used to describe author,
         version, and creation time.
     """
+    def __init__(self, **kwargs):
+        self.events = kwargs.get("events", [])
+        self.comments = kwargs.get("comments", [])
+        self._set_resource_id(kwargs.get("resource_id", None))
+        self.description = kwargs.get("description", "")
+        self._set_creation_info(kwargs.get("creation_info", None))
+
+    def _get_resource_id(self):
+        return self.resource_id
+
+    def _set_resource_id(self, value):
+        if value is None:
+            pass
+        elif type(value) == dict:
+            value = ResourceIdentifier(**value)
+        elif type(value) != ResourceIdentifier:
+            value = ResourceIdentifier(value)
+        self.__dict__['resource_id'] = value
+
+    resource_id = property(_get_resource_id, _set_resource_id)
+
+    def _get_creation_info(self):
+        return self.creation_info
+
+    def _set_creation_info(self, value):
+        if value is None:
+            pass
+        elif type(value) == dict:
+            value = CreationInfo(**value)
+        elif type(value) != CreationInfo:
+            value = CreationInfo(value)
+        self.__dict__['creation_info'] = value
+
+    creation_info = property(_get_creation_info, _set_creation_info)
+
     def __add__(self, other):
         """
         Method to add two catalogs.
@@ -1926,7 +1916,10 @@ class Catalog(__Catalog):
         """
         __setitem__ method of the Catalog object.
         """
-        self.events.__setitem__(index, event)
+        if not isinstance(index, basestring):
+            self.events.__setitem__(index, event)
+        else:
+            super(Catalog, self).__setitem__(index, event)
 
     def __str__(self, print_all=False):
         """
@@ -2040,31 +2033,35 @@ class Catalog(__Catalog):
             if key == "magnitude":
                 temp_events = []
                 for event in events:
-                    if operator_map[operator](event.magnitudes[0].mag.value,
+                    if event.magnitudes and event.magnitudes[0].mag and \
+                        operator_map[operator](event.magnitudes[0].mag,
                                               float(value)):
                         temp_events.append(event)
-                    events = temp_events
+                events = temp_events
             elif key == "longitude":
                 temp_events = []
                 for event in events:
-                    if operator_map[operator](event.origins[0].longitude.value,
+                    if event.origins and event.origins[0].longitude and \
+                        operator_map[operator](event.origins[0].longitude,
                                               float(value)):
                         temp_events.append(event)
-                    events = temp_events
+                events = temp_events
             elif key == "latitude":
                 temp_events = []
                 for event in events:
-                    if operator_map[operator](event.origins[0].latitude.value,
+                    if event.origins and event.origins[0].latitude and \
+                        operator_map[operator](event.origins[0].latitude,
                                               float(value)):
                         temp_events.append(event)
-                    events = temp_events
+                events = temp_events
             elif key == "time":
                 temp_events = []
                 for event in events:
-                    if operator_map[operator](event.origins[0].time.value,
+                    if event.origins and event.origins[0].time and \
+                        operator_map[operator](event.origins[0].time,
                                               UTCDateTime(value)):
                         temp_events.append(event)
-                    events = temp_events
+                events = temp_events
             else:
                 msg = "%s is not a valid filter key" % key
                 raise ValueError(msg)
@@ -2230,12 +2227,12 @@ class Catalog(__Catalog):
         mags = []
         dates = []
         for event in self:
-            lats.append(event.origins[0].latitude.value)
-            lons.append(event.origins[0].longitude.value)
-            mag = event.magnitudes[0].mag.value
+            lats.append(event.origins[0].latitude)
+            lons.append(event.origins[0].longitude)
+            mag = event.magnitudes[0].mag
             mags.append(mag)
             labels.append(('    %.1f' % mag) if mag else "")
-            dates.append(event.origins[0].time.value)
+            dates.append(event.origins[0].time)
         min_date = min(dates)
         max_date = max(dates)
 
@@ -2287,7 +2284,7 @@ class Catalog(__Catalog):
             mag = min_size + frac * (max_size - min_size)
             map.plot(x[_i], y[_i], 'ro', markersize=mag,
                      color=scal_map.to_rgba(dates[_i]))
-        times = [event.origins[0].time.value for event in self.events]
+        times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
              str(min(times).strftime("%Y-%m-%d")),
              str(max(times).strftime("%Y-%m-%d")))) + \

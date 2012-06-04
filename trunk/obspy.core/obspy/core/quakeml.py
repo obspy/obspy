@@ -18,9 +18,10 @@ by a distributed team in a transparent collaborative manner.
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    IntegerQuantity, FloatQuantity, TimeQuantity, ConfidenceEllipsoid, \
-    StationMagnitude, Comment, WaveformStreamID, Arrival, Pick
+    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, \
+    Arrival, Pick
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import AttribDict
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
 
@@ -155,38 +156,46 @@ class Unpickler(object):
             out.append(EventDescription(text=text, type=type))
         return out
 
-    def _value(self, element, name, quantity_type=FloatQuantity):
+    def _value(self, element, name, quantity_type=float):
         obj = quantity_type()
         try:
             el = self._xpath(name, element)[0]
         except:
-            return obj
-        obj.value = self._xpath2obj('value', el, quantity_type._value_type)
-        obj.uncertainty = self._xpath2obj('uncertainty', el, float)
-        obj.lower_uncertainty = self._xpath2obj('lowerUncertainty', el, float)
-        obj.upper_uncertainty = self._xpath2obj('upperUncertainty', el, float)
-        obj.confidence_level = self._xpath2obj('confidenceLevel', el, float)
-        return obj
+            return None, None
+
+        value = self._xpath2obj('value', el, quantity_type)
+        # All errors are attrib dicts.
+        error = AttribDict()
+        error.uncertainty = self._xpath2obj('uncertainty', el, float)
+        error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el, float)
+        error.upper_uncertainty = self._xpath2obj('upperUncertainty', el, float)
+        error.confidence_level = self._xpath2obj('confidenceLevel', el, float)
+        # Integer quantities store integer uncertainties.
+        if quantity_type == int:
+            error.uncertainty = int(error.uncertainty)
+            error.lower_uncertainty = int(error.lower_uncertainty)
+            error.upper_uncertainty = int(error.upper_uncertainty)
+        return value, error
 
     def _float_value(self, element, name):
-        return self._value(element, name, FloatQuantity)
+        return self._value(element, name, float)
 
     def _int_value(self, element, name):
-        return self._value(element, name, IntegerQuantity)
+        return self._value(element, name, int)
 
     def _time_value(self, element, name):
-        return self._value(element, name, TimeQuantity)
+        return self._value(element, name, UTCDateTime)
 
     def _composite_times(self, element):
         obj = []
         for el in self._xpath('compositeTime', element):
             ct = CompositeTime()
-            ct.year = self._int_value(el, 'year')
-            ct.month = self._int_value(el, 'month')
-            ct.day = self._int_value(el, 'day')
-            ct.hour = self._int_value(el, 'hour')
-            ct.minute = self._int_value(el, 'minute')
-            ct.second = self._float_value(el, 'second')
+            ct.year, ct.year_error = self._int_value(el, 'year')
+            ct.month, ct.month_error = self._int_value(el, 'month')
+            ct.day, ct.day_error = self._int_value(el, 'day')
+            ct.hour, ct.hour_error = self._int_value(el, 'hour')
+            ct.minute, ct.minute_error = self._int_value(el, 'minute')
+            ct.second, ct.second_error = self._float_value(el, 'second')
             obj.append(ct)
         return obj
 
@@ -285,14 +294,15 @@ class Unpickler(object):
         obj = Pick()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.time = self._time_value(element, 'time')
+        obj.time, obj.time_error = self._time_value(element, 'time')
         obj.waveform_id = self._waveform_id(element)
         # optional parameter
         obj.filter_id = self._xpath2obj('filterID', element)
         obj.method_id = self._xpath2obj('methodID', element)
-        obj.horizontal_slowness = \
+        obj.horizontal_slowness, obj.horizontal_slowness_error = \
             self._float_value(element, 'horizontalSlowness')
-        obj.backazimuth = self._float_value(element, 'backazimuth')
+        obj.backazimuth, obj.backazimuth_error = self._float_value(element,
+                                                                   'backazimuth')
         obj.slowness_method_id = self._xpath2obj('slownessMethodID', element)
         obj.onset = self._xpath2obj('onset', element)
         obj.phase_hint = self._xpath2obj('phaseHint', element)
@@ -319,17 +329,17 @@ class Unpickler(object):
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> origin = unpickler._origin(parser.xml_root)
-        >>> print(origin.latitude.value)
+        >>> print(origin.latitude)
         34.23
         """
         obj = Origin()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.time = self._time_value(element, 'time')
-        obj.latitude = self._float_value(element, 'latitude')
-        obj.longitude = self._float_value(element, 'longitude')
+        obj.time, obj.time_error = self._time_value(element, 'time')
+        obj.latitude, obj.latitude_error = self._float_value(element, 'latitude')
+        obj.longitude, obj.longitude_error = self._float_value(element, 'longitude')
         # optional parameter
-        obj.depth = self._float_value(element, 'depth')
+        obj.depth, obj.depth_error = self._float_value(element, 'depth')
         obj.depth_type = self._xpath2obj('depthType', element)
         obj.time_fixed = self._xpath2obj('timeFixed', element, bool)
         obj.epicenter_fixed = self._xpath2obj('epicenterFixed', element, bool)
@@ -362,13 +372,13 @@ class Unpickler(object):
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> magnitude = unpickler._magnitude(parser.xml_root)
-        >>> print(magnitude.mag.value)
+        >>> print(magnitude.mag)
         3.2
         """
         obj = Magnitude()
         # required parameter
         obj.resource_id = element.get('publicID')
-        obj.mag = self._float_value(element, 'mag')
+        obj.mag, obj.mag_error = self._float_value(element, 'mag')
         # optional parameter
         obj.magnitude_type = self._xpath2obj('type', element)
         obj.origin_id = self._xpath2obj('originID', element)
@@ -396,14 +406,14 @@ class Unpickler(object):
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> station_mag = unpickler._station_magnitude(parser.xml_root)
-        >>> print(station_mag.mag.value)
+        >>> print(station_mag.mag)
         3.2
         """
         obj = StationMagnitude()
         # required parameter
         obj.resource_id = element.get('publicID')
         obj.origin_id = self._xpath2obj('originID', element) or ''
-        obj.mag = self._float_value(element, 'mag')
+        obj.mag, obj.mag_error = self._float_value(element, 'mag')
         # optional parameter
         obj.station_magnitude_type = self._xpath2obj('type', element)
         obj.amplitude_id = self._xpath2obj('amplitudeID', element)
@@ -623,7 +633,7 @@ class Pickler(object):
         >>> from obspy.core.event import Magnitude
         >>> from obspy.core.util import tostring
         >>> magnitude = Magnitude()
-        >>> magnitude.mag.value = 3.2
+        >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
         >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
@@ -656,7 +666,7 @@ class Pickler(object):
         >>> from obspy.core.event import StationMagnitude
         >>> from obspy.core.util import tostring
         >>> station_mag = StationMagnitude()
-        >>> station_mag.mag.value = 3.2
+        >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
         >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
@@ -688,7 +698,7 @@ class Pickler(object):
         >>> from obspy.core.event import Origin
         >>> from obspy.core.util import tostring
         >>> origin = Origin()
-        >>> origin.latitude.value = 34.23
+        >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
         >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>

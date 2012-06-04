@@ -6,6 +6,7 @@ OriginUncertaintyDescription = Enum([
     "confidence ellipsoid",
     "probability density function",
 ])
+
 AmplitudeCategory = Enum([
     "point",
     "mean",
@@ -14,6 +15,7 @@ AmplitudeCategory = Enum([
     "integral",
     "other",
 ])
+
 OriginDepthType = Enum([
     "from location",
     "from moment tensor inversion",
@@ -23,6 +25,7 @@ OriginDepthType = Enum([
     "operator assigned",
     "other",
 ])
+
 OriginType = Enum([
     "hypocenter",
     "centroid",
@@ -31,15 +34,18 @@ OriginType = Enum([
     "rupture start",
     "rupture end",
 ])
+
 MTInversionType = Enum([
     "general",
     "zero trace",
     "double couple",
 ])
+
 EvaluationMode = Enum([
     "manual",
     "automatic",
 ])
+
 EvaluationStatus = Enum([
     "preliminary",
     "confirmed",
@@ -47,11 +53,13 @@ EvaluationStatus = Enum([
     "final",
     "rejected",
 ])
+
 PickOnset = Enum([
     "emergent",
     "impulsive",
     "questionable",
 ])
+
 DataUsedWaveType = Enum([
     "P waves",
     "body waves",
@@ -60,6 +68,7 @@ DataUsedWaveType = Enum([
     "combined",
     "unknown",
 ])
+
 AmplitudeUnit = Enum([
     "m",
     "s",
@@ -69,6 +78,7 @@ AmplitudeUnit = Enum([
     "dimensionless",
     "other",
 ])
+
 EventDescriptionType = Enum([
     "felt report",
     "Flinn-Engdahl region",
@@ -78,10 +88,12 @@ EventDescriptionType = Enum([
     "earthquake name",
     "region name",
 ])
+
 MomentTensorCategory = Enum([
     "teleseismic",
     "regional",
 ])
+
 EventType = Enum([
     "earthquake",
     "induced earthquake",
@@ -103,16 +115,19 @@ EventType = Enum([
     "other",
     "null",
 ])
+
 EventTypeCertainty = Enum([
     "known",
     "suspected",
 ])
+
 SourceTimeFunctionType = Enum([
     "box car",
     "triangle",
     "trapezoid",
     "unknown",
 ])
+
 PickPolarity = Enum([
     "positive",
     "negative",
