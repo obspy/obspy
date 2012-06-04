@@ -392,15 +392,15 @@ class ResourceIdentifier(object):
     use to refer to it. This is called a ResourceIdentifier and it is used for
     the same purpose in the obspy.core.event classes.
 
-    In QuakeML it has to be of the following regex form:
+    In QuakeML it has to be of the following regex form::
 
         (smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~']
         [\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*
 
     e.g.
 
-    * smi:sub.website.org/event/12345678
-    * quakeml:google.org/pick/unique_pick_id
+    * ``smi:sub.website.org/event/12345678``
+    * ``quakeml:google.org/pick/unique_pick_id``
 
     smi stands for "seismological meta-information".
 
@@ -884,8 +884,8 @@ class WaveformStreamID(__WaveformStreamID):
     .. rubric:: Example
 
     >>> # Can be initialized with a SEED string or with individual components.
-    >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR", \
-                                     location_code="", channel_code="EHZ")
+    >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR",
+    ...                              location_code="", channel_code="EHZ")
     >>> print stream_id
     WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
     >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
@@ -1539,8 +1539,8 @@ class Magnitude(__Magnitude):
     :type method_id: ResourceIdentifier, optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and type.
-    :type station_count, int, optional
-    :param station_count Number of used stations for this magnitude
+    :type station_count: int, optional
+    :param station_count: Number of used stations for this magnitude
         computation.
     :type azimuthal_gap: float, optional
     :param azimuthal_gap: Azimuthal gap for this magnitude computation.
