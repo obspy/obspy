@@ -253,7 +253,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Containers currently are simple lists.
             for name in self._containers:
                 setattr(self, name, list(kwargs.get(name, [])))
-            # All errors are AttribDicts. If they are not set yet, set them
+            # All errors are QuantityError. If they are not set yet, set them
             # now.
             for key, _ in self._properties:
                 if key.endswith("_errors") and getattr(self, key) is None:
@@ -1798,9 +1798,7 @@ class Catalog(object):
         return self.__dict__['resource_id']
 
     def _set_resource_id(self, value):
-        if value is None:
-            pass
-        elif type(value) == dict:
+        if type(value) == dict:
             value = ResourceIdentifier(**value)
         elif type(value) != ResourceIdentifier:
             value = ResourceIdentifier(value)
@@ -1809,12 +1807,10 @@ class Catalog(object):
     resource_id = property(_get_resource_id, _set_resource_id)
 
     def _get_creation_info(self):
-        self.__dict__['creation_info']
+        return self.__dict__['creation_info']
 
     def _set_creation_info(self, value):
-        if value is None:
-            pass
-        elif type(value) == dict:
+        if type(value) == dict:
             value = CreationInfo(**value)
         elif type(value) != CreationInfo:
             value = CreationInfo(value)

@@ -52,13 +52,10 @@ class OriginTestCase(unittest.TestCase):
         # 2 - preset via dict or existing CreationInfo object
         orig = Origin(creation_info={})
         self.assertTrue(isinstance(orig.creation_info, CreationInfo))
-        orig = Origin(creation_info=CreationInfo({'author': 'test2'}))
+        orig = Origin(creation_info=CreationInfo(author='test2'))
         self.assertTrue(isinstance(orig.creation_info, CreationInfo))
         self.assertEquals(orig.creation_info.author, 'test2')
-        # 3 - setting to anything except dict and CreationInfo fails
-        self.assertRaises(TypeError, Origin, creation_info=None)
-        self.assertRaises(TypeError, Origin, creation_info='assasas')
-        # 4 - check set values
+        # 3 - check set values
         orig = Origin(creation_info={'author': 'test'})
         self.assertEquals(orig.creation_info, orig['creation_info'])
         self.assertEquals(orig.creation_info.author, 'test')
@@ -101,6 +98,12 @@ class CatalogTestCase(unittest.TestCase):
         path = os.path.join(os.path.dirname(__file__), 'data')
         self.iris_xml = os.path.join(path, 'iris_events.xml')
         self.neries_xml = os.path.join(path, 'neries_events.xml')
+
+    def test_creationInfo(self):
+        cat = Catalog()
+        cat.creation_info = CreationInfo(author='test2')
+        self.assertTrue(isinstance(cat.creation_info, CreationInfo))
+        self.assertEquals(cat.creation_info.author, 'test2')
 
     def test_readEventsWithoutParameters(self):
         """

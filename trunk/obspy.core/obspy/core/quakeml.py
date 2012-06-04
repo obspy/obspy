@@ -18,10 +18,9 @@ by a distributed team in a transparent collaborative manner.
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
-    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, \
-    Arrival, Pick
+    ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
+    QuantityError, Arrival
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
 
@@ -163,8 +162,8 @@ class Unpickler(object):
             return None, None
 
         value = self._xpath2obj('value', el, quantity_type)
-        # All errors are attrib dicts.
-        error = AttribDict()
+        # All errors are QuantityError.
+        error = QuantityError()
         error.confidence_level = self._xpath2obj('confidenceLevel', el, float)
         if quantity_type != int:
             error.uncertainty = self._xpath2obj('uncertainty', el, float)
@@ -548,11 +547,10 @@ class Pickler(object):
             return
         subelement = etree.Element(tag)
         self._str(quantity, subelement, 'value')
-        if error:
-            self._str(error.uncertainty, subelement, 'uncertainty')
-            self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
-            self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
-            self._str(error.confidence_level, subelement, 'confidenceLevel')
+        self._str(error.uncertainty, subelement, 'uncertainty')
+        self._str(error.lower_uncertainty, subelement, 'lowerUncertainty')
+        self._str(error.upper_uncertainty, subelement, 'upperUncertainty')
+        self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
