@@ -8,6 +8,7 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import warnings
 
 
 class AttribDict(dict, object):
@@ -38,9 +39,32 @@ class AttribDict(dict, object):
     readonly = []
     priorized_keys = []
 
-    def __init__(self, data={}):
-        dict.__init__(data)
-        self.update(data)
+    def __init__(self, *args, **kwargs):
+        """
+        An AttribDict can be initialized in two ways. It can be given an
+        existing dictionary as a simple argument or alternatively all keyword
+        arguments will become (key, value) pairs.
+
+        >>> attrib_dict_1 = AttribDict({"a":1, "b":2})
+        >>> attrib_dict_2 = AttribDict(a=1, b=2)
+        >>> print attrib_dict_1
+        AttribDict({'a': 1, 'b': 2})
+        >>> assert(attrib_dict_1 == attrib_dict_2)
+        """
+        # Deprecated support of the data={} kwarg.
+        if kwargs.get("data") is not None and \
+                isinstance(kwargs["data"], dict):
+            kwargs.update(kwargs["data"])
+            del kwargs["data"]
+            msg = "The 'data' kwarg will be deprecated soon. Please use " + \
+                  "either AttribDict(data_dict) or pass the kwargs directly."
+            warnings.warn(msg, category=DeprecationWarning)
+        # Args is allowed to be exactly one dictionary which will then be
+        # appended to the kwarg dictionary.
+        if len(args) == 1 and isinstance(args[0], dict):
+            kwargs.update(args[0])
+        dict.__init__(kwargs)
+        self.update(kwargs)
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
