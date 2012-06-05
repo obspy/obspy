@@ -31,6 +31,8 @@ VERSION = _getVersionString("obspy.iris")
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
                                                    platform.platform(),
                                                    platform.python_version())
+DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
+                  'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
 
 
 class Client(object):
@@ -1250,6 +1252,145 @@ class Client(object):
             msg = "No Flinn-Engdahl data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
+
+    def traveltime(self, model='iasp91', phases=DEFAULT_PHASES, evdepth=0.0,
+                   distdeg=None, distkm=None, evloc=None, staloc=None,
+                   noheader=False, traveltimeonly=False, rayparamonly=False,
+                   mintimeonly=False):
+        """
+        Interface for `traveltime` Web service of IRIS
+        (http://www.iris.edu/ws/traveltime/).
+
+        This method will calculates travel-times for seismic phases using a 1-D
+        spherical earth model.
+
+        :type model: str, optional
+        :param model: Name of 1-D earth velocity model to be used. Available
+            models include:
+
+                * ``'iasp91'`` (default) - by Int'l Assoc of Seismology and
+                  Physics of the Earth's Interior
+                * ``'prem'`` - Preliminary Reference Earth Model
+                * ``'ak135'``
+        :type phases: list of str, optional
+        :param phases: Comma separated list of phases. The default is as
+            follows::
+                ['p','s','P','S','Pn','Sn','PcP','ScS','Pdiff','Sdiff',
+                 'PKP','SKS','PKiKP','SKiKS','PKIKP','SKIKS']
+            Invalid phases will be ignored. Valid arbitrary phases can be made
+            up e.g. sSKJKP. See
+            `TauP documentation <http://www.seis.sc.edu/TauP/>`_ for more
+            information.
+        :type evdepth: float, optional
+        :param evdepth: The depth of the event, in kilometers. Default is ``0``
+            km.
+
+        **Geographical Parameters - required**
+
+        The travel time web service requires a great-circle distance between an
+        event and station be specified. There are three methods of specifying
+        this distance:
+
+        * Specify a great-circle distance in degrees, using ``distdeg``
+        * Specify a great-circle distance in kilometers, using ``distkm``
+        * Specify an event location and one or more station locations,
+          using ``evloc`` and ``staloc``
+
+        :type distdeg: float or list of float, optional
+        :param evtlon: Great-circle distance from source to station, in decimal
+            degrees. Multiple distances may be specified as a list.
+        :type distkm: float or list of float, optional
+        :param distkm: Distance between the source and station, in kilometers.
+            Multiple distances may be specified as a list.
+        :type evloc: tuple of two floats, optional
+        :param evloc: The Event location (lat,lon) using decimal degrees.
+        :type staloc: tuple of two floats or list of tuples, optional
+        :param staloc: Station locations for which the phases will be listed.
+            The general format is (lat,lon). Specify multiple station locations
+            with a list, e.g. ``[(lat1,lon1),(lat2,lon2),...,(latn,lonn)]``.
+
+        **Output Parameters**
+
+        :type noheader: bool, optional
+        :param noheader: Specifying noheader will strip the header from the
+            resulting table. Defaults to ``False``.
+        :type traveltimeonly: bool, optional
+        :param traveltimeonly: Returns a space-separated list of travel
+            times, in seconds. Defaults to ``False``.
+
+            .. note:: Travel times are produced in ascending order regardless
+                of the order in which the phases are specified
+        :type rayparamonly: bool, optional
+        :param rayparamonly: Returns a space-separated list of ray parameters,
+            in sec/deg.. Defaults to ``False``.
+        :type mintimeonly: bool, optional
+        :param mintimeonly: Returns only the first arrival of each phase for
+            each distance. Defaults to ``False``.
+        :rtype: str
+        :return: ASCII travel time table.
+
+        .. rubric:: Example
+
+        >>> from obspy.iris import Client
+        >>> client = Client()
+        >>> result = client.traveltime(evloc=(-36.122,-72.898),
+        ...     staloc=[(-33.45,-70.67),(47.61,-122.33),(35.69,139.69)],
+        ...     evdepth=22.9)
+        >>> print(result)  # doctest: +ELLIPSIS  +NORMALIZE_WHITESPACE
+        Model: iasp91
+        Distance   Depth   Phase   Travel    Ray Param  Takeoff  Incident ...
+          (deg)     (km)   Name    Time (s)  p (s/deg)   (deg)    (deg)   ...
+        ------------------------------------------------------------------...
+            3.24    22.9   P         49.39    13.749     53.77    45.82   ...
+            3.24    22.9   Pn        49.40    13.754     53.80    45.84   ...
+        """
+        # build up query
+        url = '/traveltime/query'
+        kwargs = {}
+        kwargs['model'] = str(model)
+        kwargs['phases'] = ','.join([str(p) for p in list(phases)])
+        kwargs['evdepth'] = float(evdepth)
+        if distdeg:
+            kwargs['distdeg'] = \
+                ','.join([str(float(d)) for d in list(distdeg)])
+        elif distkm:
+            kwargs['distkm'] = ','.join([str(float(d)) for d in list(distkm)])
+        elif evloc and staloc:
+            if not isinstance(evloc, tuple):
+                raise TypeError("evloc needs to be a tuple")
+            kwargs['evloc'] = \
+                "[%s]" % (','.join([str(float(n)) for n in evloc]))
+            if isinstance(staloc, tuple):
+                # single station coordinates
+                staloc = [staloc]
+            if len(staloc) == 0:
+                raise ValueError("staloc needs to be set if using evloc")
+            temp = ''
+            for loc in staloc:
+                if not isinstance(loc, tuple):
+                    msg = "staloc needs to be a tuple or list of tuples"
+                    raise TypeError(msg)
+                temp += ",[%s]" % (','.join([str(float(n)) for n in loc]))
+            kwargs['staloc'] = temp[1:]
+        else:
+            msg = "Missing or incorrect geographical parameters distdeg, " + \
+                "distkm or evloc/staloc."
+            raise ValueError(msg)
+        if noheader:
+            kwargs['noheader'] = 1
+        elif traveltimeonly:
+            kwargs['traveltimeonly'] = 1
+        elif rayparamonly:
+            kwargs['rayparamonly'] = 1
+        elif mintimeonly:
+            kwargs['mintimeonly'] = 1
+        try:
+            data = self._fetch(url, **kwargs)
+        except HTTPError, e:
+            msg = "No response data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e)
+            raise Exception(msg)
+        return data
 
     def evalresp(self, network, station, location, channel, time=UTCDateTime(),
                  minfreq=0.00001, maxfreq=None, nfreq=200, units='def',

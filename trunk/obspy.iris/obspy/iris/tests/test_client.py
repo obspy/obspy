@@ -192,6 +192,15 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=-180.1)
         self.assertRaises(Exception, client.flinnengdahl, lat=0, lon=180.1)
 
+    def test_traveltime(self):
+        """
+        Tests calculation of travel-times for seismic phases.
+        """
+        client = Client()
+        result = client.traveltime(evloc=(-36.122, -72.898), evdepth=22.9,
+            staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
+        self.assertTrue(result.startswith('Model: iasp91'))
+
     def test_evalresp(self):
         """
         Tests evaluating instrument response information.

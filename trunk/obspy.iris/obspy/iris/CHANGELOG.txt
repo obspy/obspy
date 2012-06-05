@@ -1,2 +1,3 @@
 dev:
+ * added low-level interface for IRIS traveltime WS
  * new Client.getEvents method able to return a ObsPy catalog object
