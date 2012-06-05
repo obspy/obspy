@@ -12,7 +12,8 @@ Module for handling ObsPy Catalog and Event objects.
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
     EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
-    AmplitudeCategory, AmplitudeUnit
+    AmplitudeCategory, AmplitudeUnit, DataUsedWaveType, MTInversionType, \
+    SourceTimeFunctionType, MomentTensorCategory
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
     NamedTemporaryFile, AttribDict
@@ -1650,6 +1651,380 @@ class EventDescription(__EventDescription):
             * ``"nearest cities"``
             * ``"earthquake name"``
             * ``"region name"``
+    """
+
+
+__Tensor = _eventTypeClassFactory("__Tensor",
+    class_attributes=[("m_rr", float, ATTRIBUTE_HAS_ERRORS),
+                      ("m_tt", float, ATTRIBUTE_HAS_ERRORS),
+                      ("m_pp", float, ATTRIBUTE_HAS_ERRORS),
+                      ("m_rt", float, ATTRIBUTE_HAS_ERRORS),
+                      ("m_rp", float, ATTRIBUTE_HAS_ERRORS),
+                      ("m_tp", float, ATTRIBUTE_HAS_ERRORS)])
+
+
+class Tensor(__Tensor):
+    """
+    The Tensor class represents the six moment-tensor elements m_rr, m_tt,
+    m_pp, m_rt, m_rp, m_tp, where r is up, t is south, and p is east. See
+    Aki & Richards (1980) for conversions to other coordinate systems.
+
+    :type m_rr: float
+    :param m_rr: Moment-tensor element Mrr. Unit: Nm
+    :type m_rr_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_rr_errors: AttribDict containing error quantities.
+    :type m_tt: float
+    :param m_tt: Moment-tensor element Mtt. Unit: Nm
+    :type m_tt_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_tt_errors: AttribDict containing error quantities.
+    :type m_pp: float
+    :param m_pp: Moment-tensor element Mpp. Unit: Nm
+    :type m_pp_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_pp_errors: AttribDict containing error quantities.
+    :type m_rt: float
+    :param m_rt: Moment-tensor element Mrt. Unit: Nm
+    :type m_rt_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_rt_errors: AttribDict containing error quantities.
+    :type m_rp: float
+    :param m_rp: Moment-tensor element Mrp. Unit: Nm
+    :type m_rp_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_rp_errors: AttribDict containing error quantities.
+    :type m_tp: float
+    :param m_tp: Moment-tensor element Mtp. Unit: Nm
+    :type m_tp_errors: :class:`~obspy.core.util.AttribDict`
+    :param m_tp_errors: AttribDict containing error quantities.
+    """
+
+
+__DataUsed = _eventTypeClassFactory("__DataUsed",
+    class_attributes=[("wave_type", DataUsedWaveType),
+                      ("station_count", int),
+                      ("component_count", int),
+                      ("shortest_period", float),
+                      ("longest_period", float)])
+
+
+class DataUsed(__DataUsed):
+    """
+    This class describes the type of data that has been used for a
+    moment-tensor inversion.
+
+    :type wave_type: str
+    :param wave_type: Type of waveform data. This can be one of the following
+        values:
+            * ``"P waves"``,
+            * ``"body waves"``,
+            * ``"surface waves"``,
+            * ``"mantle waves"``,
+            * ``"combined"``,
+            * ``"unknown"``
+    :type station_count: int, optional
+    :param station_count: Number of stations that have contributed data of the
+        type given in wave_type.
+    :type component_count: int, optional
+    :param component_count: Number of data components of the type given in
+        wave_type.
+    :type shortest_period: float, optional
+    :param shortest_period: Shortest period present in data. Unit: s
+    :type longest_period: float, optional
+    :param longest_period: Longest period present in data. Unit: s
+    """
+
+
+__SourceTimeFunction = _eventTypeClassFactory("__SourceTimeFunction",
+    class_attributes=[("type", SourceTimeFunctionType),
+                      ("duration", float),
+                      ("rise_time", float),
+                      ("decay_time", float)])
+
+
+class SourceTimeFunction(__SourceTimeFunction):
+    """
+    Source time function used in moment-tensor inversion.
+
+    :type type: str
+    :param type: Type of source time function. Values can be taken from the
+        following:
+            * ``"box car"``,
+            * ``"triangle"``,
+            * ``"trapezoid"``,
+            * ``"unknown"``
+    :type duration: float
+    :param duration: Source time function duration. Unit: s
+    :type rise_time: float, optional
+    :param rise_time: Source time function rise time. Unit: s
+    :type decay_time: float, optional
+    :param decay_time: Source time function decay time. Unit: s
+    """
+
+
+__NodalPlane = _eventTypeClassFactory("__NodalPlane",
+    class_attributes=[("strike", float, ATTRIBUTE_HAS_ERRORS),
+                      ("dip", float, ATTRIBUTE_HAS_ERRORS),
+                      ("rake", float, ATTRIBUTE_HAS_ERRORS)])
+
+
+class NodalPlane(__NodalPlane):
+    """
+    This class describes a nodal plane using the attributes strike, dip, and
+    rake. For a definition of the angles see Aki & Richards (1980).
+
+    :type strike: float
+    :param strike: Strike angle of nodal plane. Unit: deg
+    :type strike_errors: :class:`~obspy.core.util.AttribDict`
+    :param strike_errors: AttribDict containing error quantities.
+    :type dip: float
+    :param dip: Dip angle of nodal plane. Unit: deg
+    :type dip_errors: :class:`~obspy.core.util.AttribDict`
+    :param dip_errors: AttribDict containing error quantities.
+    :type rake: float
+    :param rake: Rake angle of nodal plane. Unit: deg
+    :type rake_errors: :class:`~obspy.core.util.AttribDict`
+    :param rake_errors: AttribDict containing error quantities.
+    """
+
+
+__Axis = _eventTypeClassFactory("__Axis",
+    class_attributes=[("azimuth", float, ATTRIBUTE_HAS_ERRORS),
+                      ("plunge", float, ATTRIBUTE_HAS_ERRORS),
+                      ("length", float, ATTRIBUTE_HAS_ERRORS)])
+
+
+class Axis(__Axis):
+    """
+    This class describes an eigenvector of a moment tensor expressed in its
+    principal-axes system. It uses the angles azimuth, plunge, and the
+    eigenvalue length.
+
+    :type azimuth: float
+    :param azimuth: Azimuth of eigenvector of moment tensor expressed in
+        principal-axes system. Unit: deg
+    :type azimuth_errors: :class:`~obspy.core.util.AttribDict`
+    :param azimuth_errors: AttribDict containing error quantities.
+    :type plunge: float
+    :param plunge: Plunge of eigenvector of moment tensor expressed in
+        principal-axes system. Unit: deg
+    :type plunge_errors: :class:`~obspy.core.util.AttribDict`
+    :param plunge_errors: AttribDict containing error quantities.
+    :type length: float
+    :param length: Eigenvalue of moment
+    :type length_errors: :class:`~obspy.core.util.AttribDict`
+    :param length_errors: AttribDict containing error quantities.
+    """
+
+
+__NodalPlanes = _eventTypeClassFactory("__NodalPlanes",
+    class_attributes=[("nodal_plane_1", NodalPlane),
+                      ("nodal_plane_2", NodalPlane),
+                      ("preferred_plane", int)])
+
+
+class NodalPlanes(__NodalPlanes):
+    """
+    This class describes the nodal planes of a double-couple moment-tensor
+    solution. The attribute preferredPlane can be used to define which plane is
+    the preferred one.
+
+    :type nodal_plane_1: :class:`~obspy.core.event.NodalPlane`, optional
+    :param nodal_plane_1: First nodal plane of double-couple moment tensor
+        solution.
+    :type nodal_plane_2: :class:`~obspy.core.event.NodalPlane`, optional
+    :param nodal_plane_2: Second nodal plane of double-couple moment tensor
+        solution.
+    :type preferred_plane: ``1`` or ``2``, optional
+    :param preferred_plane: Indicator for preferred nodal plane of moment
+        tensor solution. It can take integer values ``1`` or ``2``.
+    """
+
+
+__PrincipalAxes = _eventTypeClassFactory("__PrincipalAxes",
+    class_attributes=[("t_axis", Axis),
+                      ("p_axis", Axis),
+                      ("n_axis", Axis)])
+
+
+class PrincipalAxes(__PrincipalAxes):
+    """
+    This class describes the principal axes of a double-couple moment tensor
+    solution. t_axis and p_axis are required, while n_axis is optional.
+
+    :type t_axis: :class:`~obspy.core.event.Axis`
+    :param t_axis: T axis of a double-couple moment tensor solution.
+    :type p_axis: :class:`~obspy.core.event.Axis`
+    :param p_axis: P axis of a double-couple moment tensor solution.
+    :type n_axis: :class:`~obspy.core.event.Axis`, optional
+    :param n_axis: N axis of a double-couple moment tensor solution.
+    """
+
+
+__MomentTensor = _eventTypeClassFactory("__MomentTensor",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("data_used", DataUsed),
+                      ("derived_origin_id", ResourceIdentifier),
+                      ("moment_magnitude_id", ResourceIdentifier),
+                      ("scalar_moment", float, ATTRIBUTE_HAS_ERRORS),
+                      ("tensor", Tensor),
+                      ("variance", float),
+                      ("variance_reduction", float),
+                      ("double_couple", float),
+                      ("clvd", float),
+                      ("iso", float),
+                      ("greens_function_id", ResourceIdentifier),
+                      ("filter_id", ResourceIdentifier),
+                      ("source_time_function", SourceTimeFunction),
+                      ("method_id", ResourceIdentifier),
+                      ("category", MomentTensorCategory),
+                      ("inversion_type", MTInversionType),
+                      ("evaluation_mode", EvaluationMode),
+                      ("evaluation_status", EvaluationStatus),
+                      ("creation_info", CreationInfo)],
+    class_contains=['comments'])
+
+
+class MomentTensor(__MomentTensor):
+    """
+    This class represents a moment tensor solution for an Event. It is part of
+    a FocalMechanism description.
+
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param resource_id: Resource identifier of MomentTensor.
+    :type data_used: :class:`~obspy.core.event.DataUsed`, optional
+    :param data_used: Describes waveform data used for moment-tensor inversion.
+    :type derived_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param derived_origin_id: Refers to the resource_id of the Origin derived
+        in the moment tensor inversion.
+    :type moment_magnitude_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
+    :param moment_magnitude_id: Refers to the resource_id of the Magnitude
+        object which represents the derived moment magnitude.
+    :type scalar_moment: float, optional
+    :param scalar_moment: Scalar moment as derived in moment tensor inversion.
+        Unit: Nm
+    :type scalar_moment_errors: :class:`~obspy.core.util.AttribDict`
+    :param scalar_moment_errors: AttribDict containing error quantities.
+    :type tensor: :class:`~obspy.core.event.Tensor`, optional
+    :param tensor: Tensor object holding the moment tensor elements.
+    :type variance: float, optional
+    :param variance: Variance of moment tensor inversion.
+    :type variance_reduction: float, optional
+    :param variance_reduction: Variance reduction of moment tensor inversion.
+    :type double_couple: float, optional
+    :param double_couple: Double couple parameter obtained from moment tensor
+        inversion (fractional value between 0 and 1).
+    :type clvd: float, optional
+    :param clvd: CLVD (compensated linear vector dipole) parameter obtained
+        from moment tensor inversion (fractional value between 0 and 1).
+    :type iso: float, optional
+    :param iso: Isotropic part obtained from moment tensor inversion
+        (fractional value between 0 and 1).
+    :type greens_function_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
+    :param greens_function_id: Resource identifier of the Green’s function used
+        in moment tensor inversion.
+    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :param filter_id: Resource identifier of the filter setup used in moment
+        tensor inversion.
+    :type source_time_function: :class:`~obspy.core.event.SourceTimeFunction`,
+        optional
+    :param source_time_function: Source time function used in moment-tensor
+        inversion.
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :param method_id: Resource identifier of the method used for moment-tensor
+        inversion.
+    :type category: str, optional
+    :param category: Moment tensor category. Values can be taken from the
+        following:
+            * ``"teleseismic"``,
+            * ``"regional"``
+    :type inversion_type: str, optional
+    :param inversion_type: Moment tensor inversion type. Values can be taken
+        from the following:
+            * ``"general"``,
+            * ``"zero trace"``,
+            * ``"double couple"``
+    :type evaluation_mode: str, optional
+    :param evaluation_mode: Evaluation mode of MomentTensor. Allowed values are
+        the following:
+            * ``"manual"``
+            * ``"automatic"``
+    :type evaluation_status: :class:`~obspy.core.event.EvaluationStatus`,
+        optional
+    :param evaluation_status: Evaluation status of MomentTensor. Allowed values
+        are the following:
+            * ``"preliminary"``
+            * ``"confirmed"``
+            * ``"reviewed"``
+            * ``"final"``
+            * ``"rejected"``
+            * ``"reported"``
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
+    """
+
+
+__FocalMechanism = _eventTypeClassFactory("__FocalMechanism",
+    class_attributes=[("resource_id", ResourceIdentifier),
+                      ("triggering_origin_id", str),
+                      ("nodal_planes", NodalPlanes),
+                      ("principal_axes", PrincipalAxes),
+                      ("azimuthal_gap", float),
+                      ("station_polarity_count", int),
+                      ("misfit", float),
+                      ("station_distribution_ratio", float),
+                      ("method_id", ResourceIdentifier),
+                      ("moment_tensor", MomentTensor),
+                      ("creation_info", CreationInfo)],
+    class_contains=['waveform_ids', 'comments'])
+
+
+class FocalMechanism(__FocalMechanism):
+    """
+    This class describes the focal mechanism of an Event.
+
+    It includes different descriptions like nodal planes, principal axes, and a
+    moment tensor. The moment tensor description is provided by objects of the
+    class MomentTensor which can be specified as child elements of
+    FocalMechanism.
+
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param resource_id: Resource identifier of FocalMechanism.
+    :type triggering_origin_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
+    :param triggering_origin_id: Refers to the resource_id of the triggering
+        origin.
+    :type nodal_planes: :class:`~obspy.core.event.NodalPlanes`, optional
+    :param nodal_planes: Nodal planes of the focal mechanism.
+    :type principal_axes: :class:`~obspy.core.event.PrincipalAxes`, optional
+    :param principal_axes: Principal axes of the focal mechanism.
+    :type azimuthal_gap: float, optional
+    :param azimuthal_gap: Largest azimuthal gap in distribution of stations
+        used for determination of focal mechanism. Unit: deg
+    :type station_polarity_count: int, optional
+    :param station_polarity_count: Number of station polarities used for
+        determination of focal mechanism.
+    :type misfit: float, optional
+    :param misfit: Fraction of misfit polarities in a first-motion focal
+        mechanism determination. Fractional value between 0 and 1.
+    :type station_distribution_ratio: float, optional
+    :param station_distribution_ratio: Station distribution ratio (STDR)
+        parameter. Indicates how the stations are distributed about the focal
+        sphere. Fractional value between 0 and 1.
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
+    :param method_id: Resource identifier of the method used for determination
+        of the focal mechanism.
+    :type waveform_ids: list of :class:`~obspy.core.event.WaveformStreamID`,
+        optional
+    :param waveform_ids: Identifies the waveform streams.
+    :type moment_tensor: :class:`~obspy.core.event.MomentTensor`, optional
+    :param moment_tensor: Moment tensor description for this focal mechanism.
+    :type comments: list of :class:`~obspy.core.event.Comment`, optional
+    :param comments: Additional comments.
+    :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
+    :param creation_info: Creation information used to describe author,
+        version, and creation time.
     """
 
 
