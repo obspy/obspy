@@ -100,17 +100,16 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         dt = UTCDateTime("2012-03-13T04:49:38")
         # 1
-        cat = client.getEvents(mindepth=34.9, maxdepth=35.1,
-                               catalog="NEIC PDE", contributor="NEIC PDE-Q",
-                               magtype="MB", lat=-56.1, lon=-26.7, maxradius=1,
-                               starttime=dt, endtime=dt + 10)
+        cat = client.getEvents(mindepth=34.9, maxdepth=35.1, magtype="MB",
+                               catalog="NEIC PDE", lat=-56.1, lon=-26.7,
+                               maxradius=2, starttime=dt, endtime=dt + 10)
         self.assertEquals(len(cat), 1)
         ev = cat[0]
         self.assertEquals(len(ev.origins), 1)
         self.assertEquals(len(ev.magnitudes), 1)
-        self.assertEquals(ev.origins[0].depth.value, 35.0)
-        self.assertEquals(ev.origins[0].latitude.value, -55.404)
-        self.assertEquals(ev.origins[0].longitude.value, -27.895)
+        self.assertEquals(ev.origins[0].depth, 35.0)
+        self.assertEquals(ev.origins[0].latitude, -55.404)
+        self.assertEquals(ev.origins[0].longitude, -27.895)
         self.assertEquals(ev.magnitudes[0].magnitude_type, 'MB')
 
     def test_sacpz(self):
