@@ -731,12 +731,12 @@ class CreationInfo(__CreationInfo):
 
     :type agency_id: str, optional
     :param agency_id: Designation of agency that published a resource.
-    :type agency_uri: str, optional
+    :type agency_uri: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param agency_uri: Resource identifier of the agency that published a
         resource.
     :type author: str, optional
     :param author: Name describing the author of a resource.
-    :type author_uri: str, optional
+    :type author_uri: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param author_uri: Resource identifier of the author of a resource.
     :type creation_time: UTCDateTime, optional
     :param creation_time: Time of creation of a resource.
@@ -832,7 +832,7 @@ class Comment(__Comment):
     :type text: str, optional
     :param text: Text of comment.
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
-    :param resource_id: Identifier of comment.
+    :param resource_id: Resource identifier of comment.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`
     :param creation_info: Creation info of comment.
 
@@ -872,7 +872,7 @@ class WaveformStreamID(__WaveformStreamID):
     :param location: Location code.
     :type channel: str, optional
     :param channel: Channel code.
-    :type resource_uri: str, optional
+    :type resource_uri: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_uri: Resource identifier for the waveform stream.
     :type seed_string: str, optional
     :param seed_string: Provides an alternative initialization way by passing a
@@ -954,7 +954,7 @@ class Amplitude(__Amplitude):
     This class represents a single amplitude measurement or a measurement of
     the visible end of a record for duration magnitudes.
 
-    :type resource_id: str
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
     :type generic_amplitude: float
     :param generic_amplitude: Amplitude value.
@@ -987,7 +987,7 @@ class Amplitude(__Amplitude):
             * ``"m*s"``,
             * ``"dimensionless"``,
             * ``"other"``
-    :type method_id: str, optional
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Describes the method of amplitude determination.
     :type period: float, optional
     :param period: Measured period in the ``time_window`` in case of amplitude
@@ -998,13 +998,13 @@ class Amplitude(__Amplitude):
     :type time_window: :class:`~obspy.core.event.TimeWindow`, optional
     :param time_window: Description of the time window used for amplitude
         measurement. Mandatory for duration magnitudes.
-    :type pick_id: str, optional
+    :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param pick_id: Refers to the ``resource_id`` of an associated
         :class:`~obspy.core.event.Pick` object.
-    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
+    :type waveform_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param waveform_id: Identifies the waveform stream on which the amplitude
         was measured.
-    :type filter_id: str, optional
+    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param filter_id: Identifies the filter or filter setup used for filtering
         the waveform stream referenced by ``waveform_id``.
     :type scaling_time: :class:`~obspy.core.UTCDateTime`, optional
@@ -1069,7 +1069,7 @@ class Pick(__Pick):
     This class contains various attributes commonly used to describe a single
     pick, e.g. time, waveform id, onset, phase hint, polarity, etc
 
-    :type resource_id: str
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Pick time.
@@ -1077,9 +1077,9 @@ class Pick(__Pick):
     :param time_errors: AttribDict containing error quantities.
     :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`
     :param waveform_id: Identifies the waveform stream.
-    :type filter_id: str, optional
+    :type filter_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param filter_id: Identifies the filter setup used.
-    :type method_id: str, optional
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the method used to get the pick.
     :type horizontal_slowness: float, optional
     :param horizontal_slowness: Describes the horizontal slowness of the Pick.
@@ -1089,7 +1089,8 @@ class Pick(__Pick):
     :param backazimuth: Describes the backazimuth of the Pick.
     :type backazimuth_errors: :class:`~obspy.core.util.AttribDict`
     :param backazimuth_errors: AttribDict containing error quantities.
-    :type slowness_method_id: str, optional
+    :type slowness_method_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
     :param slowness_method_id: Identifies the method used to derive the
         slowness.
     :type onset: str, optional
@@ -1135,15 +1136,14 @@ __Arrival = _eventTypeClassFactory("__Arrival",
                       ("time_correction", float),
                       ("azimuth", float),
                       ("distance", float),
+                      ("takeoff_angle", float, ATTRIBUTE_HAS_ERRORS),
                       ("time_residual", float),
                       ("horizontal_slowness_residual", float),
-                      ("backazimuthal_residual", float),
-                      ("time_used", bool),
-                      ("horizontal_slowness_used", bool),
-                      ("backazimuth_used", bool),
-                      ("time_weight", float, ATTRIBUTE_HAS_ERRORS),
+                      ("backazimuth_residual", float),
+                      ("time_weight", float),
+                      ("horizontal_slowness_weight", float),
+                      ("backazimuth_weight", float),
                       ("earth_model_id", ResourceIdentifier),
-                      ("preliminary", bool),
                       ("creation_info", CreationInfo)],
     class_contains=["comments"])
 
@@ -1161,8 +1161,10 @@ class Arrival(__Arrival):
     array data - may further constrain the nature of the arrival.
     [from the QuakeML Basic Event Description, Version 1.1, page 38]
 
-    :type pick_id: str
-    :param pick_id: Refers to a resource_id of a Pick.
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param resource_id: Resource identifier of Arrival.
+    :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`
+    :param pick_id: Refers to a resource_id of associated Pick.
     :type phase: str
     :param phase: Phase identification. Free-form text field describing the
         phase. In QuakeML this is a separate type but it just contains a single
@@ -1173,6 +1175,10 @@ class Arrival(__Arrival):
     :param azimuth: Azimuth of station as seen from the epicenter in degree.
     :type distance: float, optional
     :param distance: Epicentral distance in degree.
+    :type takeoff_angle: float, optional
+    :param takeoff_angle: Take off angle.
+    :type takeoff_angle_errors: :class:`~obspy.core.util.AttribDict`
+    :param takeoff_angle_errors: AttribDict containing error quantities.
     :type time_residual: float, optional
     :param time_residual: Residual between observed and expected arrival time
         assuming proper phase identification and given the earth_model_id of
@@ -1180,28 +1186,19 @@ class Arrival(__Arrival):
     :type horizontal_slowness_residual: float, optional
     :param horizontal_slowness_residual: Residual of horizontal slowness in
         seconds per degree.
-    :type backazimuthal_residual: float, optional
-    :param backazimuthal_residual: Residual of backazimuth in degree.
-    :type time_used: bool, optional
-    :param time_used: Boolean flag. True if arrival time was used for
-        computation of the associated Origin.
-    :type horizontal_slowness_used: bool, optional
-    :param horizontal_slowness_used: Boolean flag. True if horizontal slowness
-        was used for computation of the associated Origin.
-    :type backazimuth_used: bool, optional
-    :param backazimuth_used: Boolean flag. True if backazimuth was used for
-        computation of the associated Origin.
+    :type backazimuth_residual: float, optional
+    :param backazimuth_residual: Residual of backazimuth in degree.
     :type time_weight: float, optional
     :param time_weight: Weight of this Arrival in the computation of the
-        associated Origin. (timeWeight in XSD file, weight in PDF).
-    :type time_weight_errors: :class:`~obspy.core.util.AttribDict`
-    :param time_weight_errors: AttribDict containing error quantities.
-    :type earth_model_id: str, optional
+        associated Origin.
+    :type horizontal_slowness_weight: float, optional
+    :param horizontal_slowness_weight: Weight of horizontal slowness.
+    :type backazimuth_weight: float, optional
+    :param backazimuth_weight: Weight of backazimuth.
+    :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
     :param earth_model_id: Earth model which is used for the association of
         Arrival to Pick and computation of the residuals.
-    :type preliminary: bool, optional
-    :param preliminary: Boolean flag. True if arrival designation is
-        preliminary.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
@@ -1362,6 +1359,7 @@ __Origin = _eventTypeClassFactory("__Origin",
                       ("quality", OriginQuality),
                       ("origin_type", OriginType),
                       ("origin_uncertainty", OriginUncertainty),
+                      ("region", str),
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("creation_info", CreationInfo)],
@@ -1373,7 +1371,7 @@ class Origin(__Origin):
     This class represents the focal time and geographical location of an
     earthquake hypocenter, as well as additional meta-information.
 
-    :type resource_id: str
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Origin.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Focal time.
@@ -1405,12 +1403,14 @@ class Origin(__Origin):
     :type epicenter_fixed: bool, optional
     :param epicenter_fixed: ``True`` if epicenter was kept fixed for
         computation of Origin.
-    :type reference_system_id: str, optional
+    :type reference_system_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
     :param reference_system_id: Identifies the reference system used for
         hypocenter determination.
-    :type method_id: str, optional
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the method used for locating the event.
-    :type earth_model_id: str, optional
+    :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
     :param earth_model_id: Identifies the earth model used in ``method_id``.
     :type composite_times: list of :class:`~obspy.core.event.CompositeTime`,
         optional
@@ -1429,6 +1429,8 @@ class Origin(__Origin):
             * ``"hypocenter"``
             * ``"amplitude"``
             * ``"macroseismic"``
+    :type region: str, optional
+    :param region: Region name.
     :type evaluation_mode: str, optional
     :param evaluation_mode: Evaluation mode of Origin. Allowed values are the
         following:
@@ -1481,7 +1483,8 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
     This class describes the weighting of magnitude values from Magnitude
     estimations.
 
-    :type station_magnitude_id: ResourceIdentifier, optional
+    :type station_magnitude_id: :class:`~obspy.core.event.ResourceIdentifier`,
+        optional
     :param station_magnitude_id: Refers to the resource_id of a
         StationMagnitude object.
     :type residual: float, optional
@@ -1514,7 +1517,7 @@ class Magnitude(__Magnitude):
     ``origin_id``. It is either a combination of different magnitude
     estimations, or it represents the reported magnitude for the given Event.
 
-    :type resource_id: str
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
     :type mag: float
     :param mag: Resulting magnitude value from combining values of type
@@ -1534,10 +1537,10 @@ class Magnitude(__Magnitude):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
-    :type origin_id: ResourceIdentifier, optional
+    :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s resource_id if the magnitude has
         an associated Origin.
-    :type method_id: ResourceIdentifier, optional
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and type.
     :type station_count: int, optional
@@ -1589,9 +1592,9 @@ class StationMagnitude(__StationMagnitude):
     """
     This class describes the magnitude derived from a single waveform stream.
 
-    :type resource_id: ResourceIdentifier, optional
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_id: Resource identifier of StationMagnitude.
-    :type origin_id: ResourceIdentifier, optional
+    :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
     :type mag: float
@@ -1610,15 +1613,15 @@ class StationMagnitude(__StationMagnitude):
             * duration magnitude (``'Md'``)
             * coda magnitude (``'Mc'``)
             * ``'MH'``, ``'Mwp'``, ``'M50'``, ``'M100'``, etc.
-    :type amplitude_id: ResourceIdentifier, optional
+    :type amplitude_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param amplitude_id: Identifies the data source of the StationMagnitude.
         For magnitudes derived from amplitudes in waveforms (e. g.,
         local magnitude ML), amplitude_id points to resource_id in class
         :class:`obspy.core.event.Amplitude`.
-    :type method_id: ResourceIdentifier, optional
+    :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Identifies the method of magnitude estimation. Users
         should avoid to give contradictory information in method_id and type.
-    :type waveform_id: WaveformStreamID, optional
+    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
     :param waveform_id: Identifies the waveform stream.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
     :param comments: Additional comments.
@@ -2034,8 +2037,7 @@ __Event = _eventTypeClassFactory("__Event",
                       ("event_type_certainty", EventTypeCertainty),
                       ("creation_info", CreationInfo)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
-                    'station_magnitudes', 'focal_mechanisms', 'origins',
-                    'magnitudes'])
+                    'focal_mechanisms', 'origins', 'magnitudes'])
 
 
 class Event(__Event):
@@ -2049,7 +2051,7 @@ class Event(__Event):
     event is usually associated with one or more magnitudes, and with one or
     more focal mechanism determinations.
 
-    :type resource_id: ResourceIdentifier, optional
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
     :type event_type: str, optional
     :param event_type: Describes the type of an event. Allowed values are the
@@ -2091,9 +2093,6 @@ class Event(__Event):
     :param picks: Picks associated with the event.
     :type amplitudes: list of :class:`~obspy.core.event.Amplitude`
     :param amplitudes: Amplitudes associated with the event.
-    :type station_magnitudes: list of
-        :class:`~obspy.core.event.StationMagnitude`
-    :param station_magnitudes: Station magnitudes associated with the event
     :type focal_mechanisms: list of :class:`~obspy.core.event.FocalMechanism`
     :param focal_mechanisms: Focal mechanisms associated with the event
     :type origins: list of :class:`~obspy.core.event.Origin`
@@ -2148,7 +2147,7 @@ class Catalog(object):
 
     :type events: list of :class:`~obspy.core.event.Event`, optional
     :param events: List of events
-    :type resource_id: str, optional
+    :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of the catalog.
     :type description: str, optional
     :param description: Description string that can be assigned to the

@@ -294,7 +294,6 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(ar.time_weight, None)
         self.assertEquals(ar.earth_model_id,
             ResourceIdentifier('smi:ch.ethz.sed/earthmodel/U21'))
-        self.assertEquals(ar.preliminary, True)
         self.assertEquals(len(ar.comments), 1)
         self.assertEquals(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
