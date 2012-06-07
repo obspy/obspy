@@ -632,6 +632,67 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('paz' in st[0].stats)
         self.assertTrue('coordinates' in st[0].stats)
 
+    def test_issue372(self):
+        """
+        Test case for issue #372.
+        """
+        dt = UTCDateTime("20120529070000")
+        client = Client()
+        st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
+                                getPAZ=True, getCoordinates=True)
+        for tr in st:
+            self.assertTrue('paz' in tr.stats)
+            self.assertTrue('coordinates' in tr.stats)
+            self.assertTrue('poles' in tr.stats.paz)
+            self.assertTrue('zeros' in tr.stats.paz)
+            self.assertTrue('latitude' in tr.stats.coordinates)
+
+    def test_getInventoryInstrumentChange(self):
+        """
+        Check results of getInventory if instrumentation has been changed.
+
+        Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
+        """
+        client = Client()
+        # one instrument in given time span
+        dt = UTCDateTime("2003-01-09T00:00:00")
+        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                  instruments=True, route=False)
+        self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
+        # two instruments in given time span
+        dt = UTCDateTime("2003-01-09T23:59:59")
+        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                  instruments=True, route=False)
+        self.assertTrue(len(inv['GE.SNAA..BHZ']), 2)
+        # one instrument in given time span
+        dt = UTCDateTime("2003-01-10T00:00:00")
+        inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                  instruments=True, route=False)
+        self.assertTrue(len(inv['GE.SNAA..BHZ']), 1)
+
+    def test_getWaveformInstrumentChange(self):
+        """
+        Check results of getWaveform if instrumentation has been changed.
+
+        Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
+        """
+        client = Client()
+        # one instrument in given time span
+        dt = UTCDateTime("2003-01-09T00:00:00")
+        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                               getPAZ=True, getCoordinates=True)
+        self.assertEquals(st[0].stats.paz.sensitivity, 596224500.0)
+        # two instruments in given time span
+        dt = UTCDateTime("2003-01-09T23:59:00")
+        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 120,
+                                getPAZ=True, getCoordinates=True)
+        self.assertEquals(st[0].stats.paz.sensitivity, 588000000.0)
+        # one instrument in given time span
+        dt = UTCDateTime("2003-01-10T01:00:00")
+        st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
+                                getPAZ=True, getCoordinates=True)
+        self.assertEquals(st[0].stats.paz.sensitivity, 588000000.0)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

@@ -9,7 +9,6 @@ ArcLink/WebDC client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from copy import deepcopy
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy.core import read, UTCDateTime
@@ -412,17 +411,22 @@ class Client(object):
         stream.trim(starttime, endtime)
         # fetching PAZ or coordinates: one call per channel
         if getPAZ or getCoordinates:
+            inv = self.getInventory(network=network, station=station,
+                                    location=location, channel=channel,
+                                    starttime=starttime, endtime=endtime,
+                                    instruments=True, route=False)
+            id = '.'.join([network, station])
             for tr in stream:
-                cha = tr.stats.channel
-                # XXX should add a check like metadata_check in seishub.client
-                metadata = self.getMetadata(network, station, location, cha,
-                                            starttime, endtime, getPAZ=getPAZ,
-                                            getCoordinates=getCoordinates,
-                                            route=False)
                 if getPAZ:
-                    tr.stats['paz'] = deepcopy(metadata['paz'])
+                    # HACK: returning first PAZ only for now
+                    if len(inv[tr.id]) > 1:
+                        msg = "Multiple PAZ found for %s. Applying first PAZ."
+                        warnings.warn(msg % (tr.id), UserWarning)
+                    tr.stats['paz'] = inv[tr.id][0].paz
                 if getCoordinates:
-                    tr.stats['coordinates'] = deepcopy(metadata['coordinates'])
+                    tr.stats['coordinates'] = AttribDict()
+                    for key in ['latitude', 'longitude', 'elevation']:
+                        tr.stats['coordinates'][key] = inv[id][key]
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,
@@ -711,6 +715,9 @@ class Client(object):
         if getPAZ:
             id = '.'.join([network, station, location, channel])
             # HACK: returning first PAZ only for now
+            if len(result[id]) > 1:
+                msg = "Multiple PAZ found for %s. Applying first PAZ."
+                warnings.warn(msg % (id), UserWarning)
             data['paz'] = result[id][0].paz
         if getCoordinates:
             id = '.'.join([network, station])
