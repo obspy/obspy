@@ -263,25 +263,25 @@ class Unpickler(object):
         obj = Arrival()
         # required parameter
         obj.resource_id = element.get('publicID')
+        obj.pick_id = self._xpath2obj('pickID', element) or ''
         obj.phase = self._xpath2obj('phase', element) or ''
         # optional parameter
-        obj.pick_id = self._xpath2obj('pickID', element) or ''
         obj.time_correction = self._xpath2obj('timeCorrection', element, float)
         obj.azimuth = self._xpath2obj('azimuth', element, float)
         obj.distance = self._xpath2obj('distance', element, float)
+        obj.takeoff_angle, obj.takeoff_angle_errors = \
+            self._float_value(element, 'takeoffAngle')
         obj.time_residual = self._xpath2obj('timeResidual', element, float)
         obj.horizontal_slowness_residual = \
             self._xpath2obj('horizontalSlownessResidual', element, float)
         obj.backazimuth_residual = \
             self._xpath2obj('backazimuthResidual', element, float)
-        obj.time_used = self._xpath2obj('timeUsed', element, bool)
-        obj.horizontal_slowness_used = \
-            self._xpath2obj('horizontalSlownessUsed', element, bool)
-        obj.backazimuth_used = self._xpath2obj('backazimuthUsed', element,
-                                               bool)
         obj.time_weight = self._xpath2obj('timeWeight', element, float)
+        obj.horizontal_slowness_weight = \
+            self._xpath2obj('horizontalSlownessWeight', element, float)
+        obj.backazimuth_weight = \
+            self._xpath2obj('backazimuthWeight', element, float)
         obj.earth_model_id = self._xpath2obj('earthModelID', element)
-        obj.preliminary = element.get('preliminary')
         obj.comments = self._comments(element)
         obj.creation_info = self._creation_info(element)
         return obj
@@ -601,8 +601,6 @@ class Pickler(object):
         :rtype: etree.Element
         """
         attrib = {'publicID': self._id(arrival.resource_id)}
-        if arrival.preliminary:
-            attrib['preliminary'] = str(arrival.preliminary).lower()
         element = etree.Element('arrival', attrib=attrib)
         # required parameter
         self._str(arrival.pick_id, element, 'pickID', True)
@@ -611,15 +609,16 @@ class Pickler(object):
         self._str(arrival.time_correction, element, 'timeCorrection')
         self._str(arrival.azimuth, element, 'azimuth')
         self._str(arrival.distance, element, 'distance')
+        self._value(arrival.takeoff_angle, arrival.takeoff_angle_errors,
+                    element, 'takeoffAngle')
         self._str(arrival.time_residual, element, 'timeResidual')
         self._str(arrival.horizontal_slowness_residual, element,
                   'horizontalSlownessResidual')
         self._str(arrival.backazimuth_residual, element, 'backazimuthResidual')
-        self._bool(arrival.time_used, element, 'timeUsed')
-        self._bool(arrival.horizontal_slowness_used, element,
-                   'horizontalSlownessUsed')
-        self._bool(arrival.backazimuth_used, element, 'backazimuthUsed')
         self._str(arrival.time_weight, element, 'timeWeight')
+        self._str(arrival.horizontal_slowness_weight, element,
+                  'horizontalSlownessWeight')
+        self._str(arrival.backazimuth_weight, element, 'backazimuthWeight')
         self._str(arrival.earth_model_id, element, 'earthModelID')
         self._comments(arrival.comments, element)
         self._creation_info(arrival.creation_info, element)

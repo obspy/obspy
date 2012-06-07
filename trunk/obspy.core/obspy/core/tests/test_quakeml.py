@@ -58,7 +58,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests Event object.
         """
-        filename = os.path.join(self.path, 'quakeml_event.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_event.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         event = catalog[0]
@@ -105,7 +105,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests Origin object.
         """
-        filename = os.path.join(self.path, 'quakeml_origin.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_origin.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].origins), 1)
@@ -200,7 +200,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests Magnitude object.
         """
-        filename = os.path.join(self.path, 'quakeml_magnitude.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_magnitude.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].magnitudes), 1)
@@ -241,7 +241,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests StationMagnitude object.
         """
-        filename = os.path.join(self.path, 'quakeml_stationmagnitude.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_stationmagnitude.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].station_magnitudes), 1)
@@ -273,7 +273,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests Arrival object.
         """
-        filename = os.path.join(self.path, 'quakeml_arrival.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_arrival.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].origins[0].arrivals), 2)
@@ -285,13 +285,14 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(ar.phase, 'Pn')
         self.assertEquals(ar.azimuth, 12.0)
         self.assertEquals(ar.distance, 0.5)
-        self.assertEquals(ar.time_residual, None)
-        self.assertEquals(ar.horizontal_slowness_residual, None)
-        self.assertEquals(ar.backazimuth_residual, None)
-        self.assertEquals(ar.time_used, None)
-        self.assertEquals(ar.horizontal_slowness_used, None)
-        self.assertEquals(ar.backazimuth_used, None)
-        self.assertEquals(ar.time_weight, None)
+        self.assertEquals(ar.takeoff_angle, 11.0)
+        self.assertEquals(ar.takeoff_angle_errors.uncertainty, 0.2)
+        self.assertEquals(ar.time_residual, 1.6)
+        self.assertEquals(ar.horizontal_slowness_residual, 1.7)
+        self.assertEquals(ar.backazimuth_residual, 1.8)
+        self.assertEquals(ar.time_weight, 0.48)
+        self.assertEquals(ar.horizontal_slowness_weight, 0.49)
+        self.assertEquals(ar.backazimuth_weight, 0.5)
         self.assertEquals(ar.earth_model_id,
             ResourceIdentifier('smi:ch.ethz.sed/earthmodel/U21'))
         self.assertEquals(len(ar.comments), 1)
@@ -305,7 +306,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests Pick object.
         """
-        filename = os.path.join(self.path, 'quakeml_pick.xml')
+        filename = os.path.join(self.path, 'quakeml_1.2_pick.xml')
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 1)
         self.assertEquals(len(catalog[0].picks), 2)

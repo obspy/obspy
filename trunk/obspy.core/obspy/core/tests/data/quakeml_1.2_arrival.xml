@@ -13,11 +13,21 @@
         <longitude>
           <value>142.373</value>
         </longitude>
-        <arrival publicID="smi:some/arrival/id" preliminary="true">
+        <arrival publicID="smi:some/arrival/id">
           <pickID>smi:ch.ethz.sed/pick/117634</pickID>
           <phase>Pn</phase>
           <azimuth>12.0</azimuth>
           <distance>0.5</distance>
+          <takeoffAngle>
+            <value>11.0</value>
+            <uncertainty>0.2</uncertainty>
+          </takeoffAngle>
+          <timeResidual>1.6</timeResidual>
+          <horizontalSlownessResidual>1.7</horizontalSlownessResidual>
+          <backazimuthResidual>1.8</backazimuthResidual>
+          <timeWeight>0.48</timeWeight>
+          <horizontalSlownessWeight>0.49</horizontalSlownessWeight>
+          <backazimuthWeight>0.5</backazimuthWeight>
           <earthModelID>smi:ch.ethz.sed/earthmodel/U21</earthModelID>
           <comment id="smi:some/comment/id/number_3">
             <text>Another comment</text>
