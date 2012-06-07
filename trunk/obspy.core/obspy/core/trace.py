@@ -1782,7 +1782,8 @@ class Trace(object):
 
     def split(self):
         """
-        Splits a Trace object containing gaps into several traces.
+        Splits Trace object containing gaps using a NumPy masked array into
+        several traces.
 
         :rtype: list
         :returns: List of splitted traces. A gapless trace will still be

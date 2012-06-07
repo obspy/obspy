@@ -1176,7 +1176,7 @@ class Arrival(__Arrival):
     :type distance: float, optional
     :param distance: Epicentral distance in degree.
     :type takeoff_angle: float, optional
-    :param takeoff_angle: Take off angle.
+    :param takeoff_angle: Take-off angle.
     :type takeoff_angle_errors: :class:`~obspy.core.util.AttribDict`
     :param takeoff_angle_errors: AttribDict containing error quantities.
     :type time_residual: float, optional
