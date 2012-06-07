@@ -3,7 +3,7 @@ Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
 Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
- python-numpy
+ python-numpy, python-setuptools (>=0.6.21)
 Standards-Version: 3.9.3
 Vcs-Svn: https://svn.obspy.org/trunk/obspy.core
 Vcs-Browser: https://svn.obspy.org/trunk/obspy.core
