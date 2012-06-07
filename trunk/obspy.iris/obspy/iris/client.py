@@ -479,6 +479,10 @@ class Client(object):
             search and print criteria. If magnitudes do not exist for a certain
             origin, the search algorithm will consider it a miss and therefore
             will not include the event. Defaults to ``True``.
+        :type includearrivals: bool, optional
+        :param includearrivals: If this event has associated phase arrival
+            information, then it will be included in the results. Defaults to
+            ``False``.
         :type preferredonly: bool, optional
         :param preferredonly: Include preferred estimates only. When catalog is
             selected, the result returned will include the preferred origin as
@@ -1720,6 +1724,10 @@ class Client(object):
             search and print criteria. If magnitudes do not exist for a certain
             origin, the search algorithm will consider it a miss and therefore
             will not include the event. Defaults to ``True``.
+        :type includearrivals: bool, optional
+        :param includearrivals: If this event has associated phase arrival
+            information, then it will be included in the results. Defaults to
+            ``False``.
         :type preferredonly: bool, optional
         :param preferredonly: Include preferred estimates only. When catalog is
             selected, the result returned will include the preferred origin as
@@ -1769,6 +1777,11 @@ class Client(object):
                 kwargs['includeallmagnitudes'] = 'no'
             else:
                 kwargs['includeallmagnitudes'] = 'yes'
+        if 'includearrivals' in kwargs:
+            if not kwargs['includearrivals']:
+                kwargs['includearrivals'] = 'no'
+            else:
+                kwargs['includearrivals'] = 'yes'
         if 'preferredonly' in kwargs:
             if not kwargs['preferredonly']:
                 kwargs['preferredonly'] = 'no'
