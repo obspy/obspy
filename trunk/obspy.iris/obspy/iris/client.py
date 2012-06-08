@@ -670,11 +670,11 @@ class Client(object):
         >>> client = Client()
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10)
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [  24   20   19   19   19   15   10    4   -4  -11  ...
+        [  24   20   19   19   19   15   10    4   -4  -11 ...
         >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
         ...     filter=["correct", "demean", "lp=2.0"])
         >>> print(st[0].data)  # doctest: +ELLIPSIS
-        [ -4.61027071e-07  -3.16557674e-07  -1.19702676e-07   ...
+        [ -1.38267058e-06  -1.10900783e-06  -6.89020794e-07 ...
         """
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
