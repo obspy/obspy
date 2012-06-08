@@ -1,4 +1,6 @@
 dev:
+ * AttricDict may now be initialized with (key, value) kwarg pairs, e.g.
+   AttricDict(a=1, b=2).
  * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
  * Trace.__div__ (splits Trace into Stream containing num traces)
  * new obspy.core.util.types.Enum class
@@ -22,5 +24,5 @@ dev:
  * import of an unsupported waveform will result into a TypeError [#338]
  * added compatibility methods for AttribDict and UTCDateTime
  * retaining trace order in stream while merging
- * AttricDict can now be initialized with (key, value) kwarg pairs, e.g.
-   AttricDict(a=1, b=2).
+ * deprecated_keywords decorator may warn and ignore keywords by setting the
+   keyword mapping to None
