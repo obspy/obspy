@@ -527,8 +527,8 @@ class Client(object):
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Interface for `resp` Web service of IRIS
-        (http://www.iris.edu/ws/resp/).
+        Low-level interface for `resp` Web service of IRIS
+        (http://www.iris.edu/ws/resp/) - 1.4.1 (2011-04-14).
 
         This method provides access to channel response information in the SEED
         `RESP <http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F>`_
@@ -545,10 +545,20 @@ class Client(object):
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
+
+        *Temporal constraints**
+
+    The following three parameters impose time constrants on the query. Time
+    may be requested through the use of either time OR the start and end times.
+    If no time is specified, then the current time is assumed.
+
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param time: Find the response for the given time. Time cannot be used
+            with start, end, or duration parameters
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Start date and time.
+        :param starttime: Start time, may be used in conjunction with endtime.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: End date and time. Requires starttime parameter.
+        :param endtime: End time, may be used in conjunction with starttime.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -590,11 +600,12 @@ class Client(object):
                 kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
             except:
                 kwargs['endtime'] = endtime
-        elif starttime:
+        elif 'time' in kwargs:
             try:
-                kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
+                kwargs['time'] = \
+                    UTCDateTime(kwargs['time']).formatIRISWebService()
             except:
-                kwargs['time'] = starttime
+                pass
         # build up query
         url = '/resp/query'
         try:
@@ -609,8 +620,8 @@ class Client(object):
                 starttime=None, endtime=None, level='sta', filename=None,
                 **kwargs):
         """
-        Interface for `station` Web service of IRIS
-        (http://www.iris.edu/ws/station/).
+        Low-level interface for `station` Web service of IRIS
+        (http://www.iris.edu/ws/station/) - release 1.3.6 (2012-04-30).
 
         This method provides access to station metadata in the IRIS DMC
         database. The results are returned in XML format using the StationXML
@@ -629,10 +640,90 @@ class Client(object):
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
+
+        **Geographic constraints - bounding rectangle**
+
+        The following four parameters work together to specify a boundary
+        rectangle. All four parameters are optional, but they may not be mixed
+        with the parameters used for searching within a defined radius.
+
+        :type minlat: float, optional
+        :param minlat: Specify the southern boundary. The minimum latitude must
+            be between -90 and 90 degrees inclusive (and less than or equal to
+            maxlat). If not specified, then this value defaults to ``-90``.
+        :type maxlat: float, optional
+        :param maxlat: Specify the northern boundary. The maximum latitude must
+            be between -90 and 90 degrees inclusive and greater than or equal
+            to minlat. If not specified, then this value defaults to ``90``.
+        :type minlon: float, optional
+        :param minlon: Specify the western boundary. The minimum longitude must
+            be between -180 and 180 degrees inclusive. If not specified, then
+            this value defaults to ``-180``. If minlon > maxlon, then the
+            boundary will cross the -180/180 meridian
+        :type maxlon: float, optional
+        :param maxlon: Specify the eastern boundary. The minimum longitude must
+            be between -180 and 180 degrees inclusive. If not specified, then
+            this value defaults to +180. If maxlon < minlon, then the boundary
+            will cross the -180/180 meridian
+
+        **Geographic constraints - bounding radius**
+
+        The following four parameters work together to specify a circular
+        bounding area. ``lat``, ``lon``, and ``maxradius`` are all required,
+        and must be used together. ``minradius`` is optional, and defaults
+        to ``0``. These parameters are incompatible with the boundary-box
+        parameters described above.
+
+        :type lat: float, optional
+        :param lat: Specify the central latitude point, in degrees. This value
+            must be between -90 and 90 degrees. This MUST be used in
+            conjunction with the lon and maxradius parameters.
+        :type lon: float, optional
+        :param lon: Specify the central longitude point, in degrees. This MUST
+            be used in conjunction with the lat and maxradius parameters.
+        :type maxradius: float, optional
+        :param maxradius: Specify the maximum radius, in degrees. Only
+            earthquakes within maxradius degrees of the lat/lon point will be
+            retrieved. This MUST be used in conjunction with the lat and lon
+            parameters.
+        :type minradius: float, optional
+        :param minradius: This optional parameter allows for the exclusion of
+            events that are closer than minradius degrees from the specified
+            lat/lon point. This MUST be used in conjunction with the lat, lon,
+            and maxradius parameters and is subject to the same restrictions.
+            If this parameter isn't specified, then it defaults to ``0.0``
+            degrees.
+
+        **Temporal constraints**
+
+        The following parameters impose various time constrants on the query.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit results to the stations that were operational
+            on or after this time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit results to the stations that were operational on
+            or before this time.
+        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param startbefore: Limit results to the stations starting before this
+            time.
+        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param startafter: Limit results to the stations starting after this
+            time.
+        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endbefore: Limit results to the stations ending before this
+            time.
+        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endafter: Limit results to the stations ending after this time.
+
+        **Miscelleneous options**
+
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param updatedafter: Only show stations that were updated after a
+            specific time.
         :type level: ``'net'``, ``'sta'``, ``'chan'``, or ``'resp'``, optional
         :param level: Specify whether to include channel/response metadata or
             not. Defaults to ``'sta'``.
@@ -673,21 +764,25 @@ class Client(object):
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)
         kwargs['level'] = level
-        # convert UTCDateTime to string for query
-        try:
-            starttime = UTCDateTime(starttime).date
-        except KeyError:
-            starttime = None
-        try:
-            endtime = UTCDateTime(endtime).date
-        except KeyError:
-            endtime = None
+        # convert UTCDateTimes to string
         if starttime and endtime:
-            kwargs['timewindow'] = "%s,%s" % (starttime, endtime)
-        elif starttime:
-            kwargs['startafter'] = "%s" % (starttime)
-        elif endtime:
-            kwargs['endbefore'] = "%s" % (endtime)
+            try:
+                kwargs['starttime'] = \
+                    UTCDateTime(starttime).formatIRISWebService()
+            except:
+                kwargs['starttime'] = starttime
+        if endtime:
+            try:
+                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+            except:
+                kwargs['endtime'] = endtime
+        for key in ['startbefore', 'startafter', 'endbefore', 'endafter',
+                    'updatedafter']:
+            try:
+                kwargs[key] = \
+                    UTCDateTime(kwargs[key]).formatIRISWebService()
+            except KeyError:
+                pass
         # build up query
         url = '/station/query'
         try:
@@ -701,8 +796,8 @@ class Client(object):
     def dataselect(self, network, station, location, channel,
                    starttime, endtime, quality='B', filename=None, **kwargs):
         """
-        Interface for `dataselect` Web service of IRIS
-        (http://www.iris.edu/ws/dataselect/).
+        Low-level interface for `dataselect` Web service of IRIS
+        (http://www.iris.edu/ws/dataselect/)- release 1.8.1 (2012-05-03).
 
         This method returns a single channel of time series data (no wildcards
         are allowed). With this service you specify network, station, location,
@@ -784,10 +879,11 @@ class Client(object):
             pass
         return stream
 
-    def bulkdataselect(self, bulk, quality=None, filename=None):
+    def bulkdataselect(self, bulk, quality=None, filename=None,
+                       minimumlength=None, longestonly=True):
         """
-        Interface for `bulkdataselect` Web service of IRIS
-        (http://www.iris.edu/ws/bulkdataselect/).
+        Low-level interface for `bulkdataselect` Web service of IRIS
+        (http://www.iris.edu/ws/bulkdataselect/) - release 1.4.5 (2012-05-03).
 
         This method returns multiple channels of time series data for specified
         time ranges. With this service you specify a list of selections
@@ -810,6 +906,15 @@ class Client(object):
             (default) are treated the same and indicate best available.
             If ``'B'`` is selected, the output data records will be stamped
             with a ``M``.
+        :type minimumlength: float, optional
+        :param minimumlength: Enforce minimum segment length - seconds. Only
+            time-series segments of this length or longer will be returned.
+            .. note:: No data will be returned for selected time windows
+                shorter than ``minimumlength``.
+        :type longestonly: bool, optional
+        :param longestonly: Limit to longest segment only. For each time-series
+            selection, only the longest segment is returned. Defaults to
+            ``False``.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
@@ -842,9 +947,13 @@ class Client(object):
         # check for file
         if os.path.isfile(bulk):
             bulk = open(bulk).read()
-        # quality parameter is optional
+        # optional parameters
         if quality:
-            bulk = "quality %s\n" % quality.upper() + bulk
+            bulk = "quality %s\n" % (quality.upper()) + bulk
+        if minimumlength:
+            bulk = "minimumlength %lf\n" % (minimumlength) + bulk
+        if longestonly:
+            bulk = "longestonly\n" + bulk
         # build up query
         try:
             data = self._fetch(url, data=bulk)
@@ -879,8 +988,8 @@ class Client(object):
                      minlat=None, maxlat=None, minlon=None, maxlon=None,
                      output="bulk", restricted=False, filename=None, **kwargs):
         """
-        Interface for `availability` Web service of IRIS
-        (http://www.iris.edu/ws/availability/).
+        Low-level interface for `availability` Web service of IRIS
+        (http://www.iris.edu/ws/availability/) - release 1.2.1 (2012-04-06).
 
         This method returns information about what time series data is
         available at the IRIS DMC. Users can query for station metadata by
@@ -906,18 +1015,13 @@ class Client(object):
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
+        :type restricted: bool, optional
+        :param restricted: If ``True``, availability of restricted as well as
+            unrestricted data is reported. Defaults to ``False``.
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type lat: float, optional
-        :param lat: Latitude of center point for circular bounding area.
-        :type lon: float, optional
-        :param lon: Longitude of center point for circular bounding area.
-        :type minradius: float, optional
-        :param minradius: Minimum radius for circular bounding area.
-        :type maxradius: float, optional
-        :param maxradius: Maximum radius for circular bounding area.
         :type minlat: float, optional
         :param minlat: Minimum latitude for rectangular bounding box.
         :type minlon: float, optional
@@ -926,9 +1030,14 @@ class Client(object):
         :param maxlat: Maximum latitude for rectangular bounding box.
         :type maxlon: float, optional
         :param maxlon: Maximum longitude for rectangular bounding box.
-        :type restricted: bool, optional
-        :param restricted: If ``True``, availability of restricted as well as
-            unrestricted data is reported. Defaults to ``False``.
+        :type lat: float, optional
+        :param lat: Latitude of center point for circular bounding area.
+        :type lon: float, optional
+        :param lon: Longitude of center point for circular bounding area.
+        :type minradius: float, optional
+        :param minradius: Minimum radius for circular bounding area.
+        :type maxradius: float, optional
+        :param maxradius: Maximum radius for circular bounding area.
         :type output: str, optional
         :param output: Output format, either ``"bulk"`` or ``"xml"``. Defaults
             to ``"bulk"``.
@@ -1047,8 +1156,8 @@ class Client(object):
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
         """
-        Interface for `sacpz` Web service of IRIS
-        (http://www.iris.edu/ws/sacpz/).
+        Low-level interface for `sacpz` Web service of IRIS
+        (http://www.iris.edu/ws/sacpz/) - release 1.1.1 (2012-1-9).
 
         This method provides access to instrument response information
         (per-channel) as poles and zeros in the ASCII format used by SAC and
@@ -1152,8 +1261,8 @@ class Client(object):
 
     def distaz(self, stalat, stalon, evtlat, evtlon):
         """
-        Interface for `distaz` Web service of IRIS
-        (http://www.iris.edu/ws/distaz/).
+        Low-level interface for `distaz` Web service of IRIS
+        (http://www.iris.edu/ws/distaz/) - release 1.0.1 (2010).
 
         This method will calculate the great-circle angular distance, azimuth,
         and backazimuth between two geographic coordinate pairs. All results
@@ -1211,8 +1320,8 @@ class Client(object):
 
     def flinnengdahl(self, lat, lon, rtype="both"):
         """
-        Interface for `flinnengdahl` Web service of IRIS
-        (http://www.iris.edu/ws/flinnengdahl/).
+        Low-level interface for `flinnengdahl` Web service of IRIS
+        (http://www.iris.edu/ws/flinnengdahl/) - release 1.1 (2011-06-08).
 
         This method converts a latitude, longitude pair into either a
         `Flinn-Engdahl <http://en.wikipedia.org/wiki/Flinn-Engdahl_regions>`_
@@ -1262,8 +1371,8 @@ class Client(object):
                    noheader=False, traveltimeonly=False, rayparamonly=False,
                    mintimeonly=False):
         """
-        Interface for `traveltime` Web service of IRIS
-        (http://www.iris.edu/ws/traveltime/).
+        Low-level interface for `traveltime` Web service of IRIS
+        (http://www.iris.edu/ws/traveltime/) - release 1.1.1 (2012-05-15).
 
         This method will calculates travel-times for seismic phases using a 1-D
         spherical earth model.
@@ -1401,8 +1510,8 @@ class Client(object):
                  width=800, height=600, annotate=True, output='plot',
                  filename=None, **kwargs):
         """
-        Interface for `evalresp` Web service of IRIS
-        (http://www.iris.edu/ws/evalresp/).
+        Low-level interface for `evalresp` Web service of IRIS
+        (http://www.iris.edu/ws/evalresp/) - release 1.0.0 (2011-08-11).
 
         This method evaluates instrument response information stored at the
         IRIS DMC and outputs ASCII data or
@@ -1589,8 +1698,8 @@ class Client(object):
 
     def event(self, **kwargs):
         """
-        Interface for `event` Web service of IRIS
-        (http://www.iris.edu/ws/event/).
+        Low-level interface for `event` Web service of IRIS
+        (http://www.iris.edu/ws/event/) - release 1.2.1 (2012-02-29).
 
         This method returns contributed earthquake origin and magnitude
         estimates stored in the IRIS database. Selected information is returned
