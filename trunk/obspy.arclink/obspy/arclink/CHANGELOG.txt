@@ -1,0 +1,11 @@
+dev:
+ * requesting timespans (using 'starttime' and 'endtime' keywords) are
+   deprecated in Client.getPAZ() and Client.getMetadata() - use 'time' instead
+ * output format has changed for Client.getPAZ(..., time=dt)
+ * 'getCoordinates' and 'getPAZ' keywords are deprecated in
+   Client.getWaveform() - use 'metadata' instead
+ * Client.getWaveform(..., metadata=True) will return both keywords as well as
+   PAZ - inventory request is done only once per request -> huge performance
+   improvement compared to previous implementation
+ * traces requested via Client.getWaveform(..., metadata=True) covering
+   multiple instrumentations will be splitted and the correct PAZ are appended

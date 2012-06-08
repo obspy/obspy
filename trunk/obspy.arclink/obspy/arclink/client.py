@@ -9,10 +9,12 @@ ArcLink/WebDC client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from copy import deepcopy
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy.core import read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
+from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os
 import sys
@@ -334,9 +336,10 @@ class Client(object):
                 warnings.warn(msg % (dcid))
         return data
 
+    @deprecated_keywords({'getPAZ': 'metadata', 'getCoordinates': 'metadata'})
     def getWaveform(self, network, station, location, channel, starttime,
-                    endtime, format="MSEED", compressed=True, getPAZ=False,
-                    getCoordinates=False, route=True):
+                    endtime, format="MSEED", compressed=True, metadata=False,
+                    route=True):
         """
         Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
@@ -356,24 +359,16 @@ class Client(object):
         :param endtime: End date and time.
         :type format: ``'FSEED'`` or ``'MSEED'``, optional
         :param format: Output format. Either as full SEED (``'FSEED'``) or
-            Mini-SEED (``'MSEED'``) volume (default is an ``'MSEED'``).
-
-            .. note::
-                A format ``'XSEED'`` is documented, but not yet implemented in
-                ArcLink.
+            Mini-SEED (``'MSEED'``) volume. Defaults to ``'MSEED'``.
         :type compressed: bool, optional
-        :param compressed: Request compressed files from ArcLink server
-            (default is ``True``).
-        :type getPAZ: bool
-        :param getPAZ: Fetch PAZ information and append to
-            :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
-        :type getCoordinates: bool
-        :param getCoordinates: Fetch coordinate information and append to
-            :class:`~obspy.core.trace.Stats` of all fetched traces. This
-            considerably slows down the request.
+        :param compressed: Request compressed files from ArcLink server.
+            Defaults to ``True``.
+        :type metadata: bool, optional
+        :param metadata: Fetch PAZ and coordinate information and append to
+            :class:`~obspy.core.trace.Stats` of all fetched traces. Defaults
+            to ``False``.
         :type route: bool, optional
-        :param route: Enables ArcLink routing (default is ``True``).
+        :param route: Enables ArcLink routing. Defaults to ``True``.
         :return: ObsPy :class:`~obspy.core.stream.Stream` object.
 
         .. rubric:: Example
@@ -409,24 +404,38 @@ class Client(object):
             pass
         # trim stream
         stream.trim(starttime, endtime)
-        # fetching PAZ or coordinates: one call per channel
-        if getPAZ or getCoordinates:
+        # fetching PAZ and coordinates
+        if metadata:
+            # fetch metadata only once
             inv = self.getInventory(network=network, station=station,
                                     location=location, channel=channel,
                                     starttime=starttime, endtime=endtime,
                                     instruments=True, route=False)
-            id = '.'.join([network, station])
+            netsta = '.'.join([network, station])
+            coordinates = AttribDict()
+            for key in ['latitude', 'longitude', 'elevation']:
+                coordinates[key] = inv[netsta][key]
             for tr in stream:
-                if getPAZ:
-                    # HACK: returning first PAZ only for now
-                    if len(inv[tr.id]) > 1:
-                        msg = "Multiple PAZ found for %s. Applying first PAZ."
-                        warnings.warn(msg % (tr.id), UserWarning)
-                    tr.stats['paz'] = inv[tr.id][0].paz
-                if getCoordinates:
-                    tr.stats['coordinates'] = AttribDict()
-                    for key in ['latitude', 'longitude', 'elevation']:
-                        tr.stats['coordinates'][key] = inv[id][key]
+                # add coordinates
+                tr.stats['coordinates'] = coordinates
+                # add PAZ
+                entries = inv[tr.id]
+                if len(entries) > 1:
+                    # multiple entries found
+                    for entry in entries:
+                        # trim current trace to timespan of current entry
+                        temp = deepcopy(tr)
+                        temp.trim(entry.starttime,
+                                  entry.get('endtime', None))
+                        # append valid paz
+                        temp.stats['paz'] = entry.paz
+                        # add to end of stream
+                        stream.append(temp)
+                    # remove split trace
+                    stream.remove(tr)
+                else:
+                    # single entry found - apply direct
+                    tr.stats['paz'] = entries[0].paz
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,
@@ -684,10 +693,12 @@ class Client(object):
         result = self._fetch(rtype, rdata, route=False)
         return result
 
-    def getMetadata(self, network, station, location, channel, starttime,
-                    endtime, getPAZ=True, getCoordinates=True, route=True):
+    @deprecated_keywords({'getPAZ': None, 'getCoordinates': None})
+    def getMetadata(self, network, station, location, channel, starttime=None,
+                    endtime=None, time=None, route=True):
         """
-        Returns metadata (PAZ and Coordinates).
+        Returns poles, zeros, gain and sensitivity and station coordinates for
+        a single channel at a given time.
 
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -697,33 +708,71 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``.
         :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Date and time.
         :type route: bool, optional
         :param route: Enables ArcLink routing (default is ``True``).
         :return: Dictionary containing keys 'paz' and 'coordinates'.
+
+
+        .. rubric:: Example
+
+        >>> from obspy.arclink import Client
+        >>> from obspy.core import UTCDateTime
+        >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
+        >>> dt = UTCDateTime(2009, 1, 1)
+        >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', dt)
+        >>> data  # doctest: +NORMALIZE_WHITESPACE
+        {'paz': AttribDict({'poles': [(-0.037004+0.037016j),
+                                      (-0.037004-0.037016j), (-251.33+0j),
+                                      (-131.04-467.29j), (-131.04+467.29j)],
+                            'sensitivity': 2516778600.0, 'zeros': [0j, 0j],
+                            'name': 'LMU:STS-2/N/g=1500', 'gain': 60077000.0}),
+        'coordinates': AttribDict({'latitude': 49.9862, 'elevation': 635.0,
+                                   'longitude': 12.1083})}
         """
-        if not getPAZ and not getCoordinates:
-            return {}
+        # XXX: deprecation handling
+        if starttime and endtime:
+            # warn if old scheme
+            msg = "The 'starttime' and 'endtime' keywords will be " + \
+                "deprecated. Please use 'time' instead."
+            warnings.warn(msg, category=DeprecationWarning)
+        elif starttime and not endtime:
+            # use a single starttime as time keyword
+            time = starttime
+            endtime = time + 0.00001
+        elif not time:
+            # if not temporal keyword is given raise an exception
+            raise ValueError("keyword 'time' is required")
+        else:
+            # time is given
+            starttime = time
+            endtime = time + 0.000001
+        # check if single trace
+        id = '.'.join([network, station, location, channel])
+        if '*' in id:
+            msg = 'getMetadata supports only a single channel, use ' + \
+                  'getInventory instead'
+            raise ArcLinkException(msg)
+        # fetch inventory
         result = self.getInventory(network=network, station=station,
                                    location=location, channel=channel,
                                    starttime=starttime, endtime=endtime,
                                    instruments=True, route=route)
         data = {}
-        if getPAZ:
-            id = '.'.join([network, station, location, channel])
-            # HACK: returning first PAZ only for now
-            if len(result[id]) > 1:
-                msg = "Multiple PAZ found for %s. Applying first PAZ."
-                warnings.warn(msg % (id), UserWarning)
-            data['paz'] = result[id][0].paz
-        if getCoordinates:
-            id = '.'.join([network, station])
-            data['coordinates'] = AttribDict()
-            for key in ['latitude', 'longitude', 'elevation']:
-                data['coordinates'][key] = result[id][key]
+        # paz
+        id = '.'.join([network, station, location, channel])
+        # HACK: returning first PAZ only for now - should happen only for a
+        # timespan and not a single time
+        if len(result[id]) > 1:
+            msg = "Multiple PAZ found for %s. Applying first PAZ."
+            warnings.warn(msg % (id), UserWarning)
+        data['paz'] = result[id][0].paz
+        # coordinates
+        id = '.'.join([network, station])
+        data['coordinates'] = AttribDict()
+        for key in ['latitude', 'longitude', 'elevation']:
+            data['coordinates'][key] = result[id][key]
         return data
 
     def __parsePAZ(self, xml_doc, xml_ns):
@@ -776,9 +825,11 @@ class Client(object):
             raise ArcLinkException('Could not parse all poles')
         return paz
 
-    def getPAZ(self, network, station, location, channel, starttime, endtime):
+    def getPAZ(self, network, station, location, channel, starttime=None,
+               endtime=None, time=None, route=False):
         """
-        Returns poles, zeros, gain and sensitivity of a single channel.
+        Returns poles, zeros, gain and sensitivity for a single channel at
+        a given time.
 
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -788,10 +839,10 @@ class Client(object):
         :param location: Location code, e.g. ``'01'``.
         :type channel: str
         :param channel: Channel code, e.g. ``'EHE'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
+        :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param time: Date and time.
+        :type route: bool, optional
+        :param route: Enables ArcLink routing. Defaults to ``True``.
         :return: Dictionary containing PAZ information.
 
         .. rubric:: Example
@@ -799,33 +850,58 @@ class Client(object):
         >>> from obspy.arclink import Client
         >>> from obspy.core import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
-        >>> t = UTCDateTime(2009, 1, 1)
-        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
-        >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
-        {'STS-2/N/g=1500': {
-            'poles': [(-0.037004000000000002+0.037016j),
-                      (-0.037004000000000002-0.037016j),
-                      (-251.33000000000001+0j),
-                      (-131.03999999999999-467.29000000000002j),
-                      (-131.03999999999999+467.29000000000002j)],
-            'sensitivity': 2516778600.0,
-            'zeros': [0j, 0j],
-            'gain': 60077000.0}}
+        >>> dt = UTCDateTime(2009, 1, 1)
+        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
+        >>> paz  # doctest: +NORMALIZE_WHITESPACE
+        AttribDict({'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
+                              (-251.33+0j), (-131.04-467.29j),
+                              (-131.04+467.29j)],
+                    'sensitivity': 2516778600.0,
+                    'zeros': [0j, 0j],
+                    'name': 'LMU:STS-2/N/g=1500',
+                    'gain': 60077000.0})
         """
-        result = self.getInventory(network=network, station=station,
-                                   location=location, channel=channel,
-                                   starttime=starttime, endtime=endtime,
-                                   instruments=True)
+        # XXX: deprecation handling
+        if starttime and endtime:
+            # warn if old scheme
+            msg = "The 'starttime' and 'endtime' keywords will be " + \
+                "deprecated. Please use 'time' instead. Be aware that the" + \
+                "result of getPAZ() will differ using the 'time' keyword."
+            warnings.warn(msg, category=DeprecationWarning)
+        elif starttime and not endtime:
+            # use a single starttime as time keyword
+            time = starttime
+            endtime = time + 0.00001
+        elif not time:
+            # if not temporal keyword is given raise an exception
+            raise ValueError("keyword 'time' is required")
+        else:
+            # time is given
+            starttime = time
+            endtime = time + 0.000001
+        # check if single trace
         id = '.'.join([network, station, location, channel])
         if '*' in id:
             msg = 'getPAZ supports only a single channel, use getInventory' + \
                   ' instead'
             raise ArcLinkException(msg)
+        # fetch inventory
+        result = self.getInventory(network=network, station=station,
+                                   location=location, channel=channel,
+                                   starttime=starttime, endtime=endtime,
+                                   instruments=True, route=route)
         try:
-            # XXX: why dict of instruments? Only one instrument is returned!
-            # HACK: returning first PAZ only for now
-            paz = result[id][0].paz
-            return {paz.name: paz}
+            if time is None:
+                # old deprecated schema (ARGS!!!!)
+                # HACK: returning first PAZ only for now
+                if len(result[id]) > 1:
+                    msg = "Multiple PAZ found for %s. Applying first PAZ."
+                    warnings.warn(msg % (id), UserWarning)
+                paz = result[id][0].paz
+                return {paz.name: paz}
+            else:
+                # new schema
+                return result[id][0].paz
         except:
             msg = 'Could not find PAZ for channel %s' % id
             raise ArcLinkException(msg)
@@ -878,8 +954,7 @@ class Client(object):
                      instruments=False, route=True, sensortype='',
                      min_latitude=None, max_latitude=None,
                      min_longitude=None, max_longitude=None,
-                     restricted=None, permanent=None,
-                     modified_after=None):
+                     restricted=None, permanent=None, modified_after=None):
         """
         Returns information about the available networks and stations in that
         particular space/time region.

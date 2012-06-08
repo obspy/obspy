@@ -261,7 +261,7 @@ class ClientTestCase(unittest.TestCase):
         # example 1
         t = UTCDateTime("2010-08-01T12:00:00")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60,
-                                getPAZ=True, getCoordinates=True)
+                                metadata=True)
         results = {
             'network': 'BW',
             '_format': 'MSEED',
@@ -293,7 +293,7 @@ class ClientTestCase(unittest.TestCase):
         # example 2
         client = Client()
         st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60,
-                                getPAZ=True, getCoordinates=True)
+                                metadata=True)
         results = {
             'network': 'CZ',
             '_format': 'MSEED',
@@ -516,38 +516,33 @@ class ClientTestCase(unittest.TestCase):
         # reference values
         zeros = [0j, 0j]
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j,
-                 - 2.513300e+02 + 0.000000e+00j, -1.310400e+02 - 4.672900e+02j,
-                 - 1.310400e+02 + 4.672900e+02j]
+                 -2.513300e+02 + 0.000000e+00j, -1.310400e+02 - 4.672900e+02j,
+                 -1.310400e+02 + 4.672900e+02j]
         gain = 6.0077e+07
         sensitivity = 2.5168e+09
         # initialize client
         client = Client('erde.geophysik.uni-muenchen.de', 18001)
         # fetch poles and zeros
-        start = UTCDateTime(2009, 1, 1)
-        end = start + 1
-        pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', start, end)
-        # compare first instrument
-        paz = pazs.values()[0]
-        self.assertEqual(gain, paz['gain'])
-        self.assertEqual(poles, paz['poles'])
-        self.assertEqual(zeros, paz['zeros'])
-        # can only compare four decimal places
-        self.assertAlmostEqual(sensitivity / 1e9,
-                               paz['sensitivity'] / 1e9, places=4)
+        dt = UTCDateTime(2009, 1, 1)
+        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
+        # compare instrument
+        self.assertEqual(gain, paz.gain)
+        self.assertEqual(poles, paz.poles)
+        self.assertEqual(zeros, paz.zeros)
+        self.assertAlmostEqual(sensitivity / 1e9, paz.sensitivity / 1e9, 4)
         # PAZ over multiple channels should raise an exception
         self.assertRaises(ArcLinkException, client.getPAZ, 'BW', 'MANZ', '',
-                          'EH*', start, end)
+                          'EH*', dt)
 
     def test_getPAZ2(self):
         """
         Test for the Client.getPAZ function for erde.geophysik.uni-muenchen.de.
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
-        t = UTCDateTime(2009, 1, 1)
+        dt = UTCDateTime(2009, 1, 1)
         client = Client("erde.geophysik.uni-muenchen.de", 18001)
         # fetch poles and zeros
-        pazs = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
-        paz = pazs['LMU:STS-2/N/g=1500']
+        paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
         self.assertEqual(len(poles), 2)
         self.assertEqual(poles, paz['poles'][:2])
 
@@ -609,25 +604,13 @@ class ClientTestCase(unittest.TestCase):
         t = UTCDateTime("2009-08-20 04:03:12")
         # 1
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                getPAZ=True, getCoordinates=False)
+                                metadata=False)
         self.assertEqual(len(st), 3)
-        self.assertTrue('paz' in st[0].stats)
+        self.assertTrue('paz' not in st[0].stats)
         self.assertTrue('coordinates' not in st[0].stats)
         # 2
         st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                getPAZ=False, getCoordinates=True)
-        self.assertEqual(len(st), 3)
-        self.assertTrue('paz' not in st[0].stats)
-        self.assertTrue('coordinates' in st[0].stats)
-        # 3
-        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                getPAZ=False, getCoordinates=False)
-        self.assertEqual(len(st), 3)
-        self.assertTrue('paz' not in st[0].stats)
-        self.assertTrue('coordinates' not in st[0].stats)
-        # 4
-        st = client.getWaveform("BW", "MANZ", "", "EH*", t - 3, t + 15,
-                                getPAZ=True, getCoordinates=True)
+                                metadata=True)
         self.assertEqual(len(st), 3)
         self.assertTrue('paz' in st[0].stats)
         self.assertTrue('coordinates' in st[0].stats)
@@ -639,7 +622,7 @@ class ClientTestCase(unittest.TestCase):
         dt = UTCDateTime("20120529070000")
         client = Client()
         st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
-                                getPAZ=True, getCoordinates=True)
+                                metadata=True)
         for tr in st:
             self.assertTrue('paz' in tr.stats)
             self.assertTrue('coordinates' in tr.stats)
@@ -680,17 +663,24 @@ class ClientTestCase(unittest.TestCase):
         # one instrument in given time span
         dt = UTCDateTime("2003-01-09T00:00:00")
         st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                               getPAZ=True, getCoordinates=True)
+                                metadata=True)
+        self.assertEquals(len(st), 1)
         self.assertEquals(st[0].stats.paz.sensitivity, 596224500.0)
         # two instruments in given time span
         dt = UTCDateTime("2003-01-09T23:59:00")
         st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 120,
-                                getPAZ=True, getCoordinates=True)
-        self.assertEquals(st[0].stats.paz.sensitivity, 588000000.0)
+                                metadata=True)
+        # results into two traces
+        self.assertEquals(len(st), 2)
+        # with different PAZ
+        st.sort()
+        self.assertEquals(st[0].stats.paz.sensitivity, 596224500.0)
+        self.assertEquals(st[1].stats.paz.sensitivity, 588000000.0)
         # one instrument in given time span
         dt = UTCDateTime("2003-01-10T01:00:00")
         st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
-                                getPAZ=True, getCoordinates=True)
+                                metadata=True)
+        self.assertEquals(len(st), 1)
         self.assertEquals(st[0].stats.paz.sensitivity, 588000000.0)
 
 
