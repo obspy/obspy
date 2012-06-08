@@ -50,14 +50,19 @@ def deprecated_keywords(keywords):
     def fdec(func):
         fname = func.func_name
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
+        msg2 = "Deprecated keyword %s in %s() call - ignoring."
 
         @functools.wraps(func)
         def echo_func(*args, **kwargs):
             for kw in kwargs.keys():
                 if kw in keywords:
                     nkw = keywords[kw]
-                    warnings.warn(msg % (kw, fname, nkw),
-                                  category=DeprecationWarning)
+                    if nkw is None:
+                        warnings.warn(msg2 % (kw, fname),
+                                      category=DeprecationWarning)
+                    else:
+                        warnings.warn(msg % (kw, fname, nkw),
+                                      category=DeprecationWarning)
                     kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
