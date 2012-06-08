@@ -91,7 +91,7 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
-    def _fetch(self, url, data=None, headers={}, **params):
+    def _fetch(self, url, data=None, headers={}, param_list=[], **params):
         """
         Send a HTTP request via urllib2.
 
@@ -105,8 +105,13 @@ class Client(object):
         headers['User-Agent'] = self.user_agent
         # replace special characters
         remoteaddr = self.base_url + url
+        options = '&'.join(param_list)
         if params:
-            remoteaddr += '?' + urllib.urlencode(params)
+            if options:
+                options += '&'
+            options += urllib.urlencode(params)
+        if options:
+            remoteaddr = "%s?%s" % (remoteaddr, options)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
@@ -524,6 +529,196 @@ class Client(object):
             return readEvents(StringIO.StringIO(data), 'QUAKEML')
         return data
 
+    def timeseries(self, network, station, location, channel,
+                   starttime, endtime, filter=[], filename=None,
+                   output='miniseed', **kwargs):
+        """
+        Low-level interface for `timeseries` Web service of IRIS
+        (http://www.iris.edu/ws/timeseries/)- release 1.3.5 (2012-06-07).
+
+        This method fetches segments of seismic data and returns data formatted
+        in either MiniSEED, ASCII or SAC. It can optionally filter the data.
+
+        **Channel and temporal constraints (required)**
+
+        The four SCNL parameters (Station - Channel - Network - Location) are
+        used to determine the channel of interest, and are all required.
+        Wildcards are not accepted.
+
+        :type network: str
+        :param network: Network code, e.g. ``'IU'``.
+        :type station: str
+        :param station: Station code, e.g. ``'ANMO'``.
+        :type location: str
+        :param location: Location code, e.g. ``'00'``
+        :type channel: str
+        :param channel: Channel code, e.g. ``'BHZ'``.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
+
+        **Filter Options**
+
+        The following parameters act as filters upon the timeseries.
+
+        :type filter: list of str, optional
+        :param filter: Filter list.  List order matters because each filter
+            operation is performed in the order given. For example
+            ``filter=["demean", "lp=2.0"]`` will demean and then apply a
+            low-pass filter, while ``filter=["lp=2.0", "demean"]`` will apply
+            the low-pass filter first, and then demean.
+
+            ``"taper=WIDTH,TYPE"``
+                Apply a time domain symmetric tapering function to the
+                timeseries data. The width is specified as a fraction of the
+                trace length from 0 to 0.5. The window types HANNING (default),
+                HAMMING, or COSINE may be optionally followed, e.g.
+                ``"taper=0.25"`` or ``"taper=0.5,COSINE"``.
+            ``"envelope=true"``
+                Calculate the envelope of the time series. This calculation
+                uses a Hilbert transform approximated by a time domain filter.
+            ``"lp=FREQ"``
+                Low-pass filter the time-series using an IIR 4th order filter,
+                using this value (in Hertz) as the cutoff, e.g. ``"lp=1.0"``.
+            ``"hp=FREQ"``
+                High-pass filter the time-series using an IIR 4th order filter,
+                using this value (in Hertz) as the cutoff, e.g. ``"hp=3.0"``.
+            ``"bp=FREQ1,FREQ2"``
+                Band pass frequencies, in Hz, e.g. ``"bp=0.1,1.0"``.
+            ``"demean"``
+                Remove mean value from data.
+            ``"scale"``
+                Scale data samples by specified factor, e.g. ``"scale=2.0"``
+                If ``"scale=AUTO"``, the data will be scaled by the stage-zero
+                gain. Cannot specify both ``scale`` and ``divscale``.
+                Cannot specify both ``correct`` and ``scale=AUTO``.
+            ``"divscale"``
+                Scale data samples by the inverse of the specified factor, e.g
+                ``"divscale=2.0"``. You cannot specify both ``scale`` and
+                ``divscale``.
+            ``"correct"``
+                Apply instrument correction to convert to earth units. Uses
+                either deconvolution or polynomial response correction. Cannot
+                specify both ``correct`` and ``scale=AUTO``. Correction
+                on > 10^7 samples will result in an error. At a sample rate of
+                20 Hz, 10^7 samples is approximately 5.8 days.
+            ``"freqlimits=FREQ1,FREQ2,FREQ3,FREQ4"``
+                Specify an envelope for a spectrum taper for deconvolution,
+                e.g. ``"freqlimits=0.0033,0.004,0.05,0.06"``. Frequencies are
+                specified in Hertz. This cosine taper scales the spectrum from
+                0 to 1 between FREQ1 and FREQ2 and from 1 to 0 between FREQ3
+                and FREQ4. Can only be used with the correct option. Cannot be
+                used in combination with the ``autolimits`` option.
+            ``"autolimits=X,Y"``
+                Automatically determine frequency limits for deconvolution,
+                e.g. ``"autolimits=3.0,3.0"``. A pass band is determined for
+                all frequencies with the lower and upper corner cutoffs defined
+                in terms of dB down from the maximum amplitude. This algorithm
+                is designed to work with flat responses, i.e. a response in
+                velocity for an instrument which is flat to velocity. Other
+                combinations will likely result in unsatisfactory results.
+                Cannot be used in combination with the ``freqlimits`` option.
+            ``"units=UNIT"``
+                Specify output units. Can be DIS, VEL, ACC or DEF, where DEF
+                results in no unit conversion, e.g. ``"units=VEL"``. Option
+                ``units`` can only be used with ``correct``.
+            ``"diff"``
+                Differentiate using 2 point (uncentered) method
+            ``"int"``
+                Integrate using trapezoidal (midpoint) method
+            ``"decimate=SAMPLERATE"``
+                Specify the sample-rate to decimate to, e.g.
+                ``"decimate=2.0"``. The sample-rate of the source divided by
+                the given sample-rate must be factorable by 2,3,4,7.
+
+        **Miscelleneous options**
+
+        :type filename: str, optional
+        :param filename: Name of a output file. If this parameter is given
+            nothing will be returned. Default is ``None``.
+        :type output: str, optional
+        :param output: Output format if parameter ``filename`` is used.
+
+            ``'ascii'``
+                Data format, 1 column (values)
+            ``'ascii2'``
+                ASCII data format, 2 columns (time, value)
+            ``'ascii'``
+                Same as ascii2
+            ``'audio'``
+                audio WAV file
+            ``'miniseed'``
+                IRIS miniSEED format
+            ``'plot'``
+                A simple plot of the timeseries
+            ``'saca'``
+                SAC, ASCII format
+            ``'sacbb'``
+                SAC, binary big-endian format
+            ``'sacbl'``
+                SAC, binary little-endian format
+
+        :rtype: :class:`~obspy.core.stream.Stream` or ``None``
+        :return: ObsPy Stream object if no ``filename`` is given.
+
+        .. rubric:: Example
+
+        >>> from obspy.iris import Client
+        >>> from obspy.core import UTCDateTime
+        >>> dt = UTCDateTime("2005-01-01T00:00:00")
+        >>> client = Client()
+        >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10)
+        >>> print(st[0].data)  # doctest: +ELLIPSIS
+        [  24   20   19   19   19   15   10    4   -4  -11  ...
+        >>> st = client.timeseries("IU", "ANMO", "00", "BHZ", dt, dt+10,
+        ...     filter=["correct", "demean", "lp=2.0"])
+        >>> print(st[0].data)  # doctest: +ELLIPSIS
+        [ -4.61027071e-07  -3.16557674e-07  -1.19702676e-07   ...
+        """
+        kwargs['network'] = str(network)
+        kwargs['station'] = str(station)
+        if location:
+            kwargs['location'] = str(location)[0:2]
+        else:
+            kwargs['location'] = '--'
+        kwargs['channel'] = str(channel)
+        # convert UTCDateTime to string for query
+        kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
+        kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
+        # output
+        if filename:
+            kwargs['output'] = output
+        else:
+            kwargs['output'] = 'miniseed'
+        # build up query
+        url = '/timeseries/query'
+        try:
+            data = self._fetch(url, param_list=filter, **kwargs)
+        except HTTPError, e:
+            msg = "No waveform data available (%s: %s)"
+            msg = msg % (e.__class__.__name__, e)
+            raise Exception(msg)
+        # write directly if filename is given
+        if filename:
+            return self._toFileOrData(filename, data, True)
+        # create temporary file for writing data
+        tf = NamedTemporaryFile()
+        tf.write(data)
+        # read stream using obspy.mseed
+        tf.seek(0)
+        try:
+            stream = read(tf.name, 'MSEED')
+        except:
+            stream = Stream()
+        tf.close()
+        # remove temporary file:
+        try:
+            os.remove(tf.name)
+        except:
+            pass
+        return stream
+
     def resp(self, network, station, location="*", channel="*",
              starttime=None, endtime=None, filename=None, **kwargs):
         """
@@ -546,15 +741,15 @@ class Client(object):
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
 
-        *Temporal constraints**
+        **Temporal constraints**
 
-    The following three parameters impose time constrants on the query. Time
-    may be requested through the use of either time OR the start and end times.
-    If no time is specified, then the current time is assumed.
+        The following three parameters impose time constrants on the query.
+        Time may be requested through the use of either time OR the start and
+        end times. If no time is specified, then the current time is assumed.
 
         :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param time: Find the response for the given time. Time cannot be used
-            with start, end, or duration parameters
+            with starttime or endtime parameters
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Start time, may be used in conjunction with endtime.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
@@ -1369,7 +1564,7 @@ class Client(object):
     def traveltime(self, model='iasp91', phases=DEFAULT_PHASES, evdepth=0.0,
                    distdeg=None, distkm=None, evloc=None, staloc=None,
                    noheader=False, traveltimeonly=False, rayparamonly=False,
-                   mintimeonly=False):
+                   mintimeonly=False, filename=None):
         """
         Low-level interface for `traveltime` Web service of IRIS
         (http://www.iris.edu/ws/traveltime/) - release 1.1.1 (2012-05-15).
@@ -1439,8 +1634,11 @@ class Client(object):
         :type mintimeonly: bool, optional
         :param mintimeonly: Returns only the first arrival of each phase for
             each distance. Defaults to ``False``.
-        :rtype: str
-        :return: ASCII travel time table.
+        :type filename: str, optional
+        :param filename: Name of a output file. If this parameter is given
+            nothing will be returned. Default is ``None``.
+        :rtype: str or ``None``
+        :return: ASCII travel time table if no ``filename`` is given.
 
         .. rubric:: Example
 
@@ -1457,8 +1655,6 @@ class Client(object):
             3.24    22.9   P         49.39    13.749     53.77    45.82   ...
             3.24    22.9   Pn        49.40    13.754     53.80    45.84   ...
         """
-        # build up query
-        url = '/traveltime/query'
         kwargs = {}
         kwargs['model'] = str(model)
         kwargs['phases'] = ','.join([str(p) for p in list(phases)])
@@ -1497,13 +1693,15 @@ class Client(object):
             kwargs['rayparamonly'] = 1
         elif mintimeonly:
             kwargs['mintimeonly'] = 1
+        # build up query
+        url = '/traveltime/query'
         try:
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        return data
+        return self._toFileOrData(filename, data)
 
     def evalresp(self, network, station, location, channel, time=UTCDateTime(),
                  minfreq=0.00001, maxfreq=None, nfreq=200, units='def',
@@ -1696,7 +1894,7 @@ class Client(object):
             else:
                 return self._toFileOrData(filename, data)
 
-    def event(self, **kwargs):
+    def event(self, filename=None, **kwargs):
         """
         Low-level interface for `event` Web service of IRIS
         (http://www.iris.edu/ws/event/) - release 1.2.1 (2012-02-29).
@@ -1811,6 +2009,20 @@ class Client(object):
             which contain the specified contributor text, i.e. ``"NEIC"`` will
             match ``"NEIC PDE-Q"``.
 
+        **Specifying an event using an IRIS ID number**
+
+        Individual events can be retrieved using ID numbers assigned by IRIS.
+        When these parameters are used, then only the ``includeallmagnitudes``
+        and ``preferredonly`` parameters are also allowed.
+
+        :type eventid: int, optional
+        :param eventid: Retrieve an event based on the unique IRIS event id.
+        :type originid: int, optional
+        :param originid: Retrieve an event based on the unique IRIS origin id.
+        :type magnitudeid: int, optional
+        :param magnitudeid: Retrieve an event based on the unique IRIS
+            magnitude id.
+
         **Miscellaneous parameters**
 
         These parameters affect how the search is conducted, and how the events
@@ -1841,20 +2053,11 @@ class Client(object):
         :param preferredonly: Include preferred estimates only. When catalog is
             selected, the result returned will include the preferred origin as
             specified by the catalog. Defaults to ``True``.
-
-        **Specifying an event using an IRIS ID number**
-
-        Individual events can be retrieved using ID numbers assigned by IRIS.
-        When these parameters are used, then only the ``includeallmagnitudes``
-        and ``preferredonly`` parameters are also allowed.
-
-        :type eventid: int, optional
-        :param eventid: Retrieve an event based on the unique IRIS event id.
-        :type originid: int, optional
-        :param originid: Retrieve an event based on the unique IRIS origin id.
-        :type magnitudeid: int, optional
-        :param magnitudeid: Retrieve an event based on the unique IRIS
-            magnitude id.
+        :type filename: str, optional
+        :param filename: Name of a output file. If this parameter is given
+            nothing will be returned. Default is ``None``.
+        :rtype:  str or ``None``
+        :return: QuakeML formated string if no ``filename`` is given.
 
         .. rubric:: Example
 
@@ -1901,10 +2104,10 @@ class Client(object):
         try:
             data = self._fetch(url, **kwargs)
         except HTTPError, e:
-            msg = "No event data available (%s: %s)"
+            msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
-        return data
+        return self._toFileOrData(filename, data)
 
 
 if __name__ == '__main__':

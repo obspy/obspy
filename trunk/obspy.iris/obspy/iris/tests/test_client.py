@@ -410,6 +410,27 @@ class ClientTestCase(unittest.TestCase):
         result = client.resp("IU", "ANMO", "*", "*", dt)
         self.assertTrue('B050F03     Station:     ANMO' in result)
 
+    def test_timeseries(self):
+        """
+        Tests timeseries Web service interface.
+
+        Examples are inspired by http://www.iris.edu/ws/timeseries/.
+        """
+        client = Client()
+        # 1
+        t1 = UTCDateTime("2005-001T00:00:00")
+        t2 = UTCDateTime("2005-001T00:01:00")
+        # no filter
+        st1 = client.timeseries("IU", "ANMO", "00", "BHZ", t1, t2)
+        # instrument corrected
+        st2 = client.timeseries("IU", "ANMO", "00", "BHZ", t1, t2,
+                                filter=["correct"])
+        # compare results
+        self.assertEquals(st1[0].stats.starttime, st2[0].stats.starttime)
+        self.assertEquals(st1[0].stats.endtime, st2[0].stats.endtime)
+        self.assertEquals(st1[0].data[0], 24)
+        self.assertAlmostEquals(st2[0].data[0], -2.4910707e-06)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

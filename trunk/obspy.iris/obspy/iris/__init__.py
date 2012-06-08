@@ -112,6 +112,9 @@ IRIS (http://www.iris.edu/ws/):
   used by SAC and other programs
 * :meth:`~obspy.iris.client.Client.station()` - provides access to station
   metadata in the IRIS DMC database
+* :meth:`~obspy.iris.client.Client.timeseries()` - fetches segments of seismic
+  data and returns data formatted in either MiniSEED, ASCII or SAC. It can
+  optionally filter the data.
 
 **Calculation Tools**
 
