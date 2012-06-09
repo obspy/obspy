@@ -1,6 +1,6 @@
 dev:
- * AttricDict may now be initialized with (key, value) kwarg pairs, e.g.
-   AttricDict(a=1, b=2).
+ * AttribDict may now be initialized with (key, value) kwarg pairs, e.g.
+   AttribDict(a=1, b=2).
  * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
  * Trace.__div__ (splits Trace into Stream containing num traces)
  * new obspy.core.util.types.Enum class
