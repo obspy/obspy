@@ -18,19 +18,19 @@ class SLClientTestCase(unittest.TestCase):
         slClient.initialize()
         slClient.run()
 
-    def test_time_window(self):
-        slClient = SLClient()
-        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
-        slClient.multiselect = ("GE_STU:BHZ")
-        # set a time window from 2 min in the past to 5 sec in the future
-        dt = UTCDateTime()
-        slClient.begin_time = (dt - 120.0).formatSeedLink()
-        slClient.end_time = (dt + 5.0).formatSeedLink()
-        print "SeedLink date-time range:", slClient.begin_time, " -> ",
-        print slClient.end_time
-        slClient.verbose = 2
-        slClient.initialize()
-        slClient.run()
+#    def test_time_window(self):
+#        slClient = SLClient()
+#        slClient.slconn.setSLAddress("geofon.gfz-potsdam.de:18000")
+#        slClient.multiselect = ("GE_STU:BHZ")
+#        # set a time window from 2 min in the past to 5 sec in the future
+#        dt = UTCDateTime()
+#        slClient.begin_time = (dt - 120.0).formatSeedLink()
+#        slClient.end_time = (dt + 5.0).formatSeedLink()
+#        print "SeedLink date-time range:", slClient.begin_time, " -> ",
+#        print slClient.end_time
+#        slClient.verbose = 2
+#        slClient.initialize()
+#        slClient.run()
 
 
 def suite():
