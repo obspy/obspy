@@ -722,7 +722,7 @@ class Client(object):
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> dt = UTCDateTime(2009, 1, 1)
         >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', dt)
-        >>> data  # doctest: +NORMALIZE_WHITESPACE
+        >>> data  # doctest: +NORMALIZE_WHITESPACE +SKIP
         {'paz': AttribDict({'poles': [(-0.037004+0.037016j),
                                       (-0.037004-0.037016j), (-251.33+0j),
                                       (-131.04-467.29j), (-131.04+467.29j)],

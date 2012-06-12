@@ -70,7 +70,7 @@ Basic Usage
         st.plot()  # doctest: +SKIP
 
 (2) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
-    and sensitivity of a single channel for at a given time.
+    and sensitivity of a single channel at a given time.
 
     >>> from obspy.core import UTCDateTime
     >>> from obspy.arclink.client import Client

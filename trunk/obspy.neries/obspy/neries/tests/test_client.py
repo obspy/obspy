@@ -46,7 +46,7 @@ class ClientTestCase(unittest.TestCase):
                                    max_magnitude=7, max_datetime="2005-01-01")
         expected = [{'author': u'EMSC', 'event_id': u'20001206_0000014',
                      'origin_id': 1441886, 'longitude': 54.843,
-                     'datetime': UTCDateTime('2000-12-06T17:11:03Z'),
+                     'datetime': UTCDateTime('2000-12-06T17:11:05Z'),
                      'depth':-11.4, 'magnitude': 6.7, 'magnitude_type': u'mb',
                      'latitude': 39.604},
                     {'author': u'EMSC', 'event_id': u'20010210_0000010',
@@ -62,17 +62,17 @@ class ClientTestCase(unittest.TestCase):
                                    max_datetime="2005-01-01")
         expected = [{'author': u'EMSC', 'event_id': u'19980110_0000006',
                      'origin_id': 1500183, 'longitude': 20.816,
-                     'datetime': UTCDateTime('1998-01-10T19:21:54Z'),
+                     'datetime': UTCDateTime('1998-01-10T19:21:55Z'),
                      'depth':-10.0, 'magnitude': 5.5, 'magnitude_type': u'mw',
                      'latitude': 37.243, 'flynn_region': u'IONIAN SEA'},
                     {'author': u'EMSC', 'event_id': u'19980128_0000006',
                      'origin_id': 1500249, 'longitude': 32.204,
-                     'datetime': UTCDateTime('1998-01-28T22:38:55Z'),
+                     'datetime': UTCDateTime('1998-01-28T22:38:57Z'),
                      'depth':-41.6, 'magnitude': 4.3, 'magnitude_type': u'mw',
                      'latitude': 34.429},
                     {'author': u'EMSC', 'event_id': u'19980213_0000004',
                      'origin_id': 1500135, 'longitude': 28.459,
-                     'datetime': UTCDateTime('1998-02-13T07:18:49Z'),
+                     'datetime': UTCDateTime('1998-02-13T07:18:50Z'),
                      'depth':-69.2, 'magnitude': 4.8, 'magnitude_type': u'mw',
                      'latitude': 36.284}]
         self.assertEquals(results, expected)
