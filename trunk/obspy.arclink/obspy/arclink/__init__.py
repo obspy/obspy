@@ -70,23 +70,20 @@ Basic Usage
         st.plot()  # doctest: +SKIP
 
 (2) :meth:`~obspy.arclink.client.Client.getPAZ()`: Requests poles, zeros, gain
-    and sensitivity of a single channel for a certain time span.
+    and sensitivity of a single channel for at a given time.
 
     >>> from obspy.core import UTCDateTime
     >>> from obspy.arclink.client import Client
     >>> client = Client(user='test@obspy.org')
-    >>> t = UTCDateTime(2009, 1, 1)
-    >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t + 1)
+    >>> dt = UTCDateTime(2009, 1, 1)
+    >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
     >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
-    {'STS-2/N/g=1500': {
-        'poles': [(-0.037004000000000002+0.037016j),
-                  (-0.037004000000000002-0.037016j),
-                  (-251.33000000000001+0j),
-                  (-131.03999999999999-467.29000000000002j),
-                  (-131.03999999999999+467.29000000000002j)],
-        'sensitivity': 2516778600.0,
-        'zeros': [0j, 0j],
-        'gain': 60077000.0}}
+    AttribDict({'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
+                          (-251.33+0j), (-131.04-467.29j), (-131.04+467.29j)],
+                'sensitivity': 2516778600.0,
+                'zeros': [0j, 0j],
+                'name': 'LMU:STS-2/N/g=1500',
+                'gain': 60077000.0})
 
 (3) :meth:`~obspy.arclink.client.Client.saveResponse()`: Writes a response
     information into a file.
