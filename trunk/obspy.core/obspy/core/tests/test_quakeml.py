@@ -335,6 +335,86 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
+    def test_focalmechanism(self):
+        """
+        Tests FocalMechanism object.
+        """
+        filename = os.path.join(self.path, 'quakeml_1.2_focalmechanism.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].focal_mechanisms), 2)
+        fm = catalog[0].focal_mechanisms[0]
+        # general
+        self.assertEquals(fm.resource_id,
+            ResourceIdentifier('smi:ISC/fmid=292309'))
+        self.assertEquals(fm.waveform_id.network_code, 'BW')
+        self.assertEquals(fm.waveform_id.station_code, 'FUR')
+        self.assertEquals(fm.waveform_id.resource_id,
+            ResourceIdentifier(resource_id="smi:ch.ethz.sed/waveform/201754"))
+        self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
+        self.assertEquals(fm.triggering_origin_id,
+            ResourceIdentifier('smi:originId=7680412'))
+        self.assertAlmostEquals(fm.azimuthal_gap, 0.123)
+        self.assertEquals(fm.station_polarity_count, 987)
+        self.assertAlmostEquals(fm.misfit, 1.234)
+        self.assertAlmostEquals(fm.station_distribution_ratio, 2.345)
+        self.assertEquals(fm.method_id,
+            ResourceIdentifier('smi:ISC/methodID=Best_double_couple'))
+        # comments
+        self.assertEquals(len(fm.comments), 2)
+        c = fm.comments
+        self.assertEquals(c[0].text, 'Relocated after re-evaluation')
+        self.assertEquals(c[0].resource_id, None)
+        self.assertEquals(c[0].creation_info.agency_id, 'MUH')
+        self.assertEquals(c[1].text, 'Another MUH')
+        self.assertEquals(c[1].resource_id,
+            ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
+        self.assertEquals(c[1].creation_info, None)
+        # creation info
+        self.assertEquals(fm.creation_info.author, "Erika Mustermann")
+        self.assertEquals(fm.creation_info.agency_id, "MUH")
+        self.assertEquals(fm.creation_info.author_uri,
+            ResourceIdentifier("smi:smi-registry/organization/MUH"))
+        self.assertEquals(fm.creation_info.agency_uri,
+            ResourceIdentifier("smi:smi-registry/organization/MUH"))
+        self.assertEquals(fm.creation_info.creation_time,
+            UTCDateTime("2012-04-04T16:40:50+00:00"))
+        self.assertEquals(fm.creation_info.version, "1.0.1")
+        # nodalPlanes
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.strike, 346.0)
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.dip, 57.0)
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_1.rake, 75.0)
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.strike, 193.0)
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.dip, 36.0)
+        self.assertAlmostEqual(fm.nodal_planes.nodal_plane_2.rake, 112.0)
+        self.assertEquals(fm.nodal_planes.preferred_plane, 2)
+        # principalAxes
+        self.assertAlmostEqual(fm.principal_axes.t_axis.azimuth, 216.0)
+        self.assertAlmostEqual(fm.principal_axes.t_axis.plunge, 73.0)
+        self.assertAlmostEqual(fm.principal_axes.t_axis.length, 1.050e+18)
+        self.assertAlmostEqual(fm.principal_axes.p_axis.azimuth, 86.0)
+        self.assertAlmostEqual(fm.principal_axes.p_axis.plunge, 10.0)
+        self.assertAlmostEqual(fm.principal_axes.p_axis.length, -1.180e+18)
+        self.assertEquals(fm.principal_axes.n_axis.azimuth, None)
+        self.assertEquals(fm.principal_axes.n_axis.plunge, None)
+        self.assertEquals(fm.principal_axes.n_axis.length, None)
+        # momentTensor
+        mt = fm.moment_tensor
+        self.assertEquals(mt.derived_origin_id,
+            ResourceIdentifier('smi:ISC/origid=13145006'))
+        self.assertAlmostEqual(mt.scalar_moment, 1.100e+18)
+        self.assertAlmostEqual(mt.tensor.m_rr, 9.300e+17)
+        self.assertAlmostEqual(mt.tensor.m_tt, 1.700e+17)
+        self.assertAlmostEqual(mt.tensor.m_pp, -1.100e+18)
+        self.assertAlmostEqual(mt.tensor.m_rt, -2.200e+17)
+        self.assertAlmostEqual(mt.tensor.m_rp, 4.000e+17)
+        self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
+        self.assertAlmostEqual(mt.clvd, 0.22)
+#        # exporting back to XML should result in the same document
+#        original = open(filename, "rt").read()
+#        processed = Pickler().dumps(catalog)
+#        self._compareStrings(original, processed)
+
 #    def test_writeQuakeML(self):
 #        """
 #        Tests writing a QuakeML document.

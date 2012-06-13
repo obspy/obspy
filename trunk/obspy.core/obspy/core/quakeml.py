@@ -19,7 +19,8 @@ by a distributed team in a transparent collaborative manner.
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    QuantityError, Arrival
+    QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
+    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
@@ -256,7 +257,6 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Arrival object.
 
-        :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.Arrival`
         """
@@ -290,7 +290,6 @@ class Unpickler(object):
         """
         Converts an etree.Element into a Pick object.
 
-        :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.Pick`
         """
@@ -320,7 +319,6 @@ class Unpickler(object):
         """
         Converts an etree.Element into an Origin object.
 
-        :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.Origin`
 
@@ -365,7 +363,6 @@ class Unpickler(object):
         """
         Converts an etree.Element into a Magnitude object.
 
-        :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.Magnitude`
 
@@ -399,7 +396,6 @@ class Unpickler(object):
         """
         Converts an etree.Element into a StationMagnitude object.
 
-        :type parser: :class:`~obspy.core.util.xmlwrapper.XMLParser`
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.StationMagnitude`
 
@@ -424,6 +420,226 @@ class Unpickler(object):
         obj.amplitude_id = self._xpath2obj('amplitudeID', element)
         obj.method_id = self._xpath2obj('methodID', element)
         obj.waveform_id = self._waveform_id(element)
+        obj.creation_info = self._creation_info(element)
+        obj.comments = self._comments(element)
+        return obj
+
+    def _axis(self, element, name):
+        """
+        Converts an etree.Element into an Axis object.
+
+        :type element: etree.Element
+        :type name: tag name of axis
+        :rtype: :class:`~obspy.core.event.Axis`
+        """
+        obj = Axis()
+        try:
+            sub_el = self._xpath(name, element)[0]
+        except:
+            return obj
+        # required parameter
+        obj.azimuth, obj.azimuth_errors = self._float_value(sub_el, 'azimuth')
+        obj.plunge, obj.plunge_errors = self._float_value(sub_el, 'plunge')
+        obj.length, obj.length_errors = self._float_value(sub_el, 'length')
+        return obj
+
+    def _principal_axes(self, element):
+        """
+        Converts an etree.Element into an PrincipalAxes object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.PrincipalAxes`
+        """
+        obj = PrincipalAxes()
+        try:
+            sub_el = self._xpath('principalAxes', element)[0]
+        except:
+            return obj
+        # required parameter
+        obj.t_axis = self._axis(sub_el, 'tAxis')
+        obj.p_axis = self._axis(sub_el, 'pAxis')
+        # optional parameter
+        obj.n_axis = self._axis(sub_el, 'nAxis')
+        return obj
+
+    def _nodal_plane(self, element, name):
+        """
+        Converts an etree.Element into an NodalPlane object.
+
+        :type element: etree.Element
+        :type name: tag name of sub nodal plane
+        :rtype: :class:`~obspy.core.event.NodalPlane`
+        """
+        obj = NodalPlane()
+        try:
+            sub_el = self._xpath(name, element)[0]
+        except:
+            return obj
+        # required parameter
+        obj.strike, obj.strike_errors = self._float_value(sub_el, 'strike')
+        obj.dip, obj.dip_errors = self._float_value(sub_el, 'dip')
+        obj.rake, obj.rake_errors = self._float_value(sub_el, 'rake')
+        return obj
+
+    def _nodal_planes(self, element):
+        """
+        Converts an etree.Element into an NodalPlanes object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.NodalPlanes`
+        """
+        obj = NodalPlanes()
+        try:
+            sub_el = self._xpath('nodalPlanes', element)[0]
+        except:
+            return obj
+        # optional parameter
+        obj.nodal_plane_1 = self._nodal_plane(sub_el, 'nodalPlane1')
+        obj.nodal_plane_2 = self._nodal_plane(sub_el, 'nodalPlane2')
+        # optional attribute
+        try:
+            obj.preferred_plane = int(sub_el.get('preferredPlane'))
+        except:
+            obj.preferred_plane = None
+        return obj
+
+    def _source_time_function(self, element):
+        """
+        Converts an etree.Element into an SourceTimeFunction object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.SourceTimeFunction`
+        """
+        obj = SourceTimeFunction()
+        try:
+            sub_el = self._xpath('sourceTimeFunction', element)[0]
+        except:
+            return obj
+        # required parameters
+        obj.type = self._xpath2obj('type', sub_el)
+        obj.duration = self._xpath2obj('duration', sub_el, float)
+        # optional parameter
+        obj.rise_time = self._xpath2obj('riseTime', sub_el, float)
+        obj.decay_time = self._xpath2obj('decayTime', sub_el, float)
+        return obj
+
+    def _tensor(self, element):
+        """
+        Converts an etree.Element into an Tensor object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.Tensor`
+        """
+        obj = Tensor()
+        try:
+            sub_el = self._xpath('tensor', element)[0]
+        except:
+            return obj
+        # required parameters
+        obj.m_rr, obj.m_rr_errors = self._float_value(sub_el, 'Mrr')
+        obj.m_tt, obj.m_tt_errors = self._float_value(sub_el, 'Mtt')
+        obj.m_pp, obj.m_pp_errors = self._float_value(sub_el, 'Mpp')
+        obj.m_rt, obj.m_rt_errors = self._float_value(sub_el, 'Mrt')
+        obj.m_rp, obj.m_rp_errors = self._float_value(sub_el, 'Mrp')
+        obj.m_tp, obj.m_tp_errors = self._float_value(sub_el, 'Mtp')
+        return obj
+
+    def _data_used(self, element):
+        """
+        Converts an etree.Element into an DataUsed object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.DataUsed`
+        """
+        obj = DataUsed()
+        try:
+            sub_el = self._xpath('dataUsed', element)[0]
+        except:
+            return obj
+        # required parameters
+        obj.wave_type = self._xpath2obj('waveType', sub_el)
+        # optional parameter
+        obj.station_count = self._xpath2obj('stationCount', sub_el, int)
+        obj.component_count = self._xpath2obj('componentCount', sub_el, int)
+        obj.shortest_period = self._xpath2obj('shortestPeriod', sub_el, float)
+        obj.longest_period = self._xpath2obj('longestPeriod', sub_el, float)
+        return obj
+
+    def _moment_tensor(self, element):
+        """
+        Converts an etree.Element into an MomentTensor object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.MomentTensor`
+        """
+        obj = MomentTensor()
+        try:
+            mt_el = self._xpath('momentTensor', element)[0]
+        except:
+            return obj
+        # required parameters
+        obj.resource_id = mt_el.get('publicID')
+        obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
+        # optional parameter
+#        <xs:element name="dataUsed" type="bed:DataUsed"/>
+        obj.moment_magnitude_id = self._xpath2obj('momentMagnitudeID', mt_el)
+        obj.scalar_moment, obj.scalar_moment_errors = \
+            self._float_value(mt_el, 'scalarMoment')
+        obj.tensor = self._tensor(mt_el)
+        obj.variance = self._xpath2obj('variance', mt_el, float)
+        obj.variance_reduction = \
+            self._xpath2obj('varianceReduction', mt_el, float)
+        obj.double_couple = self._xpath2obj('doubleCouple', mt_el, float)
+        obj.clvd = self._xpath2obj('clvd', mt_el, float)
+        obj.iso = self._xpath2obj('iso', mt_el, float)
+        obj.greens_function_id = self._xpath2obj('greensFunctionID', mt_el)
+        obj.filter_id = self._xpath2obj('filterID', mt_el)
+        obj.source_time_function = self._source_time_function(mt_el)
+        obj.method_id = self._xpath2obj('MethodID', mt_el)
+        obj.category = self._xpath2obj('category', mt_el)
+        obj.inversion_type = self._xpath2obj('inversionType', mt_el)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', mt_el)
+        obj.evaluation_status = self._xpath2obj('evaluationStatus', mt_el)
+        obj.creation_info = self._creation_info(mt_el)
+        obj.comments = self._comments(mt_el)
+        return obj
+
+    def _focal_mechanism(self, element):
+        """
+        Converts an etree.Element into a FocalMechanism object.
+
+        :type element: etree.Element
+        :rtype: :class:`~obspy.core.event.FocalMechanism`
+
+        .. rubric:: Example
+
+        >>> from obspy.core.util import XMLParser
+        >>> XML = '<?xml version="1.0" encoding="UTF-8"?>'
+        >>> XML += '<focalMechanism><methodID>smi:ISC/methodID=' + \
+        ...        'Best_double_couple</methodID></focalMechanism>'
+        >>> parser = XMLParser(XML)
+        >>> unpickler = Unpickler(parser)
+        >>> fm = unpickler._focalmechanism(parser.xml_root)
+        >>> print(fm.method_id)
+        smi:ISC/methodID=Best_double_couple
+        """
+        obj = FocalMechanism()
+        # required parameter
+        obj.resource_id = element.get('publicID')
+        # optional parameter
+        obj.waveform_id = self._waveform_id(element)
+        obj.moment_tensor = self._moment_tensor(element)
+        obj.triggering_origin_id = \
+            self._xpath2obj('triggeringOriginID', element)
+        obj.nodal_planes = self._nodal_planes(element)
+        obj.principal_axes = self._principal_axes(element)
+        obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
+        obj.station_polarity_count = \
+            self._xpath2obj('stationPolarityCount', element, int)
+        obj.misfit = self._xpath2obj('misfit', element, float)
+        obj.station_distribution_ratio = \
+            self._xpath2obj('stationDistributionRatio', element, float)
+        obj.method_id = self._xpath2obj('methodID', element)
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         return obj
@@ -487,7 +703,12 @@ class Unpickler(object):
             for pick_el in self._xpath('pick', event_el):
                 pick = self._pick(pick_el)
                 event.picks.append(pick)
-            # add current event to catalog
+            # focal mechanisms
+            event.focal_mechanisms = []
+            for fm_el in self._xpath('focalMechanism', event_el):
+                fm = self._focal_mechanism(fm_el)
+                event.focal_mechanisms.append(fm)
+            # finally append newly created event to catalog
             catalog.append(event)
         return catalog
 

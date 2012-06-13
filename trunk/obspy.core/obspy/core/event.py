@@ -1970,7 +1970,8 @@ class MomentTensor(__MomentTensor):
 
 __FocalMechanism = _eventTypeClassFactory("__FocalMechanism",
     class_attributes=[("resource_id", ResourceIdentifier),
-                      ("triggering_origin_id", str),
+                      ("waveform_id", WaveformStreamID),
+                      ("triggering_origin_id", ResourceIdentifier),
                       ("nodal_planes", NodalPlanes),
                       ("principal_axes", PrincipalAxes),
                       ("azimuthal_gap", float),
@@ -1980,7 +1981,7 @@ __FocalMechanism = _eventTypeClassFactory("__FocalMechanism",
                       ("method_id", ResourceIdentifier),
                       ("moment_tensor", MomentTensor),
                       ("creation_info", CreationInfo)],
-    class_contains=['waveform_ids', 'comments'])
+    class_contains=['comments'])
 
 
 class FocalMechanism(__FocalMechanism):
@@ -2018,9 +2019,8 @@ class FocalMechanism(__FocalMechanism):
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Resource identifier of the method used for determination
         of the focal mechanism.
-    :type waveform_ids: list of :class:`~obspy.core.event.WaveformStreamID`,
-        optional
-    :param waveform_ids: Identifies the waveform streams.
+    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
+    :param waveform_id: Identifies the waveform stream.
     :type moment_tensor: :class:`~obspy.core.event.MomentTensor`, optional
     :param moment_tensor: Moment tensor description for this focal mechanism.
     :type comments: list of :class:`~obspy.core.event.Comment`, optional
