@@ -325,8 +325,10 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '<?xml version="1.0" encoding="UTF-8"?>'
-        >>> XML += '<origin><latitude><value>34.23</value></latitude></origin>'
+        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        ... <origin>
+        ...   <latitude><value>34.23</value></latitude>
+        ... </origin>'''
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> origin = unpickler._origin(parser.xml_root)
@@ -369,8 +371,10 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '<?xml version="1.0" encoding="UTF-8"?>'
-        >>> XML += '<magnitude><mag><value>3.2</value></mag></magnitude>'
+        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        ... <magnitude>
+        ...   <mag><value>3.2</value></mag>
+        ... </magnitude>'''
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> magnitude = unpickler._magnitude(parser.xml_root)
@@ -402,8 +406,10 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '<?xml version="1.0" encoding="UTF-8"?><stationMagnitude>'
-        >>> XML += '<mag><value>3.2</value></mag></stationMagnitude>'
+        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        ... <stationMagnitude>
+        ...   <mag><value>3.2</value></mag>
+        ... </stationMagnitude>'''
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
         >>> station_mag = unpickler._station_magnitude(parser.xml_root)
@@ -614,12 +620,13 @@ class Unpickler(object):
         .. rubric:: Example
 
         >>> from obspy.core.util import XMLParser
-        >>> XML = '<?xml version="1.0" encoding="UTF-8"?>'
-        >>> XML += '<focalMechanism><methodID>smi:ISC/methodID=' + \
-        ...        'Best_double_couple</methodID></focalMechanism>'
+        >>> XML = '''<?xml version="1.0" encoding="UTF-8"?>
+        ... <focalMechanism>
+        ...   <methodID>smi:ISC/methodID=Best_double_couple</methodID>
+        ... </focalMechanism>'''
         >>> parser = XMLParser(XML)
         >>> unpickler = Unpickler(parser)
-        >>> fm = unpickler._focalmechanism(parser.xml_root)
+        >>> fm = unpickler._focal_mechanism(parser.xml_root)
         >>> print(fm.method_id)
         smi:ISC/methodID=Best_double_couple
         """
