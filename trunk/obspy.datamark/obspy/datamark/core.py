@@ -90,13 +90,20 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
 
             for i in range((xlen/datawide)):
                 idata2 = 0
-                if datawide == 2:
+                
+                if datawide == 1:
+                    idata2 = np.fromstring(sdata[i : i+1],'b')[0]
+                elif datawide == 2:
                     idata2 = np.fromstring(sdata[2*i : 2* (i + 1)],'>h')[0]
+                elif datawide ==3:
+                    idata2 = np.fromstring(sdata[3*i : 3* (i + 1)]+' ','>i')[0] >> 8
+                elif datawide == 4:
+                    idata = np.fromstring(sdata[4*i : 4* (i + 1)], '>i')[0]
                 else:
-                    print "WOOOW, SORRY, I DID NOT TRANSLATE DATAWIDE != 2 ROUTINES"
+                    print "WOOOW, SORRY,DATAWIDE IS NOT 1, 2, 3 or 4"
+                    print datawide
                 idata22 += idata2
                 output[chanum].append(idata22)
-    
     fpin.close()
     
     traces = []
