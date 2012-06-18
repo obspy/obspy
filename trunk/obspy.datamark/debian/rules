@@ -1,0 +1,19 @@
+#!/usr/bin/make -f
+
+.PHONY: binary
+
+%:
+	dh $@ --buildsystem=python_distutils --with=python2
+
+binary:
+	dh binary
+
+override_dh_auto_install:
+	dh_auto_install #-- release
+	dh_numpy
+
+override_dh_installdeb:
+	find $(CURDIR)/debian -name LICENSE.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
+	find $(CURDIR)/debian -type d -name src | xargs rm -rf \; # in principle only needed for some modules
+	dh_installdeb
