@@ -1239,6 +1239,9 @@ class SacIO(object):
         for i, j in convert_dict.iteritems():
             value = self.GetHvalue(i)
             if isinstance(value, str):
+                null_term = value.find('\x00')
+                if null_term >= 0:
+                    value = value[:null_term]
                 value = value.strip()
                 if value == '-12345':
                     value = ''

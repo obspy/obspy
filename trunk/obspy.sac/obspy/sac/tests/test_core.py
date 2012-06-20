@@ -353,6 +353,17 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertAlmostEqual(st2[0].stats.sac.b, 0.000999)
 
+    def test_nullTerminatedStrings(self):
+        """
+        Test case for #374. Check that strings stop at the position
+        of null termination '\x00'
+        """
+        null_file = os.path.join(self.path, 'data', 'null_terminated.sac')
+        tr = read(null_file)[0]
+        self.assertEqual(tr.stats.station, 'PIN1')
+        self.assertEqual(tr.stats.network, 'GD')
+        self.assertEqual(tr.stats.channel, 'LYE')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
