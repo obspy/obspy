@@ -3,8 +3,7 @@
 """
 Datamark read support for ObsPy.
 
-This module provides read support for Datamark files
-(http://...).
+This module provides read support for Datamark files.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and
@@ -31,7 +30,6 @@ LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
 
 # package specific
-VERSION = open(os.path.join(LOCAL_PATH, 'obspy', 'datamark', 'VERSION.txt')).read()
 NAME = 'obspy.datamark'
 AUTHOR = 'The ObsPy Development Team & Thomas Lecocq'
 AUTHOR_EMAIL = 'devs@obspy.org'
@@ -43,7 +41,7 @@ ENTRY_POINTS = {
         'DATAMARK = obspy.datamark.core',
     ],
     'obspy.plugin.waveform.DATAMARK': [
-        # 'isFormat = obspy.datamark.core:isDATAMARK',
+        'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
         # 'writeFormat = obspy.datamark.core:writeDATAMARK',
     ],
@@ -57,6 +55,7 @@ def convert2to3():
     # create a new 2to3 directory for converted source files
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
+
     # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
@@ -108,7 +107,8 @@ def setupPackage():
         namespace_packages=['obspy'],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME, NAME),
+        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME,
+                                                                    NAME),
         include_package_data=True,
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,

@@ -8,6 +8,18 @@ from obspy.core import Trace, UTCDateTime, Stream
 import numpy as np
 
 
+def isDATAMARK(filename):  # @UnusedVariable
+    """
+    Checks whether a file is DATAFORMAT or not.
+
+    :type filename: string
+    :param filename: DATAFORMAT file to be checked.
+    :rtype: bool
+    :return: ``True`` if a DATAFORMAT file.
+    """
+    return True
+
+
 def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
     """
     Reads a DATAMARK file and returns a Stream object.
