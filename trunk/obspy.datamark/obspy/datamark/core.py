@@ -19,6 +19,12 @@ def isDATAMARK(filename):  # @UnusedVariable
     :rtype: bool
     :return: ``True`` if a DATAMARK file.
     """
+    # as long we don't have full format description we just try to read the
+    # file like readDATAMARK and check for errors
+    try:
+        readDATAMARK(filename)
+    except:
+        return False
     return True
 
 
