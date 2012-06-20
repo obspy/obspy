@@ -5,9 +5,9 @@ Thomas Lecocq based on others (refs will be included in the release version)
 """
 
 from __future__ import with_statement
-import warnings
 from obspy.core import Trace, UTCDateTime, Stream
 import numpy as np
+import warnings
 
 
 def isDATAMARK(filename):  # @UnusedVariable
@@ -109,7 +109,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     else:
                         msg = "DATAWIDE is %s " % datawide + \
                               "but only values of 1, 2, 3 or 4 are supported."
-                        warnings.warn(msg)
+                        raise NotImplementedError(msg)
                     idata22 += idata2
                     output[chanum].append(idata22)
 
