@@ -10,12 +10,12 @@ import numpy as np
 
 def isDATAMARK(filename):  # @UnusedVariable
     """
-    Checks whether a file is DATAFORMAT or not.
+    Checks whether a file is DATAMARK or not.
 
     :type filename: string
-    :param filename: DATAFORMAT file to be checked.
+    :param filename: DATAMARK file to be checked.
     :rtype: bool
-    :return: ``True`` if a DATAFORMAT file.
+    :return: ``True`` if a DATAMARK file.
     """
     return True
 
