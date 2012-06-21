@@ -4,7 +4,8 @@
   <eventParameters publicID="smi:ISC/bulletin">
     <event publicID="smi:ISC/evid=11713537">
       <focalMechanism publicID="smi:ISC/fmid=292309">
-        <waveformID networkCode="BW" stationCode="FUR">smi:ch.ethz.sed/waveform/201754</waveformID>
+        <waveformID networkCode="BW" stationCode="FUR"
+          >smi:ch.ethz.sed/waveform/201754</waveformID>
         <triggeringOriginID>smi:originId=7680412</triggeringOriginID>
         <azimuthalGap>0.123</azimuthalGap>
         <stationPolarityCount>987</stationPolarityCount>
@@ -43,7 +44,7 @@
               <value>73.0</value>
             </plunge>
             <length>
-              <value>1.050e+18</value>
+              <value>1.05e+18</value>
             </length>
           </tAxis>
           <pAxis>
@@ -54,7 +55,7 @@
               <value>10.0</value>
             </plunge>
             <length>
-              <value>-1.180e+18</value>
+              <value>-1.18e+18</value>
             </length>
           </pAxis>
         </principalAxes>
@@ -62,26 +63,26 @@
         <momentTensor>
           <derivedOriginID>smi:ISC/origid=13145006</derivedOriginID>
           <scalarMoment>
-            <value>1.100e+18</value>
+            <value>1.1e+18</value>
           </scalarMoment>
           <tensor>
             <Mrr>
-              <value>9.300e+17</value>
+              <value>9.3e+17</value>
             </Mrr>
             <Mtt>
-              <value>1.700e+17</value>
+              <value>1.7e+17</value>
             </Mtt>
             <Mpp>
-              <value>-1.100e+18</value>
+              <value>-1.1e+18</value>
             </Mpp>
             <Mrt>
-              <value>-2.200e+17</value>
+              <value>-2.2e+17</value>
             </Mrt>
             <Mrp>
-              <value>4.000e+17</value>
+              <value>4e+17</value>
             </Mrp>
             <Mtp>
-              <value>3.000e+16</value>
+              <value>3e+16</value>
             </Mtp>
           </tensor>
           <clvd>0.22</clvd>
@@ -108,85 +109,85 @@
         <nodalPlanes>
           <nodalPlane1>
             <strike>
-              <value>200.00</value>
+              <value>200.0</value>
             </strike>
             <dip>
-              <value>48.00</value>
+              <value>48.0</value>
             </dip>
             <rake>
-              <value>123.00</value>
+              <value>123.0</value>
             </rake>
           </nodalPlane1>
           <nodalPlane2>
             <strike>
-              <value>336.00</value>
+              <value>336.0</value>
             </strike>
             <dip>
-              <value>52.00</value>
+              <value>52.0</value>
             </dip>
             <rake>
-              <value>59.00</value>
+              <value>59.0</value>
             </rake>
           </nodalPlane2>
         </nodalPlanes>
         <principalAxes>
           <tAxis>
             <azimuth>
-              <value>182.0000</value>
+              <value>182.0</value>
             </azimuth>
             <plunge>
-              <value>66.0000</value>
+              <value>66.0</value>
             </plunge>
             <length>
-              <value>1.060e+18</value>
+              <value>1.06e+18</value>
             </length>
           </tAxis>
           <pAxis>
             <azimuth>
-              <value>87.0000</value>
+              <value>87.0</value>
             </azimuth>
             <plunge>
-              <value>2.0000</value>
+              <value>2.0</value>
             </plunge>
             <length>
-              <value>-1.220e+18</value>
+              <value>-1.22e+18</value>
             </length>
           </pAxis>
         </principalAxes>
         <methodID>smi:ISC/methodID=Best_double_couple</methodID>
-        <creationInfo>
-          <author>GCMT</author>
-        </creationInfo>
         <momentTensor>
           <derivedOriginID>smi:ISC/origid=13145007</derivedOriginID>
           <scalarMoment>
-            <value>1.100e+18</value>
+            <value>1.1e+18</value>
           </scalarMoment>
           <tensor>
             <Mrr>
-              <value>9.100e+17</value>
+              <value>9.1e+17</value>
             </Mrr>
             <Mtt>
-              <value>2.900e+17</value>
+              <value>2.9e+17</value>
             </Mtt>
             <Mpp>
-              <value>-1.210e+18</value>
+              <value>-1.21e+18</value>
             </Mpp>
             <Mrt>
-              <value>-3.400e+17</value>
+              <value>-3.4e+17</value>
             </Mrt>
             <Mrp>
-              <value>6.000e+16</value>
+              <value>6e+16</value>
             </Mrp>
             <Mtp>
-              <value>6.000e+16</value>
+              <value>6e+16</value>
             </Mtp>
           </tensor>
           <clvd>0.246</clvd>
           <sourceTimeFunction>
             <type>unknown</type>
-            <duration>4.80000</duration>
+            <duration>4.8</duration>
           </sourceTimeFunction>
+          <creationInfo>
+            <author>GCMT</author>
+          </creationInfo>
         </momentTensor>
       </focalMechanism>
     </event>

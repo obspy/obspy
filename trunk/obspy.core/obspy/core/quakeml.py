@@ -587,7 +587,7 @@ class Unpickler(object):
         obj.resource_id = mt_el.get('publicID')
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
         # optional parameter
-#        <xs:element name="dataUsed" type="bed:DataUsed"/>
+        obj.data_used = self._data_used(mt_el)
         obj.moment_magnitude_id = self._xpath2obj('momentMagnitudeID', mt_el)
         obj.scalar_moment, obj.scalar_moment_errors = \
             self._float_value(mt_el, 'scalarMoment')
@@ -635,11 +635,8 @@ class Unpickler(object):
         obj.resource_id = element.get('publicID')
         # optional parameter
         obj.waveform_id = self._waveform_id(element)
-        obj.moment_tensor = self._moment_tensor(element)
         obj.triggering_origin_id = \
             self._xpath2obj('triggeringOriginID', element)
-        obj.nodal_planes = self._nodal_planes(element)
-        obj.principal_axes = self._principal_axes(element)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
         obj.station_polarity_count = \
             self._xpath2obj('stationPolarityCount', element, int)
@@ -647,6 +644,9 @@ class Unpickler(object):
         obj.station_distribution_ratio = \
             self._xpath2obj('stationDistributionRatio', element, float)
         obj.method_id = self._xpath2obj('methodID', element)
+        obj.moment_tensor = self._moment_tensor(element)
+        obj.nodal_planes = self._nodal_planes(element)
+        obj.principal_axes = self._principal_axes(element)
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         return obj
@@ -781,7 +781,7 @@ class Pickler(object):
         self._str(error.confidence_level, subelement, 'confidenceLevel')
         element.append(subelement)
 
-    def _waveform_id(self, obj, element, required=True):  # @UnusedVariable
+    def _waveform_id(self, obj, element, required=False):
         attrib = {}
         if obj is None:
             return
@@ -795,7 +795,8 @@ class Pickler(object):
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
         subelement.text = self._id(obj.resource_id)
-        element.append(subelement)
+        if len(subelement.attrib) > 0 or required:
+            element.append(subelement)
 
     def _creation_info(self, creation_info, element):
         if creation_info is None:
@@ -1052,6 +1053,172 @@ class Pickler(object):
         self._creation_info(pick.creation_info, element)
         return element
 
+    def _nodal_planes(self, obj, element):
+        """
+        Converts a NodalPlanes into etree.Element object.
+
+        :type pick: :class:`~obspy.core.event.NodalPlanes`
+        :rtype: etree.Element
+        """
+        subelement = etree.Element('nodalPlanes')
+        # optional
+        if obj.nodal_plane_1:
+            el = etree.Element('nodalPlane1')
+            self._value(obj.nodal_plane_1.strike,
+                        obj.nodal_plane_1.strike_errors, el, 'strike')
+            self._value(obj.nodal_plane_1.dip,
+                        obj.nodal_plane_1.dip_errors, el, 'dip')
+            self._value(obj.nodal_plane_1.rake,
+                        obj.nodal_plane_1.rake_errors, el, 'rake')
+            subelement.append(el)
+        if obj.nodal_plane_2:
+            el = etree.Element('nodalPlane2')
+            self._value(obj.nodal_plane_2.strike,
+                        obj.nodal_plane_2.strike_errors, el, 'strike')
+            self._value(obj.nodal_plane_2.dip,
+                        obj.nodal_plane_2.dip_errors, el, 'dip')
+            self._value(obj.nodal_plane_2.rake,
+                        obj.nodal_plane_2.rake_errors, el, 'rake')
+            subelement.append(el)
+        if obj.preferred_plane:
+            subelement.attrib['preferredPlane'] = str(obj.preferred_plane)
+        # append only if at least one sub-element is set
+        if len(subelement) > 0:
+            element.append(subelement)
+
+    def _principal_axes(self, obj, element):
+        """
+        Converts a PrincipalAxes into etree.Element object.
+
+        :type pick: :class:`~obspy.core.event.PrincipalAxes`
+        :rtype: etree.Element
+        """
+        if obj is None:
+            return
+        subelement = etree.Element('principalAxes')
+        # tAxis
+        el = etree.Element('tAxis')
+        self._value(obj.t_axis.azimuth,
+                    obj.t_axis.azimuth_errors, el, 'azimuth')
+        self._value(obj.t_axis.plunge,
+                    obj.t_axis.plunge_errors, el, 'plunge')
+        self._value(obj.t_axis.length,
+                    obj.t_axis.length_errors, el, 'length')
+        subelement.append(el)
+        # pAxis
+        el = etree.Element('pAxis')
+        self._value(obj.p_axis.azimuth,
+                    obj.p_axis.azimuth_errors, el, 'azimuth')
+        self._value(obj.p_axis.plunge,
+                    obj.p_axis.plunge_errors, el, 'plunge')
+        self._value(obj.p_axis.length,
+                    obj.p_axis.length_errors, el, 'length')
+        subelement.append(el)
+        # nAxis (optional)
+        if obj.n_axis:
+            el = etree.Element('nAxis')
+            self._value(obj.n_axis.azimuth,
+                        obj.n_axis.azimuth_errors, el, 'azimuth')
+            self._value(obj.n_axis.plunge,
+                        obj.n_axis.plunge_errors, el, 'plunge')
+            self._value(obj.n_axis.length,
+                        obj.n_axis.length_errors, el, 'length')
+            subelement.append(el)
+        element.append(subelement)
+
+    def _moment_tensor(self, moment_tensor, element):
+        """
+        Converts a MomentTensor into etree.Element object.
+
+        :type pick: :class:`~obspy.core.event.MomentTensor`
+        :rtype: etree.Element
+        """
+        if moment_tensor is None:
+            return
+        mt_el = etree.Element('momentTensor')
+        if moment_tensor.resource_id:
+            mt_el.attrib['publicID'] = self._id(moment_tensor.resource_id)
+        # required parameters
+        self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
+        # optional parameter
+        # Data Used
+        if moment_tensor.data_used:
+            sub_el = etree.Element('dataUsed')
+            sub = moment_tensor.data_used
+            self._str(sub.wave_type, sub_el, 'waveType')
+            self._str(sub.station_count, sub_el, 'stationCount')
+            self._str(sub.component_count, sub_el, 'componentCount')
+            self._str(sub.shortest_period, sub_el, 'shortestPeriod')
+            self._str(sub.longest_period, sub_el, 'longestPeriod')
+            mt_el.append(sub_el)
+        self._str(moment_tensor.moment_magnitude_id, mt_el,
+            'momentMagnitudeID')
+        self._value(moment_tensor.scalar_moment,
+            moment_tensor.scalar_moment_errors, mt_el, 'scalarMoment')
+        # Tensor
+        if moment_tensor.tensor:
+            sub_el = etree.Element('tensor')
+            sub = moment_tensor.tensor
+            self._value(sub.m_rr, sub.m_rr_errors, sub_el, 'Mrr')
+            self._value(sub.m_tt, sub.m_tt_errors, sub_el, 'Mtt')
+            self._value(sub.m_pp, sub.m_pp_errors, sub_el, 'Mpp')
+            self._value(sub.m_rt, sub.m_rt_errors, sub_el, 'Mrt')
+            self._value(sub.m_rp, sub.m_rp_errors, sub_el, 'Mrp')
+            self._value(sub.m_tp, sub.m_tp_errors, sub_el, 'Mtp')
+            mt_el.append(sub_el)
+        self._str(moment_tensor.variance, mt_el, 'variance')
+        self._str(moment_tensor.variance_reduction, mt_el, 'varianceReduction')
+        self._str(moment_tensor.double_couple, mt_el, 'doubleCouple')
+        self._str(moment_tensor.clvd, mt_el, 'clvd')
+        self._str(moment_tensor.iso, mt_el, 'iso')
+        self._str(moment_tensor.greens_function_id, mt_el, 'greensFunctionID')
+        self._str(moment_tensor.filter_id, mt_el, 'filterID')
+        # SourceTimeFunction
+        if moment_tensor.source_time_function:
+            sub_el = etree.Element('sourceTimeFunction')
+            sub = moment_tensor.source_time_function
+            self._str(sub.type, sub_el, 'type')
+            self._str(sub.duration, sub_el, 'duration')
+            self._str(sub.rise_time, sub_el, 'riseTime')
+            self._str(sub.decay_time, sub_el, 'decayTime')
+            mt_el.append(sub_el)
+        self._str(moment_tensor.method_id, mt_el, 'MethodID')
+        self._str(moment_tensor.category, mt_el, 'category')
+        self._str(moment_tensor.inversion_type, mt_el, 'inversionType')
+        self._str(moment_tensor.evaluation_mode, mt_el, 'evaluationMode')
+        self._str(moment_tensor.evaluation_status, mt_el, 'evaluationStatus')
+        self._comments(moment_tensor.comments, mt_el)
+        self._creation_info(moment_tensor.creation_info, mt_el)
+        element.append(mt_el)
+
+    def _focal_mechanism(self, focal_mechanism):
+        """
+        Converts a FocalMechanism into etree.Element object.
+
+        :type pick: :class:`~obspy.core.event.FocalMechanism`
+        :rtype: etree.Element
+        """
+        element = etree.Element('focalMechanism',
+            attrib={'publicID': self._id(focal_mechanism.resource_id)})
+        # optional parameter
+        self._waveform_id(focal_mechanism.waveform_id, element)
+        self._str(focal_mechanism.triggering_origin_id, element,
+                  'triggeringOriginID')
+        self._str(focal_mechanism.azimuthal_gap, element,
+                  'azimuthalGap')
+        self._str(focal_mechanism.station_polarity_count, element,
+                  'stationPolarityCount')
+        self._str(focal_mechanism.misfit, element, 'misfit')
+        self._str(focal_mechanism.station_distribution_ratio, element,
+                  'stationDistributionRatio')
+        self._nodal_planes(focal_mechanism.nodal_planes, element)
+        self._principal_axes(focal_mechanism.principal_axes, element)
+        self._str(focal_mechanism.method_id, element, 'methodID')
+        self._moment_tensor(focal_mechanism.moment_tensor, element)
+        self._comments(focal_mechanism.comments, element)
+        self._creation_info(focal_mechanism.creation_info, element)
+        return element
+
     def _serialize(self, catalog, pretty_print=True):
         """
         Converts a Catalog object into XML string.
@@ -1098,6 +1265,9 @@ class Pickler(object):
             # picks
             for pick in event.picks:
                 event_el.append(self._pick(pick))
+            # focal mechanisms
+            for focal_mechanism in event.focal_mechanisms:
+                event_el.append(self._focal_mechanism(focal_mechanism))
             # add event node to catalog
             catalog_el.append(event_el)
         return tostring(root_el, pretty_print=pretty_print)
@@ -1142,7 +1312,10 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of file to write.
     """
-    raise NotImplementedError
+    fh = open(filename, 'wt')
+    xml_doc = Pickler().dumps(catalog)
+    fh.write(xml_doc)
+    fh.close()
 
 
 def readSeisHubEventXML(filename):

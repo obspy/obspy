@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID
-from obspy.core.quakeml import readQuakeML, Pickler
+from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
+from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
+from xml.etree.ElementTree import tostring, fromstring
 import os
 import unittest
-from xml.etree.ElementTree import tostring, fromstring
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -410,18 +411,40 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mt.tensor.m_rp, 4.000e+17)
         self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
         self.assertAlmostEqual(mt.clvd, 0.22)
-#        # exporting back to XML should result in the same document
-#        original = open(filename, "rt").read()
-#        processed = Pickler().dumps(catalog)
-#        self._compareStrings(original, processed)
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = Pickler().dumps(catalog)
+        self._compareStrings(original, processed)
 
-#    def test_writeQuakeML(self):
-#        """
-#        Tests writing a QuakeML document.
-#        """
-#        filename = os.path.join(self.path, 'quakeml_in.xml')
-#        catalog = readQuakeML(filename)
-#        print writeQuakeML(catalog, 'test')
+    def test_writeQuakeML(self):
+        """
+        Tests writing a QuakeML document.
+        """
+        filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
+        tmpfile = NamedTemporaryFile().name
+        catalog = readQuakeML(filename)
+        self.assertTrue(len(catalog), 1)
+        writeQuakeML(catalog, tmpfile)
+        # read file again
+        catalog2 = readQuakeML(tmpfile)
+        self.assertTrue(len(catalog2), 1)
+        # clean up
+        os.remove(tmpfile)
+
+    def test_readEvents(self):
+        """
+        Tests reading a QuakeML document via readEvents.
+        """
+        filename = os.path.join(self.path, 'neries_events.xml')
+        tmpfile = NamedTemporaryFile().name
+        catalog = readEvents(filename)
+        self.assertTrue(len(catalog), 3)
+        catalog.write(tmpfile, format='QUAKEML')
+        # read file again
+        catalog2 = readEvents(tmpfile)
+        self.assertTrue(len(catalog2), 3)
+        # clean up
+        os.remove(tmpfile)
 
 
 def suite():
