@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-obspy.datamark - DATAMARK read support for ObsPy
+obspy.datamark - DataMark read support for ObsPy
 ================================================
-This module provides read support for Datamark waveform data.
+This module provides read support for DataMark waveform data.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org), Thomas Lecocq and others
-    (refs will be included in the release version)
+    The ObsPy Development Team (devs@obspy.org), Thomas Lecocq, Adolfo Inza &
+    Philippe Lesage
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)

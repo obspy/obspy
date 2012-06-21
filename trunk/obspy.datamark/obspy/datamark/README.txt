@@ -7,14 +7,18 @@ GNU Lesser General Public License, Version 3 (LGPLv3)
 
 Copyright (c) 2012 by:
     * Thomas Lecocq
-    * others, will be included in the released version
+    * Adolfo Inza
+    * Philippe Lesage
 
 
 Overview
 --------
-Datamark read support for ObsPy.
+DataMark read support for ObsPy.
 
-This module provides read support for Datamark waveform data.
+This module provides read support for DataMark data format. This module is
+based on the code of Adolfo Inza and Philippe Lesage of the "Géophysique des
+volcans" team of the "Institut des Sciences de la Terre de l'Université de
+Savoie", France.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and

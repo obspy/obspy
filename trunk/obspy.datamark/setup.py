@@ -1,9 +1,12 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Datamark read support for ObsPy.
+DataMark read support for ObsPy.
 
-This module provides read support for Datamark files.
+This module provides read support for DataMark data format. This module is
+based on the code of Adolfo Inza and Philippe Lesage of the "Géophysique des
+volcans" team of the "Institut des Sciences de la Terre de l'Université de
+Savoie", France.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and
