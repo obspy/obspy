@@ -336,10 +336,9 @@ class Client(object):
                 warnings.warn(msg % (dcid))
         return data
 
-    @deprecated_keywords({'getPAZ': 'metadata', 'getCoordinates': 'metadata'})
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, format="MSEED", compressed=True, metadata=False,
-                    route=True):
+                    route=True, **kwargs):
         """
         Retrieves waveform data via ArcLink and returns an ObsPy Stream object.
 
@@ -389,6 +388,9 @@ class Client(object):
             st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
+        # handle deprecated keywords - one must be True to enable metadata
+        metadata = metadata or kwargs.get('getPAZ', False) or \
+            kwargs.get('getCoordinates', False)
         tf = NamedTemporaryFile()
         self.saveWaveform(tf._fileobj, network, station, location, channel,
                           starttime, endtime, format=format,
