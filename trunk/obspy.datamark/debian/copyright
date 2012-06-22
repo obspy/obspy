@@ -1,10 +1,10 @@
-This is the Debian GNU prepackaged version of obspy.seedlink, which was
+This is the Debian GNU prepackaged version of obspy.datamark, which was
 debianized by the ObsPy Development Team. The source for this release was taken
 from:
 https://svn.obspy.org/trunk/obspy.datamark
 
-Program Copyright (C) 2012 The ObsPy Development Team <devs@obspy.org>
-and Thomas Lecocq.
+Program Copyright (C) 2012 The ObsPy Development Team <devs@obspy.org>,
+Thomas Lecocq, Adolfo Inza & Philippe Lesage.
 
 Copyright:
 

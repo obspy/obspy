@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 DATAMARK bindings to ObsPy core module.
-Thomas Lecocq based on others (refs will be included in the release version)
 """
 
 from __future__ import with_statement
