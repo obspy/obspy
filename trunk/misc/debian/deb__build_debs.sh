@@ -11,9 +11,9 @@
 # Must be executed in the misc/debian directory
 # Tags are supposed to be checked out as "tags" subdirectory
 
-METAPACKAGE_VERSION=0.6.0
+METAPACKAGE_VERSION=0.7.0
 METAPACKAGE_DEBVERSION=1
-DEBVERSION=2
+DEBVERSION=1
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
 # Setting PATH to correct python distribution, avoid to use virtualenv
@@ -70,12 +70,18 @@ EOL
         # automatize it for all packages in common
         # dch --newversion ${VERSION}-$DEBVERSION "New release" 
         # just write a changelog template with only updated version info
-    cat >debian/changelog << EOF
+    cat > debian/changelog << EOF
 python-${MODULE/./-} (${VERSION}-${DEBVERSION}~${CODENAME}) unstable; urgency=low
 
-  * This changelog file is overwritten for every release, only the version
-    is not kept up to date. Visit www.obspy.org for more information about
-    the age and the contents of the version given above.
+  * visit http://www.obspy.org for more information about the age 
+    and the contents of this release
+EOF
+    if [ -f obspy/*/CHANGELOG.txt ]
+        then
+        echo "" >> debian/changelog
+        sed "s/^/  /" obspy/*/CHANGELOG.txt >> debian/changelog
+    fi
+    cat >> debian/changelog << EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF

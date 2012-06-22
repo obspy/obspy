@@ -11,7 +11,8 @@ Depends: python-obspy-core, python-obspy-gse2, python-obspy-mseed,
  python-obspy-signal, python-obspy-xseed, python-obspy-imaging,
  python-obspy-arclink, python-obspy-seishub, python-obspy-db,
  python-obspy-segy, python-obspy-neries, python-obspy-iris, python-obspy-taup,
- python-obspy-earthworm, python-obspy-seg2
+ python-obspy-earthworm, python-obspy-seg2, python-obspy-realtime,
+ python-obspy-datamark
 Suggests: python-obspy-fissures
 Description: Metapackage which installs all ObsPy packages
  .
