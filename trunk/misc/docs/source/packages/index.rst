@@ -23,6 +23,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.datamark
    obspy.gse2
    obspy.mseed
    obspy.sac

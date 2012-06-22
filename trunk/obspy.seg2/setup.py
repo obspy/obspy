@@ -48,6 +48,7 @@ ENTRY_POINTS = """
     readFormat = obspy.seg2.seg2:readSEG2
 """
 
+
 def convert2to3():
     """
     Convert source to Python 3.x syntax using lib2to3.

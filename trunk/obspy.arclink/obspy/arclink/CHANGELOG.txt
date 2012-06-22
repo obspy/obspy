@@ -1,4 +1,4 @@
-dev:
+0.7.0:
  * requesting timespans (using 'starttime' and 'endtime' keywords) are
    deprecated in Client.getPAZ() and Client.getMetadata() - use 'time' instead
  * output format has changed for Client.getPAZ(..., time=dt)

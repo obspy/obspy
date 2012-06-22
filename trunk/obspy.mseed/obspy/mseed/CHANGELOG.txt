@@ -1,8 +1,8 @@
-dev:
+0.7.0:
  * changing license to LGPL (same as libmseed)
  * libmseed 2.7 (fixes sampling rates above 32,767 Hz)
  * adding read/write support for very large and very small sampling rates using
    blockette 100 in MiniSEED
  * new obspy-mseed-recordanalyzer script for analyzing SEED files via console
- * [2012-04-17] new obspy.mseed.util.shiftTimeOfFile() function for shifting
+ * new obspy.mseed.util.shiftTimeOfFile() function for shifting
    the time of all records without interfering with the rest of the file.

@@ -1,25 +1,26 @@
-dev:
- * AttribDict may now be initialized with (key, value) kwarg pairs, e.g.
-   AttribDict(a=1, b=2).
+0.7.0:
+ * new Catalog/Event classes
+ * read/write support for QuakeML files
+ * new resample method for Trace and Stream object
  * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
  * Trace.__div__ (splits Trace into Stream containing num traces)
+ * implementation of __mul__ method for Trace and Stream objects
+ * new formatSeedLink method for UTCDateTime object
+ * new split method for transforming streams containing masked arrays into
+   contiguous traces
+ * new util.xmlwrapper module for uniform API for Python's default xml and lxml
  * new obspy.core.util.types.Enum class
  * refactored obspy.core.util.ordereddict into obspy.core.util.types
  * refactored kilometer2degrees and locations2degrees from obspy.taup into
    obspy.core.util.geodetics
+ * adding 'equal_scale' option to plot() method
  * removing __hash__ fixture for Stream and Trace
- * new util.xmlwrapper module for uniform API for Python's default xml and lxml
- * plugin hooks in setup.py for QuakeML event files
  * stream.select works now case insensitive
  * support for initialization of UTCDateTime from numpy.string_ types
  * new dtype parameter on read method allows converting data into given dtype
- * implementation of __mul__ method for Trace and Stream objects
- * adding 'equal_scale' option to plot() method
- * new formatSeedLink method for UTCDateTime object
- * new split method for transforming streams containing masked arrays into
-   contiguous traces
- * new resample method for Trace and Stream object
- * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate
+ * AttribDict may now be initialized with (key, value) kwarg pairs, e.g.
+   AttribDict(a=1, b=2).
+  * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate
  * added UTCDateTime.DEFAULT_PRECISION
  * import of an unsupported waveform will result into a TypeError [#338]
  * added compatibility methods for AttribDict and UTCDateTime

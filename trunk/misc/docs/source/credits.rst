@@ -22,10 +22,13 @@ libraries and applications, our build tools and our web sites.
     * Sebastian Heimann
     * Seyed Kasra Hosseini Zad
     * Heiner Igel
+    * Adolfo Inza
     * Simon Kremers
     * Victor Kress
     * Lars Krieger
     * Lion Krischer
+    * Thomas Lecocq
+    * Philippe Lesage
     * Anthony Lomax
     * Tobias Megies
     * Alberto Michelini

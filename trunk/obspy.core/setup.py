@@ -97,8 +97,8 @@ def convert2to3():
     # create a new 2to3 directory for converted source files
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
-    # copy original tree into 2to3 folder ignoring some unneeded files
 
+    # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(adir, filenames):  # @UnusedVariable
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \

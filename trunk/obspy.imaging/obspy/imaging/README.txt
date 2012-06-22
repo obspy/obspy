@@ -6,7 +6,7 @@ Copyright
 GNU General Public License (GPL)
 (http://www.gnu.org/licenses/gpl.txt)
 
-Copyright (c) 2008-2011 by:
+Copyright (c) 2008-2012 by:
     * Robert Barsch
     * Lion Krischner
     * Christian Sippl

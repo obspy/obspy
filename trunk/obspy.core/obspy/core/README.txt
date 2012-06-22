@@ -5,11 +5,12 @@ Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2009-2011 by:
+Copyright (c) 2009-2012 by:
     * Moritz Beyreuther
     * Lion Krischer
     * Robert Barsch
     * Tobias Megies
+    * Martin van Driel
 
 
 Overview

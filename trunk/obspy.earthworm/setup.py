@@ -60,6 +60,7 @@ def convert2to3():
     # create a new 2to3 directory for converted source files
     dst_path = os.path.join(LOCAL_PATH, '2to3')
     shutil.rmtree(dst_path, ignore_errors=True)
+
     # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(_adir, filenames):
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
@@ -111,7 +112,8 @@ def setupPackage():
         namespace_packages=['obspy'],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME, NAME),
+        download_url="https://svn.obspy.org/trunk/%s#egg=%s-dev" % (NAME,
+                                                                    NAME),
         include_package_data=True,
         test_suite="%s.tests.suite" % (NAME),
         entry_points=ENTRY_POINTS,
