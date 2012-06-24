@@ -85,6 +85,14 @@ EOF
 
  -- ObsPy Development Team <devs@obspy.org>  $DATE
 EOF
+        # dh doesn't know option python2 in lucid
+        if [ $CODENAME = "lucid" ]
+            then
+            ex ./debian/rules << EOL
+%s/--with=python2/ /g
+wq
+EOL
+        fi
         # build the package
         fakeroot ./debian/rules clean build binary
         mv ../python-${MODULE/./-}_*.deb $PACKAGEDIR/
