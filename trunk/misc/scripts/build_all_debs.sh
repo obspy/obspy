@@ -14,7 +14,7 @@ mkdir $HOME/build_all_debs
 
 svn checkout --non-interactive --trust-server-cert https://svn.obspy.org/trunk/misc/debian $DIR
 
-for DIST in lenny squeeze lucid maverick natty oneiric; do
+for DIST in lenny squeeze lucid maverick natty oneiric precise; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
         echo "$DISTARCH" >> $LOG
