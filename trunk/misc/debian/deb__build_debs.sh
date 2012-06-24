@@ -90,6 +90,7 @@ EOF
             then
             ex ./debian/rules << EOL
 %s/--with=python2/ /g
+g/dh_numpy/d
 wq
 EOL
         fi
