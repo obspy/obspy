@@ -33,7 +33,7 @@ RequestExecutionLevel admin
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2-4
+!define VERSION 2.7.2-5
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
 
@@ -367,6 +367,10 @@ Function InstallObsPy
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.wav"'
     DetailPrint "Running easy_install.exe -U obspy.xseed"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.xseed"'
+    DetailPrint "Running easy_install.exe -U obspy.realtime"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.realtime"'
+    DetailPrint "Running easy_install.exe -U obspy.datamark"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.datamark"'
 FunctionEnd
 
 # Installer sections
