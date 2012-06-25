@@ -388,6 +388,10 @@ class Client(object):
             st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
             st.plot()
         """
+        if kwargs.get('getPAZ') or kwargs.get('getCoordinates'):
+            msg = "Keywords getPAZ and getCoordinates are deprecated. " + \
+                  "Please use keyword metadata instead."
+            warnings.warn(msg, DeprecationWarning)
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
