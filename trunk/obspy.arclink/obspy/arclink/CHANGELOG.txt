@@ -1,5 +1,6 @@
 0.7.1:
  * proper DeprecationWarning for deprecated keywords for Client.getWaveform()
+
 0.7.0:
  * requesting time spans (using 'starttime' and 'endtime' keywords) are
    deprecated in Client.getPAZ() and Client.getMetadata() - use 'time' instead

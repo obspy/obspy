@@ -1,5 +1,6 @@
-dev:
+0.7.1:
  * fixing negative azimuths returned by gps2DistAzimuth [#375]
+
 0.7.0:
  * new Catalog/Event classes
  * read/write support for QuakeML files
