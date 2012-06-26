@@ -361,8 +361,7 @@ class ClientTestCase(unittest.TestCase):
         result = client.getNetworks(start, end)
         self.assertTrue('BW' in result.keys())
         self.assertEquals(result['BW']['code'], 'BW')
-        self.assertEquals(result['BW']['type'], 'SP/BB')
-        self.assertEquals(result['BW']['institutions'][0:3], u'Uni')
+        self.assertEquals(result['BW']['description'], 'BayernNetz')
 
     def test_getStations(self):
         """
@@ -379,9 +378,8 @@ class ClientTestCase(unittest.TestCase):
                         'start': UTCDateTime(2006, 6, 4, 0, 0),
                         'restricted': False, 'archive_net': '',
                         'longitude': 12.729887, 'affiliation': '',
-                        'depth': None, 'place': 'Wildenmoos, Bavaria',
-                        'country': 'Germany', 'latitude': 47.744171999999999,
-                        'end': None}) in result)
+                        'depth': None, 'place': '', 'country': '',
+                        'latitude': 47.744172, 'end': None}) in result)
 
     def test_saveWaveform(self):
         """

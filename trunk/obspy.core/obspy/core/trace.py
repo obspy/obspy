@@ -1786,7 +1786,7 @@ class Trace(object):
         several traces.
 
         :rtype: list
-        :returns: List of splitted traces. A gapless trace will still be
+        :returns: List of split traces. A gapless trace will still be
             returned as list with only one entry.
         """
         if not isinstance(self.data, np.ma.masked_array):
