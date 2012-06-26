@@ -112,6 +112,22 @@ def main():
     parser.add_option("-i", "--ignore-links", default=False,
                       action="store_true", dest="ignore_links",
                       help="Optional. Do not follow symbolic links.")
+    parser.add_option("--starttime", default=None,
+                      type="string", dest="starttime",
+                      help="Optional, a UTCDateTime compatible string. " + \
+                      "Only visualize data after this time and set " + \
+                      "time-axis axis accordingly.")
+    parser.add_option("--endtime", default=None,
+                      type="string", dest="endtime",
+                      help="Optional, a UTCDateTime compatible string. " + \
+                      "Only visualize data after this time and set " + \
+                      "time-axis axis accordingly.")
+    parser.add_option("--ids", default=None,
+                      type="string", dest="ids",
+                      help="Optional, a list of SEED channel identifiers " + \
+                      "separated by commas " + \
+                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'. Only these " + \
+                      "channels will not be plotted.")
     parser.add_option("-t", "--event-times", default=None,
                       type="string", dest="event_times",
                       help="Optional, a list of UTCDateTime compatible " + \
@@ -165,6 +181,13 @@ def main():
         for time in times:
             ax.axvline(time, color='k')
 
+    if options.starttime:
+        options.starttime = UTCDateTime(options.starttime)
+        options.starttime = date2num(options.starttime)
+    if options.endtime:
+        options.endtime = UTCDateTime(options.endtime)
+        options.endtime = date2num(options.endtime)
+
     # Generate dictionary containing nested lists of start and end times per
     # station
     data = {}
@@ -183,11 +206,24 @@ def main():
 
     # Loop through this dictionary
     ids = data.keys()
+    # restrict plotting of results to given ids
+    if options.ids:
+        options.ids = options.ids.split(',')
+        ids = filter(lambda x: x in options.ids, ids)
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
     for _i, _id in enumerate(ids):
+        labels[_i] = ids[_i]
         data[_id].sort()
         startend = np.array(data[_id])
+        # restrict plotting of results to given start/endtime
+        if options.starttime:
+            startend = startend[startend[:, 1] > options.starttime]
+        if options.starttime:
+            startend = startend[startend[:, 0] < options.endtime]
+        if len(startend) == 0:
+            continue
+
         offset = np.ones(len(startend)) * _i  # generate list of y values
         if not options.nox:
             ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
@@ -201,7 +237,7 @@ def main():
         gapsum = diffs[diffs > 0].sum()
         timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
-        labels[_i] = ids[_i] + "\n%.1f%%" % (perc * 100)
+        labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
         gaps = startend[diffs > 1.8 * samp_int[_id], 1]
         if len(gaps) > 0:
             offset = offset[:len(gaps)]
@@ -211,6 +247,11 @@ def main():
     ax.set_ylim(0 - 0.5, _i + 0.5)
     ax.set_yticks(np.arange(_i + 1))
     ax.set_yticklabels(labels, family="monospace", ha="right")
+    # set x-axis limits according to given start/endtime
+    if options.starttime:
+        ax.set_xlim(left=options.starttime, auto=None)
+    if options.endtime:
+        ax.set_xlim(right=options.endtime, auto=None)
     fig.autofmt_xdate()  # rotate date
     plt.subplots_adjust(left=0.2)
     if options.output is None:
