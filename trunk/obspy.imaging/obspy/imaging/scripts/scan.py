@@ -216,9 +216,13 @@ def main():
         labels[_i] = ids[_i]
         data[_id].sort()
         startend = np.array(data[_id])
+        if len(startend) == 0:
+            continue
         # restrict plotting of results to given start/endtime
         if options.starttime:
             startend = startend[startend[:, 1] > options.starttime]
+        if len(startend) == 0:
+            continue
         if options.starttime:
             startend = startend[startend[:, 0] < options.endtime]
         if len(startend) == 0:
