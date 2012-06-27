@@ -1,5 +1,6 @@
 dev:
- * obspy-scan: adding options to control start/endtime and channels
+ * obspy-scan: adding options to control start/endtime and channels, adding
+   options to not plot gaps and reducing file size for plots considerably.
 
 0.7.0:
  * Trace.label/Stream.label can be used to overwrite default labels

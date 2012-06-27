@@ -14,6 +14,10 @@ Directories can also be used as arguments. By default they are scanned
 recursively (disable with "-n"). Symbolic links are followed by default
 (disable with "-i"). Detailed information on all files is printed using "-v".
 
+In case of memory problems during plotting with very large datasets, the
+options --nox and --nogaps can help to reduce the size of the plot
+considerably.
+
 Gap data can be written to a numpy npz file. This file can be loaded later
 for optionally adding more data and plotting.
 
@@ -24,14 +28,46 @@ significantly by explicitly specifying the file format ("-f FORMAT"), otherwise
 the format is autodetected.
 
 See also the example in the Tutorial section:
-http://www.obspy.org/wiki/ObspyTutorial
+http://tutorial.obspy.org
 """
 
 import sys
 import os
+import warnings
 from obspy.core import read, UTCDateTime
 from optparse import OptionParser
 import numpy as np
+
+
+def compressStartend(x, stop_iteration):
+    """
+    Compress 2-dimensional array of piecewise continuous starttime/endtime
+    pairs by merging overlapping and exactly fitting pieces into one.
+    This reduces the number of lines needed in the plot considerably and is
+    necessary for very large data sets.
+    The maximum number of iterations can be specified.
+    """
+    diffs = x[1:, 0] - x[:-1, 1]
+    inds = np.concatenate([(diffs <= 0), [False]])
+    i = 0
+    while any(inds):
+        if i >= stop_iteration:
+            msg = "Stopping to merge lines for plotting at iteration %d"
+            msg = msg % i
+            warnings.warn(msg)
+            break
+        i += 1
+        first_ind = np.nonzero(inds)[0][0]
+        # to use fast numpy methods currently we only can merge two consecutive
+        # pieces, so we set every second entry to False
+        inds[first_ind+1::2] = False
+        inds_next = np.roll(inds, 1)
+        x[inds, 1] = x[inds_next, 1]
+        inds_del = np.nonzero(inds_next)
+        x = np.delete(x, inds_del, 0)
+        diffs = x[1:, 0] - x[:-1, 1]
+        inds = np.concatenate([(diffs <= 0), [False]])
+    return x
 
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
@@ -146,6 +182,9 @@ def main():
     parser.add_option("--nox", default=False,
                       action="store_true", dest="nox",
                       help="Optional, Do not plot crosses.")
+    parser.add_option("--nogaps", default=False,
+                      action="store_true", dest="nogaps",
+                      help="Optional, Do not plot gaps.")
     parser.add_option("-o", "--output", default=None,
                       type="string", dest="output",
                       help="Save plot to image file (e.g. out.pdf, " + \
@@ -228,24 +267,25 @@ def main():
         if len(startend) == 0:
             continue
 
+        startend_compressed = compressStartend(startend, 1000)
+
         offset = np.ones(len(startend)) * _i  # generate list of y values
+        ax.xaxis_date()
         if not options.nox:
             ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
-            ax.hlines(offset, startend[:, 0], startend[:, 1])
-        else:
-            ax.xaxis_date()
-            ax.hlines(offset, startend[:, 0], startend[:, 1], 'b',
-                      linewidth=2, zorder=3)
+        ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0], startend_compressed[:, 1], 'b',
+                  linewidth=2, zorder=3)
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
         timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gaps = startend[diffs > 1.8 * samp_int[_id], 1]
-        if len(gaps) > 0:
-            offset = offset[:len(gaps)]
-            ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)
+        if not options.nogaps:
+            gaps = startend[diffs > 1.8 * samp_int[_id], 1]
+            if len(gaps) > 0:
+                offset = offset[:len(gaps)]
+                ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
@@ -271,6 +311,7 @@ def main():
             days = ax.get_xlim()
             days = days[1] - days[0]
             width = max(6, days / 30.)
+            width = min(width, height * 4)
             fig.set_figwidth(width)
             plt.subplots_adjust(top=1, bottom=0, left=0, right=1)
             plt.tight_layout()
