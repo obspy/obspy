@@ -703,8 +703,8 @@ class Client(object):
     def getMetadata(self, network, station, location, channel, starttime=None,
                     endtime=None, time=None, route=True):
         """
-        Returns poles, zeros, gain and sensitivity and station coordinates for
-        a single channel at a given time.
+        Returns poles, zeros, normalization factor and sensitivity and station
+        coordinates for a single channel at a given time.
 
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -727,13 +727,14 @@ class Client(object):
         >>> from obspy.core import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
-        >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', t, t+1)
+        >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', t)
         >>> data  # doctest: +NORMALIZE_WHITESPACE +SKIP
         {'paz': AttribDict({'poles': [(-0.037004+0.037016j),
                                       (-0.037004-0.037016j), (-251.33+0j),
                                       (-131.04-467.29j), (-131.04+467.29j)],
                             'sensitivity': 2516778600.0, 'zeros': [0j, 0j],
-                            'name': 'LMU:STS-2/N/g=1500', 'gain': 60077000.0}),
+                            'name': 'LMU:STS-2/N/g=1500',
+                            'normalizationFactor': 60077000.0}),
         'coordinates': AttribDict({'latitude': 49.9862, 'elevation': 635.0,
                                    'longitude': 12.1083})}
         """
@@ -787,14 +788,26 @@ class Client(object):
         paz = AttribDict()
         # instrument name
         paz['name'] = xml_doc.get('name', '')
-        # gain
+        # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
-                paz['gain'] = float(xml_doc.get('normalizationFactor'))
+                paz['normalizationFactor'] = float(xml_doc.get('normalizationFactor'))
             else:
-                paz['gain'] = float(xml_doc.get('norm_fac'))
+                paz['normalizationFactor'] = float(xml_doc.get('norm_fac'))
         except:
-            paz['gain'] = None
+            paz['normalizationFactor'] = None
+
+        try:
+            if xml_ns == _INVENTORY_NS_1_0:
+                paz['normalizationFrequency'] = float(xml_doc.get('normalizationFrequency'))
+            else:
+                paz['normalizationFrequency'] = float(xml_doc.get('norm_freq'))
+        except:
+            paz['normalizationFrequency'] = None
+
+        # for backwards compatibility (but this is wrong naming!)
+        paz['gain'] = paz['normalizationFactor']
+
         # zeros
         paz['zeros'] = []
         if xml_ns == _INVENTORY_NS_1_0:
@@ -834,8 +847,8 @@ class Client(object):
     def getPAZ(self, network, station, location, channel, starttime=None,
                endtime=None, time=None, route=False):
         """
-        Returns poles, zeros, gain and sensitivity for a single channel at
-        a given time.
+        Returns poles, zeros, normalizationFactor and sensitivity for a
+        single channel at a given time.
 
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
@@ -857,7 +870,7 @@ class Client(object):
         >>> from obspy.core import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
-        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t, t+1)
+        >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t)
         >>> paz  # doctest: +NORMALIZE_WHITESPACE +SKIP
         AttribDict({'poles': [(-0.037004+0.037016j), (-0.037004-0.037016j),
                               (-251.33+0j), (-131.04-467.29j),
@@ -865,7 +878,7 @@ class Client(object):
                     'sensitivity': 2516778600.0,
                     'zeros': [0j, 0j],
                     'name': 'LMU:STS-2/N/g=1500',
-                    'gain': 60077000.0})
+                    'normalizationFactor': 60077000.0})
         """
         # XXX: deprecation handling
         if starttime and endtime:
@@ -1074,6 +1087,14 @@ class Client(object):
         else:
             msg = "Unknown inventory namespace %s"
             raise ArcLinkException(msg % xml_doc.nsmap)
+
+        sensors = {}
+        for sensor in xml_doc.xpath('ns:sensor', namespaces={'ns': xml_ns}):
+            entry = {}
+            for key in ['description', 'manufacturer', 'model', 'name', 'type', 'unit', 'response']:
+                entry[key] = sensor.get(key, '')
+            sensors[entry['response']] = entry
+
         # convert into dictionary
         data = AttribDict()
         for network in xml_doc.xpath('ns:network', namespaces={'ns': xml_ns}):
@@ -1180,11 +1201,19 @@ class Client(object):
                             data[id] = []
                         temp = AttribDict()
                         data[id].append(temp)
-                        # fetch gain
+                        # fetch sensitivity
                         try:
-                            temp['gain'] = float(comp.get('gain'))
+                            temp['sensitivity'] = float(comp.get('gain'))
                         except:
-                            temp['gain'] = None
+                            temp['sensitivity'] = None
+                        try:
+                            temp['sensitivityFrequency'] = float(comp.get('gainFrequency'))
+                        except:
+                            temp['sensitivityFrequency'] = None
+                        try:
+                            temp['sensitivityUnit'] = comp.get('gainUnit')
+                        except:
+                            temp['sensitivityUnit'] = None
                         # date / times
                         try:
                             temp['starttime'] = UTCDateTime(comp.get('start'))
@@ -1215,12 +1244,19 @@ class Client(object):
                         # parse PAZ
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
                         # sensitivity
-                        # here we try to overwrites PAZ with component gain
-                        try:
-                            paz['sensitivity'] = float(comp.get('gain'))
-                        except:
-                            paz['sensitivity'] = paz['gain']
+                        paz['sensitivity'] = temp['sensitivity']
+                        paz['sensitivityFrequency'] = temp['sensitivityFrequency']
+                        paz['sensitivityUnit'] = temp['sensitivityUnit']
                         temp['paz'] = paz
+
+                        # add some seismometer-specific "nice to have" stuff
+                        publicID = xml_paz[0].get('publicID')
+                        try:
+                            paz['sensorManufacturer'] = sensors[publicID]['manufacturer']
+                            paz['sensorModel'] = sensors[publicID]['model']
+                        except:
+                            paz['sensorManufacturer'] = paz['sensorModel'] = None
+
         return data
 
     def getNetworks(self, starttime, endtime):
