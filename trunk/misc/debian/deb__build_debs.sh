@@ -62,6 +62,8 @@ g/ distribute_setup/d
 wq
 EOL
         fi
+        # this changes belongs into debian/rules and is only added here to work with already tagged releases
+        sed -i -e '/tag_build/s/= .*/= ""/' -e '/tag_date/s/= .*/= 0/' -e '/tag_svn_revision/s/= .*/= 0/' setup.cfg
         # get version number from the tag, the debian version
         # has to be increased manually if necessary.
         VERSION=$TAG
