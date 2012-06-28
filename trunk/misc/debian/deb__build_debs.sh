@@ -12,8 +12,8 @@
 # Tags are supposed to be checked out as "tags" subdirectory
 
 METAPACKAGE_VERSION=0.7.0
-METAPACKAGE_DEBVERSION=1
-DEBVERSION=1
+METAPACKAGE_DEBVERSION=2
+DEBVERSION=2
 DATE=`date +"%a, %d %b %Y %H:%M:%S %z"`
 
 # Setting PATH to correct python distribution, avoid to use virtualenv
