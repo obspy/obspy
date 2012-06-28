@@ -93,13 +93,13 @@ Example 1: run with the default values:
 
     $ ./obspyDMT.py --iris 'N' --arc 'N'
 
-When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT". This folder will contain the info about the events set in the default request (Please refer to the "Folder Structure" section)
+When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT". This folder will contain the info about the events set in the default request. To access the event information for this example, go to "$HOME/obspyDMT/obspyDMT-data/2011-03-01_2012-05-24_8.9_9.9/EVENT" [the folder names will change based on your request] and check the "EVENT-CATALOG" text file (Please refer to the "Folder Structure" section for more information)
 
-Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command shows how to get the info of all the events with magnitude more than Mw 6.0 occured after 2011-03-01 and before 2012-03-01:
+Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command shows how to get the info of all the events with magnitude more than Mw 7.0 occured after 2011-03-01 and before 2012-03-01:
 
 ::
 	
-	$ ./obspyDMT.py --min_mag '6.0' --min_date '2011-03-01' --max_date '2012-03-01'
+	$ ./obspyDMT.py --iris 'N' --arc 'N' --min_mag '7.0' --min_date '2011-03-01' --max_date '2012-03-01'
 
 -------------------
 Event-Based Request
@@ -132,11 +132,11 @@ if you take away the option "--test '20'", the default values could result in a 
 
 When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the "Folder Structure" section)
 
-Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following commands show how to get all the waveforms, response files and metadata of "BHZ" channels available in "TA" network for the great Tohoku-oki earthquake of magnitude Mw 9.0:
+Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following commands show how to get all the waveforms, response files and metadata of "BHZ" channels available in "TA" network with station names start with "Z" for the great Tohoku-oki earthquake of magnitude Mw 9.0:
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ'
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ'
 
 or instead of using "identity" option:
 
@@ -148,13 +148,13 @@ In the case that you know from which data provider you want to retrieve the data
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ' --arc 'N'
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ' --arc 'N'
 
 Example 3: for downloading the same event and station identity but "SAC" as the desired waveform format instead of "MSEED" (default):
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ' --arc 'N' --SAC
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ' --arc 'N' --SAC
 
 When obspyDMT wants to save the waveforms in "SAC" format, it will fill out the station location (stla and stlo), station elevation (stel), station depth (stdp), event location (evla and evlo), event depth (evdp) and event magnitude (mag) in the SAC headers.
 
@@ -202,29 +202,29 @@ if you take away the option "--test '20'", the default values could result in a 
 
 When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the "Folder Structure" section)
 
-Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command lines show how to get all the waveforms, response files and metadata of the "BHZ" channels available in "TA" network for the specified time span:
+Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command lines show how to get all the waveforms, response files and metadata of the "BHZ" channels available in "TA" network with station names start with "Z" for the specified time span:
 
 ::
 
-    $ ./obspyDMT.py --continuous --identity 'TA.*.*.BHZ' --min_date '2011-01-01' --max_date '2011-02-01'
+    $ ./obspyDMT.py --continuous --identity 'TA.Z*.*.BHZ' --min_date '2011-01-01' --max_date '2011-01-03'
 
 or instead of using "identity" option:
 
 ::
 
-    $ ./obspyDMT.py --continuous --net 'TA' --cha 'BHZ' --min_date '2011-01-01' --max_date '2011-02-01'
+    $ ./obspyDMT.py --continuous --net 'TA' --cha 'BHZ' --min_date '2011-01-01' --max_date '2011-01-03'
 
 In the case that you know from which data provider you want to retrieve the data, it is better to exclude the non-related ones. For instance, in this example since we know that "TA" network is within IRIS, it is more wise to exclude ArcLink by:
 
 ::
 
-    $ ./obspyDMT.py --continuous --identity 'TA.*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-02-01'
+    $ ./obspyDMT.py --continuous --identity 'TA.Z*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-01-03'
 
 Example 3: for downloading the same time span and station identity but "SAC" as the desired waveform format instead of "MSEED" (default):
 
 ::
 
-    $ ./obspyDMT.py --continuous --identity 'TA.*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-02-01' --SAC
+    $ ./obspyDMT.py --continuous --identity 'TA.Z*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-01-03' --SAC
 
 When obspyDMT wants to save the waveforms in "SAC" format, it will fill out the station location (stla and stlo), station elevation (stel) and station depth (stdp) in the SAC headers.
 
@@ -232,7 +232,7 @@ Example 4: for downloading just the raw waveforms without response file and inst
 
 ::
 
-    $ ./obspyDMT.py --continuous --identity 'TA.*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-02-01' --SAC --response 'N' --ic_no
+    $ ./obspyDMT.py --continuous --identity 'TA.Z*.*.BHZ' --arc 'N' --min_date '2011-01-01' --max_date '2011-01-03' --SAC --response 'N' --ic_no
 
 ------------------------
 Geographical Restriction
@@ -240,7 +240,7 @@ Geographical Restriction
 
 If you are interested in the events happened in a specific geographical coordinate and/or retrieving the data from the stations in a specific circular or rectangular bounding area, you are in the right section! Here, we have two examples:
 
-Example 1: to extract the info of all the events occured in 2010 in a rectangular area (lon1=44.38E lon2=63.41E lat1=24.21N lat2=40.01N) with magnitude more than 3.0 and maximum depth of 80 km:
+Example 1: to extract the info of all the events occured in 2010 in a rectangular area (lon1=44.38E lon2=63.41E lat1=24.21N lat2=40.01N) with magnitude more than 3.0 and maximum depth of 80 km: (395 events should be found!)
 
 ::
 
@@ -298,13 +298,13 @@ as mentioned above, "unit" is the unit that you want to correct the waveforms to
 
 To make it more clear, let's take a look at an example with following 2 steps:
 
-Step 1: to get all the waveforms, response files and metadata of "BHZ" channels available in "TA" network for the great Tohoku-oki earthquake of magnitude Mw 9.0 you type:
+Step 1: to get all the waveforms, response files and metadata of "BHZ" channels available in "TA" network with station names start with "Z" for the great Tohoku-oki earthquake of magnitude Mw 9.0 you type:
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ' --arc 'N'
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ' --arc 'N'
 
-Step 2: to correct the raw waveforms for velocity already stored in the default path ("./obspyDMT-data"):
+Step 2: to correct the raw waveforms for velocity already stored for this example in "./obspyDMT-data/2011-03-01_2012-05-24_8.9_9.9" [the folder names will change based on your request]:
 
 ::
 
@@ -328,11 +328,13 @@ Example 1: first, lets retrieve all the waveforms, response files and metadata o
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ' --arc 'N'
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ' --arc 'N'
 
 now, we want to update the saved folder for "BHE" channels:
 
-	$ ./obspyDMT.py --update_all './obspyDMT-data' --identity 'TA.*.*.BHE'
+::
+
+	$ ./obspyDMT.py --update_all './obspyDMT-data' --identity 'TA.Z*.*.BHE'
 
 ----
 Plot
@@ -352,7 +354,7 @@ All the examples showed in this section are based on the folder created by the f
 
 ::
 
-    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.*.*.BHZ' --arc 'N'
+    $ ./obspyDMT.py --min_mag '8.9' --min_date '2011-03-01' --identity 'TA.Z*.*.BHZ' --arc 'N'
 
 Example 1: let's plot both stations and events available in the folder:
 
