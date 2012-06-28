@@ -19,7 +19,7 @@
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>0.1.3</string>
+	<string>0.1.4</string>
 	<key>SUFeedURL</key>
 	<string>http://obspy.org/osx/obspy_appcast.xml</string>
 	<key>SUPublicDSAKeyFile</key>
@@ -27,7 +27,7 @@
 	<key>LSMinimumSystemVersion</key>
 	<string>${MACOSX_DEPLOYMENT_TARGET}</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright: GNU Lesser General Public License, Version 3, 2011</string>
+	<string>Copyright: GNU Lesser General Public License, Version 3, 2012</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPrincipalClass</key>
