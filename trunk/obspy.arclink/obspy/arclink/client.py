@@ -791,22 +791,22 @@ class Client(object):
         # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
-                paz['normalizationFactor'] = float(xml_doc.get('normalizationFactor'))
+                paz['normalization_factor'] = float(xml_doc.get('normalizationFactor'))
             else:
-                paz['normalizationFactor'] = float(xml_doc.get('norm_fac'))
+                paz['normalization_factor'] = float(xml_doc.get('norm_fac'))
         except:
-            paz['normalizationFactor'] = None
+            paz['normalization_factor'] = None
 
         try:
             if xml_ns == _INVENTORY_NS_1_0:
-                paz['normalizationFrequency'] = float(xml_doc.get('normalizationFrequency'))
+                paz['normalization_frequency'] = float(xml_doc.get('normalizationFrequency'))
             else:
-                paz['normalizationFrequency'] = float(xml_doc.get('norm_freq'))
+                paz['normalization_frequency'] = float(xml_doc.get('norm_freq'))
         except:
-            paz['normalizationFrequency'] = None
+            paz['normalization_frequency'] = None
 
         # for backwards compatibility (but this is wrong naming!)
-        paz['gain'] = paz['normalizationFactor']
+        paz['gain'] = paz['normalization_factor']
 
         # zeros
         paz['zeros'] = []
@@ -1201,19 +1201,21 @@ class Client(object):
                             data[id] = []
                         temp = AttribDict()
                         data[id].append(temp)
-                        # fetch sensitivity
+
+                        # fetch sensitivity etc
                         try:
                             temp['sensitivity'] = float(comp.get('gain'))
                         except:
                             temp['sensitivity'] = None
                         try:
-                            temp['sensitivityFrequency'] = float(comp.get('gainFrequency'))
+                            temp['sensitivity_frequency'] = float(comp.get('gainFrequency'))
                         except:
-                            temp['sensitivityFrequency'] = None
+                            temp['sensitivity_frequency'] = None
                         try:
-                            temp['sensitivityUnit'] = comp.get('gainUnit')
+                            temp['sensitivity_unit'] = comp.get('gainUnit')
                         except:
-                            temp['sensitivityUnit'] = None
+                            temp['sensitivity_unit'] = None
+
                         # date / times
                         try:
                             temp['starttime'] = UTCDateTime(comp.get('start'))
@@ -1245,17 +1247,17 @@ class Client(object):
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
                         # sensitivity
                         paz['sensitivity'] = temp['sensitivity']
-                        paz['sensitivityFrequency'] = temp['sensitivityFrequency']
-                        paz['sensitivityUnit'] = temp['sensitivityUnit']
+                        paz['sensitivity_frequency'] = temp['sensitivity_frequency']
+                        paz['sensitivity_unit'] = temp['sensitivity_unit']
                         temp['paz'] = paz
 
                         # add some seismometer-specific "nice to have" stuff
                         publicID = xml_paz[0].get('publicID')
                         try:
-                            paz['sensorManufacturer'] = sensors[publicID]['manufacturer']
-                            paz['sensorModel'] = sensors[publicID]['model']
+                            paz['sensor_manufacturer'] = sensors[publicID]['manufacturer']
+                            paz['sensor_model'] = sensors[publicID]['model']
                         except:
-                            paz['sensorManufacturer'] = paz['sensorModel'] = None
+                            paz['sensor_manufacturer'] = paz['sensor_model'] = None
 
         return data
 
