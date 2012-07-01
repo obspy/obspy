@@ -60,7 +60,7 @@ def compressStartend(x, stop_iteration):
         first_ind = np.nonzero(inds)[0][0]
         # to use fast numpy methods currently we only can merge two consecutive
         # pieces, so we set every second entry to False
-        inds[first_ind+1::2] = False
+        inds[first_ind + 1::2] = False
         inds_next = np.roll(inds, 1)
         x[inds, 1] = x[inds_next, 1]
         inds_del = np.nonzero(inds_next)
@@ -273,8 +273,8 @@ def main():
         ax.xaxis_date()
         if not options.nox:
             ax.plot_date(startend[:, 0], offset, 'x', linewidth=2)
-        ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0], startend_compressed[:, 1], 'b',
-                  linewidth=2, zorder=3)
+        ax.hlines(offset[:len(startend_compressed)], startend_compressed[:, 0],
+                  startend_compressed[:, 1], 'b', linewidth=2, zorder=3)
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
