@@ -150,3 +150,8 @@ Gallery
     :width: 300px
     :target: http://docs.obspy.org/packages/autogen/obspy.segy.benchmark.plotBenchmark.html
     :alt: Benchmark Plot
+
+.. plot:: source/tutorial/xcorr_pick_correction.py
+    :width: 300px
+    :target: tutorial/xcorr_pick_correction.html
+    :alt: Cross Correlation Pick Correction
