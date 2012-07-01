@@ -40,3 +40,4 @@ will give you a good idea of the library’s flavor and style.
    visualize_data_availability_of_local_waveform_archive
    travel_time_plot
    obspyDMT.rst
+   xcorr_pick_correction

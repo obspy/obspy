@@ -16,10 +16,13 @@ Signal processing routines based on cross correlation techniques.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import warnings
+import numpy as np
+import ctypes as C
+import scipy
 from obspy.core import Trace, Stream
 from obspy.signal.headers import clibsignal
-import ctypes as C
-import numpy as np
+from obspy.signal import cosTaper
 
 
 def xcorr(tr1, tr2, shift_len, full_xcorr=False):
@@ -205,6 +208,202 @@ def xcorr_max(fct, abs_max=True):
     mid = (len(fct) - 1) / 2
     shift = np.where(fct == value)[0][0] - mid
     return float(shift), float(value)
+
+
+def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
+        t_after, cc_maxlag, filter=None, filter_options={},
+        plot=False, filename=None):
+    """
+    Calculate the correction for the differential pick time determined by cross
+    correlation of the waveforms in narrow windows around the pick times.
+    For details on the fitting procedure refer to [Deichmann1992]_.
+
+    The parameters depend on the epicentral distance and magnitude range. For
+    small local earthquakes (Ml ~0-2, distance ~3-10 km) with consistent manual
+    picks the following can be tried::
+
+        t_before=0.05, t_after=0.2, cc_maxlag=0.10,
+        filter="bandpass", filter_options={'filter_low': 1, 'filter_high': 20}
+
+    The appropriate parameter sets can and should be determined/verified
+    visually using the option `show=True` on a representative set of picks.
+
+    To get the corrected differential pick time calculate: ``((pick2 +
+    pick2_corr) - pick1)``. To get a corrected differential travel time using
+    origin times for both events calculate: ``((pick2 + pick2_corr - ot2) -
+    (pick1 - ot1))``
+
+    :type pick1: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param pick1: Time of pick for `trace1`.
+    :type trace1: :class:`~obspy.core.Trace.trace`
+    :param trace1: Waveform data for `pick1`. Add some time at front/back.
+            The appropriate part of the trace is used automatically.
+    :type pick2: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param pick2: Time of pick for `trace2`.
+    :type trace2: :class:`~obspy.core.Trace.trace`
+    :param trace2: Waveform data for `pick2`. Add some time at front/back.
+            The appropriate part of the trace is used automatically.
+    :type t_before: float
+    :param t_before: Time to start cross correlation window before pick times
+            in seconds.
+    :type t_after: float
+    :param t_after: Time to end cross correlation window after pick times in
+            seconds.
+    :type cc_maxlag: float
+    :param cc_maxlag: Maximum lag time tested during cross correlation in
+            seconds.
+    :type filter: string
+    :param filter: None for no filtering or name of filter type
+            as passed on to :meth:`~obspy.core.Trace.trace.filter` if filter
+            should be used. To avoid artifacts in filtering provide
+            sufficiently long time series for `trace1` and `trace2`.
+    :type filter_options: dict
+    :param filter_options: Filter options that get passed on to
+            :meth:`~obspy.core.Trace.trace.filter` if filtering is used.
+    :type plot: bool
+    :param plot: Determines if pick is refined automatically (default, ""),
+            if an informative matplotlib plot is shown ("plot"), or if an
+            interactively changeable PyQt Window is opened ("interactive").
+    :type filename: string
+    :param filename: If plot option is selected, specifying a filename here
+            (e.g. 'myplot.pdf' or 'myplot.png') will output the plot to a file
+            instead of opening a plot window.
+    :rtype: (float, float)
+    :returns: Correction time `pick2_corr` for `pick2` pick time as a float and
+            corresponding correlation coefficient.
+    """
+    # perform some checks on the traces
+    if trace1.stats.sampling_rate != trace2.stats.sampling_rate:
+        msg = "Sampling rates do not match: %s != %s" % \
+                (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
+        raise Exception(msg)
+    if trace1.id != trace2.id:
+        msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
+        warnings.warn(msg)
+    samp_rate = trace1.stats.sampling_rate
+    # check data, apply filter and take correct slice of traces
+    slices = []
+    for _i, (t, tr) in enumerate(zip((pick1, pick2), (trace1, trace2))):
+        start = t - t_before - (cc_maxlag / 2.0)
+        end = t + t_after + (cc_maxlag / 2.0)
+        duration = end - start
+        # check if necessary time spans are present in data
+        if tr.stats.starttime > start:
+            msg = "Trace %s starts too late." % _i
+            raise Exception(msg)
+        if tr.stats.endtime < end:
+            msg = "Trace %s ends too early." % _i
+            raise Exception(msg)
+        if filter and start - tr.stats.starttime < duration:
+            msg = "Artifacts from signal processing possible. Trace " + \
+                  "%s should have more additional data at the start." % _i
+            warnings.warn(msg)
+        if filter and tr.stats.endtime - end < duration:
+            msg = "Artifacts from signal processing possible. Trace " + \
+                  "%s should have more additional data at the end." % _i
+            warnings.warn(msg)
+        # apply signal processing and take correct slice of data
+        if filter:
+            tr.data = tr.data.astype("float64")
+            tr.detrend(type='demean')
+            tr.data *= cosTaper(len(tr), 0.1)
+            tr.filter(type=filter, **filter_options)
+        slices.append(tr.slice(start, end))
+    # cross correlate
+    shift_len = int(cc_maxlag * samp_rate)
+    cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
+                                 shift_len, full_xcorr=True)
+    cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
+    cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
+    cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)
+    # check results of cross correlation
+    if cc_max < 0:
+        msg = "Absolute maximum is negative: %.3f. " % cc_max + \
+              "Using positive maximum: %.3f" % max(cc)
+        warnings.warn(msg)
+        cc_max = max(cc)
+        cc_shift = cc.argmax() - (len(cc) / 2)
+    if cc_max < 0.8:
+        msg = "Maximum of cross correlation lower than 0.8: %s" % cc_max
+        warnings.warn(msg)
+    # make array with time shifts in seconds corresponding to cc function
+    cc_t = np.linspace(-cc_maxlag, cc_maxlag, shift_len * 2 + 1)
+    # take the subportion of the cross correlation around the maximum that is
+    # convex and fit a parabola.
+    # use vertex as subsample resolution best cc fit.
+    peak_index = cc.argmax()
+    first_sample = peak_index
+    # XXX this could be improved..
+    while first_sample > 0 and cc_curvature[first_sample-1] <= 0:
+        first_sample -= 1
+    last_sample = peak_index
+    while last_sample < len(cc) - 1 and cc_curvature[last_sample+1] <= 0:
+        last_sample += 1
+    if first_sample == 0 or last_sample == len(cc) - 1:
+        msg = "Fitting at maximum lag. Maximum lag time should be increased."
+        warnings.warn(msg)
+    # work on subarrays
+    num_samples = last_sample - first_sample + 1
+    if num_samples < 3:
+        msg = "Less than 3 samples selected for fit to cross " + \
+              "correlation: %s" % num_samples
+        raise Exception(msg)
+    if num_samples < 5:
+        msg = "Less than 5 samples selected for fit to cross " + \
+              "correlation: %s" % num_samples
+        warnings.warn(msg)
+    # quadratic fit for small subwindow
+    coeffs, residual = scipy.polyfit(cc_t[first_sample:last_sample+1],
+            cc[first_sample:last_sample+1], deg=2, full=True)[:2]
+    # check results of fit
+    if coeffs[0] >= 0:
+        msg = "Fitted parabola opens upwards!"
+        warnings.warn(msg)
+    if residual > 0.1:
+        msg = "Residual in quadratic fit to cross correlation maximum greater " + \
+              "than 0.1: %s" % residual
+        warnings.warn(msg)
+    # x coordinate of vertex of parabola gives time shift to correct differential
+    # pick time. y coordinate gives maximum correlation coefficient.
+    dt = -coeffs[1] / 2.0 / coeffs[0]
+    coeff = (4 * coeffs[0] * coeffs[2] - coeffs[1]**2) / (4 * coeffs[0])
+    # this is the shift to apply on the time axis of `trace2` to align the traces.
+    # actually we do not want to shift the trace to align it but we want to
+    # correct the time of `pick2` so that the traces align without shifting.
+    # This is the negative of the cross correlation shift.
+    dt = -dt
+    pick2_corr = dt
+    # plot the results if selected
+    if plot == True:
+        import matplotlib
+        if filename:
+            matplotlib.use('agg')
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.suptitle("%s" % slices[0].id)
+        plt.subplot(211)
+        tmp_t = np.arange(0, len(slices[0]) / samp_rate, 1 / samp_rate)
+        plt.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k", label="Trace 1")
+        plt.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r", label="Trace 2")
+        plt.plot(tmp_t - dt, slices[1].data / float(slices[1].data.max()), "g", label="Trace 2 (shifted)")
+        plt.legend(loc="lower left")
+        plt.subplot(212)
+        plt.plot(cc_t, cc_convex, ls="", marker=".", c="k", label="cross correlation (convex)")
+        plt.plot(cc_t, cc_concave, ls="", marker=".", c="0.7", label="cross correlation (concave)")
+        plt.plot(cc_t[first_sample:last_sample+1], cc[first_sample:last_sample+1], "b.", label="used for fitting")
+        tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample], num_samples * 10)
+        plt.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
+        plt.axvline(-dt, color="g", label="vertex")
+        plt.title("%.2f at %.3f seconds" % (coeff, -dt))
+        plt.ylim(-1, 1)
+        plt.legend(loc="lower left")
+        #plt.legend(loc="lower left")
+        if filename:
+            plt.savefig(fname=filename)
+        else:
+            plt.show()
+
+    return (pick2_corr, coeff)
 
 
 if __name__ == '__main__':

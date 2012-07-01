@@ -1,3 +1,6 @@
+dev:
+ * adding function for cross correlation pick correction
+
 0.7.0:
  * adding toolbox to calculate Time-Frequency Misfits
  * fixed bug in calculation of time derivatives
