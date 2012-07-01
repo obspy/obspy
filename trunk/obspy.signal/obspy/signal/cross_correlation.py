@@ -235,12 +235,12 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
 
     :type pick1: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param pick1: Time of pick for `trace1`.
-    :type trace1: :class:`~obspy.core.Trace.trace`
+    :type trace1: :class:`~obspy.core.trace.Trace`
     :param trace1: Waveform data for `pick1`. Add some time at front/back.
             The appropriate part of the trace is used automatically.
     :type pick2: :class:`~obspy.core.utcdatetime.UTCDateTime`
     :param pick2: Time of pick for `trace2`.
-    :type trace2: :class:`~obspy.core.Trace.trace`
+    :type trace2: :class:`~obspy.core.trace.Trace`
     :param trace2: Waveform data for `pick2`. Add some time at front/back.
             The appropriate part of the trace is used automatically.
     :type t_before: float
@@ -283,7 +283,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     samp_rate = trace1.stats.sampling_rate
     # check data, apply filter and take correct slice of traces
     slices = []
-    for _i, (t, tr) in enumerate(zip((pick1, pick2), (trace1, trace2))):
+    for _i, (t, tr) in enumerate(((pick1, trace1), (pick2, trace2))):
         start = t - t_before - (cc_maxlag / 2.0)
         end = t + t_after + (cc_maxlag / 2.0)
         duration = end - start
@@ -334,10 +334,10 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     peak_index = cc.argmax()
     first_sample = peak_index
     # XXX this could be improved..
-    while first_sample > 0 and cc_curvature[first_sample-1] <= 0:
+    while first_sample > 0 and cc_curvature[first_sample - 1] <= 0:
         first_sample -= 1
     last_sample = peak_index
-    while last_sample < len(cc) - 1 and cc_curvature[last_sample+1] <= 0:
+    while last_sample < len(cc) - 1 and cc_curvature[last_sample + 1] <= 0:
         last_sample += 1
     if first_sample == 0 or last_sample == len(cc) - 1:
         msg = "Fitting at maximum lag. Maximum lag time should be increased."
@@ -353,24 +353,25 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
               "correlation: %s" % num_samples
         warnings.warn(msg)
     # quadratic fit for small subwindow
-    coeffs, residual = scipy.polyfit(cc_t[first_sample:last_sample+1],
-            cc[first_sample:last_sample+1], deg=2, full=True)[:2]
+    coeffs, residual = scipy.polyfit(cc_t[first_sample:last_sample + 1],
+            cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
     # check results of fit
     if coeffs[0] >= 0:
         msg = "Fitted parabola opens upwards!"
         warnings.warn(msg)
     if residual > 0.1:
-        msg = "Residual in quadratic fit to cross correlation maximum greater " + \
-              "than 0.1: %s" % residual
+        msg = "Residual in quadratic fit to cross correlation maximum " + \
+              "larger than 0.1: %s" % residual
         warnings.warn(msg)
-    # x coordinate of vertex of parabola gives time shift to correct differential
-    # pick time. y coordinate gives maximum correlation coefficient.
+    # X coordinate of vertex of parabola gives time shift to correct
+    # differential pick time. Y coordinate gives maximum correlation
+    # coefficient.
     dt = -coeffs[1] / 2.0 / coeffs[0]
-    coeff = (4 * coeffs[0] * coeffs[2] - coeffs[1]**2) / (4 * coeffs[0])
-    # this is the shift to apply on the time axis of `trace2` to align the traces.
-    # actually we do not want to shift the trace to align it but we want to
-    # correct the time of `pick2` so that the traces align without shifting.
-    # This is the negative of the cross correlation shift.
+    coeff = (4 * coeffs[0] * coeffs[2] - coeffs[1] ** 2) / (4 * coeffs[0])
+    # this is the shift to apply on the time axis of `trace2` to align the
+    # traces. Actually we do not want to shift the trace to align it but we
+    # want to correct the time of `pick2` so that the traces align without
+    # shifting. This is the negative of the cross correlation shift.
     dt = -dt
     pick2_corr = dt
     # plot the results if selected
@@ -379,27 +380,39 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
         if filename:
             matplotlib.use('agg')
         import matplotlib.pyplot as plt
-        plt.figure()
-        plt.suptitle("%s" % slices[0].id)
-        plt.subplot(211)
+        fig = plt.figure()
+        ax1 = fig.add_subplot(211)
         tmp_t = np.arange(0, len(slices[0]) / samp_rate, 1 / samp_rate)
-        plt.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k", label="Trace 1")
-        plt.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r", label="Trace 2")
-        plt.plot(tmp_t - dt, slices[1].data / float(slices[1].data.max()), "g", label="Trace 2 (shifted)")
-        plt.legend(loc="lower left")
-        plt.subplot(212)
-        plt.plot(cc_t, cc_convex, ls="", marker=".", c="k", label="cross correlation (convex)")
-        plt.plot(cc_t, cc_concave, ls="", marker=".", c="0.7", label="cross correlation (concave)")
-        plt.plot(cc_t[first_sample:last_sample+1], cc[first_sample:last_sample+1], "b.", label="used for fitting")
-        tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample], num_samples * 10)
-        plt.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
-        plt.axvline(-dt, color="g", label="vertex")
-        plt.title("%.2f at %.3f seconds" % (coeff, -dt))
-        plt.ylim(-1, 1)
-        plt.legend(loc="lower left")
+        ax1.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k",
+                 label="Trace 1")
+        ax1.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r",
+                 label="Trace 2")
+        ax1.plot(tmp_t - dt, slices[1].data / float(slices[1].data.max()), "g",
+                 label="Trace 2 (shifted)")
+        ax1.legend(loc="lower right", prop={'size': "small"})
+        ax1.set_title("%s" % slices[0].id)
+        ax1.set_xlabel("time [s]")
+        ax1.set_ylabel("norm. amplitude")
+        ax2 = fig.add_subplot(212)
+        ax2.plot(cc_t, cc_convex, ls="", marker=".", c="k",
+                 label="xcorr (convex)")
+        ax2.plot(cc_t, cc_concave, ls="", marker=".", c="0.7",
+                 label="xcorr (concave)")
+        ax2.plot(cc_t[first_sample:last_sample + 1],
+                 cc[first_sample:last_sample + 1], "b.",
+                 label="used for fitting")
+        tmp_t = np.linspace(cc_t[first_sample], cc_t[last_sample],
+                            num_samples * 10)
+        ax2.plot(tmp_t, scipy.polyval(coeffs, tmp_t), "b", label="fit")
+        ax2.axvline(-dt, color="g", label="vertex")
+        ax2.axhline(coeff, color="g")
+        ax2.set_xlabel("%.2f at %.3f seconds correction" % (coeff, -dt))
+        ax2.set_ylabel("correlation coefficient")
+        ax2.set_ylim(-1, 1)
+        ax2.legend(loc="lower right", prop={'size': "x-small"})
         #plt.legend(loc="lower left")
         if filename:
-            plt.savefig(fname=filename)
+            fig.savefig(fname=filename)
         else:
             plt.show()
 
