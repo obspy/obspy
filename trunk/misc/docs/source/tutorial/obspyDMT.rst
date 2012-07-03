@@ -34,18 +34,18 @@ Let's Get Started
 
 It won't take too long! To get the code and check the dependencies required for running the code properly, please:
 
-1. download the source code from obspyDMT_ or copy this line to your shell:
+1. download the source code from obspyDMT_ or copy this line to your shell (change $HOME/obspyDMT to the desired directory):
 
 ::
 
-	$ svn checkout https://svn.obspy.org/trunk/apps/obspyDMT $HOME/obspyDMT
+    $ svn checkout https://svn.obspy.org/trunk/apps/obspyDMT $HOME/obspyDMT
 
 2. go to your obspyDMT directory and run the following commands:
 
 ::
 
-	$ cd $HOME/obspyDMT
-	$ ./obspyDMT.py --check
+    $ cd $HOME/obspyDMT
+    $ ./obspyDMT.py --check
 
 ------------
 Option Types
@@ -55,10 +55,10 @@ This is the general way to define your inputs for obspyDMT:
 
 ::
 
-	$ ./obspyDMT.py --option-1 'value' --option-2
+    $ ./obspyDMT.py --option-1 'value' --option-2
 
 * option-1 (with value): this value will be stored and be used in the program as an input.
-* option-2 (without value): if you enter an option-2 in your request, the required task will be performed. For example, if you enter "--check" (refer to "Let's Get it Started" section), the program will check all the dependencies required for running the code properly.
+* option-2 (without value): if you enter an option-2 in your request, the required task will be performed. For example, if you enter "--check" (refer to `Let's Get Started`_ section), the program will check all the dependencies required for running the code properly.
 
 If you want info about all the available options, you should type:
 
@@ -82,10 +82,10 @@ The general way to define an "Event-Info Request" is:
 
 ::
 
-	$ ./obspyDMT.py --iris 'N' --arc 'N' --option-1 'value' --option-2
+    $ ./obspyDMT.py --iris 'N' --arc 'N' --option-1 'value' --option-2
 
 The flags "--iris 'N'" and "--arc 'N'", force the code to skip the process of retrieving the waveforms, response files and metadata from IRIS and ArcLink since we are only interested in the event info here.
-For details on option-1 and option-2 please refer to "Option Types" section.
+For details on option-1 and option-2 please refer to `Option Types`_ section.
 
 Example 1: run with the default values:
 
@@ -93,13 +93,13 @@ Example 1: run with the default values:
 
     $ ./obspyDMT.py --iris 'N' --arc 'N'
 
-When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT". This folder will contain the info about the events set in the default request. To access the event information for this example, go to "$HOME/obspyDMT/obspyDMT-data/2011-03-01_2012-05-24_8.9_9.9/EVENT" [the folder names will change based on your request] and check the "EVENT-CATALOG" text file (Please refer to the "Folder Structure" section for more information)
+When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT". This folder will contain the info about the events set in the default request. To access the event information for this example, go to "$HOME/obspyDMT/obspyDMT-data/2012-06-23_2012-06-28_5.5_9.9/EVENT" [the folder names will change based on your request] and check the "EVENT-CATALOG" text file (Please refer to the `Folder Structure`_ section for more information)
 
 Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command shows how to get the info of all the events with magnitude more than Mw 7.0 occured after 2011-03-01 and before 2012-03-01:
 
 ::
-	
-	$ ./obspyDMT.py --iris 'N' --arc 'N' --min_mag '7.0' --min_date '2011-03-01' --max_date '2012-03-01'
+    
+    $ ./obspyDMT.py --iris 'N' --arc 'N' --min_mag '7.0' --min_date '2011-03-01' --max_date '2012-03-01'
 
 -------------------
 Event-Based Request
@@ -118,9 +118,9 @@ The general way to define an "Event-Based Request" is:
 
 ::
 
-	$ ./obspyDMT.py --option-1 'value' --option-2
+    $ ./obspyDMT.py --option-1 'value' --option-2
 
-For details on option-1 and option-2 please refer to "Option Types" section.
+For details on option-1 and option-2 please refer to `Option Types`_ section.
 
 Example 1: to test the code with the defualt values run:
 
@@ -130,7 +130,7 @@ Example 1: to test the code with the defualt values run:
 
 if you take away the option "--test '20'", the default values could result in a huge amount of requests. This option set the code to send "20" requests to IRIS and ArcLink which is suitable for testing.
 
-When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the "Folder Structure" section)
+When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the `Folder Structure`_ section)
 
 Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following commands show how to get all the waveforms, response files and metadata of "BHZ" channels available in "TA" network with station names start with "Z" for the great Tohoku-oki earthquake of magnitude Mw 9.0:
 
@@ -168,7 +168,7 @@ Example 5: the default values for the preset (how close the time series data (wa
 
 ::
 
-	$ ./obspyDMT.py --preset time_before --offset time_after --option-1 value --option-2 
+    $ ./obspyDMT.py --preset time_before --offset time_after --option-1 value --option-2 
 
 ------------------
 Continuous Request
@@ -188,9 +188,9 @@ The general way to define a "Continuous Request" is:
 
 ::
 
-	$ ./obspyDMT.py --continuous --option-1 value --option-2
+    $ ./obspyDMT.py --continuous --option-1 value --option-2
 
-For details on option-1 and option-2 please refer to "Option Types" section.
+For details on option-1 and option-2 please refer to `Option Types`_ section.
 
 Example 1: to test the code with the defualt values run:
 
@@ -200,7 +200,7 @@ Example 1: to test the code with the defualt values run:
 
 if you take away the option "--test '20'", the default values could result in a huge amount of requests. This option set the code to send "20" requests to IRIS and ArcLink which is suitable for testing.
 
-When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the "Folder Structure" section)
+When the job starts, a folder called "obspyDMT-data" will be created in "$HOME/obspyDMT" and the data will be organized there. (Please refer to the `Folder Structure`_ section)
 
 Example 2: by adding flags to the above command, one can change the default values and add/remove functionalities of the code. As an example, the following command lines show how to get all the waveforms, response files and metadata of the "BHZ" channels available in "TA" network with station names start with "Z" for the specified time span:
 
@@ -260,18 +260,18 @@ When obspyDMT retrieves waveforms and their response files, by default it applie
 
 ::
 
-	$ ./obspyDMT.py --corr_unit 'VEL' --option-1 'value' --option-2
-	$ ./obspyDMT.py --corr_unit 'ACC' --option-1 'value' --option-2
+    $ ./obspyDMT.py --corr_unit 'VEL' --option-1 'value' --option-2
+    $ ./obspyDMT.py --corr_unit 'ACC' --option-1 'value' --option-2
 
 where option-1 and option-2 are the ones related to your requests as was shown in the previous sections.
 
-Please note that all the commands presented in this section could be applied to "Continuous Request" as well but with slightly changes (refer to the "Continuous Request" section).
+Please note that all the commands presented in this section could be applied to `Continuous Request`_ as well but with slightly changes (refer to the "Continuous Request" section).
 
 Before applying the instrument correction, a bandpass filter will be applied to the data with this default values: '(0.008, 0.012, 3.0, 4.0)'. If you want to apply another band pass filter:
 
 ::
 
-	$ ./obspyDMT.py --pre_filt '(f1,f2,f3,f4)' --option-1 value --option-2
+    $ ./obspyDMT.py --pre_filt '(f1,f2,f3,f4)' --option-1 value --option-2
 
 where (f1,f2,f3,f4) are the four corner frequencies of a cosine taper, one between f2 and f3 and tapers to zero for f1 < f < f2 and f3 < f < f4.
 
@@ -279,21 +279,21 @@ If you do not need the pre filter:
 
 ::
 
-	$ ./obspyDMT.py --pre_filt 'None' --option-1 value --option-2
+    $ ./obspyDMT.py --pre_filt 'None' --option-1 value --option-2
 
 You could idle the instrument correction functionallity by:
 
 ::
 
-	$ ./obspyDMT.py --ic_no --option-1 value --option-2
+    $ ./obspyDMT.py --ic_no --option-1 value --option-2
 
 In case that you want to apply instrument correction to an existing folder:
 
 ::
 
-	$ ./obspyDMT.py --ic_all 'address' --corr_unit unit
+    $ ./obspyDMT.py --ic_all 'address' --corr_unit unit
 
-here "address" is the path where your nots-corrected waveforms are stored.
+here "address" is the path where your not-corrected waveforms are stored.
 as mentioned above, "unit" is the unit that you want to correct the waveforms to. It could be "DIS" (default), "VEL" or "ACC".
 
 To make it more clear, let's take a look at an example with following 2 steps:
@@ -318,9 +318,9 @@ If you want to continue an interrupted request or complete your existing folder,
 
 ::
 
-	$ ./obspyDMT.py --iris_update 'address' --option-1 value --option-2
-	$ ./obspyDMT.py --arc_update 'address' --option-1 value --option-2
-	$ ./obspyDMT.py --update_all 'address' --option-1 value --option-2
+    $ ./obspyDMT.py --iris_update 'address' --option-1 value --option-2
+    $ ./obspyDMT.py --arc_update 'address' --option-1 value --option-2
+    $ ./obspyDMT.py --update_all 'address' --option-1 value --option-2
 
 Please note that all the commands presented in this section could be applied to "Continuous Request" as well but with slightly changes (refer to the "Continuous Request" section).
 
@@ -334,7 +334,7 @@ now, we want to update the saved folder for "BHE" channels:
 
 ::
 
-	$ ./obspyDMT.py --update_all './obspyDMT-data' --identity 'TA.Z*.*.BHE'
+    $ ./obspyDMT.py --update_all './obspyDMT-data' --identity 'TA.Z*.*.BHE'
 
 ----
 Plot
@@ -399,7 +399,7 @@ In the description part, options have been marked by (*) or (**) which are:
 (*): option type 1 (with value)
 (**): option type 2 (without value)
 
-Please refer to the "Option Types" section for more info about type 1 and type 2
+Please refer to the `Option Types`_ section for more info about type 1 and type 2
 
 +-----------------------+-----------------------+---+-----------------------+-----------------------+
 | options               | description           |   | options               | description           |
