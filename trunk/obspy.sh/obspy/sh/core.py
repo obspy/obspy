@@ -487,11 +487,11 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     :type append: bool, optional
     :param append: If filename exists append all data to file, default False.
     """
-    if filename.endswith('.QHD'):
+    if filename.endswith('.QHD') or filename.endswith('.QBN'):
         filename = os.path.splitext(filename)[0]
     if data_directory:
         temp = os.path.basename(filename)
-        filename_data = os.path.join(data_directory, temp + '.QBN')
+        filename_data = os.path.join(data_directory, temp)
     else:
         filename_data = filename
     filename_header = filename + '.QHD'
