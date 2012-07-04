@@ -1,3 +1,6 @@
+dev:
+ * refactored attributes in getPAZ to stick better with the SEED standard
+
 0.7.1:
  * proper DeprecationWarning for deprecated keywords for Client.getWaveform()
 
