@@ -24,9 +24,9 @@ class CrossCorrelationTestCase(unittest.TestCase):
         earthquakes.
         """
         st1 = read(os.path.join(self.path,
-                                'BW.UH1..EHZ.D.2010.147.a.slist.gz'))
+                                'BW.UH1._.EHZ.D.2010.147.a.slist.gz'))
         st2 = read(os.path.join(self.path,
-                                'BW.UH1..EHZ.D.2010.147.b.slist.gz'))
+                                'BW.UH1._.EHZ.D.2010.147.b.slist.gz'))
 
         tr1 = st1.select(component="Z")[0]
         tr2 = st2.select(component="Z")[0]
