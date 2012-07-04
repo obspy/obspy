@@ -679,10 +679,11 @@ class Unpickler(object):
                 self._xpath2obj('preferredMagnitudeID', event_el)
             event.preferred_focal_mechanism_id = \
                 self._xpath2obj('preferredFocalMechanismID', event_el)
-            event.type = self._xpath2obj('type', event_el)
-            event.type_certainty = self._xpath2obj('typeCertainty', event_el)
+            event.event_type = self._xpath2obj('type', event_el)
+            event.event_type_certainty = self._xpath2obj('typeCertainty',
+                    event_el)
             event.creation_info = self._creation_info(event_el)
-            event.descriptions = self._event_description(event_el)
+            event.event_descriptions = self._event_description(event_el)
             event.comments = self._comments(event_el)
             # origins
             event.origins = []
@@ -1238,15 +1239,23 @@ class Pickler(object):
             event_el = etree.Element('event',
                 attrib={'publicID': self._id(event.resource_id)})
             # optional event attributes
-            self._str(event.preferred_origin_id, event_el, 'preferredOriginID')
-            self._str(event.preferred_magnitude_id, event_el,
-                     'preferredMagnitudeID')
-            self._str(event.preferred_focal_mechanism_id, event_el,
-                     'preferredFocalMechanismID')
-            self._str(event.type, event_el, 'type')
-            self._str(event.type_certainty, event_el, 'typeCertainty')
+            if hasattr(event, "preferred_origin_id"):
+                self._str(event.preferred_origin_id, event_el,
+                        'preferredOriginID')
+            if hasattr(event, "preferred_magnitude_id"):
+                self._str(event.preferred_magnitude_id, event_el,
+                         'preferredMagnitudeID')
+            if hasattr(event, "preferred_focal_mechanism_id"):
+                self._str(event.preferred_focal_mechanism_id, event_el,
+                         'preferredFocalMechanismID')
+            # event type and event type certainty also are optional attributes.
+            if hasattr(event, "event_type"):
+                self._str(event.event_type, event_el, 'type')
+            if hasattr(event, "event_type_certainty"):
+                self._str(event.event_type_certainty, event_el,
+                    'typeCertainty')
             # event descriptions
-            for description in event.descriptions:
+            for description in event.event_descriptions:
                 el = etree.Element('description')
                 self._str(description.text, el, 'text', True)
                 self._str(description.type, el, 'type')

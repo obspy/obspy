@@ -66,8 +66,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(event.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/event/historical/1165'))
         # enums
-        self.assertEquals(event.type, 'earthquake')
-        self.assertEquals(event.type_certainty, 'suspected')
+        self.assertEquals(event.event_type, 'earthquake')
+        self.assertEquals(event.event_type_certainty, 'suspected')
         # comments
         self.assertEquals(len(event.comments), 2)
         c = event.comments
@@ -79,8 +79,8 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
         self.assertEquals(c[1].creation_info, None)
         # event descriptions
-        self.assertEquals(len(event.descriptions), 3)
-        d = event.descriptions
+        self.assertEquals(len(event.event_descriptions), 3)
+        d = event.event_descriptions
         self.assertEquals(d[0].text, '1906 San Francisco Earthquake')
         self.assertEquals(d[0].type, 'earthquake name')
         self.assertEquals(d[1].text, 'NEAR EAST COAST OF HONSHU, JAPAN')

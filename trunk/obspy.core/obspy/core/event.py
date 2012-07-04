@@ -2037,7 +2037,8 @@ __Event = _eventTypeClassFactory("__Event",
                       ("event_type_certainty", EventTypeCertainty),
                       ("creation_info", CreationInfo)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
-                    'focal_mechanisms', 'origins', 'magnitudes'])
+                    'focal_mechanisms', 'origins', 'magnitudes',
+                    'station_magnitudes'])
 
 
 class Event(__Event):
@@ -2099,6 +2100,9 @@ class Event(__Event):
     :param origins: Origins associated with the event.
     :type magnitudes: list of :class:`~obspy.core.event.Magnitude`
     :param magnitudes: Magnitudes associated with the event.
+    :type station_magnitudes: list of
+        :class:`~obspy.core.event.StationMagnitude`
+    :param station_magnitudes: Station magnitudes associated with the event.
     """
     def __eq__(self, other):
         """
