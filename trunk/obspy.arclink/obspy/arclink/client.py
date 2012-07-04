@@ -791,7 +791,8 @@ class Client(object):
         # normalization factor
         try:
             if xml_ns == _INVENTORY_NS_1_0:
-                paz['normalization_factor'] = float(xml_doc.get('normalizationFactor'))
+                paz['normalization_factor'] = \
+                    float(xml_doc.get('normalizationFactor'))
             else:
                 paz['normalization_factor'] = float(xml_doc.get('norm_fac'))
         except:
@@ -799,9 +800,11 @@ class Client(object):
 
         try:
             if xml_ns == _INVENTORY_NS_1_0:
-                paz['normalization_frequency'] = float(xml_doc.get('normalizationFrequency'))
+                paz['normalization_frequency'] = \
+                    float(xml_doc.get('normalizationFrequency'))
             else:
-                paz['normalization_frequency'] = float(xml_doc.get('norm_freq'))
+                paz['normalization_frequency'] = \
+                    float(xml_doc.get('norm_freq'))
         except:
             paz['normalization_frequency'] = None
 
@@ -1091,7 +1094,8 @@ class Client(object):
         sensors = {}
         for sensor in xml_doc.xpath('ns:sensor', namespaces={'ns': xml_ns}):
             entry = {}
-            for key in ['description', 'manufacturer', 'model', 'name', 'type', 'unit', 'response']:
+            for key in ['description', 'manufacturer', 'model', 'name', 'type',
+                        'unit', 'response']:
                 entry[key] = sensor.get(key, '')
             sensors[entry['response']] = entry
 
@@ -1208,7 +1212,8 @@ class Client(object):
                         except:
                             temp['sensitivity'] = None
                         try:
-                            temp['sensitivity_frequency'] = float(comp.get('gainFrequency'))
+                            temp['sensitivity_frequency'] = \
+                                float(comp.get('gainFrequency'))
                         except:
                             temp['sensitivity_frequency'] = None
                         try:
@@ -1247,17 +1252,20 @@ class Client(object):
                         paz = self.__parsePAZ(xml_paz[0], xml_ns)
                         # sensitivity
                         paz['sensitivity'] = temp['sensitivity']
-                        paz['sensitivity_frequency'] = temp['sensitivity_frequency']
+                        paz['sensitivity_frequency'] = \
+                            temp['sensitivity_frequency']
                         paz['sensitivity_unit'] = temp['sensitivity_unit']
                         temp['paz'] = paz
 
                         # add some seismometer-specific "nice to have" stuff
                         publicID = xml_paz[0].get('publicID')
                         try:
-                            paz['sensor_manufacturer'] = sensors[publicID]['manufacturer']
+                            paz['sensor_manufacturer'] = \
+                                sensors[publicID]['manufacturer']
                             paz['sensor_model'] = sensors[publicID]['model']
                         except:
-                            paz['sensor_manufacturer'] = paz['sensor_model'] = None
+                            paz['sensor_manufacturer'] = None
+                            paz['sensor_model'] = None
 
         return data
 
