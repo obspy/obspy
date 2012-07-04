@@ -20,7 +20,8 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
     QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed
+    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
+    ResourceIdentifier
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
@@ -165,20 +166,30 @@ class Unpickler(object):
         value = self._xpath2obj('value', el, quantity_type)
         # All errors are QuantityError.
         error = QuantityError()
-        error.confidence_level = self._xpath2obj('confidenceLevel', el, float)
+        # Don't set the errors if they are not set.
+        confidence_level = self._xpath2obj('confidenceLevel', el, float)
+        if confidence_level is not None:
+            error.confidence_level = confidence_level
         if quantity_type != int:
-            error.uncertainty = self._xpath2obj('uncertainty', el, float)
-            error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el,
-                                                      float)
-            error.upper_uncertainty = self._xpath2obj('upperUncertainty', el,
-                                                      float)
+            uncertainty = self._xpath2obj('uncertainty', el, float)
+            if uncertainty is not None:
+                error.uncertainty = uncertainty
+            lower_uncertainty = self._xpath2obj('lowerUncertainty', el, float)
+            if lower_uncertainty is not None:
+                error.lower_uncertainty = lower_uncertainty
+            upper_uncertainty = self._xpath2obj('upperUncertainty', el, float)
+            if upper_uncertainty is not None:
+                error.upper_uncertainty = upper_uncertainty
         else:
-            # Integer quantities store integer uncertainties.
-            error.uncertainty = self._xpath2obj('uncertainty', el, int)
-            error.lower_uncertainty = self._xpath2obj('lowerUncertainty', el,
-                                                      int)
-            error.upper_uncertainty = self._xpath2obj('upperUncertainty', el,
-                                                      int)
+            uncertainty = self._xpath2obj('uncertainty', el, int)
+            if uncertainty is not None:
+                error.uncertainty = uncertainty
+            lower_uncertainty = self._xpath2obj('lowerUncertainty', el, int)
+            if lower_uncertainty is not None:
+                error.lower_uncertainty = lower_uncertainty
+            upper_uncertainty = self._xpath2obj('upperUncertainty', el, int)
+            if upper_uncertainty is not None:
+                error.upper_uncertainty = upper_uncertainty
         return value, error
 
     def _float_value(self, element, name):
@@ -308,7 +319,7 @@ class Unpickler(object):
         obj.slowness_method_id = self._xpath2obj('slownessMethodID', element)
         obj.onset = self._xpath2obj('onset', element)
         obj.phase_hint = self._xpath2obj('phaseHint', element)
-        obj.polarity = self._xpath2obj('polarity', element)
+        obj.pick_polarity = self._xpath2obj('polarity', element)
         obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.comments = self._comments(element)
@@ -749,11 +760,11 @@ class Pickler(object):
         """
         return self._serialize(catalog)
 
-    def _id(self, obj, default=""):
+    def _id(self, obj):
         try:
             return obj.getQuakeMLURI()
         except:
-            return default
+            return ResourceIdentifier().getQuakeMLURI()
 
     def _str(self, value, root, tag, always_create=False):
         if always_create is False and value is None:
@@ -795,7 +806,12 @@ class Pickler(object):
         if obj.channel_code:
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
-        subelement.text = self._id(obj.resource_id)
+        # WaveformStreamID has a non-mandatory resource_id
+        if obj.resource_id is None or obj.resource_id == "":
+            subelement.text = ""
+        else:
+            subelement.text = self._id(obj.resource_id)
+
         if len(subelement.attrib) > 0 or required:
             element.append(subelement)
 
@@ -1047,7 +1063,7 @@ class Pickler(object):
         self._str(pick.slowness_method_id, element, 'slownessMethodID')
         self._str(pick.onset, element, 'onset')
         self._str(pick.phase_hint, element, 'phaseHint')
-        self._str(pick.polarity, element, 'polarity')
+        self._str(pick.pick_polarity, element, 'polarity')
         self._str(pick.evaluation_mode, element, 'evaluationMode')
         self._str(pick.evaluation_status, element, 'evaluationStatus')
         self._comments(pick.comments, element)
@@ -1228,7 +1244,7 @@ class Pickler(object):
             '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
             attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
         catalog_el = etree.Element('eventParameters',
-            attrib={'publicID': self._id(catalog.resource_id, None)})
+            attrib={'publicID': self._id(catalog.resource_id)})
         # optional catalog parameters
         self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)

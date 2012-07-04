@@ -638,12 +638,15 @@ class ResourceIdentifier(object):
         >>> print res_id.resource_id
         some_id
         """
+        resource_id = self.resource_id
+        if str(resource_id).strip() == "":
+            resource_id = str(uuid4())
         regex = r"(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
                 r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*"
-        result = re.match(regex, str(self.resource_id))
+        result = re.match(regex, str(resource_id))
         if result is not None:
-            return self.resource_id
-        resource_id = 'smi:%s/%s' % (authority_id, str(self.resource_id))
+            return resource_id
+        resource_id = 'smi:%s/%s' % (authority_id, str(resource_id))
         # Check once again just to be sure no weird symbols are stored in the
         # resource_id.
         result = re.match(regex, resource_id)
