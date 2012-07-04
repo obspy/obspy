@@ -1212,6 +1212,8 @@ class Client(object):
                             temp['sensitivity'] = float(comp.get('gain'))
                         except:
                             temp['sensitivity'] = None
+                        # again keep it backwards compatible
+                        temp['gain'] = temp['sensitivity']
                         try:
                             temp['sensitivity_frequency'] = \
                                 float(comp.get('gainFrequency'))

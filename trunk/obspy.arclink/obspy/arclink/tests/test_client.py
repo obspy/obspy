@@ -266,29 +266,38 @@ class ClientTestCase(unittest.TestCase):
             'network': 'BW',
             '_format': 'MSEED',
             'paz': AttribDict({
-                'poles': [(-0.037004 + 0.037016j),
-                          (-0.037004 - 0.037016j),
-                          (-251.33 + 0j),
-                          (-131.04 - 467.29j),
-                          (-131.04 + 467.29j)],
-                'sensitivity': 2516778600.0,
-                'zeros': [0j, 0j],
+                'normalization_factor': 60077000.0,
                 'name': 'LMU:STS-2/N/g=1500',
-                'gain': 60077000.0}),
-            'mseed': AttribDict({'record_length': 512, 'encoding': 'STEIM1',
-                                 'filesize': 30720, 'dataquality': 'D',
-                                 'number_of_records': 60, 'byteorder': '>'}),
-            'coordinates': AttribDict({'latitude': 47.737167,
-                                       'elevation': 860.0,
-                                       'longitude': 12.795714}),
+                'sensitivity': 2516778600.0,
+                'normalization_frequency': 1.0,
+                'sensor_manufacturer': 'Streckeisen',
+                'sensitivity_unit': 'M/S',
+                'sensitivity_frequency': 0.02,
+                'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
+                          (-251.33 + 0j), (-131.04 - 467.29j),
+                          (-131.04 + 467.29j)],
+                'gain': 60077000.0,
+                'zeros': [0j, 0j],
+                'sensor_model': 'STS-2/N'}),
+            'mseed': AttribDict({
+                'record_length': 512,
+                'encoding': 'STEIM1',
+                'filesize': 30720L,
+                'dataquality': 'D',
+                'number_of_records': 60L,
+                'byteorder': '>'}),
+            'coordinates': AttribDict({
+                'latitude': 47.737167,
+                'elevation': 860.0,
+                'longitude': 12.795714}),
+            'delta': 0.005,
             'station': 'RJOB',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 12, 0),
             'npts': 1370,
             'calib': 1.0,
             'sampling_rate': 200.0,
-            'channel': 'EHZ',
-            'delta': 0.005}
+            'channel': 'EHZ'}
         self.assertEquals(st[0].stats, results)
         # example 2
         client = Client()
@@ -298,29 +307,38 @@ class ClientTestCase(unittest.TestCase):
             'network': 'CZ',
             '_format': 'MSEED',
             'paz': AttribDict({
-                'poles': [(-0.037004 + 0.037016j),
-                          (-0.037004 - 0.037016j),
-                          (-251.33 + 0j),
-                          (-131.04 - 467.29j),
-                          (-131.04 + 467.29j)],
+                'normalization_factor': 60077000.0,
+                'name': 'GFZ:STS-2/N/g=20000',
                 'sensitivity': 8200000000.0,
+                'normalization_frequency': 1.0,
+                'sensor_manufacturer': 'Streckeisen',
+                'sensitivity_unit': 'M/S',
+                'sensitivity_frequency': 0.02,
                 'zeros': [0j, 0j],
                 'gain': 60077000.0,
-                'name': 'GFZ:STS-2/N/g=20000'}),
-            'mseed': AttribDict({'record_length': 512, 'encoding': 'STEIM1',
-                                 'filesize': 3584, 'dataquality': 'D',
-                                 'number_of_records': 7, 'byteorder': '>'}),
-            'coordinates': AttribDict({'latitude': 49.3084,
-                                       'elevation': 470.0,
-                                       'longitude': 16.5933}),
+                'poles': [(-0.037004 + 0.037016j), (-0.037004 - 0.037016j),
+                          (-251.33 + 0j), (-131.04 - 467.29j),
+                          (-131.04 + 467.29j)],
+                'sensor_model': 'STS-2/N'}),
+            'mseed': AttribDict({
+                'record_length': 512,
+                'encoding': 'STEIM1',
+                'filesize': 3584L,
+                'dataquality': 'D',
+                'number_of_records': 7L,
+                'byteorder': '>'}),
+            'coordinates': AttribDict({
+                'latitude': 49.3084,
+                'elevation': 470.0,
+                'longitude': 16.5933}),
+            'delta': 0.025,
             'station': 'VRAC',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
             'npts': 2401,
             'calib': 1.0,
             'sampling_rate': 40.0,
-            'channel': 'BHZ',
-            'delta': 0.025}
+            'channel': 'BHZ'}
         self.assertEquals(st[0].stats, results)
 
     def test_getNotExistingWaveform(self):
@@ -516,7 +534,7 @@ class ClientTestCase(unittest.TestCase):
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j,
                  -2.513300e+02 + 0.000000e+00j, -1.310400e+02 - 4.672900e+02j,
                  -1.310400e+02 + 4.672900e+02j]
-        gain = 6.0077e+07
+        normalization_factor = 6.0077e+07
         sensitivity = 2.5168e+09
         # initialize client
         client = Client('erde.geophysik.uni-muenchen.de', 18001)
@@ -524,7 +542,7 @@ class ClientTestCase(unittest.TestCase):
         dt = UTCDateTime(2009, 1, 1)
         paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
         # compare instrument
-        self.assertEqual(gain, paz.gain)
+        self.assertEqual(normalization_factor, paz.normalization_factor)
         self.assertEqual(poles, paz.poles)
         self.assertEqual(zeros, paz.zeros)
         self.assertAlmostEqual(sensitivity / 1e9, paz.sensitivity / 1e9, 4)
