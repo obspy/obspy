@@ -301,7 +301,8 @@ class Client(object):
             # safeguard for not covered status messages
             self._writeln('PURGE %d' % req_id)
             self._bye()
-            raise ArcLinkException('No content')
+            msg = "Uncovered status message - contact a developer to fix this"
+            raise ArcLinkException(msg)
         self._writeln('DOWNLOAD %d' % req_id)
         fd = self._client.get_socket().makefile('rb+')
         length = int(fd.readline(100).strip())
