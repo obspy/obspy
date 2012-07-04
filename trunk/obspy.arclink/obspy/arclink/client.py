@@ -735,7 +735,7 @@ class Client(object):
                                       (-131.04-467.29j), (-131.04+467.29j)],
                             'sensitivity': 2516778600.0, 'zeros': [0j, 0j],
                             'name': 'LMU:STS-2/N/g=1500',
-                            'normalizationFactor': 60077000.0}),
+                            'normalization_factor': 60077000.0}),
         'coordinates': AttribDict({'latitude': 49.9862, 'elevation': 635.0,
                                    'longitude': 12.1083})}
         """
@@ -851,7 +851,7 @@ class Client(object):
     def getPAZ(self, network, station, location, channel, starttime=None,
                endtime=None, time=None, route=False):
         """
-        Returns poles, zeros, normalizationFactor and sensitivity for a
+        Returns poles, zeros, normalization factor and sensitivity for a
         single channel at a given time.
 
         :type network: str
@@ -882,7 +882,7 @@ class Client(object):
                     'sensitivity': 2516778600.0,
                     'zeros': [0j, 0j],
                     'name': 'LMU:STS-2/N/g=1500',
-                    'normalizationFactor': 60077000.0})
+                    'normalization_factor': 60077000.0})
         """
         # XXX: deprecation handling
         if starttime and endtime:
