@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.preview import createPreview, mergePreviews, resamplePreview
 from obspy.core import Stream, Trace, UTCDateTime
+from obspy.core.preview import createPreview, mergePreviews, resamplePreview
 import numpy as np
 import unittest
 
@@ -184,6 +184,15 @@ class UtilTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.endtime, tr2.stats.endtime)
         self.assertEqual(st2[0].stats.npts, 5760)
         self.assertEqual(len(st2[0]), 5760)
+
+    def test_createPreviewWithUnroundedSampleRate(self):
+        """
+        Test for creating preview.
+        """
+        tr = Trace(data=np.arange(4000))
+        tr.stats.sampling_rate = 124.999992371
+        tr.stats.starttime = UTCDateTime("1989-10-06T14:31:14.000000Z")
+        createPreview(tr, delta=30)
 
 
 def suite():

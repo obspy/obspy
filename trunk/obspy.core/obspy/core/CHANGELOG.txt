@@ -1,3 +1,6 @@
+dev:
+ * fixing preview generation for sampling rates containing floats
+
 0.7.1:
  * fixing negative azimuths returned by gps2DistAzimuth [#375]
 
