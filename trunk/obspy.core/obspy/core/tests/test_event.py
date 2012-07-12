@@ -3,6 +3,7 @@
 from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier
+import obspy.core.event
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 import os
@@ -29,9 +30,13 @@ class EventTestCase(unittest.TestCase):
         Testing the __eq__ method of the Event object.
         """
         # events are equal if the have the same public_id
-        ev1 = Event('id1')
-        ev2 = Event('id1')
-        ev3 = Event('id2')
+        # Catch warnings about the same different objects with the same
+        # resource id so they do not clutter the test output.
+        with warnings.catch_warnings() as w:
+            warnings.simplefilter("ignore")
+            ev1 = Event('id1')
+            ev2 = Event('id1')
+            ev3 = Event('id2')
         self.assertTrue(ev1 == ev2)
         self.assertTrue(ev2 == ev1)
         self.assertFalse(ev1 == ev3)

@@ -22,6 +22,7 @@ from pkg_resources import load_entry_point
 from uuid import uuid4
 import copy
 import glob
+import inspect
 import numpy as np
 import os
 import re
@@ -205,6 +206,12 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         >>> assert(test_event.description is None)
         >>> assert(test_event.some_letters is None)
 
+    If the resource_id attribute of the created class type is set, the object
+    the ResourceIdentifier refers to will be the class instance.
+
+        >>> assert(id(test_event) == \
+            id(test_event.resource_id.getReferredObject()))
+
     They can be set later and will be converted to the appropriate type if
     possible.
 
@@ -379,6 +386,10 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
             AttribDict.__setattr__(self, name, value)
+            # If "name" is resource_id and value is not None, set the referred
+            # object of the ResourceIdentifier to self.
+            if name == "resource_id" and value is not None:
+                self.resource_id.setReferredObject(self)
 
     # Set the class type name.
     setattr(AbstractEventType, "__name__", class_name)
@@ -602,7 +613,9 @@ class ResourceIdentifier(object):
         msg = "The resource identifier already exists and points to " + \
               "another object. It will now point to the object " + \
               "referred to by the new resource identifier."
-        warnings.warn(msg)
+        # Always raise the warning!
+        warnings.warn_explicit(msg, UserWarning, __file__,
+                inspect.currentframe().f_back.f_lineno)
         ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
