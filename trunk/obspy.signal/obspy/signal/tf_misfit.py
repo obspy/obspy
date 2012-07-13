@@ -828,7 +828,7 @@ def pg(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     return A * (1 - np.abs(PM) ** k)
 
 
-def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
+def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                   norm='global', st2_isref=True, left=0.1, bottom=0.1,
                   h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6, w_cb=0.01,
                   d_cb=0.0, show=True, plot_args=['k', 'r', 'b'], ylim=0.,
@@ -842,6 +842,7 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         timesamples, ) for single component data
     :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
+    :param t0: starting time for plotting
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
@@ -927,7 +928,7 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
     """
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
-    t = np.linspace(0., tmax, npts)
+    t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     if cmap == None:
@@ -1110,7 +1111,7 @@ def plotTfMisfits(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
+def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                norm='global', st2_isref=True, A=10., k=1., left=0.1,
                bottom=0.1, h_1=0.2, h_2=0.125, h_3=0.2, w_1=0.2, w_2=0.6,
                w_cb=0.01, d_cb=0.0, show=True, plot_args=['k', 'r', 'b'],
@@ -1124,6 +1125,7 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
         timesamples, ) for single component data
     :param st2: signal 2 of two signals to compare, type and shape as st1
     :param dt: time step between two samples in st1 and st2
+    :param t0: starting time for plotting
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
@@ -1202,7 +1204,7 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
     """
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
-    t = np.linspace(0., tmax, npts)
+    t = np.linspace(0., tmax, npts) + t0
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
     if cmap == None:
@@ -1379,7 +1381,7 @@ def plotTfGofs(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6,
             return figs
 
 
-def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
+def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
              bottom=0.1, h_1=0.2, h_2=0.6, w_1=0.2, w_2=0.6, w_cb=0.01,
              d_cb=0.0, show=True, plot_args=['k', 'k'], clim=0., cmap=None,
              mode='absolute', fft_zero_pad_fac=0):
@@ -1390,6 +1392,7 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         number of time samples) or (number of timesamples, ) for single
         component data
     :param dt: time step between two samples in st
+    :param t0: starting time for plotting
     :param fmin: minimal frequency to be analyzed
     :param fmax: maximal frequency to be analyzed
     :param nf: number of frequencies (will be chosen with logarithmic spacing)
@@ -1435,12 +1438,13 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     """
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
-    t = np.linspace(0., tmax, npts)
+    t = np.linspace(0., tmax, npts) + t0
 
     if fft_zero_pad_fac == 0:
         nfft = npts
     else:
         nfft = util.nextpow2(npts) * fft_zero_pad_fac
+
     f_lin = np.linspace(0, 0.5 / dt, nfft / 2 + 1)
 
     if cmap == None:
@@ -1486,6 +1490,8 @@ def plotTfr(st, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, left=0.1,
             spec[i] = np.fft.rfft(st[i], n=nfft) * dt
 
         ntr = st.shape[0]
+
+    print W.shape
 
     if mode == 'absolute':
         TFR = np.abs(W)
