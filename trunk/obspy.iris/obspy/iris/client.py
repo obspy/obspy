@@ -344,9 +344,11 @@ class Client(object):
         elif format == 'SACPZ':
             # StationXML
             data = self.sacpz(**kwargs)
-        else:
+        elif format == 'RESP':
             # RESP
             data = self.resp(**kwargs)
+        else:
+            raise ValueError("Unsupported format %s" % format)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()

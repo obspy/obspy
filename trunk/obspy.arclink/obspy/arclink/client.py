@@ -962,12 +962,18 @@ class Client(object):
         >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',
         ...                     t, t + 1, format="SEED")  # doctest: +SKIP
         """
-        # request type
-        rtype = 'REQUEST RESPONSE format=%s' % format
-        # request data
-        rdata = [starttime, endtime, network, station, channel, location]
-        # fetch dataless
-        data = self._fetch(rtype, rdata)
+        # check format
+        format = format.upper()
+
+        if format == "SEED":
+            # request type
+            rtype = 'REQUEST RESPONSE format=%s' % format
+            # request data
+            rdata = [starttime, endtime, network, station, channel, location]
+            # fetch dataless
+            data = self._fetch(rtype, rdata)
+        else:
+            raise ValueError("Unsupported format %s" % format)
         fh = open(filename, "wb")
         fh.write(data)
         fh.close()
