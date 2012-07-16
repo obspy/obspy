@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import obspy.core.event
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import skipIfPython25
 from xml.etree.ElementTree import tostring, fromstring
 import os
 import unittest
+import warnings
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -263,7 +266,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude"))
         self.assertEqual(mag.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
-                             resource_id="smi:ch.ethz.sed/waveform/201754"))
+                             resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
         original = open(filename, "rt").read()
@@ -318,7 +321,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(pick.time_errors.uncertainty, 0.012)
         self.assertEquals(pick.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
-                             resource_id='smi:ch.ethz.sed/waveform/201754'))
+                             resource_uri='smi:ch.ethz.sed/waveform/201754'))
         self.assertEquals(pick.filter_id,
             ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard'))
         self.assertEquals(pick.method_id,
@@ -350,7 +353,7 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier('smi:ISC/fmid=292309'))
         self.assertEquals(fm.waveform_id.network_code, 'BW')
         self.assertEquals(fm.waveform_id.station_code, 'FUR')
-        self.assertEquals(fm.waveform_id.resource_id,
+        self.assertEquals(fm.waveform_id.resource_uri,
             ResourceIdentifier(resource_id="smi:ch.ethz.sed/waveform/201754"))
         self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
         self.assertEquals(fm.triggering_origin_id,
@@ -416,32 +419,44 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
+    @skipIfPython25
     def test_writeQuakeML(self):
         """
         Tests writing a QuakeML document.
+
+        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
         tmpfile = NamedTemporaryFile().name
         catalog = readQuakeML(filename)
         self.assertTrue(len(catalog), 1)
         writeQuakeML(catalog, tmpfile)
-        # read file again
-        catalog2 = readQuakeML(tmpfile)
+        # Read file again. Avoid the (legit) warning about the already used
+        # resource identifiers.
+        with warnings.catch_warnings() as _:
+            warnings.simplefilter("ignore")
+            catalog2 = readQuakeML(tmpfile)
         self.assertTrue(len(catalog2), 1)
         # clean up
         os.remove(tmpfile)
 
+    @skipIfPython25
     def test_readEvents(self):
         """
         Tests reading a QuakeML document via readEvents.
+
+        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
         tmpfile = NamedTemporaryFile().name
         catalog = readEvents(filename)
         self.assertTrue(len(catalog), 3)
         catalog.write(tmpfile, format='QUAKEML')
-        # read file again
-        catalog2 = readEvents(tmpfile)
+        # Read file again. Avoid the (legit) warning about the already used
+        # resource identifiers.
+        with warnings.catch_warnings() as _:
+            warnings.simplefilter("ignore")
+            catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
         # clean up
         os.remove(tmpfile)

@@ -869,7 +869,7 @@ __WaveformStreamID = _eventTypeClassFactory("__WaveformStreamID",
                       ("station_code", str),
                       ("channel_code", str),
                       ("location_code", str),
-                      ("resource_id", ResourceIdentifier)])
+                      ("resource_uri", ResourceIdentifier)])
 
 
 class WaveformStreamID(__WaveformStreamID):
@@ -913,7 +913,7 @@ class WaveformStreamID(__WaveformStreamID):
     BW.FUR..EHZ
     """
     def __init__(self, network_code=None, station_code=None,
-                 location_code=None, channel_code=None, resource_id=None,
+                 location_code=None, channel_code=None, resource_uri=None,
                  seed_string=None):
         # Use the seed_string if it is given and everything else is not.
         if (seed_string is not None) and (network_code is None) and \
@@ -934,7 +934,7 @@ class WaveformStreamID(__WaveformStreamID):
                                                station_code=station_code,
                                                location_code=location_code,
                                                channel_code=channel_code,
-                                               resource_id=resource_id)
+                                               resource_uri=resource_uri)
 
     def getSEEDString(self):
         return "%s.%s.%s.%s" % (\

@@ -25,6 +25,7 @@ class EventTestCase(unittest.TestCase):
         self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" + \
                           " | 4.3 ML | manual", s)
 
+    @skipIfPython25
     def test_eq(self):
         """
         Testing the __eq__ method of the Event object.
@@ -32,7 +33,7 @@ class EventTestCase(unittest.TestCase):
         # events are equal if the have the same public_id
         # Catch warnings about the same different objects with the same
         # resource id so they do not clutter the test output.
-        with warnings.catch_warnings() as w:
+        with warnings.catch_warnings() as _:
             warnings.simplefilter("ignore")
             ev1 = Event('id1')
             ev2 = Event('id1')

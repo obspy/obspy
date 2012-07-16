@@ -261,7 +261,7 @@ class Unpickler(object):
         obj.station_code = wid_el.get('stationCode') or ''
         obj.location_code = wid_el.get('locationCode')
         obj.channel_code = wid_el.get('channelCode')
-        obj.resource_id = wid_el.text
+        obj.resource_uri = wid_el.text
         return obj
 
     def _arrival(self, element):
@@ -807,10 +807,10 @@ class Pickler(object):
             attrib['channelCode'] = obj.channel_code
         subelement = etree.Element('waveformID', attrib=attrib)
         # WaveformStreamID has a non-mandatory resource_id
-        if obj.resource_id is None or obj.resource_id == "":
+        if obj.resource_uri is None or obj.resource_uri == "":
             subelement.text = ""
         else:
-            subelement.text = self._id(obj.resource_id)
+            subelement.text = self._id(obj.resource_uri)
 
         if len(subelement.attrib) > 0 or required:
             element.append(subelement)
