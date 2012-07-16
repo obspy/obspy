@@ -147,7 +147,7 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
 @deprecated_keywords({'pitsa': None})
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
-             debug=False, **kwargs):
+             debug=False):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
