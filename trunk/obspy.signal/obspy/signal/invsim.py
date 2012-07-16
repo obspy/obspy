@@ -170,6 +170,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param units: Units to return response in. Can be either DIS, VEL or ACC
     :type debug: bool
     :param debug: Verbose output to stdout. Disabled by default.
+    :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
