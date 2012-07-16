@@ -329,7 +329,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(pick.backazimuth, 44.0)
         self.assertEquals(pick.onset, 'impulsive')
         self.assertEquals(pick.phase_hint, 'Pn')
-        self.assertEquals(pick.pick_polarity, 'positive')
+        self.assertEquals(pick.polarity, 'positive')
         self.assertEquals(pick.evaluation_mode, "manual")
         self.assertEquals(pick.evaluation_status, "confirmed")
         self.assertEquals(len(pick.comments), 2)
