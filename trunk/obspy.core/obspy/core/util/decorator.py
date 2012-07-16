@@ -63,7 +63,7 @@ def deprecated_keywords(keywords):
                     else:
                         warnings.warn(msg % (kw, fname, nkw),
                                       category=DeprecationWarning)
-                    kwargs[nkw] = kwargs[kw]
+                        kwargs[nkw] = kwargs[kw]
                     del(kwargs[kw])
             return func(*args, **kwargs)
         return echo_func
