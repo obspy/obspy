@@ -144,7 +144,8 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
 
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
-             network='*', locid='*', units="VEL", freq=False, debug=False):
+             network='*', locid='*', units="VEL", freq=False,
+             debug=False, pitsa=True):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
@@ -212,7 +213,8 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         f[i] = rfreqs[i]
     clibevresp.free_response(res)
     del nfreqs, rfreqs, rvec, res
-    h = np.conj(h)
+    if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
+        h = np.conj(h)
     # delete temporary file
     try:
         os.remove(tempfile)
