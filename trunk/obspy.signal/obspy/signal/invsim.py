@@ -145,7 +145,7 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
 
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
-             debug=False, pitsa=True):
+             debug=False):
     """
     Use the evalresp library to extract instrument response
     information from a SEED RESP-file.
@@ -170,7 +170,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param units: Units to return response in. Can be either DIS, VEL or ACC
     :type debug: bool
     :param debug: Verbose output to stdout. Disabled by default.
-    :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
@@ -214,8 +213,6 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         f[i] = rfreqs[i]
     clibevresp.free_response(res)
     del nfreqs, rfreqs, rvec, res
-    if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
-        h = np.conj(h)
     # delete temporary file
     try:
         os.remove(tempfile)
@@ -240,8 +237,7 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
-                  pitsa=True):
+def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output
     contains the frequency zero which is the offset of the trace.
@@ -256,7 +252,6 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     :param t_samp: Sampling interval in seconds
     :type nfft: Integer
     :param nfft: Number of FFT points of signal which needs correction
-    :param pitsa: Use PITSA format that is conjugate(h)
     :rtype: numpy.ndarray complex128
     :return: Frequency response of PAZ of length nfft
 
@@ -282,8 +277,6 @@ def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False,
     # start at zero to get zero for offset / DC of fft
     f = np.linspace(0, fy, n + 1)
     _w, h = scipy.signal.freqs(b, a, f * 2 * np.pi)
-    if pitsa:  # like in PITSA paz2Freq (insdeconv.c) last line
-        h = np.conj(h)
     if freq:
         return h, f
     return h
@@ -471,15 +464,13 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
                 cos_win = cosTaper(freqs.size, freqs=freqs,
                                    flimit=(fl1, fl2, fl3, fl4))
             data *= cos_win
-        #if paz_remove.has_key('t_shift'):
-        #    data *= np.exp(-1j*2*np.pi*freqs*paz_remove['t_shift'])
         specInv(freq_response, water_level)
-        data *= np.conj(freq_response)
+        data *= freq_response
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= np.conj(pazToFreqResp(paz_simulate['poles'],
-                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft))
+        data *= pazToFreqResp(paz_simulate['poles'],
+                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain

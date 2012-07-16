@@ -154,7 +154,7 @@ def _calcresp(calfile, nfft, sampfreq):
     # calculate transfer function
     poles, zeros, scale_fac = readPaz(calfile)
     h, f = pazToFreqResp(poles, zeros, scale_fac, 1.0 / sampfreq,
-                         nfft, freq=True, pitsa=False)
+                         nfft, freq=True)
     return h, f
 
 
