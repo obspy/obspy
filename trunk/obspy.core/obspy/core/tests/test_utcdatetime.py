@@ -798,6 +798,44 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 444999, precision=3)
         self.assertEquals(str(dt), '1980-02-03T12:23:34.445Z')
 
+    def test_richComparisonNumericTypes(self):
+        """
+        Tests some basic rich comparison operations against non UTCDateTime
+        numeric types.
+        """
+        t1 = UTCDateTime(2005, 3, 4, 12, 33, 44)
+        t2 = UTCDateTime(2005, 3, 4, 12, 33, 44, 123456)
+        t1_int = 1109939624
+        t2_int = 1109939624
+        t1_float = 1109939624.0
+        t2_float = 1109939624.123456
+        # test (not) equal
+        self.assertTrue(t1 == t1_int)
+        self.assertTrue(t1 == t1_float)
+        self.assertFalse(t2 == t2_int)
+        self.assertTrue(t2 == t2_float)
+        self.assertFalse(t1 != t1_int)
+        self.assertFalse(t1 != t1_float)
+        self.assertTrue(t2 != t2_int)
+        self.assertFalse(t2 != t2_float)
+        # test less/greater(equal)
+        self.assertTrue(t1 >= t1_int)
+        self.assertTrue(t1 <= t1_int)
+        self.assertFalse(t1 > t1_int)
+        self.assertFalse(t1 < t1_int)
+        self.assertTrue(t1 >= t1_float)
+        self.assertTrue(t1 <= t1_float)
+        self.assertFalse(t1 > t1_float)
+        self.assertFalse(t1 < t1_float)
+        self.assertTrue(t2 >= t2_int)
+        self.assertFalse(t2 <= t2_int)
+        self.assertTrue(t2 > t2_int)
+        self.assertFalse(t2 < t2_int)
+        self.assertTrue(t2 >= t2_float)
+        self.assertTrue(t2 <= t2_float)
+        self.assertFalse(t2 > t2_float)
+        self.assertFalse(t2 < t2_float)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
