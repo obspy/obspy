@@ -171,8 +171,8 @@ class Parser(object):
         :type split_stations: boolean, optional
         :param split_stations: Splits stations containing multiple channels
             into multiple documents.
-        :rtype: str or list of str
-        :return: Returns either a string or a list of strings depending
+        :rtype: str or dict
+        :return: Returns either a string or a dict of strings depending
             on the flag ``split_stations``.
         """
         if version not in XSEED_VERSIONS:
@@ -219,7 +219,7 @@ class Parser(object):
             return tostring(doc, pretty_print=True, xml_declaration=True,
                             encoding='UTF-8')
         else:
-            # generate a XML resource for each station
+            # generate a dict of XML resources for each station
             result = {}
             for station in self.stations:
                 cdoc = copy.copy(doc)
@@ -247,13 +247,12 @@ class Parser(object):
             return
         elif isinstance(result, dict):
             for key, value in result.iteritems():
-                if len(result) > 1 and key != '':
+                if key is not '':
+                    # past meta data - append timestamp
                     fn = filename.split('.xml')[0]
-                    if result.keys().count(key) == 1:
-                        fn = "%s.%s.xml" % (filename, key.date)
-                    else:
-                        fn = "%s.%s.xml" % (filename, key.timestamp)
+                    fn = "%s.%s.xml" % (filename, key.timestamp)
                 else:
+                    # current meta data - leave original filename
                     fn = filename
                 open(fn, 'w').write(value)
             return

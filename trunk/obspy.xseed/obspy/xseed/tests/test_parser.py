@@ -597,6 +597,20 @@ class ParserTestCase(unittest.TestCase):
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('G.SPB.00.BHZ', dt)
 
+    def test_splitStationsDataless2XSEED(self):
+        """
+        Test case for writing dataless to XSEED with multiple entries.
+        """
+        filename = os.path.join(self.path, 'dataless.seed.BW_DHFO')
+        parser = Parser()
+        parser.read(filename)
+        tempfile = NamedTemporaryFile().name
+        # this will create two files due to two entries in dataless
+        parser.writeXSEED(tempfile, split_stations=True)
+        os.remove(tempfile)
+        # the second filename is appended with the timestamp of start period
+        os.remove(tempfile + '.1301529600.0.xml')
+
 
 def suite():
     return unittest.makeSuite(ParserTestCase, 'test')
