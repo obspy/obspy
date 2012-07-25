@@ -1,2 +1,5 @@
+dev:
+ * fixed a bug with dataless to xseed conversion using split_stations=True
+
 0.7.0:
  * fixed a bug with exactly one pole or one zero in response information
