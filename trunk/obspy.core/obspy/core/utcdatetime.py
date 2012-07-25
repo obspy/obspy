@@ -14,8 +14,6 @@ import time
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
-MSG_COMPARE_ERROR = "UTCDateTime objects can only be compared to other " + \
-                    "UTCDateTime objects."
 
 
 class UTCDateTime(object):
@@ -877,8 +875,6 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        if not isinstance(other, UTCDateTime):
-            raise NotImplementedError(MSG_COMPARE_ERROR)
         return round(self.timestamp - float(other), self.__precision) == 0
 
     def __ne__(self, other):
@@ -933,8 +929,6 @@ class UTCDateTime(object):
         >>> t1 < t2
         True
         """
-        if not isinstance(other, UTCDateTime):
-            raise NotImplementedError(MSG_COMPARE_ERROR)
         return round(self.timestamp - float(other), self.__precision) < 0
 
     def __le__(self, other):
@@ -962,8 +956,6 @@ class UTCDateTime(object):
         >>> t1 <= t2
         False
         """
-        if not isinstance(other, UTCDateTime):
-            raise NotImplementedError(MSG_COMPARE_ERROR)
         return round(self.timestamp - float(other), self.__precision) <= 0
 
     def __gt__(self, other):
@@ -991,8 +983,6 @@ class UTCDateTime(object):
         >>> t1 > t2
         True
         """
-        if not isinstance(other, UTCDateTime):
-            raise NotImplementedError(MSG_COMPARE_ERROR)
         return round(self.timestamp - float(other), self.__precision) > 0
 
     def __ge__(self, other):
@@ -1020,8 +1010,6 @@ class UTCDateTime(object):
         >>> t1 >= t2
         False
         """
-        if not isinstance(other, UTCDateTime):
-            raise NotImplementedError(MSG_COMPARE_ERROR)
         return round(self.timestamp - float(other), self.__precision) >= 0
 
     def __repr__(self):
