@@ -335,6 +335,8 @@ ENTRY_POINTS = {
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
+                                      'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat')
 }
 

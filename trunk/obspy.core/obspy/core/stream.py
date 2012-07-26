@@ -25,9 +25,6 @@ import urllib2
 import warnings
 
 
-WAVEFORM_ENTRY_POINTS = ENTRY_POINTS['waveform']
-
-
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         endtime=None, nearest_sample=True, dtype=None, **kwargs):
     """
@@ -1245,13 +1242,14 @@ class Stream(object):
         format = format.upper()
         try:
             # get format specific entry point
-            format_ep = WAVEFORM_ENTRY_POINTS[format]
+            format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
             writeFormat = load_entry_point(format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
-        except (IndexError, ImportError):
-            msg = "Format \"%s\" is not supported. Supported types: %s"
-            raise TypeError(msg % (format, ', '.join(WAVEFORM_ENTRY_POINTS)))
+        except (IndexError, ImportError, KeyError):
+            msg = "Writing format \"%s\" is not supported. Supported types: %s"
+            raise TypeError(msg % (format,
+                                   ', '.join(ENTRY_POINTS['waveform_write'])))
         writeFormat(self, filename, **kwargs)
 
     def trim(self, starttime=None, endtime=None, pad=False,
