@@ -257,8 +257,7 @@ class CoreTestCase(unittest.TestCase):
                 if format == 'Q':
                     os.remove(tempfile[:-4] + '.QBN')
                     os.remove(tempfile[:-4])
-                else:
-                    os.remove(tempfile)
+                os.remove(tempfile)
 
 
 def suite():
