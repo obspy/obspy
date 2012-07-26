@@ -202,7 +202,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = np.loadtxt(data, dtype='float32')
+            data = np.loadtxt(data, dtype='float32', ndmin=1)
 
             # cut data if requested
             if skip and length:
@@ -451,6 +451,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
             stream.append(Trace(header=header))
         else:
             if not npts:
+                stream.append(Trace(header=header))
                 continue
             # read data
             data = fh_data.read(npts * 4)

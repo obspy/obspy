@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime, read
+from obspy.core import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
                                                            STANDARD_ASC_HEADERS
@@ -237,6 +237,28 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(len(stream[0].data), 2)
         self.assertAlmostEqual(stream[0].data[0], 111.7009, 4)
         self.assertAlmostEqual(stream[0].data[1], 119.5831, 4)
+
+    def test_writeSmallTrace(self):
+        """
+        Tests writing Traces containing 0, 1 or 2 samples only.
+        """
+        for format in ['SH_ASC', 'Q']:
+            for num in range(0, 4):
+                tr = Trace(data=np.arange(num))
+                tempfile = NamedTemporaryFile().name
+                if format == 'Q':
+                    tempfile += '.QHD'
+                tr.write(tempfile, format=format)
+                # test results
+                st = read(tempfile, format=format)
+                self.assertEquals(len(st), 1)
+                self.assertEquals(len(st[0]), num)
+                # Q files consist of two files - deleting additional file
+                if format == 'Q':
+                    os.remove(tempfile[:-4] + '.QBN')
+                    os.remove(tempfile[:-4])
+                else:
+                    os.remove(tempfile)
 
 
 def suite():
