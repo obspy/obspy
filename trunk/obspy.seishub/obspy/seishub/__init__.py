@@ -39,7 +39,7 @@ Advanced Examples
 
 >>> cha_ids = client.waveform.getChannelIds(network='BW', station='MANZ')
 >>> sorted(cha_ids)
-['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'SHE', 'SHN', 'SHZ']
+['AEX', 'AEY', 'EHE', 'EHN', 'EHZ', 'LOG', 'SHE', 'SHN', 'SHZ']
 
 >>> res = client.station.getResource('dataless.seed.BW_MANZ.xml',
 ...                                  format='metadata')
