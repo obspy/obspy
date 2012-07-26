@@ -700,7 +700,7 @@ class MSTG(object):
         # hold all datapoints.
         tempdatpoint = c_dtype()
         datasize = SAMPLESIZES[sampletype] * trace.stats.npts
-        # XXX: Ugly workaround for bug writing ASCII.
+        # XXX: Ugly workaround for traces with less than 17 data points
         if datasize < 17:
             datasize = 17
         C.resize(tempdatpoint, datasize)
