@@ -897,6 +897,21 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEquals(len(st[0]), 2)
         os.remove(tempfile)
 
+    def test_emptyTrace(self):
+        """
+        Tests writing empty Traces should raise an exception.
+        """
+        tr1 = Trace(data=np.array([12]))
+        tr2 = Trace()
+        st = Stream([tr1, tr2])
+        tempfile = NamedTemporaryFile().name
+        # check for expected Userwarning
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, st.write, tempfile, format="MSEED")
+        # cleanup
+        os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase,  'test')

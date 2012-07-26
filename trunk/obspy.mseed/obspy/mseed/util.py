@@ -276,9 +276,14 @@ def _getRecordInformation(file_object, offset=0):
     if info['filesize'] % 256 != 0:
         # if a multiple of minimal record length 256
         record_start = 0
-    elif file_object.read(8)[6] not in ['D', 'R', 'Q', 'M']:
-        # if valid data record start at all starting with D, R, Q or M
-        record_start = 0
+    else:
+        temp = file_object.read(8)
+        if temp == '':
+            # no record available -> empty file!
+            return info
+        if temp[6] not in ['D', 'R', 'Q', 'M']:
+            # if valid data record start at all starting with D, R, Q or M
+            record_start = 0
     file_object.seek(record_start, 0)
 
     # check if full SEED or Mini-SEED

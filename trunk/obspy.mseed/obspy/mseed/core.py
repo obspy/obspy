@@ -167,7 +167,6 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         # Only keep information relevant for the whole file.
         info = {'encoding': info['encoding'],
                 'filesize': info['filesize'],
-                'encoding': info['encoding'],
                 'record_length': info['record_length'],
                 'byteorder': info['byteorder'],
                 'number_of_records': info['number_of_records']}
@@ -640,6 +639,9 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                           trace_attr['reclen'], trace_attr['encoding'],
                           trace_attr['byteorder'], C.byref(packedsamples),
                           flush, verbose, msr)
+        if errcode == 0:
+            msg = 'Skipping empty trace "%s".' % (trace)
+            warnings.warn(msg)
         if errcode == -1:
             clibmseed.msr_free(C.pointer(msr))
             del mstg, msr

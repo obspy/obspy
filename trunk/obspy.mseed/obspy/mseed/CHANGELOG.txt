@@ -1,5 +1,6 @@
 dev:
  * Bugfix writing traces containing one or two samples only
+ * writeMSEED emits an UserWarning while writing an empty trace
 
 0.7.0:
  * changing license to LGPL (same as libmseed)
