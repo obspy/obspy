@@ -876,6 +876,27 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             del ms  # for valgrind
             os.remove(tempfile)
 
+    def test_issue376(self):
+        """
+        Tests writing Traces containing 1 or 2 samples only.
+        """
+        # one samples
+        tr = Trace(data=np.ones(1))
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format="MSEED")
+        st = read(tempfile)
+        self.assertEquals(len(st), 1)
+        self.assertEquals(len(st[0]), 1)
+        os.remove(tempfile)
+        # two samples
+        tr = Trace(data=np.ones(2))
+        tempfile = NamedTemporaryFile().name
+        tr.write(tempfile, format="MSEED")
+        st = read(tempfile)
+        self.assertEquals(len(st), 1)
+        self.assertEquals(len(st[0]), 2)
+        os.remove(tempfile)
+
 
 def suite():
     return unittest.makeSuite(MSEEDReadingAndWritingTestCase,  'test')

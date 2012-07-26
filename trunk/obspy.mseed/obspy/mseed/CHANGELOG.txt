@@ -1,3 +1,6 @@
+dev:
+ * Bugfix writing traces containing one or two samples only
+
 0.7.0:
  * changing license to LGPL (same as libmseed)
  * libmseed 2.7 (fixes sampling rates above 32,767 Hz)

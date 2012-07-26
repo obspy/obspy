@@ -701,7 +701,7 @@ class MSTG(object):
         tempdatpoint = c_dtype()
         datasize = SAMPLESIZES[sampletype] * trace.stats.npts
         # XXX: Ugly workaround for bug writing ASCII.
-        if sampletype == 'a' and datasize < 17:
+        if datasize < 17:
             datasize = 17
         C.resize(tempdatpoint, datasize)
         # The datapoints in the MSTG structure are a pointer to the memory
