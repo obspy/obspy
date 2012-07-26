@@ -630,7 +630,7 @@ class SEGYTraceHeader(object):
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%sI' % endian
+                format = '%si' % endian
                 file.write(pack(format, getattr(self, name)))
             # Just the one unassigned field.
             elif length == 8:

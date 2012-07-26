@@ -569,6 +569,18 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = readSU(filename)
         self.assertEqual(1999, st[0].stats.starttime.year)
 
+    def test_issue377(self):
+        """
+        Tests that readSEGY() and stream.write() should handle negative trace
+        header values.
+        """
+        filename = os.path.join(self.path, 'one_trace_year_11.sgy')
+        st = readSEGY(filename)
+        st[0].stats.segy.trace_header['source_coordinate_x'] = -1
+        outfile = NamedTemporaryFile().name
+        st.write(outfile, format='SEGY')
+        os.remove(outfile)
+
 
 def suite():
     return unittest.makeSuite(SEGYCoreTestCase, 'test')

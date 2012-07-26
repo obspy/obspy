@@ -46,7 +46,7 @@ def unpack_header_value(endian, packed_value, length, special_format):
     # Update: Seems to be correct. Two's complement integers seem to be
     # the common way to store integer values.
     elif length == 4:
-        format = '%sI' % endian
+        format = '%si' % endian
         return unpack(format, packed_value)[0]
     # The unassigned field. Since it is unclear how this field is
     # encoded it will just be stored as a string.
