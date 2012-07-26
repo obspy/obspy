@@ -86,7 +86,7 @@ def isSACXY(filename):
     return True
 
 
-def readSACXY(filename, headonly=False, **kwargs):
+def readSACXY(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -122,7 +122,7 @@ def readSACXY(filename, headonly=False, **kwargs):
     return Stream([tr])
 
 
-def writeSACXY(stream, filename, **kwargs):
+def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a alphanumeric SAC file.
 
@@ -152,7 +152,7 @@ def writeSACXY(stream, filename, **kwargs):
     return
 
 
-def readSAC(filename, headonly=False, **kwargs):
+def readSAC(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -189,7 +189,7 @@ def readSAC(filename, headonly=False, **kwargs):
     return Stream([tr])
 
 
-def writeSAC(stream, filename, **kwargs):
+def writeSAC(stream, filename, **kwargs):  # @UnusedVariable
     """
     Writes a SAC file.
 

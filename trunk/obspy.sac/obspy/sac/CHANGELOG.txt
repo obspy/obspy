@@ -1,2 +1,6 @@
+dev:
+ * fixing SAC and SACXY reading/writing of empty traces or traces containing
+   only one or two data points
+
 0.7.0:
  * bugfix for SAC files containing null terminated strings

@@ -293,7 +293,7 @@ class SacIO(object):
     def __init__(self, filen=False, headonly=False, alpha=False):
         self.byteorder = 'little'
         self.InitArrays()
-        if not filen:
+        if filen is False:
             return
         # parse Trace object if we get one
         if isinstance(filen, Trace):
@@ -483,10 +483,9 @@ class SacIO(object):
         :param f: filename (Sac binary).
         """
         npts = self.GetHvalue('npts')
-        if lenchk:
-            if npts != len(self.seis):
-                raise SacError("Number of points in header and " + \
-                               "length of trace inconsistent!")
+        if lenchk and npts != len(self.seis):
+            raise SacError("Number of points in header and " + \
+                           "length of trace inconsistent!")
         if fsize:
             st = os.stat(name)  # file's size = st[6]
             sizecheck = st[6] - (632 + 4 * int(npts))
@@ -556,12 +555,12 @@ class SacIO(object):
                 f.close()
                 raise SacError(e)
         try:
-            self._get_date_()
+            self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
         if self.GetHvalue('lcalda'):
             try:
-                self._get_dist_()
+                self._get_dist()
             except SacError:
                 pass
         f.close()
@@ -670,12 +669,12 @@ class SacIO(object):
             msg = "Cannot read any or only some data points: "
             raise SacIOError(msg, e)
         try:
-            self._get_date_()
+            self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
         if self.GetHvalue('lcalda'):
             try:
-                self._get_dist_()
+                self._get_dist()
             except SacError:
                 pass
         f.close()
@@ -726,18 +725,18 @@ class SacIO(object):
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
-            self.seis = np.loadtxt(f, dtype='<f4').ravel()
+            self.seis = np.loadtxt(f, dtype='<f4', ndmin=1).ravel()
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
         try:
-            self._get_date_()
+            self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
         if self.GetHvalue('lcalda'):
             try:
-                self._get_dist_()
+                self._get_dist()
             except SacError:
                 pass
         f.close()
@@ -795,12 +794,12 @@ class SacIO(object):
             f.close()
             raise SacError(e)
         try:
-            self._get_date_()
+            self._get_date()
         except SacError:
             warnings.warn('Cannot determine date')
         if self.GetHvalue('lcalda'):
             try:
-                self._get_dist_()
+                self._get_dist()
             except SacError:
                 pass
         f.close()
@@ -849,26 +848,28 @@ class SacIO(object):
             f = open(ofname, 'w')
         except IOError:
             raise SacIOError("Can't open file:" + ofname)
-        else:
-            try:
-                np.savetxt(f, np.reshape(self.hf, (14, 5)),
-                           fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
-                np.savetxt(f, np.reshape(self.hi, (8, 5)),
-                           fmt="%10d%10d%10d%10d%10d")
-                for i in xrange(0, 24, 3):
-                    self.hs[i:i + 3].tofile(f)
-                    f.write('\n')
-            except:
-                raise SacIOError("Can't write header values:" + ofname)
-            else:
-                try:
-                    npts = self.GetHvalue('npts')
-                    rows = npts / 5
-                    np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
-                               fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
-                    np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
-                except:
-                    raise SacIOError("Can't write trace values:" + ofname)
+        # header
+        try:
+            np.savetxt(f, np.reshape(self.hf, (14, 5)),
+                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+            np.savetxt(f, np.reshape(self.hi, (8, 5)),
+                       fmt="%10d%10d%10d%10d%10d")
+            for i in xrange(0, 24, 3):
+                self.hs[i:i + 3].tofile(f)
+                f.write('\n')
+        except:
+            raise SacIOError("Can't write header values:" + ofname)
+        # traces
+        npts = self.GetHvalue('npts')
+        if npts == -12345:
+            return
+        try:
+            rows = npts / 5
+            np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
+                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+            np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
+        except:
+            raise SacIOError("Can't write trace values:" + ofname)
 
     def WriteSacBinary(self, ofname):
         """
@@ -886,17 +887,16 @@ class SacIO(object):
             f = open(ofname, 'wb+')
         except IOError:
             raise SacIOError("Cannot open file: ", ofname)
-        else:
-            try:
-                self._chck_header_()
-                self.hf.tofile(f)
-                self.hi.tofile(f)
-                self.hs.tofile(f)
-                self.seis.tofile(f)
-            except Exception, e:
-                f.close()
-                msg = "Cannot write SAC-buffer to file: "
-                raise SacIOError(msg, ofname, e)
+        try:
+            self._chck_header()
+            self.hf.tofile(f)
+            self.hi.tofile(f)
+            self.hs.tofile(f)
+            self.seis.tofile(f)
+        except Exception, e:
+            f.close()
+            msg = "Cannot write SAC-buffer to file: "
+            raise SacIOError(msg, ofname, e)
 
     def PrintIValue(self, label='=', value=-12345):
         """
@@ -1099,14 +1099,14 @@ class SacIO(object):
         else:
             return False
 
-    def _get_date_(self):
+    def _get_date(self):
         """
         If date header values are set calculate date in julian seconds
 
         >>> t = SacIO()
         >>> t.fromarray(np.random.randn(100), delta=1.0, \
                         starttime=UTCDateTime(1970,01,01))
-        >>> t._get_date_()
+        >>> t._get_date()
         >>> t.reftime.timestamp
         0.0
         >>> t.endtime.timestamp - t.reftime.timestamp
@@ -1143,17 +1143,19 @@ class SacIO(object):
             except:
                 raise SacError("Cannot calculate date")
 
-    def _chck_header_(self):
+    def _chck_header(self):
         """
         If trace changed since read, adapt header values
         """
         self.seis = np.require(self.seis, '<f4')
         self.SetHvalue('npts', self.seis.size)
+        if self.seis.size == 0:
+            return
         self.SetHvalue('depmin', self.seis.min())
         self.SetHvalue('depmax', self.seis.max())
         self.SetHvalue('depmen', self.seis.mean())
 
-    def _get_dist_(self):
+    def _get_dist(self):
         """
         calculate distance from station and event coordinates
 
@@ -1162,7 +1164,7 @@ class SacIO(object):
         >>> t.SetHvalue('evlo',11.58333)
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
-        >>> t._get_dist_()
+        >>> t._get_dist()
         >>> print(round(t.GetHvalue('dist'), 2))
         18486.53
         >>> print(round(t.GetHvalue('az'), 5))
