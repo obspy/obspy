@@ -154,9 +154,9 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             # parse data
             data.seek(0)
             if parts[8] == 'INTEGER':
-                data = np.loadtxt(data, dtype='int')
+                data = np.loadtxt(data, dtype='int', ndmin=1)
             elif parts[8] == 'FLOAT':
-                data = np.loadtxt(data, dtype='float32')
+                data = np.loadtxt(data, dtype='float32', ndmin=1)
             else:
                 raise NotImplementedError
             stream.append(Trace(data=data, header=stats))
@@ -227,9 +227,9 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
             # parse data
             data.seek(0)
             if parts[8] == 'INTEGER':
-                data = np.loadtxt(data, dtype='int')
+                data = np.loadtxt(data, dtype='int', ndmin=1)
             elif parts[8] == 'FLOAT':
-                data = np.loadtxt(data, dtype='float32')
+                data = np.loadtxt(data, dtype='float32', ndmin=1)
             else:
                 raise NotImplementedError
             stream.append(Trace(data=data, header=stats))

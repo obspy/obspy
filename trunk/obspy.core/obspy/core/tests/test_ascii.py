@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime
+from obspy.core import UTCDateTime, read, Trace
 from obspy.core.ascii import readSLIST, readTSPAIR, isSLIST, isTSPAIR, \
     writeTSPAIR, writeSLIST
 from obspy.core.util import NamedTemporaryFile
@@ -447,6 +447,21 @@ class ASCIITestCase(unittest.TestCase):
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
         # clean up
         os.remove(tmpfile)
+
+    def test_writeSmallTrace(self):
+        """
+        Tests writing Traces containing 0, 1 or 2 samples only.
+        """
+        for format in ['SLIST', 'TSPAIR']:
+            for num in range(0, 4):
+                tr = Trace(data=np.arange(num))
+                tempfile = NamedTemporaryFile().name
+                tr.write(tempfile, format=format)
+                # test results
+                st = read(tempfile, format=format)
+                self.assertEquals(len(st), 1)
+                self.assertEquals(len(st[0]), num)
+                os.remove(tempfile)
 
 
 def suite():

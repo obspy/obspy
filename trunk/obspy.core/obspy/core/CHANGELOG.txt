@@ -1,6 +1,8 @@
 dev:
  * fixing preview generation for sampling rates containing floats
  * fixing deprecated_keywords decorator for the case of removed keywords
+ * fixing SLIST and TSPAIR reading/writing of empty traces or traces containing
+   only one or two data points
 
 0.7.1:
  * fixing negative azimuths returned by gps2DistAzimuth [#375]
