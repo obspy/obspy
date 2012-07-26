@@ -1,0 +1,2 @@
+dev:
+ * fixing a bug related to negative values in trace header
