@@ -29,6 +29,7 @@ import numpy as np
 import os
 import scipy.signal
 import util
+import warnings
 
 
 # Sensitivity is 2080 according to:
@@ -456,6 +457,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         freq_response, freqs = evalresp(delta, nfft, seedresp['filename'],
                                         seedresp['date'],
                                         units=seedresp['units'], freq=True)
+        if not remove_sensitivity:
+            msg = "remove_sensitivity is set to False, but since seedresp " + \
+                  "is selected the overall sensitivity will be corrected " + \
+                  " for anyway!"
+            warnings.warn(msg)
     if paz_remove or seedresp:
         if pre_filt:
             # make cosine taper
@@ -485,7 +491,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         # detrend using least squares
         data = scipy.signal.detrend(data, type="linear")
     # correct for involved overall sensitivities
-    if paz_remove and remove_sensitivity:
+    if paz_remove and remove_sensitivity and not seedresp:
         data /= paz_remove['sensitivity']
     if paz_simulate and simulate_sensitivity:
         data *= paz_simulate['sensitivity']
