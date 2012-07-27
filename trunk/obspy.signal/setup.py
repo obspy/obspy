@@ -67,6 +67,9 @@ ENTRY_POINTS = {
     'obspy.plugin.detrend': [
         'simple = obspy.signal.detrend:simple',
     ],
+    'obspy.plugin.taper': [
+        'cosine = obspy.signal.invsim:cosTaper',
+    ],
 }
 
 

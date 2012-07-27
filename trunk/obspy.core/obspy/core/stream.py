@@ -2044,6 +2044,23 @@ class Stream(object):
         for tr in self:
             tr.detrend(type=type)
 
+    def taper(self, type='cosine', *args, **kwargs):
+        """
+        Method to taper all Traces in Stream.
+
+        For details see the corresponding :meth:`~obspy.core.trace.Trace.taper`
+        method of :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.taper(type=type)
+
     def std(self):
         """
         Method to get the standard deviations of amplitudes in all trace in the

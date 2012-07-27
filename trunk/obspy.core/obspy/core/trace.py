@@ -1680,6 +1680,85 @@ class Trace(object):
         proc_info = "detrend:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
 
+    def taper(self, type='cosine', *args, **kwargs):
+        """
+        Method to taper the trace.
+
+        Optional (and sometimes necessary) options to the tapering function can
+        be provided as args and kwargs. See respective function definitions in
+        `Supported Methods`_ section below.
+
+        :type type: str
+        :param type: Type of taper to use for detrending. Defaults to
+            ``'cosine'``.  See the `Supported Methods`_ section below for
+            further details.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.trace.Trace.copy` to create
+            a copy of your trace object.
+            This also makes an entry with information on the applied processing
+            in ``stats.processing`` of this trace.
+
+        .. rubric:: _`Supported Methods`
+
+        ``'cosine'``
+            Cosine taper, for additional options like taper percentage see:
+            :func:`obspy.signal.invsim.cosTaper`.
+        ``'barthann'``
+            Modified Bartlett-Hann window. (uses:
+            :func:`scipy.signal.barthann`)
+        ``'bartlett'``
+            Bartlett window. (uses: :func:`scipy.signal.bartlett`)
+        ``'blackman'``
+            Blackman window. (uses: :func:`scipy.signal.blackman`)
+        ``'blackmanharris'``
+            Minimum 4-term Blackman-Harris window. (uses:
+            :func:`scipy.signal.blackmanharris`)
+        ``'bohman'``
+            Bohman window. (uses: :func:`scipy.signal.bohman`)
+        ``'boxcar'``
+            Boxcar window. (uses: :func:`scipy.signal.boxcar`)
+        ``'chebwin'``
+            Dolph-Chebyshev window. (uses: :func:`scipy.signal.chebwin`)
+        ``'flattop'``
+            Flat top window. (uses: :func:`scipy.signal.flattop`)
+        ``'gaussian'``
+            Gaussian window with standard-deviation std. (uses:
+            :func:`scipy.signal.gaussian`)
+        ``'general_gaussian'``
+            Generalized Gaussian window. (uses:
+            :func:`scipy.signal.general_gaussian`)
+        ``'hamming'``
+            Hamming window. (uses: :func:`scipy.signal.hamming`)
+        ``'hann'``
+            Hann window. (uses: :func:`scipy.signal.hann`)
+        ``'kaiser'``
+            Kaiser window with shape parameter beta. (uses:
+            :func:`scipy.signal.kaiser`)
+        ``'nuttall'``
+            Minimum 4-term Blackman-Harris window according to Nuttall.
+            (uses: :func:`scipy.signal.nuttall`)
+        ``'parzen'``
+            Parzen window. (uses: :func:`scipy.signal.parzen`)
+        ``'slepian'``
+            Slepian window. (uses: :func:`scipy.signal.slepian`)
+        ``'triang'``
+            Triangular window. (uses: :func:`scipy.signal.triang`)
+        """
+        type = type.lower()
+        # retrieve function call from entry points
+        func = _getFunctionFromEntryPoint('taper', type)
+        # tapering. tapering functions are expected to accept the number of
+        # samples as first argument and return an array of values between 0 and
+        # 1 with the same length as the data
+        self.data = self.data * func(self.stats.npts, *args, **kwargs)
+        # add processing information to the stats dictionary
+        proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
+        self._addProcessingInfo(proc_info)
+
     def normalize(self, norm=None):
         """
         Method to normalize the trace to its absolute maximum.

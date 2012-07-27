@@ -87,6 +87,25 @@ ENTRY_POINTS = {
     'obspy.plugin.differentiate': [
         'gradient = numpy:gradient',
     ],
+    'obspy.plugin.taper': [
+        'barthann = scipy.signal:barthann',
+        'bartlett = scipy.signal:bartlett',
+        'blackman = scipy.signal:blackman',
+        'blackmanharris = scipy.signal:blackmanharris',
+        'bohman = scipy.signal:bohman',
+        'boxcar = scipy.signal:boxcar',
+        'chebwin = scipy.signal:chebwin',
+        'flattop = scipy.signal:flattop',
+        'gaussian = scipy.signal:gaussian',
+        'general_gaussian = scipy.signal:general_gaussian',
+        'hamming = scipy.signal:hamming',
+        'hann = scipy.signal:hann',
+        'kaiser = scipy.signal:kaiser',
+        'nuttall = scipy.signal:nuttall',
+        'parzen = scipy.signal:parzen',
+        'slepian = scipy.signal:slepian',
+        'triang = scipy.signal:triang',
+    ],
 }
 
 

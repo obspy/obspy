@@ -337,7 +337,8 @@ ENTRY_POINTS = {
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
                                       'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _getEntryPoints('obspy.plugin.event', 'readFormat')
+    'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
+    'taper': _getEntryPoints('obspy.plugin.taper'),
 }
 
 
