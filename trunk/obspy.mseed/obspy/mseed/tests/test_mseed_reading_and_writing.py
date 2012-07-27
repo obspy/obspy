@@ -897,12 +897,13 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEquals(len(st[0]), 2)
         os.remove(tempfile)
 
+    @skipIfPython25
     def test_emptyTrace(self):
         """
         Tests writing empty Traces should raise an exception.
         """
-        tr1 = Trace(data=np.array([12]))
-        tr2 = Trace()
+        tr1 = Trace(data=np.array([12], dtype='int32'))
+        tr2 = Trace(data=np.array([], dtype='int32'))
         st = Stream([tr1, tr2])
         tempfile = NamedTemporaryFile().name
         # check for expected Userwarning
