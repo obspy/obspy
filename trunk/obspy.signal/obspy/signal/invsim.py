@@ -371,6 +371,12 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         deconvolution. The list or tuple defines the four corner frequencies
         (f1,f2,f3,f4) of a cosine taper which is one between f2 and f3 and
         tapers to zero for f1 < f < f2 and f3 < f < f4.
+    :type seedresp: Dictionary, None
+    :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
+        'filename' is the path to a RESP-file generated from a dataless SEED volume;
+        'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
+        that the response function should be extracted for;
+        'units' defines the units of the response function. Can be either 'DIS', 'VEL' or 'ACC'
     :type nfft_pow2: Boolean
     :param nfft_pow2: Number of frequency points to use for FFT. If True,
         the exact power of two is taken (default in PITSA). If False the
