@@ -725,7 +725,7 @@ class SacIO(object):
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
-            self.seis = np.loadtxt(f, dtype='<f4', ndmin=1).ravel()
+            self.seis = np.atleast_1d(np.loadtxt(f, dtype='<f4')).ravel()
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()

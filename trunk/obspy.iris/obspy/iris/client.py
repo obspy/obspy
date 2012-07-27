@@ -1892,7 +1892,7 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return np.loadtxt(StringIO.StringIO(data))
+                return np.atleast_1d(np.loadtxt(StringIO.StringIO(data)))
             else:
                 return self._toFileOrData(filename, data)
 
