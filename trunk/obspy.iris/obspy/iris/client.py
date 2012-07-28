@@ -10,15 +10,16 @@ IRIS Web service client for ObsPy.
 """
 from obspy.core import UTCDateTime, read, Stream
 from obspy.core.event import readEvents
-from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString
+from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
+    loadtxt
 from urllib2 import HTTPError
 import StringIO
-import numpy as np
 import os
 import platform
 import sys
 import urllib
 import urllib2
+
 try:
     import json
     if not getattr(json, "loads", None):
@@ -1892,7 +1893,7 @@ class Client(object):
         else:
             # ASCII data
             if filename is None:
-                return np.atleast_1d(np.loadtxt(StringIO.StringIO(data)))
+                return loadtxt(StringIO.StringIO(data), ndlim=1)
             else:
                 return self._toFileOrData(filename, data)
 

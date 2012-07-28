@@ -8,7 +8,7 @@
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 from obspy.core import UTCDateTime, Trace
-from obspy.core.util import gps2DistAzimuth
+from obspy.core.util import gps2DistAzimuth, loadtxt
 import numpy as np
 import obspy.core
 import os
@@ -725,7 +725,7 @@ class SacIO(object):
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
-            self.seis = np.atleast_1d(np.loadtxt(f, dtype='<f4')).ravel()
+            self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
         except IOError, e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()

@@ -219,7 +219,7 @@ def toIntOrZero(value):
 
     :param value: Arbitrary data type.
     :rtype: int
-
+numpy.version.version
     .. rubric:: Example
 
     >>> toIntOrZero("12")
@@ -232,6 +232,39 @@ def toIntOrZero(value):
         return int(value)
     except ValueError:
         return 0
+
+
+# import numpy loadtxt and check if ndlim parameter is available
+try:
+    from numpy import loadtxt
+    loadtxt(np.array([]), ndlim=1)
+except TypeError:
+    # otherwise redefine loadtxt
+    def loadtxt(*args, **kwargs):
+        """
+        Replacement for older numpy.loadtxt versions not supporting ndlim
+        parameter.
+        """
+        if not 'ndlim' in kwargs:
+            return np.loadtxt(*args, **kwargs)
+        # ok we got a ndlim param
+        if kwargs['ndlim'] != 1:
+            # for now we support only one dimensional arrays
+            raise NotImplementedError('Upgrade your NumPy version!')
+        del kwargs['ndlim']
+        dtype = kwargs.get('dtype', None)
+        # lets get the data
+        try:
+            data = np.loadtxt(*args, **kwargs)
+        except IOError, e:
+            # raises in older versions if no data could be read
+            if 'reached before encountering data' in str(e):
+                # return empty array
+                return np.array([], dtype=dtype)
+            # otherwise just raise
+            raise
+        # ensures that an array is returned
+        return np.atleast_1d(data)
 
 
 if __name__ == '__main__':

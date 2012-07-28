@@ -33,7 +33,7 @@ Simple ASCII time series formats
 """
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
-from obspy.core.util import AttribDict
+from obspy.core.util import AttribDict, loadtxt
 import numpy as np
 
 
@@ -154,9 +154,9 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             # parse data
             data.seek(0)
             if parts[8] == 'INTEGER':
-                data = np.atleast_1d(np.loadtxt(data, dtype='int'))
+                data = loadtxt(data, dtype='int', ndlim=1)
             elif parts[8] == 'FLOAT':
-                data = np.atleast_1d(np.loadtxt(data, dtype='float32'))
+                data = loadtxt(data, dtype='float32', ndlim=1)
             else:
                 raise NotImplementedError
             stream.append(Trace(data=data, header=stats))
@@ -227,9 +227,9 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
             # parse data
             data.seek(0)
             if parts[8] == 'INTEGER':
-                data = np.atleast_1d(np.loadtxt(data, dtype='int'))
+                data = loadtxt(data, dtype='int', ndlim=1)
             elif parts[8] == 'FLOAT':
-                data = np.atleast_1d(np.loadtxt(data, dtype='float32'))
+                data = loadtxt(data, dtype='float32', ndlim=1)
             else:
                 raise NotImplementedError
             stream.append(Trace(data=data, header=stats))

@@ -11,7 +11,7 @@ SH bindings to ObsPy core module.
 
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
-from obspy.core.util import formatScientific
+from obspy.core.util import formatScientific, loadtxt
 import numpy as np
 import os
 
@@ -202,7 +202,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             stream.append(Trace(header=header))
         else:
             # read data
-            data = np.atleast_1d(np.loadtxt(data, dtype='float32'))
+            data = loadtxt(data, dtype='float32', ndlim=1)
 
             # cut data if requested
             if skip and length:
