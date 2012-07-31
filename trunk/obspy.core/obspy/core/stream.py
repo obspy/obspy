@@ -1986,9 +1986,13 @@ class Stream(object):
         """
         Method to integrate all traces with respect to time.
 
-        :type type: ``'cumtrapz'``, optional
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.integrate` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        :type type: str
         :param type: Method to use for integration. Defaults to
-            ``'cumtrapz'``. See the `Supported Methods`_ section below for
+            ``'cumtrapz'``. See :meth:`~obspy.core.trace.Trace.integrate` for
             further details.
 
         .. note::
@@ -1999,13 +2003,6 @@ class Stream(object):
             a copy of your stream object.
             This also makes an entry with information on the applied processing
             in ``stats.processing`` of every trace.
-
-        .. rubric:: _`Supported Methods`
-
-        ``'cumtrapz'``
-            Cumulatively integrate using the composite trapezoidal rule (uses
-            :func:`scipy.integrate.cumtrapz`). Result has one sample less then
-            the input!
         """
         for tr in self:
             tr.integrate(type=type)
