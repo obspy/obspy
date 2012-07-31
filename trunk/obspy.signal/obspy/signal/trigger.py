@@ -471,12 +471,18 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         An example can be found in the
         `Tutorial <http://docs.obspy.org/tutorial/trigger_tutorial.html>`_
 
+    .. note::
+        Setting `trigger_type=None` precomputed characteristic functions can
+        be provided.
+
     .. seealso:: [Withers1998]_ (p. 98) and [Trnkoczy2012]_
 
     :param trigger_type: String that specifies which trigger is applied (e.g.
         ``'recstalta'``). See e.g. :meth:`obspy.core.trace.Trace.trigger` for
-        further details.
-    :type trigger_type: str
+        further details. If set to None no triggering routine is applied, i.e.
+        data in traces is supposed to be a precomputed chracteristic function
+        on which the trigger thresholds are evaluated.
+    :type trigger_type: str or None
     :type thr_on: float
     :param thr_on: threshold for switching single station trigger on
     :type thr_off: float
@@ -545,7 +551,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
                   "trace ID list and was disregarded (%s)" % tr.id
             warnings.warn(msg, UserWarning)
             continue
-        tr.trigger(trigger_type, **options)
+        if trigger_type is not None:
+            tr.trigger(trigger_type, **options)
         kwargs['max_len'] = max_trigger_length * tr.stats.sampling_rate
         tmp_triggers = triggerOnset(tr.data, thr_on, thr_off, **kwargs)
         for on, off in tmp_triggers:
