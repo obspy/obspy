@@ -4,21 +4,12 @@
 The tf_misfit test suite.
 """
 
-from obspy.core.util.decorator import skipIf
 from obspy.signal.tf_misfit import tfem, tfpm, tem, fem, fpm, pg, em, pm, eg, \
     tfpg, teg, feg, fpg, tpg, tfeg, tpm
 from scipy.signal import hilbert
 import numpy as np
 import os
 import unittest
-
-
-# tests suite needs a recent NumPy version
-OLD_NUMPY_VERSION = False
-try:  # pragma: no cover
-    from numpy.testing import assert_allclose  # @UnusedImport
-except ImportError:  # pragma: no cover
-    OLD_NUMPY_VERSION = True
 
 
 class TfTestCase(unittest.TestCase):
@@ -76,7 +67,6 @@ class TfTestCase(unittest.TestCase):
         self.npts = npts
         self.w0 = 6
 
-    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_phase_misfit(self):
         """
         Tests all tf misfits with a signal that has phase misfit
@@ -111,22 +101,22 @@ class TfTestCase(unittest.TestCase):
         tol = 1e-5
         atol_min = 1e-15
 
-        np.testing.assert_allclose(TFEM_11p, TFEM_11p_ref, rtol=tol,
-                atol=np.abs(TFEM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TFPM_11p, TFPM_11p_ref, rtol=tol,
-                atol=np.abs(TFPM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TEM_11p, TEM_11p_ref, rtol=tol,
-                atol=np.abs(TEM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(FEM_11p, FEM_11p_ref, rtol=tol,
-                atol=np.abs(FEM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(FPM_11p, FPM_11p_ref, rtol=tol,
-                atol=np.abs(FPM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TPM_11p, TPM_11p_ref, rtol=tol,
-                atol=np.abs(TPM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(EM_11p, EM_11p_ref, rtol=tol,
-                atol=np.abs(EM_11p_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(PM_11p, PM_11p_ref, rtol=tol,
-                atol=np.abs(PM_11p_ref).max() * tol + atol_min)
+        self.assertTrue(np.allclose(TFEM_11p, TFEM_11p_ref, rtol=tol,
+                atol=np.abs(TFEM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TFPM_11p, TFPM_11p_ref, rtol=tol,
+                atol=np.abs(TFPM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TEM_11p, TEM_11p_ref, rtol=tol,
+                atol=np.abs(TEM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(FEM_11p, FEM_11p_ref, rtol=tol,
+                atol=np.abs(FEM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(FPM_11p, FPM_11p_ref, rtol=tol,
+                atol=np.abs(FPM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TPM_11p, TPM_11p_ref, rtol=tol,
+                atol=np.abs(TPM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(EM_11p, EM_11p_ref, rtol=tol,
+                atol=np.abs(EM_11p_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(PM_11p, PM_11p_ref, rtol=tol,
+                atol=np.abs(PM_11p_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt(self.path + os.sep + 'TFEM_11p.dat', TFEM_11p, fmt='%1.5e')
@@ -138,7 +128,6 @@ class TfTestCase(unittest.TestCase):
         #np.savetxt(self.path + os.sep + 'EM_11p.dat', (EM_11p,), fmt='%1.5e')
         #np.savetxt(self.path + os.sep + 'PM_11p.dat', (PM_11p,), fmt='%1.5e')
 
-    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_envelope_misfit(self):
         """
         Tests all tf misfits with a signal that has envelope misfit
@@ -173,22 +162,22 @@ class TfTestCase(unittest.TestCase):
         tol = 1e-5
         atol_min = 1e-15
 
-        np.testing.assert_allclose(TFEM_11a, TFEM_11a_ref, rtol=tol,
-                atol=np.abs(TFEM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TFPM_11a, TFPM_11a_ref, rtol=tol,
-                atol=np.abs(TFPM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TEM_11a, TEM_11a_ref, rtol=tol,
-                atol=np.abs(TEM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(FEM_11a, FEM_11a_ref, rtol=tol,
-                atol=np.abs(FEM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(FPM_11a, FPM_11a_ref, rtol=tol,
-                atol=np.abs(FPM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(TPM_11a, TPM_11a_ref, rtol=tol,
-                atol=np.abs(TPM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(EM_11a, EM_11a_ref, rtol=tol,
-                atol=np.abs(EM_11a_ref).max() * tol + atol_min)
-        np.testing.assert_allclose(PM_11a, PM_11a_ref, rtol=tol,
-                atol=np.abs(PM_11a_ref).max() * tol + atol_min)
+        self.assertTrue(np.allclose(TFEM_11a, TFEM_11a_ref, rtol=tol,
+                atol=np.abs(TFEM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TFPM_11a, TFPM_11a_ref, rtol=tol,
+                atol=np.abs(TFPM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TEM_11a, TEM_11a_ref, rtol=tol,
+                atol=np.abs(TEM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(FEM_11a, FEM_11a_ref, rtol=tol,
+                atol=np.abs(FEM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(FPM_11a, FPM_11a_ref, rtol=tol,
+                atol=np.abs(FPM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(TPM_11a, TPM_11a_ref, rtol=tol,
+                atol=np.abs(TPM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(EM_11a, EM_11a_ref, rtol=tol,
+                atol=np.abs(EM_11a_ref).max() * tol + atol_min))
+        self.assertTrue(np.allclose(PM_11a, PM_11a_ref, rtol=tol,
+                atol=np.abs(PM_11a_ref).max() * tol + atol_min))
 
         # keeping the save commands in case the files need to be updated
         #np.savetxt(self.path + os.sep + 'TFEM_11a.dat', TFEM_11a, fmt='%1.5e')
@@ -200,7 +189,6 @@ class TfTestCase(unittest.TestCase):
         #np.savetxt(self.path + os.sep + 'EM_11a.dat', (EM_11a,), fmt='%1.5e')
         #np.savetxt(self.path + os.sep + 'PM_11a.dat', (PM_11a,), fmt='%1.5e')
 
-    @skipIf(OLD_NUMPY_VERSION, 'test case requires a newer NumPy version')
     def test_envelope_gof(self):
         """
         Tests all tf gofs
@@ -225,14 +213,14 @@ class TfTestCase(unittest.TestCase):
         EG = eg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
         PG = pg(S1(t), S1(t), dt=dt, fmin=fmin, fmax=fmax, nf=nf)
 
-        np.testing.assert_allclose(TFEG, np.ones((nf, npts)) * 10., rtol=tol)
-        np.testing.assert_allclose(TFPG, np.ones((nf, npts)) * 10., rtol=tol)
-        np.testing.assert_allclose(TEG, np.ones(npts) * 10., rtol=tol)
-        np.testing.assert_allclose(TPG, np.ones(npts) * 10., rtol=tol)
-        np.testing.assert_allclose(FEG, np.ones(nf) * 10., rtol=tol)
-        np.testing.assert_allclose(FPG, np.ones(nf) * 10., rtol=tol)
-        np.testing.assert_allclose(EG, 10., rtol=tol)
-        np.testing.assert_allclose(PG, 10., rtol=tol)
+        self.assertTrue(np.allclose(TFEG, np.ones((nf, npts)) * 10., rtol=tol))
+        self.assertTrue(np.allclose(TFPG, np.ones((nf, npts)) * 10., rtol=tol))
+        self.assertTrue(np.allclose(TEG, np.ones(npts) * 10., rtol=tol))
+        self.assertTrue(np.allclose(TPG, np.ones(npts) * 10., rtol=tol))
+        self.assertTrue(np.allclose(FEG, np.ones(nf) * 10., rtol=tol))
+        self.assertTrue(np.allclose(FPG, np.ones(nf) * 10., rtol=tol))
+        self.assertTrue(np.allclose(EG, 10., rtol=tol))
+        self.assertTrue(np.allclose(PG, 10., rtol=tol))
 
 
 def suite():
