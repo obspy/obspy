@@ -5,7 +5,7 @@ The Filter test suite.
 """
 
 from obspy.signal import bandpass, lowpass, highpass
-from obspy.signal.filter import envelope, lowpassCheby2
+from obspy.signal.filter import envelope, lowpassCheby2, polarizationFilter
 import os
 import unittest
 import gzip
@@ -247,6 +247,28 @@ class FilterTestCase(unittest.TestCase):
         self.assertTrue(h_db[freq > 50].max() < -96)
         # be 0 (1dB ripple) before filter ramp
         self.assertTrue(h_db[freq < 25].min() > -1)
+
+    def test_polarizationFilter(self):
+        """
+        Test polarization filter. Only the most common case with > 3 windows
+        and cubic spline interpolation is tested.
+        """
+        rtol = 1e-5
+        atol = 1e-5
+        z = np.loadtxt(os.path.join(self.path, "loc_RJOB20050801145719850.z"))
+        n = np.loadtxt(os.path.join(self.path, "loc_RJOB20050801145719850.n"))
+        e = np.loadtxt(os.path.join(self.path, "loc_RJOB20050801145719850.e"))
+        z, n, e = polarizationFilter(z, n, e, 70)
+        z_res = np.loadtxt(gzip.open(os.path.join(self.path,
+                "loc_RJOB20050801145719850.z.polfilt.gz")))
+        n_res = np.loadtxt(gzip.open(os.path.join(self.path,
+                "loc_RJOB20050801145719850.n.polfilt.gz")))
+        e_res = np.loadtxt(gzip.open(os.path.join(self.path,
+                "loc_RJOB20050801145719850.e.polfilt.gz")))
+        # test the resulting filtered time series
+        self.assertTrue(np.allclose(z, z_res, rtol=rtol, atol=atol))
+        self.assertTrue(np.allclose(n, n_res, rtol=rtol, atol=atol))
+        self.assertTrue(np.allclose(e, e_res, rtol=rtol, atol=atol))
 
 
 def suite():

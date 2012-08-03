@@ -185,7 +185,7 @@ scripts in the `svn repository`_.
 
 from obspy.core.util import _getVersionString
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
-from filter import envelope, integerDecimation
+from filter import envelope, integerDecimation, polarizationFilter
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
     delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, coincidenceTrigger

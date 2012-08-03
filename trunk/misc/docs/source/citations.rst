@@ -113,3 +113,8 @@ Citations
    | **A comparison of select trigger algorithms for automated global seismic phase and event detection**,
    | *Bulletin of the Seismological Society of America*, 88 (1), 95-106.
    | http://www.bssaonline.org/content/88/1/95.abstract
+.. [deFranco2001]  
+   | de Franco, R. and Musacchio, G. (2001),
+   | **Polarization filter with singular value decomposition**,
+   | *Geophysics*, 66 (3), 932.
+   | http://geophysics.geoscienceworld.org/content/66/3/932.short http://link.aip.org/link/GPYSA7/v66/i3/p932/s1\&Agg=doi

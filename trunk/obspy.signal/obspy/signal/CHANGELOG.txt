@@ -4,6 +4,7 @@ dev:
    (no complex conjugate)
  * preventing a possible duplicated overall sensitivity removal in seisSim
    when using the option seedresp
+ * adding SVD based polarization filter
 
 0.7.0:
  * adding toolbox to calculate Time-Frequency Misfits
