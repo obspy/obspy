@@ -117,4 +117,4 @@ Citations
    | de Franco, R. and Musacchio, G. (2001),
    | **Polarization filter with singular value decomposition**,
    | *Geophysics*, 66 (3), 932.
-   | http://geophysics.geoscienceworld.org/content/66/3/932.short http://link.aip.org/link/GPYSA7/v66/i3/p932/s1\&Agg=doi
+   | http://geophysics.geoscienceworld.org/content/66/3/932.short
