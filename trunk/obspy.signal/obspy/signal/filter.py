@@ -402,8 +402,9 @@ def polarizationFilter(x, y, z, wlen, details=False):
         rectilinearity 1/2 and planarity, discrete rectilinearity 1/2 and
         planarity and indices of midpoints of discrete polarization
         attributes).
-    :rtype: list of 3 :class:`~numpy.ndarray`s
-    :return: Original time series after polarization filtering.
+    :rtype: list of 3 :class:`~numpy.ndarray`
+    :return: The 3 components of original time series after polarization
+        filtering.
     """
     # use whole time series if window length 0 is specified
     if wlen == 0:
