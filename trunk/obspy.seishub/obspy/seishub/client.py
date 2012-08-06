@@ -210,8 +210,8 @@ class Client(object):
                 response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
                 doc = response.read()
                 return doc
-            # XXX currently there are random problems with SeisHub's internal sql
-            # XXX database access ("cannot operate on a closed database").
+            # XXX currently there are random problems with SeisHub's internal
+            # XXX sql database access ("cannot operate on a closed database").
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
