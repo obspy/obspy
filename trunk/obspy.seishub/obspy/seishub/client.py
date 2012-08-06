@@ -16,7 +16,6 @@ from math import log
 from obspy.core import UTCDateTime
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
-import httplib
 import os
 import pickle
 import sys
@@ -112,7 +111,8 @@ class Client(object):
     BW.RTPI..EHZ | 2009-09-03T00:00:00.000000Z - ... | 250.0 Hz, 5001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
-                 user="admin", password="admin", timeout=10, debug=False):
+                 user="admin", password="admin", timeout=10, debug=False,
+                 retries=3):
         """
         Initializes the SeisHub Web service client.
 
@@ -130,6 +130,8 @@ class Client(object):
             is 10 seconds). Available only for Python >= 2.6.x.
         :type debug: boolean, optional
         :param debug: Enables verbose output.
+        :type retries: int
+        :param retries: Number of retries for failing requests.
         """
         self.base_url = base_url
         self.waveform = _WaveformMapperClient(self)
@@ -137,6 +139,7 @@ class Client(object):
         self.event = _EventMapperClient(self)
         self.timeout = timeout
         self.debug = debug
+        self.retries = retries
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -197,32 +200,23 @@ class Client(object):
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         # timeout exists only for Python >= 2.6
-        try:
-            if sys.hexversion < 0x02060000:
-                response = urllib2.urlopen(remoteaddr)
-            else:
-                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
-        # XXX currently there are random problems with SeisHub's internal sql
-        # XXX database access ("cannot operate on a closed database").
-        # XXX this can be circumvented by issuing the same request again..
-        except urllib2.HTTPError, e:
-            if e.code == 500 and e.msg == "Internal Server Error":
-                # XXX same request again
-                if sys.hexversion < 0x02060000:
-                    response = urllib2.urlopen(remoteaddr)
-                else:
-                    response = urllib2.urlopen(remoteaddr,
-                                               timeout=self.timeout)
-            else:
-                raise
-        except httplib.BadStatusLine:
-            # XXX same request again
-            if sys.hexversion < 0x02060000:
-                response = urllib2.urlopen(remoteaddr)
-            else:
-                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        if sys.hexversion < 0x02060000:
+            timeout_kwarg = {}
+        else:
+            timeout_kwarg = {'timeout': self.timeout}
+        # certain requests randomly fail on rare occasions, retry
+        for _i in xrange(self.retries):
+            try:
+                response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
+                doc = response.read()
+                return doc
+            # XXX currently there are random problems with SeisHub's internal sql
+            # XXX database access ("cannot operate on a closed database").
+            # XXX this can be circumvented by issuing the same request again..
+            except Exception:
+                continue
+        response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
         doc = response.read()
-
         return doc
 
     def _HTTP_request(self, url, method, xml_string="", headers={}):

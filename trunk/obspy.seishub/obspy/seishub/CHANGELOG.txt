@@ -1,0 +1,2 @@
+dev:
+ * adding kwarg to control number of retries for failing requests
