@@ -182,8 +182,8 @@ class ClientTestCase(unittest.TestCase):
         # test with a XSEED file with a referenced PAZ response info (see #364)
         t = UTCDateTime("2012-05-10")
         result = AttribDict({'gain': 1.0, 'poles': [0j],
-                'seismometer_gain': 6319120000000.0,
-                'sensitivity': 6319120000000.0, 'zeros': [0j]})
+                'sensitivity': 6319100000000.0, 'digitizer_gain': 1000000.0,
+                'seismometer_gain': 6319100.0, 'zeros': [0j]})
         data = c.station.getPAZ("BW.RLAS..BJZ", t)
         self.assertEqual(data, result)
 
@@ -223,8 +223,8 @@ class ClientTestCase(unittest.TestCase):
         c = self.client
         datas = []
         result = AttribDict({'gain': 1.0, 'poles': [0j],
-                'seismometer_gain': 6319120000000.0,
-                'sensitivity': 6319120000000.0, 'zeros': [0j]})
+                'sensitivity': 6319100000000.0, 'digitizer_gain': 1000000.0,
+                'seismometer_gain': 6319100.0, 'zeros': [0j]})
         # test that the old/deprecated call syntax is still working
         self.assertRaises(SEEDParserException, c.station.getPAZ, "BW", "RLAS",
                           t)
