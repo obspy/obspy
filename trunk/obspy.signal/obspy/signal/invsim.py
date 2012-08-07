@@ -48,8 +48,8 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     :type npts: Int
     :param npts: Number of points of cosine taper.
     :type p: Float
-    :param p: Percent of cosine taper. Default is 10% which tapers 5% from
-        the beginning and 5% form the end
+    :param p: Decimal percentage of cosine taper (ranging from 0 to 1). Default
+        is 0.1 (10%) which tapers 5% from the beginning and 5% form the end.
     :rtype: float NumPy ndarray
     :return: Cosine taper array/vector of length npts.
     :type freqs: NumPy ndarray
@@ -78,6 +78,9 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
     True
     """
+    if p < 0 or p > 1:
+        msg = "Decimal taper percentage must be between 0 and 1."
+        raise ValueError(msg)
     if p == 0.0 or p == 1.0:
         frac = int(npts * p / 2.0)
     else:
