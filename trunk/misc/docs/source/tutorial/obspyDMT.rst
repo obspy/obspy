@@ -16,17 +16,28 @@ obspyDMT_ (ObsPy Data Management Tool) is a command line tool for retrieving, pr
 
 This tutorial has been divided into the following sections: 
 
-1.  `Let's Get Started`_: download obspyDMT code and check your local machine for required dependencies.
-2.  `Option Types`_: there are two types of options for obspyDMT which are explained in this section.
-3.  `Event-Info Request`_: if you are looking for some events and you want to get info about them.
-4.  `Event-Based Request`_: retrieve the waveforms, response files and meta-data of all the requested stations for all the events found in the archive.
-5.  `Continuous Request`_: retrieve the waveforms, response files and meta-data of all the requested stations for all the specified time span.
-6.  `Geographical Restriction`_: if you are interested in the events happened in a specific geographical coordinate and/or retrieving the data from the stations in a specific circular or rectangular bounding area.
-7.  `Instrument Correction`_: instrument correction for displacement, velocity and acceleration.
-8.  `Update`_: if you want to continue an interrupted request or complete your existing folder.
-9.  `Plot`_: for an existing folder, you could plot all the events and/or all the stations, ray path for event-station pairs and epicentral-distance/time for the waveforms.
-10. `Folder Structure`_: the way that obspyDMT organize your retrieved and processed data.
-11. `Available Options`_: all options currently available in obspyDMT have been shown in the form of a table.
+1.  `How to Cite ObsPyDMT`_
+2.  `Let's Get Started`_: download obspyDMT code and check your local machine for required dependencies.
+3.  `Option Types`_: there are two types of options for obspyDMT which are explained in this section.
+4.  `Event-Info Request`_: if you are looking for some events and you want to get info about them.
+5.  `Event-Based Request`_: retrieve the waveforms, response files and meta-data of all the requested stations for all the events found in the archive.
+6.  `Continuous Request`_: retrieve the waveforms, response files and meta-data of all the requested stations for all the specified time span.
+7.  `Geographical Restriction`_: if you are interested in the events happened in a specific geographical coordinate and/or retrieving the data from the stations in a specific circular or rectangular bounding area.
+8.  `Instrument Correction`_: instrument correction for displacement, velocity and acceleration.
+9.  `Update`_: if you want to continue an interrupted request or complete your existing folder.
+10.  `Plot`_: for an existing folder, you could plot all the events and/or all the stations, ray path for event-station pairs and epicentral-distance/time for the waveforms.
+11. `Folder Structure`_: the way that obspyDMT organize your retrieved and processed data.
+12. `Available Options`_: all options currently available in obspyDMT have been shown in the form of a table.
+
+--------------------
+How to Cite ObsPyDMT
+--------------------
+
+If you use ObsPyDMT, please consider citing the code as:
+
+::
+
+    Kasra Hosseini (2012), ObsPyDMT (Version 1.1) [software] [http://docs.obspy.org/tutorial/obspyDMT.html]
 
 -----------------
 Let's Get Started
