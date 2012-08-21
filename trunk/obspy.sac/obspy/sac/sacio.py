@@ -333,7 +333,7 @@ class SacIO(object):
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24, dtype='|S8')
-        self.hs[:] = '-12345   '  # setting default value
+        self.hs[:] = '-12345  '  # setting default value
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
@@ -898,14 +898,14 @@ class SacIO(object):
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
 
-    def PrintIValue(self, label='=', value=-12345):
+    def PrintIValue(self, label='=', value= -12345):
         """
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
             print(label, value)
 
-    def PrintFValue(self, label='=', value=-12345.0):
+    def PrintFValue(self, label='=', value= -12345.0):
         """
         Convenience function for printing undefined float header values.
         """
