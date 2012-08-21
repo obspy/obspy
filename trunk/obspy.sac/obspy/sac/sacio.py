@@ -333,7 +333,7 @@ class SacIO(object):
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24, dtype='|S8')
-        self.hs[:] = '        '  # setting default value
+        self.hs[:] = '         '  # setting default value
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
@@ -443,7 +443,7 @@ class SacIO(object):
         >>> from obspy.sac import SacIO
         >>> tr = SacIO()
         >>> tr.GetHvalue('kstnm')
-        '        '
+        '-12345  '
         >>> tr.SetHvalue('kstnm', 'STA_NEW')
         >>> tr.GetHvalue('kstnm')
         'STA_NEW '
