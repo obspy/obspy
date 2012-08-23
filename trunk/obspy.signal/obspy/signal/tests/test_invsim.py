@@ -258,7 +258,6 @@ class InvSimTestCase(unittest.TestCase):
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
         seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
         tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
-                          remove_sensitivity=False,
                           pre_filt=(fl1, fl2, fl3, fl4),
                           seedresp=seedresp, taper_fraction=0.1,
                           pitsasim=False, sacsim=True)
