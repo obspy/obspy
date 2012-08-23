@@ -32,6 +32,7 @@ libraries and applications, our build tools and our web sites.
     * Anthony Lomax
     * Tobias Megies
     * Alberto Michelini
+    * Nathaniel C. Miller
     * Tom Richter
     * Emiliano Russo
     * Claudio Satriano

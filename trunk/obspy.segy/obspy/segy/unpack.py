@@ -16,6 +16,8 @@ from util import clibsegy
 import ctypes as C
 import numpy as np
 import sys
+import os
+import warnings
 
 # Get the system byteorder.
 BYTEORDER = sys.byteorder
@@ -119,3 +121,32 @@ def unpack_4byte_IEEE(file, count, endian='>'):
 
 def unpack_1byte_Integer(file, count, endian='>'):
     raise NotImplementedError
+
+
+class OnTheFlyDataUnpacker:
+    """
+    Tie-up a data sample unpack function with its parameters.
+
+    This class allows for data to be read directly from the disk as needed,
+    preventing the need to store data in memory.
+    """
+    def __init__(self, unpack_function, filename, filemode, seek, count,
+                 endian='>'):
+        self.unpack_function = unpack_function
+        self.filename = filename
+        self.filemode = filemode
+        self.seek = seek
+        self.count = count
+        self.endian = endian
+        self.mtime = os.path.getmtime(self.filename)
+
+    def __call__(self):
+        mtime = os.path.getmtime(self.filename)
+        if mtime != self.mtime:
+            msg = "File '%s' changed since reading headers" % self.filename
+            msg += "; data may be read incorrectly "
+            msg += "(modification time = %s)." % mtime
+            warnings.warn(msg)
+        file = open(self.filename, self.filemode)
+        file.seek(self.seek)
+        return self.unpack_function(file, self.count, endian=self.endian)

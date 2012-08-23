@@ -17,6 +17,7 @@ from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
 from struct import pack, unpack
+from unpack import OnTheFlyDataUnpacker
 import StringIO
 import numpy as np
 import os
@@ -40,6 +41,14 @@ class SEGYTraceReadingError(SEGYError):
     """
     Raised if there is not enough data left in the file to unpack the data
     according to the values read from the header.
+    """
+    pass
+
+
+class SEGYTraceOnTheFlyDataUnpackingError(SEGYError):
+    """
+    Raised if attempting to unpack trace data but no ``unpack_data()`` function
+    exists.
     """
     pass
 
@@ -74,8 +83,9 @@ class SEGYFile(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
         :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers. Defaults to False.
+            records will be read and unpacked. Has a huge impact on memory
+            usage. Data can be read and unpacked on-the-fly after reading the
+            file. Defaults to False.
         """
         if file is None:
             self._createEmptySEGYFileObject()
@@ -290,8 +300,9 @@ class SEGYFile(object):
             after being read. Defaults to False.
 
         :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers. Defaults to False.
+            records will be read and unpacked. Has a huge impact on memory
+            usage. Data can be read and unpacked on-the-fly after reading the
+            file. Defaults to False.
         """
         self.traces = []
         # Determine the filesize once.
@@ -342,7 +353,7 @@ class SEGYBinaryFileHeader(object):
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%sI' % self.endian
+                format = '%si' % self.endian
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # The other value are the unassigned values. As it is unclear how
@@ -382,7 +393,7 @@ class SEGYBinaryFileHeader(object):
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%sI' % endian
+                format = '%si' % endian
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # These are the two unassigned values in the binary file header.
@@ -444,8 +455,9 @@ class SEGYTrace(object):
         :param filesize: Integer. Filesize of the file. If not given it will be
             determined using fstat which is slow.
         :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers. Defaults to False.
+            records will be read and unpacked. Has a huge impact on memory
+            usage. Data can be read and unpacked on-the-fly after reading the
+            file. Defaults to False.
         """
         self.endian = endian
         self.data_encoding = data_encoding
@@ -475,8 +487,9 @@ class SEGYTrace(object):
             memory usage and the performance. They can be unpacked on-the-fly
             after being read. Defaults to False.
         :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers. Defaults to False.
+            records will be read and unpacked. Has a huge impact on memory
+            usage. Data can be read and unpacked on-the-fly after reading the
+            file. Defaults to False.
         """
         trace_header = self.file.read(240)
         # Check if it is smaller than 240 byte.
@@ -502,7 +515,12 @@ class SEGYTrace(object):
                   """.strip()
             raise SEGYTraceReadingError(msg)
         if headonly:
-            self.data = None
+            # skip reading the data, but still advance the file
+            self.file.seek(data_needed, 1)
+            # build a function for reading data from the disk on the fly
+            self.unpack_data = OnTheFlyDataUnpacker(
+                DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[self.data_encoding],
+                self.file.name, self.file.mode, pos, npts, endian=self.endian)
         else:
             # Unpack the data.
             self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[\
@@ -526,10 +544,7 @@ class SEGYTrace(object):
             endian = self.endian
         # Write the data.
         if self.data is None:
-            msg = """
-            No data in the SEGYTrace. Maybe the data has been read with
-            headonly=True.
-            """.strip()
+            msg = "No data in the SEGYTrace."
             raise SEGYWritingError(msg)
         DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_encoding](file, self.data,
                                                   endian=endian)
@@ -552,6 +567,27 @@ class SEGYTrace(object):
                 (self.header.sample_interval_in_ms_for_this_trace / \
                 float(1E6)))
         return ret_val
+
+    def __getattr__(self, name):
+        """
+        This method is only called if the attribute is not found in the usual
+        places (i.e. not an instance attribute or not found in the class tree
+        for self).
+        """
+        if name == 'data':
+            # Use data unpack function to unpack data on the fly
+            if hasattr(self, 'unpack_data'):
+                return self.unpack_data()
+            else:
+                msg = """
+                      Attempted to unpack trace data on the fly with
+                      self.unpack_data(), but function does not exist.
+                      """.strip()
+                raise SEGYTraceOnTheFlyDataUnpackingError(msg)
+        else:
+            msg = "'%s' object has no attribute '%s'" % \
+                  (self.__class__.__name__, name)
+            raise AttributeError(msg)
 
 
 class SEGYTraceHeader(object):
@@ -588,9 +624,6 @@ class SEGYTraceHeader(object):
             # The number of samples is an essential information that always
             # needs to be unpacked.
             format = '%sH' % self.endian
-            # XXX: Remove if it works!
-            #self.number_of_samples_in_this_trace = \
-            #        unpack(format, header[114:116])[0]
         else:
             self.unpacked_header = None
             self._readTraceHeader(header)
@@ -637,7 +670,7 @@ class SEGYTraceHeader(object):
                 field = getattr(self, name)
                 # An empty field will have a zero.
                 if field == 0:
-                    field = 2 * pack('%sI' % endian, 0)
+                    field = 2 * pack('%si' % endian, 0)
                 file.write(field)
             # Should not happen.
             else:
@@ -705,8 +738,9 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data records
-        will be unpacked. Useful if one is just interested in the headers.
+    :param headonly: Bool. Determines whether or not the actual data
+        records will be read and unpacked. Has a huge impact on memory usage.
+        Data can be read and unpacked on-the-fly after reading the file.
         Defaults to False.
     """
     # Open the file if it is not a file like object.
@@ -739,8 +773,9 @@ def _readSEGY(file, endian=None, textual_header_encoding=None,
         unpacked during reading the file. Has a huge impact on the memory usage
         and the performance. They can be unpacked on-the-fly after being read.
         Defaults to False.
-    :param headonly: Bool. Determines whether or not the actual data records
-        will be unpacked. Useful if one is just interested in the headers.
+    :param headonly: Bool. Determines whether or not the actual data
+        records will be read and unpacked. Has a huge impact on memory usage.
+        Data can be read and unpacked on-the-fly after reading the file.
         Defaults to False.
     """
     return SEGYFile(file, endian=endian,
@@ -768,8 +803,9 @@ class SUFile(object):
             after being read.
             Defaults to False.
         :param headonly: Bool. Determines whether or not the actual data
-            records will be unpacked. Useful if one is just interested in the
-            headers.  Defaults to False.
+            records will be read and unpacked. Has a huge impact on memory
+            usage. Data can be read and unpacked on-the-fly after reading the
+            file. Defaults to False.
         """
         if file is None:
             self._createEmptySUFileObject()

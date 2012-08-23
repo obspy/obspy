@@ -114,6 +114,15 @@ in ipython's tab completion. See :const:`obspy.segy.header.TRACE_HEADER_FORMAT`
 for a list of all available trace header attributes. They will be unpacked on
 the fly if they are accessed as class attributes.
 
+By default trace data are read into memory, but this may be impractical for
+very large datasets. To skip loading data into memory, read SEG Y files with
+``headonly=True``.  The ``data`` class attribute will not show up in ipython's
+tab completion, but data are read directly from the disk when it is accessed:
+
+>>> from obspy.segy.segy import readSEGY
+>>> segy = readSEGY(filename, headonly=True)
+>>> print(len(segy.traces[0].data))
+2001
 
 Writing
 =======
