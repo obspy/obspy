@@ -143,7 +143,9 @@ def getSockCharLine(sock, timeout=10.):
     indat = '^'
     try:
         while indat[-1] != '\n':
-            indat = sock.recv(8192)
+            # see http://obspy.org/ticket/383
+            # indat = sock.recv(8192)
+            indat = sock.recv(1)
             chunks.append(indat)
     except socket.timeout:
         print 'socket timeout in getSockCharLine()'
