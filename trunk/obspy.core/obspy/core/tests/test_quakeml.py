@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import obspy.core.event
+from __future__ import with_statement
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
@@ -433,7 +433,7 @@ class QuakeMLTestCase(unittest.TestCase):
         writeQuakeML(catalog, tmpfile)
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
-        with warnings.catch_warnings() as _:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             catalog2 = readQuakeML(tmpfile)
         self.assertTrue(len(catalog2), 1)
@@ -454,7 +454,7 @@ class QuakeMLTestCase(unittest.TestCase):
         catalog.write(tmpfile, format='QUAKEML')
         # Read file again. Avoid the (legit) warning about the already used
         # resource identifiers.
-        with warnings.catch_warnings() as _:
+        with warnings.catch_warnings(record=True):
             warnings.simplefilter("ignore")
             catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
