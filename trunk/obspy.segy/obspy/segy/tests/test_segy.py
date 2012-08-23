@@ -335,7 +335,7 @@ class SEGYTestCase(unittest.TestCase):
             # Assert the actual header.
             self.assertEqual(org_header, new_header)
 
-    def test_readAndWriteSEGY(self):
+    def test_readAndWriteSEGY(self, headonly=False):
         """
         Reading and writing again should not change a file.
         """
@@ -345,7 +345,7 @@ class SEGYTestCase(unittest.TestCase):
             # Read the file.
             with open(file, 'rb') as f:
                 org_data = f.read()
-            segy_file = readSEGY(file)
+            segy_file = readSEGY(file, headonly=headonly)
             out_file = NamedTemporaryFile().name
             segy_file.write(out_file)
             # Read the new file again.
@@ -373,6 +373,12 @@ class SEGYTestCase(unittest.TestCase):
             # Test the identity without the SEGY revision number
             self.assertEqual(org_data[:3500], new_data[:3500])
             self.assertEqual(org_data[3502:], new_data[3502:])
+
+    def test_readAndWriteSEGY_headonly(self):
+        """
+        Reading with headonly=True and writing again should not change a file.
+        """
+        self.test_readAndWriteSEGY(headonly=True)
 
     def test_unpackBinaryFileHeader(self):
         """
