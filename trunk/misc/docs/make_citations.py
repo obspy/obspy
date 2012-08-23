@@ -10,8 +10,16 @@ import os
 
 
 REPLACE_TOKEN = [
+  (u"<nbsp>", u" "),
+  (u"\xa0", u" "),
+  (u'–','-'),
+  (u'—','-'),
+  (u'—','-'),
+  (u'--','-'),
   (u"\'{a}", u"á"),
+  (u"{\\ae}", u"æ"),
   (u"**{", u"**"),
+  (u"}**", u"**"),
   (u"}**", u"**"),
 ]
 
@@ -92,8 +100,21 @@ formats = {
         ],
         optional ['\n   | ', field('url')]
     ],
+    'techreport': words(sep='') [
+        '\n   | ',
+        words(sep=' ')[
+            format_names('author'), brackets(field('year'))], ',',
+        '\n   | ',
+        bold(field('title')), ',',
+        '\n   | in ',
+        sentence(sep=', ')[
+            italic(words(sep=' ')[field('type'), field('number')]),
+            field('institution'),
+            optional [field('address')],
+        ],
+        optional ['\n   | ', field('url')]
+    ],
 }
-
 
 parser = bibtex.Parser(encoding='utf8')
 
@@ -128,11 +149,6 @@ for key in sorted(entries.keys()):
     out = '.. [%s]  %s'
     line = formats[entry.type].format_data(entry).plaintext()
     # replace special content, e.g. <nbsp>
-    line = line.replace('<nbsp>', ' ')
-    line = line.replace(u'\xa0',' ')
-    line = line.replace(u'–','-')
-    line = line.replace(u'—','-')
-    line = line.replace(u'—','-')
     for old, new in REPLACE_TOKEN:
         line = line.replace(old, new)
     try:

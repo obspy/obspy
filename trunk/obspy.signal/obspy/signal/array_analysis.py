@@ -785,7 +785,14 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
     """
-    Note: Interface not fixed jet
+    FK Array Analysis
+
+    The algorithm used is an adaptation of [KvaernaRingdal1986]_
+    broadband fk routine published in the corresponding NORSAR report.
+    Exploring the src directory in trunk/obspy.signal/obspy/signal/src you will
+    find the source code written in plain C.
+
+    .. note :: Interface is not fixed yet
 
     :type spoint: int
     :param spoint: Start sample point, probably in julian seconds
