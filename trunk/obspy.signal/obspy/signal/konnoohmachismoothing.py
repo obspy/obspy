@@ -66,7 +66,7 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     # at zero.
     if center_frequency == 0:
         smoothing_window = np.zeros(len(frequencies), dtype=frequencies.dtype)
-        smoothing_window[np.where(frequencies == 0.0)] = 1.0
+        smoothing_window[frequencies == 0.0] = 1.0
         return smoothing_window
     # Calculate the bandwidth*log10(f/f_c)
     smoothing_window = bandwidth * np.log10(frequencies / center_frequency)
@@ -75,10 +75,10 @@ def konnoOhmachiSmoothingWindow(frequencies, center_frequency, bandwidth=40.0,
     # Check if the center frequency is exactly part of the provided
     # frequencies. This will result in a division by 0. The limit of f->f_c is
     # one.
-    smoothing_window[np.where(frequencies == center_frequency)] = 1.0
+    smoothing_window[frequencies == center_frequency] = 1.0
     # Also a frequency of zero will result in a logarithm of -inf. The limit of
     # f->0 with f_c!=0 is zero.
-    smoothing_window[np.where(frequencies == 0.0)] = 0.0
+    smoothing_window[frequencies == 0.0] = 0.0
     # Normalize to one if wished.
     if normalize:
         smoothing_window /= smoothing_window.sum()
