@@ -1,0 +1,754 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:bed="http://quakeml.org/xmlns/bed/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2" targetNamespace="http://quakeml.org/xmlns/bed/1.2" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:simpleType name="ResourceIdentifier">
+    <xs:restriction base="xs:anyURI">
+      <xs:pattern value="(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="WhitespaceOrEmptyStringType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\s*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ResourceReference_optional">
+    <xs:union memberTypes="bed:ResourceReference bed:WhitespaceOrEmptyStringType"/>
+  </xs:simpleType>
+  <xs:simpleType name="OriginUncertaintyDescription">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="horizontal uncertainty"/>
+      <xs:enumeration value="uncertainty ellipse"/>
+      <xs:enumeration value="confidence ellipsoid"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AmplitudeCategory">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="point"/>
+      <xs:enumeration value="mean"/>
+      <xs:enumeration value="duration"/>
+      <xs:enumeration value="period"/>
+      <xs:enumeration value="integral"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OriginDepthType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="from location"/>
+      <xs:enumeration value="from moment tensor inversion"/>
+      <xs:enumeration value="from modeling of broad-band P waveforms"/>
+      <xs:enumeration value="constrained by depth phases"/>
+      <xs:enumeration value="constrained by direct phases"/>
+      <xs:enumeration value="constrained by depth and direct phases"/>
+      <xs:enumeration value="operator assigned"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="OriginType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="hypocenter"/>
+      <xs:enumeration value="centroid"/>
+      <xs:enumeration value="amplitude"/>
+      <xs:enumeration value="macroseismic"/>
+      <xs:enumeration value="rupture start"/>
+      <xs:enumeration value="rupture end"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="MTInversionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="general"/>
+      <xs:enumeration value="zero trace"/>
+      <xs:enumeration value="double couple"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EvaluationMode">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="manual"/>
+      <xs:enumeration value="automatic"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EvaluationStatus">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="preliminary"/>
+      <xs:enumeration value="confirmed"/>
+      <xs:enumeration value="reviewed"/>
+      <xs:enumeration value="final"/>
+      <xs:enumeration value="rejected"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PickOnset">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="emergent"/>
+      <xs:enumeration value="impulsive"/>
+      <xs:enumeration value="questionable"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EventType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="not reported"/>
+      <xs:enumeration value="earthquake"/>
+      <xs:enumeration value="anthropogenic event"/>
+      <xs:enumeration value="collapse"/>
+      <xs:enumeration value="cavity collapse"/>
+      <xs:enumeration value="mine collapse"/>
+      <xs:enumeration value="building collapse"/>
+      <xs:enumeration value="explosion"/>
+      <xs:enumeration value="accidental explosion"/>
+      <xs:enumeration value="chemical explosion"/>
+      <xs:enumeration value="controlled explosion"/>
+      <xs:enumeration value="experimental explosion"/>
+      <xs:enumeration value="industrial explosion"/>
+      <xs:enumeration value="mining explosion"/>
+      <xs:enumeration value="quarry blast"/>
+      <xs:enumeration value="road cut"/>
+      <xs:enumeration value="blasting levee"/>
+      <xs:enumeration value="nuclear explosion"/>
+      <xs:enumeration value="induced or triggered event"/>
+      <xs:enumeration value="rock burst"/>
+      <xs:enumeration value="reservoir loading"/>
+      <xs:enumeration value="fluid injection"/>
+      <xs:enumeration value="fluid extraction"/>
+      <xs:enumeration value="crash"/>
+      <xs:enumeration value="plane crash"/>
+      <xs:enumeration value="train crash"/>
+      <xs:enumeration value="boat crash"/>
+      <xs:enumeration value="other event"/>
+      <xs:enumeration value="atmospheric event"/>
+      <xs:enumeration value="sonic boom"/>
+      <xs:enumeration value="sonic blast"/>
+      <xs:enumeration value="acoustic noise"/>
+      <xs:enumeration value="thunder"/>
+      <xs:enumeration value="avalanche"/>
+      <xs:enumeration value="snow avalanche"/>
+      <xs:enumeration value="debris avalanche"/>
+      <xs:enumeration value="hydroacoustic event"/>
+      <xs:enumeration value="ice quake"/>
+      <xs:enumeration value="slide"/>
+      <xs:enumeration value="landslide"/>
+      <xs:enumeration value="rockslide"/>
+      <xs:enumeration value="meteorite"/>
+      <xs:enumeration value="volcanic eruption"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="DataUsedWaveType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="P waves"/>
+      <xs:enumeration value="body waves"/>
+      <xs:enumeration value="surface waves"/>
+      <xs:enumeration value="mantle waves"/>
+      <xs:enumeration value="combined"/>
+      <xs:enumeration value="unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="AmplitudeUnit">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="m"/>
+      <xs:enumeration value="s"/>
+      <xs:enumeration value="m/s"/>
+      <xs:enumeration value="m/(s*s)"/>
+      <xs:enumeration value="m*s"/>
+      <xs:enumeration value="dimensionless"/>
+      <xs:enumeration value="other"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EventDescriptionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="felt report"/>
+      <xs:enumeration value="Flinn-Engdahl region"/>
+      <xs:enumeration value="local time"/>
+      <xs:enumeration value="tectonic summary"/>
+      <xs:enumeration value="nearest cities"/>
+      <xs:enumeration value="earthquake name"/>
+      <xs:enumeration value="region name"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="MomentTensorCategory">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="teleseismic"/>
+      <xs:enumeration value="regional"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="EventTypeCertainty">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="known"/>
+      <xs:enumeration value="suspected"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="SourceTimeFunctionType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="box car"/>
+      <xs:enumeration value="triangle"/>
+      <xs:enumeration value="trapezoid"/>
+      <xs:enumeration value="unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="PickPolarity">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="positive"/>
+      <xs:enumeration value="negative"/>
+      <xs:enumeration value="undecidable"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="TimeQuantity">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:dateTime"/>
+        <xs:element name="uncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="lowerUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="upperUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="confidenceLevel" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:simpleType name="ResourceReference">
+    <xs:restriction base="bed:ResourceIdentifier"/>
+  </xs:simpleType>
+  <xs:complexType name="CreationInfo">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="agencyID" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="64"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="agencyURI" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="author" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="128"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="authorURI" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="creationTime" minOccurs="0" maxOccurs="1" type="xs:dateTime"/>
+        <xs:element name="version" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="64"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="EventDescription">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1" type="bed:EventDescriptionType"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Phase">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="Comment">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="text" minOccurs="1" maxOccurs="1" type="xs:string"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Axis">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="azimuth" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="plunge" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="length" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="PrincipalAxes">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="tAxis" minOccurs="1" maxOccurs="1" type="bed:Axis"/>
+        <xs:element name="pAxis" minOccurs="1" maxOccurs="1" type="bed:Axis"/>
+        <xs:element name="nAxis" minOccurs="0" maxOccurs="1" type="bed:Axis"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="DataUsed">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="waveType" minOccurs="1" maxOccurs="1" type="bed:DataUsedWaveType"/>
+        <xs:element name="stationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="componentCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="shortestPeriod" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="longestPeriod" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="CompositeTime">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="year" minOccurs="0" maxOccurs="1" type="bed:IntegerQuantity"/>
+        <xs:element name="month" minOccurs="0" maxOccurs="1" type="bed:IntegerQuantity"/>
+        <xs:element name="day" minOccurs="0" maxOccurs="1" type="bed:IntegerQuantity"/>
+        <xs:element name="hour" minOccurs="0" maxOccurs="1" type="bed:IntegerQuantity"/>
+        <xs:element name="minute" minOccurs="0" maxOccurs="1" type="bed:IntegerQuantity"/>
+        <xs:element name="second" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Tensor">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="Mrr" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="Mtt" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="Mpp" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="Mrt" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="Mrp" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="Mtp" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="OriginQuality">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="associatedPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="usedPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="associatedStationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="usedStationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="depthPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="standardError" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="azimuthalGap" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="secondaryAzimuthalGap" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="groundTruthLevel" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="32"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="maximumDistance" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="minimumDistance" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="medianDistance" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="RealQuantity">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="uncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="lowerUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="upperUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="confidenceLevel" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="NodalPlane">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="strike" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="dip" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="rake" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="TimeWindow">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="begin" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="end" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="reference" minOccurs="1" maxOccurs="1" type="xs:dateTime"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="WaveformStreamID">
+    <xs:simpleContent>
+      <xs:extension base="bed:ResourceReference_optional">
+        <xs:attribute name="networkCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="8"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="stationCode" use="required">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="8"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="channelCode">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="8"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+        <xs:attribute name="locationCode">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="8"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:attribute>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="IntegerQuantity">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="value" minOccurs="1" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="uncertainty" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="lowerUncertainty" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="upperUncertainty" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="confidenceLevel" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="SourceTimeFunction">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="type" minOccurs="1" maxOccurs="1" type="bed:SourceTimeFunctionType"/>
+        <xs:element name="duration" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="riseTime" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="decayTime" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="NodalPlanes">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="nodalPlane1" minOccurs="0" maxOccurs="1" type="bed:NodalPlane"/>
+        <xs:element name="nodalPlane2" minOccurs="0" maxOccurs="1" type="bed:NodalPlane"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="preferredPlane" type="xs:integer"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="ConfidenceEllipsoid">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="semiMajorAxisLength" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="semiMinorAxisLength" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="semiIntermediateAxisLength" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="majorAxisPlunge" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="majorAxisAzimuth" minOccurs="1" maxOccurs="1" type="xs:double"/>
+        <xs:element name="majorAxisRotation" minOccurs="1" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="MomentTensor">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="dataUsed" type="bed:DataUsed"/>
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="derivedOriginID" minOccurs="1" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="momentMagnitudeID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="scalarMoment" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="tensor" minOccurs="0" maxOccurs="1" type="bed:Tensor"/>
+        <xs:element name="variance" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="varianceReduction" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="doubleCouple" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="clvd" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="iso" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="greensFunctionID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="filterID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="sourceTimeFunction" minOccurs="0" maxOccurs="1" type="bed:SourceTimeFunction"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="category" minOccurs="0" maxOccurs="1" type="bed:MomentTensorCategory"/>
+        <xs:element name="inversionType" minOccurs="0" maxOccurs="1" type="bed:MTInversionType"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="FocalMechanism">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="waveformID" type="bed:WaveformStreamID"/>
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="momentTensor" type="bed:MomentTensor"/>
+        <xs:element name="triggeringOriginID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="nodalPlanes" minOccurs="0" maxOccurs="1" type="bed:NodalPlanes"/>
+        <xs:element name="principalAxes" minOccurs="0" maxOccurs="1" type="bed:PrincipalAxes"/>
+        <xs:element name="azimuthalGap" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="stationPolarityCount" minOccurs="0" maxOccurs="1" type="xs:int"/>
+        <xs:element name="misfit" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="stationDistributionRatio" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Amplitude">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="genericAmplitude" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="32"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="category" minOccurs="0" maxOccurs="1" type="bed:AmplitudeCategory"/>
+        <xs:element name="unit" minOccurs="0" maxOccurs="1" type="bed:AmplitudeUnit"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="period" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="snr" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="timeWindow" minOccurs="0" maxOccurs="1" type="bed:TimeWindow"/>
+        <xs:element name="pickID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="waveformID" minOccurs="0" maxOccurs="1" type="bed:WaveformStreamID"/>
+        <xs:element name="filterID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="scalingTime" minOccurs="0" maxOccurs="1" type="bed:TimeQuantity"/>
+        <xs:element name="magnitudeHint" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="32"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="evaluationMode" minOccurs="0" maxOccurs="1" type="bed:EvaluationMode"/>
+        <xs:element name="evaluationStatus" minOccurs="0" maxOccurs="1" type="bed:EvaluationStatus"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="StationMagnitudeContribution">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="stationMagnitudeID" minOccurs="1" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="residual" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="weight" minOccurs="0" maxOccurs="1" type="xs:double"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Magnitude">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="stationMagnitudeContribution" type="bed:StationMagnitudeContribution"/>
+        <xs:element name="mag" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="32"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="originID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="stationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="azimuthalGap" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="evaluationMode" minOccurs="0" maxOccurs="1" type="bed:EvaluationMode"/>
+        <xs:element name="evaluationStatus" minOccurs="0" maxOccurs="1" type="bed:EvaluationStatus"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="StationMagnitude">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="originID" minOccurs="1" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="mag" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="32"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="amplitudeID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="waveformID" minOccurs="0" maxOccurs="1" type="bed:WaveformStreamID"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="OriginUncertainty">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="horizontalUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="minHorizontalUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="maxHorizontalUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="azimuthMaxHorizontalUncertainty" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="confidenceEllipsoid" minOccurs="0" maxOccurs="1" type="bed:ConfidenceEllipsoid"/>
+        <xs:element name="preferredDescription" minOccurs="0" maxOccurs="1" type="bed:OriginUncertaintyDescription"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Arrival">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="pickID" minOccurs="1" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="phase" minOccurs="1" maxOccurs="1" type="bed:Phase"/>
+        <xs:element name="timeCorrection" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="azimuth" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="distance" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="takeoffAngle" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="timeResidual" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="horizontalSlownessResidual" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="backazimuthResidual" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="timeWeight" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="horizontalSlownessWeight" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="backazimuthWeight" minOccurs="0" maxOccurs="1" type="xs:double"/>
+        <xs:element name="earthModelID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Origin">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="compositeTime" type="bed:CompositeTime"/>
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="originUncertainty" type="bed:OriginUncertainty"/>
+        <xs:element name="arrival" type="bed:Arrival"/>
+        <xs:element name="time" minOccurs="1" maxOccurs="1" type="bed:TimeQuantity"/>
+        <xs:element name="longitude" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="latitude" minOccurs="1" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="depth" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="depthType" minOccurs="0" maxOccurs="1" type="bed:OriginDepthType"/>
+        <xs:element name="timeFixed" minOccurs="0" maxOccurs="1" type="xs:boolean"/>
+        <xs:element name="epicenterFixed" minOccurs="0" maxOccurs="1" type="xs:boolean"/>
+        <xs:element name="referenceSystemID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="earthModelID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="quality" minOccurs="0" maxOccurs="1" type="bed:OriginQuality"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1" type="bed:OriginType"/>
+        <xs:element name="region" minOccurs="0" maxOccurs="1">
+          <xs:simpleType>
+            <xs:restriction base="xs:string">
+              <xs:maxLength value="128"/>
+            </xs:restriction>
+          </xs:simpleType>
+        </xs:element>
+        <xs:element name="evaluationMode" minOccurs="0" maxOccurs="1" type="bed:EvaluationMode"/>
+        <xs:element name="evaluationStatus" minOccurs="0" maxOccurs="1" type="bed:EvaluationStatus"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Pick">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="time" minOccurs="1" maxOccurs="1" type="bed:TimeQuantity"/>
+        <xs:element name="waveformID" minOccurs="1" maxOccurs="1" type="bed:WaveformStreamID"/>
+        <xs:element name="filterID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="horizontalSlowness" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="backazimuth" minOccurs="0" maxOccurs="1" type="bed:RealQuantity"/>
+        <xs:element name="slownessMethodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="onset" minOccurs="0" maxOccurs="1" type="bed:PickOnset"/>
+        <xs:element name="phaseHint" minOccurs="0" maxOccurs="1" type="bed:Phase"/>
+        <xs:element name="polarity" minOccurs="0" maxOccurs="1" type="bed:PickPolarity"/>
+        <xs:element name="evaluationMode" minOccurs="0" maxOccurs="1" type="bed:EvaluationMode"/>
+        <xs:element name="evaluationStatus" minOccurs="0" maxOccurs="1" type="bed:EvaluationStatus"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="Event">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="description" type="bed:EventDescription"/>
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="focalMechanism" type="bed:FocalMechanism"/>
+        <xs:element name="amplitude" type="bed:Amplitude"/>
+        <xs:element name="magnitude" type="bed:Magnitude"/>
+        <xs:element name="stationMagnitude" type="bed:StationMagnitude"/>
+        <xs:element name="origin" type="bed:Origin"/>
+        <xs:element name="pick" type="bed:Pick"/>
+        <xs:element name="preferredOriginID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="preferredMagnitudeID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="preferredFocalMechanismID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
+        <xs:element name="type" minOccurs="0" maxOccurs="1" type="bed:EventType"/>
+        <xs:element name="typeCertainty" minOccurs="0" maxOccurs="1" type="bed:EventTypeCertainty"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:complexType name="EventParameters">
+    <xs:sequence>
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element name="comment" type="bed:Comment"/>
+        <xs:element name="event" type="bed:Event"/>
+        <xs:element name="description" minOccurs="0" maxOccurs="1" type="xs:string"/>
+        <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
+      </xs:choice>
+      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:complexType>
+  <xs:element name="eventParameters" type="bed:EventParameters"/>
+</xs:schema>

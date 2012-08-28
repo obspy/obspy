@@ -690,7 +690,12 @@ class Unpickler(object):
                 self._xpath2obj('preferredMagnitudeID', event_el)
             event.preferred_focal_mechanism_id = \
                 self._xpath2obj('preferredFocalMechanismID', event_el)
-            event.event_type = self._xpath2obj('type', event_el)
+            event_type = self._xpath2obj('type', event_el)
+            # Change for QuakeML 1.2RC4. 'null' is no longer acceptable as an
+            # event type. Will be replaced with 'not reported'.
+            if event_type == "null":
+                event_type = "not reported"
+            event.event_type = event_type
             event.event_type_certainty = self._xpath2obj('typeCertainty',
                     event_el)
             event.creation_info = self._creation_info(event_el)
@@ -1246,7 +1251,8 @@ class Pickler(object):
         catalog_el = etree.Element('eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
         # optional catalog parameters
-        self._str(catalog.description, catalog_el, 'description')
+        if catalog.description:
+            self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
         self._creation_info(catalog.creation_info, catalog_el)
         root_el.append(catalog_el)

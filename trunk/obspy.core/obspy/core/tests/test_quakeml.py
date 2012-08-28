@@ -461,6 +461,76 @@ class QuakeMLTestCase(unittest.TestCase):
         # clean up
         os.remove(tmpfile)
 
+    def test_enums(self):
+        """
+        Parses the QuakeML xsd scheme definition and checks if all enums are
+        correctly defined.
+
+        This is a very strict test against the xsd scheme file of QuakeML
+        1.2RC4. If obspy.core.event will ever be more loosely coupled to
+        QuakeML this test WILL HAVE to be changed.
+        """
+        # Currently only works with lxml.
+        try:
+            from lxml.etree import parse
+        except:
+            return
+        xsd_enum_definitions = {}
+        xsd_file = os.path.join(self.path, "QuakeML-BED-1.2.xsd")
+        root = parse(xsd_file).getroot()
+        for elem in root.getchildren():
+            # All enums are simple types.
+            if not elem.tag.endswith("simpleType"):
+                continue
+            # They only have one child, a restriction to strings.
+            children = elem.getchildren()
+            if len(children) > 1 or \
+                not children[0].tag.endswith("restriction") \
+                or (children[0].items()[0] != ('base', 'xs:string')):
+                continue
+            # Furthermore all children of the restriction should be
+            # enumerations.
+            enums = children[0].getchildren()
+            all_enums = [_i.tag.endswith("enumeration") for _i in enums]
+            if not all(all_enums):
+                continue
+            enum_name = elem.get('name')
+            xsd_enum_definitions[enum_name] = []
+            for enum in enums:
+                xsd_enum_definitions[enum_name].append(enum.get('value'))
+        # Now import all enums and check if they are correct.
+        from obspy.core import event_header
+        from obspy.core.util.types import Enum
+        available_enums = {}
+        for module_item_name in dir(event_header):
+            module_item = getattr(event_header, module_item_name)
+            if type(module_item) != Enum:
+                continue
+            # Assign clearer names.
+            enum_name = module_item_name
+            enum_values = [_i.lower() for _i in module_item.keys()]
+            available_enums[enum_name] = enum_values
+        # Now loop over all enums defined in the xsd file and check them.
+        for enum_name, enum_items in xsd_enum_definitions.iteritems():
+            self.assertTrue(enum_name in available_enums.keys())
+            # Check that also all enum items are available.
+            available_items = available_enums[enum_name]
+            available_items = [_i.lower() for _i in available_items]
+            for enum_item in enum_items:
+                if enum_item.lower() not in available_items:
+                    msg = "Value '%s' not in Enum '%s'" % (enum_item,
+                        enum_name)
+                    raise Exception(msg)
+            # Check if there are too many items.
+            if len(available_items) != len(enum_items):
+                additional_items = [_i for _i in available_items \
+                    if _i.lower() not in enum_items]
+                msg = "Enum {enum_name} has the following additional items" + \
+                    " not defined in the xsd style sheet:\n\t{enumerations}"
+                msg = msg.format(enum_name=enum_name,
+                    enumerations=", ".join(additional_items))
+                raise Exception(msg)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')
