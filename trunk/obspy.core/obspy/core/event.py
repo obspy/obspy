@@ -2603,11 +2603,18 @@ class Catalog(object):
         :type water_fill_color: Valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
-        :type date_colormap: str, optional, any matplotlib colormap
-        :param date_colormap: The events will be color-coded based on the
-            origin time. The very first occuring event will have the color of
-            one end of the colormap and the latest event the color of the other
-            end with all other events in between.
+        :type color: str, optional
+        :param color:The events will be color-coded based on the property
+            choosen. Possible values are
+            * ``"date"``
+            * ``"depth"``
+            Defaults to ``"date"``
+        :type colormap: str, optional, any matplotlib colormap
+        :param colormap: The colormap for color-coding the events.
+            The event with the smallest property will have the
+            color of one end of the colormap and the event with the biggest
+            property the color of the other end with all other events in
+            between.
             Defaults to None which will use the default colormap.
 
         .. rubric:: Example
