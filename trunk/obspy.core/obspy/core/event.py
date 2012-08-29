@@ -2573,13 +2573,12 @@ class Catalog(object):
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
         writeFormat(self, filename, **kwargs)
 
-    @deprecated_keywords(('date_colormap',))
+    @deprecated_keywords({'date_colormap': 'colormap'})
     def plot(self, projection='cyl', resolution='l',
              continent_fill_color='0.8',
              water_fill_color='white',
              color='date',
-             colormap=None,
-             date_colormap=None, **kwargs):  # @UnusedVariable
+             colormap=None, **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
 
@@ -2651,7 +2650,7 @@ class Catalog(object):
         max_color = max(colors)
 
         # Create the colormap for date based plotting.
-        colormap = plt.get_cmap(date_colormap or colormap)
+        colormap = plt.get_cmap(colormap)
         scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
                                   cmap=colormap)
         scal_map.set_array(np.linspace(0, 1, 1))
