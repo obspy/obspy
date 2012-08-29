@@ -38,7 +38,7 @@ def isQuakeML(filename):
 
     .. rubric:: Example
 
-    >>> isSLIST('/path/to/quakeml.xml')  # doctest: +SKIP
+    >>> isQuakeML('/path/to/quakeml.xml')  # doctest: +SKIP
     True
     """
     try:
@@ -48,7 +48,7 @@ def isQuakeML(filename):
     # check node "*/eventParameters/event" for the global namespace exists
     try:
         namespace = p._getFirstChildNamespace()
-        p.xpath('eventParameters/event', namespace=namespace)[0]
+        p.xpath('eventParameters', namespace=namespace)[0]
     except:
         return False
     return True
