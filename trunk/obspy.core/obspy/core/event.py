@@ -18,6 +18,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
     NamedTemporaryFile, AttribDict
 from obspy.core.util.base import ENTRY_POINTS
+from obspy.core.util.decorator import deprecated_keywords
 from pkg_resources import load_entry_point
 from uuid import uuid4
 import copy
@@ -617,6 +618,7 @@ class ResourceIdentifier(object):
         warnings.warn_explicit(msg, UserWarning, __file__,
                 inspect.currentframe().f_back.f_lineno)
         ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -2426,40 +2428,37 @@ class Catalog(object):
         events = list(self.events)
         for arg in args:
             try:
-                key, operator, value = arg.split(" ")
+                key, operator, value = arg.split(" ", 2)
             except ValueError:
-                msg = "%s is not a valid filter rule."
+                msg = "%s is not a valid filter rule." % arg
                 raise ValueError(msg)
             if key == "magnitude":
                 temp_events = []
                 for event in events:
                     if event.magnitudes and event.magnitudes[0].mag and \
                         operator_map[operator](event.magnitudes[0].mag,
-                                              float(value)):
+                                               float(value)):
                         temp_events.append(event)
                 events = temp_events
-            elif key == "longitude":
+            elif key in ("longitude", "latitude", "depth", "time"):
                 temp_events = []
                 for event in events:
-                    if event.origins and event.origins[0].longitude and \
-                        operator_map[operator](event.origins[0].longitude,
-                                              float(value)):
+                    if (event.origins and event.origins[0].has_key(key) and
+                        operator_map[operator](
+                            event.origins[0].get(key),
+                            UTCDateTime(value) if key == 'time' else
+                            float(value))):
                         temp_events.append(event)
                 events = temp_events
-            elif key == "latitude":
+            elif key in ('standard_error', 'azimuthal_gap',
+                         'used_station_count'):
                 temp_events = []
                 for event in events:
-                    if event.origins and event.origins[0].latitude and \
-                        operator_map[operator](event.origins[0].latitude,
-                                              float(value)):
-                        temp_events.append(event)
-                events = temp_events
-            elif key == "time":
-                temp_events = []
-                for event in events:
-                    if event.origins and event.origins[0].time and \
-                        operator_map[operator](event.origins[0].time,
-                                              UTCDateTime(value)):
+                    if (event.origins and event.origins[0].quality and
+                        event.origins[0].quality.has_key(key) and
+                        operator_map[operator](
+                            event.origins[0].quality.get(key),
+                            float(value))):
                         temp_events.append(event)
                 events = temp_events
             else:
@@ -2574,9 +2573,12 @@ class Catalog(object):
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
         writeFormat(self, filename, **kwargs)
 
+    @deprecated_keywords(('date_colormap',))
     def plot(self, projection='cyl', resolution='l',
              continent_fill_color='0.8',
              water_fill_color='white',
+             color='date',
+             colormap=None,
              date_colormap=None, **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
@@ -2620,25 +2622,30 @@ class Catalog(object):
         from matplotlib.cm import ScalarMappable
         import matplotlib as mpl
 
+        if color not in ('date', 'depth'):
+            raise ValueError('Events can be color coded by date or depth. '
+                             "'%s' is not supported." % (color,))
+
         # lat/lon coordinates, magnitudes, dates
         lats = []
         lons = []
         labels = []
         mags = []
-        dates = []
+        colors = []
         for event in self:
             lats.append(event.origins[0].latitude)
             lons.append(event.origins[0].longitude)
             mag = event.magnitudes[0].mag
             mags.append(mag)
             labels.append(('    %.1f' % mag) if mag else "")
-            dates.append(event.origins[0].time)
-        min_date = min(dates)
-        max_date = max(dates)
+            colors.append(event.origins[0].get('time' if color == 'date' else
+                                               color))
+        min_color = min(colors)
+        max_color = max(colors)
 
         # Create the colormap for date based plotting.
-        colormap = plt.get_cmap(date_colormap)
-        scal_map = ScalarMappable(norm=Normalize(min_date, max_date),
+        colormap = plt.get_cmap(date_colormap or colormap)
+        scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
                                   cmap=colormap)
         scal_map.set_array(np.linspace(0, 1, 1))
 
@@ -2671,9 +2678,9 @@ class Catalog(object):
         # compute the native map projection coordinates for events.
         x, y = map(lons, lats)
         # plot labels
-        for name, xpt, ypt, datept in zip(labels, x, y, dates):
+        for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
             plt.text(xpt, ypt, name, weight="heavy",
-                     color=scal_map.to_rgba(datept))
+                     color=scal_map.to_rgba(colorpt))
         min_size = 5
         max_size = 18
         min_mag = min(mags)
@@ -2683,20 +2690,22 @@ class Catalog(object):
             frac = (mags[_i] - min_mag) / (max_mag - min_mag)
             mag = min_size + frac * (max_size - min_size)
             map.plot(x[_i], y[_i], 'ro', markersize=mag,
-                     color=scal_map.to_rgba(dates[_i]))
+                     color=scal_map.to_rgba(colors[_i]))
         times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
              str(min(times).strftime("%Y-%m-%d")),
              str(max(times).strftime("%Y-%m-%d")))) + \
-                 " - Color codes origin time, size the magnitude")
+                 " - Color codes %s, size the magnitude" % (
+                     "origin time" if color == "date" else "depth"))
 
         cb = mpl.colorbar.ColorbarBase(ax=cm_ax, orientation='horizontal')
         cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
-        date_range = max_date - min_date
-        cb.set_ticklabels([_i.strftime('%Y-%b-%d') \
-            for _i in [min_date, min_date + date_range * 0.25,
-                       min_date + date_range * 0.50,
-                       min_date + date_range * 0.75, max_date]])
+        color_range = max_color - min_color
+        cb.set_ticklabels([
+            _i.strftime('%Y-%b-%d') if color == 'date' else '%.1fkm' % _i
+            for _i in [min_color, min_color + color_range * 0.25,
+                       min_color + color_range * 0.50,
+                       min_color + color_range * 0.75, max_color]])
 
         # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()

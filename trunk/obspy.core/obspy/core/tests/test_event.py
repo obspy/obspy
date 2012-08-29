@@ -279,6 +279,38 @@ class CatalogTestCase(unittest.TestCase):
         self.assertTrue(cat.events[0] == cat2.events[0])
         self.assertFalse(cat.events[0] is cat2.events[0])
 
+    def test_filter(self):
+        """
+        Testing the filter method of the Catalog object.
+        """
+        def getattrs(event, attr):
+            if attr == 'magnitude':
+                obj = event.magnitudes[0]
+                attr = 'mag'
+            else:
+                obj = event.origins[0]
+            for a in attr.split('.'):
+                obj = getattr(obj, a)
+            return obj
+        cat = readEvents()
+        self.assertTrue(all(event.magnitudes[0].mag < 4.
+                            for event in cat.filter('magnitude < 4.')))
+        attrs = ('magnitude', 'latitude', 'longitude', 'depth', 'time',
+                 'quality.standard_error', 'quality.azimuthal_gap',
+                 'quality.used_station_count')
+        values = (4., 40., 50., 10., UTCDateTime('2012-04-04 14:20:00'),
+                  1., 50, 40)
+        for attr, value in zip(attrs, values):
+            attr_filter = attr.split('.')[-1]
+            cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
+            cat_bigger = cat.filter('%s >= %s' % (attr_filter, value))
+            self.assertTrue(all(getattrs(event, attr) < value
+                                for event in cat_smaller))
+            self.assertTrue(all(getattrs(event, attr) >= value
+                                for event in cat_bigger))
+            self.assertTrue(all(event in cat
+                                for event in (cat_smaller + cat_bigger)))
+            #print attr_filter, len(cat_smaller), len(cat_bigger), len(cat)
 
 class WaveformStreamIDTestCase(unittest.TestCase):
     """
