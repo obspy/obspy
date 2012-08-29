@@ -2692,11 +2692,11 @@ class Catalog(object):
         min_mag = min(mags)
         max_mag = max(mags)
         # plot filled circles at the locations of the events.
-        for _i in xrange(len(x)):
-            frac = (mags[_i] - min_mag) / (max_mag - min_mag)
-            mag = min_size + frac * (max_size - min_size)
-            map.plot(x[_i], y[_i], 'ro', markersize=mag,
-                     color=scal_map.to_rgba(colors[_i]))
+        frac = np.array([(m - min_mag) / (max_mag - min_mag) for m in mags])
+        mags_plot = min_size + frac * (max_size - min_size)
+        colors_plot = [scal_map.to_rgba(c) for c in colors]
+        map.scatter(x, y, marker='o', s=(mags_plot ** 2), c=colors_plot,
+                    zorder=10)
         times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
              str(min(times).strftime("%Y-%m-%d")),
@@ -2704,7 +2704,8 @@ class Catalog(object):
                  " - Color codes %s, size the magnitude" % (
                      "origin time" if color == "date" else "depth"))
 
-        cb = mpl.colorbar.ColorbarBase(ax=cm_ax, orientation='horizontal')
+        cb = mpl.colorbar.ColorbarBase(ax=cm_ax, cmap=colormap,
+                                       orientation='horizontal')
         cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
         color_range = max_color - min_color
         cb.set_ticklabels([
