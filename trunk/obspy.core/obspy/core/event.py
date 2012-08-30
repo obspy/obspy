@@ -2451,7 +2451,7 @@ class Catalog(object):
                         temp_events.append(event)
                 events = temp_events
             elif key in ('standard_error', 'azimuthal_gap',
-                         'used_station_count'):
+                         'used_station_count', 'used_phase_count'):
                 temp_events = []
                 for event in events:
                     if (event.origins and event.origins[0].quality and
@@ -2577,6 +2577,7 @@ class Catalog(object):
     def plot(self, projection='cyl', resolution='l',
              continent_fill_color='0.8',
              water_fill_color='white',
+             label='magnitude',
              color='date',
              colormap=None, **kwargs):  # @UnusedVariable
         """
@@ -2586,6 +2587,7 @@ class Catalog(object):
         :param projection: The map projection. Currently supported are
             * ``"cyl"`` (Will plot the whole world.)
             * ``"ortho"`` (Will center around the mean lat/long.)
+            * ``"local"`` (Will plot around local events)
             Defaults to "cyl"
         :type resolution: str, optional
         :param resolution: Resolution of the boundary database to use. Will be
@@ -2602,9 +2604,15 @@ class Catalog(object):
         :type water_fill_color: Valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
+        :type label: str, optional
+        :param label:Events will be labeld based on the chosen property.
+            Possible values are
+            * ``"magnitude"``
+            * ``None``
+            Defaults to ``"magnitude"``            
         :type color: str, optional
-        :param color:The events will be color-coded based on the property
-            choosen. Possible values are
+        :param color:The events will be color-coded based on the chosen
+            proberty. Possible values are
             * ``"date"``
             * ``"depth"``
             Defaults to ``"date"``
@@ -2631,6 +2639,10 @@ class Catalog(object):
         if color not in ('date', 'depth'):
             raise ValueError('Events can be color coded by date or depth. '
                              "'%s' is not supported." % (color,))
+        if label not in (None, 'magnitude', 'depth'):
+            raise ValueError('Events can be labeled by magnitude or events can '
+                             'not be labeled. '
+                             "'%s' is not supported." % (label,))
 
         # lat/lon coordinates, magnitudes, dates
         lats = []
@@ -2643,7 +2655,8 @@ class Catalog(object):
             lons.append(event.origins[0].longitude)
             mag = event.magnitudes[0].mag
             mags.append(mag)
-            labels.append(('    %.1f' % mag) if mag else "")
+            labels.append(('    %.1f' % mag) if mag and label == 'magnitude'
+                          else '')
             colors.append(event.origins[0].get('time' if color == 'date' else
                                                color))
         min_color = min(colors)
@@ -2666,6 +2679,50 @@ class Catalog(object):
             map = Basemap(projection='ortho', resolution=resolution,
                           area_thresh=1000.0, lat_0=sum(lats) / len(lats),
                           lon_0=sum(lons) / len(lons))
+        elif projection == 'local':
+            if min(lons) < -150 and max(lons) > 150:
+                max_lons = max(np.array(lons) % 360)
+                min_lons = min(np.array(lons) % 360)
+            else:
+                max_lons = max(lons)
+                min_lons = min(lons)
+            lat_0 = (max(lats) + min(lats)) / 2.
+            lon_0 = (max_lons + min_lons) / 2.
+            if lon_0 > 180:
+                lon_0 -= 360
+            deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
+            deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
+            height = (max(lats) - min(lats)) * deg2m_lat
+            width = (max_lons - min_lons) * deg2m_lon
+            margin = 0.2 * (width + height)
+            height += margin
+            width += margin
+            map = Basemap(projection='aeqd', resolution=resolution,
+                          area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
+                          width=width, height=height)
+            # not most elegant way to calculate some round lats/lons
+            def linspace2(val1, val2, N):
+                """
+                returns around N 'nice' values between val1 and val2
+                """
+                dval = val2 - val1
+                round_pos = int(round(-np.log10(1.*dval / N)))
+                delta = round(2.*dval / N, round_pos) / 2
+                new_val1 = np.ceil(val1 / delta) * delta
+                new_val2 = np.floor(val2 / delta) * delta
+                N = (new_val2 - new_val1) / delta + 1
+                return np.linspace(new_val1, new_val2, N)
+            N1 = int(np.ceil(height / max(width, height) * 8))
+            N2 = int(np.ceil(width / max(width, height) * 8))
+            map.drawparallels(linspace2(lat_0 - height / 2 / deg2m_lat,
+                                        lat_0 + height / 2 / deg2m_lat, N1),
+                              labels=[0, 1, 1, 0])
+            if min(lons) < -150 and max(lons) > 150:
+                lon_0 %= 360
+            meridians = linspace2(lon_0 - width / 2 / deg2m_lon,
+                                  lon_0 + width / 2 / deg2m_lon, N2)
+            meridians[meridians > 180] -= 360
+            map.drawmeridians(meridians, labels=[1, 0, 0, 1])
         else:
             msg = "Projection %s not supported." % projection
             raise ValueError(msg)

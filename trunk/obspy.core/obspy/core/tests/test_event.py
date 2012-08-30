@@ -297,9 +297,9 @@ class CatalogTestCase(unittest.TestCase):
                             for event in cat.filter('magnitude < 4.')))
         attrs = ('magnitude', 'latitude', 'longitude', 'depth', 'time',
                  'quality.standard_error', 'quality.azimuthal_gap',
-                 'quality.used_station_count')
+                 'quality.used_station_count', 'quality.used_phase_count')
         values = (4., 40., 50., 10., UTCDateTime('2012-04-04 14:20:00'),
-                  1., 50, 40)
+                  1., 50, 40, 20)
         for attr, value in zip(attrs, values):
             attr_filter = attr.split('.')[-1]
             cat_smaller = cat.filter('%s < %s' % (attr_filter, value))
@@ -310,7 +310,6 @@ class CatalogTestCase(unittest.TestCase):
                                 for event in cat_bigger))
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
-            #print attr_filter, len(cat_smaller), len(cat_bigger), len(cat)
 
 class WaveformStreamIDTestCase(unittest.TestCase):
     """
