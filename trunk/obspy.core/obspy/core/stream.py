@@ -1347,6 +1347,41 @@ class Stream(object):
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
+    def cutout(self, starttime, endtime):
+        """
+        Cuts the given time range out of all traces of this Stream object.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start of time span to remove from stream.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End of time span to remove from stream.
+
+        .. rubric:: Example
+
+        >>> st = read()
+        >>> print(st)  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
+        >>> t1 = UTCDateTime("2009-08-24T00:20:06")
+        >>> t2 = UTCDateTime("2009-08-24T00:20:11")
+        >>> st.cutout(t1, t2)
+        >>> print(st)  # doctest: +ELLIPSIS
+        6 Trace(s) in Stream:
+        BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 301 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 301 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 301 samples
+        BW.RJOB..EHZ | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 2200 samples
+        BW.RJOB..EHN | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 2200 samples
+        BW.RJOB..EHE | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 2200 samples
+        """
+        if not self:
+            return
+        tmp = self.slice(endtime=starttime, keep_empty_traces=False)
+        tmp += self.slice(starttime=endtime, keep_empty_traces=False)
+        self.traces = tmp.traces
+
     def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
         Returns new Stream object cut to the given start- and endtime.

@@ -372,6 +372,43 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st2.test, 1)
         self.assertEqual(st2.muh, "Muh")
 
+    def test_cutout(self):
+        """
+        Test cutout method of the Stream object. Compare against equivalent
+        trimming operations.
+        """
+        t1 = UTCDateTime("2009-06-24")
+        t2 = UTCDateTime("2009-08-24T00:20:06.007Z")
+        t3 = UTCDateTime("2009-08-24T00:20:16.008Z")
+        t4 = UTCDateTime("2011-09-11")
+        st = read()
+        st_cut = read()
+        ###
+        st_cut.cutout(t4, t4 + 10)
+        self.assertEqual(st, st_cut)
+        ###
+        st_cut.cutout(t1 - 10, t1)
+        self.assertEqual(st, st_cut)
+        ###
+        st_cut.cutout(t1, t2)
+        st.trim(starttime=t2, nearest_sample=True)
+        self.assertEqual(st, st_cut)
+        ###
+        st = read()
+        st_cut = read()
+        st_cut.cutout(t3, t4)
+        st.trim(endtime=t3, nearest_sample=True)
+        self.assertEqual(st, st_cut)
+        ###
+        st = read()
+        st.trim(endtime=t2, nearest_sample=True)
+        tmp = read()
+        tmp.trim(starttime=t3, nearest_sample=True)
+        st += tmp
+        st_cut = read()
+        st_cut.cutout(t2, t3)
+        self.assertEqual(st, st_cut)
+
     def test_pop2(self):
         """
         Test the pop method of the Stream object.
