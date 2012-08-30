@@ -1347,7 +1347,7 @@ class Stream(object):
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
 
-    def slice(self, starttime, endtime, keep_empty_traces=False):
+    def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
         Returns new Stream object cut to the given start- and endtime.
 
@@ -1381,7 +1381,7 @@ class Stream(object):
         tmp.traces = []
         new = tmp.copy()
         for trace in self:
-            sliced_trace = trace.slice(starttime, endtime)
+            sliced_trace = trace.slice(starttime=starttime, endtime=endtime)
             if keep_empty_traces is False and not sliced_trace.stats.npts:
                 continue
             new.append(sliced_trace)

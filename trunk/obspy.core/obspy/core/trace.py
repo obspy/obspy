@@ -1013,7 +1013,7 @@ class Trace(object):
             self._rtrim(endtime, pad, nearest_sample=nearest_sample,
                         fill_value=fill_value)
 
-    def slice(self, starttime, endtime):
+    def slice(self, starttime=None, endtime=None):
         """
         Returns a new Trace object with data going from start to end time.
 
@@ -1035,7 +1035,7 @@ class Trace(object):
         """
         tr = copy(self)
         tr.stats = deepcopy(self.stats)
-        tr.trim(starttime, endtime)
+        tr.trim(starttime=starttime, endtime=endtime)
         return tr
 
     def verify(self):

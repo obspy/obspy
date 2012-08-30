@@ -400,6 +400,51 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(tr.data[2:9].ctypes.data, tr1.data.ctypes.data)
         self.assertEqual(tr1.data.ctypes.data - 8, mempos)
 
+    def test_slice_noStarttimeOrEndtime(self):
+        """
+        Tests the slicing of trace objects with no starttime or endtime
+        provided. Compares results against the equivalent trim() operation
+        """
+        tr_orig = Trace(data=np.arange(10, dtype='int32'))
+        tr = tr_orig.copy()
+        # two time points outside the trace and two inside
+        t1 = tr.stats.starttime - 2
+        t2 = tr.stats.starttime + 2
+        t3 = tr.stats.endtime - 3
+        t4 = tr.stats.endtime + 2
+        # test 1: only removing data at left side
+        tr_trim = tr_orig.copy()
+        tr_trim.trim(starttime=t2)
+        self.assertEqual(tr_trim, tr.slice(starttime=t2))
+        self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t4))
+        # test 2: only removing data at right side
+        tr_trim = tr_orig.copy()
+        tr_trim.trim(endtime=t3)
+        self.assertEqual(tr_trim, tr.slice(endtime=t3))
+        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t3))
+        # test 3: not removing data at all
+        tr_trim = tr_orig.copy()
+        tr_trim.trim(starttime=t1, endtime=t4)
+        self.assertEqual(tr_trim, tr.slice())
+        self.assertEqual(tr_trim, tr.slice(starttime=t1))
+        self.assertEqual(tr_trim, tr.slice(endtime=t4))
+        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        tr_trim.trim()
+        self.assertEqual(tr_trim, tr.slice())
+        self.assertEqual(tr_trim, tr.slice(starttime=t1))
+        self.assertEqual(tr_trim, tr.slice(endtime=t4))
+        self.assertEqual(tr_trim, tr.slice(starttime=t1, endtime=t4))
+        # test 4: removing data at left and right side
+        tr_trim = tr_orig.copy()
+        tr_trim.trim(starttime=t2, endtime=t3)
+        self.assertEqual(tr_trim, tr.slice(t2, t3))
+        self.assertEqual(tr_trim, tr.slice(starttime=t2, endtime=t3))
+        # test 5: no data left after operation
+        tr_trim = tr_orig.copy()
+        tr_trim.trim(starttime=t4)
+        self.assertEqual(tr_trim, tr.slice(starttime=t4))
+        self.assertEqual(tr_trim, tr.slice(starttime=t4, endtime=t4 + 1))
+
     def test_trimFloatingPoint(self):
         """
         Tests the slicing of trace objects.
