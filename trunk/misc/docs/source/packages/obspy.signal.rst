@@ -54,6 +54,7 @@
        freqattributes
        hoctavbands
        invsim
+       konnoohmachismoothing
        polarization
        psd
        rotate
