@@ -179,12 +179,12 @@ class SacIO(object):
     nzsec        N    GMT second.
     nzmsec       N    GMT millisecond.
     iztype       I    Reference time equivalence:
-                          * IUNKN (Unknown)
-                          * IB (Begin time)
-                          * IDAY (Midnight of refernece GMT day)
-                          * IO (Event origin time)
-                          * IA (First arrival time)
-                          * ITn (User defined n=0 time 9) pick n
+                          * IUNKN (5): Unknown
+                          * IB (9): Begin time
+                          * IDAY (10): Midnight of refernece GMT day
+                          * IO (11): Event origin time
+                          * IA (12): First arrival time
+                          * ITn (13-22): User defined time pick n, n=0,9
     o            F    Event origin time (seconds relative to reference time.)
     a            F    First arrival time (seconds relative to reference time.)
     ka           K    First arrival time identification.
