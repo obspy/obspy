@@ -33,7 +33,7 @@ from obspy.signal.util import prevpow2
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
-if MATPLOTLIB_VERSION == None:
+if MATPLOTLIB_VERSION is None:
     # if matplotlib is not present be silent about it and only raise the
     # ImportError if matplotlib actually is used (currently in psd() and
     # PPSD())
@@ -278,7 +278,7 @@ class PPSD():
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
-                 is_rotational_data=False):
+                 is_rotational_data=False, db_bins=[-200, -50, 0.5]):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -322,6 +322,10 @@ class PPSD():
         :type is_rotational_data: Boolean (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
+        :type db_bins: List of three ints/floats
+        :param db_bins: Specify the lower and upper boundary and the width of
+                the db bins. The bin width might get adjusted to fit  a number
+                of equally spaced bins in between the given boundaries.
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -368,6 +372,10 @@ class PPSD():
         self.times_gaps = []
         self.hist_stack = None
         self.__setup_bins()
+        # set up the binning for the db scale
+        num_bins = int((db_bins[1] - db_bins[0]) / db_bins[2])
+        self.spec_bins = np.linspace(db_bins[0], db_bins[1], num_bins + 1,
+                                     endpoint=True)
         self.colormap = LinearSegmentedColormap('mcnamara', CDICT, 1024)
 
     def __setup_bins(self):
@@ -413,8 +421,6 @@ class PPSD():
         # mid-points of all the period bins
         self.period_bin_centers = np.mean((self.period_bins[:-1],
                                            self.period_bins[1:]), axis=0)
-        # set up the binning for the db scale
-        self.spec_bins = np.linspace(-200, -50, 301, endpoint=True)
 
     def __sanity_check(self, trace):
         """
@@ -757,7 +763,7 @@ class PPSD():
 
         ax.semilogx()
         ax.set_xlim(0.01, 179)
-        ax.set_ylim(-200, -50)
+        ax.set_ylim(self.spec_bins[0], self.spec_bins[-1])
         ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
         ax.xaxis.set_major_formatter(FormatStrFormatter("%.2f"))
