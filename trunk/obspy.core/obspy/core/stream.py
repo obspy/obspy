@@ -2384,11 +2384,11 @@ def isPickle(filename):  # @UnusedVariable
     :type filename: str
     :param filename: Name of the pickled ObsPy Stream file to be checked.
     :rtype: bool
-    :return: ``True`` if ASCII TSPAIR file.
+    :return: ``True`` if pickled file.
 
     .. rubric:: Example
 
-    >>> isTSPAIR('/path/to/tspair.ascii')  # doctest: +SKIP
+    >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
     if isinstance(filename, basestring):
