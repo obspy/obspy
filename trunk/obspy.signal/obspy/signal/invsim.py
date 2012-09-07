@@ -189,8 +189,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    #freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
-    freqs = np.linspace(0, fy, n)
+    freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
@@ -458,7 +457,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     else:
         nfft = 2 * ndat
     # Transform data in Fourier domain
-    import pdb;pdb.set_trace()
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
