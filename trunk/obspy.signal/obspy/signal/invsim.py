@@ -189,7 +189,8 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
+    #freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
+    freqs = np.linspace(0, fy, n)
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
@@ -452,11 +453,12 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     # evalresp scales directly with nfft, therefor taking the next power of
     # two has a greater negative performance impact than the slow down of a
     # not power of two in the FFT
-    elif ndat & 1:  # check if even
+    elif ndat & 0x1:  # check if uneven
         nfft = 2 * (ndat + 1)
     else:
         nfft = 2 * ndat
     # Transform data in Fourier domain
+    import pdb;pdb.set_trace()
     data = np.fft.rfft(data, n=nfft)
     # Inverse filtering = Instrument correction
     if paz_remove:
