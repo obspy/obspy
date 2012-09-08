@@ -1060,6 +1060,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
 
     transff = np.empty((nkx, nky))
 
+    # checked for arange, ktep / 10. is added for numerical stability
     for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             _sum = 0j
@@ -1115,6 +1116,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     transff = np.empty((nsx, nsy))
     buff = np.zeros(nf)
 
+    # checked for arange, step / 10. is added for numerical stability
     for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
         for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):

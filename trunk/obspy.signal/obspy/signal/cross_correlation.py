@@ -382,7 +382,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
         import matplotlib.pyplot as plt
         fig = plt.figure()
         ax1 = fig.add_subplot(211)
-        tmp_t = np.arange(0, len(slices[0]) / samp_rate, 1 / samp_rate)
+        tmp_t = np.linspace(0, len(slices[0]) / samp_rate, len(slices[0]))
         ax1.plot(tmp_t, slices[0].data / float(slices[0].data.max()), "k",
                  label="Trace 1")
         ax1.plot(tmp_t, slices[1].data / float(slices[1].data.max()), "r",

@@ -574,6 +574,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
     if D2 >= 90:
         D2 = 89.9999
 
+    # arange checked for numerical stablility, np.pi is not multiple of 0.1
     phi = np.arange(0, np.pi, .01)
     l1 = np.sqrt(np.power(90 - D1, 2) / (np.power(np.sin(phi), 2) + \
         np.power(np.cos(phi), 2) * np.power(90 - D1, 2) / np.power(90, 2)))
@@ -587,7 +588,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         lo = S1 - 180
         hi = S2
         if lo > hi:
-            inc = -inc
+            inc = -1
         th1 = np.arange(S1 - 180, S2, inc)
         (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
         (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)
@@ -596,7 +597,7 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         hi = S1 - 180
         lo = S2 - 180
         if lo > hi:
-            inc = -inc
+            inc = -1
         th1 = np.arange(hi, lo, -inc)
         (Xs1, Ys1) = Pol2Cart(th1 * D2R, 90 * np.ones((1, len(th1))))
         (X2, Y2) = Pol2Cart(phi + S2 * D2R, l2)

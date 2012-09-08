@@ -107,16 +107,15 @@ def cfrequency(data, fs, smoothie, fk):
         frequency (windowed only).
     """
     nfft = util.nextpow2(data.shape[1])
-    freq = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
-                          1. / float(nfft / float(fs)))
+    freq = np.linspace(0, fs, nfft+1)
     freqaxis = freq[0:nfft / 2]
     cfreq = np.zeros(data.shape[0])
-    if (np.size(data.shape) > 1):
+    if np.size(data.shape) > 1:
         i = 0
         for row in data:
             Px_wm = welch(row, np.hamming(len(row)), util.nextpow2(len(row)))
             Px = Px_wm[0:len(Px_wm) / 2]
-            cfreq[i] = np.sqrt(np.sum(pow(freqaxis, 2) * Px) / (sum(Px)))
+            cfreq[i] = np.sqrt(np.sum(freqaxis**2 * Px) / (sum(Px)))
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         #cfreq_add = \
@@ -133,7 +132,7 @@ def cfrequency(data, fs, smoothie, fk):
     else:
         Px_wm = welch(data, np.hamming(len(data)), util.nextpow2(len(data)))
         Px = Px_wm[0:len(Px_wm) / 2]
-        cfreq = np.sqrt(np.sum(pow(freqaxis, 2) * Px) / (sum(Px)))
+        cfreq = np.sqrt(np.sum(freqaxis**2 * Px) / (sum(Px)))
         return cfreq
 
 
@@ -158,12 +157,11 @@ def bwith(data, fs, smoothie, fk):
         period (windowed only).
     """
     nfft = util.nextpow2(data.shape[1])
-    freqaxis = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
-                          1. / float(nfft / float(fs)))
+    freqaxis = np.linspace(0, fs, nfft+1)
     bwith = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
     f_sm = util.smooth(abs(f[:, 0:nfft / 2]), 10)
-    if (np.size(data.shape) > 1):
+    if np.size(data.shape) > 1:
         i = 0
         for row in f_sm:
             minfc = abs(row - max(abs(row * (1 / np.sqrt(2)))))
@@ -211,13 +209,12 @@ def domperiod(data, fs, smoothie, fk):
     """
     nfft = 1024
     #nfft = util.nextpow2(data.shape[1])
-    freqaxis = np.arange(0, float(fs) - 1. / float(nfft / float(fs)),
-                          1. / float(nfft / float(fs)))
+    freqaxis = np.linspace(0, fs, nfft+1)
     dperiod = np.zeros(data.shape[0])
     f = fftpack.fft(data, nfft)
     #f_sm = util.smooth(abs(f[:,0:nfft/2]),1)
     f_sm = f[:, 0:nfft / 2]
-    if (np.size(data.shape) > 1):
+    if np.size(data.shape) > 1:
         i = 0
         for row in f_sm:
             [mdist_ind, _mindist] = max(enumerate(abs(row)), key=itemgetter(1))
