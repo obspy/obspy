@@ -115,6 +115,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     SU       :mod:`obspy.segy`    :func:`obspy.segy.core.readSU`
     SEG2     :mod:`obspy.seg2`    :func:`obspy.seg2.seg2.readSEG2`
     WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.readWAV`
+    PICKLE   :mod:`obspy.core`    :func:`obspy.wav.stream.readPICKLE`
     =======  ===================  ====================================
 
     Next to the :func:`~obspy.core.stream.read` function the
@@ -1190,8 +1191,8 @@ class Stream(object):
         :param format: The format to write must be specified. Depending on your
             ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``. See the `Supported Formats`_ section below for a full
-            list of supported formats.
+            ``"WAV"``, ``"PICKLE"``. See the `Supported Formats`_ section
+            below for a full list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -1230,6 +1231,7 @@ class Stream(object):
         SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
         TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
+        PICKLE   :mod:`obspy.core`    :func:`obspy.wav.stream.writePICKLE`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.
@@ -2426,6 +2428,10 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     """
     Writes a Python pickle of current stream.
+
+    .. note::
+        Writing into the piuckle format allows to store additional attributes
+        set within the current Stream object or any contained Trace.
 
     .. warning::
         This function should NOT be called directly, it registers via the

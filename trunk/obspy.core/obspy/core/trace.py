@@ -819,8 +819,9 @@ class Trace(object):
         :param format: The format to write must be specified. Depending on your
             ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
             ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``. See :meth:`obspy.core.stream.Stream.write` method for
-            all possible formats.
+            ``"WAV"``, ``"PICKLE"``. See
+            :meth:`obspy.core.stream.Stream.write` method for all possible
+            formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
