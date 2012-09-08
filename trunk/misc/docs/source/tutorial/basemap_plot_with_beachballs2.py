@@ -8,8 +8,8 @@ m = Basemap(projection='cyl', lon_0=142.36929, lat_0=38.3215,
 
 m.drawcoastlines()
 m.fillcontinents()
-m.drawparallels(np.arange(-90.,120.,30.))
-m.drawmeridians(np.arange(0.,420.,60.))
+m.drawparallels(np.arange(-90., 120., 30.))
+m.drawmeridians(np.arange(0., 420., 60.))
 m.drawmapboundary()
 
 x, y = m(142.36929, 38.3215)

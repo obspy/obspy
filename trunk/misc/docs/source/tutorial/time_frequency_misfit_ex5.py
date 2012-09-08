@@ -27,7 +27,7 @@ H1 = (np.sign(t - t1) + 1) / 2
 st1 = A1 * (t - t1) * np.exp(-2 * (t - t1)) * \
         np.cos(2. * np.pi * f1 * (t - t1) + phi1 * np.pi) * H1
 
-ste = 0.001 * A1 * np.exp(- (10 *(t - 2. * t1)) ** 2) \
+ste = 0.001 * A1 * np.exp(- (10 * (t - 2. * t1)) ** 2)
 
 # reference signal
 st2 = st1.copy()
@@ -36,6 +36,7 @@ st2 = st1.copy()
 st1a = st1 * amp_fac + ste
 
 plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, show=False)
-plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local', clim=0.15, show=False)
+plotTfMisfits(st1a, st2, dt=dt, fmin=fmin, fmax=fmax, norm='local', clim=0.15,
+              show=False)
 
 plt.show()
