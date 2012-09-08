@@ -154,10 +154,10 @@ class FreqTraceTestCase(unittest.TestCase):
         self.assertEqual(m_dis, 1.0)
         self.assertEqual(m_vel, 0.5)
         self.assertEqual(m_acc, 0.5)
-        # flat array with one cicle of sin (degree)
+        # flat array with one circle of sin (degree)
         data = np.zeros(400)
         for i in range(360):
-            data[i+20] = np.sin(i * pi / 180)
+            data[i + 20] = np.sin(i * pi / 180)
         (pg, m_dis, m_vel, m_acc) = freqattributes.pgm(data, 1.0, 1.0)
         self.assertAlmostEqual(pg, 0.00902065171505, 6)
         self.assertEqual(m_dis, 1.0)
