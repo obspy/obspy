@@ -186,10 +186,9 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     fh.write(os.linesep.join(data.splitlines()))
     fh.close()
 
-    n = nfft // 2
     fy = 1 / (t_samp * 2.0)
     # start at zero to get zero for offset/ DC of fft
-    freqs = np.arange(0, fy + fy / n, fy / n)  # arrange should includes fy/n
+    freqs = np.linspace(0, fy, nfft // 2 + 1)
     start_stage = C.c_int(-1)
     stop_stage = C.c_int(0)
     stdio_flag = C.c_int(0)
@@ -205,7 +204,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     rtyp = C.create_string_buffer("CS")
     datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
     fn = C.create_string_buffer(tempfile)
-    nfreqs = C.c_int(freqs.size)
+    nfreqs = C.c_int(freqs.shape[0])
     res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                             freqs, nfreqs, rtyp, vbs, start_stage,
                             stop_stage, stdio_flag, C.c_int(0))
