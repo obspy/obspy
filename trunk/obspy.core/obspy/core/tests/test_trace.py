@@ -1015,6 +1015,17 @@ class TraceTestCase(unittest.TestCase):
         tr.stats.station = '%t3u'
         self.assertTrue(tr.__str__().startswith(".%t3u.. | 1970"))
 
+    def test_taper(self):
+        """
+        Test taper method of trace
+        """
+        data = np.ones(10)
+        tr = Trace(data=data)
+        tr.taper()
+        for i in range(len(data)):
+            self.assertLessEqual(tr.data[i], 1.)
+            self.assertGreaterEqual(tr.data[i], 0.)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
