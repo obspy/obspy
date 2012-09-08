@@ -11,7 +11,7 @@ echo $PACKAGES
 for NAME in obspy.core $PACKAGES; do
     cd $NAME
     rm -rf build
-    pip install -v -e ./
+    pip install --no-deps -v -e .
     cd ..
 done
 
