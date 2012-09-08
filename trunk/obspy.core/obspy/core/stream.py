@@ -2430,8 +2430,8 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     Writes a Python pickle of current stream.
 
     .. note::
-        Writing into the piuckle format allows to store additional attributes
-        set within the current Stream object or any contained Trace.
+        Writing into PICKLE format allows to store additional attributes
+        appended to the current Stream object or any contained Trace.
 
     .. warning::
         This function should NOT be called directly, it registers via the
