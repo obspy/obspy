@@ -6,7 +6,7 @@ The freqattributes.core test suite.
 
 from obspy.signal import freqattributes, util
 from scipy import signal
-from math import sin,pi
+from math import pi
 import numpy as np
 import os
 import unittest
