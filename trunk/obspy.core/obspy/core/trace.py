@@ -1884,6 +1884,23 @@ class Trace(object):
             trace_list.append(tr)
         return trace_list
 
+    def times(self):
+        """
+        For convenient plotting compute a Numpy array of seconds since
+        starttime corresponding to the samples in Trace.
+
+        :rtype: :class:`~numpy.ndarray` or :class:`~numpy.ma.MaskedArray`
+        :returns: An array of time samples in an :class:`~numpy.ndarray` if
+            the trace doesn't have any gaps or a :class:`~numpy.ma.MaskedArray`
+            otherwise.
+        """
+        timeArray = np.arange(self.stats.npts)
+        timeArray = timeArray / self.stats.sampling_rate
+        # Check if the data is a ma.maskedarray
+        if isinstance(self.data, np.ma.masked_array):
+            timeArray = np.ma.array(timeArray, mask=self.data.mask)
+        return timeArray
+
 
 if __name__ == '__main__':
     import doctest

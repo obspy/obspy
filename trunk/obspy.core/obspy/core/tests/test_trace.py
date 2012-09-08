@@ -1026,6 +1026,22 @@ class TraceTestCase(unittest.TestCase):
             self.assertLessEqual(tr.data[i], 1.)
             self.assertGreaterEqual(tr.data[i], 0.)
 
+    def test_times(self):
+        """
+        Test if the correct times array is returned for normal traces and
+        traces with gaps.
+        """
+        tr = Trace(data=np.ones(100))
+        tr.stats.sampling_rate = 20
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr.stats.starttime = start
+        tm = tr.times()
+        self.assertAlmostEquals(tm[-1], tr.stats.endtime - tr.stats.starttime)
+        tr.data = np.ma.ones(100)
+        tr.data[30:40] = np.ma.masked
+        tm = tr.times()
+        self.assertTrue(np.alltrue(tr.data.mask == tm.mask))
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
