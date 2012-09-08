@@ -18,6 +18,7 @@ Frequency Attributes
 
 from operator import itemgetter
 from scipy import fftpack, signal, sparse
+from obspy.signal.invsim import seisSim, cornFreq2Paz
 import numpy as np
 import util
 
@@ -329,3 +330,65 @@ def logcep(data, fs, nc, p, n, w):  # @UnusedVariable: n is never used!!!
     elif (p < nc):
         z = np.vstack([z, np.zeros(nf, nc - p)])
     return z
+
+
+def pgm(data, delta, freq, damp=0.1):  
+    """
+    Peak ground motion parameters
+
+    Compute the maximal displacement, velocity, acceleration 
+    and the peak ground acceleration at a certain frequency 
+    (standard frequencies for ShakeMaps are 0.3/1.0/3.0 Hz).
+    
+    Data must be displacement
+
+    :type data: :class:`~numpy.ndarray`
+    :param data: Data in dispalcement to convolve with pendulum at freq.
+    :type delta: float
+    :param delta: Sampling interval
+    :type freq: float
+    :param freq: Frequency in Hz.
+    :type damp: float
+    :param damp: damping factor. Default is set to 0.1
+    :rtype: (float, float, float, float)
+    :return: Peak Ground Acceleration, maximal displacement, velocity, acceleration
+    """
+    data = data.copy()
+
+    # Displacement
+    if abs(max(data)) >= abs(min(data)):
+        m_dis = abs(max(data))
+    else:
+        m_dis = abs(min(data))
+
+    # Velocity
+    data = np.gradient(data,delta)
+    if abs(max(data)) >= abs(min(data)):
+        m_vel = abs(max(data))
+    else:
+        m_vel = abs(min(data))
+
+    # Acceleration
+    data = np.gradient(data,delta)
+    if abs(max(data)) >= abs(min(data)):
+        m_acc = abs(max(data))
+    else:
+        m_acc = abs(min(data))
+
+    samp_rate = 1.0 / delta
+    T = freq * 1.0
+    D = damp
+    omega = (2 *  3.14159 * T) ** 2
+
+    paz_sa = cornFreq2Paz(T, damp=D)
+    paz_sa['sensitivity'] = omega
+    paz_sa['zeros'] = []
+    data=seisSim(data, samp_rate, paz_remove=None, paz_simulate=paz_sa, taper=True, simulate_sensitivity=True, taper_fraction=0.05)
+
+    if abs(max(data)) >= abs(min(data)):
+       pga = abs(max(data))
+    else:
+       pga = abs(min(data))
+
+    return (pga, m_dis, m_vel, m_acc)
+
