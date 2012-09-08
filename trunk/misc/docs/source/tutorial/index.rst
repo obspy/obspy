@@ -12,7 +12,14 @@ Basic Introduction
 
 This section will introduce ObsPy's basic object types and how to use them.
 
-Coming soon.
+Work in progress...
+
+.. toctree::
+   :numbered:
+   :maxdepth: 2
+
+   utc_date_time
+   waveform_data
 
 Advanced Exercise
 -----------------
