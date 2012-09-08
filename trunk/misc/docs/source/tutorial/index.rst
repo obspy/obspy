@@ -7,6 +7,26 @@ This tutorial does not attempt to be comprehensive and cover every single
 feature. Instead, it introduces many of ObsPy's most noteworthy features, and
 will give you a good idea of the library’s flavor and style.
 
+Basic Introduction
+------------------
+
+This section will introduce ObsPy's basic object types and how to use them.
+
+Coming soon.
+
+Advanced Exercise
+-----------------
+
+In this exercise we show how to use ObsPy to develop a automated processing
+workflow. We start out with very simple tasks and then automate the routine
+step by step.
+
+Code Snippets
+-------------
+
+The following is a list of short, useful code snippets using ObsPy. All plots
+are also included in the :doc:`Gallery <../gallery>`.
+
 .. toctree::
    :numbered:
    :maxdepth: 2
