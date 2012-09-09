@@ -6,6 +6,7 @@ dev:
  * adding taper() method to Trace/Stream using cosTaper of ObsPy and also
    all scipy windowing functions
  * adding cutout() method to Stream
+ * removed all deprecated UTCDateTime methods
 
 0.7.1:
  * fixing negative azimuths returned by gps2DistAzimuth [#375]
