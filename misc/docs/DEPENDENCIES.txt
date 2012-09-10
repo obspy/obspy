@@ -1,24 +1,30 @@
-General
-=======
-  sphinx>=1.1
-  coverage (for 'make coverage' only)
-  pep8 (for 'make pep8' only)
-  pybtex>=0.16 (for 'make citations' only)
+# this file is set up according to pip requirements file format
+# http://www.pip-installer.org/en/latest/requirements.html
 
-ObsPy Library
-=============
-  obspy.*
-  lxml
-  numpy
-  scipy
-  matplotlib
-  suds (obspy.neries)
-  sqlalchemy (obspy.db)
+# General
+sphinx>=1.1
+## for 'make coverage' only:
+coverage
+## for 'make pep8' only:
+pep8
+## for 'make citations' only:
+pybtex>=0.16
 
-Tutorial
-========
-  basemap
-  hcluster
-  mlpy
-  pyproj (doctest only)
-  r2py (doctest only)
+# ObsPy Library
+## obspy.*
+lxml
+numpy
+scipy
+matplotlib
+## for obspy.neries:
+suds
+## for obspy.db:
+sqlalchemy
+
+# Tutorial
+basemap
+hcluster
+mlpy
+## doctests only:
+pyproj
+r2py
