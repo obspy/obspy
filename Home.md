@@ -1,6 +1,4 @@
-## Welcome to ObsPy
-
-A Python Toolbox for seismology/seismological observatories.
+ObsPy: A Python Toolbox for seismology/seismological observatories.
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838)).
 
@@ -19,4 +17,34 @@ These notes describe installing ObsPy on the following platforms:
 * Linux
 * Mac
 * Windows
-* FreeBSD 
+* FreeBSD
+
+## [Documentation](http://docs.obspy.org)
+
+The functionality is provided through the following packages:
+
+### General packages:
+* [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together
+* [obspy.imaging](http://docs.obspy.org/packages/obspy.imaging.html) - Imaging spectograms, beachballs and waveforms
+* [obspy.realtime](http://docs.obspy.org/packages/obspy.realtime.html) - Extends the !ObsPy core classes with real time functionalities (''experimental'')
+* [obspy.signal](http://docs.obspy.org/packages/obspy.signal.html) - Filters, triggers, instrument correction, rotation, array analysis, beamforming
+* [obspy.taup](http://docs.obspy.org/packages/obspy.taup.html) - Calculates and visualizes travel times
+* [obspy.xseed](http://docs.obspy.org/packages/obspy.xseed.html) - Converter for Dataless SEED, [XML-SEED](http://adsabs.harvard.edu/abs/2004AGUFMSF31B..03T) and SEED RESP files
+
+### Waveform import/export plug-ins:
+* [obspy.datamark](http://docs.obspy.org/packages/obspy.datamark.html) - DATAMARK read support ("experimental")
+* [obspy.gse2](http://docs.obspy.org/packages/obspy.gse2.html) - GSE2 and GSE1 read and write support
+* [obspy.mseed](http://docs.obspy.org/packages/obspy.mseed.html) - MiniSEED read and write support
+* [obspy.sac](http://docs.obspy.org/packages/obspy.sac.html) - SAC read and write support
+* [obspy.seisan](http://docs.obspy.org/packages/obspy.seisan.html) - SEISAN read support
+* [obspy.seg2](http://docs.obspy.org/packages/obspy.seg2.html) - SEG2 read support ("experimental")
+* [obspy.segy](http://docs.obspy.org/packages/obspy.segy.html) - SEGY read and write support
+* [obspy.sh](http://docs.obspy.org/packages/obspy.sh.html) - Q and ASC read and write support (file formats of [SeismicHandler](http://www.seismic-handler.org))
+* [obspy.wav](http://docs.obspy.org/packages/obspy.wav.html) - WAV (audio) read and write support
+
+### Database or Web service access clients:
+* [obspy.arclink](http://docs.obspy.org/packages/obspy.arclink.html) - [ArcLink/WebDC](http://www.webdc.eu) request client
+* [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client ("experimental")
+* [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client
+* [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
+* [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](http://www.seishub.org) database client
