@@ -17,7 +17,7 @@ On Linux there is a variety of possible ways to install ObsPy. The overview is g
   * makes it possible to modify internal ObsPy code
 
 ## Via Linux Package Management (Debian/Ubuntu)
-The easiest and cleanest way to install the most recent stable release ObsPy under Debian and Ubuntu globally for all system users is using the ObsPy Debian Packages. The package management system will automatically install all necessary components and dependencies needed for using ObsPy. The package management will also automatically check for new releases and give an update dialog in case new tagged versions are 
+The easiest and cleanest way to install the most recent stable release ObsPy under Debian and Ubuntu globally for all system users is using the ObsPy Debian Packages. The package management system will automatically install all necessary components and dependencies needed for using ObsPy. The package management will also automatically check for new releases and give an update dialog in case new tagged versions become available.
 
 * [[Installation using the ObsPy apt repository|Installation on Linux via Apt Repository]]
 
@@ -29,4 +29,4 @@ On any Linux distribution, prepackaged ObsPy modules for the latest stable relea
 ## Manually from Source Code
 Installing from a git checkout of the source code repository is only recommended for advanced users and developers. It makes it possible to work on modified ObsPy code and on bug fixes.
 
-* [[Installation via PyPI|Installation on Linux from Source]]
+* [[Installation from Source Code|Installation on Linux from Source]]
