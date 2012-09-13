@@ -1,4 +1,4 @@
-ObsPy: A Python Toolbox for seismology/seismological observatories.
+## ObsPy: A Python Toolbox for seismology/seismological observatories.
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838)).
 
@@ -14,10 +14,10 @@ ObsPy is currently [running and tested](http://tests.obspy.org) on Linux (32 and
 
 These notes describe installing ObsPy on the following platforms:
 
-* Linux
-* Mac
-* Windows
-* FreeBSD
+* [Linux](InstallationLinux)
+* [Mac](InstallationMac)
+* [Windows](InstallationWindows)
+* [FreeBSD](InstallationFreeBSD)
 
 ## [Documentation](http://docs.obspy.org)
 
@@ -49,7 +49,7 @@ The functionality is provided through the following packages:
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](http://www.seishub.org) database client
 
-### Additional Documentation
+### References
 
 1. Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010),
    [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), SRL, 81(3), 530-533.
@@ -58,7 +58,7 @@ The functionality is provided through the following packages:
 
 ## Mailing List
 
-If you are using ObsPy we strongly recommend for you to join the [obspy-users mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
+If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
 
 ## Developer Corner
 
@@ -69,4 +69,3 @@ If you are using ObsPy we strongly recommend for you to join the [obspy-users ma
  * Testing & Debugging, Sphinx Documentation
  * [Docs or doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
-
