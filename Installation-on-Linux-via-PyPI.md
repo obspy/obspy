@@ -1,35 +1,6 @@
-It is recommended to install the required dependencies via your package manager beforehand, e.g. on.. 
+First, install ObsPy's dependencies as described [[here|Installation on Linux: Dependencies]].
 
- * Debian/Ubuntu
-```bash
-      sudo apt-get update
-      sudo apt-get install python
-      sudo apt-get install python-dev
-      sudo apt-get install python-setuptools
-      sudo apt-get install python-numpy
-      sudo apt-get install python-scipy
-      sudo apt-get install python-matplotlib
-      sudo apt-get install python-lxml
-      sudo apt-get install ipython         # strongly recommended, not necessary
-      #sudo apt-get install python-omniorb # only needed for deprecated module obspy.fissures
-```
- * openSUSE
-```bash
-      sudo zypper update
-      sudo zypper install python
-      sudo zypper install python-devel
-      sudo zypper install python-setuptools
-      sudo zypper install python-numpy
-      sudo zypper install python-numpy-devel
-      sudo zypper install python-scipy
-      sudo zypper install python-matplotlib
-      sudo zypper install python-matplotlib-tk
-      sudo zypper install python-lxml
-      sudo zypper install IPython             # strongly recommended, not necessary
-      #sudo zypper install python-omniORB     # only needed for deprecated module obspy.fissures
-```
-
-First, make sure the version of distribute is recent enough (the current developer version needs at least version 0.6.21):
+Then, make sure the version of distribute is recent enough (the current developer version needs at least version 0.6.21):
 
 ```bash
 easy_install -U distribute
