@@ -19,6 +19,10 @@ These notes describe installing ObsPy on the following platforms:
 * [[Windows|InstallationWindows]]
 * [[FreeBSD|InstallationFreeBSD]]
 
+## Mailing List
+
+If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
+
 ## [Documentation](http://docs.obspy.org)
 
 The functionality is provided through the following packages:
@@ -55,10 +59,6 @@ The functionality is provided through the following packages:
    [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), SRL, 81(3), 530-533.
 2. Tobias Megies, Moritz Beyreuther, Robert Barsch, Lion Krischer, Joachim Wassermann (2011),
     [ObsPy – What can it do for data centers and observatories?](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838) Annals Of Geophysics, 54(1), 47-58, doi:10.4401/ag-4838.
-
-## Mailing List
-
-If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
 
 ## Developer Corner
 
