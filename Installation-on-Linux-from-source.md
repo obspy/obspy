@@ -1,4 +1,4 @@
-Developers might be interested in directly linking their git checkout to the python site-packages. First, clone the ObsPy git repository:
+Developers might be interested in directly linking their git checkout to the python site-packages. First, clone the ObsPy git repository (or fork ObsPy in GitHub and clone your fork):
 ```bash
 git clone https://github.com/obspy/obspy.git /path/to/my/obspy
 ```
