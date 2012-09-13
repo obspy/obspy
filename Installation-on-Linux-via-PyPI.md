@@ -24,14 +24,3 @@ easy_install -N -U obspy.core
 ```
  * **-N**: Option will prevent easy_install to resolve the dependencies on its own (can be useful if dependencies are already installed and installing them via PyPI fails).
  * **==dev**: The latest development version can be obtained by adding ==dev to the package name, e.g. `easy_install -N obspy.sac==dev`.
- * Developers might be interested in directly linking their git checkout to the python site-packages:
-   * Clone git repository:
-```bash
-git clone https://github.com/obspy/obspy.git /path/to/my/obspy
-```
-   * Install in Python site-packages (will install for current Python interpreter, check with `which python`):
-```bash
-cd /path/to/my/obspy
-cd misc/scripts
-./develop.sh
-```
