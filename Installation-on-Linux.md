@@ -6,7 +6,7 @@ On Linux there is a variety of possible ways to install ObsPy. The overview is g
   * admin privileges necessary
   * easiest/cleanest way to handle for end user
   * system-wide for all users
-  * all dependencies installed autometically
+  * all dependencies installed automatically
   * automatically notifies of new releases
  * Python Package Index
   * latest stable release _or_ older versions _or_ current developer snapshot
