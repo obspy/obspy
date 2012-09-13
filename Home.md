@@ -14,7 +14,7 @@ ObsPy is currently [running and tested](http://tests.obspy.org) on Linux (32 and
 
 These notes describe installing ObsPy on the following platforms:
 
-* [Linux](InstallationLinux)
+* [[Linux|InstallationLinux]]
 * [Mac](InstallationMac)
 * [Windows](InstallationWindows)
 * [FreeBSD](InstallationFreeBSD)
