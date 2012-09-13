@@ -25,8 +25,6 @@ If you are using ObsPy we **strongly recommend** for you to join the [[obspy-use
 
 ## [Documentation](http://docs.obspy.org)
 
-The functionality is provided through the following packages:
-
 ### General packages:
 * [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together
 * [obspy.imaging](http://docs.obspy.org/packages/obspy.imaging.html) - Imaging spectograms, beachballs and waveforms
