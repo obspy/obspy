@@ -67,3 +67,4 @@ If you are using ObsPy we **strongly recommend** for you to join the [[obspy-use
  * Testing & Debugging, Sphinx Documentation
  * [Docs or doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
+ * [Notes on the performed svn to git migration](svn-to-git-migration)
