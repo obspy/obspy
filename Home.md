@@ -23,6 +23,10 @@ These notes describe installing ObsPy on the following platforms:
 
 If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
 
+  * [Subscribe](mailto:obspy-users-request@lists.sevor.de?subject=subscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20subscribe.) / [Unsubscribe](mailto:obspy-users-request@lists.sevor.de?subject=unsubscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20unsubscribe.)
+  * [Post a message](mailto:users@obspy.org)
+  * [Browse the archive](http://lists.obspy.org/pipermail/obspy-users/)
+
 ## [Documentation](http://docs.obspy.org)
 
 ### General packages:
