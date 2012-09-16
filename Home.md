@@ -51,19 +51,20 @@ If you are using ObsPy we **strongly recommend** for you to join the [[obspy-use
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](http://www.seishub.org) database client
 
-### References
+## References
 
-1. Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010),
-   [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), SRL, 81(3), 530-533.
-2. Tobias Megies, Moritz Beyreuther, Robert Barsch, Lion Krischer, Joachim Wassermann (2011),
-    [ObsPy – What can it do for data centers and observatories?](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838) Annals Of Geophysics, 54(1), 47-58, doi:10.4401/ag-4838.
+  1. Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010), [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), SRL, 81(3), 530-533.
+  1. Tobias Megies, Moritz Beyreuther, Robert Barsch, Lion Krischer, Joachim Wassermann (2011), [ObsPy – What can it do for data centers and observatories?](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838) Annals Of Geophysics, 54(1), 47-58, doi:10.4401/ag-4838.
 
 ## Developer Corner
 
  * [Style Guide](http://docs.obspy.org/coding_style.html)
  * Best Practices
- * Performance Tips [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips), [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes), [SciPy](http://www.scipy.org/PerformancePython),  
-   [NumPy Book](http://www.tramy.us/numpybook.pdf)
+ * Performance Tips..
+    * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+    * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
+    * [SciPy](http://www.scipy.org/PerformancePython)
+    * [NumPy Book](http://www.tramy.us/numpybook.pdf)
  * Testing & Debugging, Sphinx Documentation
  * [Docs or doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
