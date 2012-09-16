@@ -51,6 +51,21 @@ If you are using ObsPy we **strongly recommend** for you to join the [[obspy-use
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](http://www.seishub.org) database client
 
+## Use Cases / Applications Using ObsPy
+
+   * ObsPyck
+   * [SeismicHandler](http://www.seismic-handler.org)
+   * [SeisHub](http://www.seishub.org)
+   * SeishubExplorer
+   * HtoVToolbox
+   * [Antelope Python moment tensor code](http://eqinfo.ucsd.edu/~rnewman/howtos/antelope/moment_tensor/)
+   * [Running ObsPy in a PiCloud](http://blog.picloud.com/2011/09/26/introducing-environments-run-anything-on-picloud/)
+   * [Using ObsPy with py2exe](http://www.geophysique.be/en/2011/08/09/using-obspy-modules-with-py2exe/)
+   * [Whisper](http://code-whisper.isterre.fr/html)
+   * [Wavesdownloader](http://webservices.rm.ingv.it/wavesdownloader/)
+   * [ADMIRE project](http://www.admire-project.eu/)
+   * [pSysmon](http://www.stefanmertl.com/science/category/software/psysmon/)
+
 ## References
 
   1. Moritz Beyreuther, Robert Barsch, Lion Krischer, Tobias Megies, Yannik Behr and Joachim Wassermann (2010), [ObsPy: A Python Toolbox for Seismology](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), SRL, 81(3), 530-533.
