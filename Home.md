@@ -8,8 +8,7 @@ The goal of the ObsPy project is to facilitate **rapid application development f
 
 The [ObsPy Gallery](http://gallery.obspy.org) and its related [ObsPy Tutorial](http://tutorial.obspy.org) are maybe the best point to get a first impression of what ObsPy is all about. The tutorial is a collection of short example programs with explanations and program output. 
 
-## Installing ObsPy
-
+## Installation
 ObsPy is currently [running and tested](http://tests.obspy.org) on Linux (32 and 64 bit), Windows XP/Vista/7 (32 bit and/or 64 bit) and Mac OS X (32 and 64 bit Intel and untested support for 32 and 64 bit PPC).
 
 These notes describe installing ObsPy on the following platforms:
@@ -19,13 +18,15 @@ These notes describe installing ObsPy on the following platforms:
 * [[Windows|Installation on Windows]]
 * [[FreeBSD|Installation on FreeBSD]]
 
-## Mailing List
+## Stay Informed
 
 If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
 
   * [Subscribe](mailto:obspy-users-request@lists.sevor.de?subject=subscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20subscribe.) / [Unsubscribe](mailto:obspy-users-request@lists.sevor.de?subject=unsubscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20unsubscribe.)
   * [Post a message](mailto:users@obspy.org)
   * [Browse the archive](http://lists.obspy.org/pipermail/obspy-users/)
+
+There also is a [feed for commits](https://github.com/obspy/obspy/commits/master.atom). To get emails concerning issues make a GitHub login, 'watch' our repository and set up email notifications for your GitHub account.
 
 ## [Documentation](http://docs.obspy.org)
 
