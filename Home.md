@@ -33,7 +33,7 @@ There also is a [feed for commits](https://github.com/obspy/obspy/commits/master
 ### General packages:
 * [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together
 * [obspy.imaging](http://docs.obspy.org/packages/obspy.imaging.html) - Imaging spectograms, beachballs and waveforms
-* [obspy.realtime](http://docs.obspy.org/packages/obspy.realtime.html) - Extends the !ObsPy core classes with real time functionalities (''experimental'')
+* [obspy.realtime](http://docs.obspy.org/packages/obspy.realtime.html) - Extends the ObsPy core classes with real time functionalities (''experimental'')
 * [obspy.signal](http://docs.obspy.org/packages/obspy.signal.html) - Filters, triggers, instrument correction, rotation, array analysis, beamforming
 * [obspy.taup](http://docs.obspy.org/packages/obspy.taup.html) - Calculates and visualizes travel times
 * [obspy.xseed](http://docs.obspy.org/packages/obspy.xseed.html) - Converter for Dataless SEED, [XML-SEED](http://adsabs.harvard.edu/abs/2004AGUFMSF31B..03T) and SEED RESP files
