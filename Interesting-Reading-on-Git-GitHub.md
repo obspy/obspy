@@ -1,0 +1,5 @@
+ - github development workflow
+   - http://scottchacon.com/2011/08/31/github-flow.html
+   - http://nvie.com/posts/a-successful-git-branching-model/
+ - interaction with svn
+   - https://github.com/blog/1178-collaborating-on-github-with-subversion
