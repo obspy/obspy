@@ -86,6 +86,6 @@ There also is a [feed for commits](https://github.com/obspy/obspy/commits/master
     * [SciPy](http://www.scipy.org/PerformancePython)
     * [NumPy Book](http://www.tramy.us/numpybook.pdf)
  * Testing & Debugging, Sphinx Documentation
- * [Docs or doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
+ * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
