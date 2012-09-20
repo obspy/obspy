@@ -1,0 +1,7 @@
+/.project
+*.egg-info/
+build/
+distribute-*.egg
+distribute-*.tar.gz
+*.pyc
+*.pyo
