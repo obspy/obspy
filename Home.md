@@ -89,4 +89,4 @@ There also is a [feed for commits](https://github.com/obspy/obspy/commits/master
  * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
- * [[Interesting reading on git+github]]
+ * [[Interesting reading on git, github]]
