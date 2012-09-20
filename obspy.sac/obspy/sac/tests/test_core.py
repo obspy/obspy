@@ -379,6 +379,39 @@ class CoreTestCase(unittest.TestCase):
                 self.assertEquals(len(st[0]), num)
                 os.remove(tempfile)
 
+    def test_issue390(self):
+        """
+        Read all SAC headers if debug_headers flag is enabled.
+        """
+        # 1 - binary SAC
+        tr = read(self.file, headonly=True, debug_headers=True)[0]
+        self.assertEqual(tr.stats.sac.nzyear, 1978)
+        self.assertEqual(tr.stats.sac.nzjday, 199)
+        self.assertEqual(tr.stats.sac.nzhour, 8)
+        self.assertEqual(tr.stats.sac.nzmin, 0)
+        self.assertEqual(tr.stats.sac.nzsec, 0)
+        self.assertEqual(tr.stats.sac.nzmsec, 0)
+        self.assertEqual(tr.stats.sac.delta, 1.0)
+        self.assertEqual(tr.stats.sac.scale, -12345.0)
+        self.assertEqual(tr.stats.sac.npts, 100)
+        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
+        self.assertEqual(tr.stats.sac.kstnm, 'STA     ')
+        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+        # 2 - ASCII SAC
+        tr = read(self.filexy, headonly=True, debug_headers=True)[0]
+        self.assertEqual(tr.stats.sac.nzyear, -12345)
+        self.assertEqual(tr.stats.sac.nzjday, -12345)
+        self.assertEqual(tr.stats.sac.nzhour, -12345)
+        self.assertEqual(tr.stats.sac.nzmin, -12345)
+        self.assertEqual(tr.stats.sac.nzsec, -12345)
+        self.assertEqual(tr.stats.sac.nzmsec, -12345)
+        self.assertEqual(tr.stats.sac.delta, 1.0)
+        self.assertEqual(tr.stats.sac.scale, -12345.0)
+        self.assertEqual(tr.stats.sac.npts, 100)
+        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
+        self.assertEqual(tr.stats.sac.kstnm, 'sta     ')
+        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')
