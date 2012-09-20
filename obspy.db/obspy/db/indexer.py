@@ -515,13 +515,17 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         log_queue.append(msg % (filepath, e))
                         continue
                 # generate preview of trace
-                try:
-                    trace = createPreview(trace, 30)
-                    result['preview'] = trace.data.dumps()
-                except Exception, e:
-                    msg = '[Creating preview] %s: %s'
-                    log_queue.append(msg % (filepath, e))
+                if '.LOG.L.' in file and trace.stats.channel == 'LOG':
+                    # create previews only for non-log files (see issue #400)
                     result['preview'] = None
+                else:
+                    try:
+                        trace = createPreview(trace, 30)
+                        result['preview'] = trace.data.dumps()
+                    except Exception, e:
+                        msg = '[Creating preview] %s: %s'
+                        log_queue.append(msg % (filepath, e))
+                        result['preview'] = None
                 # update dataset
                 dataset.append(result)
             del stream
