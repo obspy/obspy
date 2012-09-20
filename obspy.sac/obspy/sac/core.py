@@ -86,7 +86,8 @@ def isSACXY(filename):
     return True
 
 
-def readSACXY(filename, headonly=False, **kwargs):  # @UnusedVariable
+def readSACXY(filename, headonly=False, debug_headers=False,
+              **kwargs):  # @UnusedVariable
     """
     Reads an alphanumeric SAC file and returns an ObsPy Stream object.
 
@@ -99,6 +100,13 @@ def readSACXY(filename, headonly=False, **kwargs):  # @UnusedVariable
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
+    :type debug_headers: bool, optional
+    :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
+        'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
+        'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
+        :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
+        values are not synchronized with the Stream object itself and won't
+        be used during writing of a SAC file! Defaults to ``False``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -107,7 +115,7 @@ def readSACXY(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy.core import read # doctest: +SKIP
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
-    t = SacIO()
+    t = SacIO(debug_headers=debug_headers)
     if headonly:
         t.ReadSacXYHeader(filename)
     else:
@@ -152,7 +160,8 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     return
 
 
-def readSAC(filename, headonly=False, **kwargs):  # @UnusedVariable
+def readSAC(filename, headonly=False, debug_headers=False,
+            **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
 
@@ -165,6 +174,13 @@ def readSAC(filename, headonly=False, **kwargs):  # @UnusedVariable
     :type headonly: bool, optional
     :param headonly: If set to True, read only the head. This is most useful
         for scanning available data in huge (temporary) data sets.
+    :type debug_headers: bool, optional
+    :param debug_headers: Extracts also the SAC headers ``'nzyear', 'nzjday',
+        'nzhour', 'nzmin', 'nzsec', 'nzmsec', 'delta', 'scale', 'npts',
+        'knetwk', 'kstnm', 'kcmpnm'`` which are usually directly mapped to the
+        :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
+        values are not synchronized with the Stream object itself and won't
+        be used during writing of a SAC file! Defaults to ``False``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -174,7 +190,7 @@ def readSAC(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> st = read("/path/to/test.sac") # doctest: +SKIP
     """
     # read SAC file
-    t = SacIO()
+    t = SacIO(debug_headers=debug_headers)
     if headonly:
         t.ReadSacHeader(filename)
     else:

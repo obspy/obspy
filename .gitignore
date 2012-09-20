@@ -5,3 +5,5 @@ distribute-*.egg
 distribute-*.tar.gz
 *.pyc
 *.pyo
+/.settings
+/.pydevproject

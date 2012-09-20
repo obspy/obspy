@@ -290,9 +290,11 @@ class SacIO(object):
     ============ ==== =========================================================
     """
 
-    def __init__(self, filen=False, headonly=False, alpha=False):
+    def __init__(self, filen=False, headonly=False, alpha=False,
+                 debug_headers=False):
         self.byteorder = 'little'
         self.InitArrays()
+        self.debug_headers = debug_headers
         if filen is False:
             return
         # parse Trace object if we get one
@@ -898,14 +900,14 @@ class SacIO(object):
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
 
-    def PrintIValue(self, label='=', value= -12345):
+    def PrintIValue(self, label='=', value=-12345):
         """
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
             print(label, value)
 
-    def PrintFValue(self, label='=', value= -12345.0):
+    def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
@@ -1268,6 +1270,11 @@ class SacIO(object):
         # them according to the starttime, npts and delta.
         header['sac']['b'] = float(self.GetHvalue('b'))
         header['sac']['e'] = float(self.GetHvalue('e'))
+        # ticket #390
+        if self.debug_headers:
+            for i in ['nzyear', 'nzjday', 'nzhour', 'nzmin', 'nzsec', 'nzmsec',
+                      'delta', 'scale', 'npts', 'knetwk', 'kstnm', 'kcmpnm']:
+                header['sac'][i] = self.GetHvalue(i)
         return header
 
 
