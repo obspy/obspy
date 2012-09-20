@@ -20,7 +20,7 @@ These notes describe installing ObsPy on the following platforms:
 
 ## Stay Informed
 
-If you are using ObsPy we **strongly recommend** for you to join the [[obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
+If you are using ObsPy we **strongly recommend** for you to join the [ [obspy-users] mailing list](http://lists.obspy.org/listinfo). This list will be the place where new additions, important changes and bug fixes will be announced. The list can also be used to contact other ObsPy users for open discussions.
 
   * [Subscribe](mailto:obspy-users-request@lists.sevor.de?subject=subscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20subscribe.) / [Unsubscribe](mailto:obspy-users-request@lists.sevor.de?subject=unsubscribe&body=Send%20this%20message%20from%20the%20address%20you%20want%20to%20unsubscribe.)
   * [Post a message](mailto:users@obspy.org)
@@ -89,3 +89,4 @@ There also is a [feed for commits](https://github.com/obspy/obspy/commits/master
  * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
  * BrainStorming
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
+ * [[Interesting reading on git+github]]
