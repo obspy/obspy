@@ -515,7 +515,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         log_queue.append(msg % (filepath, e))
                         continue
                 # generate preview of trace
-                if file.endswith('.log') and trace.stats.channel == 'LOG':
+                if '.LOG.L.' in file and trace.stats.channel == 'LOG':
                     # create previews only for non-log files (see issue #400)
                     result['preview'] = None
                 else:
