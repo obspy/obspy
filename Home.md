@@ -29,6 +29,7 @@ If you are using ObsPy we **strongly recommend** for you to join the [ [obspy-us
 There also is a [feed for commits](https://github.com/obspy/obspy/commits/master.atom). To get emails concerning issues make a GitHub login, 'watch' our repository and set up email notifications for your GitHub account.
 
 ## [Documentation](http://docs.obspy.org)
+_Note: Documentation for current master snapshot can be found [here](http://docs.obspy.org/master)_
 
 ### General packages:
 * [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together
