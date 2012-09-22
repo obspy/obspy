@@ -9,7 +9,7 @@ from obspy.signal import cornFreq2Paz, seisSim
 client = Client(user="test@obspy.de")
 t = UTCDateTime("2009-08-24 00:20:03")
 st = client.getWaveform('BW', 'RJOB', '', 'EHZ', t, t + 30)
-paz = client.getPAZ('BW', 'RJOB', '', 'EHZ', t, t + 30)
+paz = client.getPAZ('BW', 'RJOB', '', 'EHZ', t)
 paz = paz.values()[0]
 
 # 1Hz instrument
