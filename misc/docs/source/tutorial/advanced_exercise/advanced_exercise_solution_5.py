@@ -15,7 +15,8 @@ st = Stream()
 
 for station in stations:
     try:
-        tmp = client.getWaveform("CH", station, "", "[EH]HZ", t, t2, metadata=True)
+        tmp = client.getWaveform("CH", station, "", "[EH]HZ", t, t2,
+                                 metadata=True)
     except:
         print station, "---"
         continue
@@ -46,7 +47,8 @@ for trig in triglist:
     for station in stations:
         station = station['code']
         try:
-            st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300, t + 300, metadata=True)
+            st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300,
+                                    t + 300, metadata=True)
             assert(len(st) == 3)
         except:
             print station, "---"
@@ -66,7 +68,8 @@ for trig in triglist:
         event_lat = trig['latitude']
         event_lon = trig['longitude']
 
-        epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat, sta_lon)
+        epi_dist, az, baz = gps2DistAzimuth(event_lat, event_lon, sta_lat,
+                                            sta_lon)
         epi_dist = epi_dist / 1000
 
         if epi_dist < 60:

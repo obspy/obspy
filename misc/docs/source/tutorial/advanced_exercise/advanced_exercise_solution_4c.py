@@ -16,7 +16,8 @@ mags = []
 for station in stations:
     station = station['code']
     try:
-        st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300, t + 300, metadata=True)
+        st = client.getWaveform("CH", station, "", "[EH]H[ZNE]", t - 300,
+                                t + 300, metadata=True)
         assert(len(st) == 3)
     except:
         print station, "---"

@@ -1,4 +1,4 @@
-from obspy.core import read
+from obspy.core import read, UTCDateTime
 from obspy.core.util.geodetics import gps2DistAzimuth
 from obspy.arclink import Client
 from math import log10

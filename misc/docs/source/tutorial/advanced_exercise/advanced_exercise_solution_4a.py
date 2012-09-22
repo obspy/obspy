@@ -8,7 +8,8 @@ paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
 
 client = Client(user="sed-workshop@obspy.org")
 t = UTCDateTime("2012-04-03T02:45:03")
-st = client.getWaveform("CH", "LKBD", "", "EH*", t - 300, t + 300, metadata=True)
+st = client.getWaveform("CH", "LKBD", "", "EH*", t - 300, t + 300,
+                        metadata=True)
 
 st.simulate(paz_remove="self", paz_simulate=paz_wa, water_level=10)
 st.trim(t, t + 50)
