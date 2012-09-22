@@ -1,5 +1,5 @@
 from obspy.iris import Client
-from obspy.core import UTCDateTime, read
+from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import matplotlib.pyplot as plt
 import numpy as np
@@ -36,8 +36,7 @@ seedresp = {'filename': respf,  # RESP filename
 }
 
 # Remove instrument response using the information from the given RESP file
-st.simulate(paz_remove=None, remove_sensitivity=False,
-            pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp)
+st.simulate(paz_remove=None, pre_filt=(fl1, fl2, fl3, fl4), seedresp=seedresp)
 
 # plot original and simulated data
 tr = st[0]
