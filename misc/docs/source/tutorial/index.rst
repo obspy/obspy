@@ -24,9 +24,17 @@ Work in progress...
 Advanced Exercise
 -----------------
 
-In this exercise we show how to use ObsPy to develop a automated processing
-workflow. We start out with very simple tasks and then automate the routine
-step by step.
+In the advanced exercise we show how ObsPy can be used to develop an automated
+processing workflow. We start out with very simple tasks and then automate the
+routine step by step.
+For all exercises solutions are provided.
+
+.. toctree::
+   :maxdepth: 1
+
+   advanced_exercise
+
+.. _code-snippets:
 
 Code Snippets
 -------------
