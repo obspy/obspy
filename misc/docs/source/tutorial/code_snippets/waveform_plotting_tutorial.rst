@@ -38,7 +38,7 @@ your needs.
 
    >>> singlechannel.plot()
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_1.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_1.py
 
 
 ----------------
@@ -55,7 +55,7 @@ the plot. Please see the documentation of method
    ...                    tick_rotation=5, tick_format='%I:%M %p',
    ...                    starttime=dt + 60*60, endtime=dt + 60*60 + 120)
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_2.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_2.py
 
 -------------------
 Saving Plot to File
@@ -81,7 +81,7 @@ in the following example to change the overall size of the plot.
 
    >>> threechannels.plot(size=(800, 600))
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_3.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_3.py
 
 -----------------------
 Creating a One-Day Plot
@@ -92,7 +92,7 @@ setting the ``type`` parameter to ``'dayplot'``:
 
    >>> singlechannel.plot(type='dayplot')
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_4.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
 
 --------------------
 Plot & Color Options

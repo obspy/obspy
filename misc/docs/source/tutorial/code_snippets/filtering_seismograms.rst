@@ -17,4 +17,4 @@ The available filters are:
 .. include:: filtering_seismograms.py
    :literal:
 
-.. plot:: source/tutorial/filtering_seismograms.py
+.. plot:: source/tutorial/code_snippets/filtering_seismograms.py

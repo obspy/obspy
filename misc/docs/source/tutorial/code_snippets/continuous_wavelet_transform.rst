@@ -13,4 +13,4 @@ defines the spacing in the scale domain)*
 .. include:: continuous_wavelet_transform.py
    :literal:
 
-.. plot:: source/tutorial/continuous_wavelet_transform.py
+.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform.py

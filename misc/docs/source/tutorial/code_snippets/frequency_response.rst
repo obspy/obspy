@@ -15,4 +15,4 @@ imaginary part of the response):
 .. include:: frequency_response.py
    :literal:
 
-.. plot:: source/tutorial/frequency_response.py
+.. plot:: source/tutorial/code_snippets/frequency_response.py

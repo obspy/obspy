@@ -14,4 +14,4 @@ together with the Trace. Data can be found
 .. include:: seismogram_envelopes.py
    :literal:
 
-.. plot:: source/tutorial/seismogram_envelopes.py
+.. plot:: source/tutorial/code_snippets/seismogram_envelopes.py

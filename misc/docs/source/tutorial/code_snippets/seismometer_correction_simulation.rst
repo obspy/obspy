@@ -14,7 +14,7 @@ specified as keys of a dictionary.
 .. include:: seismometer_correction_simulation_1.py
    :literal:
 
-.. plot:: source/tutorial/seismometer_correction_simulation_1.py
+.. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_1.py
 
 For more customized plotting we could also work with matplotlib_ manually from
 here: 
@@ -38,7 +38,7 @@ here:
    plt.xlabel('Time [s]')
    plt.show()
 
-.. plot:: source/tutorial/seismometer_correction_simulation_2.py
+.. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_2.py
 
 -----------------
 Using a RESP file
@@ -50,7 +50,7 @@ response information from a RESP file.
 .. include:: seismometer_correction_simulation_3.py
    :literal:
 
-.. plot:: source/tutorial/seismometer_correction_simulation_3.py
+.. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_3.py
 
 .. _matplotlib: http://matplotlib.sourceforge.net/
 
