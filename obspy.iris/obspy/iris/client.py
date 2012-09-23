@@ -523,7 +523,7 @@ class Client(object):
         >>> client = Client()
         >>> events = client.getEvents(format='xml', minmag=9.1)
         >>> print(events)  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="UTF-8"?><q:quakeml ...
+        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" ...
         """
         # fetch data
         data = self.event(**kwargs)
@@ -942,6 +942,7 @@ class Client(object):
         ...                              location="00", channel="BHZ",
         ...                              starttime=t1, endtime=t2, level="net")
         >>> print(station_xml) # doctest: +ELLIPSIS
+        <?xml version="1.0" encoding="ISO-8859-1"?>
         <BLANKLINE>
         <StaMessage ...>
          ...
@@ -2068,7 +2069,7 @@ class Client(object):
         >>> client = Client()
         >>> events = client.event(minmag=9.1)
         >>> print(events)  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="UTF-8"?><q:quakeml ...
+        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" ...
         """
         # convert UTCDateTimes to string
         try:
