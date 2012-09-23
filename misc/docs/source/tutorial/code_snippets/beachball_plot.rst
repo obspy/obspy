@@ -8,4 +8,4 @@ focal mechanism.
 .. include:: beachball_plot.py
    :literal:
 
-.. plot:: source/tutorial/beachball_plot.py
+.. plot:: source/tutorial/code_snippets/beachball_plot.py

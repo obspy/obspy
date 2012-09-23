@@ -30,7 +30,7 @@ power.
 .. include:: beamforming_fk_analysis_1.py
    :literal:
 
-.. plot:: source/tutorial/beamforming_fk_analysis_1.py
+.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_1.py
 
 Another representation would be a polar plot, which sums the relative power in
 gridded bins, each defined by backazimuth and slowness of the analyzed signal
@@ -40,4 +40,4 @@ be set by hand.
 .. include:: beamforming_fk_analysis_2.py
    :literal:
 
-.. plot:: source/tutorial/beamforming_fk_analysis_2.py
+.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_2.py
