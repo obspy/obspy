@@ -6,152 +6,152 @@ Gallery
 
 **Click on any image to see full size image and source code**
 
-.. plot:: source/tutorial/reading_seismograms.py
+.. plot:: source/tutorial/code_snippets/reading_seismograms.py
     :width: 300px
-    :target: tutorial/reading_seismograms.html
+    :target: tutorial/code_snippets/reading_seismograms.html
     :alt: Reading Seismograms
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_1.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_1.py
     :width: 300px
-    :target: tutorial/waveform_plotting_tutorial.html
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html
     :alt: Basic Plotting
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_2.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_2.py
     :width: 300px
-    :target: tutorial/waveform_plotting_tutorial.html#customized-plots
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html#customized-plots
     :alt: Customized Plots
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_3.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_3.py
     :width: 300px
-    :target: tutorial/waveform_plotting_tutorial.html#plotting-multiple-channels
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html#plotting-multiple-channels
     :alt: Plotting multiple Channels
 
-.. plot:: source/tutorial/waveform_plotting_tutorial_4.py
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
     :width: 300px
-    :target: tutorial/waveform_plotting_tutorial.html#creating-a-one-day-plot
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html#creating-a-one-day-plot
     :alt: Creating a One-Day Plot
 
-.. plot:: source/tutorial/filtering_seismograms.py
+.. plot:: source/tutorial/code_snippets/filtering_seismograms.py
     :width: 300px
-    :target: tutorial/filtering_seismograms.html
+    :target: tutorial/code_snippets/filtering_seismograms.html
     :alt: Filtering Seismograms
 
-.. plot:: source/tutorial/downsampling_seismograms.py
+.. plot:: source/tutorial/code_snippets/downsampling_seismograms.py
     :width: 300px
-    :target: tutorial/downsampling_seismograms.html
+    :target: tutorial/code_snippets/downsampling_seismograms.html
     :alt: Downsampling Seismograms
 
-.. plot:: source/tutorial/seismogram_envelopes.py
+.. plot:: source/tutorial/code_snippets/seismogram_envelopes.py
     :width: 300px
-    :target: tutorial/seismogram_envelopes.html
+    :target: tutorial/code_snippets/seismogram_envelopes.html
     :alt: Seismogram Envelopes
 
-.. plot:: source/tutorial/seismometer_correction_simulation_1.py
+.. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_1.py
     :width: 300px
-    :target: tutorial/seismometer_correction_simulation.html
+    :target: tutorial/code_snippets/seismometer_correction_simulation.html
     :alt: Seismometer Correction/Simulation
 
-.. plot:: source/tutorial/plotting_spectrograms.py
+.. plot:: source/tutorial/code_snippets/plotting_spectrograms.py
     :width: 300px
-    :target: tutorial/plotting_spectrograms.html
+    :target: tutorial/code_snippets/plotting_spectrograms.html
     :alt: Plotting Spectrograms
 
-.. plot:: source/tutorial/trigger_tutorial_classic_sta_lta.py
+.. plot:: source/tutorial/code_snippets/trigger_tutorial_classic_sta_lta.py
     :width: 300px
-    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Classic Sta Lta
 
-.. plot:: source/tutorial/trigger_tutorial_z_detect.py
+.. plot:: source/tutorial/code_snippets/trigger_tutorial_z_detect.py
     :width: 300px
-    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Z-Detect
 
-.. plot:: source/tutorial/trigger_tutorial_recursive_sta_lta.py
+.. plot:: source/tutorial/code_snippets/trigger_tutorial_recursive_sta_lta.py
     :width: 300px
-    :target: tutorial/trigger_tutorial.html#trigger-examples
+    :target: tutorial/code_snippets/trigger_tutorial.html#trigger-examples
     :alt: Recursive Sta Lta
 
-.. plot:: source/tutorial/frequency_response.py
+.. plot:: source/tutorial/code_snippets/frequency_response.py
     :width: 300px
-    :target: tutorial/frequency_response.html
+    :target: tutorial/code_snippets/frequency_response.html
     :alt: Poles and Zeros, Frequency Response
 
-.. plot:: source/tutorial/retrieving_data_from_datacenters_1.py
+.. plot:: source/tutorial/code_snippets/retrieving_data_from_datacenters_1.py
     :width: 300px
-    :target: tutorial/retrieving_data_from_datacenters.html
+    :target: tutorial/code_snippets/retrieving_data_from_datacenters.html
     :alt: Retrieving Data via ArcLink
 
-.. plot:: source/tutorial/beachball_plot.py
+.. plot:: source/tutorial/code_snippets/beachball_plot.py
     :height: 90px
-    :target: tutorial/beachball_plot.html
+    :target: tutorial/code_snippets/beachball_plot.html
     :alt: Beachball Plot
 
-.. plot:: source/tutorial/basemap_plot_with_beachballs.py
+.. plot:: source/tutorial/code_snippets/basemap_plot_with_beachballs.py
     :width: 300px
-    :target: tutorial/basemap_plot_with_beachballs.html
+    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Basemap Plot with Beachballs
 
-.. plot:: source/tutorial/basemap_plot_with_beachballs2.py
+.. plot:: source/tutorial/code_snippets/basemap_plot_with_beachballs2.py
     :width: 300px
-    :target: tutorial/basemap_plot_with_beachballs.html
+    :target: tutorial/code_snippets/basemap_plot_with_beachballs.html
     :alt: Second Basemap Plot with Beachballs
 
-.. plot:: source/tutorial/merging_seismograms.py
+.. plot:: source/tutorial/code_snippets/merging_seismograms.py
     :width: 300px
-    :target: tutorial/merging_seismograms.html
+    :target: tutorial/code_snippets/merging_seismograms.html
     :alt: Merging Seismograms
 
-.. plot:: source/tutorial/beamforming_fk_analysis_1.py
+.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_1.py
     :width: 300px
-    :target: tutorial/beamforming_fk_analysis.html
+    :target: tutorial/code_snippets/beamforming_fk_analysis.html
     :alt: Beamforming - FK Analysis
 
-.. plot:: source/tutorial/beamforming_fk_analysis_2.py
+.. plot:: source/tutorial/code_snippets/beamforming_fk_analysis_2.py
     :width: 300px
-    :target: tutorial/beamforming_fk_analysis.html
+    :target: tutorial/code_snippets/beamforming_fk_analysis.html
     :alt: Beamforming - FK Analysis
 
-.. plot:: source/tutorial/hierarchical_clustering.py
+.. plot:: source/tutorial/code_snippets/hierarchical_clustering.py
     :width: 300px
-    :target: tutorial/hierarchical_clustering.html
+    :target: tutorial/code_snippets/hierarchical_clustering.html
     :alt: Hierarchical Clustering
 
-.. plot:: source/tutorial/probabilistic_power_spectral_density.py
+.. plot:: source/tutorial/code_snippets/probabilistic_power_spectral_density.py
     :width: 300px
-    :target: tutorial/probabilistic_power_spectral_density.html
+    :target: tutorial/code_snippets/probabilistic_power_spectral_density.html
     :alt: Visualizing Probabilistic Power Spectral Densities
 
-.. plot:: source/tutorial/array_response_function.py
+.. plot:: source/tutorial/code_snippets/array_response_function.py
     :width: 300px
-    :target: tutorial/array_response_function.html
+    :target: tutorial/code_snippets/array_response_function.html
     :alt: Array Response Function
 
-.. plot:: source/tutorial/continuous_wavelet_transform.py
+.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform.py
     :width: 300px
-    :target: tutorial/continuous_wavelet_transform.html
+    :target: tutorial/code_snippets/continuous_wavelet_transform.html
     :alt: Continuous Wavelet Transform
 
-.. plot:: source/tutorial/time_frequency_misfit_ex1.py
+.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex1.py
     :width: 300px
-    :target: tutorial/time_frequency_misfit.html#plot-the-time-frequency-representation
+    :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-representation
     :alt: Plot the Time Frequency Representation
 
-.. plot:: source/tutorial/time_frequency_misfit_ex2.py
+.. plot:: source/tutorial/code_snippets/time_frequency_misfit_ex2.py
     :width: 300px
-    :target: tutorial/time_frequency_misfit.html#plot-the-time-frequency-misfits
+    :target: tutorial/code_snippets/time_frequency_misfit.html#plot-the-time-frequency-misfits
     :alt: Time Frequency Misfit
 
-.. plot:: source/tutorial/travel_time_plot.py
+.. plot:: source/tutorial/code_snippets/travel_time_plot.py
     :width: 300px
-    :target: tutorial/travel_time_plot.html
+    :target: tutorial/code_snippets/travel_time_plot.html
     :alt: Travel Time Plot
 
-.. plot:: source/tutorial/benchmark.py
+.. plot:: source/tutorial/code_snippets/benchmark.py
     :width: 300px
     :target: http://docs.obspy.org/packages/autogen/obspy.segy.benchmark.plotBenchmark.html
     :alt: Benchmark Plot
 
-.. plot:: source/tutorial/xcorr_pick_correction.py
+.. plot:: source/tutorial/code_snippets/xcorr_pick_correction.py
     :width: 300px
-    :target: tutorial/xcorr_pick_correction.html
+    :target: tutorial/code_snippets/xcorr_pick_correction.html
     :alt: Cross Correlation Pick Correction
