@@ -7,10 +7,10 @@ This page contains a short summary of how we performed the migration from svn to
     * The main reason for this is that ObsPy branches mostly are no true branches but rather a collection of scripts, programs, and other things that are not directly related to the actual ObsPy library.
     * In theory, svn2git is able to create git branches and tags from the conventional svn trunk/tags/branches structure. Unfortunately the ObsPy repository did not have proper branches and the whole trunk/tags/branches structure did not exists from the beginning but rather was created at some point in the repository's history.
     * This delayed creation of a proper trunk/tags/branches structure is the reason that the first attempt to solely convert the trunk to git via
-  `$ svn2git http://svn.obspy.org --trunk trunk --nobranches --notags --authors ../authors.txt
+  `$ svn2git https://svn.obspy.org --trunk trunk --nobranches --notags --authors ../authors.txt
 `
 failed because a large part of the history of files was missing because they were originally located somewhere else.
-* Therefore the solution was to convert everything to git with with `svn2git http://svn.obspy.org --rootistrunk --authors ../authors.txt` and remove unwanted parts later on.
+* Therefore the solution was to convert everything to git with with `svn2git https://svn.obspy.org --rootistrunk --authors ../authors.txt` and remove unwanted parts later on.
 
 ## 2. Rewrite the repository's history to remove unwanted parts.
 * Motivation: The whole repository was around 600 MB in size after the conversion to git. This is largely due to branches, tags, and large binary files checked in at some point in the history of ObsPy but no more present in the latest revision. The size is not a big problem while using svn but become a huge issue with git as every clone will contain the whole history.
