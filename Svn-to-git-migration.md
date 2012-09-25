@@ -22,6 +22,7 @@ mkdir new_repo
 cd new_repo
 git init
 git pull file:///full/path/to/old/repo
+git status  # otherwise git reports an unclean working directory on further commands
 ```
 * This resulted in a repository size of 150MB. Still quite a lot but more manageable.
 * To further bring it down we wanted to remove all files that have, at one point in time, been part of the repository but are no longer in the latest revision. This might potentially mess with some more important parts of the history but we felt it is worth it. It proved to be more of a challenge as we wanted to also keep the history of files which had been moved or renamed at some point in time. The final result is short bash/sh script that extracts the necessary information from the repository, then uses a Python script to track file renames/moved to find all files that have no more current version and then once again rewrite the repository's history, excluding the determined files.  
