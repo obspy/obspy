@@ -43,7 +43,7 @@ python parse_rename_stats.py
 # Also we can rewrite issue references to explicitely point at a specific repo.
 # The output should be piped to a file or /dev/null to avoid substantial slow down
 git filter-branch --prune-empty --msg-filter  \
-    'sed -e "s/@\([a-zA-Z0-9]\)/@ \1/" -e "s/#\([0-9]\)/obspy\/obspy#\1/"' \
+    'sed -e "s/@\([a-zA-Z0-9]\)/@ \\1/" -e "s/#\([0-9]\)/obspy\/obspy#\\1/"' \
     --index-filter \
     'cat /.../to_delete.txt | xargs git rm -rf --cached --ignore-unmatch' \
     --tag-name-filter cat -- --all &> /tmp/filter-branch.log
