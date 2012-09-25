@@ -38,9 +38,15 @@ python parse_rename_stats.py
 # Now permanently remove those files from the repository.
 # XXX: The path to the to_delete function is hardcoded! It will be created by
 # the above python script.
-git filter-branch --prune-empty --index-filter \
+# To avoid having github send automatic notifications to github users we modiy
+# commit messages that have "@somename" in it to "@ somename".
+# Also we can rewrite issue references to explicitely point at a specific repo.
+# The output should be piped to a file or /dev/null to avoid substantial slow down
+git filter-branch --prune-empty --msg-filter  \
+    'sed -e "s/@\([a-zA-Z0-9]\)/@ \1/" -e "s/#\([0-9]\)/obspy\/obspy#\1/"' \
+    --index-filter \
     'cat /.../to_delete.txt | xargs git rm -rf --cached --ignore-unmatch' \
-    --tag-name-filter cat -- --all
+    --tag-name-filter cat -- --all &> /tmp/filter-branch.log
 
 ```
 **parse_rename_stats.py**
