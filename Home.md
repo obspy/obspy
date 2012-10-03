@@ -59,11 +59,11 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 
 ## Use Cases / Applications Using ObsPy
 
-   * ObsPyck
+   * [ObsPyck](https://github.com/megies/obspyck)
    * [SeismicHandler](http://www.seismic-handler.org)
    * [SeisHub](http://www.seishub.org)
-   * SeishubExplorer
-   * HtoVToolbox
+   * [SeishubExplorer](https://github.com/krischer/SeishubExplorer)
+   * [HtoVToolbox](https://github.com/krischer/HtoV-Toolbox)
    * [Antelope Python moment tensor code](http://eqinfo.ucsd.edu/~rnewman/howtos/antelope/moment_tensor/)
    * [Running ObsPy in a PiCloud](http://blog.picloud.com/2011/09/26/introducing-environments-run-anything-on-picloud/)
    * [Using ObsPy with py2exe](http://www.geophysique.be/en/2011/08/09/using-obspy-modules-with-py2exe/)
