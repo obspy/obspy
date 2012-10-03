@@ -39,13 +39,13 @@ Running the test verbose exposes the available tests.
 
 ### Debugging Python
 
-Debugging in Python is best with [pdb](http://docs.python.org/library/pdb.html). In the ''interesting'' place of your Python source code set the debugger by
+Debugging in Python is best with [pdb](http://docs.python.org/library/pdb.html). In the interesting place of your Python source code set the debugger by
 
 ```python
 import pdb; pdb.set_trace()
 ```
 
-Running your program will now bring you to a ```pdb``` prompt at the _interesting_ place. Type ```help``` or see [http://docs.python.org/library/pdb.html](pdb-doc) for available ```pdb``` commands.
+Running your program will now bring you to a ```pdb``` prompt. Type ```help``` or see [http://docs.python.org/library/pdb.html](pdb-doc) for available ```pdb``` commands.
 
 From IPython 0.11 (http://ipython.org) you can alternatively use the more interactive ```ipdb``` debugger:
 
