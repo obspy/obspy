@@ -88,9 +88,6 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	***pow;
     float	**nomin;
     float	*maxpow;
-    float	sumre;
-    float	sumim;
-    float	wtau;
     double	absval;
     float	maxinmap = 0.;
     double  *fftpack_work = 0;
@@ -251,6 +248,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     /* to prewhiten the fk map, if we want to			 */
     /*************************************************************/
     for (w=wlow;w<=whigh;w++) {
+    	float PI_2_df_w = 2.*M_PI*df*(float)w;
         /***********************************/
         /* now we loop over x index (east) */
         /***********************************/
@@ -262,15 +260,19 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
                 /********************************************/
                 /* this is the loop over the stations group */
                 /********************************************/
-                sumre = sumim = 0.;
-                for (j=0;j<nstat;j++) {
-                    wtau = (float) (2.*M_PI*df*(float)w*stat_tshift_table[j][k][l]);
-                    re = window[j][2*w];
-                    im = window[j][2*w+1];
-                    sumre += (float) (re*cos(wtau)-im*sin(wtau));
-                    sumim += (float) (im*cos(wtau)+re*sin(wtau));
+                float sumre = 0.f;
+                float sumim = 0.f;
+                for (j = 0; j < nstat; j++) {
+                    float wtau =
+                            (float) (PI_2_df_w * stat_tshift_table[j][k][l]);
+                    float cos_wtau = cos(wtau);
+                    float sin_wtau = sin(wtau);
+                    re = window[j][2 * w];
+                    im = window[j][2 * w + 1];
+                    sumre += (float) (re * cos_wtau - im * sin_wtau);
+                    sumim += (float) (im * cos_wtau + re * sin_wtau);
                 }
-                pow[w][k][l] = (sumre*sumre+sumim*sumim);
+                pow[w][k][l] = (sumre * sumre + sumim * sumim);
                 if (pow[w][k][l] >= maxpow[w]) {
                     maxpow[w] = pow[w][k][l];
                 }
