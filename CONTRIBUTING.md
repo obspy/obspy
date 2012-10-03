@@ -19,3 +19,14 @@ We love pull requests! Here's a quick guide:
  4. Make the test pass.
  5. Push to your fork and submit a pull request.
  6. Wait for our review. We may suggest some changes or improvements or alternatives.
+
+## Additional Resources
+
+ * [Style Guide](http://docs.obspy.org/coding_style.html)
+ * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
+ * Performance Tips:
+    * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
+    * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
+    * [SciPy](http://www.scipy.org/PerformancePython)
+    * [NumPy Book](http://www.tramy.us/numpybook.pdf)
+ * [Interesting reading on git, github](https://github.com/obspy/obspy/wiki/Interesting-Reading-on-Git%2C-GitHub)
