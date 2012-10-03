@@ -87,7 +87,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
     * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
     * [SciPy](http://www.scipy.org/PerformancePython)
     * [NumPy Book](http://www.tramy.us/numpybook.pdf)
- * [[Testing & Debugging]]
+ * [[Testing, Debugging & Profiling]]
  * [[Sphinx Documentation]]
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
  * [[Interesting reading on git, github]]
