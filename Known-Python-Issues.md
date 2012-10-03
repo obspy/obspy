@@ -38,7 +38,8 @@ In [4]: %timeit np.floor(3.5)
 
 Note: math cannot handle vectors
 
-## CTypes, Tips and Tricks ===
+## CTypes, Tips and Tricks
+
  * NULL pointers in ctypes are generally of `None` type. However sometimes the C functions need directly given addresses. 
    In such cases a NULL pointer to an e.g. integer must be passed with the construct `ctypes.POINTER(ctypes.c_int)()`
  * For cross platform compilation of C code the `#ifdef` statement can be really useful. To see all available variables for `#ifdef`
