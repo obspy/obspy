@@ -37,7 +37,7 @@ Running the test verbose exposes the available tests.
 
 ## Debugging
 
-## Debugging Python
+### Debugging Python
 
 Debugging in Python is best with [pdb](http://docs.python.org/library/pdb.html). In the ''interesting'' place of your Python source code set the debugger by
 
