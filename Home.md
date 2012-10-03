@@ -80,14 +80,14 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 ## Developer Corner
 
  * [Style Guide](http://docs.obspy.org/coding_style.html)
- * Best Practices
- * Performance Tips..
+ * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
+ * [[Known Python issues]]
+ * Performance Tips:
     * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
     * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
     * [SciPy](http://www.scipy.org/PerformancePython)
     * [NumPy Book](http://www.tramy.us/numpybook.pdf)
- * Testing & Debugging, Sphinx Documentation
- * [Docs or it doesn't exist!](http://lukeplant.me.uk/blog/posts/docs-or-it-doesnt-exist/)
- * BrainStorming
+ * [[Testing & Debugging]]
+ * [[Sphinx Documentation]]
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
  * [[Interesting reading on git, github]]
