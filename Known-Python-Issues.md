@@ -146,12 +146,13 @@ Just to avoid problems with negative numbers:
 
 ## Comma & Dot; Locale Settings
 A known problem are locale settings so that the Python shell uses comma instead of dot as decimal separator. 
-In this case the ctypes library could cause problems ([http://www.seismic-handler.org/portal/browser/SHX/trunk/src/sandbox/sscanf.py Read more ...]). 
+In this case the ctypes library could cause problems ([Read more ...](http://www.seismic-handler.org/portal/browser/SHX/trunk/src/sandbox/sscanf.py)). 
 As soon as this problem occurs with !ObsPy please let us know.
 
 ## Writing Data from Numpy Arrays after Indexing Operations (#192, #193)
-Using convenient indexing operations on Numpy `ndarray`s can lead to problems when writing data via external functions with ctypes (C/Fortran).[[BR]]
-Consider the following example...
+
+Using convenient indexing operations on Numpy `ndarray`s can lead to problems when writing data via external functions with ctypes (C/Fortran). Consider the following example...
+
 ```python
 import numpy as np
 from obspy.core import read, Trace
@@ -224,10 +225,9 @@ False
 True
 ```
 
-To summarize: When data arrays are created via e.g. indexing operations on other arrays it should be checked if the correct data get passed on during `ctypes` calls.[[BR]]
-Also refer to bugs #192 and #193.
+To summarize: When data arrays are created via e.g. indexing operations on other arrays it should be checked if the correct data get passed on during `ctypes` calls. Also refer to bugs #192 and #193.
 
 ## Floating Point Arithmetic Issues
 
- * [http://docs.python.org/tutorial/floatingpoint.html Python documentation page on floating point arithmetic]
- * Numpy information on machine limits for floating point types: `numpy.finfo()`
+ * [Python documentation page on floating point arithmetic](http://docs.python.org/tutorial/floatingpoint.html)
+ * Numpy information on machine limits for floating point types: ```numpy.finfo()```
