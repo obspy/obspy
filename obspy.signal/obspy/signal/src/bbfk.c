@@ -18,6 +18,10 @@
 #define TRUE 1
 #define FALSE 0
 
+#define SINE_REF_LEN 1000
+#define SINE_REF_LEN_4 (SINE_REF_LEN / 4)
+#define SINE_TABLE_LEN (SINE_REF_LEN + SINE_REF_LEN / 4 + 1)
+
 
 /************************************************************************/
 /* numpy fftpack_lite definitions, must be linked with fftpack_lite.so  */
@@ -89,8 +93,19 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	**nomin;
     float	*maxpow;
     double	absval;
-    float	maxinmap = 0.;
-    double  *fftpack_work = 0;
+    float maxinmap = 0.;
+    double *fftpack_work = 0;
+    float sumre;
+    float sumim;
+    float wtau;
+    float fidx;
+    int idx;
+    float frac;
+    float cos_wtau;
+    float sin_wtau;
+    float sine_step = 2 * M_PI / SINE_REF_LEN;
+    float sine_step_inv = 1. / sine_step;
+    float *sine_table;
 
     /* mtrace(); */
     /***********************************************************************/
@@ -128,6 +143,14 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         /* we avoid using values next to nyquist frequency */
         /***************************************************/
         whigh = nfft/2-1;
+    }
+
+    /********************************************************************/
+    /* create sine table for fast execution                             */
+    /********************************************************************/
+    sine_table = (float *)calloc((size_t) SINE_TABLE_LEN, sizeof(float));
+    for (j = 0; j < SINE_TABLE_LEN; ++j) {
+        sine_table[j] = sin(j / (float) (SINE_TABLE_LEN - 1) * (M_PI * 2. + M_PI / 2.));
     }
 
     /****************************************************************************/
@@ -260,13 +283,24 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
                 /********************************************/
                 /* this is the loop over the stations group */
                 /********************************************/
-                float sumre = 0.f;
-                float sumim = 0.f;
+                sumre = 0.f;
+                sumim = 0.f;
                 for (j = 0; j < nstat; j++) {
-                    float wtau =
+                    wtau =
                             (float) (PI_2_df_w * stat_tshift_table[j][k][l]);
-                    float cos_wtau = cos(wtau);
-                    float sin_wtau = sin(wtau);
+                    /* calculate index in sine table */
+                    while (wtau > 2.f * M_PI) {
+                        wtau -= 2.f * M_PI;
+                    }
+                    while (wtau < 0.) {
+                        wtau += 2.f * M_PI;
+                    }
+                    fidx = wtau * sine_step_inv;
+                    idx = (int) fidx;
+                    frac = fidx - idx;
+                    sin_wtau = sine_table[idx] * (1. - frac) + sine_table[idx + 1] * frac;
+                    cos_wtau = sine_table[idx + SINE_REF_LEN_4] * (1. - frac) + sine_table[idx + 1 + SINE_REF_LEN_4] * frac;
+                    /* here the real stuff happens */
                     re = window[j][2 * w];
                     im = window[j][2 * w + 1];
                     sumre += (float) (re * cos_wtau - im * sin_wtau);
