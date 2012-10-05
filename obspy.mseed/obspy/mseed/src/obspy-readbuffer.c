@@ -32,6 +32,9 @@ typedef struct ContinuousSegment_s {
     char sampletype;                        // Sampletype
     hptime_t hpdelta;                       // High precission sample period
     int64_t samplecnt;                         // Total sample count
+    /* Timing quality is a vendor specific value from 0 to 100% of maximum
+     * accuracy, taking into account both clock quality and data flags. */
+    uint8_t timing_qual;
     void *datasamples;                      // Actual data samples
     struct LinkedRecordList_s *firstRecord; // First item
     struct LinkedRecordList_s *lastRecord;  // Last item
@@ -182,6 +185,9 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     // Unpack without reading the data first
     flag dataflag = 0;
 
+    // flag controlling timing_qual of BLK 1001
+    uint8_t timing_qual = 0xFF;
+
     // Init all the pointers to NULL. Most compilers should do this anyway.
     LinkedIDList * idListHead = NULL;
     LinkedIDList * idListCurrent = NULL;
@@ -249,7 +255,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Returns 0 if the host is little endian, otherwise 1.
             flag bigendianhost = ms_bigendianhost();
             // Set the swapbyteflag if it is needed.
-            if ( msr->Blkt1000 != 0) {
+            if ( msr->Blkt1000 != 0) { /* XXX: use NULL? */
                 /* If BE host and LE data need swapping */
                 if ( bigendianhost && msr->byteorder == 0 ) {
                     swapflag = 1;
@@ -333,12 +339,19 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
         }
+        if (recordCurrent->record->Blkt1001 != 0) { /* use NULL? */
+            timing_qual = recordCurrent->record->Blkt1001->timing_qual;
+        }
+        else {
+            timing_qual = 0xFF;
+        }
         if ( segmentCurrent != NULL &&
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&
              // Check if the times are within the time tolerance
-             lastgap <= hptimetol && lastgap >= nhptimetol) {
+             lastgap <= hptimetol && lastgap >= nhptimetol &&
+             segmentCurrent->timing_qual == timing_qual) {
             recordCurrent->previous = segmentCurrent->lastRecord;
             segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
             segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
@@ -364,6 +377,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Calculate high-precision sample period
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
                            (HPTMODULUS / recordCurrent->record->samprate) : 0.0);
+            segmentCurrent->timing_qual = timing_qual;
             segmentCurrent->firstRecord = segmentCurrent->lastRecord = recordCurrent;
             recordCurrent->previous = NULL;
         }
