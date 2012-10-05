@@ -18,9 +18,13 @@
 #define TRUE 1
 #define FALSE 0
 
+#define USE_SINE_TABLE
+
+#ifdef USE_SINE_TABLE
 #define SINE_REF_LEN 1000
 #define SINE_REF_LEN_4 (SINE_REF_LEN / 4)
 #define SINE_TABLE_LEN (SINE_REF_LEN + SINE_REF_LEN / 4 + 1)
+#endif
 
 
 /************************************************************************/
@@ -98,14 +102,16 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float sumre;
     float sumim;
     float wtau;
+    float cos_wtau;
+    float sin_wtau;
+#ifdef USE_SINE_TABLE
     float fidx;
     int idx;
     float frac;
-    float cos_wtau;
-    float sin_wtau;
     float sine_step = 2 * M_PI / SINE_REF_LEN;
     float sine_step_inv = 1. / sine_step;
     float *sine_table;
+#endif
 
     /* mtrace(); */
     /***********************************************************************/
@@ -145,13 +151,19 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         whigh = nfft/2-1;
     }
 
+#ifdef USE_SINE_TABLE
     /********************************************************************/
     /* create sine table for fast execution                             */
     /********************************************************************/
     sine_table = (float *)calloc((size_t) SINE_TABLE_LEN, sizeof(float));
+    if (sine_table == NULL) {
+        fprintf(stderr,"\nMemory allocation error (sine_table)!\n");
+        exit(EXIT_FAILURE);
+    }
     for (j = 0; j < SINE_TABLE_LEN; ++j) {
         sine_table[j] = sin(j / (float) (SINE_TABLE_LEN - 1) * (M_PI * 2. + M_PI / 2.));
     }
+#endif
 
     /****************************************************************************/
     /* first we need the fft'ed window of traces for the stations of this group */
@@ -177,6 +189,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
             free((void *)window);
             free((void *)taper);
             free((void *)fftpack_work);
+            free ((void *)sine_table);
             return 1;
         }
         /* doing calloc is automatically zero-padding, too */
@@ -288,6 +301,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
                 for (j = 0; j < nstat; j++) {
                     wtau =
                             (float) (PI_2_df_w * stat_tshift_table[j][k][l]);
+#ifdef USE_SINE_TABLE
                     /* calculate index in sine table */
                     while (wtau > 2.f * M_PI) {
                         wtau -= 2.f * M_PI;
@@ -300,6 +314,10 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
                     frac = fidx - idx;
                     sin_wtau = sine_table[idx] * (1. - frac) + sine_table[idx + 1] * frac;
                     cos_wtau = sine_table[idx + SINE_REF_LEN_4] * (1. - frac) + sine_table[idx + 1 + SINE_REF_LEN_4] * frac;
+#else
+                    sin_wtau = sin(wtau);
+                    cos_wtau = cos(wtau);
+#endif
                     /* here the real stuff happens */
                     re = window[j][2 * w];
                     im = window[j][2 * w + 1];
@@ -377,5 +395,8 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
         free((void *)window[j]);
     }
     free((void *)window);
+#ifdef USE_SINE_TABLE
+    free((void *)sine_table);
+#endif
     return 0;
 }
