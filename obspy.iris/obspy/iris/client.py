@@ -19,6 +19,7 @@ import platform
 import sys
 import urllib
 import urllib2
+import warnings
 
 try:
     import json
@@ -1185,7 +1186,8 @@ class Client(object):
                      endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
                      lat=None, lon=None, minradius=None, maxradius=None,
                      minlat=None, maxlat=None, minlon=None, maxlon=None,
-                     output="bulk", restricted=False, filename=None, **kwargs):
+                     output="bulkdataselect", restricted=False, filename=None,
+                     **kwargs):
         """
         Low-level interface for `availability` Web service of IRIS
         (http://www.iris.edu/ws/availability/) - release 1.2.1 (2012-04-06).
@@ -1238,15 +1240,15 @@ class Client(object):
         :type maxradius: float, optional
         :param maxradius: Maximum radius for circular bounding area.
         :type output: str, optional
-        :param output: Output format, either ``"bulk"`` or ``"xml"``. Defaults
-            to ``"bulk"``.
+        :param output: Output format, either ``"bulkdataselect"`` or ``"xml"``.
+            Defaults to ``"bulkdataselect"``.
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
         :rtype: str or ``None``
         :return: String that lists available channels, either as plaintext
-            `bulkdataselect` format (``output="bulk"``) or in XML format
-            (``output="xml"``) if no ``filename`` is given.
+            `bulkdataselect` format (``output="bulkdataselect"``) or in XML
+            format (``output="xml"``) if no ``filename`` is given.
 
         .. note::
 
@@ -1307,7 +1309,15 @@ class Client(object):
             kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
         except:
             kwargs['endtime'] = endtime
-        kwargs['output'] = str(output)
+        # stay backward compatible to API change, see #419 and also
+        # http://iris.washington.edu/pipermail/webservices/2012-October/000322
+        output = str(output).lower()
+        if output == 'bulk':
+            msg = "output format 'bulk' for Client.availability is " + \
+                " deprecated, please use 'bulkdataselect' instead"
+            warnings.warn(msg, DeprecationWarning)
+            output = 'bulkdataselect'
+        kwargs['output'] = output
         kwargs['restricted'] = str(restricted).lower()
         # sanity checking geographical bounding areas
         rectangular = (minlat, minlon, maxlat, maxlon)
@@ -1340,8 +1350,8 @@ class Client(object):
             kwargs['minradius'] = str(minradius)
             kwargs['maxradius'] = str(maxradius)
         # checking output options
-        if not kwargs['output'] in ("bulk", "xml"):
-            msg = "kwarg output must be either 'bulk' or 'xml'."
+        if not kwargs['output'] in ("bulkdataselect", "xml"):
+            msg = "kwarg output must be either 'bulkdataselect' or 'xml'."
             raise ValueError(msg)
         try:
             data = self._fetch(url, **kwargs)

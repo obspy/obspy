@@ -1,3 +1,7 @@
+dev:
+ * output format 'bulk' for Client.availability has been deprecated, use
+   'bulkdataselect' instead (#419)
+
 0.7.0:
  * added low-level interface for IRIS timeseries WS
  * added low-level interface for IRIS traveltime WS
