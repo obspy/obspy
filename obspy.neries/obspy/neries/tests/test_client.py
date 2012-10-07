@@ -204,7 +204,7 @@ class ClientTestCase(unittest.TestCase):
         fseedfile = NamedTemporaryFile().name
         # initialize client
         client = Client(user='test@obspy.org')
-        start = UTCDateTime(2008, 1, 1)
+        start = UTCDateTime(2012, 1, 1)
         end = start + 10
         # MiniSEED
         client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
