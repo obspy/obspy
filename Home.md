@@ -55,13 +55,13 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 * [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client ("experimental")
 * [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
-* [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](http://www.seishub.org) database client
+* [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](https://github.com/barsch/seishub.core) database client
 
 ## Use Cases / Applications Using ObsPy
 
    * [ObsPyck](https://github.com/megies/obspyck/wiki)
    * [SeismicHandler](http://www.seismic-handler.org)
-   * [SeisHub](http://www.seishub.org)
+   * [SeisHub](https://github.com/barsch/seishub.core)
    * [SeishubExplorer](https://github.com/krischer/SeishubExplorer)
    * [HtoVToolbox](https://github.com/krischer/HtoV-Toolbox)
    * [Antelope Python moment tensor code](http://eqinfo.ucsd.edu/~rnewman/howtos/antelope/moment_tensor/)
