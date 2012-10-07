@@ -59,7 +59,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 
 ## Use Cases / Applications Using ObsPy
 
-   * [ObsPyck](https://github.com/megies/obspyck)
+   * [ObsPyck](https://github.com/megies/obspyck/wiki)
    * [SeismicHandler](http://www.seismic-handler.org)
    * [SeisHub](http://www.seishub.org)
    * [SeishubExplorer](https://github.com/krischer/SeishubExplorer)
