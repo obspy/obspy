@@ -122,10 +122,17 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         be read and all following records are assumed to be the same. Defaults
         to ``True``.
     :type details: bool, optional
-    :param details: If ``True`` read additional information like the timing
-        quality. Note, that the traces are then also split on these extra
+    :param details: If ``True`` read additional information: timing quality
+        and availability of calibration information.
+        Note, that the traces are then also split on these additional
         information. Thus the number of traces in a stream will change.
-        Details are stored in the mseed stats AttribDict of each trace. 
+        Details are stored in the mseed stats AttribDict of each trace.
+        -1 specifies for both cases, that these information is not available.
+        ``timing_quality`` specifies the timing quality from 0 to 100 [%].
+        ``calibration_type`` specifies the type of available calibration
+        information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
+        Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
+        Calibration Abort.
 
     .. rubric:: Example
 
@@ -291,10 +298,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 util._convertMSTimeToDatetime(currentSegment.starttime)
             # TODO: write support is missing
             if details:
-                timing_qual = currentSegment.timingqual
-                if timing_qual == 0xFF: # 0xFF is mask for not known timing
-                    timing_qual = -1
-                header['mseed']['timingqual'] = timing_qual
+                timing_quality = currentSegment.timing_quality
+                if timing_quality == 0xFF: # 0xFF is mask for not known timing
+                    timing_quality = -1
+                header['mseed']['timing_quality'] = timing_quality
                 header['mseed']['calibration_type'] = currentSegment.calibration_type
                 
             if headonly is False:

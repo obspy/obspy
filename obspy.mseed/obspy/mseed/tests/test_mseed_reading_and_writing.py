@@ -920,10 +920,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
         st = read(filename, details=True)
         dt = np.dtype([('npts', 'i4'), ('qual', 'i4')])
-        res = np.array([(tr.stats.npts, tr.stats.mseed.timingqual)
+        res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename) # do not read timing quality info
-        # timingqual splits the stream additionaly when timing quality
+        # timing_quality splits the stream additionaly when timing quality
         # changes, sum of all points in stream must stay the same
         self.assertEquals(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]

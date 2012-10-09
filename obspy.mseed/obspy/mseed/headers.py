@@ -629,7 +629,7 @@ ContinuousSegment._fields_ = [
     ('sampletype', C.c_char),
     ('hpdelta', C.c_longlong),
     ('samplecnt', C.c_int64),
-    ('timingqual', C.c_uint8),
+    ('timing_quality', C.c_uint8),
     ('calibration_type',  C.c_int8),
     ('datasamples', C.c_void_p),      # Data samples, 'numsamples' of type
                                       # 'sampletype'
