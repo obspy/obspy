@@ -172,7 +172,7 @@ lil_free(LinkedIDList * lil)
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
-                 unpack_data, int reclen, flag verbose,
+                 unpack_data, int reclen, flag verbose, flag extra_info,
                  long (*allocData) (int, char))
 {
     int retcode = 0;
@@ -255,7 +255,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Returns 0 if the host is little endian, otherwise 1.
             flag bigendianhost = ms_bigendianhost();
             // Set the swapbyteflag if it is needed.
-            if ( msr->Blkt1000 != 0) { /* XXX: use NULL? */
+            if ( msr->Blkt1000 != 0) {
                 /* If BE host and LE data need swapping */
                 if ( bigendianhost && msr->byteorder == 0 ) {
                     swapflag = 1;
@@ -339,7 +339,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
         }
-        if (recordCurrent->record->Blkt1001 != 0) { /* use NULL? */
+        if ((extra_info == 1) && (recordCurrent->record->Blkt1001 != 0)) {
             timing_qual = recordCurrent->record->Blkt1001->timing_qual;
         }
         else {
