@@ -172,7 +172,7 @@ lil_free(LinkedIDList * lil)
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
-                 unpack_data, int reclen, flag verbose, flag extra_info,
+                 unpack_data, int reclen, flag verbose, flag details,
                  long (*allocData) (int, char))
 {
     int retcode = 0;
@@ -339,7 +339,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
         }
-        if ((extra_info == 1) && (recordCurrent->record->Blkt1001 != 0)) {
+        if ((details == 1) && (recordCurrent->record->Blkt1001 != 0)) {
             timing_qual = recordCurrent->record->Blkt1001->timing_qual;
         }
         else {

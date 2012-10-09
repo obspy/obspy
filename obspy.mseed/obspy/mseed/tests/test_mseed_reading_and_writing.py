@@ -918,7 +918,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Read timing quality via L{obspy.core.Stream}.
         """
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
-        st = read(filename, extra_info=True)
+        st = read(filename, details=True)
         dt = np.dtype([('npts', 'i4'), ('qual', 'i4')])
         res = np.array([(tr.stats.npts, tr.stats.mseed.timingqual)
                         for tr in st], dtype=dt)

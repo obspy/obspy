@@ -90,7 +90,7 @@ def isMSEED(filename):
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, recinfo=True, extra_info=False, **kwargs):
+              sourcename=None, reclen=None, recinfo=True, details=False, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -121,6 +121,11 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         writing a Mini-SEED file. Only the very first record of the file will
         be read and all following records are assumed to be the same. Defaults
         to ``True``.
+    :type details: bool, optional
+    :param details: If ``True`` read additional information like the timing
+        quality. Note, that the traces are then also split on these extra
+        information. Thus the number of traces in a stream will change.
+        Details are stored in the mseed stats AttribDict of each trace. 
 
     .. rubric:: Example
 
@@ -254,7 +259,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
     lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-                                    reclen, 0, C.c_int(extra_info), allocData)
+                                    reclen, 0, C.c_int(details), allocData)
 
     # XXX: Check if the freeing works.
     del selections
@@ -284,7 +289,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             header['sampling_rate'] = currentSegment.samprate
             header['starttime'] = \
                 util._convertMSTimeToDatetime(currentSegment.starttime)
-            if extra_info:
+            # TODO: write support is missing
+            if details:
                 timing_qual = currentSegment.timingqual
                 if timing_qual == 0xFF: # 0xFF is mask for not known timing
                     timing_qual = -1
