@@ -295,6 +295,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 if timing_qual == 0xFF: # 0xFF is mask for not known timing
                     timing_qual = -1
                 header['mseed']['timingqual'] = timing_qual
+                header['mseed']['calibration_type'] = currentSegment.calibration_type
+                
             if headonly is False:
                 # The data always will be in sequential order.
                 data = all_data.pop(0)

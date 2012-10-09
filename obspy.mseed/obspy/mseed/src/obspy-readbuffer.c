@@ -35,6 +35,9 @@ typedef struct ContinuousSegment_s {
     /* Timing quality is a vendor specific value from 0 to 100% of maximum
      * accuracy, taking into account both clock quality and data flags. */
     uint8_t timing_qual;
+    /* type of calibration available, BLK 300 = 1, BLK 310 = 2, BLK 320 = 3
+     * BLK 390 = 4, BLK 395 = -2 */
+    int8_t calibration_type;
     void *datasamples;                      // Actual data samples
     struct LinkedRecordList_s *firstRecord; // First item
     struct LinkedRecordList_s *lastRecord;  // Last item
@@ -185,8 +188,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     // Unpack without reading the data first
     flag dataflag = 0;
 
-    // flag controlling timing_qual of BLK 1001
+    // the timing_qual of BLK 1001
     uint8_t timing_qual = 0xFF;
+
+    // the calibration type, availability of BLK 300, 310, 320, 390, 395
+    int8_t calibration_type = -1;
 
     // Init all the pointers to NULL. Most compilers should do this anyway.
     LinkedIDList * idListHead = NULL;
@@ -339,11 +345,39 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
         }
-        if ((details == 1) && (recordCurrent->record->Blkt1001 != 0)) {
-            timing_qual = recordCurrent->record->Blkt1001->timing_qual;
-        }
-        else {
+        if (details == 1) {
+            /* extract information on calibration BLKs */
+            calibration_type = -1;
+            if (recordCurrent->record->blkts) {
+                BlktLink *cur_blkt = recordCurrent->record->blkts;
+                while (cur_blkt) {
+                    switch (cur_blkt->blkt_type) {
+                    case 300:
+                        calibration_type = 1;
+                        break;
+                    case 310:
+                        calibration_type = 2;
+                        break;
+                    case 320:
+                        calibration_type = 3;
+                        break;
+                    case 390:
+                        calibration_type = 4;
+                        break;
+                    case 395:
+                        calibration_type = -2;
+                        break;
+                    default:
+                        break;
+                    }
+                    cur_blkt = cur_blkt->next;
+                }
+            }
+            /* extract information based on timing quality */
             timing_qual = 0xFF;
+            if (recordCurrent->record->Blkt1001 != 0) {
+                timing_qual = recordCurrent->record->Blkt1001->timing_qual;
+            }
         }
         if ( segmentCurrent != NULL &&
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
@@ -351,7 +385,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&
              // Check if the times are within the time tolerance
              lastgap <= hptimetol && lastgap >= nhptimetol &&
-             segmentCurrent->timing_qual == timing_qual) {
+             segmentCurrent->timing_qual == timing_qual &&
+             segmentCurrent->calibration_type == calibration_type) {
             recordCurrent->previous = segmentCurrent->lastRecord;
             segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
             segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
@@ -378,6 +413,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
                            (HPTMODULUS / recordCurrent->record->samprate) : 0.0);
             segmentCurrent->timing_qual = timing_qual;
+            segmentCurrent->calibration_type = calibration_type;
             segmentCurrent->firstRecord = segmentCurrent->lastRecord = recordCurrent;
             recordCurrent->previous = NULL;
         }
