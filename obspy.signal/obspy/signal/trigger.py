@@ -29,7 +29,7 @@ import warnings
 import ctypes as C
 import numpy as np
 from obspy.core import UTCDateTime
-from obspy.signal.headers import clibsignal
+from obspy.signal.headers import clibsignal, head_stalta_t
 
 
 def recSTALTA(a, nsta, nlta):
@@ -159,6 +159,36 @@ def carlSTATrig(a, nsta, nlta, ratio, quiet):
 
 
 def classicSTALTA(a, nsta, nlta):
+    """
+    Computes the standard STA/LTA from a given input array a. The length of
+    the STA is given by nsta in samples, respectively is the length of the
+    LTA given by nlta in samples.
+
+    :type a: NumPy ndarray
+    :param a: Seismic Trace
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
+    :rtype: NumPy ndarray
+    :return: Characteristic function of classic STA/LTA
+    """
+    data = a
+    # initialize C struct / numpy structed array
+    head = np.empty(1, dtype=head_stalta_t)
+    head[:] = (len(data), nsta, nlta)
+    # ensure correct type and countiguous of data
+    data = np.require(data, dtype='f8', requirements=['C_CONTIGUOUS'])
+    # all memory should be allocated by python
+    charfct = np.empty(len(data), dtype='f8')
+    # run and check the errorcode
+    errcode = clibsignal.stalta(head, data, charfct)
+    if errcode != 0:
+        raise Exception('ERROR %d stalta: len(data) < nlta' % errcode)
+    return charfct
+
+
+def classicSTALTAPy(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
