@@ -207,22 +207,24 @@ def classicSTALTAPy(a, nsta, nlta):
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
-    #
+    # indexes start at 0, length must be subtracted by one
+    nsta_1 = nsta - 1
+    nlta_1 = nlta - 1
     # compute the short time average (STA)
     sta = np.zeros(len(a), dtype='float64')
-    pad_sta = np.zeros(nsta)
+    pad_sta = np.zeros(nsta_1)
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
     # once.
     for i in xrange(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
+        sta = sta + np.concatenate((pad_sta, a[i:m - nsta_1 + i] ** 2))
     sta = sta / nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
-    pad_lta = np.ones(nlta)  # avoid for 0 division 0/1=0
+    pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
     for i in xrange(nlta):  # window size to smooth over
-        lta = lta + np.concatenate((pad_lta, a[i:m - nlta + i] ** 2))
+        lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
     lta = lta / nlta
     #
     # pad zeros of length nlta to avoid overfit and
