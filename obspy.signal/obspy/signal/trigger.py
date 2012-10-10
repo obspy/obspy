@@ -163,6 +163,8 @@ def classicSTALTA(a, nsta, nlta):
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
     LTA given by nlta in samples.
+    
+    Fast version written in C.
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
@@ -192,7 +194,12 @@ def classicSTALTAPy(a, nsta, nlta):
     """
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
-    LTA given by nlta in samples.
+    LTA given by nlta in samples. Written in Python.
+
+    .. note::
+
+        There exists a faster version of this trigger wrapped in C
+        called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
@@ -229,7 +236,7 @@ def classicSTALTAPy(a, nsta, nlta):
     #
     # pad zeros of length nlta to avoid overfit and
     # return STA/LTA ratio
-    sta[0:nlta] = 0
+    sta[0:nlta_1] = 0
     return sta / lta
 
 
