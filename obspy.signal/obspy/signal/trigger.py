@@ -177,11 +177,11 @@ def classicSTALTA(a, nsta, nlta):
     # initialize C struct / numpy structed array
     head = np.empty(1, dtype=head_stalta_t)
     head[:] = (len(data), nsta, nlta)
-    # ensure correct type and countiguous of data
+    # ensure correct type and contiguous of data
     data = np.require(data, dtype='f8', requirements=['C_CONTIGUOUS'])
     # all memory should be allocated by python
     charfct = np.empty(len(data), dtype='f8')
-    # run and check the errorcode
+    # run and check the error-code
     errcode = clibsignal.stalta(head, data, charfct)
     if errcode != 0:
         raise Exception('ERROR %d stalta: len(data) < nlta' % errcode)
