@@ -67,7 +67,8 @@ Basic Usage
     >>> cat = client.getEvents(starttime=starttime, endtime=endtime,
     ...                        minmag=6.7)
     >>> print(cat)  # doctest: +NORMALIZE_WHITESPACE
-    3 Event(s) in Catalog:
+    4 Event(s) in Catalog:
+    2011-04-11T08:16:12.730000Z | +37.001, +140.401 | 6.7 MW
     2011-04-07T14:32:43.290000Z | +38.276, +141.588 | 7.1 MW
     2011-04-07T13:11:22.400000Z | +17.208,  -94.338 | 6.7 MW
     2011-04-03T20:06:40.390000Z |  -9.848, +107.693 | 6.7 MW

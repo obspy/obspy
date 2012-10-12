@@ -29,8 +29,11 @@ def rotate_NE_RT(n, e, ba):
     defined as the angle measured between the vector pointing from the station
     to the source and the vector pointing from the station to the north.
 
+    :type n: :class:`~numpy.ndarray`
     :param n: Data of the North component of the seismogram.
+    :type e: :class:`~numpy.ndarray`
     :param e: Data of the East component of the seismogram.
+    :type ba: float
     :param ba: The back azimuth from station to source in degrees.
     :return: Radial and Transversal component of seismogram.
     """
@@ -59,10 +62,15 @@ def rotate_ZNE_LQT(z, n, e, ba, inc):
         3. negative rotation of coordinate system around T-axis with angle inc:
            ZRT -> LQT
 
+    :type z: :class:`~numpy.ndarray`
     :param z: Data of the Z component of the seismogram.
+    :type n: :class:`~numpy.ndarray`
     :param n: Data of the North component of the seismogram.
+    :type e: :class:`~numpy.ndarray`
     :param e: Data of the East component of the seismogram.
+    :type ba: float
     :param ba: The back azimuth from station to source in degrees.
+    :type inc: float
     :param inc: The inclination of the ray at the station in degrees.
     :return: L-, Q- and T-component of seismogram.
     """
