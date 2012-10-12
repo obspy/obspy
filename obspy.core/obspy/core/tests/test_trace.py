@@ -1023,8 +1023,8 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=data)
         tr.taper()
         for i in range(len(data)):
-            self.assertLessEqual(tr.data[i], 1.)
-            self.assertGreaterEqual(tr.data[i], 0.)
+            self.assertTrue(tr.data[i] <= 1.)
+            self.assertTrue(tr.data[i] >= 0.)
 
     def test_times(self):
         """

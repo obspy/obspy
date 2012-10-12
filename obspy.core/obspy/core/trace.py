@@ -416,7 +416,7 @@ class Trace(object):
         5
         """
         if not isinstance(num, int):
-            return TypeError("Integer expected")
+            raise TypeError("Integer expected")
         from obspy.core import Stream
         st = Stream()
         for _i in range(num):
@@ -450,7 +450,7 @@ class Trace(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:28.740000Z ... | 100.0 Hz, 426 samples
         """
         if not isinstance(num, int):
-            return TypeError("Integer expected")
+            raise TypeError("Integer expected")
         from obspy.core import Stream
         total_length = np.size(self.data)
         rest_length = total_length % num
@@ -491,7 +491,7 @@ class Trace(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:27.000000Z ... | 100.0 Hz, 600 samples
         """
         if not isinstance(num, int):
-            return TypeError("Integer expected")
+            raise TypeError("Integer expected")
         from obspy.core import Stream
         st = Stream()
         total_length = np.size(self.data)

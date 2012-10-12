@@ -3,14 +3,17 @@
 The obspy.iris.client test suite.
 """
 
+from __future__ import with_statement
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skipIfPython25
 from obspy.iris import Client
 import filecmp
 import numpy as np
 import os
 import unittest
 import urllib
+import warnings
 
 
 class ClientTestCase(unittest.TestCase):
@@ -430,6 +433,43 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st1[0].stats.endtime, st2[0].stats.endtime)
         self.assertEquals(st1[0].data[0], 24)
         self.assertAlmostEquals(st2[0].data[0], -2.4910707e-06)
+
+    @skipIfPython25
+    def test_issue419(self):
+        """
+        obspy.iris.Client.availability should work with output='bulkdataselect'
+        """
+        client = Client()
+        # 1 - default output ('bulkdataselect')
+        t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        result = client.availability('IU', channel='B*', starttime=t1,
+                                     endtime=t2)
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU YSS 00 BHZ' in result)
+        # 2 - explicit set output 'bulkdataselect'
+        t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        result = client.availability('IU', channel='B*', starttime=t1,
+                                     endtime=t2, output='bulkdataselect')
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU YSS 00 BHZ' in result)
+        # 3 - output 'bulk' (backward compatibility)
+        t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', DeprecationWarning)
+            result = client.availability('IU', channel='B*', starttime=t1,
+                                         endtime=t2, output='bulk')
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('IU YSS 00 BHZ' in result)
+        # 4 - output 'xml'
+        t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        t2 = UTCDateTime("2010-02-27T10:30:00.000")
+        result = client.availability('IU', channel='B*', starttime=t1,
+                                     endtime=t2, output='xml')
+        self.assertTrue(isinstance(result, basestring))
+        self.assertTrue('<?xml' in result)
 
 
 def suite():

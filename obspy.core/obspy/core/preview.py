@@ -38,6 +38,8 @@ def createPreview(trace, delta=60):
     start_time = trace.stats.starttime.timestamp
     # number of samples for a single slice of delta seconds
     samples_per_slice = delta * int(trace.stats.sampling_rate)
+    if samples_per_slice < 1:
+        raise ValueError('samples_per_slice is less than 0 - skipping')
     # minimum and maximum of samples before a static time marker
     start = (delta - start_time % delta) * int(trace.stats.sampling_rate)
     start_time = start_time - start_time % delta
