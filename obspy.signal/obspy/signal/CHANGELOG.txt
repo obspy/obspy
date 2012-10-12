@@ -4,7 +4,6 @@ dev:
    (no complex conjugate)
  * preventing a possible duplicated overall sensitivity removal in seisSim
    when using the option seedresp
- * adding SVD based polarization filter
  * optimizing bbfk C-source: Array analysis (sonic / bbfk) now runs at
    least twice as fast
 

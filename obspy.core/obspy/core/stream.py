@@ -451,7 +451,7 @@ class Stream(object):
         15
         """
         if not isinstance(num, int):
-            return TypeError("Integer expected")
+            raise TypeError("Integer expected")
         from obspy.core import Stream
         st = Stream()
         for _i in range(num):

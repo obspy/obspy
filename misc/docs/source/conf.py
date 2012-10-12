@@ -30,6 +30,7 @@ extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.autodoc',
               'sphinx.ext.viewcode',
               'matplotlib.sphinxext.only_directives',
+              'sphinx.ext.mathjax',
               # local extensions
               'autosummary',
               'plot_directive',

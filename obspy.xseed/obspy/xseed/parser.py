@@ -404,7 +404,7 @@ class Parser(object):
                            blk.end_effective_date < datetime:
                             continue
                     station_flag = True
-                    blockettes.append(blk)
+                    tmpb50 = blk
                 elif blk.id == 52 and station_flag:
                     channel_flag = False
                     if loc is not None and blk.location_identifier != loc:
@@ -417,6 +417,7 @@ class Parser(object):
                         if blk.end_date and blk.end_date < datetime:
                             continue
                     channel_flag = True
+                    blockettes.append(tmpb50)
                     blockettes.append(blk)
                 elif channel_flag and station_flag:
                     blockettes.append(blk)

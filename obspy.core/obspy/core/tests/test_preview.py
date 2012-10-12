@@ -194,6 +194,18 @@ class UtilTestCase(unittest.TestCase):
         tr.stats.starttime = UTCDateTime("1989-10-06T14:31:14.000000Z")
         createPreview(tr, delta=30)
 
+    def test_createPreviewWithVerySmallSampleRate(self):
+        """
+        Test for creating previews with samples per slice less than 1.
+        """
+        tr = Trace(data=np.arange(4000))
+        # 1 - should raise
+        tr.stats.sampling_rate = 0.1
+        self.assertRaises(ValueError, createPreview, tr)
+        # 2 - should work
+        tr.stats.sampling_rate = 1
+        createPreview(tr)
+
 
 def suite():
     return unittest.makeSuite(UtilTestCase, 'test')

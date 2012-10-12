@@ -1,5 +1,8 @@
 dev:
  * fixed a bug with dataless to xseed conversion using split_stations=True
+ * fixed a bug affecting getPAZ() and getCoordinates() when selecting specific
+   channels from complex dataless files
+   (see: https://github.com/obspy/obspy/issues/412) 
 
 0.7.0:
  * fixed a bug with exactly one pole or one zero in response information
