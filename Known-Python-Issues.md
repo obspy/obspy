@@ -192,10 +192,11 @@ print tr2.data
 [0 1 2 3 4]
 ```
 
-It seems that this can only be avoided by creating a fresh array from the array that was created as a new view on the original data:
+This can be avoided by ensuring that the data is C-contiguous. Use either `np.requrire(data, dtype=data.dtype, requirements='C_CONTIGUOUS)` or `np.ascontiguousarray(data)` for this purpose:
 
 ```python
-z_safe = np.array(z)
+z_safe = np.ascontiguousarray(z)
+# or: z_safe = np.requrire(z, dtype=z.dtype, requirements='C_CONTIGUOUS)
 tr1 = Trace(data=y)
 tr2 = Trace(data=z_safe)
 tr1.write("/tmp/tr1.tmp", "MSEED")
