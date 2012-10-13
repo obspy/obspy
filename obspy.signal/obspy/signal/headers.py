@@ -114,6 +114,19 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
                                   C.POINTER(C.c_double)]
 clibsignal.utl_geo_km.restype = C.c_void_p
 
+head_stalta_t = np.dtype([
+   ('N', 'u4', 1),
+   ('nsta', 'u4', 1),
+   ('nlta', 'u4', 1),
+], align=True)
+
+clibsignal.stalta.argtypes = [
+    np.ctypeslib.ndpointer(dtype=head_stalta_t, ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1, flags='C_CONTIGUOUS'),
+]
+clibsignal.stalta.restype = C.c_int
+
 
 STALEN = 64
 NETLEN = 64

@@ -54,6 +54,7 @@ ENTRY_POINTS = {
         'delayedstalta = obspy.signal.trigger:delayedSTALTA',
         'zdetect = obspy.signal.trigger:zDetect',
         'recstaltapy = obspy.signal.trigger:recSTALTAPy',
+        'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
     ],
     'obspy.plugin.filter': [
         'bandpass = obspy.signal.filter:bandpass',
@@ -111,7 +112,8 @@ def setupLibSignal():
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
                                src + 'coordtrans.c', src + 'pk_mbaer.c',
                                src + 'filt_util.c', src + 'arpicker.c',
-                               src + 'bbfk.c', src_fft + 'fftpack.c',
+                               src + 'bbfk.c', src + 'stalta.c',
+                               src_fft + 'fftpack.c',
                                src_fft + 'fftpack_litemodule.c'],
                       export_symbols=symbols)
     return lib

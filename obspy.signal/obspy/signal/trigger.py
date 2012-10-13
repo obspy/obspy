@@ -29,7 +29,7 @@ import warnings
 import ctypes as C
 import numpy as np
 from obspy.core import UTCDateTime
-from obspy.signal.headers import clibsignal
+from obspy.signal.headers import clibsignal, head_stalta_t
 
 
 def recSTALTA(a, nsta, nlta):
@@ -163,6 +163,43 @@ def classicSTALTA(a, nsta, nlta):
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
     LTA given by nlta in samples.
+    
+    Fast version written in C.
+
+    :type a: NumPy ndarray
+    :param a: Seismic Trace
+    :type nsta: Int
+    :param nsta: Length of short time average window in samples
+    :type nlta: Int
+    :param nlta: Length of long time average window in samples
+    :rtype: NumPy ndarray
+    :return: Characteristic function of classic STA/LTA
+    """
+    data = a
+    # initialize C struct / numpy structed array
+    head = np.empty(1, dtype=head_stalta_t)
+    head[:] = (len(data), nsta, nlta)
+    # ensure correct type and contiguous of data
+    data = np.require(data, dtype='f8', requirements=['C_CONTIGUOUS'])
+    # all memory should be allocated by python
+    charfct = np.empty(len(data), dtype='f8')
+    # run and check the error-code
+    errcode = clibsignal.stalta(head, data, charfct)
+    if errcode != 0:
+        raise Exception('ERROR %d stalta: len(data) < nlta' % errcode)
+    return charfct
+
+
+def classicSTALTAPy(a, nsta, nlta):
+    """
+    Computes the standard STA/LTA from a given input array a. The length of
+    the STA is given by nsta in samples, respectively is the length of the
+    LTA given by nlta in samples. Written in Python.
+
+    .. note::
+
+        There exists a faster version of this trigger wrapped in C
+        called :func:`~obspy.signal.trigger.classicSTALTA` in this module!
 
     :type a: NumPy ndarray
     :param a: Seismic Trace
@@ -177,27 +214,29 @@ def classicSTALTA(a, nsta, nlta):
     #    This should be faster then the for loops in this fct
     #    Currently debian lenny ships 1.1.1
     m = len(a)
-    #
+    # indexes start at 0, length must be subtracted by one
+    nsta_1 = nsta - 1
+    nlta_1 = nlta - 1
     # compute the short time average (STA)
     sta = np.zeros(len(a), dtype='float64')
-    pad_sta = np.zeros(nsta)
+    pad_sta = np.zeros(nsta_1)
     # Tricky: Construct a big window of length len(a)-nsta. Now move this
     # window nsta points, i.e. the window "sees" every point in a at least
     # once.
     for i in xrange(nsta):  # window size to smooth over
-        sta = sta + np.concatenate((pad_sta, a[i:m - nsta + i] ** 2))
+        sta = sta + np.concatenate((pad_sta, a[i:m - nsta_1 + i] ** 2))
     sta = sta / nsta
     #
     # compute the long time average (LTA)
     lta = np.zeros(len(a), dtype='float64')
-    pad_lta = np.ones(nlta)  # avoid for 0 division 0/1=0
+    pad_lta = np.ones(nlta_1)  # avoid for 0 division 0/1=0
     for i in xrange(nlta):  # window size to smooth over
-        lta = lta + np.concatenate((pad_lta, a[i:m - nlta + i] ** 2))
+        lta = lta + np.concatenate((pad_lta, a[i:m - nlta_1 + i] ** 2))
     lta = lta / nlta
     #
     # pad zeros of length nlta to avoid overfit and
     # return STA/LTA ratio
-    sta[0:nlta] = 0
+    sta[0:nlta_1] = 0
     return sta / lta
 
 
