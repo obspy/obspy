@@ -7,7 +7,7 @@ from ctypes import ArgumentError
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
-    coincidenceTrigger, arPick
+    coincidenceTrigger, arPick, classicSTALTA, classicSTALTAPy
 from obspy.signal.util import clibsignal
 import gzip
 import numpy as np
@@ -326,6 +326,17 @@ class TriggerTestCase(unittest.TestCase):
         self.assertAlmostEquals(ev['cft_stds'][1], 4.4446373508521804)
         self.assertAlmostEquals(ev['cft_stds'][2], 5.3499401252675964)
         self.assertAlmostEquals(ev['cft_stds'][3], 4.2723814539487703)
+
+    def test_classicSTALTAPyC(self):
+        """
+        Test case for ctypes version of recSTALTA
+        """
+        nsta, nlta = 5, 10
+        c1 = classicSTALTA(self.data, nsta, nlta)
+        c2 = classicSTALTAPy(self.data, nsta, nlta)
+        self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
+        ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
+        self.assertTrue(np.allclose(ref, c2[99:103]))
 
 
 def suite():
