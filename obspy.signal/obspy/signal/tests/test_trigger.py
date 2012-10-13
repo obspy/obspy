@@ -334,9 +334,9 @@ class TriggerTestCase(unittest.TestCase):
         nsta, nlta = 5, 10
         c1 = classicSTALTA(self.data, nsta, nlta)
         c2 = classicSTALTAPy(self.data, nsta, nlta)
-        np.testing.assert_allclose(c1, c2, rtol=1e-10)
+        self.assertTrue(np.allclose(c1, c2, rtol=1e-10))
         ref = np.array([0.38012302, 0.37704431, 0.47674533, 0.67992292])
-        np.testing.assert_allclose(ref, c2[99:103])
+        self.assertTrue(np.allclose(ref, c2[99:103]))
 
 
 def suite():
