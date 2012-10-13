@@ -192,11 +192,11 @@ print tr2.data
 [0 1 2 3 4]
 ```
 
-This can be avoided by ensuring that the data is C-contiguous. Use either `np.requrire(data, dtype=data.dtype, requirements='C_CONTIGUOUS)` or `np.ascontiguousarray(data)` for this purpose:
+This can be avoided by ensuring that the data is C-contiguous. Use either `np.require(data, dtype=data.dtype, requirements='C_CONTIGUOUS')` or `np.ascontiguousarray(data)` for this purpose:
 
 ```python
 z_safe = np.ascontiguousarray(z)
-# or: z_safe = np.requrire(z, dtype=z.dtype, requirements='C_CONTIGUOUS)
+# or: z_safe = np.require(z, dtype=z.dtype, requirements='C_CONTIGUOUS')
 tr1 = Trace(data=y)
 tr2 = Trace(data=z_safe)
 tr1.write("/tmp/tr1.tmp", "MSEED")
