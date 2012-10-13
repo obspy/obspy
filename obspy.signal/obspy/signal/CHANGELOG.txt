@@ -4,6 +4,9 @@ dev:
    (no complex conjugate)
  * preventing a possible duplicated overall sensitivity removal in seisSim
    when using the option seedresp
+ * adding optimized C-code for classic STALTA. Runs aproximally, 1000x
+   faster than pure python code. It has now the same order of speed as the
+   recursive STALTA
 
 0.7.0:
  * adding toolbox to calculate Time-Frequency Misfits
