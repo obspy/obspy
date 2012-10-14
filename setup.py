@@ -53,7 +53,9 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
-    'lxml']
+    'lxml',
+    'sqlalchemy',
+    'suds>=0.4.0']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
@@ -233,12 +235,80 @@ ENTRY_POINTS = {
 UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
                                          "core", "util"))
 sys.path.append(UTIL_PATH)
-from base import _getVersionString
+from base import _getVersionString  # @UnresolvedImport
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
 IS_WINDOWS = platform.system() == "Windows"
 IS_DEVELOP = 'develop' in sys.argv
+
+
+if IS_WINDOWS:
+    # ugly Monkey patch for MSVCCompiler & Mingw32CCompiler for Windows
+    # using MinGW64 (http://mingw-w64.sourceforge.net/)
+    from distutils.msvccompiler import MSVCCompiler
+    from distutils.cygwinccompiler import Mingw32CCompiler
+    MSVCCompiler._c_extensions.append(".f")
+
+    def compile(self, sources, output_dir=None, **kwargs):  # @UnusedVariable
+        # we check if 'taup' is in sources
+        IS_FORTRAN = False
+        for source in sources:
+            if 'taup' in source:
+                IS_FORTRAN = True
+        if not IS_FORTRAN:
+            # otherwise we just use the original compile method
+            return self.original_compile(sources, output_dir=None, **kwargs)
+        if output_dir:
+            try:
+                os.makedirs(output_dir)
+            except OSError:
+                pass
+        if '32' in platform.architecture()[0]:
+            # 32 bit gfortran compiler
+            self.compiler_so = ["mingw32-gfortran.exe"]
+        else:
+            # 64 bit gfortran compiler
+            self.compiler_so = ["x86_64-w64-mingw32-gfortran.exe"]
+        objects = []
+        for src in sources:
+            file = os.path.splitext(src)[0]
+            if output_dir:
+                obj = os.path.join(output_dir, os.path.basename(file) + ".o")
+            else:
+                obj = file + ".o"
+            try:
+                self.spawn(self.compiler_so + \
+                           ["-fno-underscoring", "-c"] + [src, '-o', obj])
+            except DistutilsExecError:
+                _, msg, _ = sys.exc_info()
+                raise CompileError(msg)
+            objects.append(obj)
+        return objects
+
+    def link(self, _target_desc, objects, output_filename,
+             *args, **kwargs):  # @UnusedVariable
+        # we check if 'taup' is in output_filename
+        if 'taup' not in output_filename:
+            # otherwise we just use the original link method
+            return self.original_link(_target_desc, objects, output_filename,
+                                      *args, **kwargs)
+        try:
+            os.makedirs(os.path.dirname(output_filename))
+        except OSError:
+            pass
+        self.spawn(self.compiler_so + \
+                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
+                   objects + ["-o", output_filename])
+
+    MSVCCompiler.original_compile = MSVCCompiler.compile
+    MSVCCompiler.compile = compile
+    MSVCCompiler.original_link = MSVCCompiler.link
+    MSVCCompiler.link = link
+    Mingw32CCompiler.original_compile = MSVCCompiler.compile
+    Mingw32CCompiler.compile = compile
+    Mingw32CCompiler.original_link = MSVCCompiler.link
+    Mingw32CCompiler.link = link
 
 
 def convert2to3():
@@ -267,6 +337,7 @@ def convert2to3():
 class finallist(list):
     def append(self, object):
         return
+
 
 class MyExtension(Extension):
     def __init__(self, *args, **kwargs):
@@ -484,57 +555,6 @@ def setupLibTauP():
                     _, msg, _ = sys.exc_info()
                     raise CompileError(msg)
         UnixCCompiler._compile = _compile
-    else:
-        # Monkey patch MSVCCompiler & Mingw32CCompiler for Windows
-        # using MinGW64 (http://mingw-w64.sourceforge.net/)
-        from distutils.msvccompiler import MSVCCompiler
-        from distutils.cygwinccompiler import Mingw32CCompiler
-        MSVCCompiler._c_extensions.append(".f")
-
-        def compile(self, sources, output_dir=None,
-                    **kwargs):  # @UnusedVariable
-            if output_dir:
-                try:
-                    os.makedirs(output_dir)
-                except OSError:
-                    pass
-            if '32' in platform.architecture()[0]:
-                # 32 bit gfortran compiler
-                self.compiler_so = ["mingw32-gfortran.exe"]
-            else:
-                # 64 bit gfortran compiler
-                self.compiler_so = ["x86_64-w64-mingw32-gfortran.exe"]
-            objects = []
-            for src in sources:
-                file = os.path.splitext(src)[0]
-                if output_dir:
-                    obj = os.path.join(output_dir,
-                                       os.path.basename(file) + ".o")
-                else:
-                    obj = file + ".o"
-                try:
-                    self.spawn(self.compiler_so + \
-                               ["-fno-underscoring", "-c"] + [src, '-o', obj])
-                except DistutilsExecError:
-                    _, msg, _ = sys.exc_info()
-                    raise CompileError(msg)
-                objects.append(obj)
-            return objects
-
-        def link(self, _target_desc, objects, output_filename,
-                 *args, **kwargs):  # @UnusedVariable
-            try:
-                os.makedirs(os.path.dirname(output_filename))
-            except OSError:
-                pass
-            self.spawn(self.compiler_so + \
-                       ["-static-libgcc", "-static-libgfortran", "-shared"] + \
-                       objects + ["-o", output_filename])
-
-#        MSVCCompiler.compile = compile
-#        MSVCCompiler.link = link
-#        Mingw32CCompiler.compile = compile
-#        Mingw32CCompiler.link = link
 
     # create library name
     if IS_DEVELOP:
