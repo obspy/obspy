@@ -37,7 +37,7 @@ import sys
 UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
                                          "core", "util"))
 sys.path.append(UTIL_PATH)
-from base import _getVersionString()
+from base import _getVersionString
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
