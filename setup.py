@@ -110,7 +110,6 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
         'readFormat = obspy.datamark.core:readDATAMARK',
-        # 'writeFormat = obspy.datamark.core:writeDATAMARK',
     ],
     'obspy.plugin.waveform.GSE1': [
         'isFormat = obspy.gse2.core:isGSE1',
@@ -259,19 +258,21 @@ def convert2to3():
     main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
 
 
+# hack to prevent build_ext to append __init__ to the export symbols
+class finallist(list):
+    def append(self, object):
+        return
+
+class MyExtension(Extension):
+    def __init__(self, *args, **kwargs):
+        Extension.__init__(self, *args, **kwargs)
+        self.export_symbols = finallist(self.export_symbols)
+
+
 def setupLibMSEED():
     """
     Prepare building of C extension libmseed.
     """
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
     macros = []
     extra_link_args = []
     extra_compile_args = []
@@ -327,15 +328,6 @@ def setupLibGSE2():
     """
     Prepare building of C extension libgse2.
     """
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
     macros = []
     src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
     symbols = [s.strip()
@@ -366,15 +358,6 @@ def setupLibSignal():
     """
     Prepare building of C extension libsignal.
     """
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
     macros = []
     src = os.path.join('obspy', 'signal', 'src') + os.sep
     src_fft = os.path.join('obspy', 'signal', 'src', 'fft') + os.sep
@@ -410,15 +393,6 @@ def setupLibEvalResp():
     """
     Prepare building of evalresp extension library.
     """
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
     macros = []
     src = os.path.join('obspy', 'signal', 'src') + os.sep
     src_evresp = os.path.join('obspy', 'signal', 'src', 'evalresp') + os.sep
@@ -451,15 +425,6 @@ def setupLibSEGY():
     """
     Prepare building of C extension libsegy.
     """
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
     macros = []
     src = os.path.join('obspy', 'segy', 'src') + os.sep
     symbols = [s.strip() for s in open(src + 'libsegy.def').readlines()[2:]
@@ -563,16 +528,6 @@ def setupLibTauP():
         MSVCCompiler.link = link
         Mingw32CCompiler.compile = compile
         Mingw32CCompiler.link = link
-
-    # hack to prevent build_ext to append __init__ to the export symbols
-    class finallist(list):
-        def append(self, object):
-            return
-
-    class MyExtension(Extension):
-        def __init__(self, *args, **kwargs):
-            Extension.__init__(self, *args, **kwargs)
-            self.export_symbols = finallist(self.export_symbols)
 
     # create library name
     if 'develop' in sys.argv:
