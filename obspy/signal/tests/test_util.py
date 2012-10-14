@@ -67,7 +67,8 @@ class UtilTestCase(unittest.TestCase):
         corp = np.empty(2 * window_len + 1, dtype='float64')
 
         path = os.path.dirname(__file__)
-        name = os.path.join(path, os.pardir, 'lib', lib_name + lib_extension)
+        name = os.path.join(path, os.pardir, os.pardir, 'lib',
+                            lib_name + lib_extension)
         lib = C.CDLL(name)
         #
         shift = C.c_int()
