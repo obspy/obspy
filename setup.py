@@ -305,9 +305,9 @@ if IS_WINDOWS:
     MSVCCompiler.compile = compile
     MSVCCompiler.original_link = MSVCCompiler.link
     MSVCCompiler.link = link
-    Mingw32CCompiler.original_compile = MSVCCompiler.compile
+    Mingw32CCompiler.original_compile = Mingw32CCompiler.compile
     Mingw32CCompiler.compile = compile
-    Mingw32CCompiler.original_link = MSVCCompiler.link
+    Mingw32CCompiler.original_link = Mingw32CCompiler.link
     Mingw32CCompiler.link = link
 else:
     # Monkey patch CCompiler for Unix, Linux and Mac
