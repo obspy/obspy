@@ -24,8 +24,8 @@ lib_extension, = sysconfig.get_config_vars('SO')
 clibsignal = None
 for lib_name in lib_names:
     try:
-        clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                         lib_name + lib_extension))
+        clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
+                                         'lib', lib_name + lib_extension))
     except Exception, e:
         pass
     else:
