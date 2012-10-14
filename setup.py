@@ -620,7 +620,7 @@ def setupPackage():
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
         packages=find_packages(exclude=['distribute_setup']),
-        namespace_packages=['obspy'],
+        namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         download_url="https://github.com/obspy/obspy/zipball/master",
