@@ -41,6 +41,8 @@ from base import _getVersionString
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
+IS_WINDOWS = platform.system() == "Windows"
+IS_DEVELOP = 'develop' in sys.argv
 
 # package specific settings
 NAME = 'obspy'
@@ -286,7 +288,7 @@ def setupLibMSEED():
     symbols += [s.strip() for s in lines if s.strip() != '']
 
     # system specific settings
-    if platform.system() == "Windows":
+    if IS_WINDOWS:
         # needed by libmseed lmplatform.h
         macros.append(('WIN32', '1'))
         # disable some warnings for MSVC
@@ -298,7 +300,7 @@ def setupLibMSEED():
                 extra_compile_args.append("/fp:strict")
 
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libmseed-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -334,11 +336,11 @@ def setupLibGSE2():
                for s in open(src + 'gse_functions.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
-    if platform.system() == "Windows":
+    if IS_WINDOWS:
         # disable some warnings for MSVC
         macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libgse2-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -366,11 +368,11 @@ def setupLibSignal():
     symbols = [s.strip() for s in open(src + 'libsignal.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
-    if platform.system() == "Windows":
+    if IS_WINDOWS:
         # disable some warnings for MSVC
         macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libsignal-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -400,13 +402,13 @@ def setupLibEvalResp():
     symbols = [s.strip() for s in open(src + 'libevresp.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
-    if platform.system() == "Windows":
+    if IS_WINDOWS:
         # needed by evalresp evresp.h
         macros.append(('WIN32', '1'))
         # disable some warnings for MSVC
         macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libevresp-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -430,11 +432,11 @@ def setupLibSEGY():
     symbols = [s.strip() for s in open(src + 'libsegy.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
-    if platform.system() == "Windows":
+    if IS_WINDOWS:
         # disable some warnings for MSVC
         macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libsegy-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
@@ -457,7 +459,7 @@ def setupLibTauP():
     """
     Prepare building of Fortran extensions.
     """
-    if platform.system() != "Windows":
+    if not IS_WINDOWS:
         # Monkey patch CCompiler for Unix, Linux and Mac
         # Pretend .f is a C extension and change corresponding compilation call
         CCompiler.language_map['.f'] = "c"
@@ -530,7 +532,7 @@ def setupLibTauP():
         Mingw32CCompiler.link = link
 
     # create library name
-    if 'develop' in sys.argv:
+    if IS_DEVELOP:
         lib_name = 'libtaup-%s-%s-py%s' % (
             platform.system(), platform.architecture()[0],
             ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
