@@ -46,8 +46,8 @@ erlib_names = [
 clibevresp = None
 for erlib_name in erlib_names:
     try:
-        clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), 'lib',
-                                         erlib_name + lib_extension))
+        clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
+                                         'lib', erlib_name + lib_extension))
     except Exception, e:
         pass
     else:
