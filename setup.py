@@ -8,6 +8,7 @@ processing seismological data. It provides parsers for common file formats,
 clients to access data centers and seismological signal processing routines
 which allow the manipulation of seismological time series (see Beyreuther et
 al. 2010, Megies et al. 2011).
+
 The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
@@ -34,21 +35,8 @@ import platform
 import shutil
 import sys
 
-UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
-                                         "core", "util"))
-sys.path.append(UTIL_PATH)
-from base import _getVersionString
-
-LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
-DOCSTRING = __doc__.split("\n")
-IS_WINDOWS = platform.system() == "Windows"
-IS_DEVELOP = 'develop' in sys.argv
 
 # package specific settings
-NAME = 'obspy'
-AUTHOR = 'The ObsPy Development Team'
-AUTHOR_EMAIL = 'devs@obspy.org'
-LICENSE = 'GNU Lesser General Public License, Version 3 (LGPLv3)'
 KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
@@ -62,7 +50,10 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'seismograms', 'signal', 'slink', 'spectrogram', 'taper', 'taup',
     'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'Winston', 'XML-SEED', 'XSEED']
-INSTALL_REQUIRES = ['numpy>1.0.0', 'scipy', 'lxml', 'sqlalchemy', 'suds>=0.4']
+INSTALL_REQUIRES = [
+    'numpy>1.0.0',
+    'scipy',
+    'lxml']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
@@ -236,6 +227,18 @@ ENTRY_POINTS = {
         'bandpass_preview = obspy.db.features:BandpassPreviewFeature',
     ],
 }
+
+# Here be dragons - beware!
+
+UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
+                                         "core", "util"))
+sys.path.append(UTIL_PATH)
+from base import _getVersionString
+
+LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
+DOCSTRING = __doc__.split("\n")
+IS_WINDOWS = platform.system() == "Windows"
+IS_DEVELOP = 'develop' in sys.argv
 
 
 def convert2to3():
@@ -488,7 +491,8 @@ def setupLibTauP():
         from distutils.cygwinccompiler import Mingw32CCompiler
         MSVCCompiler._c_extensions.append(".f")
 
-        def compile(self, sources, output_dir=None, **kwargs):  # @UnusedVariable
+        def compile(self, sources, output_dir=None,
+                    **kwargs):  # @UnusedVariable
             if output_dir:
                 try:
                     os.makedirs(output_dir)
@@ -504,12 +508,13 @@ def setupLibTauP():
             for src in sources:
                 file = os.path.splitext(src)[0]
                 if output_dir:
-                    obj = os.path.join(output_dir, os.path.basename(file) + ".o")
+                    obj = os.path.join(output_dir,
+                                       os.path.basename(file) + ".o")
                 else:
                     obj = file + ".o"
                 try:
-                    self.spawn(self.compiler_so + ["-fno-underscoring", "-c"] + \
-                               [src, '-o', obj])
+                    self.spawn(self.compiler_so + \
+                               ["-fno-underscoring", "-c"] + [src, '-o', obj])
                 except DistutilsExecError:
                     _, msg, _ = sys.exc_info()
                     raise CompileError(msg)
@@ -526,10 +531,10 @@ def setupLibTauP():
                        ["-static-libgcc", "-static-libgfortran", "-shared"] + \
                        objects + ["-o", output_filename])
 
-        MSVCCompiler.compile = compile
-        MSVCCompiler.link = link
-        Mingw32CCompiler.compile = compile
-        Mingw32CCompiler.link = link
+#        MSVCCompiler.compile = compile
+#        MSVCCompiler.link = link
+#        Mingw32CCompiler.compile = compile
+#        Mingw32CCompiler.link = link
 
     # create library name
     if IS_DEVELOP:
@@ -555,14 +560,14 @@ def setupPackage():
         convert2to3()
     # setup package
     setup(
-        name=NAME,
+        name='obspy',
         version=_getVersionString(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="http://www.obspy.org",
-        author=AUTHOR,
-        author_email=AUTHOR_EMAIL,
-        license=LICENSE,
+        author='The ObsPy Development Team',
+        author_email='devs@obspy.org',
+        license='GNU Lesser General Public License, Version 3 (LGPLv3)',
         platforms='OS Independent',
         classifiers=[
             'Development Status :: 4 - Beta',
