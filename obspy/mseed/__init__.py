@@ -98,7 +98,7 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.mseed")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

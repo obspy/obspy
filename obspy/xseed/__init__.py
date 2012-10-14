@@ -78,7 +78,7 @@ from obspy.core.util import _getVersionString
 from obspy.xseed.parser import Parser
 
 
-__version__ = _getVersionString("obspy.xseed")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

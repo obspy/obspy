@@ -82,7 +82,7 @@ from obspy.core.stream import Stream, read
 from obspy.core.scripts.runtests import runTests
 
 
-__version__ = _getVersionString("obspy.core")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

@@ -16,4 +16,4 @@ Supported waveform formats depend on installed ObsPy packages.
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.db")
+__version__ = _getVersionString()

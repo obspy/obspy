@@ -1,3 +1,4 @@
+include RELEASE-VERSION
 include obspy/core/tests/data/*
 include obspy/datamark/tests/data/*
 include obspy/gse2/tests/data/*

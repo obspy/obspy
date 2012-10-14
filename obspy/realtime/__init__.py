@@ -24,7 +24,7 @@ from obspy.realtime.rtmemory import RtMemory
 from obspy.realtime.rttrace import RtTrace
 
 
-_version__ = _getVersionString("obspy.realtime")
+_version__ = _getVersionString()
 
 
 if __name__ == '__main__':

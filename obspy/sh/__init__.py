@@ -67,7 +67,7 @@ or
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.sh")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

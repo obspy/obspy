@@ -85,7 +85,7 @@ from obspy.core.util import _getVersionString
 from obspy.seishub.client import Client
 
 
-__version__ = _getVersionString("obspy.seishub")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

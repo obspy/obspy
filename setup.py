@@ -34,6 +34,10 @@ import platform
 import shutil
 import sys
 
+UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
+                                         "core", "util"))
+sys.path.append(UTIL_PATH)
+from base import _getVersionString()
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
@@ -253,12 +257,6 @@ def convert2to3():
     from lib2to3.main import main
     print("Converting to Python3 via lib2to3...")
     main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
-
-
-def getVersion():
-    # fetch version
-    file = os.path.join(LOCAL_PATH, 'VERSION.txt')
-    return open(file).read()
 
 
 def setupLibMSEED():
@@ -601,7 +599,7 @@ def setupPackage():
     # setup package
     setup(
         name=NAME,
-        version=getVersion(),
+        version=_getVersionString(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="http://www.obspy.org",

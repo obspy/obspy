@@ -7,3 +7,4 @@ distribute-*.tar.gz
 *.pyo
 /.settings
 /.pydevproject
+RELEASE-VERSION

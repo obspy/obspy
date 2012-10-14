@@ -56,7 +56,7 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.seisan")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

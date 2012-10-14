@@ -11,6 +11,7 @@ Base utilities and constants for ObsPy.
 
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.types import OrderedDict
+from obspy.core.util.version import get_git_version as _getVersionString
 from pkg_resources import require, iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
@@ -167,37 +168,6 @@ def getExampleFile(filename):
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
     raise IOError(msg)
-
-
-def _getVersionString(module):
-    """
-    Returns either the .egg version or current SVN revision for a given module.
-
-    .. rubric:: Example
-
-    >>> _getVersionString('obspy.core')  # doctest: +SKIP
-    '0.4.8.dev-r2767'
-
-    >>> _getVersionString('does.not.exist')  # doctest: +ELLIPSIS
-    'Module does.not.exist is not installed via setup.py!'
-    """
-    try:
-        mod = require(module)[0]
-    except:
-        return "Module %s is not installed via setup.py!" % module
-    egg_version = mod.version
-    # check installation location for .svn directory
-    if '.svn' in os.listdir(mod.location):
-        path = os.path.join(mod.location, '.svn', 'entries')
-        try:
-            svn_version = open(path).readlines()[3].strip()
-        except:
-            return egg_version
-        else:
-            temp = egg_version.split('.dev-r')
-            return temp[0] + ".dev-r" + svn_version
-    # else return egg-info version
-    return egg_version
 
 
 def add_doctests(testsuite, module_name):

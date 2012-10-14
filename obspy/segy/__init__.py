@@ -240,7 +240,7 @@ _i + 1
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.segy")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

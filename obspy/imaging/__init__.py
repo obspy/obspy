@@ -199,4 +199,4 @@ Common formats are png, svg, pdf or ps.
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.imaging")
+__version__ = _getVersionString()

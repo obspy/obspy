@@ -78,7 +78,7 @@ You may export the data to the file system using the
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.gse2")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

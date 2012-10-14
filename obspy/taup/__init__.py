@@ -17,7 +17,7 @@ The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
 from obspy.core.util import _getVersionString
 
 
-__version__ = _getVersionString("obspy.taup")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

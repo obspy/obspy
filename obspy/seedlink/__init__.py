@@ -19,7 +19,7 @@ mining".
 from obspy.core.util.base import _getVersionString
 
 
-_version__ = _getVersionString("obspy.seedlink")
+_version__ = _getVersionString()
 
 
 if __name__ == '__main__':

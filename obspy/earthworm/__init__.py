@@ -45,7 +45,7 @@ from obspy.core.util import _getVersionString
 from client import Client
 
 
-__version__ = _getVersionString("obspy.earthworm")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

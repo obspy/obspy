@@ -201,7 +201,7 @@ from psd import psd, PPSD
 from konnoohmachismoothing import konnoOhmachiSmoothing
 
 
-__version__ = _getVersionString("obspy.signal")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':
