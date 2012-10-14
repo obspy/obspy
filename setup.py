@@ -309,6 +309,37 @@ if IS_WINDOWS:
     Mingw32CCompiler.compile = compile
     Mingw32CCompiler.original_link = MSVCCompiler.link
     Mingw32CCompiler.link = link
+else:
+    # Monkey patch CCompiler for Unix, Linux and Mac
+    # Pretend .f is a C extension and change corresponding compilation call
+    CCompiler.language_map['.f'] = "c"
+    # Monkey patch UnixCCompiler for Unix, Linux and MacOS
+    UnixCCompiler.src_extensions.append(".f")
+
+    def _compile(self, obj, src, *args, **kwargs):  # @UnusedVariable
+        # we check if 'taup' is in sources
+        IS_FORTRAN = False
+        if 'taup' in src:
+            IS_FORTRAN = True
+        if not IS_FORTRAN:
+            # otherwise we just use the original compile method
+            UnixCCompiler.linker_so = None
+            return self._original_compile(obj, src, *args, **kwargs)
+        UnixCCompiler.linker_so = ["gfortran"]
+        self.compiler_so = ["gfortran"]
+        cc_args = ['-c', '-fno-underscoring']
+        if sys.platform == 'darwin':
+            self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
+                                                      cc_args)
+        else:
+            cc_args.append('-fPIC')
+        try:
+            self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
+        except DistutilsExecError:
+            _, msg, _ = sys.exc_info()
+            raise CompileError(msg)
+    UnixCCompiler._original_compile = UnixCCompiler._compile
+    UnixCCompiler._compile = _compile
 
 
 def convert2to3():
@@ -533,29 +564,6 @@ def setupLibTauP():
     """
     Prepare building of Fortran extensions.
     """
-    if not IS_WINDOWS:
-        # Monkey patch CCompiler for Unix, Linux and Mac
-        # Pretend .f is a C extension and change corresponding compilation call
-        CCompiler.language_map['.f'] = "c"
-        # Monkey patch UnixCCompiler for Unix, Linux and MacOS
-        UnixCCompiler.src_extensions.append(".f")
-        UnixCCompiler.linker_so = ["gfortran"]
-
-        def _compile(self, obj, src, *args, **kwargs):  # @UnusedVariable
-                self.compiler_so = ["gfortran"]
-                cc_args = ['-c', '-fno-underscoring']
-                if sys.platform == 'darwin':
-                    self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                              cc_args)
-                else:
-                    cc_args.append('-fPIC')
-                try:
-                    self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
-                except DistutilsExecError:
-                    _, msg, _ = sys.exc_info()
-                    raise CompileError(msg)
-        UnixCCompiler._compile = _compile
-
     # create library name
     if IS_DEVELOP:
         lib_name = 'libtaup-%s-%s-py%s' % (
