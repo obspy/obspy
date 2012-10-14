@@ -13,11 +13,6 @@ This module provides read support for DataMark waveform data.
 
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

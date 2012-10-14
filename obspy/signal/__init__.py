@@ -183,7 +183,6 @@ scripts in the `svn repository`_.
 .. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
 """
 
-from obspy.core.util import _getVersionString
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
 from filter import envelope, integerDecimation
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
@@ -199,9 +198,6 @@ from hoctavbands import sonogram
 from polarization import eigval
 from psd import psd, PPSD
 from konnoohmachismoothing import konnoOhmachiSmoothing
-
-
-__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

@@ -95,11 +95,6 @@ So in order to write a STEIM1 encoded Mini-SEED file with a record_length of
 ...          encoding='STEIM1')
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

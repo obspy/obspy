@@ -75,11 +75,6 @@ You may export the data to the file system using the
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

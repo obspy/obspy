@@ -237,11 +237,6 @@ _i + 1
     print st1.stats.binary_file_header.trace_sorting_code
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

@@ -12,8 +12,3 @@ Supported waveform formats depend on installed ObsPy packages.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()

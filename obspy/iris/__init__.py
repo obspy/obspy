@@ -132,11 +132,7 @@ Please see the documentation for each method for further information and
 examples to retrieve various data from the IRIS DMC.
 """
 
-from obspy.core.util import _getVersionString
 from client import Client
-
-
-__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

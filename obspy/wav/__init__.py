@@ -60,11 +60,6 @@ frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

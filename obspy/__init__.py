@@ -35,7 +35,7 @@ from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
 
 
-__version__ = _getVersionString("obspy.core")
+__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

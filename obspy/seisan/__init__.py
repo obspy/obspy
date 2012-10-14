@@ -53,11 +53,6 @@ The actual data is stored as numpy.ndarray in the data attribute of each trace.
 [  492   519   542 ..., -6960 -6858 24000]
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

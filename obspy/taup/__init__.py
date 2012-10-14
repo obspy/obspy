@@ -14,11 +14,6 @@ The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
     Unknown
 """
 
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()
-
 
 if __name__ == '__main__':
     import doctest

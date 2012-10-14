@@ -195,8 +195,3 @@ Common formats are png, svg, pdf or ps.
 # Please do not import any modules using matplotlib - otherwise it will disturb
 # the test suite (running without X11 or any other display)
 # see tests/__init__.py for details
-
-from obspy.core.util import _getVersionString
-
-
-__version__ = _getVersionString()

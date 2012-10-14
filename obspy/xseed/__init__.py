@@ -74,11 +74,7 @@ all related Blockettes.
 # needs to stay above import statements
 DEFAULT_XSEED_VERSION = '1.1'
 
-from obspy.core.util import _getVersionString
 from obspy.xseed.parser import Parser
-
-
-__version__ = _getVersionString()
 
 
 if __name__ == '__main__':
