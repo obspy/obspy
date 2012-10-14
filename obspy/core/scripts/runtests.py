@@ -79,17 +79,18 @@ and report everything you would run::
 """
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
+from obspy.core.util.version import get_git_version
 from optparse import OptionParser, OptionGroup
+import copy
+import doctest
+import glob
 import numpy as np
 import operator
 import os
 import sys
 import time
 import unittest
-import doctest
 import warnings
-import copy
-import glob
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
@@ -180,19 +181,16 @@ def _createReport(ttrs, timetaken, log, server):
     errors = 0
     failures = 0
     skipped = 0
-    dev = False
+    try:
+        installed = get_git_version()
+    except:
+        installed = ''
+    result['obspy']['installed'] = installed
     for module in sorted(ALL_MODULES):
         result['obspy'][module] = {}
-        try:
-            mod = __import__('obspy.' + module, fromlist='obspy')
-            result['obspy'][module]['installed'] = mod.__version__
-        except:
-            result['obspy'][module]['installed'] = ''
         if module not in ttrs:
             continue
-        # check if developer version
-        if not dev and '.dev' in result['obspy'][module]['installed']:
-            dev = True
+        result['obspy'][module]['installed'] = installed
         # test results
         ttr = ttrs[module]
         result['obspy'][module]['timetaken'] = ttr.__dict__['timetaken']
@@ -253,9 +251,6 @@ def _createReport(ttrs, timetaken, log, server):
         result['platform']['node'] = result['platform']['node'].split('.')[0]
     except:
         pass
-    # append [dev] to node it at least one .dev module is installed
-    if dev:
-        result['platform']['node'] += ' [dev]'
     # test results
     result['tests'] = tests
     result['errors'] = errors
