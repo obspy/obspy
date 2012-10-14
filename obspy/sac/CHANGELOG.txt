@@ -1,8 +1,0 @@
-dev:
- * fixing SAC and SACXY reading/writing of empty traces or traces containing
-   only one or two data points
- * new debug_headers flag for reading SAC files in order to extract all
-   header variables (issue #390)
-
-0.7.0:
- * bugfix for SAC files containing null terminated strings

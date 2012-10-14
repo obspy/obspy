@@ -1,2 +1,0 @@
-0.7.0:
- * bugfix in parsing starttime from seg2 header

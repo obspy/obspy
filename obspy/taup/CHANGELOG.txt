@@ -1,3 +1,0 @@
-0.7.0:
- * deprecated kilometer2degrees and locations2degrees - one can find those
-   methods on obspy.core.util now 
