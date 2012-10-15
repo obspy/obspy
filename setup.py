@@ -288,12 +288,11 @@ def setupPackage():
             interface_file = open_file.read()
         # In the original .pyf file the library is called _libtau.
         interface_file = interface_file.replace("_libtau", libname)
-        print interface_file
-
         if not os.path.exists("build"):
             os.mkdir("build")
         with open(new_interface_path, "w") as open_file:
             open_file.write(interface_file)
+        # Proceed normally.
         taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
         taup_files.insert(0, new_interface_path)
         config.add_extension(libname, taup_files)
