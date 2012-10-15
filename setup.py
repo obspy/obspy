@@ -324,7 +324,7 @@ def setupPackage():
         signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
         signal_src_files.extend(glob.glob(os.path.join(signal_src_path, "fft",
             "*.c")))
-        config.add_extension(_get_lib_name("signal"), segy_files)
+        config.add_extension(_get_lib_name("signal"), signal_src_files)
 
         # Add evalresp source files.
         src_evresp = glob.glob(os.path.join("obspy", "signal", "src",
