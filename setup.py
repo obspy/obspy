@@ -223,6 +223,7 @@ ENTRY_POINTS = {
         'delayedstalta = obspy.signal.trigger:delayedSTALTA',
         'zdetect = obspy.signal.trigger:zDetect',
         'recstaltapy = obspy.signal.trigger:recSTALTAPy',
+        'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
     ],
     'obspy.db.feature': [
         'minmax_amplitude = obspy.db.features:MinMaxAmplitudeFeature',
