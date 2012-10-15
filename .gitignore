@@ -1,5 +1,5 @@
 /.project
-*.egg-info/
+obspy.egg-info
 build/
 distribute-*.egg
 distribute-*.tar.gz
