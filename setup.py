@@ -273,72 +273,80 @@ def convert2to3():
 
 
 def _get_lib_name(lib):
+    """
+    Helper function to get an architecture and Python version specific library
+    filename.
+    """
     return "lib%s_%s_%s_py%s" % (lib, platform.system(),
         platform.architecture()[0], "".join([str(i) for i in
             platform.python_version_tuple()[:2]]))
+
+
+def configuration(parent_package="", top_path=None):
+    """
+    Config function mainly used to compile C and Fortran code.
+    """
+    config = Configuration("", parent_package, top_path)
+
+    # Add obspy.gse2 source files.
+    gse2_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src",
+        "GSE_UTI")
+    gse2_files = [os.path.join(gse2_src_path, "buf.c"),
+        os.path.join(gse2_src_path, "gse_functions.c")]
+    config.add_extension(_get_lib_name("gse2"), gse2_files)
+
+    # Add obspy.mseed source files.
+    mseed_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
+    mseed_src_files = glob.glob(os.path.join(mseed_src_path, "libmseed",
+        "*.c"))
+    mseed_src_files.append(os.path.join(mseed_src_path, "obspy-readbuffer.c"))
+    config.add_extension(_get_lib_name("mseed"), mseed_src_files)
+
+    # Add obspy.segy source files.
+    segy_files = [os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src",
+        "ibm2ieee.c")]
+    config.add_extension(_get_lib_name("segy"), segy_files)
+
+    # Add obspy.signal source code files.
+    signal_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
+    signal_src_files.extend(glob.glob(os.path.join(signal_src_path, "fft",
+        "*.c")))
+    config.add_extension(_get_lib_name("signal"), signal_src_files)
+
+    # Add evalresp source files.
+    src_evresp = glob.glob(os.path.join("obspy", "signal", "src", "evalresp",
+        "*.c"))
+    config.add_extension(_get_lib_name("evresp"), src_evresp)
+
+    # Add obspy.taup source files.
+    obspy_taup_dir = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
+    # Hack to get a architecture specific taup library filename.
+    libname = _get_lib_name("tau")
+    # XXX: The build subdirectory is more difficult to determine if installed
+    # via pypi or other means. I could not find a reliable way of doing it.
+    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
+    interface_file = os.path.join(obspy_taup_dir, "src", "_libtau.pyf")
+    with open(interface_file, "r") as open_file:
+        interface_file = open_file.read()
+    # In the original .pyf file the library is called _libtau.
+    interface_file = interface_file.replace("_libtau", libname)
+    if not os.path.exists("build"):
+        os.mkdir("build")
+    with open(new_interface_path, "w") as open_file:
+        open_file.write(interface_file)
+    # Proceed normally.
+    taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
+    taup_files.insert(0, new_interface_path)
+    config.add_extension(libname, taup_files)
+
+    return config
 
 
 def setupPackage():
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         convert2to3()
-
-    def configuration(parent_package="", top_path=None):
-        config = Configuration("", parent_package, top_path)
-
-        # Add obspy.taup source files.
-        obspy_taup_dir = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
-        # Hack to get a architecture specific taup library filename.
-        libname = _get_lib_name("tau")
-        new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-        interface_file = os.path.join(obspy_taup_dir, "src", "_libtau.pyf")
-        with open(interface_file, "r") as open_file:
-            interface_file = open_file.read()
-        # In the original .pyf file the library is called _libtau.
-        interface_file = interface_file.replace("_libtau", libname)
-        if not os.path.exists("build"):
-            os.mkdir("build")
-        with open(new_interface_path, "w") as open_file:
-            open_file.write(interface_file)
-        # Proceed normally.
-        taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
-        taup_files.insert(0, new_interface_path)
-        config.add_extension(libname, taup_files)
-
-        # Add obspy.gse2 source files.
-        gse2_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src",
-            "GSE_UTI")
-        gse2_files = [os.path.join(gse2_src_path, "buf.c"),
-            os.path.join(gse2_src_path, "gse_functions.c")]
-        config.add_extension(_get_lib_name("gse2"), gse2_files)
-
-        # Add obspy.mseed source files.
-        mseed_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-        mseed_src_files = glob.glob(os.path.join(mseed_src_path, "libmseed",
-            "*.c"))
-        mseed_src_files.append(os.path.join(mseed_src_path,
-            "obspy-readbuffer.c"))
-        config.add_extension(_get_lib_name("mseed"), mseed_src_files)
-
-        # Add obspy.segy source files.
-        segy_files = [os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src",
-            "ibm2ieee.c")]
-        config.add_extension(_get_lib_name("segy"), segy_files)
-
-        # Add obspy.signal source code files.
-        signal_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "signal",
-            "src")
-        signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
-        signal_src_files.extend(glob.glob(os.path.join(signal_src_path, "fft",
-            "*.c")))
-        config.add_extension(_get_lib_name("signal"), signal_src_files)
-
-        # Add evalresp source files.
-        src_evresp = glob.glob(os.path.join("obspy", "signal", "src",
-            "evalresp", "*.c"))
-        config.add_extension(_get_lib_name("evresp"), src_evresp)
-
-        return config
 
     # setup package
     setup(
@@ -372,8 +380,7 @@ def setupPackage():
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
         use_2to3=True,
-        configuration=configuration,
-    )
+        configuration=configuration)
     # cleanup after using lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         os.chdir(LOCAL_PATH)
