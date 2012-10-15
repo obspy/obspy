@@ -6,7 +6,7 @@ Copyright
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
 Copyright (c) 2009-2012 by:
-    * Moritz Beyreuther (beyreuth@geophysik.uni-muenchen.de)
+    * Moritz Beyreuther
 
 
 Overview
