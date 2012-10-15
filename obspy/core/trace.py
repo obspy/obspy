@@ -869,6 +869,7 @@ class Trace(object):
                 newdelta = round((starttime - newstarttime) * \
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
+            delta = int(delta)
         else:
             delta = int(math.floor(round((self.stats.starttime - starttime) * \
                                           self.stats.sampling_rate, 7))) * -1
