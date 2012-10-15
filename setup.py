@@ -20,8 +20,6 @@ For more information visit http://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import distribute_setup
-from setuptools import find_packages
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 
@@ -240,6 +238,17 @@ ENTRY_POINTS = {
 }
 
 
+def find_packages():
+    """
+    Simple function to find all modules under the current folder.
+    """
+    modules = []
+    for dirpath, _, filenames in os.walk("obspy"):
+        if "__init__.py" in filenames:
+            modules.append(dirpath)
+    return [_i.replace(os.sep, ".") for _i in modules]
+
+
 def convert2to3():
     """
     Convert source to Python 3.x syntax using lib2to3.
@@ -269,8 +278,6 @@ def _get_lib_name(lib):
 
 
 def setupPackage():
-    # automatically install distribute if the user does not have it installed
-    distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         convert2to3()
@@ -355,7 +362,7 @@ def setupPackage():
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
-        packages=find_packages(exclude=['distribute_setup']),
+        packages=find_packages(),
         namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
