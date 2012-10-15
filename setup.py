@@ -262,6 +262,12 @@ def convert2to3():
     main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
 
 
+def _get_lib_name(lib):
+    return "lib%s_%s_%s_py%s" % (lib, platform.system(),
+        platform.architecture()[0], "".join([str(i) for i in
+            platform.python_version_tuple()[:2]]))
+
+
 def setupPackage():
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
@@ -269,20 +275,28 @@ def setupPackage():
     if sys.version_info[0] == 3:
         convert2to3()
 
-    def _get_lib_name(lib):
-        return "lib%s-%s-%s-py%s" % (lib, platform.system(),
-            platform.architecture()[0], "".join([str(i) for i in
-                platform.python_version_tuple()[:2]]))
-
     def configuration(parent_package="", top_path=None):
         config = Configuration("", parent_package, top_path)
 
         # Add obspy.taup source files.
         obspy_taup_dir = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
+        # Hack to get a architecture specific taup library filename.
+        libname = _get_lib_name("tau")
+        new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
+        interface_file = os.path.join(obspy_taup_dir, "src", "_libtau.pyf")
+        with open(interface_file, "r") as open_file:
+            interface_file = open_file.read()
+        # In the original .pyf file the library is called _libtau.
+        interface_file = interface_file.replace("_libtau", libname)
+        print interface_file
+
+        if not os.path.exists("build"):
+            os.mkdir("build")
+        with open(new_interface_path, "w") as open_file:
+            open_file.write(interface_file)
         taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
-        taup_files.insert(0, os.path.join(obspy_taup_dir, "src",
-            "_libtau.pyf"))
-        config.add_extension("_libtau", taup_files)
+        taup_files.insert(0, new_interface_path)
+        config.add_extension(libname, taup_files)
 
         # Add obspy.gse2 source files.
         gse2_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src",

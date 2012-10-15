@@ -39,7 +39,7 @@ import warnings
 # create library names
 lib_names = [
      # platform specific library name
-    'libgse2-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libgse2']
