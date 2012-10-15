@@ -243,9 +243,10 @@ def find_packages():
     Simple function to find all modules under the current folder.
     """
     modules = []
-    for dirpath, _, filenames in os.walk("obspy"):
+    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
+        "obspy")):
         if "__init__.py" in filenames:
-            modules.append(dirpath)
+            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
 
 
