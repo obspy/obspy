@@ -920,6 +920,7 @@ class Trace(object):
         if nearest_sample:
             delta = round((endtime - self.stats.starttime) * \
                            self.stats.sampling_rate) - self.stats.npts + 1
+            delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
             #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
