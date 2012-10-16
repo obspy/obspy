@@ -20,6 +20,15 @@ For more information visit http://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+# Importing setuptools monkeypatches some of distutils commands so things like
+# 'python setup.py develop' work. Wrap in try/except so it is not an actual
+# dependency. Inplace installation with pip works also without importing
+# setuptools.
+try:
+    import setuptools
+except:
+    pass
+
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
 
@@ -29,6 +38,7 @@ import os
 import platform
 import shutil
 import sys
+
 
 # Directory of the current file in the (hopefully) most reliable way possible.
 SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
