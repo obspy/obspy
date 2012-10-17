@@ -1,0 +1,17 @@
+LIBRARY libsignal.dll
+EXPORTS
+    X_corr
+    utl_geo_km
+    utl_lonlat
+    recstalta
+    ar_picker
+    spr_bp_fast_bworth
+    spr_hp_fast_bworth
+    spr_lp_fast_bworth
+    spr_time_fast_int
+    decim
+    spr_coef_paz
+    ppick
+    bbfk
+    cosine_taper
+    stalta

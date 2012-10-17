@@ -7,3 +7,8 @@ distribute-*.tar.gz
 *.pyo
 /.settings
 /.pydevproject
+RELEASE-VERSION
+*.obj
+*.exp
+*.lib
+*.pyd.manifest

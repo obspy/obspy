@@ -1,7 +1,0 @@
-python-obspy-segy (0.4.5-1) unstable; urgency=low
-
-  * This changelog file is overwritten for every release, only the version
-    is not kept up to date. Visit www.obspy.org for more information about
-    the age and the contents of the version given above.
-
- -- ObsPy Development Team <devs@obspy.org>  Thu, 20 Oct 2011 10:07:58 +0200

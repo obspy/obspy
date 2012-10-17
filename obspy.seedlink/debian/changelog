@@ -1,7 +1,0 @@
-python-obspy-seedlink (0.0.4-1) unstable; urgency=low
-
-  * This changelog file is overwritten for every release, only the version
-    is not kept up to date. Visit www.obspy.org for more information about
-    the age and the contents of the version given above.
-
- -- ObsPy Development Team <devs@obspy.org>  Wed, 21 Mar 2012 15:00:00 +0100
