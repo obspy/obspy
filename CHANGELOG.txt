@@ -49,6 +49,9 @@ dev:
    * fixed a bug affecting getPAZ() and getCoordinates() when selecting specific
      channels from complex dataless files
      (see: https://github.com/obspy/obspy/issues/412) 
+ - obspy.mseed:
+   * adding experimental details option, which extracts timing quality and
+     info on the calibration
 
 0.7.1:
  - obspy.arclink:
