@@ -59,14 +59,8 @@ echo.
 cd ..\..
 
 
-FOR /f %%M IN ('dir /B /AD obspy.*') DO (
-cd %%M
-echo === %%M ===
 %PYTHON% setup.py %BUILD_FLAGS% clean --all >NUL 2>NUL
 %PYTHON% setup.py %BUILD_FLAGS% develop
 %PYTHON% setup.py %BUILD_FLAGS% clean --all >NUL 2>NUL
-echo OK
-cd ..
-)
 
 cd misc\scripts

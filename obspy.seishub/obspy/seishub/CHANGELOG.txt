@@ -1,4 +1,0 @@
-dev:
- * adding kwarg to control number of retries for failing requests
- * adding obspy.xseed as dependency (in setup.py and debian/control)
- * changing obspy.client.station.getPAZ() call syntax to use seed_id (args/kwargs)

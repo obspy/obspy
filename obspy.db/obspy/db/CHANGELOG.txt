@@ -1,3 +1,0 @@
-0.7.0:
- * added client for a database created by obspy.db
- * adapting to changes in obspy.core.util.base version 0.6.0 and above
