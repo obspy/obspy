@@ -4,7 +4,6 @@ The obspy.realtime.rttrace test suite.
 """
 from obspy.core import Trace
 from obspy.core.stream import read
-from obspy.core.util.decorator import skipIfPython25
 from obspy.realtime import RtTrace
 from obspy.realtime.rtmemory import RtMemory
 from obspy.signal import filter
@@ -110,7 +109,6 @@ class RtTraceTestCase(unittest.TestCase):
         self.assertRaises(TypeError, rtr.append, 1)
         self.assertRaises(TypeError, rtr.append, "2323")
 
-    @skipIfPython25
     def test_appendOverlap(self):
         """
         Appending overlapping traces should raise a UserWarning/TypeError
@@ -125,7 +123,6 @@ class RtTraceTestCase(unittest.TestCase):
         # append with gap_overlap_check=True will raise a TypeError
         self.assertRaises(TypeError, rtr.append, tr, gap_overlap_check=True)
 
-    @skipIfPython25
     def test_appendGap(self):
         """
         Appending a traces with a time gap should raise a UserWarning/TypeError

@@ -4,7 +4,6 @@ from obspy.core import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 import numpy as np
 import os
 import random
@@ -245,7 +244,6 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Remove the file after everything it done.
         os.remove(output_filename)
 
-    @skipIfPython25
     def test_time_shifting_special_case(self):
         """
         Sometimes actually changing the time value is necessary. This works but

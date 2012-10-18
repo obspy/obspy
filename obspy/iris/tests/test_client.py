@@ -5,7 +5,6 @@ The obspy.iris.client test suite.
 
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from obspy.iris import Client
 import filecmp
 import numpy as np
@@ -433,7 +432,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertEquals(st1[0].data[0], 24)
         self.assertAlmostEquals(st2[0].data[0], -2.4910707e-06)
 
-    @skipIfPython25
     def test_issue419(self):
         """
         obspy.iris.Client.availability should work with output='bulkdataselect'

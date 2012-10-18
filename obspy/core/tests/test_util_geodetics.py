@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from obspy.core.util.decorator import skipIf, skipIfPython25
+from obspy.core.util.decorator import skipIf
 from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \
     calcVincentyInverse, gps2DistAzimuth
 import math
@@ -106,7 +106,6 @@ class UtilGeodeticsTestCase(unittest.TestCase):
 
     @skipIf(HAS_GEOGRAPHICLIB,
             'Module geographiclib is installed, not using calcVincentyInverse')
-    @skipIfPython25
     def test_gps2DistAzimuthBUG150(self):
         """
         Test case for #150: UserWarning will be only raised if geographiclib is

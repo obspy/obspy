@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from obspy.core import UTCDateTime, Stream, Trace, read, AttribDict
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -604,7 +603,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st.write(tempfile, format="MSEED")
         os.remove(tempfile)
 
-    @skipIfPython25
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
         Tests all data and endian types into a single file.
@@ -822,7 +820,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(isMSEED(file))
 
-    @skipIfPython25
     def test_bizarreFiles(self):
         """
         Tests reading some bizarre MSEED files.
@@ -896,7 +893,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEquals(len(st[0]), 2)
         os.remove(tempfile)
 
-    @skipIfPython25
     def test_emptyTrace(self):
         """
         Tests writing empty Traces should raise an exception.

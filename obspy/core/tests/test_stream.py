@@ -3,7 +3,6 @@ from copy import deepcopy
 from obspy.core import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 import cPickle
 import numpy as np
 import os
@@ -1465,7 +1464,6 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
 
-    @skipIfPython25
     def test_cleanup(self):
         """
         Test case for merging traces in the stream with method=-1. This only

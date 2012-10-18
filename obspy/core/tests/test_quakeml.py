@@ -4,7 +4,6 @@ from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from xml.etree.ElementTree import tostring, fromstring
 import os
 import unittest
@@ -418,12 +417,9 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
-    @skipIfPython25
     def test_writeQuakeML(self):
         """
         Tests writing a QuakeML document.
-
-        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
         tmpfile = NamedTemporaryFile().name
@@ -439,12 +435,9 @@ class QuakeMLTestCase(unittest.TestCase):
         # clean up
         os.remove(tmpfile)
 
-    @skipIfPython25
     def test_readEvents(self):
         """
         Tests reading a QuakeML document via readEvents.
-
-        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
         tmpfile = NamedTemporaryFile().name
