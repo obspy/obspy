@@ -16,7 +16,6 @@ from urllib2 import HTTPError
 import StringIO
 import os
 import platform
-import sys
 import urllib
 import urllib2
 import warnings
@@ -114,11 +113,7 @@ class Client(object):
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            response = urllib2.urlopen(req)
-        else:
-            response = urllib2.urlopen(req, timeout=self.timeout)
+        response = urllib2.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 
