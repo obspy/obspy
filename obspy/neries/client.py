@@ -25,12 +25,9 @@ import sys
 import urllib
 import urllib2
 import warnings
-try:
-    import json
-    if not getattr(json, "loads", None):
-        json.loads = json.read  # @UndefinedVariable
-except ImportError:
-    import simplejson as json
+import json
+if not getattr(json, "loads", None):
+    json.loads = json.read  # @UndefinedVariable
 
 
 SEISMOLINK_WSDL = "http://www.orfeus-eu.org/wsdl/seismolink/seismolink.wsdl"
