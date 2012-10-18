@@ -18,7 +18,7 @@ echo "#### `date`" >> $LOG
 git clone https://github.com/obspy/obspy.git $GITDIR 2>&1 >> $LOG
 cd $GITDIR 2>&1 >> $LOG
 
-for DIST in squeeze lucid natty oneiric precise; do
+for DIST in squeeze wheezy lucid natty oneiric precise; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
         echo "#### $DISTARCH" >> $LOG
