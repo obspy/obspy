@@ -4,7 +4,6 @@
 The polarization.core test suite.
 """
 
-from __future__ import with_statement
 from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \

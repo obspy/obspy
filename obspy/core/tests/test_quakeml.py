@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime

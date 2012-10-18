@@ -4,7 +4,6 @@
 The psd test suite.
 """
 
-from __future__ import with_statement
 from obspy.core import Trace, Stream, UTCDateTime
 from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import PPSD, psd

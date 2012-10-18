@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from StringIO import StringIO
 from lxml import etree
 from obspy.core import UTCDateTime

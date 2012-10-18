@@ -3,7 +3,6 @@
 The obspy.iris.client test suite.
 """
 
-from __future__ import with_statement
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skipIfPython25

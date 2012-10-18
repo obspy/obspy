@@ -2,7 +2,6 @@
 """
 The obspy.realtime.rttrace test suite.
 """
-from __future__ import with_statement
 from obspy.core import Trace
 from obspy.core.stream import read
 from obspy.core.util.decorator import skipIfPython25

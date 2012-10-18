@@ -3,7 +3,6 @@
 The obspy.segy test suite.
 """
 
-from __future__ import with_statement
 from StringIO import StringIO
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \

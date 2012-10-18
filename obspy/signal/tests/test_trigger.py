@@ -2,7 +2,6 @@
 """
 The obspy.signal.trigger test suite.
 """
-from __future__ import with_statement
 from ctypes import ArgumentError
 from obspy.core import read, Stream, UTCDateTime
 from obspy.core.util.decorator import skipIfPython25

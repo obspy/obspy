@@ -38,7 +38,6 @@ conversion tools.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import with_statement
 from optparse import OptionParser
 import warnings
 import mmap

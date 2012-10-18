@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
 from obspy.core.util.decorator import skipIf, skipIfPython25
 from obspy.core.util.geodetics import kilometer2degrees, locations2degrees, \
     calcVincentyInverse, gps2DistAzimuth

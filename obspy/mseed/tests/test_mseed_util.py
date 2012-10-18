@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
 from StringIO import StringIO
 from obspy.core import UTCDateTime
 from obspy.mseed import util
