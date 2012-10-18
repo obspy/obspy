@@ -3,17 +3,9 @@
 # go from here to ObsPy root directory
 cd ../..
 
-PACKAGES=$(ls | grep obspy | grep -v core)
-
-echo $PACKAGES
-
-# link all packages to python2.x/lib/site-packages/
-for NAME in obspy.core $PACKAGES; do
-    cd $NAME
-    rm -rf build
-    pip install --no-deps -v -e .
-    cd ..
-done
+# link to python2.x/lib/site-packages/
+rm -rf build
+pip install --no-deps -v -e .
 
 # go back to scripts directory
 cd misc/scripts

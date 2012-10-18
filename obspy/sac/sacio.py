@@ -432,7 +432,7 @@ class SacIO(object):
                 myarray = self.hs[index + 1]  # extra 1 is from item #2
             return myarray
         else:
-            raise SacError("Cannot find header entry for: ", item)
+            raise SacError("Cannot find header entry for: " + item)
 
     def SetHvalue(self, item, value):
         """
@@ -476,7 +476,7 @@ class SacIO(object):
             else:
                 self.hs[index + 1] = value
         else:
-            raise SacError("Cannot find header entry for: ", item)
+            raise SacError("Cannot find header entry for: " + item)
 
     def IsSACfile(self, name, fsize=True, lenchk=False):
         """
@@ -484,7 +484,10 @@ class SacIO(object):
 
         :param f: filename (Sac binary).
         """
-        npts = self.GetHvalue('npts')
+        try:
+            npts = self.GetHvalue('npts')
+        except:
+            raise SacError("Unable to read number of points from header")
         if lenchk and npts != len(self.seis):
             raise SacError("Number of points in header and " + \
                            "length of trace inconsistent!")
@@ -522,23 +525,22 @@ class SacIO(object):
             #### open the file
             f = open(fname, 'rb')
         except IOError:
-            raise SacIOError("No such file:" + fname)
-        try:
-            #--------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
-            self.hf = np.fromfile(f, dtype='<f4', count=70)
-            self.hi = np.fromfile(f, dtype='<i4', count=40)
-            # read in the char values
-            self.hs = np.fromfile(f, dtype='|S8', count=24)
-        except EOFError, e:
+            raise SacIOError("No such file: " + fname)
+        #--------------------------------------------------------------
+        # parse the header
+        #
+        # The sac header has 70 floats, 40 integers, then 192 bytes
+        #    in strings. Store them in array (an convert the char to a
+        #    list). That's a total of 632 bytes.
+        #--------------------------------------------------------------
+        self.hf = np.fromfile(f, dtype='<f4', count=70)
+        self.hi = np.fromfile(f, dtype='<i4', count=40)
+        # read in the char values
+        self.hs = np.fromfile(f, dtype='|S8', count=24)
+        if len(self.hf)!=70 or len(self.hi)!=40 or len(self.hs)!=24:
             self.hf = self.hi = self.hs = None
             f.close()
-            raise SacIOError("Cannot read all header values: ", e)
+            raise SacIOError("Cannot read all header values")
         try:
             self.IsSACfile(fname)
         except SacError, e:
@@ -589,7 +591,7 @@ class SacIO(object):
         try:
             os.path.exists(fname)
         except IOError:
-            warnings.warn("No such file:" + fname, category=Warning)
+            warnings.warn("No such file: " + fname, category=Warning)
         else:
             f = open(fname, 'rb+')  # open file for modification
             f.seek(0, 0)  # set pointer to the file beginning
@@ -600,7 +602,8 @@ class SacIO(object):
                 self.hs.tofile(f)
             except Exception, e:
                 f.close()
-                raise SacError("Cannot write header to file: ", fname, '  ', e)
+                raise SacError("Cannot write header to file: " + fname, e)
+        f.close()
 
     def ReadSacFile(self, fname):
         """
@@ -623,21 +626,22 @@ class SacIO(object):
             #### open the file
             f = open(fname, 'rb')
         except IOError:
-            raise SacIOError("No such file:" + fname)
-        try:
-            #--------------------------------------------------------------
-            # parse the header
-            #
-            # The sac header has 70 floats, 40 integers, then 192 bytes
-            #    in strings. Store them in array (an convert the char to a
-            #    list). That's a total of 632 bytes.
-            #--------------------------------------------------------------
-            self.hf = np.fromfile(f, dtype='<f4', count=70)
-            self.hi = np.fromfile(f, dtype='<i4', count=40)
-            # read in the char values
-            self.hs = np.fromfile(f, dtype='|S8', count=24)
-        except EOFError, e:
-            raise SacIOError("Cannot read any or no header values: ", e)
+            raise SacIOError("No such file: " + fname)
+        #--------------------------------------------------------------
+        # parse the header
+        #
+        # The sac header has 70 floats, 40 integers, then 192 bytes
+        #    in strings. Store them in array (an convert the char to a
+        #    list). That's a total of 632 bytes.
+        #--------------------------------------------------------------
+        self.hf = np.fromfile(f, dtype='<f4', count=70)
+        self.hi = np.fromfile(f, dtype='<i4', count=40)
+        # read in the char values
+        self.hs = np.fromfile(f, dtype='|S8', count=24)
+        if len(self.hf)!=70 or len(self.hi)!=40 or len(self.hs)!=24:
+            self.hf = self.hi = self.hs = None
+            f.close()
+            raise SacIOError("Cannot read all header values")
         ##### only continue if it is a SAC file
         try:
             self.IsSACfile(fname)
@@ -653,6 +657,7 @@ class SacIO(object):
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
             except SacError, e:
+                f.close()
                 raise SacError(e)
         #--------------------------------------------------------------
         # read in the seismogram points
@@ -660,16 +665,14 @@ class SacIO(object):
         # you just have to know it's in the 10th place
         # actually, it's in the SAC manual
         npts = self.hi[9]
-        try:
-            if self.byteorder == 'big':
-                self.seis = np.fromfile(f, dtype='>f4', count=npts)
-            else:
-                self.seis = np.fromfile(f, dtype='<f4', count=npts)
-        except EOFError, e:
+        if self.byteorder == 'big':
+            self.seis = np.fromfile(f, dtype='>f4', count=npts)
+        else:
+            self.seis = np.fromfile(f, dtype='<f4', count=npts)
+        if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             f.close()
-            msg = "Cannot read any or only some data points: "
-            raise SacIOError(msg, e)
+            raise SacIOError("Cannot read any or only some data points")
         try:
             self._get_date()
         except SacError:
@@ -704,7 +707,7 @@ class SacIO(object):
         try:
             f = open(fname, 'r')
         except IOError:
-            raise SacIOError("No such file:" + fname)
+            raise SacIOError("No such file: " + fname)
         try:
             #--------------------------------------------------------------
             # parse the header
@@ -766,7 +769,7 @@ class SacIO(object):
         try:
             f = open(fname, 'r')
         except IOError:
-            raise SacIOError("No such file:" + fname)
+            raise SacIOError("No such file: " + fname)
         try:
             #--------------------------------------------------------------
             # parse the header
@@ -849,7 +852,7 @@ class SacIO(object):
         try:
             f = open(ofname, 'w')
         except IOError:
-            raise SacIOError("Can't open file:" + ofname)
+            raise SacIOError("Cannot open file: " + ofname)
         # header
         try:
             np.savetxt(f, np.reshape(self.hf, (14, 5)),
@@ -860,7 +863,8 @@ class SacIO(object):
                 self.hs[i:i + 3].tofile(f)
                 f.write('\n')
         except:
-            raise SacIOError("Can't write header values:" + ofname)
+            f.close()
+            raise SacIOError("Cannot write header values: " + ofname)
         # traces
         npts = self.GetHvalue('npts')
         if npts == -12345:
@@ -871,7 +875,9 @@ class SacIO(object):
                        fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
             np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
         except:
-            raise SacIOError("Can't write trace values:" + ofname)
+            f.close()
+            raise SacIOError("Cannot write trace values: " + ofname)
+        f.close()
 
     def WriteSacBinary(self, ofname):
         """
@@ -888,7 +894,7 @@ class SacIO(object):
         try:
             f = open(ofname, 'wb+')
         except IOError:
-            raise SacIOError("Cannot open file: ", ofname)
+            raise SacIOError("Cannot open file: " + ofname)
         try:
             self._chck_header()
             self.hf.tofile(f)
@@ -899,6 +905,8 @@ class SacIO(object):
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
+        
+        f.close()
 
     def PrintIValue(self, label='=', value=-12345):
         """

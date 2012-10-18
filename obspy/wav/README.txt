@@ -6,7 +6,7 @@ Copyright
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
 Copyright (c) 2009-2012 by:
-    * Moritz Beyreuther (beyreuth@geophysik.uni-muenchen.de)
+    * Moritz Beyreuther
 
 
 Overview
@@ -24,8 +24,3 @@ The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
 For more information visit http://www.obspy.org.
-
-
-Dependencies
-------------
-* obspy.core
