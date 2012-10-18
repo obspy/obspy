@@ -320,8 +320,7 @@ def configuration(parent_package="", top_path=None):
     # Add obspy.signal source code files.
     signal_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
     signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
-    signal_src_files.extend(glob.glob(os.path.join(signal_src_path, "fft",
-        "*.c")))
+    signal_src_files.append(os.path.join(signal_src_path, "fft", "fftpack.c"))
     config.add_extension(_get_lib_name("signal"), signal_src_files)
 
     # Add evalresp source files.
