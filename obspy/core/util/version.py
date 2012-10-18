@@ -77,7 +77,7 @@ def get_git_version(abbrev=4):
 
     # If we still don't have anything, that's an error.
     if version is None:
-        raise ValueError("Cannot find the version number!")
+        return 'master'
 
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
