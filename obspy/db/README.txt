@@ -29,6 +29,4 @@ For more information visit http://www.obspy.org.
 
 Dependencies
 ------------
-* obspy.core
-* obspy.mseed
 * sqlalchemy

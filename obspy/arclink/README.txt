@@ -25,7 +25,5 @@ For more information visit http://www.obspy.org.
 
 Dependencies
 ------------
-* obspy.core
-* obspy.mseed
 * lxml
 * M2Crypto (optional, for ArcLink encryption support)
