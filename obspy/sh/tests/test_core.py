@@ -123,6 +123,9 @@ class CoreTestCase(unittest.TestCase):
         # read both files and compare the content
         text1 = open(origfile, 'rb').read()
         text2 = open(tempfile, 'rb').read()
+		# Depending on how the files are checked out and written on Windows, the line endings might be different...
+        text1 = ";".join(text1.splitlines())
+        text2 = ";".join(text2.splitlines())
         self.assertEquals(text1, text2)
         # read again
         stream2 = readASC(tempfile)
