@@ -33,6 +33,5 @@ For more information visit http://www.obspy.org.
 
 Dependencies
 ------------
-* obspy.core
 * suds
 * simplejson (for Python < 2.6)

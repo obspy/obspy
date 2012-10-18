@@ -26,9 +26,3 @@ The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
 For more information visit http://www.obspy.org.
-
-
-Dependencies
-------------
-* obspy.core
-
