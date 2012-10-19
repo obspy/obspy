@@ -90,7 +90,7 @@ def isMSEED(filename):
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, recinfo=True, **kwargs):
+              sourcename=None, reclen=None, recinfo=True, details=False, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -121,6 +121,18 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         writing a Mini-SEED file. Only the very first record of the file will
         be read and all following records are assumed to be the same. Defaults
         to ``True``.
+    :type details: bool, optional
+    :param details: If ``True`` read additional information: timing quality
+        and availability of calibration information.
+        Note, that the traces are then also split on these additional
+        information. Thus the number of traces in a stream will change.
+        Details are stored in the mseed stats AttribDict of each trace.
+        -1 specifies for both cases, that these information is not available.
+        ``timing_quality`` specifies the timing quality from 0 to 100 [%].
+        ``calibration_type`` specifies the type of available calibration
+        information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
+        Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
+        Calibration Abort.
 
     .. rubric:: Example
 
@@ -254,7 +266,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
     lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-                                    reclen, 0, allocData)
+                                    reclen, 0, C.c_int(details), allocData)
 
     # XXX: Check if the freeing works.
     del selections
@@ -284,6 +296,14 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             header['sampling_rate'] = currentSegment.samprate
             header['starttime'] = \
                 util._convertMSTimeToDatetime(currentSegment.starttime)
+            # TODO: write support is missing
+            if details:
+                timing_quality = currentSegment.timing_quality
+                if timing_quality == 0xFF: # 0xFF is mask for not known timing
+                    timing_quality = -1
+                header['mseed']['timing_quality'] = timing_quality
+                header['mseed']['calibration_type'] = currentSegment.calibration_type
+                
             if headonly is False:
                 # The data always will be in sequential order.
                 data = all_data.pop(0)
