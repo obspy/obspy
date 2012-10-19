@@ -6,6 +6,7 @@ include obspy/iris/tests/data/*
 include obspy/mseed/tests/data/*
 include obspy/mseed/tests/data/encoding/*
 include obspy/mseed/tests/data/bizarre/*
+include obspy/realtime/tests/data/*
 include obspy/sac/tests/data/*
 include obspy/segy/tests/data/*
 include obspy/seisan/tests/data/*
