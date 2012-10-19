@@ -294,7 +294,8 @@ def _get_lib_name(lib):
 
 def configuration(parent_package="", top_path=None):
     """
-    Config function mainly used to compile C and Fortran code.
+    Config function mainly used to compile C and Fortran code and to add data
+    files.
     """
     config = Configuration("", parent_package, top_path)
 
@@ -348,6 +349,12 @@ def configuration(parent_package="", top_path=None):
     taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
     taup_files.insert(0, new_interface_path)
     config.add_extension(libname, taup_files)
+
+    # MANIFEST.in is apparently not read by numpy.distutils. Manually add the
+    # files specified in it here.
+    with open(os.path.join(SETUP_DIRECTORY, "MANIFEST.in")) as open_file:
+        files = open_file.readlines()
+    config.add_data_files(*[_i.split()[-1] for _i in files])
 
     return config
 
