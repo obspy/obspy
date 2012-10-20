@@ -12,3 +12,4 @@ RELEASE-VERSION
 *.exp
 *.lib
 *.pyd.manifest
+*.pyd
