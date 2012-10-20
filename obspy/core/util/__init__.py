@@ -30,6 +30,6 @@ from obspy.core.util.decorator import deprecated, deprecated_keywords, \
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
-    formatScientific, scoreatpercentile, toIntOrZero, loadtxt
+    scoreatpercentile, toIntOrZero, loadtxt
 from obspy.core.util.types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
