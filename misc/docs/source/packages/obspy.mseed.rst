@@ -13,3 +13,14 @@
        util
 
     .. comment to end block
+
+    Scripts
+    -------
+    .. autosummary::
+      :template: script.rst
+      :toctree: autogen
+      :nosignatures:
+
+        scripts.recordanalyzer
+
+    .. comment to end block
