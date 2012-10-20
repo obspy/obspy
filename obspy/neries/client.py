@@ -19,14 +19,12 @@ from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
 import StringIO
 import functools
+import json
 import os
 import platform
 import urllib
 import urllib2
 import warnings
-import json
-if not getattr(json, "loads", None):
-    json.loads = json.read  # @UndefinedVariable
 
 
 SEISMOLINK_WSDL = "http://www.orfeus-eu.org/wsdl/seismolink/seismolink.wsdl"

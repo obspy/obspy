@@ -14,15 +14,12 @@ from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
     loadtxt
 from urllib2 import HTTPError
 import StringIO
+import json
 import os
 import platform
 import urllib
 import urllib2
 import warnings
-
-import json
-if not getattr(json, "loads", None):
-    json.loads = json.read  # @UndefinedVariable
 
 
 VERSION = _getVersionString("obspy.iris")
