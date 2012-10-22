@@ -37,7 +37,7 @@ import os
 from subprocess import Popen, PIPE
 
 VERSION_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                            "RELEASE-VERSION"))
+        os.pardir, os.pardir, os.pardir, "RELEASE-VERSION"))
 
 
 def call_git_describe(abbrev=4):
@@ -77,7 +77,7 @@ def get_git_version(abbrev=4):
 
     # If we still don't have anything, that's an error.
     if version is None:
-        raise ValueError("Cannot find the version number!")
+        return 'tar/zipball'
 
     # If the current version is different from what's in the
     # RELEASE-VERSION file, update the file to be current.
