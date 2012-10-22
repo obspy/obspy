@@ -573,7 +573,7 @@ def rms(x, y):
     Normalized RMS
 
     Taken from the mtspec library:
-    http://svn.geophysik.uni-muenchen.de/trac/mtspecpy
+    https://github.com/krischer/mtspec
     """
     return np.sqrt(((x - y) ** 2).mean() / (x ** 2).mean())
 
