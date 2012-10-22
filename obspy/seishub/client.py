@@ -334,8 +334,8 @@ class _WaveformMapperClient(object):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.waveform` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/waveform.py
     """
     def __init__(self, client):
         self.client = client
@@ -608,8 +608,8 @@ class _StationMapperClient(_BaseRESTClient):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.station` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/waveform.py
     """
     package = 'seismology'
     resourcetype = 'station'
@@ -732,8 +732,8 @@ class _EventMapperClient(_BaseRESTClient):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.event` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/event.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'

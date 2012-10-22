@@ -176,11 +176,11 @@ But it also means that the trace's built-in methods can be used.
 For more examples check out the `triggering page`_ in the `Tutorial`_. For
 network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
 and the same page in the `Tutorial`_. For automated use there are some example
-scripts in the `svn repository`_.
+scripts in the `repository`_ (from the old svn branches).
 
 .. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
-.. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
+.. _`repository`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
 
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
