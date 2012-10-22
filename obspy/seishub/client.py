@@ -501,6 +501,7 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         stream = pickle.loads(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
+        stream._cleanup()
 
         # trimming needs to be done only if we extend the datetime above
         if channel:
@@ -532,7 +533,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
                     raise Exception(msg)
             for tr in stream:
                 tr.stats['coordinates'] = coords.copy()
-        stream._cleanup()
         return stream
 
     def getPreview(self, network, station, location=None, channel=None,
