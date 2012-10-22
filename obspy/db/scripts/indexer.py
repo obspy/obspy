@@ -25,7 +25,7 @@ A command-line program that indexes seismogram files into a database.
        ./obspy-indexer -v -i0.0 --run_once --check_duplicates -n1 -u$DB -d$DATA
 """
 
-from obspy.db import __version__
+from obspy import __version__
 from obspy.db.db import Base
 from obspy.db.util import parseMappingData
 from obspy.db.indexer import worker, WaveformFileCrawler

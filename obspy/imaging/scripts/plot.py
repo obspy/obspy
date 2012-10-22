@@ -6,7 +6,7 @@ USAGE: obspy-plot [ -f format ] file
 Wiggle plot of the data in file
 """
 from obspy.core import read
-from obspy.imaging import __version__
+from obspy import __version__
 from optparse import OptionParser
 
 
