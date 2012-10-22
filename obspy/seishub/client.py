@@ -140,6 +140,7 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
         self.retries = retries
+        self.xml_seeds = {}
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -702,6 +703,15 @@ master/seishub/plugins/seismology/waveform.py
         >>> paz['sensitivity']
         2516800000.0
         """
+        # try to read PAZ from previously obtained XSEED data
+        for res in self.client.xml_seeds.get(seed_id, []):
+            parser = Parser(res)
+            try:
+                paz = parser.getPAZ(seed_id=seed_id,
+                                    datetime=UTCDateTime(datetime))
+                return paz
+            except:
+                continue
         network, station, location, channel = seed_id.split(".")
         # request station information
         station_list = self.getList(network=network, station=station,
@@ -719,6 +729,9 @@ master/seishub/plugins/seismology/waveform.py
 
         xml_doc = station_list[0]
         res = self.client.station.getResource(xml_doc['resource_name'])
+        reslist = self.client.xml_seeds.setdefault(seed_id, [])
+        if res not in reslist:
+            reslist.append(res)
         parser = Parser(res)
         paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
