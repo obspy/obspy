@@ -354,6 +354,7 @@ def convert2to3():
     # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(adir, filenames):  # @UnusedVariable
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
+               ['.git', '.gitignore'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]
     shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
