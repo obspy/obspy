@@ -21,10 +21,15 @@ import math
 import warnings
 import ctypes as C
 import numpy as np
+import pylab as pl
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
 from scipy.integrate import cumtrapz
+from obspy.signal.invsim import cosTaper
+from scipy.signal import detrend
+import cProfile
+import genbeam
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -785,14 +790,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
 def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
     """
-    FK Array Analysis
-
-    The algorithm used is an adaptation of [KvaernaRingdal1986]_
-    broadband fk routine published in the corresponding NORSAR report.
-    Exploring the src directory in trunk/obspy.signal/obspy/signal/src you will
-    find the source code written in plain C.
-
-    .. note :: Interface is not fixed yet
+    Note: Interface not fixed jet
 
     :type spoint: int
     :param spoint: Start sample point, probably in julian seconds
@@ -932,24 +930,16 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    if 0:  # unoptimized version for reference
-        nstat = len(geometry)  # last index are center coordinates
+    nstat = len(geometry)  # last index are center coordinates
 
-        time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-        for k in xrange(grdpts_x):
-            sx = sll_x + k * sl_s
-            for l in xrange(grdpts_y):
-                sy = sll_y + l * sl_s
-                time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
-        time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
-        return time_shift_tbl
-    else:  # optimized version
-        mx = np.outer(geometry[:,0], sll_x + np.arange(grdpts_x) * sl_s)
-        my = np.outer(geometry[:,1], sll_y + np.arange(grdpts_y) * sl_s)
-        return np.require( \
-            mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) + \
-            my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
-            dtype='float32')
+    time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    for k in xrange(grdpts_x):
+        sx = sll_x + k * sl_s
+        for l in xrange(grdpts_y):
+            sy = sll_y + l * sl_s
+            time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
+
+    return time_shift_tbl
 
 
 def get_spoint(stream, stime, etime):
@@ -1068,7 +1058,6 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
 
     transff = np.empty((nkx, nky))
 
-    # checked for arange, ktep / 10. is added for numerical stability
     for i, kx in enumerate(np.arange(kxmin, kxmax + kstep / 10., kstep)):
         for j, ky in enumerate(np.arange(kymin, kymax + kstep / 10., kstep)):
             _sum = 0j
@@ -1124,7 +1113,6 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     transff = np.empty((nsx, nsy))
     buff = np.zeros(nf)
 
-    # checked for arange, step / 10. is added for numerical stability
     for i, sx in enumerate(np.arange(sxmin, sxmax + sstep / 10., sstep)):
         for j, sy in enumerate(np.arange(symin, symax + sstep / 10., sstep)):
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
@@ -1139,6 +1127,279 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
+
+#def generalized_beamformer(spoint, offset, stream, ntrace, steer, flow, fhigh,
+#         digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft,method):
+#    """
+#
+#    """
+#    # start the code -------------------------------------------------
+#    # This assumes that all stations and components have the same number of
+#    # time samples, nt
+#    df = digfreq/float(nfft)
+#    nf = int((fhigh-flow)/df)+1
+#    if nf > (nfft/2+1): nf = nfft/2+1
+#    nlow = int(flow/df)
+#
+#    tap = cosTaper(nsamp,p=0.1)
+#
+#    trace = np.zeros((nstat,nfft),dtype=float)
+#    for i,tr in enumerate(stream):
+#       trace[i][:nsamp] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
+#       trace[i][:nsamp] = detrend(trace[i][:nsamp],type='constant')
+#       trace[i][:nsamp] *= tap
+#
+#
+#    # in general, beamforming is done by simply computing the co-variances 
+#    # of the signal at different receivers and than stear the matrix R with 
+#    # "weights" which are the trial-DOAs e.g., Kirlin & Done, 1999
+#    R = np.zeros((nstat, nstat,nf),dtype=complex)
+#    dpow = 0.
+#
+#    # fill up R
+#    for i in xrange(nstat):
+#       for j in xrange(i,nstat):
+#            xx = np.fft.rfft(trace[i],nfft) * np.fft.rfft(trace[j],nfft).conjugate()
+#            if method == 'capon':
+#                 R[i,j,0:nf] = xx[nlow:nlow+nf]/np.abs(np.sum(xx[nlow:nlow+nf]))
+#                 if i != j:
+#                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()/np.abs(np.sum(xx[nlow:nlow+nf]))
+#            else :
+#                 R[i,j,0:nf] = xx[nlow:nlow+nf]
+#                 if i != j:
+#                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()
+#                 else:
+#                     dpow += np.abs(np.sum(R[i,j,:]))
+#
+#    dpow *= nstat
+#    
+#    p = np.zeros((grdpts_x,grdpts_y,nf),dtype=float)
+#    abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
+#    relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
+#    white = np.zeros((nf),dtype=float)
+#
+#    if method == "bf":
+#    # P(f) = e.H R(f) e
+#        for x in xrange(grdpts_x):
+#            for y in xrange(grdpts_y):
+#              for n in xrange(nf):
+#                 e = np.zeros(nstat,dtype=complex)
+#                 C = R[:,:,n]
+#                 e = steer[:,x,y,n]
+#                 eH = e.T
+#                 Ce = np.dot(C,e) 
+#                 p[x,y,n] = np.abs(np.dot(eH.conjugate(),Ce))
+#              if prewhiten == 0:
+#                 abspow[x,y] = np.sum(p[x,y,:])
+#                 relpow[x,y] = abspow[x,y]/dpow
+#              if prewhiten == 1:
+#                 for n in xrange(nf):
+#                   if p[x][y][n] > white[n]:
+#                      white[n] = p[x,y,n]
+#        if prewhiten == 1:
+#            for x in xrange(grdpts_x):
+#               for y in xrange(grdpts_y):
+#                   abspow[x,y] = np.sum(p[x,y,:])
+#                   relpow[x,y] = np.sum(p[x,y,:]/(white[:]*nf*nstat))
+#        
+#    elif method == "capon":
+#    # P(f) = 1/(e.H R(f)^-1 e)
+#        for x in xrange(grdpts_x):
+#            for y in xrange(grdpts_y):
+#              for n in xrange(nf):
+#                  e = np.zeros(nstat,dtype=complex)
+#                  C = R[:,:,n]
+#                  IC = np.linalg.pinv(C)
+#                  e = steer[:,x,y,n]
+#                  eH = e.T
+#                  ICe = np.dot(IC,e)
+#                  p[x,y,n] = np.abs(1./np.dot(eH.conjugate(),ICe))
+#              abspow[x,y] = np.sum(p[x,y,:])
+#              if prewhiten == 0:
+#                 relpow[x,y] = abspow[x,y]
+#              if prewhiten == 1:
+#                 for n in xrange(nf):
+#                   if p[x][y][n] > white[n]:
+#                      white[n] = p[x,y,n]
+#        if prewhiten == 1:
+#            for x in xrange(grdpts_x):
+#               for y in xrange(grdpts_y):
+#                  relpow[x,y] = np.sum(p[x,y,:]/(white[:]*nf*nstat))
+#
+#    # find the maximum in the map and return its value and the indices
+#    ix,iy = pl.unravel_index(relpow.argmax(), relpow.shape)
+#
+#    print "%lf %lf %d %d %d %d\n"%(abspow.max(), relpow.max(), ix, iy,grdpts_x,grdpts_y)
+#
+#    return abspow.max(), relpow.max(), ix, iy
+
+
+def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
+          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
+          verbose=False, coordsys='lonlat', timestamp='mlabday',method='bbfk'):
+    """
+    Method for Seismic-Array-Beamforming/FK-Analysis/Capon
+
+    :param stream: Stream object, the trace.stats dict like class must
+        contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
+        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
+        items/attributes. See param coordsys
+    :type win_len: Float
+    :param win_len: Sliding window length in seconds
+    :type win_frac: Float
+    :param win_frac: Fraction of sliding window to use for step
+    :type sll_x: Float
+    :param sll_x: slowness x min (lower)
+    :type slm_x: Float
+    :param slm_x: slowness x max
+    :type sll_y: Float
+    :param sll_y: slowness y min (lower)
+    :type slm_y: Float
+    :param slm_y: slowness y max
+    :type sl_s: Float
+    :param sl_s: slowness step
+    :type semb_thres: Float
+    :param semb_thres: Threshold for semblance
+    :type vel_thres: Float
+    :param vel_thres: Threshold for velocity
+    :type frqlow: Float
+    :param frqlow: lower frequency for fk/capon
+    :type frqhigh: Float
+    :param frqhigh: higher frequency for fk/capon
+    :type stime: UTCDateTime
+    :param stime: Starttime of interest
+    :type etime: UTCDateTime
+    :param etime: Endtime of interest
+    :type prewhiten: int
+    :param prewhiten: Do prewhitening, values: 1 or 0
+    :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
+        attributes to use for coordinates
+    :type timestamp: string
+    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
+        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
+        returns the timestamp in days (decimals represent hours, minutes
+        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
+        date plotting (see e.g. matplotlibs num2date)
+    :return: numpy.ndarray of timestamp, relative power, absolute power,
+        backazimut, slowness
+    """
+    res = []
+    eotr = True
+    #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
+
+    # check that sampling rates do not vary
+    df = stream[0].stats.sampling_rate
+    if len(stream) != len(stream.select(sampling_rate=df)):
+        msg = 'in sonic sampling rates of traces in stream are not equal'
+        raise ValueError(msg)
+
+    grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
+    grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
+
+    geometry = get_geometry(stream, coordsys=coordsys, verbose=verbose)
+
+    if verbose:
+        print("geometry:")
+        print(geometry)
+        print("stream contains following traces:")
+        print(stream)
+        print("stime = " + str(stime) + ", etime = " + str(etime))
+
+    time_shift_table_numpy = get_timeshift(geometry, sll_x, sll_y,
+                                                    sl_s, grdpts_x, grdpts_y)
+    time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
+    # fillup the double trace pointer
+    nstat = len(stream)
+    trace = (C.c_void_p * nstat)()
+    ntrace = np.empty(nstat, dtype="int32", order="C")
+    for i, tr in enumerate(stream):
+        # assure data are of correct type
+        tr.data = np.require(tr.data, 'float64', ['C_CONTIGUOUS'])
+        trace[i] = tr.data.ctypes.data_as(C.c_void_p)
+        ntrace[i] = len(tr.data)
+
+    # offset of arrays
+    spoint, _epoint = get_spoint(stream, stime, etime)
+    #
+    # loop with a sliding window over the data trace array and apply bbfk
+    #
+    df = stream[0].stats.sampling_rate
+    nsamp = int(win_len * df)
+    nstep = int(nsamp * win_frac)
+
+    # generate plan for rfftr
+    nfft = nextpow2(nsamp)
+    deltaf = df/float(nfft)
+    nf = int((frqhigh-frqlow)/deltaf)+1
+    if nf > (nfft/2+1): nf = nfft/2+1
+    nlow = int(frqlow/deltaf)
+    # to spead up the routine a bit we estimate all steering vectors in advance
+    steer = np.zeros((nstat,grdpts_x,grdpts_y,nf),dtype=complex)
+    steerH = np.zeros((nstat,grdpts_x,grdpts_y,nf),dtype=complex)
+    for i in xrange(nstat):
+           for x in xrange(grdpts_x):
+                 for y in xrange(grdpts_y):
+                       for n in xrange(nf):
+                           wtau = 2.*np.pi*float(nlow+n)*deltaf*time_shift_table_numpy[i,x,y]
+                           steer[i,x,y,n] = complex(np.cos(wtau), -1.*np.sin(wtau))
+                           steerH[i,x,y,n] = complex(np.cos(wtau), np.sin(wtau))
+    newstart = stime
+    offset = 0
+    while eotr:
+        if method == 'bbfk':
+            try:
+                  buf = bbfk(spoint, offset, trace, ntrace, time_shift_table, frqlow,
+                       frqhigh, df, nsamp, nstat, prewhiten, grdpts_x,
+                       grdpts_y, nfft)
+                  abspow, power, ix, iy = buf
+            except IndexError:
+                  break
+        elif method == 'bf' or method == 'capon':
+            tap = cosTaper(nsamp,p=0.1)
+            trace = np.zeros((nstat,nsamp),dtype=float)
+            try:
+                  for i,tr in enumerate(stream):
+                     trace[i][0:nsamp] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
+                     trace[i][0:nsamp] = detrend(trace[i][0:nsamp],type='constant')
+                     trace[i][0:nsamp] = trace[i][0:nsamp]*tap[0:nsamp]
+
+                  buf = genbeam.generalized_beamformer(trace, steer, steerH, frqlow, frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, method)
+                  abspow, power, ix, iy = buf
+            except IndexError:
+                  break
+
+
+        # here we compute baz, slow
+        slow_x = sll_x + ix * sl_s
+        slow_y = sll_y + iy * sl_s
+
+        slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
+        if slow < 1e-8:
+            slow = 1e-8
+        azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
+        baz = azimut - np.sign(azimut) * 180
+        if power > semb_thres and 1. / slow > vel_thres:
+            res.append(np.array([newstart.timestamp, power, abspow, baz,
+                                 slow]))
+            if verbose:
+                print(newstart, (newstart + (nsamp / df)), res[-1][1:])
+        if (newstart + (nsamp + nstep) / df) > etime:
+            eotr = False
+        offset += nstep
+
+        newstart += nstep / df
+    res = np.array(res)
+    if timestamp == 'julsec':
+        pass
+    elif timestamp == 'mlabday':
+        # 719162 == hours between 1970 and 0001
+        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
+    else:
+        msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
+        raise ValueError(msg)
+    return np.array(res)
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
+
