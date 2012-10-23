@@ -314,10 +314,20 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(ret == paz2)
         self.assertTrue(len(c.xml_seeds) == 1)
         self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        # new request that needs to connect to server, just to make sure the
+        # monkey patch for raising on requests really works
+        self.assertRaises(RequestException, c.station.getCoordinates,
+                          "GR", "FUR", t2)
+        self.assertRaises(RequestException, c.station.getPAZ,
+                          "GR.FUR..HHZ", t2)
+
+
+class RequestException(Exception):
+    pass
 
 
 def raiseOnCall(*args, **kwargs):
-    raise Exception("Unwanted request to server.")
+    raise RequestException("Unwanted request to server.")
 
 
 def suite():
