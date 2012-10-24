@@ -93,6 +93,8 @@ class XMLParser:
             text = self.xpath(xpath, xml_doc, namespace)[0].text
         except IndexError:
             return None
+        if text is None:
+            return None
         # handle empty nodes
         if text == '':
             return None
