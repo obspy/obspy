@@ -378,14 +378,15 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 # If it is a dict, and the attrib_type is no dict, than all
                 # values will be assumed to be keyword arguments.
                 if isinstance(value, dict):
-                    value = attrib_type(**value)
+                    new_value = attrib_type(**value)
                 else:
-                    value = attrib_type(value)
-                if value is None:
+                    new_value = attrib_type(value)
+                if new_value is None:
                     msg = 'Setting attribute "%s" failed. ' % (name)
-                    msg += '"%s" could not be converted to type "%s"' % \
+                    msg += 'Value "%s" could not be converted to type "%s"' % \
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
+                value = new_value
             AttribDict.__setattr__(self, name, value)
             # If "name" is resource_id and value is not None, set the referred
             # object of the ResourceIdentifier to self.
