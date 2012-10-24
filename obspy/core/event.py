@@ -2609,7 +2609,7 @@ class Catalog(object):
             Possible values are
             * ``"magnitude"``
             * ``None``
-            Defaults to ``"magnitude"``            
+            Defaults to ``"magnitude"``
         :type color: str, optional
         :param color:The events will be color-coded based on the chosen
             proberty. Possible values are
@@ -2757,7 +2757,7 @@ class Catalog(object):
         times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
              str(min(times).strftime("%Y-%m-%d")),
-             str(max(times).strftime("%Y-%m-%d")))) + \
+             str(max(times).strftime("%Y-%m-%d")))) +
                  " - Color codes %s, size the magnitude" % (
                      "origin time" if color == "date" else "depth"))
 
@@ -2773,6 +2773,33 @@ class Catalog(object):
 
         # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()
+
+
+def validate(xml_file):
+    """
+    Validates a QuakeML file against the QuakeML 1.2 RC4 schema. Returns either
+    True or False.
+
+    This method requires lxml and will raise an ImportError if it does not
+    exist.
+    """
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
+
+    from lxml import etree
+
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    xmldoc = etree.parse(xml_file)
+
+    valid = xmlschema.validate(xmldoc)
+
+    # Pretty error printing if the validation fails.
+    if valid is not True:
+        print "Error validating QuakeML file:"
+        for entry in xmlschema.error_log:
+            print "\t%s" % entry
+    return valid
 
 
 if __name__ == '__main__':

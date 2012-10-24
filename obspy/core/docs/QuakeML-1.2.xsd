@@ -7,14 +7,11 @@
            attributeFormDefault="unqualified">
            
   <xs:import namespace="http://quakeml.org/xmlns/bed/1.2" schemaLocation="QuakeML-BED-1.2.xsd"/>
-  
+ 
   <xs:complexType name="Quakeml">
-    <xs:sequence>
-      <xs:choice minOccurs="0" maxOccurs="1">
-        <xs:element ref="bed:eventParameters" minOccurs="0" maxOccurs="1"/>
-      </xs:choice>
-      <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
-    </xs:sequence>
+    <xs:all>
+      <xs:element ref="bed:eventParameters" minOccurs="0" maxOccurs="1"/>
+    </xs:all>
     <xs:anyAttribute namespace="##other" processContents="lax"/>
   </xs:complexType>
   
