@@ -1525,7 +1525,7 @@ __Magnitude = _eventTypeClassFactory("__Magnitude",
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("creation_info", CreationInfo)],
-    class_contains=["comments", "station_magnitude_contribution"])
+    class_contains=["comments", "station_magnitude_contributions"])
 
 
 class Magnitude(__Magnitude):
