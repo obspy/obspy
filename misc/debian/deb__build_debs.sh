@@ -25,8 +25,6 @@ git clone https://github.com/obspy/obspy.git $GITDIR
 
 # Build ObsPy Packages
 TAGS="`git tag | tail -1` master"
-TAGS="bd39e0236c85b5f4f84f69220aa296d570f8568c master"
-#TAGS="`git tag` master"
 for TAG in $TAGS; do
     echo "#### Working on $TAG"
     cd $GITDIR
