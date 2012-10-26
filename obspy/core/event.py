@@ -276,15 +276,15 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the attribute and containers that are to be printed. Only not
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
-            attributes = [_i for _i in self._property_keys if not \
+            attributes = [_i for _i in self._property_keys if not
                           _i.endswith("_errors") and getattr(self, _i)]
             containers = [_i for _i in self._containers if getattr(self, _i)]
 
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
-            max_length = max(max([len(_i) for _i in attributes]) \
+            max_length = max(max([len(_i) for _i in attributes])
                                  if attributes else 0,
-                             max([len(_i) for _i in containers]) \
+                             max([len(_i) for _i in containers])
                              if containers else 0) + 1
 
             ret_str = self.__class__.__name__
@@ -300,14 +300,14 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if hasattr(self, error_key) and getattr(self, error_key):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
-                    repr_str += " [%s]" % ', '.join([str(key) + "=" + \
+                    repr_str += " [%s]" % ', '.join([str(key) + "=" +
                                 str(value) for key, value in err_items])
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
             # single line.
             if len(attributes) <= 3 and not containers:
-                att_strs = ["%s=%s" % (_i, get_value_repr(_i)) \
+                att_strs = ["%s=%s" % (_i, get_value_repr(_i))
                             for _i in attributes if getattr(self, _i)]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
@@ -315,7 +315,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Case 3: Verbose string representation for large object.
             if attributes:
                 format_str = "%" + str(max_length) + "s: %s"
-                att_strs = [format_str % (_i, get_value_repr(_i)) \
+                att_strs = [format_str % (_i, get_value_repr(_i))
                             for _i in attributes if getattr(self, _i)]
                 ret_str += "\n\t" + "\n\t".join(att_strs)
 
@@ -326,8 +326,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                     ret_str += '\n\t---------'
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
-                    "\n\t".join([element_str % \
-                    (_i, len(getattr(self, _i))) \
+                    "\n\t".join([element_str %
+                    (_i, len(getattr(self, _i)))
                     for _i in containers])
             return ret_str
 
@@ -338,7 +338,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return self.__str__()
 
         def __nonzero__(self):
-            if any([bool(getattr(self, _i)) \
+            if any([bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
@@ -619,7 +619,6 @@ class ResourceIdentifier(object):
         warnings.warn_explicit(msg, UserWarning, __file__,
                 inspect.currentframe().f_back.f_lineno)
         ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
-
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -926,7 +925,7 @@ class WaveformStreamID(__WaveformStreamID):
                 network_code, station_code, location_code, channel_code = \
                     seed_string.split('.')
             except ValueError:
-                warnings.warn("In WaveformStreamID.__init__(): " + \
+                warnings.warn("In WaveformStreamID.__init__(): " +
                               "seed_string was given but could not be parsed")
                 pass
             if not any([bool(_i) for _i in [network_code, station_code,
@@ -940,7 +939,7 @@ class WaveformStreamID(__WaveformStreamID):
                                                resource_uri=resource_uri)
 
     def getSEEDString(self):
-        return "%s.%s.%s.%s" % (\
+        return "%s.%s.%s.%s" % (
             self.network_code if self.network_code else "",
             self.station_code if self.station_code else "",
             self.location_code if self.location_code else "",
@@ -1490,7 +1489,7 @@ class Origin(__Origin):
     """
 
 
-__StationMagnitudeContribution = _eventTypeClassFactory(\
+__StationMagnitudeContribution = _eventTypeClassFactory(
     "__StationMagnitudeContribution",
     class_attributes=[("station_magnitude_id", ResourceIdentifier),
                       ("residual", float),
@@ -2444,7 +2443,7 @@ class Catalog(object):
             elif key in ("longitude", "latitude", "depth", "time"):
                 temp_events = []
                 for event in events:
-                    if (event.origins and event.origins[0].has_key(key) and
+                    if (event.origins and key in event.origins[0] and
                         operator_map[operator](
                             event.origins[0].get(key),
                             UTCDateTime(value) if key == 'time' else
@@ -2456,7 +2455,7 @@ class Catalog(object):
                 temp_events = []
                 for event in events:
                     if (event.origins and event.origins[0].quality and
-                        event.origins[0].quality.has_key(key) and
+                         key in event.origins[0].quality and
                         operator_map[operator](
                             event.origins[0].quality.get(key),
                             float(value))):
@@ -2641,8 +2640,8 @@ class Catalog(object):
             raise ValueError('Events can be color coded by date or depth. '
                              "'%s' is not supported." % (color,))
         if label not in (None, 'magnitude', 'depth'):
-            raise ValueError('Events can be labeled by magnitude or events can '
-                             'not be labeled. '
+            raise ValueError('Events can be labeled by magnitude or events can'
+                             ' not be labeled. '
                              "'%s' is not supported." % (label,))
 
         # lat/lon coordinates, magnitudes, dates
@@ -2702,13 +2701,14 @@ class Catalog(object):
                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
                           width=width, height=height)
             # not most elegant way to calculate some round lats/lons
+
             def linspace2(val1, val2, N):
                 """
                 returns around N 'nice' values between val1 and val2
                 """
                 dval = val2 - val1
-                round_pos = int(round(-np.log10(1.*dval / N)))
-                delta = round(2.*dval / N, round_pos) / 2
+                round_pos = int(round(-np.log10(1. * dval / N)))
+                delta = round(2. * dval / N, round_pos) / 2
                 new_val1 = np.ceil(val1 / delta) * delta
                 new_val2 = np.floor(val2 / delta) * delta
                 N = (new_val2 - new_val1) / delta + 1

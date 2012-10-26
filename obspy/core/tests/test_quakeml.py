@@ -241,6 +241,38 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
+    def test_stationmagnitudecontribution(self):
+        """
+        Tests the station magnitude contribution object.
+        """
+        filename = os.path.join(self.path,
+            'quakeml_1.2_stationmagnitudecontributions.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].magnitudes), 1)
+        self.assertEquals(
+            len(catalog[0].magnitudes[0].station_magnitude_contributions), 2)
+        # Check the first stationMagnitudeContribution object.
+        stat_contrib = \
+            catalog[0].magnitudes[0].station_magnitude_contributions[0]
+        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+            "smi:ch.ethz.sed/magnitude/station/881342")
+        self.assertEqual(stat_contrib.weight, 0.77)
+        self.assertEqual(stat_contrib.residual, 0.02)
+        # Check the second stationMagnitudeContribution object.
+        stat_contrib = \
+            catalog[0].magnitudes[0].station_magnitude_contributions[1]
+        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+            "smi:ch.ethz.sed/magnitude/station/881334")
+        self.assertEqual(stat_contrib.weight, 0.55)
+        self.assertEqual(stat_contrib.residual, 0.11)
+
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = Pickler().dumps(catalog)
+        self._compareStrings(original, processed)
+
+
     def test_stationmagnitude(self):
         """
         Tests StationMagnitude object.
