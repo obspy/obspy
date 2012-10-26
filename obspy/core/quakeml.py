@@ -819,7 +819,7 @@ class Pickler(object):
             attrib['networkCode'] = obj.network_code
         if obj.station_code:
             attrib['stationCode'] = obj.station_code
-        if obj.location_code:
+        if obj.location_code is not None:
             attrib['locationCode'] = obj.location_code
         if obj.channel_code:
             attrib['channelCode'] = obj.channel_code
