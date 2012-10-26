@@ -1,4 +1,4 @@
-include RELEASE-VERSION
+include obspy/RELEASE-VERSION
 include obspy/core/tests/data/*
 include obspy/core/docs/*.xsd
 include obspy/datamark/tests/data/*
