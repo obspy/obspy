@@ -30,6 +30,15 @@ for TAG in $TAGS; do
     cd $GITDIR
     git checkout $TAG
     git clean -fxd
+    # remove dependencies of distribute for obspy.core
+    # distribute is not packed for python2.5 in Debian
+    # Note: the space before distribute is essential
+    # Note: also makes problems in python2.6 because it wants to install a more
+    # recent distribute
+    ex setup.py << EOL
+g/ distribute_setup/d
+wq
+EOL
     # get version number from the tag, the debian version
     # has to be increased manually if necessary.
     VERSION=`python -c "\
