@@ -14,19 +14,12 @@ from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
     loadtxt
 from urllib2 import HTTPError
 import StringIO
+import json
 import os
 import platform
-import sys
 import urllib
 import urllib2
 import warnings
-
-try:
-    import json
-    if not getattr(json, "loads", None):
-        json.loads = json.read  # @UndefinedVariable
-except ImportError:
-    import simplejson as json
 
 
 VERSION = _getVersionString("obspy.iris")
@@ -117,11 +110,7 @@ class Client(object):
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
         req = urllib2.Request(url=remoteaddr, data=data, headers=headers)
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            response = urllib2.urlopen(req)
-        else:
-            response = urllib2.urlopen(req, timeout=self.timeout)
+        response = urllib2.urlopen(req, timeout=self.timeout)
         doc = response.read()
         return doc
 

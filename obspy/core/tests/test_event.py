@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier
 import obspy.core.event
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import skipIfPython25
 import os
 import sys
 import unittest
@@ -25,7 +23,6 @@ class EventTestCase(unittest.TestCase):
         self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" + \
                           " | 4.3 ML | manual", s)
 
-    @skipIfPython25
     def test_eq(self):
         """
         Testing the __eq__ method of the Event object.
@@ -340,7 +337,6 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         self.assertEqual(waveform_id.location_code, "02")
         self.assertEqual(waveform_id.channel_code, None)
 
-    @skipIfPython25
     def test_initialization_with_invalid_seed_string(self):
         """
         Test initialization with an invalid seed string. Should raise a
@@ -373,7 +369,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # otherwise.
         ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
 
-    @skipIfPython25
     def test_same_resource_id_different_referred_object(self):
         """
         Tests the handling of the case that different ResourceIdentifier

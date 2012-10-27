@@ -17,7 +17,6 @@ Various Routines Related to Spectral Estimation
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from __future__ import with_statement
 import os
 import warnings
 import pickle

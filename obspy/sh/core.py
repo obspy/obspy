@@ -11,7 +11,7 @@ SH bindings to ObsPy core module.
 
 from StringIO import StringIO
 from obspy.core import Stream, Trace, UTCDateTime, Stats
-from obspy.core.util import formatScientific, loadtxt
+from obspy.core.util import loadtxt
 import numpy as np
 import os
 
@@ -216,7 +216,8 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
 
 
 def writeASC(stream, filename, included_headers=None, npl=4,
-                custom_format=None, append=False, **kwargs):  # @UnusedVariable
+             custom_format="%-.6e", append=False,
+             **kwargs):  # @UnusedVariable
     """
     Writes a Seismic Handler ASCII file from given ObsPy Stream object.
 
@@ -237,7 +238,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         set to None, a basic set will be included.
     :type custom_format: string, optional
     :param custom_format: Parameter for number formatting of samples, defaults
-        to None. This will use ObsPy's formatScientific method.
+        to "%-.6e".
     :type append: bool, optional
     :param append: If filename exists append all data to file, default False.
     """
@@ -250,7 +251,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         fh = open(filename, 'wb')
     for trace in stream:
         # write headers
-        fh.write("DELTA: %s\n" % formatScientific("%-.6e" % trace.stats.delta))
+        fh.write("DELTA: %-.6e\n" % (trace.stats.delta))
         fh.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
         for key, value in trace.stats.get('sh', {}).iteritems():
@@ -271,18 +272,14 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         if "STATION" in included_headers:
             fh.write("STATION: %s\n" % trace.stats.station)
         if "CALIB" in included_headers:
-            fh.write("CALIB: %s\n" % formatScientific("%-.6e" % \
-                                                            trace.stats.calib))
+            fh.write("CALIB: %-.6e\n" % (trace.stats.calib))
         # write data in npl columns
         mask = ([''] * (npl - 1)) + ['\n']
         delimiter = mask * ((trace.stats.npts / npl) + 1)
         delimiter = delimiter[:trace.stats.npts - 1]
         delimiter.append('\n')
         for (sample, delim) in zip(trace.data, delimiter):
-            if custom_format is None:
-                value = formatScientific("%-.6e" % sample)
-            else:
-                value = custom_format % sample
+            value = custom_format % (sample)
             fh.write("%s %s" % (value, delim))
         fh.write("\n")
     fh.close()
