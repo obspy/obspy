@@ -1,4 +1,6 @@
 dev:
+ - version numbering: one single, common version number for ObsPy now.
+   Use "import obspy; print obspy.__version__"
  - obspy.arclink:
    * refactored attributes in getPAZ to stick better with the SEED standard
  - obspy.core:
