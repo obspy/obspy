@@ -34,6 +34,8 @@ dev:
    * adding kwarg to control number of retries for failing requests
    * adding obspy.xseed as dependency (in setup.py and debian/control)
    * changing obspy.client.station.getPAZ() call syntax to use seed_id (args/kwargs)
+   * adding local caching of requests for PAZ and coordinates to avoid repeated
+     requests to server
  - obspy.sh:
    * file extension 'QBN' not added twice anymore if data_directory was set
    * fixing SH_ASC and Q reading/writing of empty traces or traces containing

@@ -139,6 +139,8 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
         self.retries = retries
+        self.xml_seeds = {}
+        self.station_list = {}
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -653,11 +655,33 @@ master/seishub/plugins/seismology/waveform.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
+        # try to read coordinates from previously obtained station lists
+        netsta = ".".join([network, station])
+        for data in self.client.station_list.get(netsta, []):
+            # check if starttime is present and fitting
+            if data['start_datetime'] == "":
+                pass
+            elif datetime < UTCDateTime(data['start_datetime']):
+                continue
+            # check if endtime is present and fitting
+            if data['end_datetime'] == "":
+                pass
+            elif datetime > UTCDateTime(data['end_datetime']):
+                continue
+            coords = {}
+            for key in ['latitude', 'longitude', 'elevation']:
+                coords[key] = data[key]
+            return coords
+
         metadata = self.getList(**kwargs)
         if not metadata:
             msg = "No coordinates for station %s.%s at %s" % \
                     (network, station, datetime)
             raise Exception(msg)
+        stalist = self.client.station_list.setdefault(netsta, [])
+        for data in metadata:
+            if data not in stalist:
+                stalist.append(data)
         if len(metadata) > 1:
             warnings.warn("Received more than one metadata set. Using first.")
         metadata = metadata[0]
@@ -696,6 +720,15 @@ master/seishub/plugins/seismology/waveform.py
         >>> paz['sensitivity']
         2516800000.0
         """
+        # try to read PAZ from previously obtained XSEED data
+        for res in self.client.xml_seeds.get(seed_id, []):
+            parser = Parser(res)
+            try:
+                paz = parser.getPAZ(seed_id=seed_id,
+                                    datetime=UTCDateTime(datetime))
+                return paz
+            except:
+                continue
         network, station, location, channel = seed_id.split(".")
         # request station information
         station_list = self.getList(network=network, station=station,
@@ -713,6 +746,9 @@ master/seishub/plugins/seismology/waveform.py
 
         xml_doc = station_list[0]
         res = self.client.station.getResource(xml_doc['resource_name'])
+        reslist = self.client.xml_seeds.setdefault(seed_id, [])
+        if res not in reslist:
+            reslist.append(res)
         parser = Parser(res)
         paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
