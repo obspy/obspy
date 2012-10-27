@@ -103,20 +103,6 @@ def skipIf(condition, reason):
     return _id
 
 
-def skipIfPython25(func):
-    """
-    Decorator for skipping a unit test running under Python 2.5.x.
-    """
-    if sys.hexversion >= 0x02060000:
-        return func
-
-    def decorator(test_item):
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = "Python 2.5.x not supported"
-        return test_item
-    return decorator
-
-
 def uncompressFile(func):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.

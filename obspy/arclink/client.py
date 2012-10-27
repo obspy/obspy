@@ -17,7 +17,6 @@ from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os
-import sys
 import time
 import warnings
 
@@ -106,11 +105,7 @@ class Client(object):
         self.init_port = port
         self.timeout = timeout
         self.dcid_keys = dcid_keys
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            self._client = Telnet(host, port)
-        else:
-            self._client = Telnet(host, port, timeout)
+        self._client = Telnet(host, port, timeout)
         # silent connection check
         self.debug = False
         self._hello()
@@ -138,12 +133,8 @@ class Client(object):
                     self.dcid_keys[key] = value.strip()
 
     def _reconnect(self):
-        # only use timeout from python2.6
-        if sys.hexversion < 0x02060000:
-            self._client.open(self._client.host, self._client.port)
-        else:
-            self._client.open(self._client.host, self._client.port,
-                              self._client.timeout)
+        self._client.open(self._client.host, self._client.port,
+                          self._client.timeout)
 
     def _writeln(self, buffer):
         if self.command_delay:

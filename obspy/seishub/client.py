@@ -18,7 +18,6 @@ from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
 import pickle
-import sys
 import time
 import urllib
 import urllib2
@@ -199,15 +198,10 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            timeout_kwarg = {}
-        else:
-            timeout_kwarg = {'timeout': self.timeout}
         # certain requests randomly fail on rare occasions, retry
         for _i in xrange(self.retries):
             try:
-                response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
@@ -215,7 +209,7 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
+        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 

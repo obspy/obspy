@@ -3,7 +3,6 @@
 The obspy.segy core test suite.
 """
 
-from __future__ import with_statement
 import numpy as np
 from obspy.core import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile

@@ -34,4 +34,3 @@ For more information visit http://www.obspy.org.
 Dependencies
 ------------
 * suds
-* simplejson (for Python < 2.6)

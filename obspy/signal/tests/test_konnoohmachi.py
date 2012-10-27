@@ -4,8 +4,6 @@
 The polarization.core test suite.
 """
 
-from __future__ import with_statement
-from obspy.core.util.decorator import skipIfPython25
 from obspy.signal import konnoOhmachiSmoothing
 from obspy.signal.konnoohmachismoothing import konnoOhmachiSmoothingWindow, \
     calculateSmoothingMatrix
@@ -103,7 +101,6 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             self.assertAlmostEqual(matrix[_i].sum(), 1.0, 5)
         np.seterr(**temp)
 
-    @skipIfPython25
     def test_konnoOhmachiSmoothing(self):
         """
         Tests the actual smoothing matrix.

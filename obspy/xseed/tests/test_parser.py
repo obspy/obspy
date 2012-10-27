@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from StringIO import StringIO
 from lxml import etree
 from obspy.core import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
@@ -29,7 +27,6 @@ class ParserTestCase(unittest.TestCase):
                 ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
-    @skipIfPython25
     def test_issue165(self):
         """
         Test cases related to #165:
@@ -122,7 +119,6 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(strict=True)
         parser.read(data)
 
-    @skipIfPython25
     def test_multipleContinuedStationControlHeader(self):
         """
         """
@@ -293,7 +289,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
-    @skipIfPython25
     def test_getPAZ(self):
         """
         Test extracting poles and zeros information
@@ -482,7 +477,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
-    @skipIfPython25
     def test_missingRequiredDateTimes(self):
         """
         A warning should be raised if a blockette misses a required date.
@@ -527,7 +521,6 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(file)
         parser.getRESP()
 
-    @skipIfPython25
     def test_issue319(self):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
@@ -542,7 +535,6 @@ class ParserTestCase(unittest.TestCase):
             parser = Parser(filename)
             self.assertEquals(parser.version, 2.3)
 
-    @skipIfPython25
     def test_issue157(self):
         """
         Test case for issue #157: re-using parser object.
@@ -574,7 +566,6 @@ class ParserTestCase(unittest.TestCase):
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('CL.AIO.00.EHZ', dt)
 
-    @skipIfPython25
     def test_issue361(self):
         """
         Test case for issue #361.

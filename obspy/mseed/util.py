@@ -2,7 +2,6 @@
 """
 Mini-SEED specific utilities.
 """
-from __future__ import with_statement
 from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy.core import UTCDateTime
 from obspy.core.util import scoreatpercentile

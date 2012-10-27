@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core import UTCDateTime
-from obspy.core.util.decorator import skipIf, skipIfPython25
+from obspy.core.util.decorator import skipIf
 import copy
 import datetime
 import numpy as np
@@ -326,7 +326,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         end = UTCDateTime(-1000.5)
         self.assertAlmostEquals(end - start, -1000.5)
 
-    @skipIfPython25
     def test_smallNegativeUTCDateTime(self):
         """
         Windows OS supports only negative timestamps < -43200

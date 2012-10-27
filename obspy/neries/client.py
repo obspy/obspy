@@ -19,18 +19,12 @@ from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
 import StringIO
 import functools
+import json
 import os
 import platform
-import sys
 import urllib
 import urllib2
 import warnings
-try:
-    import json
-    if not getattr(json, "loads", None):
-        json.loads = json.read  # @UndefinedVariable
-except ImportError:
-    import simplejson as json
 
 
 SEISMOLINK_WSDL = "http://www.orfeus-eu.org/wsdl/seismolink/seismolink.wsdl"
@@ -165,11 +159,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:  # pragma: no cover
-            response = urllib2.urlopen(remoteaddr)
-        else:  # pragma: no cover
-            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
