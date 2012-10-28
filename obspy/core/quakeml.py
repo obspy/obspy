@@ -27,6 +27,10 @@ from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
 
 
+NSMAP = {None: "http://quakeml.org/xmlns/bed/1.2",
+         'q': "http://quakeml.org/xmlns/quakeml/1.2"}
+
+
 def isQuakeML(filename):
     """
     Checks whether a file is QuakeML format.
@@ -1273,9 +1277,7 @@ class Pickler(object):
         """
         Converts a Catalog object into XML string.
         """
-        root_el = etree.Element(
-            '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
-            attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
+        root_el = etree.Element('{%s}quakeml' % NSMAP['q'], nsmap=NSMAP)
         catalog_el = etree.Element('eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
         # optional catalog parameters
