@@ -27,3 +27,4 @@ for DIST in squeeze wheezy lucid natty oneiric precise; do
         mv $PACKAGEDIR/* $BASEDIR 2>&1 >> $LOG
     done
 done
+ln $BASEDIR/*.deb $PACKAGEDIR/ 2>&1 >> $LOG
