@@ -28,6 +28,7 @@ TAGS="`git tag | tail -1` master"
 for TAG in $TAGS; do
     echo "#### Working on $TAG"
     cd $GITDIR
+    git clean -fxd
     git checkout $TAG
     git clean -fxd
     # remove dependencies of distribute for obspy.core
