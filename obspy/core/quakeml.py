@@ -1341,7 +1341,7 @@ class Pickler(object):
             catalog_el.append(event_el)
         nsmap = NSMAP
         for _i, ns in enumerate(self.ns_list):
-            if ns in nsmap:
+            if ns in nsmap.values():
                 continue
             nsmap["ns%d" % _i] = ns
         root_el = etree.Element('{%s}quakeml' % NSMAP['q'], nsmap=nsmap)
