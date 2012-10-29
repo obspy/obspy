@@ -878,10 +878,11 @@ class Pickler(object):
             element.append(comment_el)
 
     def _additionals(self, additionals, element):
-        for ns, tag, value in additionals:
+        for key, _dict in additionals.iteritems():
+            ns = _dict['namespace']
             self.ns_list.append(ns)
-            tag = "{%s}%s" % (ns, tag)
-            self._str(value, element, tag)
+            tag = "{%s}%s" % (ns, key)
+            self._str(_dict['value'], element, tag)
 
     def _arrival(self, arrival):
         """
@@ -1114,7 +1115,8 @@ class Pickler(object):
         self._str(pick.evaluation_status, element, 'evaluationStatus')
         self._comments(pick.comments, element)
         self._creation_info(pick.creation_info, element)
-        self._additionals(pick.additionals, element)
+        if hasattr(pick, "additionals"):
+            self._additionals(pick.additionals, element)
         return element
 
     def _nodal_planes(self, obj, element):
