@@ -758,6 +758,9 @@ class Pickler(object):
     """
     Serializes an ObsPy Catalog object into QuakeML format.
     """
+    def __init__(self):
+        self.ns_list = []
+        
     def dump(self, catalog, file):
         """
         Writes ObsPy Catalog into given file.
@@ -873,6 +876,12 @@ class Pickler(object):
             etree.SubElement(comment_el, 'text').text = comment.text
             self._creation_info(comment.creation_info, comment_el)
             element.append(comment_el)
+
+    def _additionals(self, additionals, element):
+        for ns, tag, value in additionals:
+            self.ns_list.append(ns)
+            tag = "{%s}%s" % (ns, tag)
+            self._str(value, element, tag)
 
     def _arrival(self, arrival):
         """
@@ -1105,6 +1114,7 @@ class Pickler(object):
         self._str(pick.evaluation_status, element, 'evaluationStatus')
         self._comments(pick.comments, element)
         self._creation_info(pick.creation_info, element)
+        self._additionals(pick.additionals, element)
         return element
 
     def _nodal_planes(self, obj, element):
@@ -1277,7 +1287,6 @@ class Pickler(object):
         """
         Converts a Catalog object into XML string.
         """
-        root_el = etree.Element('{%s}quakeml' % NSMAP['q'], nsmap=NSMAP)
         catalog_el = etree.Element('eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
         # optional catalog parameters
@@ -1285,7 +1294,6 @@ class Pickler(object):
             self._str(catalog.description, catalog_el, 'description')
         self._comments(catalog.comments, catalog_el)
         self._creation_info(catalog.creation_info, catalog_el)
-        root_el.append(catalog_el)
         for event in catalog:
             # create event node
             event_el = etree.Element('event',
@@ -1331,6 +1339,13 @@ class Pickler(object):
                 event_el.append(self._focal_mechanism(focal_mechanism))
             # add event node to catalog
             catalog_el.append(event_el)
+        nsmap = NSMAP
+        for _i, ns in enumerate(self.ns_list):
+            if ns in nsmap:
+                continue
+            nsmap["ns%d" % _i] = ns
+        root_el = etree.Element('{%s}quakeml' % NSMAP['q'], nsmap=nsmap)
+        root_el.append(catalog_el)
         return tostring(root_el, pretty_print=pretty_print)
 
 
