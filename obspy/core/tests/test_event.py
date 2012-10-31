@@ -43,6 +43,15 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(ev1 == 1)
         self.assertFalse(ev2 == "id1")
 
+    def test_449(self):
+        """
+        Very basic test for #449
+        """
+        e = Event()
+        e.comments.append("test")
+        e.clear()
+        self.assertTrue(e == Event())
+
 
 class OriginTestCase(unittest.TestCase):
     """
