@@ -1,5 +1,5 @@
 <img class="right" src="https://raw.github.com/obspy/obspy/master/misc/docs/source/_static/obspy-logo.png" />
-## ObsPy: A Python Toolbox<br /> for seismology seismological observatories
+## ObsPy: A Python Toolbox<br /> for seismology/seismological observatories
 
 ObsPy is an open-source project dedicated to provide a **Python framework for processing seismological** data. It provides parsers for common file formats, clients to access data centers and seismological signal processing routines which allow the manipulation of seismological time series (see [Beyreuther et al. 2010](http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/), [Megies et al. 2011](http://www.annalsofgeophysics.eu/index.php/annals/article/view/4838)).
 
