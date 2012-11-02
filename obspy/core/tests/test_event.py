@@ -2,7 +2,6 @@
 
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier
-import obspy.core.event
 from obspy.core.utcdatetime import UTCDateTime
 import os
 import sys

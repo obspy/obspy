@@ -12,7 +12,6 @@ Decorator used in ObsPy.
 from obspy.core.util.base import NamedTemporaryFile
 import functools
 import os
-import sys
 import unittest
 import warnings
 
