@@ -9,7 +9,6 @@ ArcLink/WebDC client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from copy import deepcopy
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy.core import read, UTCDateTime
@@ -424,9 +423,8 @@ class Client(object):
                     # multiple entries found
                     for entry in entries:
                         # trim current trace to timespan of current entry
-                        temp = deepcopy(tr)
-                        temp.trim(entry.starttime,
-                                  entry.get('endtime', None))
+                        temp = tr.slice(entry.starttime,
+                                        entry.get('endtime', None))
                         # append valid paz
                         if 'paz' not in entry:
                             raise ArcLinkException(MSG_NOPAZ)
