@@ -3,7 +3,6 @@
 The obspy.seedlink.slclient test suite.
 """
 
-#from obspy.core.utcdatetime import UTCDateTime
 from obspy.seedlink.slclient import SLClient
 import unittest
 
