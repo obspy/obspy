@@ -29,6 +29,8 @@ _ROUTING_NS_0_1 = "http://geofon.gfz-potsdam.de/ns/routing/0.1/"
 _INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
+MSG_NOPAZ = "No Poles and Zeros information returned by server."
+
 
 class ArcLinkException(Exception):
     """
@@ -426,6 +428,8 @@ class Client(object):
                         temp.trim(entry.starttime,
                                   entry.get('endtime', None))
                         # append valid paz
+                        if 'paz' not in entry:
+                            raise ArcLinkException(MSG_NOPAZ)
                         temp.stats['paz'] = entry.paz
                         # add to end of stream
                         stream.append(temp)
@@ -433,7 +437,10 @@ class Client(object):
                     stream.remove(tr)
                 else:
                     # single entry found - apply direct
-                    tr.stats['paz'] = entries[0].paz
+                    entry = entries[0]
+                    if 'paz' not in entry:
+                        raise ArcLinkException(MSG_NOPAZ)
+                    tr.stats['paz'] = entry.paz
         return stream
 
     def saveWaveform(self, filename, network, station, location, channel,
