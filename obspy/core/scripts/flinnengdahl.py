@@ -3,7 +3,7 @@
 """
 USAGE: %prog longitude latitude
 
-Get Flinn-Engahl region name from Longitude and Latitude
+Get Flinn-Engahl region name from longitude and latitude
 """
 import sys
 from optparse import OptionParser
