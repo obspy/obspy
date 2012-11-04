@@ -131,11 +131,7 @@ class FlinnEngdahl(object):
 
         return fe_name
 
+
 if __name__ == '__main__':
-    import sys
-
-    longitude = float(sys.argv[1])
-    latitude = float(sys.argv[2])
-
-    flinn_engdahl = FlinnEngdahl()
-    print flinn_engdahl.get_region(longitude, latitude)
+    import doctest
+    doctest.testmod(exclude_empty=True)
