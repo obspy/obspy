@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Automated script to build all packages for all distributions.
 # schroot environments have to be set up accordingly beforehand.
 
@@ -24,8 +24,13 @@ for DIST in squeeze wheezy lucid natty oneiric precise quantal; do
         echo "#### $DISTARCH" >> $LOG
         git clean -fxd 2>&1 >> $LOG
         cd /tmp  # can make problems to enter schroot environment from a folder not present in the schroot
+        COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh &>> $LOG"
+        if [[ "$DIST" == "quantal" ]]
+        then
+            COMMAND="export GIT_SSL_NO_VERIFY=true; $COMMAND"
+        fi
         SCHROOT_SESSION=$(schroot --begin-session -c $DISTARCH)
-        echo "cd $DEBSCRIPTDIR; ./deb__build_debs.sh &>> $LOG" | schroot --run-session -c "$SCHROOT_SESSION" 2>&1 >> $LOG
+        echo "$COMMAND" | schroot --run-session -c "$SCHROOT_SESSION" 2>&1 >> $LOG
         schroot -f --end-session -c "$SCHROOT_SESSION" 2>&1 >> $LOG
         mv $PACKAGEDIR/* $BASEDIR 2>&1 >> $LOG
     done
