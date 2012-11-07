@@ -36,7 +36,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._ltrim(0.5)
         tr.verify()
-        np.testing.assert_array_equal(tr.data[0:5], \
+        np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([100, 101, 102, 103, 104]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
@@ -47,7 +47,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._ltrim(1.010)
         tr.verify()
-        np.testing.assert_array_equal(tr.data[0:5], \
+        np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -58,7 +58,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
         tr.verify()
-        np.testing.assert_array_equal(tr.data[0:5], \
+        np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([202, 203, 204, 205, 206]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -121,7 +121,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._rtrim(0.5)
         tr.verify()
-        np.testing.assert_array_equal(tr.data[-5:], \
+        np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([895, 896, 897, 898, 899]))
         self.assertEquals(len(tr.data), 900)
         self.assertEquals(tr.stats.npts, 900)
@@ -132,7 +132,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._rtrim(1.010)
         tr.verify()
-        np.testing.assert_array_equal(tr.data[-5:], \
+        np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -143,7 +143,7 @@ class TraceTestCase(unittest.TestCase):
         tr = deepcopy(trace)
         tr._rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
         tr.verify()
-        np.testing.assert_array_equal(tr.data[-5:], \
+        np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([793, 794, 795, 796, 797]))
         self.assertEquals(len(tr.data), 798)
         self.assertEquals(tr.stats.npts, 798)
@@ -194,6 +194,40 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.sampling_rate, 200.0)
         self.assertEquals(tr.stats.starttime, start)
         self.assertEquals(tr.stats.endtime, start)
+
+    def test_rtrim_with_padding(self):
+        """
+        Tests the _rtrim() method of the Trace class with padding. It has
+        already been tested in the two sided trimming tests. This is just to
+        have an explicit test. Also tests issue #429.
+        """
+        # set up
+        trace = Trace(data=np.arange(10))
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        trace.stats.starttime = start
+        trace.stats.sampling_rate = 1.0
+        trace.verify()
+
+        # Pad with no fill_value will mask the additional values.
+        tr = trace.copy()
+        end = tr.stats.endtime
+        tr._rtrim(end + 10, pad=True)
+        self.assertEqual(tr.stats.endtime, trace.stats.endtime + 10)
+        np.testing.assert_array_equal(tr.data[0:10], np.arange(10))
+        # Check that the first couple of entries are not masked.
+        self.assertFalse(tr.data[0:10].mask.any())
+        # All the other entries should be masked.
+        self.assertTrue(tr.data[10:].mask.all())
+
+        # Pad with fill_value.
+        tr = trace.copy()
+        end = tr.stats.endtime
+        tr._rtrim(end + 10, pad=True, fill_value=-33)
+        self.assertEqual(tr.stats.endtime, trace.stats.endtime + 10)
+        # The first ten entries should not have changed.
+        np.testing.assert_array_equal(tr.data[0:10], np.arange(10))
+        # The rest should be filled with the fill_value.
+        np.testing.assert_array_equal(tr.data[10:], np.ones(10) * -33)
 
     def test_trim(self):
         """
@@ -372,9 +406,9 @@ class TraceTestCase(unittest.TestCase):
         mask[800:1000] = True
         mask[1800:2400] = True
         np.testing.assert_array_equal(overlap_gap.data.mask, mask)
-        np.testing.assert_array_equal(overlap_gap.data.data[:800], \
+        np.testing.assert_array_equal(overlap_gap.data.data[:800],
                                       tr1.data[:800])
-        np.testing.assert_array_equal(overlap_gap.data.data[1000:1800], \
+        np.testing.assert_array_equal(overlap_gap.data.data[1000:1800],
                                       tr2.data[200:])
         np.testing.assert_array_equal(overlap_gap.data.data[2400:], tr3.data)
         # gap
@@ -761,11 +795,11 @@ class TraceTestCase(unittest.TestCase):
         tr0 = Trace(np.arange(3))
         tr1 = Trace(np.arange(3))
         tr2 = Trace(np.arange(3), {'station': 'X'})
-        tr3 = Trace(np.arange(3), {'processing': \
+        tr3 = Trace(np.arange(3), {'processing':
                                    ["filter:lowpass:{'freq': 10}"]})
         tr4 = Trace(np.arange(5))
         tr5 = Trace(np.arange(5), {'station': 'X'})
-        tr6 = Trace(np.arange(5), {'processing': \
+        tr6 = Trace(np.arange(5), {'processing':
                                    ["filter:lowpass:{'freq': 10}"]})
         # tests that should raise a NotImplementedError (i.e. <=, <, >=, >)
         self.assertRaises(NotImplementedError, tr1.__lt__, tr1)

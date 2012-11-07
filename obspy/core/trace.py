@@ -253,7 +253,7 @@ class Trace(object):
             msg = "Trace.data must be a NumPy array."
             raise ValueError(msg)
         # set some defaults if not set yet
-        if header == None:
+        if header is None:
             # Default values: For detail see
             # http://www.obspy.org/wiki/\
             # KnownIssues#DefaultParameterValuesinPython
@@ -337,7 +337,7 @@ class Trace(object):
         out = ''
         # output depending on delta or sampling rate bigger than one
         if self.stats.sampling_rate < 0.1:
-            if hasattr(self.stats, 'preview')  and self.stats.preview:
+            if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(delta).1f s, %(npts)d samples [preview]"
@@ -346,7 +346,7 @@ class Trace(object):
                       "%(starttime)s - %(endtime)s | " + \
                       "%(delta).1f s, %(npts)d samples"
         else:
-            if hasattr(self.stats, 'preview')  and self.stats.preview:
+            if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
                       "%(starttime)s - %(endtime)s | " + \
                       "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
@@ -858,7 +858,7 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((starttime - self.stats.starttime) * \
+            delta = round((starttime - self.stats.starttime) *
                           self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
@@ -866,12 +866,12 @@ class Trace(object):
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                         float(self.stats.sampling_rate)
-                newdelta = round((starttime - newstarttime) * \
+                newdelta = round((starttime - newstarttime) *
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
-            delta = int(math.floor(round((self.stats.starttime - starttime) * \
+            delta = int(math.floor(round((self.stats.starttime - starttime) *
                                           self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
@@ -886,7 +886,7 @@ class Trace(object):
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of points, e.g. 189336539799
-                raise Exception("Time offset between starttime and " + \
+                raise Exception("Time offset between starttime and "
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((gap, self.data))
             return
@@ -918,14 +918,14 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) * \
+            delta = round((endtime - self.stats.starttime) *
                            self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
             #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
             #                       self.stats.sampling_rate, 7)))
-            delta = int(math.floor(round((endtime - self.stats.endtime) * \
+            delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
             return
@@ -935,7 +935,7 @@ class Trace(object):
             except ValueError:
                 # createEmptyDataChunk returns negative ValueError ?? for
                 # too large number of pointes, e.g. 189336539799
-                raise Exception("Time offset between starttime and " + \
+                raise Exception("Time offset between starttime and " +
                                 "trace.starttime too large")
             self.data = np.ma.concatenate((self.data, gap))
             return
@@ -945,18 +945,11 @@ class Trace(object):
             self.data = np.empty(0, dtype=org_dtype)
             return
         # cut from right
-        if pad:
-            delta = abs(delta)
-            total = len(self.data) - delta
-            if endtime == self.stats.starttime:
-                total = 1
-            self.data = self.data[:total]
-        else:
-            delta = abs(delta)
-            total = len(self.data) - delta
-            if endtime == self.stats.starttime:
-                total = 1
-            self.data = self.data[:total]
+        delta = abs(delta)
+        total = len(self.data) - delta
+        if endtime == self.stats.starttime:
+            total = 1
+        self.data = self.data[:total]
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
