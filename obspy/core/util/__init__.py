@@ -27,6 +27,7 @@ from obspy.core.util.base import NamedTemporaryFile, add_doctests, \
     _getVersionString, NETWORK_MODULES, _readFromPlugin
 from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
+from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
