@@ -1,3 +1,4 @@
+./debian/obspy-flinn-engdahl.1
 ./debian/obspy-runtests.1
 ./debian/obspy-reftek-rescue.1
 ./debian/obspy-indexer.1
