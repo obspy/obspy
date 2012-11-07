@@ -835,6 +835,18 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertFalse(t2 > t2_float)
         self.assertFalse(t2 < t2_float)
 
+    def test_richComparisonNonNumericTypes(self):
+        """
+        """
+        dt = UTCDateTime()
+        for obj in [None, 'string', object()]:
+            self.assertFalse(dt == obj)
+            self.assertTrue(dt != obj)
+            self.assertFalse(dt <= obj)
+            self.assertFalse(dt < obj)
+            self.assertFalse(dt > obj)
+            self.assertFalse(dt >= obj)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')

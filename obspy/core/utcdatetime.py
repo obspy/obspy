@@ -924,7 +924,10 @@ class UTCDateTime(object):
         >>> t1 == t2
         False
         """
-        return round(self.timestamp - float(other), self.__precision) == 0
+        try:
+            return round(self.timestamp - float(other), self.__precision) == 0
+        except (TypeError, ValueError):
+            return False
 
     def __ne__(self, other):
         """
@@ -978,7 +981,10 @@ class UTCDateTime(object):
         >>> t1 < t2
         True
         """
-        return round(self.timestamp - float(other), self.__precision) < 0
+        try:
+            return round(self.timestamp - float(other), self.__precision) < 0
+        except (TypeError, ValueError):
+            return False
 
     def __le__(self, other):
         """
@@ -1005,7 +1011,10 @@ class UTCDateTime(object):
         >>> t1 <= t2
         False
         """
-        return round(self.timestamp - float(other), self.__precision) <= 0
+        try:
+            return round(self.timestamp - float(other), self.__precision) <= 0
+        except (TypeError, ValueError):
+            return False
 
     def __gt__(self, other):
         """
@@ -1032,7 +1041,10 @@ class UTCDateTime(object):
         >>> t1 > t2
         True
         """
-        return round(self.timestamp - float(other), self.__precision) > 0
+        try:
+            return round(self.timestamp - float(other), self.__precision) > 0
+        except (TypeError, ValueError):
+            return False
 
     def __ge__(self, other):
         """
@@ -1059,7 +1071,10 @@ class UTCDateTime(object):
         >>> t1 >= t2
         False
         """
-        return round(self.timestamp - float(other), self.__precision) >= 0
+        try:
+            return round(self.timestamp - float(other), self.__precision) >= 0
+        except (TypeError, ValueError):
+            return False
 
     def __repr__(self):
         """
