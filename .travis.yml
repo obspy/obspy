@@ -2,6 +2,7 @@
 # see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
 language: erlang
 before_install:
+  - sudo hostname travis-ci.org
   - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
 install:
   - sudo python setup.py install
