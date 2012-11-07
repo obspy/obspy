@@ -635,7 +635,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Test case for issue #372.
         """
-        dt = UTCDateTime("20120529070000")
+        dt = UTCDateTime("20120729070000")
         client = Client()
         st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
                                 metadata=True)
