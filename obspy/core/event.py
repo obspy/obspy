@@ -34,7 +34,6 @@ import weakref
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
 ATTRIBUTE_HAS_ERRORS = True
-BASECLASS = AttribDict
 
 
 def readEvents(pathname_or_url=None, format=None, **kwargs):
@@ -235,7 +234,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         >>> test_event.some_error_quantity_errors  # doctest: +ELLIPSIS
         QuantityError(...)
     """
-    class AbstractEventType(BASECLASS):
+    class AbstractEventType(AttribDict):
         # Keep the class attributes in a class level list for a manual property
         # implementation that works when inheriting from AttribDict.
         _properties = []
@@ -270,7 +269,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                     setattr(self, key, QuantityError())
 
         def clear(self):
-            BASECLASS.clear(self)
+            super(AbstractEventType, self).clear()
             self.__init__()
 
         def __str__(self):

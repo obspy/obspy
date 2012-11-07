@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
-    Origin, CreationInfo, ResourceIdentifier
+    Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
 import os
 import sys
@@ -19,7 +19,7 @@ class EventTestCase(unittest.TestCase):
         """
         event = readEvents()[1]
         s = event.short_str()
-        self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" + \
+        self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                           " | 4.3 ML | manual", s)
 
     def test_eq(self):
@@ -42,14 +42,39 @@ class EventTestCase(unittest.TestCase):
         self.assertFalse(ev1 == 1)
         self.assertFalse(ev2 == "id1")
 
-    def test_449(self):
+    def test_clear_method_resets_objects(self):
         """
-        Very basic test for #449
+        Tests that the clear() method properly resets all objects. Test for
+        #449.
         """
+        # Test with basic event object.
         e = Event()
-        e.comments.append("test")
+        e.comments.append(Comment("test"))
+        e.event_type = "explosion"
+        self.assertEqual(len(e.comments), 1)
+        self.assertEqual(e.event_type, "explosion")
         e.clear()
         self.assertTrue(e == Event())
+        self.assertEqual(len(e.comments), 0)
+        self.assertEqual(e.event_type, None)
+        # Test with pick object. Does not really fit in the event test case but
+        # it tests the same thing...
+        p = Pick()
+        p.comments.append(Comment("test"))
+        p.phase_hint = "p"
+        self.assertEqual(len(p.comments), 1)
+        self.assertEqual(p.phase_hint, "p")
+        # Add some more random attributes. These should disappear upon
+        # cleaning.
+        p.test_1 = "a"
+        p.test_2 = "b"
+        self.assertEqual(p.test_1, "a")
+        self.assertEqual(p.test_2, "b")
+        p.clear()
+        self.assertEqual(len(p.comments), 0)
+        self.assertEqual(p.phase_hint, None)
+        self.assertFalse(hasattr(p, "test_1"))
+        self.assertFalse(hasattr(p, "test_2"))
 
 
 class OriginTestCase(unittest.TestCase):
@@ -315,6 +340,7 @@ class CatalogTestCase(unittest.TestCase):
                                 for event in cat_bigger))
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
+
 
 class WaveformStreamIDTestCase(unittest.TestCase):
     """
