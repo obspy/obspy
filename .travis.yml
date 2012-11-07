@@ -1,0 +1,11 @@
+# We pretend to be erlang because we can't use the python support in travis-ci
+# see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
+language: erlang
+before_install:
+  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
+install:
+  - sudo python setup.py install
+script:
+  - sudo obspy-runtests -r
+notifications:
+    email: false
