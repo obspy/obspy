@@ -25,12 +25,13 @@ For more information visit http://www.obspy.org.
 # dependency. Inplace installation with pip works also without importing
 # setuptools.
 try:
-    import setuptools
+    import setuptools  # @UnresolvedImport @UnusedImport
 except:
     pass
 
 from numpy.distutils.core import setup
 from numpy.distutils.misc_util import Configuration
+from numpy.distutils.ccompiler import get_default_compiler
 
 import glob
 import inspect
@@ -51,6 +52,14 @@ from base import _getVersionString  # @UnresolvedImport
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 DOCSTRING = __doc__.split("\n")
+
+# check for MSVC
+if platform.system() == "Windows" and ('msvc' in sys.argv or \
+    '-c' not in sys.argv and get_default_compiler() == 'msvc'):
+    IS_MSVC = True
+else:
+    IS_MSVC = False
+
 
 # package specific settings
 KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
@@ -292,6 +301,32 @@ def _get_lib_name(lib):
             platform.python_version_tuple()[:2]]))
 
 
+# monkey patches for MS Visual Studio
+if IS_MSVC:
+    # support library paths containing spaces
+    def _library_dir_option(self, dir):
+        return '"/LIBPATH:%s"' % (dir)
+
+    from distutils.msvc9compiler import MSVCCompiler
+    MSVCCompiler.library_dir_option = _library_dir_option
+
+    # remove 'init' entry in exported symbols
+    def _get_export_symbols(self, ext):
+        return ext.export_symbols
+    from distutils.command.build_ext import build_ext
+    build_ext.get_export_symbols = _get_export_symbols
+
+    # helper function for collecting export symbols from .def files
+    def export_symbols(*path):
+        lines = open(os.path.join(*path), 'r').readlines()[2:]
+        return [s.strip() for s in lines if s.strip() != '']
+
+    # add "x86_64-w64-mingw32-gfortran.exe" to executables
+    from numpy.distutils.fcompiler.gnu import Gnu95FCompiler
+    Gnu95FCompiler.possible_executables = ["x86_64-w64-mingw32-gfortran.exe",
+                                           'gfortran', 'f95']
+
+
 def configuration(parent_package="", top_path=None):
     """
     Config function mainly used to compile C and Fortran code and to add data
@@ -299,44 +334,77 @@ def configuration(parent_package="", top_path=None):
     """
     config = Configuration("", parent_package, top_path)
 
-    # Add obspy.gse2 source files.
-    gse2_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src",
-        "GSE_UTI")
-    gse2_files = [os.path.join(gse2_src_path, "buf.c"),
-        os.path.join(gse2_src_path, "gse_functions.c")]
-    config.add_extension(_get_lib_name("gse2"), gse2_files)
+    # GSE2
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src", "GSE_UTI")
+    files = [os.path.join(path, "buf.c"),
+             os.path.join(path, "gse_functions.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
+    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
 
-    # Add obspy.mseed source files.
-    mseed_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
-    mseed_src_files = glob.glob(os.path.join(mseed_src_path, "libmseed",
-        "*.c"))
-    mseed_src_files.append(os.path.join(mseed_src_path, "obspy-readbuffer.c"))
-    config.add_extension(_get_lib_name("mseed"), mseed_src_files)
+    # LIBMSEED
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
+    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
+    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # needed by libmseed lmplatform.h
+        kwargs['define_macros'] = [('WIN32', '1')]
+        # get export symbols
+        kwargs['export_symbols'] = \
+            export_symbols(path, 'libmseed', 'libmseed.def')
+        kwargs['export_symbols'] += \
+            export_symbols(path, 'obspy-readbuffer.def')
+        # workaround Win32 and MSVC - see issue #64
+        if '32' in platform.architecture()[0]:
+            kwargs['extra_compile_args'] = ["/fp:strict"]
+    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
 
-    # Add obspy.segy source files.
-    segy_files = [os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src",
-        "ibm2ieee.c")]
-    config.add_extension(_get_lib_name("segy"), segy_files)
+    # SEGY
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
+    files = [os.path.join(path, "ibm2ieee.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
+    config.add_extension(_get_lib_name("segy"), files, **kwargs)
 
-    # Add obspy.signal source code files.
-    signal_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
-    signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
-    signal_src_files.append(os.path.join(signal_src_path, "fft", "fftpack.c"))
-    config.add_extension(_get_lib_name("signal"), signal_src_files)
+    # SIGNAL
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    files = glob.glob(os.path.join(path, "*.c"))
+    files.append(os.path.join(path, "fft", "fftpack.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
+    config.add_extension(_get_lib_name("signal"), files, **kwargs)
 
-    # Add evalresp source files.
-    src_evresp = glob.glob(os.path.join("obspy", "signal", "src", "evalresp",
-        "*.c"))
-    config.add_extension(_get_lib_name("evresp"), src_evresp)
+    # EVALRESP
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # needed by evalresp evresp.h
+        kwargs['define_macros'] = [('WIN32', '1')]
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
 
-    # Add obspy.taup source files.
-    obspy_taup_dir = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
+    # TAUP
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "taup", "src")
     # Hack to get a architecture specific taup library filename.
     libname = _get_lib_name("tau")
     # XXX: The build subdirectory is more difficult to determine if installed
     # via pypi or other means. I could not find a reliable way of doing it.
     new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
-    interface_file = os.path.join(obspy_taup_dir, "src", "_libtau.pyf")
+    interface_file = os.path.join(path, "_libtau.pyf")
     with open(interface_file, "r") as open_file:
         interface_file = open_file.read()
     # In the original .pyf file the library is called _libtau.
@@ -346,9 +414,9 @@ def configuration(parent_package="", top_path=None):
     with open(new_interface_path, "w") as open_file:
         open_file.write(interface_file)
     # Proceed normally.
-    taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
-    taup_files.insert(0, new_interface_path)
-    config.add_extension(libname, taup_files)
+    files = glob.glob(os.path.join(path, "*.f"))
+    files.insert(0, new_interface_path)
+    config.add_extension(libname, files)
 
     # MANIFEST.in is apparently not read by numpy.distutils. Manually add the
     # files specified in it here.
