@@ -12,7 +12,7 @@ Download the image by clicking on the link in the green box on the right side. M
 Installation to another folder will most likely fail due to some fixed paths.
 
 The latest version is available here:
-  * [ObsPy-0.1.4.dmg](http://www.obspy.org/osx/ObsPy-0.1.4.dmg) (91.8 MB) ([changelog](http://www.obspy.org/osx/changelog.html), [older versions](http://www.obspy.org/osx))
+  * [ObsPy-0.1.4.dmg](http://www.obspy.org/osx/ObsPy-0.1.4.dmg) (91.8 MB) ([changelog](http://www.obspy.org/osx/changelog.html), [older versions](http://www.obspy.org/osx/))
 
 The Application works with OSX 10.6 and 10.7. It might also work on OSX 10.5 with an Intel processor but that is untested so far.
 
