@@ -2094,7 +2094,7 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type)
+            tr.taper(type=type, *args, **kwargs)
 
     def std(self):
         """
