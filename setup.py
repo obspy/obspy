@@ -237,7 +237,7 @@ ENTRY_POINTS = {
 UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
                                          "core", "util"))
 sys.path.append(UTIL_PATH)
-from base import _getVersionString  # @UnresolvedImport
+from version import get_git_version as _getVersionString
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
