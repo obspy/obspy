@@ -151,14 +151,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             # skip data
             stream.append(Trace(header=stats))
         else:
-            # parse data
-            data.seek(0)
-            if parts[8] == 'INTEGER':
-                data = loadtxt(data, dtype='int', ndlim=1)
-            elif parts[8] == 'FLOAT':
-                data = loadtxt(data, dtype='float32', ndlim=1)
-            else:
-                raise NotImplementedError
+            data = _parse_data(data, parts[8])
             stream.append(Trace(data=data, header=stats))
     return stream
 
@@ -224,14 +217,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
             # skip data
             stream.append(Trace(header=stats))
         else:
-            # parse data
-            data.seek(0)
-            if parts[8] == 'INTEGER':
-                data = loadtxt(data, dtype='int', ndlim=1)
-            elif parts[8] == 'FLOAT':
-                data = loadtxt(data, dtype='float32', ndlim=1)
-            else:
-                raise NotImplementedError
+            data = _parse_data(data, parts[8])
             stream.append(Trace(data=data, header=stats))
     return stream
 
@@ -444,6 +430,32 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
         # .26s cuts the Z from the time string
         np.savetxt(fh, data, fmt="%.26s  " + fmt)
     fh.close()
+
+
+def _parse_data(data, data_type):
+    """
+    Simple function to read data contained in a StringIO object to a numpy
+    array.
+
+    :type data: StringIO.StringIO object.
+    :param data: The actual data.
+    :type data_type: String
+    :param data_type: The data type of the expected data. Currently supported
+        are 'INTEGER' and 'FLOAT'.
+    """
+    if data_type == "INTEGER":
+        dtype = "int"
+    elif data_type == "FLOAT":
+        dtype = "float32"
+    else:
+        raise NotImplementedError
+    # Seek to the beginning of the StringIO.
+    data.seek(0)
+    # Data will always be a StringIO. Avoid to send empty StringIOs to
+    # numpy.readtxt() which raises a warning.
+    if not data.buf:
+        return np.array([], dtype=dtype)
+    return loadtxt(data, dtype=dtype, ndlim=1)
 
 
 if __name__ == '__main__':
