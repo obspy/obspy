@@ -1076,6 +1076,25 @@ class TraceTestCase(unittest.TestCase):
         tm = tr.times()
         self.assertTrue(np.alltrue(tr.data.mask == tm.mask))
 
+    def test_modulo_operation(self):
+        """
+        Method for testing the modulo operation. Mainly tests part not covered
+        by the doctests.
+        """
+        tr = Trace(data=np.arange(25))
+        # Wrong type raises.
+        self.assertRaises(TypeError, tr.__mod__, 5.0)
+        self.assertRaises(TypeError, tr.__mod__, "123")
+        # Needs to be a positive integer.
+        self.assertRaises(ValueError, tr.__mod__, 0)
+        self.assertRaises(ValueError, tr.__mod__, -11)
+        # If num is more then the number of samples, a copy will be returned.
+        st = tr % 500
+        self.assertTrue(tr == st[0])
+        self.assertEqual(len(st), 1)
+        self.assertFalse(tr.data is st[0].data)
+
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

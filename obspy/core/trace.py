@@ -492,11 +492,13 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
+        elif num <= 0:
+            raise ValueError("Positive Integer expected")
         from obspy.core import Stream
         st = Stream()
         total_length = np.size(self.data)
         if num >= total_length:
-            st.append(tr.copy())
+            st.append(self.copy())
             return st
         tstart = self.stats.starttime
         tend = tstart + (self.stats.delta * (num - 1))
