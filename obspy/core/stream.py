@@ -8,7 +8,7 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from glob import glob, iglob, has_magic
+from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
@@ -239,7 +239,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     else:
         # some file name
         pathname = pathname_or_url
-        for file in iglob(pathname):
+        for file in sorted(glob(pathname)):
             st.extend(_read(file, format, headonly, **kwargs).traces)
         if len(st) == 0:
             # try to give more specific information why the stream is empty
