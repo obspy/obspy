@@ -71,9 +71,13 @@ the names of all available test cases.
 
         $ obspy-runtests -r
 
+(8) To get a full list of all options, use::
+
+        $ obspy-runtests --help
+
 Of course you may combine most of the options here, e.g. in order to test
-all modules ecept the module obspy.sh and obspy.seishub, have a verbose output
-and report everything you would run::
+all modules except the module obspy.sh and obspy.seishub, have a verbose output
+and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
