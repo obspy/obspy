@@ -307,6 +307,22 @@ class CoreTestCase(unittest.TestCase):
         np.testing.assert_equal(st[0].data, st2[0].data[:100])
         self.assertEqual(st[0].stats['station'], 'RJOB')
 
+    def test_read_apply_calib(self):
+        """
+        Tests apply_calib parameter in read method.
+        """
+        gse2file = os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')
+        testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
+        # read w/ apply_calib = False
+        st = read(gse2file, apply_calib=False)
+        tr = st[0]
+        self.assertEqual(tr.data[0:13].tolist(), testdata)
+        # read w/ apply_calib = True
+        st = read(gse2file, apply_calib=True)
+        tr = st[0]
+        testdata = [n * tr.stats.calib for n in testdata]
+        self.assertEqual(tr.data[0:13].tolist(), testdata)
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

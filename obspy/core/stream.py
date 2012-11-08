@@ -26,7 +26,8 @@ import warnings
 
 
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
-        endtime=None, nearest_sample=True, dtype=None, **kwargs):
+         endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
+         **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -55,8 +56,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         which results in a slightly slower reading. If you specify a format no
         further format checking is done.
     :type headonly: bool, optional
-    :param headonly: If set to True, read only the data header. This is most
-        useful for scanning available meta information of huge data sets.
+    :param headonly: If set to ``True``, read only the data header. This is
+        most useful for scanning available meta information of huge data sets.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param starttime: Specify the start time to read.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
@@ -67,6 +68,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
     :type dtype: :class:`numpy.dtype`, optional
     :param dtype: Convert data of all traces into given numpy.dtype.
+    :type apply_calib: bool, optional
+    :param apply_calib: Automatically applies the calibration factor
+        ``trace.stats.calib`` for each trace, if set. Defaults to ``False``.
     :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -268,6 +272,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if dtype:
         for tr in st:
             tr.data = np.require(tr.data, dtype)
+    # applies calibration factor
+    if apply_calib:
+        for tr in st:
+            tr.data = tr.data * tr.stats.calib
     return st
 
 
