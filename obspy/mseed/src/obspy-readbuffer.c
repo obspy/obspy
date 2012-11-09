@@ -201,7 +201,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     MSRecord *msr = NULL;
     ContinuousSegment * segmentCurrent = NULL;
     hptime_t lastgap;
-    hptime_t hptimetol;
+    hptime_t hptimetol = 0;
     hptime_t nhptimetol;
     long data_offset;
     LinkedRecordList *recordHead = NULL;
