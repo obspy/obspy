@@ -399,7 +399,7 @@ class _TextTestRunner:
             self.stream.writeln(")")
         elif self.verbosity:
             self.stream.writeln("OK")
-        return results, time_taken
+        return results, time_taken, (faileds + erroreds)
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
@@ -451,8 +451,8 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites
-    ttr, total_time = _TextTestRunner(verbosity=verbosity,
-                                      timeit=timeit).run(suites)
+    ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
+                                              timeit=timeit).run(suites)
     if slowest:
         mydict = {}
         # loop over modules
@@ -475,6 +475,8 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             report = True
     if report:
         _createReport(ttr, total_time, log, server)
+    if errors:
+        return errors
 
 
 def run(interactive=True):
@@ -565,9 +567,9 @@ def run(interactive=True):
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
-    runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all, options.timeit, interactive, options.n,
-             exclude=options.module, tutorial=options.tutorial)
+    return runTests(verbosity, parser.largs, report, options.log,
+        options.server, options.all, options.timeit, interactive, options.n,
+        exclude=options.module, tutorial=options.tutorial)
 
 
 def main(interactive=True):
@@ -592,7 +594,9 @@ def main(interactive=True):
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
         print PSTATS_HELP
     else:
-        run(interactive)
+        errors = run(interactive)
+        if errors:
+            sys.exit(1)
 
 
 if __name__ == "__main__":
