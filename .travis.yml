@@ -2,10 +2,10 @@
 # see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
 language: erlang
 before_install:
-  - lsb_release -a
-  - sudo hostname travis-ci.org
-  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null
-  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done
+  - lsb_release -a  # get info on the operating system
+  - sudo hostname travis-ci.org  # change hostname for our test report list
+  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
+  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
 install:
   - sudo python setup.py install
 script:
