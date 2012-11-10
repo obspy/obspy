@@ -8,7 +8,6 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import warnings
 
 
 class AttribDict(dict, object):
@@ -36,6 +35,7 @@ class AttribDict(dict, object):
     >>> x[0:3]
     ['network', 'station']
     """
+    defaults = {}
     readonly = []
     priorized_keys = []
 
@@ -51,19 +51,17 @@ class AttribDict(dict, object):
         AttribDict({'a': 1, 'b': 2})
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
-        # Deprecated support of the data={} kwarg.
-        if kwargs.get("data") is not None and \
-                isinstance(kwargs["data"], dict):
-            kwargs.update(kwargs["data"])
-            del kwargs["data"]
-            msg = "The 'data' kwarg will be deprecated soon. Please use " + \
-                  "either AttribDict(data_dict) or pass the kwargs directly."
-            warnings.warn(msg, category=DeprecationWarning)
-        # Args is allowed to be exactly one dictionary which will then be
-        # appended to the kwarg dictionary.
-        if len(args) == 1 and isinstance(args[0], dict):
-            kwargs.update(args[0])
-        dict.__init__(kwargs)
+        # initialize dictionary with default values if set
+        dict.__init__(self.defaults)
+        # append argument
+        if args:
+            if len(args) > 1:
+                raise TypeError("Only one dictionary-like argument allowed")
+            arg0 = args[0]
+            if not isinstance(arg0, dict):
+                raise TypeError("Argument needs to be of dict type")
+            kwargs.update(arg0)
+        # append keyword arguments
         self.update(kwargs)
 
     def __repr__(self):

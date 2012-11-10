@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.util import AttribDict
+from obspy.core import AttribDict
 import unittest
 
 
@@ -198,6 +198,20 @@ class AttribDictTestCase(unittest.TestCase):
         # class attributes should be still present
         self.assertTrue(hasattr(ad, 'readonly'))
         self.assertTrue(hasattr(ad, 'priorized_keys'))
+
+    def test_init_argument(self):
+        """
+        Tests initialization of AttribDict with various arguments.
+        """
+        # one dict works as expected
+        ad = AttribDict({'test': 1})
+        self.assertEquals(ad.test, 1)
+        # multiple dicts results into TypeError
+        self.assertRaises(TypeError, AttribDict, {}, {})
+        self.assertRaises(TypeError, AttribDict, {}, {}, blah=1)
+        # non-dicts results into TypeError
+        self.assertRaises(TypeError, AttribDict, 1)
+        self.assertRaises(TypeError, AttribDict, object())
 
 
 def suite():
