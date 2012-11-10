@@ -95,6 +95,7 @@ import sys
 import time
 import unittest
 import warnings
+import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
@@ -109,6 +110,8 @@ The following commands will produce the same output as shown above:
 
 Type "help" to see all available options.
 """
+
+HOSTNAME = platform.node().split('.', 1)[0]
 
 
 #XXX: start of ugly monkey patch for Python 2.7
@@ -161,12 +164,11 @@ def _getSuites(verbosity=1, names=[]):
     return suites
 
 
-def _createReport(ttrs, timetaken, log, server):
+def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
     import httplib
     import urllib
     from urlparse import urlparse
-    import platform
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -240,7 +242,7 @@ def _createReport(ttrs, timetaken, log, server):
             result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
-    for func in ['system', 'node', 'release', 'version', 'machine',
+    for func in ['system', 'release', 'version', 'machine',
                  'processor', 'python_version', 'python_implementation',
                  'python_compiler', 'architecture']:
         try:
@@ -250,6 +252,8 @@ def _createReport(ttrs, timetaken, log, server):
             result['platform'][func] = temp
         except:
             result['platform'][func] = ''
+    # set node name to hostname if set
+    result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
@@ -404,7 +408,8 @@ class _TextTestRunner:
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0, exclude=[], tutorial=False):
+             interactive=False, slowest=0, exclude=[], tutorial=False,
+             hostname=HOSTNAME):
     """
     This function executes ObsPy test suites.
 
@@ -474,7 +479,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server)
+        _createReport(ttr, total_time, log, server, hostname)
     if errors:
         return errors
 
@@ -532,6 +537,9 @@ def run(interactive=True):
     report.add_option("-u", "--server", default="tests.obspy.org",
                       type="string", dest="server",
                       help="report server (default is tests.obspy.org)")
+    report.add_option("-n", "--node", default=HOSTNAME,
+                      type="string", dest="hostname",
+                      help="nodename visible at the report server")
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
@@ -569,7 +577,8 @@ def run(interactive=True):
         interactive = False
     return runTests(verbosity, parser.largs, report, options.log,
         options.server, options.all, options.timeit, interactive, options.n,
-        exclude=options.module, tutorial=options.tutorial)
+        exclude=options.module, tutorial=options.tutorial,
+        hostname=options.hostname)
 
 
 def main(interactive=True):
