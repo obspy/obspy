@@ -242,6 +242,19 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEquals(ad.test, 1)
         self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
 
+    def test_deepcopy(self):
+        """
+        Tests of setting readonly attributes.
+        """
+        class MyAttribDict(AttribDict):
+            defaults = {'test': 1}
+
+        ad = MyAttribDict()
+        ad.muh = 2
+        ad2 = ad.__deepcopy__()
+        self.assertEquals(ad2.test, 1)
+        self.assertEquals(ad2.muh, 2)
+
 
 def suite():
     return unittest.makeSuite(AttribDictTestCase, 'test')

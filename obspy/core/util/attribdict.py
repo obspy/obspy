@@ -95,8 +95,7 @@ class AttribDict(collections.MutableMapping):
 
     def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
         ad = self.__class__()
-        ad.__dict__.update(self.defaults)
-        ad.update(self)
+        ad.update(self.__dict__)
         return ad
 
     def update(self, adict={}):
