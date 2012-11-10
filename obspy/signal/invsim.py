@@ -432,8 +432,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     for d in [paz_remove, paz_simulate]:
         if d is None:
             continue
-        if not isinstance(d, dict):
-            raise TypeError("Expected dictionary, got %s." % type(d))
         for key in ['poles', 'zeros', 'gain']:
             if key not in d:
                 raise KeyError("Missing key: %s" % key)

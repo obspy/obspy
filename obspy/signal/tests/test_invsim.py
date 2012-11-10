@@ -325,7 +325,6 @@ class InvSimTestCase(unittest.TestCase):
         respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ.windows')
         evalresp(0.01, nfft, respf, dt)
 
-
     def test_evalrespBug395(self):
         """
         Was a bug due to inconstistent numerical range
@@ -337,10 +336,10 @@ class InvSimTestCase(unittest.TestCase):
         fh.close()
         samprate = 120.0
         nfft = 56328
-        args = [1/samprate, nfft, tmpfile,
+        args = [1.0 / samprate, nfft, tmpfile,
                 UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)]
         kwargs = {'units': 'VEL', 'freq': True}
-        h, f = evalresp(*args, **kwargs)
+        _h, f = evalresp(*args, **kwargs)
         self.assertEquals(len(f), nfft // 2 + 1)
         os.unlink(tmpfile)
 
