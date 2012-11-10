@@ -74,11 +74,11 @@ unpack all header fields.
 
 >>> st1 = readSEGY(filename)
 >>> len(st1[0].stats.segy.trace_header)
-6
+8
 >>> st1[0].stats.segy.trace_header.data_use # Unpacking a value on the fly.
 1
 >>> len(st1[0].stats.segy.trace_header) # This value will remain unpacked.
-7
+9
 >>> st2 = readSEGY(filename, unpack_trace_headers=True)
 >>> len(st2[0].stats.segy.trace_header)
 92
