@@ -197,7 +197,7 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertFalse(hasattr(ad, 'test2'))
         # class attributes should be still present
         self.assertTrue(hasattr(ad, 'readonly'))
-        self.assertTrue(hasattr(ad, 'priorized_keys'))
+        self.assertTrue(hasattr(ad, 'defaults'))
 
     def test_init_argument(self):
         """

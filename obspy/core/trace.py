@@ -127,7 +127,6 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
-
     readonly = ['endtime']
     defaults = {
         'sampling_rate': 1.0,
