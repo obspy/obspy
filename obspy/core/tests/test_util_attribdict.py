@@ -213,6 +213,35 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertRaises(TypeError, AttribDict, 1)
         self.assertRaises(TypeError, AttribDict, object())
 
+    def test_defaults(self):
+        """
+        Tests default of __getitem__/__getattr__ methods of AttribDict class.
+        """
+        # 1
+        ad = AttribDict()
+        ad['test'] = 'NEW'
+        self.assertEqual(ad.__getitem__('test'), 'NEW')
+        self.assertEqual(ad.__getitem__('xxx', 'blub'), 'blub')
+        self.assertEqual(ad.__getitem__('test', 'blub'), 'NEW')
+        self.assertEqual(ad.__getattr__('test'), 'NEW')
+        self.assertEqual(ad.__getattr__('xxx', 'blub'), 'blub')
+        self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
+        # should raise KeyError without default item
+        self.assertRaises(KeyError, ad.__getitem__, 'xxx')
+        self.assertRaises(KeyError, ad.__getattr__, 'xxx')
+
+    def test_set_readonly(self):
+        """
+        Tests of setting readonly attributes.
+        """
+        class MyAttribDict(AttribDict):
+            readonly = ['test']
+            defaults = {'test': 1}
+
+        ad = MyAttribDict()
+        self.assertEquals(ad.test, 1)
+        self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
+
 
 def suite():
     return unittest.makeSuite(AttribDictTestCase, 'test')
