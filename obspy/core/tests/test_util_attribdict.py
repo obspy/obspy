@@ -244,7 +244,7 @@ class AttribDictTestCase(unittest.TestCase):
 
     def test_deepcopy(self):
         """
-        Tests of setting readonly attributes.
+        Tests __deepcopy__ method of AttribDict.
         """
         class MyAttribDict(AttribDict):
             defaults = {'test': 1}
