@@ -39,7 +39,6 @@ class AttribDict(collections.MutableMapping):
     """
     defaults = {}
     readonly = []
-    priorized_keys = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -95,9 +94,10 @@ class AttribDict(collections.MutableMapping):
         return self.__class__(self.__dict__.copy())
 
     def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
-        st = self.__class__()
-        st.update(self)
-        return st
+        ad = self.__class__()
+        ad.__dict__.update(self.defaults)
+        ad.update(self)
+        return ad
 
     def update(self, adict={}):
         for (key, value) in adict.iteritems():
