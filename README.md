@@ -6,4 +6,4 @@ The goal of the ObsPy project is to facilitate **rapid application development f
 
 - - -
 
-[![Build Status](https://travis-ci.org/obspy/obspy.png)](https://travis-ci.org/obspy/obspy)
+[![Build Status](https://secure.travis-ci.org/obspy/obspy.png?branch=master)](https://travis-ci.org/obspy/obspy)
