@@ -31,7 +31,7 @@ It is recommended to install the required dependencies via the package manager o
 ```
 
 ## Manually from Source
-If necessary (e.g. in case your Python is too old), you still have the possibility of compiling your local Python source tree, which is described in the following:
+If necessary (e.g. in case your Python is too old), you still have the possibility of compiling your local Python source tree, which is described in the following (or in this automated script: https://github.com/obspy/sandbox/blob/master/buildbots/install_python.sh):
 
 ### Python
 
