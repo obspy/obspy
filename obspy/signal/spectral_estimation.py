@@ -1,6 +1,13 @@
+#!/usr/bin/env python
+#------------------------------------------------------------------------------
+# Filename: spectral_estimation.py
+#  Purpose: Various Routines Related to Spectral Estimation
+#   Author: Tobias Megies
+#    Email: tobias.megies@geophysik.uni-muenchen.de
+#
+# Copyright (C) 2011-2012 Tobias Megies
+#------------------------------------------------------------------------------
 """
-DEPRECATED: Use obspy.signal.spectral_estimation instead.
-
 Various Routines Related to Spectral Estimation
 
 :copyright:
@@ -10,17 +17,16 @@ Various Routines Related to Spectral Estimation
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+import os
+import warnings
+import pickle
+import math
+import bisect
+import numpy as np
 from obspy.core import Trace, Stream
 from obspy.core.util import getMatplotlibVersion
-from obspy.core.util.decorator import deprecated
 from obspy.signal import cosTaper
 from obspy.signal.util import prevpow2
-import bisect
-import math
-import numpy as np
-import os
-import pickle
-import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -119,8 +125,6 @@ def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
         slightly. In contrast to PITSA, this routine also returns the psd value
         at the Nyquist frequency and therefore is one frequency sample longer.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     # check if matplotlib is available, no official dependency for obspy.signal
     if MATPLOTLIB_VERSION is None:
         raise ImportError(msg_matplotlib_ImportError)
@@ -160,8 +164,6 @@ def fft_taper(data):
     .. warning::
         Inplace operation, so data should be float.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     data *= cosTaper(len(data), 0.2)
     return data
 
@@ -179,8 +181,6 @@ def welch_taper(data):
         returns data for convenience.
     :returns: Tapered data.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     data *= welch_window(len(data))
     return data
 
@@ -201,8 +201,6 @@ def welch_window(N):
     :rtype: :class:`~numpy.ndarray`
     :returns: Window function for tapering data.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     n = math.ceil(N / 2.0)
     taper_left = np.arange(n, dtype=np.float64)
     taper_left = 1 - np.power(taper_left / n, 2)
@@ -280,7 +278,6 @@ class PPSD():
 
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
-    @deprecated
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
                  is_rotational_data=False, db_bins=[-200, -50, 0.5]):
         """
@@ -331,8 +328,6 @@ class PPSD():
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.
         """
-        msg = 'Module is deprecated! Use obspy.signal.spectral_estimation.'
-        warnings.warn(msg, category=DeprecationWarning)
         # check if matplotlib is available, no official dependency for
         # obspy.signal
         if MATPLOTLIB_VERSION is None:
@@ -851,8 +846,6 @@ def get_NLNM():
     Returns periods and psd values for the New Low Noise Model.
     For information on New High/Low Noise Model see [Peterson2003]_.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
     nlnm = data['low_noise']
@@ -864,9 +857,12 @@ def get_NHNM():
     Returns periods and psd values for the New High Noise Model.
     For information on New High/Low Noise Model see [Peterson2003]_.
     """
-    msg = 'Module is deprecated! Use obspy.signal.spectral_estimation instead.'
-    warnings.warn(msg, category=DeprecationWarning)
     data = np.load(NOISE_MODEL_FILE)
     periods = data['model_periods']
     nlnm = data['high_noise']
     return (periods, nlnm)
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

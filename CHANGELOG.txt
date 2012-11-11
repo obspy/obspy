@@ -7,8 +7,8 @@ dev:
  - obspy.core:
    * fixing preview generation for sampling rates containing floats
    * fixing deprecated_keywords decorator for the case of removed keywords
-   * fixing SLIST and TSPAIR reading/writing of empty traces or traces containing
-     only one or two data points
+   * fixing SLIST and TSPAIR reading/writing of empty traces or traces
+     containing only one or two data points
    * adding taper() method to Trace/Stream using cosTaper of ObsPy and also
      all scipy windowing functions
    * adding cutout() method to Stream
@@ -35,7 +35,8 @@ dev:
  - obspy.seishub:
    * adding kwarg to control number of retries for failing requests
    * adding obspy.xseed as dependency (in setup.py and debian/control)
-   * changing obspy.client.station.getPAZ() call syntax to use seed_id (args/kwargs)
+   * changing obspy.client.station.getPAZ() call syntax to use seed_id
+     (args/kwargs)
    * adding local caching of requests for PAZ and coordinates to avoid repeated
      requests to server
  - obspy.sh:
@@ -43,20 +44,21 @@ dev:
    * fixing SH_ASC and Q reading/writing of empty traces or traces containing
      only one or two data points
  - obspy.signal:
+   * module psd has been refactored to spectral_estimation 
    * adding function for cross correlation pick correction
    * removing pitsa-compatibility in response function calculation
      (no complex conjugate)
    * preventing a possible duplicated overall sensitivity removal in seisSim
      when using the option seedresp
-   * adding optimized C-code for classic STALTA. Runs aproximally, 1000x
+   * adding optimized C-code for classic STALTA. Runs approximately, 1000x
      faster than pure python code. It has now the same order of speed as the
      recursive STALTA
    * optimizing bbfk C-source: Array analysis (sonic / bbfk) now runs at
      least twice as fast
  - obspy.xseed:
-   * fixed a bug with dataless to xseed conversion using split_stations=True
-   * fixed a bug affecting getPAZ() and getCoordinates() when selecting specific
-     channels from complex dataless files
+   * fixed a bug with Dataless to XSEED conversion using split_stations=True
+   * fixed a bug affecting getPAZ() and getCoordinates() when selecting
+     specific channels from complex dataless files
      (see: https://github.com/obspy/obspy/issues/412) 
  - obspy.mseed:
    * adding experimental details option, which extracts timing quality and

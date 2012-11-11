@@ -5,8 +5,8 @@ The psd test suite.
 """
 
 from obspy.core import Trace, Stream, UTCDateTime
-from obspy.signal import PPSD, psd
-from obspy.signal.psd import welch_window, welch_taper
+from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
+    welch_taper
 import numpy as np
 import os
 import unittest
@@ -25,7 +25,7 @@ class PsdTestCase(unittest.TestCase):
         """
         Test to compare results of PITSA's psd routine to the
         :func:`matplotlib.mlab.psd` routine wrapped in
-        :func:`obspy.signal.psd.psd`.
+        :func:`obspy.signal.spectral_estimation.psd`.
         The test works on 8192 samples long gaussian noise with a standard
         deviation of 0.1 generated with PITSA, sampling rate for processing in
         PITSA was 100.0 Hz, length of nfft 512 samples. The overlap in PITSA
