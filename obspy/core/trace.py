@@ -18,9 +18,6 @@ import numpy as np
 import warnings
 
 
-signal = None
-
-
 class Stats(AttribDict):
     """
     A container for additional header information of a ObsPy Trace object.
@@ -1165,20 +1162,12 @@ class Trace(object):
             tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
             tr.plot()
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
 
-        self.data = signal.seisSim(self.data, self.stats.sampling_rate,
+        from obspy.signal import seisSim
+        self.data = seisSim(self.data, self.stats.sampling_rate,
                 paz_remove=paz_remove, paz_simulate=paz_simulate,
                 remove_sensitivity=remove_sensitivity,
                 simulate_sensitivity=simulate_sensitivity, **kwargs)
@@ -1466,15 +1455,6 @@ class Trace(object):
         >>> tr.data
         array([0, 4, 8])
         """
-        global signal
-        if not signal:
-            try:
-                import obspy.signal as signal
-            except ImportError:
-                msg = "Error during import from obspy.signal. Please make " + \
-                      "sure obspy.signal is installed properly."
-                raise ImportError(msg)
-
         # check if endtime changes and this is not explicitly allowed
         if strict_length and len(self.data) % factor:
             msg = "Endtime of trace would change and strict_length=True."
@@ -1492,7 +1472,8 @@ class Trace(object):
 
         # actual downsampling, as long as sampling_rate is a float we would not
         # need to convert to float, but let's do it as a safety measure
-        self.data = signal.integerDecimation(self.data, factor)
+        from obspy.signal import integerDecimation
+        self.data = integerDecimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
 
         # add processing information to the stats dictionary
