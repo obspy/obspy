@@ -107,7 +107,7 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       int ptime;
       int itar;
       int amp,dtime,num,itrm;
-      int amptime,end_dur;
+      int end_dur;
       float rawold,ssx,ssx2,sum,sdev,mean;
       float edat,rdif,rdat,rda2,rdi2,omega,y2,yt,edev=0.0;
       int i,iamp,picklength;
@@ -185,7 +185,6 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       ifrst = 0;
       strcpy(pfm,"");
       noise = 0;
-      amptime = 0;
       i = 0;
 
 label160:
@@ -239,7 +238,7 @@ label160:
       }
 
       /*
-         once picklength is reached, only amp and amptime are updated
+         once picklength is reached, only amp is updated
          but no further trigger is evaluated
       */
       if ( i > picklength)
@@ -249,7 +248,6 @@ label160:
         if(iamp > amp)
         {
            amp= iamp;
-           amptime = i;
         }
         goto label160;
       }
@@ -277,7 +275,6 @@ label160:
       if(iamp > amp)
       {
         amp= iamp;
-        amptime= i;
       }
       if(i <= end_dur)
       {
