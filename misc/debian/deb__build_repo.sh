@@ -91,7 +91,17 @@ Contents: . .gz
 Origin: ObsPy Development Team
 Label: ObsPy Apt Repository
 Codename: precise
-Version: 12.04
+Version: 12.04 LTS
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: quantal
+Version: 12.10
 Architectures: amd64 i386
 Components: main
 Description: ObsPy Apt Repository
