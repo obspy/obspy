@@ -3,7 +3,7 @@
 from obspy.core import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
-                                                           STANDARD_ASC_HEADERS
+    STANDARD_ASC_HEADERS, readFLF
 import numpy as np
 import os
 import unittest
@@ -258,6 +258,16 @@ class CoreTestCase(unittest.TestCase):
                     os.remove(tempfile[:-4] + '.QBN')
                     os.remove(tempfile[:-4])
                 os.remove(tempfile)
+
+    def test_readFLF(self):
+        # read
+        paz = readFLF('TF_DSP_S+WOODAND.FLF')
+        self.assertEquals(paz.normalization_factor, 0.0028)
+        self.assertEquals(paz.name, 'TF_DSP_S+WOODAND.FLF')
+        self.assertEquals(paz.normalization_frequency, 1.0)
+        self.assertEquals(paz.poles, [(-6.283185 - 4.712389j),
+                                      (-6.283185 + 4.712389j)])
+        self.assertEquals(paz.zeros, [0j, 0j])
 
 
 def suite():

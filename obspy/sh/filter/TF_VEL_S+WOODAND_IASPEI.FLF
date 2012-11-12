@@ -1,0 +1,11 @@
+! Wood-Anderson seismometer transfer function
+! Velocity input derived from displacement function
+! TF_DSP_WOODAND_IASPEI.FLF
+1357913578
+1
+0.00208
+1
+(0.0,0.0)
+2
+(-5.49779,-5.60886)
+(-5.49779,5.60886)

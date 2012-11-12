@@ -1,0 +1,17 @@
+! WWSSN-SP transfer function
+! Displacement input as defined by IASPEI
+! http://www.iaspei.org/commissions/CSOI/Summary_WG-Recommendations_20110909.pdf
+! filter is normalized to 1 at 1 Hz (velocity proportional)
+1357913578
+1
+3343.5501079465153
+3
+(0.0,0.0)
+(0.0,0.0)
+(0.0,0.0)
+5
+(-3.72500,-6.22000)
+(-3.72500,6.22000)
+(-5.61200,0.00000)
+(-13.2400,0.00000)
+(-21.0800,0.00000)

@@ -1,0 +1,12 @@
+! Wood-Anderson seismometer transfer function
+! Displacement input as defined by IASPEI
+! http://www.iaspei.org/commissions/CSOI/Summary_WG-Recommendations_20110909.pdf
+1357913578
+1
+0.00208
+2
+(0.0,0.0)
+(0.0,0.0)
+2
+(-5.49779,-5.60886)
+(-5.49779,5.60886)

@@ -1,0 +1,16 @@
+! WWSSN-SP transfer function
+! Velocity input derived from displacement function
+! TF_DSP_S+WWSSN_SP_IASPEI.FLF
+! normalized to 1 at 1 Hz
+1357913578
+1
+3343.5501079465153
+2
+(0.0,0.0)
+(0.0,0.0)
+5
+(-3.72500,-6.22000)
+(-3.72500,6.22000)
+(-5.61200,0.00000)
+(-13.2400,0.00000)
+(-21.0800,0.00000)

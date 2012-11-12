@@ -10,8 +10,8 @@ SH bindings to ObsPy core module.
 """
 
 from StringIO import StringIO
-from obspy.core import Stream, Trace, UTCDateTime, Stats
-from obspy.core.util import loadtxt
+from obspy.core import Stream, Trace, UTCDateTime, Stats, PAZ
+from obspy.core.util import loadtxt, complexifyString
 import numpy as np
 import os
 
@@ -637,6 +637,56 @@ def fromUTCDateTime(dt):
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
                         dt.minute, dt.second, dt.microsecond / 1000)
+
+
+def readFLF(filename):
+    """
+    Reads Seismic Handler FLF files into PAZ object.
+
+    :type filename: str
+    :param filename: ASCII file to be read.
+    :rtype: :class:`~obspy.core.response.PAZ`
+    :return: A ObsPy PAZ object.
+
+    .. seealso:: https://www.seismic-handler.org/svn/SH_SHM/tags/2012a/filter/
+    """
+    # if filename not exists try filter directory
+    if not os.path.exists(filename):
+        filename = os.path.join(os.path.dirname(__file__), 'filter', filename)
+    # get filter file
+    lines = open(filename, 'rt').readlines()
+    # strip comment and search for "magic" number
+    paz = PAZ()
+    paz.name = os.path.basename(filename)
+    while True:
+        line = lines.pop(0).strip()
+        # add comment to doc string
+        if line.startswith('!'):
+            paz.comments += line[1:].strip() + '\n'
+            continue
+        # test for "magic" number 1357913578
+        if not line.startswith("1357913578"):
+            msg = "Wrong file format (no magic number) %s" % filename
+            raise Exception(msg)
+        break
+    # filter type
+    filter_type = int(lines.pop(0))
+    paz.normalization_frequency = 1.0
+    paz.zeros = []
+    paz.poles = []
+    if filter_type == 1:
+        paz.normalization_factor = float(lines.pop(0))
+        # read input coefficients
+        nol = int(lines.pop(0))
+        for _l in xrange(nol):
+            paz.zeros.append(complexifyString(lines.pop(0)))
+        # read output coefficient
+        nol = int(lines.pop(0))
+        for _l in xrange(nol):
+            paz.poles.append(complexifyString(lines.pop(0)))
+        return paz
+    else:
+        raise NotImplementedError('Unknown filter type %d' % (filter_type))
 
 
 if __name__ == '__main__':

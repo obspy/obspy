@@ -158,6 +158,9 @@ def complexifyString(line):
 
     >>> complexifyString(" ( 1 , 2 ) ")
     (1+2j)
+
+    >>> complexifyString(" (0.0,0.0) ")
+    0j
     """
     temp = line.split(',')
     return complex(float(temp[0].strip()[1:]), float(temp[1].strip()[:-1]))
