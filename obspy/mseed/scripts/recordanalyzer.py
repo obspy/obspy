@@ -10,6 +10,8 @@
 # Copyright (C) 2010-2012 Lion Krischer
 #---------------------------------------------------------------------
 """
+USAGE: obspy-mseed-recordanalyzer filename.mseed
+
 A command-line tool to analyze Mini-SEED records.
 
 :copyright:
@@ -17,10 +19,6 @@ A command-line tool to analyze Mini-SEED records.
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
-
-.. rubric:: Usage
-
-    $ ./obspy-mseed-recordanalyzer filename.mseed
 """
 
 from copy import deepcopy
