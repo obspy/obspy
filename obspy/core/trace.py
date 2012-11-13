@@ -124,27 +124,24 @@ class Stats(AttribDict):
         >>> trace.stats.npts
         4
     """
-
     readonly = ['endtime']
-    sampling_rate = 1.0
-    starttime = UTCDateTime(0)
-    npts = 0
+    defaults = {
+        'sampling_rate': 1.0,
+        'delta': 1.0,
+        'starttime': UTCDateTime(0),
+        'endtime': UTCDateTime(0),
+        'npts': 0,
+        'calib': 1.0,
+        'network': '',
+        'station': '',
+        'location': '',
+        'channel': '',
+    }
 
     def __init__(self, header={}):
         """
         """
-        # set default values without calculating derived entries
-        super(Stats, self).__setitem__('sampling_rate', 1.0)
-        super(Stats, self).__setitem__('starttime', UTCDateTime(0))
-        super(Stats, self).__setitem__('npts', 0)
-        # set default values for all other headers
-        header.setdefault('calib', 1.0)
-        for default in ['station', 'network', 'location', 'channel']:
-            header.setdefault(default, '')
-        # initialize
         super(Stats, self).__init__(header)
-        # calculate derived values
-        self._calculateDerivedValues()
 
     def __setitem__(self, key, value):
         """
@@ -163,8 +160,18 @@ class Stats(AttribDict):
                 value = int(value)
             # set current key
             super(Stats, self).__setitem__(key, value)
-            # set derived values
-            self._calculateDerivedValues()
+            # set derived value: delta
+            try:
+                delta = 1.0 / float(self.sampling_rate)
+            except ZeroDivisionError:
+                delta = 0
+            self.__dict__['delta'] = delta
+            # set derived value: endtime
+            if self.npts == 0:
+                timediff = 0
+            else:
+                timediff = (self.npts - 1) * delta
+            self.__dict__['endtime'] = self.starttime + timediff
             return
         # prevent a calibration factor of 0
         if key == 'calib' and value == 0:
@@ -186,32 +193,6 @@ class Stats(AttribDict):
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
-
-    def _calculateDerivedValues(self):
-        """
-        Calculates derived headers such as `delta` and `endtime`.
-        """
-        # set delta
-        try:
-            delta = 1.0 / float(self.sampling_rate)
-        except ZeroDivisionError:
-            delta = 0
-        super(Stats, self).__setitem__('delta', delta)
-        # set endtime
-        if self.npts == 0:
-            timediff = 0
-        else:
-            timediff = (self.npts - 1) * delta
-        self.__dict__['endtime'] = self.starttime + timediff
-
-    def setEndtime(self, value):  # @UnusedVariable
-        msg = "Attribute \"endtime\" in Stats object is read only!"
-        raise AttributeError(msg)
-
-    def getEndtime(self):
-        return self.__dict__['endtime']
-
-    endtime = property(getEndtime, setEndtime)
 
 
 class Trace(object):
