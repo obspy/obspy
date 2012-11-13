@@ -173,11 +173,11 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     the acceptable values.
 
         >>> from obspy.core.util.types import Enum
-        >>> ABCEnum = Enum(["a", "b", "c"])
+        >>> MyEnum = Enum(["a", "b", "c"])
         >>> class_attributes = [ \
                 ("resource_id", ResourceIdentifier), \
                 ("creation_info", CreationInfo), \
-                ("some_letters", ABCEnum), \
+                ("some_letters", MyEnum), \
                 ("some_error_quantity", float, ATTRIBUTE_HAS_ERRORS), \
                 ("description", str)]
 

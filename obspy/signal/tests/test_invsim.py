@@ -339,7 +339,7 @@ class InvSimTestCase(unittest.TestCase):
         args = [1.0 / samprate, nfft, tmpfile,
                 UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)]
         kwargs = {'units': 'VEL', 'freq': True}
-        h, f = evalresp(*args, **kwargs)
+        _h, f = evalresp(*args, **kwargs)
         self.assertEquals(len(f), nfft // 2 + 1)
         os.unlink(tmpfile)
 
