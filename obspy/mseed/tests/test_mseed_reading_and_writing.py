@@ -917,14 +917,13 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         dt = np.dtype([('npts', 'i4'), ('qual', 'i4')])
         res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
-        one_big_st = read(filename) # do not read timing quality info
+        one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionaly when timing quality
         # changes, sum of all points in stream must stay the same
         self.assertEquals(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
         self.assertEquals((res[:]['qual'] >= 0).sum(),  res.shape[0])
         self.assertEquals((res[:]['qual'] <= 100).sum(),  res.shape[0])
-
 
 
 def suite():
