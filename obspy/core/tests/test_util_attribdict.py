@@ -255,6 +255,15 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEquals(ad2.test, 1)
         self.assertEquals(ad2.muh, 2)
 
+    def test_compare_with_dict(self):
+        """
+        Checks if AttribDict is still comparable to a dict object.
+        """
+        adict = {'test': 1}
+        ad = AttribDict(adict)
+        self.assertEquals(ad, adict)
+        self.assertEquals(adict, ad)
+
 
 def suite():
     return unittest.makeSuite(AttribDictTestCase, 'test')

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from obspy.core import Stats, Stream, Trace
+from obspy.core import Stats, Stream, Trace, UTCDateTime
 from obspy.core.util import AttribDict
 import copy
 import pickle
@@ -208,6 +208,19 @@ class StatsTestCase(unittest.TestCase):
             self.assertRaises(UserWarning, x.update, {'calib': 0})
         # calib value should nevertheless be set to 0
         self.assertTrue(x.calib, 0)
+
+    def test_compare_with_dict(self):
+        """
+        Checks if Stats is still comparable to a dict object.
+        """
+        adict = {
+            'network': '', 'sampling_rate': 1.0, 'test': 1, 'station': '',
+            'location': '', 'starttime': UTCDateTime(1970, 1, 1, 0, 0),
+            'delta': 1.0, 'calib': 1.0, 'npts': 0,
+            'endtime': UTCDateTime(1970, 1, 1, 0, 0), 'channel': ''}
+        ad = Stats(adict)
+        self.assertEquals(ad, adict)
+        self.assertEquals(adict, ad)
 
 
 def suite():
