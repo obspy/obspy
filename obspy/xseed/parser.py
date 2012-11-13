@@ -535,6 +535,11 @@ class Parser(object):
             the folder name extended with the extension '.zip'.
         """
         new_resp_list = self.getRESP()
+        # Check if channel information could be found.
+        if len(new_resp_list) == 0:
+            msg = ("No channel information could be found. The SEED file "
+                   "needs to contain information about at least one channel.")
+            raise Exception(msg)
         if not zipped:
             # Write single files.
             for response in new_resp_list:
