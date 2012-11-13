@@ -3,6 +3,7 @@ The API reference documentation of ObsPy is generated with Sphinx. In order to b
 #!sh
 cd /path/to/obspy/trunk/misc/docs
 make pep8
+make coverage
 make html
 ```
 
