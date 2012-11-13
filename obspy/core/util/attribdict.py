@@ -64,6 +64,10 @@ class AttribDict(collections.MutableMapping):
         try:
             return self.__dict__[name]
         except KeyError:
+            # check if we got any default value given at class level
+            if name in self.defaults:
+                return self.defaults[name]
+            # if both are missing check for a given default value
             if default is None:
                 raise
             return default
