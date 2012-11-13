@@ -90,7 +90,8 @@ def isMSEED(filename):
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
-              sourcename=None, reclen=None, recinfo=True, details=False, **kwargs):
+              sourcename=None, reclen=None, recinfo=True, details=False,
+              **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -299,11 +300,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # TODO: write support is missing
             if details:
                 timing_quality = currentSegment.timing_quality
-                if timing_quality == 0xFF: # 0xFF is mask for not known timing
+                if timing_quality == 0xFF:  # 0xFF is mask for not known timing
                     timing_quality = -1
                 header['mseed']['timing_quality'] = timing_quality
-                header['mseed']['calibration_type'] = currentSegment.calibration_type
-                
+                header['mseed']['calibration_type'] = \
+                        currentSegment.calibration_type
+
             if headonly is False:
                 # The data always will be in sequential order.
                 data = all_data.pop(0)

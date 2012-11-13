@@ -1095,7 +1095,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertFalse(tr.data is st[0].data)
 
 
-
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 

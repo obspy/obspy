@@ -3,6 +3,7 @@
 
 import os
 
+
 class FlinnEngdahl(object):
     """
     Load data from asc files and allow to resolve coordinates
@@ -24,19 +25,17 @@ class FlinnEngdahl(object):
     def __init__(self):
         self.quads_index = []
 
-        directory =  os.path.dirname(__file__)
-
         with open(self.names_file, 'r') as fh:
-            self.names = [ name.strip() for name in fh ]
+            self.names = [name.strip() for name in fh]
 
         with open(self.quadsindex_file, 'r') as fh:
             indexes = []
             for index in fh:
-                indexes += [ n.strip() for n in index.split(' ') if n != '' ]
+                indexes += [n.strip() for n in index.split(' ') if n != '']
 
         self.lons_per_lat = dict(zip(
             self.quads_order,
-            [indexes[x:x+91] for x in xrange(0, len(indexes), 91)]
+            [indexes[x:x + 91] for x in xrange(0, len(indexes), 91)]
         ))
 
         self.lat_begins = {}
@@ -61,7 +60,8 @@ class FlinnEngdahl(object):
             sect = []
             with open(sect_file, 'r') as fh:
                 for line in fh:
-                    sect += [ int(v) for v in line.strip().split(' ') if v != '' ]
+                    sect += [int(v) for v in line.strip().split(' ')
+                             if v != '']
 
             lons = []
             fenums = []
@@ -87,10 +87,14 @@ class FlinnEngdahl(object):
         :rtype: string
         :return: Quadrant name (ne, nw, se and sw)
         """
-        if longitude >= 0 and latitude >= 0: return 'ne'
-        if longitude <  0 and latitude >= 0: return 'nw'
-        if longitude >= 0 and latitude <  0: return 'se'
-        if longitude <  0 and latitude <  0: return 'sw'
+        if longitude >= 0 and latitude >= 0:
+            return 'ne'
+        if longitude < 0 and latitude >= 0:
+            return 'nw'
+        if longitude >= 0 and latitude < 0:
+            return 'se'
+        if longitude < 0 and latitude < 0:
+            return 'sw'
 
     def get_region(self, longitude, latitude):
         """
@@ -104,10 +108,13 @@ class FlinnEngdahl(object):
         :return: Flinn Engdahl region name
         """
 
-        if longitude < -180 or longitude > 180: raise ValueError
-        if latitude < -90 or latitude > 90: raise ValueError
+        if longitude < -180 or longitude > 180:
+            raise ValueError
+        if latitude < -90 or latitude > 90:
+            raise ValueError
 
-        if longitude == -180: longitude = 180
+        if longitude == -180:
+            longitude = 180
 
         quad = self.get_quadrant(longitude, latitude)
 
@@ -117,17 +124,18 @@ class FlinnEngdahl(object):
         begin = self.lat_begins[quad][abs_latitude]
         num = int(self.lons_per_lat[quad][abs_latitude])
 
-        my_lons = self.lons[quad][begin:begin+num]
-        my_fenums = self.fenums[quad][begin:begin+num]
+        my_lons = self.lons[quad][begin:begin + num]
+        my_fenums = self.fenums[quad][begin:begin + num]
 
         n = 0
         for longitude in my_lons:
-            if longitude > abs_longitude: break
+            if longitude > abs_longitude:
+                break
             n += 1
 
         fe_index = n - 1
         fe_num = my_fenums[fe_index]
-        fe_name = self.names[fe_num-1]
+        fe_name = self.names[fe_num - 1]
 
         return fe_name
 

@@ -270,7 +270,6 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
-
     def test_stationmagnitude(self):
         """
         Tests StationMagnitude object.

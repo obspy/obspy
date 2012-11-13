@@ -940,12 +940,13 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
             sx = sll_x + k * sl_s
             for l in xrange(grdpts_y):
                 sy = sll_y + l * sl_s
-                time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
+                time_shift_tbl[:, k, l] = sx * geometry[:, 0] + \
+                                          sy * geometry[:, 1]
         time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
         return time_shift_tbl
     else:  # optimized version
-        mx = np.outer(geometry[:,0], sll_x + np.arange(grdpts_x) * sl_s)
-        my = np.outer(geometry[:,1], sll_y + np.arange(grdpts_y) * sl_s)
+        mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
+        my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
         return np.require( \
             mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) + \
             my[:, np.newaxis, :].repeat(grdpts_x, axis=1),

@@ -25,6 +25,38 @@ import sys
 import traceback
 
 
+USAGE = """
+## General program options ##
+-V             report program version
+-h             show this usage message
+-v             be more verbose, multiple flags can be used
+-p             print details of data packets
+-nd delay      network re-connect delay (seconds), default 30
+-nt timeout    network timeout (seconds), re-establish connection if no
+               data/keepalives are received in this time, default 600
+-k interval    send keepalive (heartbeat) packets this often (seconds)
+-x statefile   save/restore stream state information to this file
+-t begintime   sets a beginning time for the initiation of data transmission
+               (year,month,day,hour,minute,second)
+-e endtime     sets an end time for windowed data transmission
+               (year,month,day,hour,minute,second)
+-i infolevel   request this INFO level, write response to std out, and exit
+               infolevel is one of: ID, STATIONS, STREAMS, GAPS, CONNECTIONS,
+               ALL
+
+## Data stream selection ##
+-l listfile    read a stream list from this file for multi-station mode
+-s selectors   selectors for uni-station or default for multi-station
+-S streams     select streams for multi-station (requires SeedLink >= 2.5)
+  'streams' = 'stream1[:selectors1],stream2[:selectors2],...'
+       'stream' is in NET_STA format, for example:
+       -S \"IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D\"
+
+<[host]:port>  Address of the SeedLink server in host:port format
+               if host is omitted (i.e. ':18000'), localhost is assumed
+"""
+
+
 # default logger
 logger = logging.getLogger('obspy.seedlink')
 
@@ -278,41 +310,17 @@ class SLClient(object):
             print self.__class__.__name__ + ": blockette contains no trace"
         return False
 
-    def printUsage(self, concise):
+    def printUsage(self, concise=True):
         """
         Prints the usage message for this class.
         """
         print("\nUsage: python %s [options] <[host]:port>" % \
               (self.__class__.__name__))
         if concise:
-            print("Use '-h' for detailed help")
-            return
-        print
-        print(" ## General program options ##")
-        print(" -V             report program version")
-        print(" -h             show this usage message")
-        print(" -v             be more verbose, multiple flags can be used")
-        print(" -p             print details of data packets")
-        print(" -nd delay      network re-connect delay (seconds), default 30")
-        print(" -nt timeout    network timeout (seconds), re-establish connection if no")
-        print("                  data/keepalives are received in this time, default 600")
-        print(" -k interval    send keepalive (heartbeat) packets this often (seconds)")
-        print(" -x statefile   save/restore stream state information to this file")
-        print(" -t begintime   sets a beginning time for the initiation of data transmission (year,month,day,hour,minute,second)")
-        print(" -e endtime     sets an end time for windowed data transmission  (year,month,day,hour,minute,second)")
-        print(" -i infolevel   request this INFO level, write response to std out, and exit ")
-        print("                  infolevel is one of: ID, STATIONS, STREAMS, GAPS, CONNECTIONS, ALL ")
-        print
-        print(" ## Data stream selection ##")
-        print(" -l listfile    read a stream list from this file for multi-station mode")
-        print(" -s selectors   selectors for uni-station or default for multi-station")
-        print(" -S streams     select streams for multi-station (requires SeedLink >= 2.5)")
-        print("   'streams' = 'stream1[:selectors1],stream2[:selectors2],...'")
-        print("        'stream' is in NET_STA format, for example:")
-        print("        -S \"IU_KONO:BHE BHN,GE_WLF,MN_AQU:HH?.D\"")
-        print("")
-        print(" <[host]:port>  Address of the SeedLink server in host:port format")
-        print("                  if host is omitted (i.e. ':18000'), localhost is assumed")
+            usage = "Use '-h' for detailed help"
+        else:
+            usage = USAGE
+        print(usage)
 
     @classmethod
     def main(cls, args):

@@ -5,6 +5,7 @@ from obspy.core.util import FlinnEngdahl
 import os
 import unittest
 
+
 class UtilFlinnEngdahlTestCase(unittest.TestCase):
     def setUp(self):
         self.flinnengdahl = FlinnEngdahl()
