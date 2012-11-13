@@ -6,10 +6,13 @@ import mlpy
 tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
 
 omega0 = 8
-spec, scale = mlpy.cwt(tr.data, dt=tr.stats.delta, dj=0.05, wf='morlet',
-                       p=omega0, extmethod='none', extlength='powerof2')
+wavelet_fct = "morlet"
+scales = mlpy.wavelet.autoscales(N=len(tr.data), dt=tr.stats.delta, dj=0.05,
+    wf=wavelet_fct, p=omega0)
+spec = mlpy.wavelet.cwt(tr.data, dt=tr.stats.delta, scales=scales,
+    wf=wavelet_fct, p=omega0)
 # approximate scales through frequencies
-freq = (omega0 + np.sqrt(2.0 + omega0 ** 2)) / (4 * np.pi * scale[1:])
+freq = (omega0 + np.sqrt(2.0 + omega0 ** 2)) / (4 * np.pi * scales[1:])
 
 fig = plt.figure()
 ax1 = fig.add_axes([0.1, 0.75, 0.7, 0.2])
