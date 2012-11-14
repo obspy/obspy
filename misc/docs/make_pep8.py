@@ -6,10 +6,16 @@ import obspy
 import os
 import sys
 from StringIO import StringIO
+from shutil import copyfile
 
-paths = [p for p in obspy.__path__]
-modules = [p.split(os.sep)[-2] for p in paths]
 
+ROOT = os.path.dirname(__file__)
+PEP8_IMAGE = os.path.join(ROOT, 'source', 'pep8', 'pep8.png')
+PEP8_FAIL_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-failing.png')
+PEP8_PASS_IMAGE = os.path.join(ROOT, 'source', '_static', 'pep8-passing.png')
+
+
+path = obspy.__path__[0]
 
 try:
     os.makedirs(os.path.join('source', 'pep8'))
@@ -25,6 +31,8 @@ fh.write("""
 PEP8
 ====
 
+.. image:: pep8.png
+
 Like most Python projects, we try to adhere to :pep:`8` (Style Guide for Python
 Code) and :pep:`257` (Docstring Conventions) with the modifications documented
 in the :ref:`coding-style-guide`. Be sure to read those documents if you
@@ -32,53 +40,34 @@ intend to contribute code to ObsPy.
 
 Here are the results of the automatic PEP 8 syntax checker:
 
-.. toctree::
-
 """)
-for module in sorted(modules):
-    fh.write('   %s\n' % module)
-fh.close()
+
 
 # backup stdout
 stdout = sys.stdout
+sys.stdout = StringIO()
 
-# handle each module
-for path in paths:
-    module = path.split(os.sep)[-2]
-    sys.stdout = StringIO()
-    # clean up runner options
-    options, args = process_options()
-    options.repeat = True
-    if os.path.isdir(path):
-        input_dir(path, runner=input_file)
-    elif not excluded(path):
-        input_file(path)
-    sys.stdout.seek(0)
-    data = sys.stdout.read()
-    statistic = get_statistics('')
-    count = get_count()
-    # write rst file
-    fh = open(os.path.join('source', 'pep8', module + '.rst'), 'wt')
-    title = "%s (%d)" % (module, count)
-    fh.write(len(title) * "=" + "\n")
-    fh.write(title + "\n")
-    fh.write(len(title) * "=" + "\n")
-    fh.write("\n")
+# clean up runner options
+options, args = process_options()
+options.repeat = True
+input_dir(path, runner=input_file)
+sys.stdout.seek(0)
+data = sys.stdout.read()
+statistic = get_statistics('')
+count = get_count()
 
-    if count == 0:
-        fh.write("The PEP 8 checker didn't find any issues.\n")
-        fh.close()
-        continue
-
+if count == 0:
+    fh.write("The PEP 8 checker didn't find any issues.\n")
+else:
     fh.write("\n")
     fh.write(".. rubric:: Statistic\n")
     fh.write("\n")
-    fh.write("======= ======================================================\n")
-    fh.write("Count   PEP 8 message string                                  \n")
-    fh.write("======= ======================================================\n")
+    fh.write("======= =====================================================\n")
+    fh.write("Count   PEP 8 message string                                 \n")
+    fh.write("======= =====================================================\n")
     for stat in statistic:
         fh.write(stat + "\n")
-    fh.write("======= ======================================================\n")
+    fh.write("======= =====================================================\n")
     fh.write("\n")
 
     fh.write(".. rubric:: Warnings\n")
@@ -94,3 +83,14 @@ for path in paths:
 
 # restore stdout
 sys.stdout = stdout
+
+# remove any old image
+try:
+    os.remove(PEP8_IMAGE)
+except:
+    pass
+# copy correct pep8 image
+if count > 0:
+    copyfile(PEP8_FAIL_IMAGE, PEP8_IMAGE)
+else:
+    copyfile(PEP8_PASS_IMAGE, PEP8_IMAGE)
