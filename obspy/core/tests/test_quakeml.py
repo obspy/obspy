@@ -554,6 +554,15 @@ class QuakeMLTestCase(unittest.TestCase):
                     enumerations=", ".join(additional_items))
                 raise Exception(msg)
 
+    def test_read_string(self):
+        """
+        Test reading a QuakeML string/unicode object via readEvents.
+        """
+        filename = os.path.join(self.path, 'neries_events.xml')
+        data = open(filename, 'rt').read()
+        catalog = readEvents(data)
+        self.assertTrue(len(catalog), 3)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

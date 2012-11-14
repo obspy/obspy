@@ -30,6 +30,7 @@ import re
 import urllib2
 import warnings
 import weakref
+import cStringIO
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -105,10 +106,14 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
             cat.extend(_read(fh.name, format, **kwargs).events)
             os.remove(fh.name)
         pathname_or_url.seek(0)
+    elif pathname_or_url.strip().startswith('<'):
+        # XML string
+        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        cat.extend(catalog.events)
     elif "://" in pathname_or_url:
+        # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        # some URL
         fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
         fh.close()
