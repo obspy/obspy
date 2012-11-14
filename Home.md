@@ -1,4 +1,4 @@
-[![Build Status](https://secure.travis-ci.org/obspy/obspy.png?branch=master)](http://travis-ci.org/obspy/obspy) [![PEP8 Status](http://docs.obspy.org/master/pep8/pep8.png)](http://docs.obspy.org/master/pep8/)
+[![Build Status](https://secure.travis-ci.org/obspy/obspy.png?branch=master)](http://travis-ci.org/obspy/obspy) [![PEP8 Status](http://docs.obspy.org/master/_images/pep8.png)](http://docs.obspy.org/master/pep8/)
 
 <img class="right" src="https://raw.github.com/obspy/obspy/master/misc/docs/source/_static/obspy-logo.png" />
 ## ObsPy: A Python Toolbox<br /> for seismology/seismological observatories
