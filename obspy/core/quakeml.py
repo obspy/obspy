@@ -1371,10 +1371,18 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of file to write.
     """
-    fh = open(filename, 'wt')
+    # Open filehandler or use an existing file like object.
+    if not hasattr(filename, 'write'):
+        fh = open(filename, 'wt')
+    else:
+        fh = filename
+
     xml_doc = Pickler().dumps(catalog)
     fh.write(xml_doc)
     fh.close()
+    # Close if its a file handler.
+    if isinstance(fh, file):
+        fh.close()
 
 
 def readSeisHubEventXML(filename):
