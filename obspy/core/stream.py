@@ -1239,7 +1239,7 @@ class Stream(object):
         SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
         TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.wav.stream.writePICKLE`
+        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.readPickle`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.

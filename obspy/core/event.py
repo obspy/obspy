@@ -2561,14 +2561,14 @@ class Catalog(object):
         :meth:`~obspy.core.event.Catalog.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the *Linked Function Call* of each module for any extra
-        options available.
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
 
-        =======  ===================  =====================================
-        Format   Required Module      Linked Function Call
-        =======  ===================  =====================================
-        QUAKEML  :mod:`obspy.core`   :func:`obspy.core.event.writeQUAKEML`
-        =======  ===================  =====================================
+        =======  ===================  =======================================
+        Format   Required Module      _`Linked Function Call`
+        =======  ===================  =======================================
+        QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.writeQuakeML`
+        =======  ===================  =======================================
         """
         format = format.upper()
         try:
