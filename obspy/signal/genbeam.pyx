@@ -100,7 +100,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                  relpow[x,y] = abspow[x,y]/dpow
               if prewhiten == 1:
                  for n from 0 <= n < nf: 
-                   if p[x][y][n] > white[n]:
+                   if p[x,y,n] > white[n]:
                       white[n] = p[x,y,n]
               
         if prewhiten == 1:
@@ -131,7 +131,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                  relpow[x,y] = abspow[x,y]
               if prewhiten == 1:
                  for n from 0 <= n < nf:
-                   if p[x][y][n] > white[n]:
+                   if p[x,y,n] > white[n]:
                       white[n] = p[x,y,n]
         if prewhiten == 1:
             for x from 0 <= x < grdpts_x:
