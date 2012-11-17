@@ -40,6 +40,8 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
 
     cdef int nlow,x,y,i,j,n,ix,iy
     cdef float df
+    cdef complex bufi
+    cdef complex bufj
     cdef complex xxx
     cdef np.ndarray[np.complex128_t, ndim=1] xx = np.zeros((nfft),dtype=complex)
     cdef np.ndarray[np.complex128_t,ndim=3] R = np.zeros((nstat, nstat,nf),dtype=complex)
@@ -50,12 +52,6 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef np.ndarray[np.float64_t,ndim=2] relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=1] white = np.zeros((nf),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=1] tap = np.zeros((nsamp),dtype=float)
-    cdef np.ndarray[np.complex128_t,ndim=1] e = np.zeros((nstat),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=1] eH = np.zeros((nstat),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=1] Ce = np.zeros((nstat),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=1] ICe = np.zeros((nstat),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=2] C = np.zeros((nstat,nstat),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=2] IC = np.zeros((nstat,nstat),dtype=complex)
     cdef extern from "math.h":
         float sqrt "sqrtf" (float dummy)
 
@@ -89,7 +85,13 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
         for x from 0 <= x < grdpts_x:
             for y from 0 <= y < grdpts_y:
               for n from 0 <= n < nf:
-                 xxx = np.inner(nsteer[0:nstat,x,y,n],np.dot(R[0:nstat,0:nstat,n],steer[0:nstat,x,y,n]))
+                 bufi = 0.0
+                 for i from 0 <= i < nstat:
+                   bufj = 0.0
+                   for j from 0 <= j < nstat:
+                      bufj += R[i, j, n] * steer[j, x, y, n]
+                   bufi += nsteer[i,x,y,n] * bufj
+                 xxx = bufi 
                  if prewhiten == 0:
                     abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
                  if prewhiten == 1:
@@ -114,12 +116,13 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
         for x from 0 <= x < grdpts_x:
             for y from 0 <= y < grdpts_y:
               for n from 0 <= n < nf:
-                  #C = R[0:nstat,0:nstat,n]
-                  #IC = np.linalg.pinv(C)
-                  #e = steer[0:nstat,x,y,n]
-                  #eH = nsteer[0:nstat,x,y,n]
-                  #ICe = np.dot(IC,e)
-                  xxx = (1./np.inner(nsteer[0:nstat,x,y,n],np.dot(R_inv[:, :, n],steer[0:nstat,x,y,n])))
+                  bufi = 0.0
+                  for i from 0 <= i < nstat:
+                    bufj = 0.0
+                    for j from 0 <= j < nstat:
+                       bufj += R_inv[i, j, n] * steer[j, x, y, n]
+                    bufi += nsteer[i,x,y,n] * bufj
+                  xxx = 1. / bufi 
                   if prewhiten == 0:
                       abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
                   if prewhiten == 1:
