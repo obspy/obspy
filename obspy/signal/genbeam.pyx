@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------
 # Filename: genbeam.py
 #  Purpose: more general beamforming
-#   Author: Joachim Wassermann	
+#   Author: Joachim Wassermann  
 #    Email: j.wassermann@lmu.de
 #
 # Copyright (C) 2012 J. Wassermann
@@ -43,6 +43,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef complex xxx
     cdef np.ndarray[np.complex128_t, ndim=1] xx = np.zeros((nfft),dtype=complex)
     cdef np.ndarray[np.complex128_t,ndim=3] R = np.zeros((nstat, nstat,nf),dtype=complex)
+    cdef np.ndarray[np.complex128_t,ndim=3] R_inv = np.zeros((nstat, nstat,nf),dtype=complex)
     cdef double dpow
     cdef np.ndarray[np.float64_t,ndim=3] p = np.zeros((grdpts_x,grdpts_y,nf),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
@@ -108,6 +109,8 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
 
     elif method == "capon":
     # P(f) = 1/(e.H R(f)^-1 e)
+        for n from 0 <= n < nf:
+            R_inv[:, :, n] = np.linalg.pinv(R[0:nstat,0:nstat,n])
         for x from 0 <= x < grdpts_x:
             for y from 0 <= y < grdpts_y:
               for n from 0 <= n < nf:
@@ -116,7 +119,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                   #e = steer[0:nstat,x,y,n]
                   #eH = nsteer[0:nstat,x,y,n]
                   #ICe = np.dot(IC,e)
-                  xxx = (1./np.inner(nsteer[0:nstat,x,y,n],np.dot(np.linalg.pinv(R[0:nstat,0:nstat,n]),steer[0:nstat,x,y,n])))
+                  xxx = (1./np.inner(nsteer[0:nstat,x,y,n],np.dot(R_inv[:, :, n],steer[0:nstat,x,y,n])))
                   if prewhiten == 0:
                       abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
                   if prewhiten == 1:
