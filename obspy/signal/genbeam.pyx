@@ -27,8 +27,7 @@ from time import time
 from obspy.core import Stream
 
 @cython.boundscheck(False)
-
-
+@cython.wraparound(False)
 def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.complex128_t,ndim=4] steer, np.ndarray[np.complex128_t,ndim=4] nsteer, np.float flow, np.float fhigh,
          np.float digfreq, np.int nsamp, np.int nstat, np.int prewhiten, np.int grdpts_x, np.int grdpts_y, np.int nfft, np.int nf ,np.str method):
     """
