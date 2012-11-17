@@ -18,6 +18,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define STEER(I, J, K, L, M) steer[(I)*2*nf*grdpts_y*grdpts_x + (J)*2*nf*grdpts_y + (K)*2*nf + (L)*2 + (M)]
+
 #define USE_SINE_TABLE
 
 #ifdef USE_SINE_TABLE
@@ -74,6 +76,27 @@ int cosine_taper(double *taper, int ndat, double fraction)
             taper[k] = 1.0;
     }
     return 0;
+}
+
+
+void calcSteer(int nstat, int grdpts_x, int grdpts_y, int nf, int nlow,
+               float deltaf, float ***stat_tshift_table, double *steer) {
+    int i;
+    int x;
+    int y;
+    int n;
+    double wtau;
+    for (i=0; i < nstat; i++) {
+        for (x=0; x < grdpts_x; x++) {
+            for (y=0; y < grdpts_y; y++) {
+                for (n=0; n < nf; n++) {
+                    wtau = 2.*M_PI*(float)(nlow+n)*deltaf*stat_tshift_table[i][x][y];
+                    STEER(i,x,y,n,0) = cos(wtau);
+                    STEER(i,x,y,n,1) = sin(wtau);
+                }
+            }
+        }
+    }
 }
 
 

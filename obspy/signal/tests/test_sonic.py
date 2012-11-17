@@ -164,7 +164,7 @@ class SonicTestCase(unittest.TestCase):
 7.19162000e+05 9.76931058e+01 9.76931058e+01 -3.86598083e+01 2.56124969e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out)
+        np.testing.assert_allclose(ref, out, rtol=1e-6)
 
 
     def test_sonicCaponPrew(self):
@@ -181,7 +181,7 @@ class SonicTestCase(unittest.TestCase):
 7.19162000e+05 4.49519407e-02 0.00000000e+00 1.96538241e+01 1.48660687e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out)
+        np.testing.assert_allclose(ref, out, rtol=1e-6)
 
 
     def test_array_transff_freqslowness(self):

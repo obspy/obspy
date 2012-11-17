@@ -1334,15 +1334,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     if nf > (nfft/2+1): nf = nfft/2+1
     nlow = int(frqlow/deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
-    steer = np.zeros((nstat,grdpts_x,grdpts_y,nf),dtype=complex)
-    steerH = np.zeros((nstat,grdpts_x,grdpts_y,nf),dtype=complex)
-    for i in xrange(nstat):
-           for x in xrange(grdpts_x):
-                 for y in xrange(grdpts_y):
-                       for n in xrange(nf):
-                           wtau = 2.*np.pi*float(nlow+n)*deltaf*time_shift_table_numpy[i,x,y]
-                           steer[i,x,y,n] = complex(np.cos(wtau), -1.*np.sin(wtau))
-                           steerH[i,x,y,n] = complex(np.cos(wtau), np.sin(wtau))
+    STEER = np.empty((nstat,grdpts_x,grdpts_y,nf,2), dtype='f8')
+    clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+        C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
+                         STEER.ravel())
+    steer = STEER[:,:,:,:,0] - 1j * STEER[:,:,:,:,1]
+    steerH = STEER[:,:,:,:,0] + 1j * STEER[:,:,:,:,1]
     newstart = stime
     offset = 0
     while eotr:

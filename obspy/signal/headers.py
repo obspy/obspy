@@ -57,6 +57,12 @@ if not clibevresp:
           'obspy.signal.invsim.evalresp\n\n %s' % (e)
     raise ImportError(msg)
 
+clibsignal.calcSteer.argtypes = [
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, 
+    C.c_float, C.POINTER(C.c_void_p),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1, flags='C_CONTIGUOUS'),
+]
+clibsignal.calcSteer.restype = C.c_void_p
 
 #XXX moritz: add a note where params are pointers
 clibsignal.bbfk.argtypes = [
