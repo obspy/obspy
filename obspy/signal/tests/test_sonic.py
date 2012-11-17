@@ -74,20 +74,22 @@ class SonicTestCase(unittest.TestCase):
 
         frqlow = 1.0
         frqhigh = 8.0
-        prewhiten = 0
 
         semb_thres = -1e99
         vel_thres = -1e99
 
-        # out returns: rel. power, abs. power, backazimuth, slowness
-        out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-                    semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
-                    prewhiten, coordsys='xy', verbose=False)
+        for prew, power, abspower, baz, slow in [
+            (0, 0.959573696057, 6.28819465573e-13, 18.434948822922024, 1.26491106407),
+            (1, 3.64250693868e-05, 0.0, 18.434948822922024, 1.26491106407)]:
+            # out returns: rel. power, abs. power, backazimuth, slowness
+            out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
+                        semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
+                        prew, coordsys='xy', verbose=False)
+            np.testing.assert_almost_equal(out[:, 1].mean(), power)
+            np.testing.assert_almost_equal(out[:, 2].mean(), abspower)
+            np.testing.assert_almost_equal(out[:, 3].mean(), baz)
+            np.testing.assert_almost_equal(out[:, 4].mean(), slow)
 
-        # returns baz
-        np.testing.assert_almost_equal(out[:, 3].mean(), 18.434948822922024)
-        # slowness ~= 1.3
-        np.testing.assert_almost_equal(out[:, 4].mean(), 1.26491106407)
 
     def test_array_transff_freqslowness(self):
 
