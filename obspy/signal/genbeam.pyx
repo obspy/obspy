@@ -106,8 +106,11 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
         if prewhiten == 1:
             for x from 0 <= x < grdpts_x:
                for y from 0 <= y < grdpts_y:
-                   abspow[x,y] = p[x,y,0:nf].sum()
-                   relpow[x,y] = (p[x,y,0:nf]/(white[0:nf]*nf*nstat)).sum()
+                   abspow[x,y] = 0.
+                   relpow[x,y] = 0.
+                   for n from 0 <= n < nf:
+                       abspow[x,y] += p[x,y,n]
+                       relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
 
     elif method == "capon":
     # P(f) = 1/(e.H R(f)^-1 e)
@@ -136,7 +139,9 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
         if prewhiten == 1:
             for x from 0 <= x < grdpts_x:
                for y from 0 <= y < grdpts_y:
-                  relpow[x,y] = np.sum(p[x,y,0:nf]/(white[0:nf]*nf*nstat))
+                  relpow[x,y] = 0.
+                  for n from 0 <= n < nf:
+                      relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
 
     # find the maximum in the map and return its value and the indices
     ix,iy = pl.unravel_index(relpow.argmax(), np.shape(relpow))
