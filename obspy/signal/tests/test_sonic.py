@@ -2,11 +2,13 @@
 
 from obspy.core import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict
-from obspy.signal.array_analysis import sonic, array_transff_freqslowness
+from obspy.signal.array_analysis import sonic, array_transff_freqslowness, \
+  array_processing
 from obspy.signal.array_analysis import array_transff_wavenumber
 from obspy.signal.util import utlLonLat
 import numpy as np
 import unittest
+from cStringIO import StringIO
 
 
 class SonicTestCase(unittest.TestCase):
@@ -14,8 +16,7 @@ class SonicTestCase(unittest.TestCase):
     Test fk analysis, main function is sonic() in array_analysis.py
     """
 
-    def test_sonic(self):
-#        for i in xrange(100):
+    def sonicArgs(self):
         np.random.seed(2348)
 
         geometry = np.array([[0.0, 0.0, 0.0],
@@ -74,20 +75,114 @@ class SonicTestCase(unittest.TestCase):
 
         frqlow = 1.0
         frqhigh = 8.0
-        prewhiten = 0
 
         semb_thres = -1e99
         vel_thres = -1e99
 
-        # out returns: rel. power, abs. power, backazimuth, slowness
-        out = sonic(st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-                    semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
-                    prewhiten, coordsys='xy', verbose=False)
+        args = (st, win_len, step_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
+                semb_thres, vel_thres, frqlow, frqhigh, stime, etime)
+        return args
 
-        # returns baz
-        np.testing.assert_almost_equal(out[:, 3].mean(), 18.434948822922024)
-        # slowness ~= 1.3
-        np.testing.assert_almost_equal(out[:, 4].mean(), 1.26491106407)
+
+    def test_sonicBbfk(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=0, coordsys='xy', verbose=False)
+        out = sonic(*args, **kwargs)
+        raw = """
+7.19162000e+05 9.65490401e-01 8.70780661e-13 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.59400535e-01 7.54453737e-13 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.59788144e-01 6.01638964e-13 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.64473665e-01 6.02637731e-13 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.54958439e-01 5.13858053e-13 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.53330994e-01 4.29547646e-13 1.84349488e+01 1.26491106e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
+
+    def test_sonicBbfkPrew(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=1, coordsys='xy', verbose=False)
+        out = sonic(*args, **kwargs)
+        raw = """
+7.19162000e+05 3.85422463e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+7.19162000e+05 3.51870804e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+7.19162000e+05 3.55861157e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+7.19162000e+05 3.67066314e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+7.19162000e+05 3.64870211e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+7.19162000e+05 3.60413214e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
+
+    def test_sonicBf(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=0, coordsys='xy', verbose=False,
+                      method='bf')
+        out = array_processing(*args, **kwargs)
+        raw = """
+7.19162000e+05 9.67606719e-01 2.28960532e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.69335057e-01 1.97564749e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.46067852e-01 1.54123841e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.41080449e-01 1.43546068e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.67305409e-01 1.35210630e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 9.39513631e-01 1.13792741e-05 1.84349488e+01 1.26491106e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
+
+    def test_sonicBfPrew(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=1, coordsys='xy', verbose=False,
+                      method='bf')
+        out = array_processing(*args, **kwargs)
+        raw = """
+7.19162000e+05 1.40348207e-01 2.28960532e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 1.30415347e-01 1.97564749e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 1.28008783e-01 1.54123841e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 1.25878335e-01 1.43546068e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 1.39312546e-01 1.35210630e-05 1.84349488e+01 1.26491106e+00
+7.19162000e+05 1.32947973e-01 1.13792741e-05 1.84349488e+01 1.26491106e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
+
+    def test_sonicCapon(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=0, coordsys='xy', verbose=False,
+                      method='capon')
+        out = array_processing(*args, **kwargs)
+        raw = """
+7.19162000e+05 1.17234469e+01 1.17234469e+01 1.35000000e+02 8.48528137e-01
+7.19162000e+05 2.40054037e+03 2.40054037e+03 -1.69380345e+02 1.62788206e+00
+7.19162000e+05 4.49490862e+00 4.49490862e+00 -1.53434949e+02 4.47213595e-01
+7.19162000e+05 4.10257370e+03 4.10257370e+03 0.00000000e+00 1.00000000e-01
+7.19162000e+05 7.03232341e+02 7.03232341e+02 4.19872125e+01 2.69072481e+00
+7.19162000e+05 9.76931058e+01 9.76931058e+01 -3.86598083e+01 2.56124969e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
+
+    def test_sonicCaponPrew(self):
+        args = self.sonicArgs()
+        kwargs = dict(prewhiten=1, coordsys='xy', verbose=False,
+                      method='capon')
+        out = array_processing(*args, **kwargs)
+        raw = """
+7.19162000e+05 1.12733499e-01 0.00000000e+00 3.36900675e+01 7.21110255e-01
+7.19162000e+05 1.77112262e-02 0.00000000e+00 2.65650512e+01 2.23606798e-01
+7.19162000e+05 8.14214170e-02 0.00000000e+00 1.66992442e+01 1.04403065e+00
+7.19162000e+05 1.27112655e-02 0.00000000e+00 1.84349488e+01 1.58113883e+00
+7.19162000e+05 1.74286539e-02 0.00000000e+00 1.40362435e+01 8.24621125e-01
+7.19162000e+05 4.49519407e-02 0.00000000e+00 1.96538241e+01 1.48660687e+00
+        """
+        ref = np.loadtxt(StringIO(raw), dtype='f4')
+        np.testing.assert_allclose(ref, out)
+
 
     def test_array_transff_freqslowness(self):
 
