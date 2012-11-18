@@ -1288,8 +1288,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
 
     # check that sampling rates do not vary
-    df = stream[0].stats.sampling_rate
-    if len(stream) != len(stream.select(sampling_rate=df)):
+    fs = stream[0].stats.sampling_rate
+    if len(stream) != len(stream.select(sampling_rate=fs)):
         msg = 'in sonic sampling rates of traces in stream are not equal'
         raise ValueError(msg)
 
@@ -1323,13 +1323,13 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     #
     # loop with a sliding window over the data trace array and apply bbfk
     #
-    df = stream[0].stats.sampling_rate
-    nsamp = int(win_len * df)
+    fs = stream[0].stats.sampling_rate
+    nsamp = int(win_len * fs)
     nstep = int(nsamp * win_frac)
 
     # generate plan for rfftr
     nfft = nextpow2(nsamp)
-    deltaf = df/float(nfft)
+    deltaf = fs/float(nfft)
     nf = int((frqhigh-frqlow)/deltaf)+1
     if nf > (nfft/2+1): nf = nfft/2+1
     nlow = int(frqlow/deltaf)
@@ -1346,7 +1346,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
         if method == 'bbfk':
             try:
                   buf = bbfk(spoint, offset, trace, ntrace, time_shift_table, frqlow,
-                       frqhigh, df, nsamp, nstat, prewhiten, grdpts_x,
+                       frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
                        grdpts_y, nfft)
                   abspow, power, ix, iy = buf
             except IndexError:
@@ -1360,7 +1360,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                      trace[i][0:nsamp] = detrend(trace[i][0:nsamp],type='constant')
                      trace[i][0:nsamp] = trace[i][0:nsamp]*tap[0:nsamp]
 
-                  buf = genbeam.generalized_beamformer(trace, steer, steerH, frqlow, frqhigh, df, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, method)
+                  buf = genbeam.generalized_beamformer(trace, steer, steerH, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, method)
                   abspow, power, ix, iy = buf
             except IndexError:
                   break
@@ -1379,12 +1379,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
             res.append(np.array([newstart.timestamp, power, abspow, baz,
                                  slow]))
             if verbose:
-                print(newstart, (newstart + (nsamp / df)), res[-1][1:])
-        if (newstart + (nsamp + nstep) / df) > etime:
+                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+        if (newstart + (nsamp + nstep) / fs) > etime:
             eotr = False
         offset += nstep
 
-        newstart += nstep / df
+        newstart += nstep / fs
     res = np.array(res)
     if timestamp == 'julsec':
         pass
