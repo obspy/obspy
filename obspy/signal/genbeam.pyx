@@ -17,19 +17,15 @@ More Generalized beamforming (currently fk and capon supported)
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-import warnings
-import ctypes as C
 import numpy as np
 cimport numpy as np
 cimport cython
-import pylab as pl
-from time import time
-from obspy.core import Stream
+
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.complex128_t,ndim=4] steer, np.ndarray[np.complex128_t,ndim=4] nsteer, np.float flow, np.float fhigh,
-         np.float digfreq, np.int nsamp, np.int nstat, np.int prewhiten, np.int grdpts_x, np.int grdpts_y, np.int nfft, np.int nf ,np.str method):
+def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.complex128_t,ndim=4] steer, np.ndarray[np.complex128_t,ndim=4] nsteer, double flow, double fhigh,
+         double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft, int nf ,np.str method):
     """
 
     """
@@ -84,9 +80,9 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
         for x from 0 <= x < grdpts_x:
             for y from 0 <= y < grdpts_y:
               for n from 0 <= n < nf:
-                 bufi = 0.0
+                 bufi = <complex> 0.0
                  for i from 0 <= i < nstat:
-                   bufj = 0.0
+                   bufj = <complex> 0.0
                    for j from 0 <= j < nstat:
                       bufj += R[i, j, n] * steer[j, x, y, n]
                    bufi += nsteer[i,x,y,n] * bufj
@@ -143,7 +139,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                       relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
 
     # find the maximum in the map and return its value and the indices
-    ix,iy = pl.unravel_index(relpow.argmax(), np.shape(relpow))
+    ix,iy = np.unravel_index(relpow.argmax(), np.shape(relpow))
 
     return abspow.max(), relpow.max(), ix, iy
 
