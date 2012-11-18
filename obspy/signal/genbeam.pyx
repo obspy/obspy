@@ -37,6 +37,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=5] steer,
 
     cdef int nlow,x,y,i,j,n,ix,iy
     cdef float df
+    cdef double power
     cdef complex bufi
     cdef complex bufj
     cdef complex xxx
@@ -67,12 +68,13 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=5] steer,
                bufi.real += steer[i,x,y,n,0] * bufj.real - steer[i,x,y,n,1] * bufj.imag
                bufi.imag += steer[i,x,y,n,0] * bufj.imag + steer[i,x,y,n,1] * bufj.real
              xxx = bufi 
+             power = sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
              if method == 2:
-                 xxx = 1. / xxx
+                 power = 1. / power
              if prewhiten == 0:
-                abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
+                abspow[x,y] += power
              if prewhiten == 1:
-                p[x,y,n] = sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
+                p[x,y,n] = power
           if prewhiten == 0:
               relpow[x,y] = abspow[x,y]/dpow
           if prewhiten == 1:
