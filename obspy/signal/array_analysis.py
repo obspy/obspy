@@ -1332,12 +1332,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     if nf > (nfft/2+1): nf = nfft/2+1
     nlow = int(frqlow/deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
-    STEER = np.empty((nstat,grdpts_x,grdpts_y,nf,2), dtype='f8')
-    clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-        C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
-                         STEER.ravel())
-    #steer = STEER[:,:,:,:,0] - 1j * STEER[:,:,:,:,1]
-    #steerH = STEER[:,:,:,:,0] + 1j * STEER[:,:,:,:,1]
+    if method != 'bbfk':
+        STEER = np.empty((nstat,grdpts_x,grdpts_y,nf,2), dtype='f8')
+        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+            C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
+                             STEER.ravel())
     newstart = stime
     offset = 0
     while eotr:
@@ -1388,8 +1387,21 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                           R[:, :, n] = np.linalg.pinv(R[:, :, n])
 
                   methodint = {"capon": 2, "bf": 1}[method]
-                  buf = genbeam.generalized_beamformer(STEER, R, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow, methodint)
-                  abspow, power, ix, iy = buf
+                  if 0:
+                      buf = genbeam.generalized_beamformer(STEER, R, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow, methodint)
+                      abspow, power, ix, iy = buf
+                  else:
+                      cabspow = C.c_double()
+                      cpower = C.c_double()
+                      cix = C.c_int()
+                      ciy = C.c_int()
+                      clibsignal.generalizedBeamformer(STEER.ravel(),
+                          R.ravel().view('f8'), C.c_double(frqlow),
+                          C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
+                          prewhiten, grdpts_x, grdpts_y, nfft, nf, 
+                          C.c_double(dpow), C.byref(cix), C.byref(ciy),
+                          C.byref(cabspow), C.byref(cpower), methodint)
+                      abspow, power, ix, iy = cabspow.value, cpower.value, cix.value, ciy.value
             except IndexError:
                   break
 

@@ -19,6 +19,10 @@
 #define FALSE 0
 
 #define STEER(I, J, K, L, M) steer[(I)*2*nf*grdpts_y*grdpts_x + (J)*2*nf*grdpts_y + (K)*2*nf + (L)*2 + (M)]
+#define RPTR(I, J, K) Rptr[(I)*nf*nstat + (J)*nf + (K)]
+#define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
+#define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
+#define ABSPOW(I, J) abspow[(I)*grdpts_y + (J)]
 
 #define USE_SINE_TABLE
 
@@ -27,6 +31,11 @@
 #define SINE_REF_LEN_4 (SINE_REF_LEN / 4)
 #define SINE_TABLE_LEN (SINE_REF_LEN + SINE_REF_LEN / 4 + 1)
 #endif
+
+typedef struct cplxS {
+    double re;
+    double im;
+} cplx;
 
 
 /************************************************************************/
@@ -421,5 +430,138 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
 #ifdef USE_SINE_TABLE
     free((void *)sine_table);
 #endif
+    return 0;
+}
+
+
+int generalizedBeamformer(double *steer, cplx *Rptr, double flow, double fhigh,
+        double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x,
+        int grdpts_y, int nfft, int nf, double dpow, int *ix, int *iy,
+        double *absmax, double *relmax, int method) {
+    /* method: 1 == "bf, 2 == "capon"
+     * start the code -------------------------------------------------
+     * This assumes that all stations and components have the same number of
+     * time samples, nt */
+
+    int nlow, x, y, i, j, n;
+    float df;
+    cplx bufi;
+    cplx bufj;
+    cplx xxx;
+    double *p;
+    double *abspow;
+    double *relpow;
+    double *white;
+    double power;
+
+    /* we allocate the taper buffer, size nsamp! */
+    p = (double *) calloc((size_t) (grdpts_x * grdpts_y * nf), sizeof(double));
+    if (p == NULL ) {
+        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        exit(EXIT_FAILURE);
+    }
+    abspow = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
+    if (abspow == NULL ) {
+        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        exit(EXIT_FAILURE);
+    }
+    relpow = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
+    if (relpow == NULL ) {
+        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        exit(EXIT_FAILURE);
+    }
+    white = (double *) calloc((size_t) nf, sizeof(double));
+    if (white == NULL ) {
+        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        exit(EXIT_FAILURE);
+    }
+
+    df = digfreq / (float) nfft;
+    nlow = (int) flow / df;
+
+    if (method == 2) {
+        /* P(f) = 1/(e.H R(f)^-1 e) */
+        dpow = 1.0;  // needed for general way of abspow normalization
+    }
+    /* if "bf"
+     *   P(f) = e.H R(f) e */
+    for (x = 0; x < grdpts_x; ++x) {
+        for (y = 0; y < grdpts_y; ++y) {
+            ABSPOW(x, y) = 0.;
+            for (n = 0; n < nf; ++n) {
+                bufi.re = 0.;
+                bufi.im = 0.;
+                for (i = 0; i < nstat; ++i) {
+                    bufj.re = 0.;
+                    bufj.im = 0.;
+                    for (j = 0; j < nstat; ++j) {
+                        bufj.re += RPTR(i,j,n).re * STEER(j,x,y,n,0) - RPTR(i,j,n).im * (-STEER(j,x,y,n,1));
+                        bufj.im += RPTR(i,j,n).re * (-STEER(j,x,y,n,1)) + RPTR(i,j,n).im * STEER(j,x,y,n,0);
+                    }
+                    bufi.re += STEER(i,x,y,n,0)* bufj.re - STEER(i,x,y,n,1) * bufj.im;
+                    bufi.im += STEER(i,x,y,n,0)* bufj.im + STEER(i,x,y,n,1) * bufj.re;
+                }
+
+                power = sqrt(bufi.re * bufi.re + bufi.im * bufi.im);
+                if (method == 2) {
+                    power = 1. / power;
+                }
+                if (prewhiten == 0) {
+                    ABSPOW(x,y) += power;
+                }
+                if (prewhiten == 1) {
+                    P(x,y,n) = power;
+                }
+            }
+            if (prewhiten == 0) {
+                RELPOW(x,y) = ABSPOW(x,y)/dpow;
+            }
+            if (prewhiten == 1) {
+                for (n = 0; n < nf; ++n) {
+                    if (P(x,y,n) > white[n]) {
+                        white[n] = P(x,y,n);
+                    }
+                }
+            }
+        }
+    }
+
+    if (prewhiten == 1) {
+        for (x = 0; x < grdpts_x; ++x) {
+            for (y = 0; y < grdpts_y; ++y) {
+                RELPOW(x,y)= 0.;
+                for (n = 0; n < nf; ++n) {
+                    RELPOW(x,y) += P(x,y,n)/(white[n]*nf*nstat);
+                }
+                if (method == 1) {
+                    ABSPOW(x,y) = 0.;
+                    for (n = 0; n < nf; ++n) {
+                        ABSPOW(x,y) += P(x,y,n);
+                    }
+                }
+            }
+        }
+    }
+
+    *relmax = 0.;
+    *absmax = 0.;
+    for (x = 0; x < grdpts_x; ++x) {
+        for (y = 0; y < grdpts_y; ++y) {
+            if (RELPOW(x,y) > *relmax) {
+                *relmax = RELPOW(x,y);
+                *ix = x;
+                *iy = y;
+            }
+            if (ABSPOW(x,y) > *absmax) {
+                *absmax = ABSPOW(x,y);
+            }
+        }
+    }
+
+    free((void *) p);
+    free((void *) relpow);
+    free((void *) abspow);
+    free((void *) white);
+
     return 0;
 }

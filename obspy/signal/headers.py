@@ -64,6 +64,20 @@ clibsignal.calcSteer.argtypes = [
 ]
 clibsignal.calcSteer.restype = C.c_void_p
 
+clibsignal.generalizedBeamformer.argtypes = [
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_double, C.c_double, C.c_double,
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+    C.c_double,
+    C.POINTER(C.c_int),
+    C.POINTER(C.c_int),
+    C.POINTER(C.c_double),
+    C.POINTER(C.c_double),
+    C.c_int,
+]
+clibsignal.generalizedBeamformer.restype = C.c_int
+
 #XXX moritz: add a note where params are pointers
 clibsignal.bbfk.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
