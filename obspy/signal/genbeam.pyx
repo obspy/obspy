@@ -24,12 +24,13 @@ cimport cython
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.complex128_t,ndim=4] steer, np.ndarray[np.complex128_t,ndim=4] nsteer, double flow, double fhigh,
-         double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft, int nf ,np.str method,
-         np.ndarray[np.complex128_t, ndim=3] R, np.ndarray[np.complex128_t, ndim=3] R_inv, double dpow):
-    """
-
-    """
+def generalized_beamformer(np.ndarray[np.float64_t,ndim=5] steer,
+                           np.ndarray[np.complex128_t, ndim=3] Rptr,
+                           double flow, double fhigh,
+                           double digfreq, int nsamp, int nstat, int
+                           prewhiten, int grdpts_x, int grdpts_y, int nfft,
+                           int nf, double dpow, int method):
+    # method: 1 == "bf, 2 == "capon"
     # start the code -------------------------------------------------
     # This assumes that all stations and components have the same number of
     # time samples, nt
@@ -39,25 +40,21 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef complex bufi
     cdef complex bufj
     cdef complex xxx
-    cdef np.ndarray[np.complex128_t, ndim=1] xx = np.zeros((nfft),dtype=complex)
     cdef np.ndarray[np.float64_t,ndim=3] p = np.zeros((grdpts_x,grdpts_y,nf),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=1] white = np.zeros((nf),dtype=float)
-    cdef np.ndarray[np.complex128_t,ndim=3] Rptr = None
     cdef extern from "math.h":
         float sqrt "sqrtf" (float dummy)
 
     df = digfreq/float(nfft)
     nlow = int(flow/df)
 
-    if method == "capon":
+    if method == 2:
         # P(f) = 1/(e.H R(f)^-1 e)
-        Rptr = R_inv
         dpow = 1.0 # needed for general way of abspow normalization
-    elif method == "bf":
-        # P(f) = e.H R(f) e
-        Rptr = R
+    # if "bf"
+    #   P(f) = e.H R(f) e
     for x from 0 <= x < grdpts_x:
         for y from 0 <= y < grdpts_y:
           for n from 0 <= n < nf:
@@ -65,12 +62,12 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
              for i from 0 <= i < nstat:
                bufj = <complex> 0.0
                for j from 0 <= j < nstat:
-                  bufj.real += Rptr[i, j, n].real * steer[j, x, y, n].real - Rptr[i, j, n].imag * steer[j, x, y, n].imag
-                  bufj.imag += Rptr[i, j, n].real * steer[j, x, y, n].imag + Rptr[i, j, n].imag * steer[j, x, y, n].real
-               bufi.real += nsteer[i,x,y,n].real * bufj.real - nsteer[i,x,y,n].imag * bufj.imag
-               bufi.imag += nsteer[i,x,y,n].real * bufj.imag + nsteer[i,x,y,n].imag * bufj.real
+                  bufj.real += Rptr[i, j, n].real * steer[j, x, y, n, 0] - Rptr[i, j, n].imag * (-steer[j, x, y, n, 1])
+                  bufj.imag += Rptr[i, j, n].real * (-steer[j, x, y, n, 1]) + Rptr[i, j, n].imag * steer[j, x, y, n, 0]
+               bufi.real += steer[i,x,y,n,0] * bufj.real - steer[i,x,y,n,1] * bufj.imag
+               bufi.imag += steer[i,x,y,n,0] * bufj.imag + steer[i,x,y,n,1] * bufj.real
              xxx = bufi 
-             if method == 'capon':
+             if method == 2:
                  xxx = 1. / xxx
              if prewhiten == 0:
                 abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
@@ -89,7 +86,7 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                relpow[x,y] = 0.
                for n from 0 <= n < nf:
                    relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
-               if method == 'bf':
+               if method == 1:
                    abspow[x,y] = 0.
                    for n from 0 <= n < nf:
                        abspow[x,y] += p[x,y,n]

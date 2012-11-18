@@ -21,14 +21,12 @@ import math
 import warnings
 import ctypes as C
 import numpy as np
-import pylab as pl
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 from scipy.signal import detrend
-import cProfile
 import genbeam
 
 
@@ -1227,7 +1225,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
 #                  relpow[x,y] = np.sum(p[x,y,:]/(white[:]*nf*nstat))
 #
 #    # find the maximum in the map and return its value and the indices
-#    ix,iy = pl.unravel_index(relpow.argmax(), relpow.shape)
+#    ix,iy = np.unravel_index(relpow.argmax(), relpow.shape)
 #
 #    print "%lf %lf %d %d %d %d\n"%(abspow.max(), relpow.max(), ix, iy,grdpts_x,grdpts_y)
 #
@@ -1338,8 +1336,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
         C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
                          STEER.ravel())
-    steer = STEER[:,:,:,:,0] - 1j * STEER[:,:,:,:,1]
-    steerH = STEER[:,:,:,:,0] + 1j * STEER[:,:,:,:,1]
+    #steer = STEER[:,:,:,:,0] - 1j * STEER[:,:,:,:,1]
+    #steerH = STEER[:,:,:,:,0] + 1j * STEER[:,:,:,:,1]
     newstart = stime
     offset = 0
     while eotr:
@@ -1363,7 +1361,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                   df = fs/float(nfft)
                   nlow = int(frqlow/df)
                   R = np.zeros((nstat, nstat,nf),dtype=np.complex128)
-                  R_inv = np.zeros((nstat, nstat,nf),dtype=np.complex128)
 
                   # in general, beamforming is done by simply computing the co-variances
                   # of the signal at different receivers and than stear the matrix R with
@@ -1388,9 +1385,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                   if method == "capon":
                       # P(f) = 1/(e.H R(f)^-1 e)
                       for n in xrange(nf):
-                          R_inv[:, :, n] = np.linalg.pinv(R[:, :, n])
+                          R[:, :, n] = np.linalg.pinv(R[:, :, n])
 
-                  buf = genbeam.generalized_beamformer(trace, steer, steerH, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, method, R, R_inv, dpow)
+                  methodint = {"capon": 2, "bf": 1}[method]
+                  buf = genbeam.generalized_beamformer(STEER, R, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow, methodint)
                   abspow, power, ix, iy = buf
             except IndexError:
                   break
