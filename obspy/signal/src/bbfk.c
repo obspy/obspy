@@ -17,9 +17,8 @@
 
 #define TRUE 1
 #define FALSE 0
-
-#define STEER(I, J, K, L, M) steer[(I)*2*nf*grdpts_y*grdpts_x + (J)*2*nf*grdpts_y + (K)*2*nf + (L)*2 + (M)]
-#define RPTR(I, J, K) Rptr[(I)*nf*nstat + (J)*nf + (K)]
+#define STEER(I, J, K, L, M) steer[(I)*2*nstat*nf*grdpts_y + (J)*2*nstat*nf + (K)*2*nstat + (L)*2 + (M)]
+#define RPTR(I, J, K) Rptr[(I)*nstat*nstat + (J)*nstat + (K)]
 #define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
 #define ABSPOW(I, J) abspow[(I)*grdpts_y + (J)]
@@ -100,8 +99,8 @@ void calcSteer(int nstat, int grdpts_x, int grdpts_y, int nf, int nlow,
             for (y=0; y < grdpts_y; y++) {
                 for (n=0; n < nf; n++) {
                     wtau = 2.*M_PI*(float)(nlow+n)*deltaf*stat_tshift_table[i][x][y];
-                    STEER(i,x,y,n,0) = cos(wtau);
-                    STEER(i,x,y,n,1) = sin(wtau);
+                    STEER(x,y,n,i,0) = cos(wtau);
+                    STEER(x,y,n,i,1) = sin(wtau);
                 }
             }
         }
@@ -495,11 +494,11 @@ int generalizedBeamformer(double *steer, cplx *Rptr, double flow, double fhigh,
                     bufj.re = 0.;
                     bufj.im = 0.;
                     for (j = 0; j < nstat; ++j) {
-                        bufj.re += RPTR(i,j,n).re * STEER(j,x,y,n,0) - RPTR(i,j,n).im * (-STEER(j,x,y,n,1));
-                        bufj.im += RPTR(i,j,n).re * (-STEER(j,x,y,n,1)) + RPTR(i,j,n).im * STEER(j,x,y,n,0);
+                        bufj.re += RPTR(n,i,j).re * STEER(x,y,n,j,0) - RPTR(n,i,j).im * (-STEER(x,y,n,j,1));
+                        bufj.im += RPTR(n,i,j).re * (-STEER(x,y,n,j,1)) + RPTR(n,i,j).im * STEER(x,y,n,j,0);
                     }
-                    bufi.re += STEER(i,x,y,n,0)* bufj.re - STEER(i,x,y,n,1) * bufj.im;
-                    bufi.im += STEER(i,x,y,n,0)* bufj.im + STEER(i,x,y,n,1) * bufj.re;
+                    bufi.re += STEER(x,y,n,i,0)* bufj.re - STEER(x,y,n,i,1) * bufj.im;
+                    bufi.im += STEER(x,y,n,i,0)* bufj.im + STEER(x,y,n,i,1) * bufj.re;
                 }
 
                 power = sqrt(bufi.re * bufi.re + bufi.im * bufi.im);

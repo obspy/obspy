@@ -1333,7 +1333,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     nlow = int(frqlow/deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
-        STEER = np.empty((nstat,grdpts_x,grdpts_y,nf,2), dtype='f8')
+        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat,2), dtype='f8')
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
                              STEER.ravel())
@@ -1359,7 +1359,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
 
                   df = fs/float(nfft)
                   nlow = int(frqlow/df)
-                  R = np.zeros((nstat, nstat,nf),dtype=np.complex128)
+                  R = np.zeros((nf, nstat, nstat),dtype=np.complex128)
 
                   # in general, beamforming is done by simply computing the co-variances
                   # of the signal at different receivers and than stear the matrix R with
@@ -1372,19 +1372,19 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                       ft.append(np.fft.rfft(trace[i, :],nfft)[nlow:nlow+nf])
                   for i in xrange(nstat):
                       for j in xrange(i, nstat):
-                          R[i, j, :] = ft[i] * ft[j].conj()
+                          R[:, i, j] = ft[i] * ft[j].conj()
                           if method == 'capon':
-                              R[i, j, :] /= np.abs(R[i, j, :].sum())
+                              R[:, i, j] /= np.abs(R[:, i, j].sum())
                           if i != j:
-                              R[j, i, :] = R[i, j, :].conjugate() 
+                              R[:, j, i] = R[:, i, j].conjugate() 
                           else:
-                              dpow += np.abs(R[i,j,:].sum())
+                              dpow += np.abs(R[:,i,j].sum())
 
                   dpow *= nstat
                   if method == "capon":
                       # P(f) = 1/(e.H R(f)^-1 e)
                       for n in xrange(nf):
-                          R[:, :, n] = np.linalg.pinv(R[:, :, n])
+                          R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
                   methodint = {"capon": 2, "bf": 1}[method]
                   if 0:
