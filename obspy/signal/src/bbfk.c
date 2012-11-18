@@ -17,7 +17,7 @@
 
 #define TRUE 1
 #define FALSE 0
-#define STEER(I, J, K, L, M) steer[(I)*2*nstat*nf*grdpts_y + (J)*2*nstat*nf + (K)*2*nstat + (L)*2 + (M)]
+#define STEER(I, J, K, L) steer[(I)*nstat*nf*grdpts_y + (J)*nstat*nf + (K)*nstat + (L)]
 #define RPTR(I, J, K) Rptr[(I)*nstat*nstat + (J)*nstat + (K)]
 #define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
@@ -89,7 +89,7 @@ int cosine_taper(double *taper, int ndat, double fraction)
 
 void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
         const int nf, const int nlow, const float deltaf, float
-        ***stat_tshift_table, double * const steer) {
+        ***stat_tshift_table, cplx * const steer) {
     int i;
     int x;
     int y;
@@ -100,8 +100,8 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
             for (y=0; y < grdpts_y; y++) {
                 for (n=0; n < nf; n++) {
                     wtau = 2.*M_PI*(float)(nlow+n)*deltaf*stat_tshift_table[i][x][y];
-                    STEER(x,y,n,i,0) = cos(wtau);
-                    STEER(x,y,n,i,1) = sin(wtau);
+                    STEER(x,y,n,i).re = cos(wtau);
+                    STEER(x,y,n,i).im = sin(wtau);
                 }
             }
         }
@@ -434,7 +434,7 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
 }
 
 
-int generalizedBeamformer(const double * const steer, const cplx * const Rptr,
+int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
         const double flow, const double fhigh, const double digfreq,
         const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
         const int grdpts_y, const int nfft, const int nf, double dpow,
@@ -496,11 +496,11 @@ int generalizedBeamformer(const double * const steer, const cplx * const Rptr,
                     bufj.re = 0.;
                     bufj.im = 0.;
                     for (j = 0; j < nstat; ++j) {
-                        bufj.re += RPTR(n,i,j).re * STEER(x,y,n,j,0) - RPTR(n,i,j).im * (-STEER(x,y,n,j,1));
-                        bufj.im += RPTR(n,i,j).re * (-STEER(x,y,n,j,1)) + RPTR(n,i,j).im * STEER(x,y,n,j,0);
+                        bufj.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
+                        bufj.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
                     }
-                    bufi.re += STEER(x,y,n,i,0)* bufj.re - STEER(x,y,n,i,1) * bufj.im;
-                    bufi.im += STEER(x,y,n,i,0)* bufj.im + STEER(x,y,n,i,1) * bufj.re;
+                    bufi.re += STEER(x,y,n,i).re * bufj.re - STEER(x,y,n,i).im * bufj.im;
+                    bufi.im += STEER(x,y,n,i).re * bufj.im + STEER(x,y,n,i).im * bufj.re;
                 }
 
                 power = sqrt(bufi.re * bufi.re + bufi.im * bufi.im);

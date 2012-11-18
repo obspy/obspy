@@ -1333,10 +1333,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     nlow = int(frqlow/deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
-        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat,2), dtype='f8')
+        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat), dtype=np.complex128)
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
-                             STEER.ravel())
+            STEER.ravel().view('f8'))
     newstart = stime
     offset = 0
     while eotr:
@@ -1395,7 +1395,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                       cpower = C.c_double()
                       cix = C.c_int()
                       ciy = C.c_int()
-                      clibsignal.generalizedBeamformer(STEER.ravel(),
+                      clibsignal.generalizedBeamformer(STEER.ravel().view('f8'),
                           R.ravel().view('f8'), C.c_double(frqlow),
                           C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
                           prewhiten, grdpts_x, grdpts_y, nfft, nf, 
