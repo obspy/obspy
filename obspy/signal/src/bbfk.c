@@ -87,8 +87,9 @@ int cosine_taper(double *taper, int ndat, double fraction)
 }
 
 
-void calcSteer(int nstat, int grdpts_x, int grdpts_y, int nf, int nlow,
-               float deltaf, float ***stat_tshift_table, double *steer) {
+void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
+        const int nf, const int nlow, const float deltaf, float
+        ***stat_tshift_table, double * const steer) {
     int i;
     int x;
     int y;
@@ -433,10 +434,11 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
 }
 
 
-int generalizedBeamformer(double *steer, cplx *Rptr, double flow, double fhigh,
-        double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x,
-        int grdpts_y, int nfft, int nf, double dpow, int *ix, int *iy,
-        double *absmax, double *relmax, int method) {
+int generalizedBeamformer(const double * const steer, const cplx * const Rptr,
+        const double flow, const double fhigh, const double digfreq,
+        const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
+        const int grdpts_y, const int nfft, const int nf, double dpow,
+        int *ix, int *iy, double *absmax, double *relmax, const int method) {
     /* method: 1 == "bf, 2 == "capon"
      * start the code -------------------------------------------------
      * This assumes that all stations and components have the same number of
