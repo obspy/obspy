@@ -44,7 +44,6 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef np.ndarray[np.float64_t,ndim=2] abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=1] white = np.zeros((nf),dtype=float)
-    cdef np.ndarray[np.float64_t,ndim=1] tap = np.zeros((nsamp),dtype=float)
     cdef extern from "math.h":
         float sqrt "sqrtf" (float dummy)
 
@@ -60,8 +59,10 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
                  for i from 0 <= i < nstat:
                    bufj = <complex> 0.0
                    for j from 0 <= j < nstat:
-                      bufj += R[i, j, n] * steer[j, x, y, n]
-                   bufi += nsteer[i,x,y,n] * bufj
+                      bufj.real += R[i, j, n].real * steer[j, x, y, n].real - R[i, j, n].imag * steer[j, x, y, n].imag
+                      bufj.imag += R[i, j, n].real * steer[j, x, y, n].imag + R[i, j, n].imag * steer[j, x, y, n].real
+                   bufi.real += nsteer[i,x,y,n].real * bufj.real - nsteer[i,x,y,n].imag * bufj.imag
+                   bufi.imag += nsteer[i,x,y,n].real * bufj.imag + nsteer[i,x,y,n].imag * bufj.real
                  xxx = bufi 
                  if prewhiten == 0:
                     abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
