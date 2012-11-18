@@ -1333,10 +1333,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
     nlow = int(frqlow/deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
-        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat), dtype=np.complex128)
+        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat), dtype='c16')
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-            C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy),
-            STEER.ravel().view('f8'))
+            C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
     newstart = stime
     offset = 0
     while eotr:
@@ -1359,7 +1358,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
 
                   df = fs/float(nfft)
                   nlow = int(frqlow/df)
-                  R = np.zeros((nf, nstat, nstat),dtype=np.complex128)
+                  R = np.zeros((nf, nstat, nstat), dtype='c16')
 
                   # in general, beamforming is done by simply computing the co-variances
                   # of the signal at different receivers and than stear the matrix R with
@@ -1395,8 +1394,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                       cpower = C.c_double()
                       cix = C.c_int()
                       ciy = C.c_int()
-                      clibsignal.generalizedBeamformer(STEER.ravel().view('f8'),
-                          R.ravel().view('f8'), C.c_double(frqlow),
+                      clibsignal.generalizedBeamformer(STEER,
+                          R, C.c_double(frqlow),
                           C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
                           prewhiten, grdpts_x, grdpts_y, nfft, nf, 
                           C.c_double(dpow), C.byref(cix), C.byref(ciy),
