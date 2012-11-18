@@ -444,11 +444,10 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
      * This assumes that all stations and components have the same number of
      * time samples, nt */
 
-    int nlow, x, y, i, j, n;
-    float df;
+    int x, y, i, j, n;
     cplx bufi;
     cplx bufj;
-    cplx xxx;
+    cplx cplx_zero = {0., 0.};
     double *p;
     double *abspow;
     double *relpow;
@@ -477,9 +476,6 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
         exit(EXIT_FAILURE);
     }
 
-    df = digfreq / (float) nfft;
-    nlow = (int) flow / df;
-
     if (method == 2) {
         /* P(f) = 1/(e.H R(f)^-1 e) */
         dpow = 1.0;  // needed for general way of abspow normalization
@@ -490,11 +486,9 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
         for (y = 0; y < grdpts_y; ++y) {
             ABSPOW(x, y) = 0.;
             for (n = 0; n < nf; ++n) {
-                bufi.re = 0.;
-                bufi.im = 0.;
+                bufi = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
-                    bufj.re = 0.;
-                    bufj.im = 0.;
+                    bufj = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
                         bufj.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
                         bufj.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
