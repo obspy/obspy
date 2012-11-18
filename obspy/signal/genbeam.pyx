@@ -25,7 +25,8 @@ cimport cython
 @cython.boundscheck(False)
 @cython.wraparound(False)
 def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.complex128_t,ndim=4] steer, np.ndarray[np.complex128_t,ndim=4] nsteer, double flow, double fhigh,
-         double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft, int nf ,np.str method):
+         double digfreq, int nsamp, int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft, int nf ,np.str method,
+         np.ndarray[np.complex128_t, ndim=3] R, np.ndarray[np.complex128_t, ndim=3] R_inv, double dpow):
     """
 
     """
@@ -39,9 +40,6 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef complex bufj
     cdef complex xxx
     cdef np.ndarray[np.complex128_t, ndim=1] xx = np.zeros((nfft),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=3] R = np.zeros((nstat, nstat,nf),dtype=complex)
-    cdef np.ndarray[np.complex128_t,ndim=3] R_inv = np.zeros((nstat, nstat,nf),dtype=complex)
-    cdef double dpow
     cdef np.ndarray[np.float64_t,ndim=3] p = np.zeros((grdpts_x,grdpts_y,nf),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
@@ -52,28 +50,6 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
 
     df = digfreq/float(nfft)
     nlow = int(flow/df)
-
-    # in general, beamforming is done by simply computing the co-variances
-    # of the signal at different receivers and than stear the matrix R with
-    # "weights" which are the trial-DOAs e.g., Kirlin & Done, 1999
-    dpow = 0.
-
-    # fill up R
-    for i in xrange(nstat):
-       for j in xrange(i,nstat):
-            xx = np.fft.rfft(trace[i],nfft) * np.fft.rfft(trace[j],nfft).conjugate()
-            if method == 'capon':
-                 R[i,j,0:nf] = xx[nlow:nlow+nf]/np.abs(xx[nlow:nlow+nf].sum())
-                 if i != j:
-                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()/np.abs(xx[nlow:nlow+nf].sum())
-            else :
-                 R[i,j,0:nf] = xx[nlow:nlow+nf]
-                 if i != j:
-                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()
-                 else:
-                     dpow += np.abs(R[i,j,:].sum())
-
-    dpow *= nstat
 
     if method == "bf":
     # P(f) = e.H R(f) e
@@ -109,8 +85,6 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
 
     elif method == "capon":
     # P(f) = 1/(e.H R(f)^-1 e)
-        for n from 0 <= n < nf:
-            R_inv[:, :, n] = np.linalg.pinv(R[0:nstat,0:nstat,n])
         for x from 0 <= x < grdpts_x:
             for y from 0 <= y < grdpts_y:
               for n from 0 <= n < nf:
