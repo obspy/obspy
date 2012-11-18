@@ -1336,6 +1336,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
         STEER = np.empty((grdpts_x,grdpts_y,nf,nstat), dtype='c16')
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
+    R = np.empty((nf, nstat, nstat), dtype='c16')
     newstart = stime
     offset = 0
     while eotr:
@@ -1352,13 +1353,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
             trace = np.zeros((nstat,nsamp),dtype=float)
             try:
                   for i,tr in enumerate(stream):
-                     trace[i][0:nsamp] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
-                     trace[i][0:nsamp] = detrend(trace[i][0:nsamp],type='constant')
-                     trace[i][0:nsamp] = trace[i][0:nsamp]*tap[0:nsamp]
+                     trace[i, :] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
+                     trace[i, :] = detrend(trace[i, :],type='constant')
+                     trace[i, :] = trace[i, :]*tap[:]
 
                   df = fs/float(nfft)
                   nlow = int(frqlow/df)
-                  R = np.zeros((nf, nstat, nstat), dtype='c16')
 
                   # in general, beamforming is done by simply computing the co-variances
                   # of the signal at different receivers and than stear the matrix R with
@@ -1367,6 +1367,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
 
                   # fill up R
                   ft = []
+                  R.fill(0. + 0j)
                   for i in xrange(nstat):
                       ft.append(np.fft.rfft(trace[i, :],nfft)[nlow:nlow+nf])
                   for i in xrange(nstat):
