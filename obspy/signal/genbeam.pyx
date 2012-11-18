@@ -44,74 +44,56 @@ def generalized_beamformer(np.ndarray[np.float64_t,ndim=2] trace, np.ndarray[np.
     cdef np.ndarray[np.float64_t,ndim=2] abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=2] relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
     cdef np.ndarray[np.float64_t,ndim=1] white = np.zeros((nf),dtype=float)
+    cdef np.ndarray[np.complex128_t,ndim=3] Rptr = None
     cdef extern from "math.h":
         float sqrt "sqrtf" (float dummy)
 
     df = digfreq/float(nfft)
     nlow = int(flow/df)
 
-    if method == "bf":
-    # P(f) = e.H R(f) e
+    if method == "capon":
+        # P(f) = 1/(e.H R(f)^-1 e)
+        Rptr = R_inv
+        dpow = 1.0 # needed for general way of abspow normalization
+    elif method == "bf":
+        # P(f) = e.H R(f) e
+        Rptr = R
+    for x from 0 <= x < grdpts_x:
+        for y from 0 <= y < grdpts_y:
+          for n from 0 <= n < nf:
+             bufi = <complex> 0.0
+             for i from 0 <= i < nstat:
+               bufj = <complex> 0.0
+               for j from 0 <= j < nstat:
+                  bufj.real += Rptr[i, j, n].real * steer[j, x, y, n].real - Rptr[i, j, n].imag * steer[j, x, y, n].imag
+                  bufj.imag += Rptr[i, j, n].real * steer[j, x, y, n].imag + Rptr[i, j, n].imag * steer[j, x, y, n].real
+               bufi.real += nsteer[i,x,y,n].real * bufj.real - nsteer[i,x,y,n].imag * bufj.imag
+               bufi.imag += nsteer[i,x,y,n].real * bufj.imag + nsteer[i,x,y,n].imag * bufj.real
+             xxx = bufi 
+             if method == 'capon':
+                 xxx = 1. / xxx
+             if prewhiten == 0:
+                abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
+             if prewhiten == 1:
+                p[x,y,n] = sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
+          if prewhiten == 0:
+              relpow[x,y] = abspow[x,y]/dpow
+          if prewhiten == 1:
+             for n from 0 <= n < nf: 
+               if p[x,y,n] > white[n]:
+                  white[n] = p[x,y,n]
+          
+    if prewhiten == 1:
         for x from 0 <= x < grdpts_x:
-            for y from 0 <= y < grdpts_y:
-              for n from 0 <= n < nf:
-                 bufi = <complex> 0.0
-                 for i from 0 <= i < nstat:
-                   bufj = <complex> 0.0
-                   for j from 0 <= j < nstat:
-                      bufj.real += R[i, j, n].real * steer[j, x, y, n].real - R[i, j, n].imag * steer[j, x, y, n].imag
-                      bufj.imag += R[i, j, n].real * steer[j, x, y, n].imag + R[i, j, n].imag * steer[j, x, y, n].real
-                   bufi.real += nsteer[i,x,y,n].real * bufj.real - nsteer[i,x,y,n].imag * bufj.imag
-                   bufi.imag += nsteer[i,x,y,n].real * bufj.imag + nsteer[i,x,y,n].imag * bufj.real
-                 xxx = bufi 
-                 if prewhiten == 0:
-                    abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
-                 if prewhiten == 1:
-                    p[x,y,n] = sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
-              if prewhiten == 0:
-                 relpow[x,y] = abspow[x,y]/dpow
-              if prewhiten == 1:
-                 for n from 0 <= n < nf: 
-                   if p[x,y,n] > white[n]:
-                      white[n] = p[x,y,n]
-              
-        if prewhiten == 1:
-            for x from 0 <= x < grdpts_x:
-               for y from 0 <= y < grdpts_y:
+           for y from 0 <= y < grdpts_y:
+               relpow[x,y] = 0.
+               for n from 0 <= n < nf:
+                   relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
+               if method == 'bf':
                    abspow[x,y] = 0.
-                   relpow[x,y] = 0.
                    for n from 0 <= n < nf:
                        abspow[x,y] += p[x,y,n]
-                       relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
 
-    elif method == "capon":
-    # P(f) = 1/(e.H R(f)^-1 e)
-        for x from 0 <= x < grdpts_x:
-            for y from 0 <= y < grdpts_y:
-              for n from 0 <= n < nf:
-                  bufi = 0.0
-                  for i from 0 <= i < nstat:
-                    bufj = 0.0
-                    for j from 0 <= j < nstat:
-                       bufj += R_inv[i, j, n] * steer[j, x, y, n]
-                    bufi += nsteer[i,x,y,n] * bufj
-                  xxx = 1. / bufi 
-                  if prewhiten == 0:
-                      abspow[x,y] += sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
-                  if prewhiten == 1:
-                      p[x,y,n] = sqrt(xxx.real * xxx.real + xxx.imag*xxx.imag)
-              if prewhiten == 0:
-                 relpow[x,y] = abspow[x,y]
-              if prewhiten == 1:
-                 for n from 0 <= n < nf:
-                   if p[x,y,n] > white[n]:
-                      white[n] = p[x,y,n]
-        if prewhiten == 1:
-            for x from 0 <= x < grdpts_x:
-               for y from 0 <= y < grdpts_y:
-                  relpow[x,y] = 0.
-                  for n from 0 <= n < nf:
-                      relpow[x,y] += p[x,y,n]/(white[n]*nf*nstat)
 
     # find the maximum in the map and return its value and the indices
     ix,iy = np.unravel_index(relpow.argmax(), np.shape(relpow))
