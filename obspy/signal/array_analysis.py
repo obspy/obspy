@@ -1371,25 +1371,24 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                   dpow = 0.
 
                   # fill up R
+                  ft = []
                   for i in xrange(nstat):
-                     for j in xrange(i,nstat):
-                          xx = np.fft.rfft(trace[i],nfft) * np.fft.rfft(trace[j],nfft).conjugate()
+                      ft.append(np.fft.rfft(trace[i, :],nfft)[nlow:nlow+nf])
+                  for i in xrange(nstat):
+                      for j in xrange(i, nstat):
+                          R[i, j, :] = ft[i] * ft[j].conj()
                           if method == 'capon':
-                               R[i,j,0:nf] = xx[nlow:nlow+nf]/np.abs(xx[nlow:nlow+nf].sum())
-                               if i != j:
-                                   R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()/np.abs(xx[nlow:nlow+nf].sum())
-                          else :
-                               R[i,j,0:nf] = xx[nlow:nlow+nf]
-                               if i != j:
-                                   R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()
-                               else:
-                                   dpow += np.abs(R[i,j,:].sum())
+                              R[i, j, :] /= np.abs(R[i, j, :].sum())
+                          if i != j:
+                              R[j, i, :] = R[i, j, :].conjugate() 
+                          else:
+                              dpow += np.abs(R[i,j,:].sum())
 
                   dpow *= nstat
                   if method == "capon":
                       # P(f) = 1/(e.H R(f)^-1 e)
                       for n in xrange(nf):
-                          R_inv[:, :, n] = np.linalg.pinv(R[0:nstat,0:nstat,n])
+                          R_inv[:, :, n] = np.linalg.pinv(R[:, :, n])
 
                   buf = genbeam.generalized_beamformer(trace, steer, steerH, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, method, R, R_inv, dpow)
                   abspow, power, ix, iy = buf
