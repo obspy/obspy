@@ -548,7 +548,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(stream[4] in stream2)
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
-                                network='aA', station='ZzZz', )
+                                network='aA', station='ZzZz',)
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
@@ -1660,6 +1660,56 @@ class StreamTestCase(unittest.TestCase):
         # merge
         st.merge(fill_value='interpolate')
         self.assertEquals(len(st), 1)
+
+    def test_rotateRT(self):
+        """
+        Testing the rotateRT method.
+        """
+        st = read()
+        st += st.copy()
+        st[3:].normalize()
+        st2 = st.copy()
+        # rotate to RT and back with 6 traces
+        st.rotateRT([30, 50])
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZRT')
+        st.rotateRT([330, 310], check_components='RT', rename_components='NE')
+        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                        st[2].stats.channel[-1] == 'ZNE')
+        self.assertTrue(sum((st[0].data - st2[0].data) ** 2) +
+                        sum((st[1].data - st2[1].data) ** 2) +
+                        sum((st[2].data - st2[2].data) ** 2) < 1e-9)
+        # again, with angles given in stats and just 2 components
+        st = st[1:3] + st[4:]
+        st[0].stats.ba = 190
+        st[2].stats.ba = 200
+        st.rotateRT(number_components=2)
+        st[0].stats.ba = 170
+        st[2].stats.ba = 160
+        st.rotateRT(number_components=2, check_components=None,
+                    rename_components='NE')
+        self.assertTrue(sum((st[0].data - st2[1].data) ** 2) +
+                        sum((st[1].data - st2[2].data) ** 2) < 1e-9)
+
+    def test_rotateLQT(self):
+        """
+        Testing the rotateLQT method.
+        """
+        st = read()
+        st += st.copy()
+        st[3:].normalize()
+        st2 = st.copy()
+        # rotate to LQT and back with 6 traces
+        st.rotateLQT(100, 30)
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'LQT')
+        st.rotateLQT(100, 30, check_components='LQT', rename_components='ZNE',
+                     back=True)
+        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                        st[2].stats.channel[-1] == 'ZNE')
+        self.assertTrue(sum((st[0].data - st2[0].data) ** 2) +
+                        sum((st[1].data - st2[1].data) ** 2) +
+                        sum((st[2].data - st2[2].data) ** 2) < 1e-9)
 
 
 def suite():

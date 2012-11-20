@@ -2199,6 +2199,127 @@ class Stream(object):
             tr.normalize(norm=norm)
         return
 
+    def __get_rot_angles(self, angle, stats_entry, num=3):
+        """
+        Helper method for rotation: Return list of angles.
+        
+        :param angle: ``None``, float or list.
+        :param stats_entry: if param_angle is None, list of angles is taken
+        from the entry ``stats_entry`` of the stats object of every first of 2
+        or 3 consecutive traces.
+        :param num: number of different components in stream object (2 or 3)
+        
+        :return: list of angles        
+        """
+        if isinstance(angle, (float, int, long)):
+            angle = [angle] * (len(self) // num)
+        elif angle is None:
+            angle = [self[num * i].stats[stats_entry]
+                     for i in range(len(self) // num)]
+        if len(angle) != len(self) // num:
+            raise ValueError('List of angles has wrong length.')
+        return angle
+
+    def rotateRT(self, ba=None, number_components=3, check_components='NE',
+                  rename_components='RT'):
+        """
+        Method for rotating stream in 2 components.
+        
+        This method uses the function ``signal.rotate_NE_RT``.
+        Each trace of the stream stands for one component and they have to be in
+        the order ZNEZNE... or ZNZN... .
+        The stream will be rotated by the angles given as back-azimuths
+        in parameter ``ba`` or by the entries in ``stats.ba`` if ``ba`` is
+        ``None``.
+        
+        :type ba: ``None``, float or list
+        :param ba: list of back-azimuths or float (all rotations with the same
+            angle) or ``None`` (angles will be taken from ``stats.ba`` of the
+            first trace of every 2 or 3 consecutive traces)
+        :param number_components: 2 or 3. If 2 all traces will be rotated. If 3
+            only the 2nd and 3rd of 3 consecutive traces will be rotated.
+        :param check_components: Check if components are in the right
+            specified order. If ``None`` no check is done.
+        :param rename_components: Adapt the component in ``stats.channel`` as
+            specified. If ``None`` channel is not changed.
+        """
+        from obspy.signal import rotate_NE_RT
+        assert number_components in (2, 3)
+        N = len(self)
+        num = number_components
+        j = num == 3
+        if N % num != 0:
+            raise ValueError('Length of stream has to be divisible by %d.' %
+                             num)
+        elif (check_components and
+              not all([self[i].stats.channel[-1] ==
+                       check_components[i % num - j]
+                       for i in range(N) if num == 2 or i % 3 != 0])):
+            raise ValueError('Traces in stream are not in right order (%s).' %
+                             check_components)
+        ba = self.__get_rot_angles(ba, 'ba', num)
+        for i in range(N // num):
+            self[num * i + j].data, self[num * i + 1 + j].data = \
+            rotate_NE_RT(self[num * i + j].data, self[num * i + j + 1].data,
+                         ba[i])
+        if rename_components:
+            for i, tr in enumerate(self):
+                if num == 2 or i % 3 != 0:
+                    tr.stats.channel = (tr.stats.channel[:-1] +
+                                        rename_components[i % num - j])
+
+    def rotateLQT(self, ba=None, inc=None, check_components='ZNE',
+                  rename_components='LQT', back=False):
+        """
+        Method for rotating stream in 3 components.
+        
+        This method uses the function ``signal.rotate_ZNE_LQT``.
+        Each trace of the stream stands for one component and they have to be in
+        the order ZNEZNE and so on.
+        The stream will be rotated by the angles given as back-azimuths and
+        inclinations in the parameters ``ba`` and ``inc`` or by the entries in
+        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` is ``None``.
+        
+        :type ba: ``None``, float or list
+        :param ba: list of back-azimuths or float (all rotations with the same
+            angle) or ``None`` (angles will be taken from ``stats.ba`` of the
+            first trace of every 3 consecutive traces)
+        :type inc: ``None``, float or list
+        :param inc: list of inclinations or float (all rotations with the same
+            angle) or ``None`` (angles will be taken from ``stats.inc`` of the
+            first trace of every 3 consecutive traces)
+        :param check_components: Check if components are in the right
+            specified order. If ``None`` no check is done.
+        :param rename_components: Adapt the component in ``stats.channel`` as
+            specified. If ``None`` channel is not changed.
+        :param back: If True the method uses the function
+            ``signal.rotate_LQT_ZNE`` instead of ``signal.rotate_ZNE_LQT``
+        """
+        if back:
+            from obspy.signal import rotate_LQT_ZNE
+            rotate = rotate_LQT_ZNE
+        else:
+            from obspy.signal import rotate_ZNE_LQT
+            rotate = rotate_ZNE_LQT
+        N = len(self)
+        if N % 3 != 0:
+            raise ValueError('Length of stream has to be divisible by 3.')
+        elif (check_components and
+              not all([self[i].stats.channel[-1] == check_components[i % 3]
+                       for i in range(N)])):
+            raise ValueError('Traces in stream are not in right order (%s).' %
+                             check_components)
+        ba = self.__get_rot_angles(ba, 'ba')
+        inc = self.__get_rot_angles(inc, 'inc')
+        for i in range(N // 3):
+            self[3 * i].data, self[3 * i + 1].data, self[3 * i + 2].data = \
+            rotate(self[3 * i].data, self[3 * i + 1].data, self[3 * i + 2].data,
+                   ba[i], inc[i])
+        if rename_components:
+            for i, tr in enumerate(self):
+                tr.stats.channel = (tr.stats.channel[:-1] +
+                                    rename_components[i % 3])
+
     def copy(self):
         """
         Returns a deepcopy of the Stream object.
