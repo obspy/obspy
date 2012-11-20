@@ -480,11 +480,11 @@ class Unpickler(object):
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.PrincipalAxes`
         """
-        obj = PrincipalAxes()
         try:
             sub_el = self._xpath('principalAxes', element)[0]
         except:
-            return obj
+            return None
+        obj = PrincipalAxes()
         # required parameter
         obj.t_axis = self._axis(sub_el, 'tAxis')
         obj.p_axis = self._axis(sub_el, 'pAxis')
