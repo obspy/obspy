@@ -74,6 +74,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
    * [Wavesdownloader](http://webservices.rm.ingv.it/wavesdownloader/)
    * [ADMIRE project](http://www.admire-project.eu/)
    * [pSysmon](http://www.stefanmertl.com/science/category/software/psysmon/)
+   * [MIIC](http://theo1.geo.uni-leipzig.de/wordpress/)
 
 ## References
 
