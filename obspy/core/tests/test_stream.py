@@ -1673,34 +1673,32 @@ class StreamTestCase(unittest.TestCase):
         st.rotate(ba=[30, 50])
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'ZRT')
-        st.rotate(ba=[330, 310], components='ZRT')
-        self.assertTrue(sum((st[0].data - st2[0].data) ** 2) +
-                        sum((st[1].data - st2[1].data) ** 2) +
-                        sum((st[2].data - st2[2].data) ** 2) < 1e-9)
+        st.rotate(method='NE', ba=[30, 50], components='ZRT')
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
+                        np.allclose(st[1].data, st2[1].data) and
+                        np.allclose(st[2].data, st2[2].data))
         # again, with angles given in stats and just 2 components
         st = st2.copy()
         st = st[1:3] + st[4:]
         st[0].stats.ba = 190
         st[2].stats.ba = 200
         st.rotate()
-        st[0].stats.ba = 170
-        st[2].stats.ba = 160
-        st.rotate(components='ZRT')
-        self.assertTrue(sum((st[0].data - st2[1].data) ** 2) +
-                        sum((st[1].data - st2[2].data) ** 2) < 1e-9)
-
+        st.rotate(method='NE', components='ZRT')
+        self.assertTrue(np.allclose(st[0].data, st2[1].data) and
+                        np.allclose(st[1].data, st2[2].data))
         # rotate to LQT and back with 6 traces
         st = st2.copy()
         st.rotate(method='LQT', ba=100, inc=30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'LQT')
-#        st.rotate(method='LQT', ba=100, inc=30)
-#        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
-#                        st[2].stats.channel[-1] == 'ZNE')
-#        self.assertTrue(sum((st[0].data - st2[0].data) ** 2) +
-#                        sum((st[1].data - st2[1].data) ** 2) +
-#                        sum((st[2].data - st2[2].data) ** 2) < 1e-9)
-
+        st.rotate(method='ZNE', ba=100, inc=30, components='LQT')
+        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                        st[2].stats.channel[-1] == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
+                        np.allclose(st[1].data, st2[1].data) and
+                        np.allclose(st[2].data, st2[2].data))
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

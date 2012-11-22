@@ -2221,103 +2221,87 @@ class Stream(object):
                 components=('Z', 'N', 'E')):
         """
         Method for rotating stream.
+        
+        This method uses the functions ``signal.rotate_NE_RT``,
+        ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
+        The stream will be rotated by the angles given as back-azimuths and
+        inclinations in the parameters ``ba`` and ``inc`` or by the entries in
+        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` is ``None``.
+        
+        :type method: 'RT', 'LQT', 'ZN', 'ZNE'
+        :param method: 'RT' will rotate the NE components of a stream to RT.
+            'LQT' will rotate the ZNE components of a stream to LQT.
+            'ZN' will rotate RT components back to ZN
+            'ZNE' will rotate LQT components back to ZNE
+        :type ba: ``None``, float or list
+        :param ba: list of back-azimuths or float (all rotations with the same
+            angle) or ``None`` (angles will be taken from ``stats.ba`` of N or
+            R componenent traces for method='RT' or 'NE' resp.
+            Z or L component traces for method='LQT', 'ZNE')
+        :type inc: ``None``, float or list
+        :param inc: List of inclinations or float (all rotations with the same
+            angle) or ``None`` (same as for ba)
+            This parameter is ignored for method='RT' and method='NE'.
+        :type components: tuple of length 3
+        :param components: The three components to select for rotation.
+            Wildcards can be used eg. ('Z', '[N1]', '[E2]').
+            The first entry is ignored for method='RT' and 'NE'.  
         """
-        if method == 'RT':
+        assert len(components) == 3
+        if method == 'RT' or method == 'NE':
             from obspy.signal import rotate_NE_RT
             rotate = rotate_NE_RT
+        elif method == 'LQT':
+            from obspy.signal import rotate_ZNE_LQT
+            rotate = rotate_ZNE_LQT
+        elif method == 'ZNE':
+            from obspy.signal import rotate_LQT_ZNE
+            rotate = rotate_LQT_ZNE
+        else:
+            raise ValueError("Method has to be one of ('RT', 'LQT', 'ZN', "
+                             "'ZNE').")
+        if method == 'RT' or method == 'NE':
             N = self.select(component=components[1])
             E = self.select(component=components[2])
             if not (len(N) == len(E)):
-                raise ValueError('Selection of N and E component of stream '
-                                 'must have same length.')
+                raise ValueError('The streams consisting of the different '
+                                 'components must have same lengths.')
             for i in range(len(N)):
                 if (not (N[i].stats.starttime == E[i].stats.starttime) or
                     not (N[i].stats.sampling_rate == E[i].stats.sampling_rate)
                     or not (N[i].stats.npts == E[i].stats.npts)):
-                    raise ValueError('Associated N, E traces must have same '
+                    raise ValueError('Associated traces must have same '
                                      'starttime, sampling_rate and npts.')
             ba = N.__get_rot_angles(ba, 'ba')
+            if method == 'NE':
+                ba = [360 - value for value in ba]
             for i in range(len(N)):
                 N[i].data, E[i].data = rotate(N[i].data, E[i].data, ba[i])
-                N[i].stats.channel = N[i].stats.channel[-1] + 'R'
-                E[i].stats.channel = E[i].stats.channel[-1] + 'T'
-        elif method == 'LQT':
-            from obspy.signal import rotate_ZNE_LQT
-            rotate = rotate_ZNE_LQT
+                N[i].stats.channel = N[i].stats.channel[-1] + method[0]
+                E[i].stats.channel = E[i].stats.channel[-1] + method[1]
+        else:
             Z = self.select(component=components[0])
             N = self.select(component=components[1])
             E = self.select(component=components[2])
             if not (len(Z) == len(N) == len(E)):
-                raise ValueError('Selection of Z, N and E component of stream '
-                                 'must have same length.')
+                raise ValueError('The streams consisting of the different '
+                                 'components must have same lengths.')
             for i in range(len(N)):
                 if (not (Z[i].stats.starttime == N[i].stats.starttime ==
                          E[i].stats.starttime) or not
                     (Z[i].stats.sampling_rate == N[i].stats.sampling_rate ==
                      E[i].stats.sampling_rate) or not
                     (Z[i].stats.npts == N[i].stats.npts == E[i].stats.npts)):
-                    raise ValueError('Associated Z, N, E traces must have same '
+                    raise ValueError('Associated traces must have same '
                                      'starttime, sampling_rate and npts.')
             ba = Z.__get_rot_angles(ba, 'ba')
             inc = Z.__get_rot_angles(inc, 'inc')
             for i in range(len(N)):
                 Z[i].data, N[i].data, E[i].data = rotate(
                                 Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
-                Z[i].stats.channel = Z[i].stats.channel[-1] + 'L'
-                N[i].stats.channel = N[i].stats.channel[-1] + 'Q'
-                E[i].stats.channel = E[i].stats.channel[-1] + 'T'
-
-    def rotateRT(self, ba=None, number_components=3, check_components='NE',
-                  rename_components='RT'):
-        """
-        Method for rotating stream in 2 components.
-        
-        This method uses the function ``signal.rotate_NE_RT``.
-        Each trace of the stream stands for one component and they have to be in
-        the order ZNEZNE... or ZNZN... .
-        The stream will be rotated by the angles given as back-azimuths
-        in parameter ``ba`` or by the entries in ``stats.ba`` if ``ba`` is
-        ``None``.
-        
-        :type ba: ``None``, float or list
-        :param ba: list of back-azimuths or float (all rotations with the same
-            angle) or ``None`` (angles will be taken from ``stats.ba`` of the
-            first trace of every 2 or 3 consecutive traces)
-        :param number_components: 2 or 3. If 2 all traces will be rotated. If 3
-            only the 2nd and 3rd of 3 consecutive traces will be rotated.
-        :param check_components: Check if components are in the right
-            specified order. If ``None`` no check is done.
-        :param rename_components: Adapt the component in ``stats.channel`` as
-            specified. If ``None`` channel is not changed.
-        """
-
-    def rotateLQT(self, ba=None, inc=None, check_components='ZNE',
-                  rename_components='LQT', back=False):
-        """
-        Method for rotating stream in 3 components.
-        
-        This method uses the function ``signal.rotate_ZNE_LQT``.
-        Each trace of the stream stands for one component and they have to be in
-        the order ZNEZNE and so on.
-        The stream will be rotated by the angles given as back-azimuths and
-        inclinations in the parameters ``ba`` and ``inc`` or by the entries in
-        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` is ``None``.
-        
-        :type ba: ``None``, float or list
-        :param ba: list of back-azimuths or float (all rotations with the same
-            angle) or ``None`` (angles will be taken from ``stats.ba`` of the
-            first trace of every 3 consecutive traces)
-        :type inc: ``None``, float or list
-        :param inc: list of inclinations or float (all rotations with the same
-            angle) or ``None`` (angles will be taken from ``stats.inc`` of the
-            first trace of every 3 consecutive traces)
-        :param check_components: Check if components are in the right
-            specified order. If ``None`` no check is done.
-        :param rename_components: Adapt the component in ``stats.channel`` as
-            specified. If ``None`` channel is not changed.
-        :param back: If True the method uses the function
-            ``signal.rotate_LQT_ZNE`` instead of ``signal.rotate_ZNE_LQT``
-        """
+                Z[i].stats.channel = Z[i].stats.channel[-1] + method[0]
+                N[i].stats.channel = N[i].stats.channel[-1] + method[1]
+                E[i].stats.channel = E[i].stats.channel[-1] + method[2]
 
     def copy(self):
         """
