@@ -1513,7 +1513,8 @@ class Stream(object):
             if npts and int(npts) != trace.stats.npts:
                 continue
             if component and \
-               component.upper() != trace.stats.channel[-1].upper():
+                    not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                                        component.upper()):
                 continue
             traces.append(trace)
         return self.__class__(traces=traces)
