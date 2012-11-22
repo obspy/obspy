@@ -2199,26 +2199,73 @@ class Stream(object):
             tr.normalize(norm=norm)
         return
 
-    def __get_rot_angles(self, angle, stats_entry, num=3):
+    def __get_rot_angles(self, angle, stats_entry):
         """
         Helper method for rotation: Return list of angles.
         
         :param angle: ``None``, float or list.
         :param stats_entry: if param_angle is None, list of angles is taken
-        from the entry ``stats_entry`` of the stats object of every first of 2
-        or 3 consecutive traces.
-        :param num: number of different components in stream object (2 or 3)
+        from the entry ``stats_entry`` of the stats object.
         
         :return: list of angles        
         """
         if isinstance(angle, (float, int, long)):
-            angle = [angle] * (len(self) // num)
+            angle = [angle] * (len(self))
         elif angle is None:
-            angle = [self[num * i].stats[stats_entry]
-                     for i in range(len(self) // num)]
-        if len(angle) != len(self) // num:
+            angle = [tr.stats[stats_entry] for tr in self]
+        if len(angle) != len(self):
             raise ValueError('List of angles has wrong length.')
         return angle
+
+    def rotate(self, method='RT', ba=None, inc=None,
+                components=('Z', 'N', 'E')):
+        """
+        Method for rotating stream.
+        """
+        if method == 'RT':
+            from obspy.signal import rotate_NE_RT
+            rotate = rotate_NE_RT
+            N = self.select(component=components[1])
+            E = self.select(component=components[2])
+            if not (len(N) == len(E)):
+                raise ValueError('Selection of N and E component of stream '
+                                 'must have same length.')
+            for i in range(len(N)):
+                if (not (N[i].stats.starttime == E[i].stats.starttime) or
+                    not (N[i].stats.sampling_rate == E[i].stats.sampling_rate)
+                    or not (N[i].stats.npts == E[i].stats.npts)):
+                    raise ValueError('Associated N, E traces must have same '
+                                     'starttime, sampling_rate and npts.')
+            ba = N.__get_rot_angles(ba, 'ba')
+            for i in range(len(N)):
+                N[i].data, E[i].data = rotate(N[i].data, E[i].data, ba[i])
+                N[i].stats.channel = N[i].stats.channel[-1] + 'R'
+                E[i].stats.channel = E[i].stats.channel[-1] + 'T'
+        elif method == 'LQT':
+            from obspy.signal import rotate_ZNE_LQT
+            rotate = rotate_ZNE_LQT
+            Z = self.select(component=components[0])
+            N = self.select(component=components[1])
+            E = self.select(component=components[2])
+            if not (len(Z) == len(N) == len(E)):
+                raise ValueError('Selection of Z, N and E component of stream '
+                                 'must have same length.')
+            for i in range(len(N)):
+                if (not (Z[i].stats.starttime == N[i].stats.starttime ==
+                         E[i].stats.starttime) or not
+                    (Z[i].stats.sampling_rate == N[i].stats.sampling_rate ==
+                     E[i].stats.sampling_rate) or not
+                    (Z[i].stats.npts == N[i].stats.npts == E[i].stats.npts)):
+                    raise ValueError('Associated Z, N, E traces must have same '
+                                     'starttime, sampling_rate and npts.')
+            ba = Z.__get_rot_angles(ba, 'ba')
+            inc = Z.__get_rot_angles(inc, 'inc')
+            for i in range(len(N)):
+                Z[i].data, N[i].data, E[i].data = rotate(
+                                Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
+                Z[i].stats.channel = Z[i].stats.channel[-1] + 'L'
+                N[i].stats.channel = N[i].stats.channel[-1] + 'Q'
+                E[i].stats.channel = E[i].stats.channel[-1] + 'T'
 
     def rotateRT(self, ba=None, number_components=3, check_components='NE',
                   rename_components='RT'):
@@ -2243,30 +2290,6 @@ class Stream(object):
         :param rename_components: Adapt the component in ``stats.channel`` as
             specified. If ``None`` channel is not changed.
         """
-        from obspy.signal import rotate_NE_RT
-        assert number_components in (2, 3)
-        N = len(self)
-        num = number_components
-        j = num == 3
-        if N % num != 0:
-            raise ValueError('Length of stream has to be divisible by %d.' %
-                             num)
-        elif (check_components and
-              not all([self[i].stats.channel[-1] ==
-                       check_components[i % num - j]
-                       for i in range(N) if num == 2 or i % 3 != 0])):
-            raise ValueError('Traces in stream are not in right order (%s).' %
-                             check_components)
-        ba = self.__get_rot_angles(ba, 'ba', num)
-        for i in range(N // num):
-            self[num * i + j].data, self[num * i + 1 + j].data = \
-            rotate_NE_RT(self[num * i + j].data, self[num * i + j + 1].data,
-                         ba[i])
-        if rename_components:
-            for i, tr in enumerate(self):
-                if num == 2 or i % 3 != 0:
-                    tr.stats.channel = (tr.stats.channel[:-1] +
-                                        rename_components[i % num - j])
 
     def rotateLQT(self, ba=None, inc=None, check_components='ZNE',
                   rename_components='LQT', back=False):
@@ -2295,30 +2318,6 @@ class Stream(object):
         :param back: If True the method uses the function
             ``signal.rotate_LQT_ZNE`` instead of ``signal.rotate_ZNE_LQT``
         """
-        if back:
-            from obspy.signal import rotate_LQT_ZNE
-            rotate = rotate_LQT_ZNE
-        else:
-            from obspy.signal import rotate_ZNE_LQT
-            rotate = rotate_ZNE_LQT
-        N = len(self)
-        if N % 3 != 0:
-            raise ValueError('Length of stream has to be divisible by 3.')
-        elif (check_components and
-              not all([self[i].stats.channel[-1] == check_components[i % 3]
-                       for i in range(N)])):
-            raise ValueError('Traces in stream are not in right order (%s).' %
-                             check_components)
-        ba = self.__get_rot_angles(ba, 'ba')
-        inc = self.__get_rot_angles(inc, 'inc')
-        for i in range(N // 3):
-            self[3 * i].data, self[3 * i + 1].data, self[3 * i + 2].data = \
-            rotate(self[3 * i].data, self[3 * i + 1].data, self[3 * i + 2].data,
-                   ba[i], inc[i])
-        if rename_components:
-            for i, tr in enumerate(self):
-                tr.stats.channel = (tr.stats.channel[:-1] +
-                                    rename_components[i % 3])
 
     def copy(self):
         """
