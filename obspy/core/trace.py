@@ -14,7 +14,6 @@ from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
 import obspy.imaging
-from obspy.imaging.spectrogram import spectrogram as _spectogram
 import math
 import numpy as np
 import warnings
@@ -778,7 +777,7 @@ class Trace(object):
             kwargs['samp_rate'] = self.stats.sampling_rate
         if 'title' not in kwargs:
             kwargs['title'] = str(self)
-        return _spectogram(data=self.data, **kwargs)
+        return obspy.imaging.spectogram.spectrogram(data=self.data, **kwargs)
 
     def write(self, filename, format, **kwargs):
         """
