@@ -2,6 +2,8 @@ dev:
  - version numbering: one single, common version number for ObsPy now.
    Use "import obspy; print obspy.__version__"
  - discontinuing Python 2.5 support
+ - most important classes/functions can be imported like "from obspy import
+   ...", currently: read, Trace, Stream, UTCDateTime and Stats
  - obspy.arclink:
    * refactored attributes in getPAZ to stick better with the SEED standard
  - obspy.core:

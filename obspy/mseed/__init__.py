@@ -20,7 +20,7 @@ Reading
 -------
 Similar to reading any other waveform data format using obspy.core:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/test.mseed")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>

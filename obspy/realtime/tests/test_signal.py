@@ -2,7 +2,7 @@
 """
 The obspy.realtime.signal test suite.
 """
-from obspy.core import read
+from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal
 import numpy as np

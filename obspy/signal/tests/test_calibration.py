@@ -7,7 +7,7 @@ The calibration test suite.
 import os
 import unittest
 import numpy as np
-from obspy.core import read
+from obspy import read
 from obspy.signal.calibration import relcalstack
 
 

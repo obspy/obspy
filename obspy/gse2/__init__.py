@@ -20,7 +20,7 @@ Reading
 -------
 Similar to reading any other waveform data format using :mod:`obspy.core`:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/loc_RJOB20050831023349.z")
 
 You can also specify the following keyword arguments that change the

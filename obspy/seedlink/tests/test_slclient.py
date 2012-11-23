@@ -2,7 +2,7 @@
 """
 The obspy.seedlink.slclient test suite.
 """
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
 from obspy.seedlink.slclient import SLClient
 import unittest

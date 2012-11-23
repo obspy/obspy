@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime, read, Trace
+from obspy import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
                                                            STANDARD_ASC_HEADERS

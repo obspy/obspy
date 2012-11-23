@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from obspy.core import UTCDateTime, Stream, Trace, read, AttribDict
+from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED

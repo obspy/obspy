@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
-from obspy.core import UTCDateTime, Trace
+from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt
 import numpy as np
 import obspy.core

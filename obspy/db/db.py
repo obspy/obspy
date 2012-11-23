@@ -13,7 +13,7 @@ from sqlalchemy import ForeignKey, Column, Integer, DateTime, Float, String, \
     PickleType, Boolean
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relation
-from obspy.core import Trace, UTCDateTime
+from obspy import Trace, UTCDateTime
 import numpy as np
 from sqlalchemy.schema import UniqueConstraint
 import pickle

@@ -50,7 +50,7 @@ Local files can be read by specifying the filename, files stored on http
 servers (e.g. at http://examples.obspy.org) can be read by specifying their
 URL. For details see the documentation of :func:`~obspy.core.stream.read`.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:

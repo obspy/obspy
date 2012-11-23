@@ -6,7 +6,7 @@ The obspy.seishub.client test suite.
 
 from obspy.seishub import Client
 import unittest
-from obspy.core import UTCDateTime, AttribDict
+from obspy import UTCDateTime, AttribDict
 from obspy.xseed.utils import SEEDParserException
 
 

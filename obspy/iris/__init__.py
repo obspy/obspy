@@ -19,7 +19,7 @@ Basic Usage
     Network (``"IU"``) for an seismic event around 2010-02-27 06:45 (UTC).
 
     >>> from obspy.iris import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime("2010-02-27T06:45:00.000")
     >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 60 * 60)
@@ -27,7 +27,7 @@ Basic Usage
 
     .. plot::
 
-        from obspy.core import UTCDateTime
+        from obspy import UTCDateTime
         from obspy.iris import Client
         client = Client()
         t = UTCDateTime("2010-02-27T06:45:00.000")
@@ -39,7 +39,7 @@ Basic Usage
     SEED volume.
 
     >>> from obspy.iris import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
     >>> t2 = UTCDateTime("2010-02-27T07:30:00.000")
@@ -51,7 +51,7 @@ Basic Usage
     ``'RESP'``, ``'StationXML'`` or ``'SACPZ'``.
 
     >>> from obspy.iris import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime(2009, 1, 1)
     >>> client.saveResponse('resp.txt', 'IU', 'ANMO', '', '*',
@@ -76,7 +76,7 @@ Basic Usage
 
     .. plot::
 
-        from obspy.core import UTCDateTime
+        from obspy import UTCDateTime
         from obspy.iris import Client
         client = Client()
         starttime = UTCDateTime("2011-04-01")

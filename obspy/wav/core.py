@@ -18,7 +18,7 @@ WAV bindings to ObsPy core module.
 """
 
 from __future__ import division
-from obspy.core import Trace, Stream
+from obspy import Trace, Stream
 import numpy as np
 import os
 import wave
@@ -76,7 +76,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
     >>> print(st) #doctest: +NORMALIZE_WHITESPACE
     1 Trace(s) in Stream:

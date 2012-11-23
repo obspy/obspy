@@ -9,7 +9,7 @@ Module for handling ObsPy RtTrace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import Trace, Stats
+from obspy import Trace, Stats
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
 import copy
@@ -59,7 +59,7 @@ class RtTrace(Trace):
 
         >>> import numpy as np
         >>> from obspy.realtime import RtTrace
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> from obspy.realtime.signal import calculateMwpMag
         >>> data_trace = read('/path/to/II.TLY.BHZ.SAC')[0]
         >>> len(data_trace)

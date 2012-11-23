@@ -4,7 +4,7 @@ The obspy.imaging.waveform test suite.
 """
 
 from copy import deepcopy
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util.decorator import skipIf
 import numpy as np

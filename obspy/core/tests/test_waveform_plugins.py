@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace, read
+from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 from pkg_resources import load_entry_point

@@ -34,7 +34,7 @@ http://tutorial.obspy.org
 import sys
 import os
 import warnings
-from obspy.core import read, UTCDateTime
+from obspy import read, UTCDateTime
 from optparse import OptionParser
 import numpy as np
 

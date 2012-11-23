@@ -3,7 +3,7 @@
 The obspy.imaging.spectogram test suite.
 """
 
-from obspy.core import UTCDateTime, Stream, Trace
+from obspy import UTCDateTime, Stream, Trace
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np

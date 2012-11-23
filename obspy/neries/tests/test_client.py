@@ -3,7 +3,7 @@
 The obspy.neries.client test suite.
 """
 
-from obspy.core import UTCDateTime, read
+from obspy import UTCDateTime, read
 from obspy.core.event import Catalog
 from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client

@@ -9,7 +9,7 @@ SEISAN bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime, Stats
 import numpy as np
 
 
@@ -122,7 +122,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/2001-01-13-1742-24S.KONO__004")
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>

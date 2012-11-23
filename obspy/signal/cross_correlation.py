@@ -20,7 +20,7 @@ import warnings
 import numpy as np
 import ctypes as C
 import scipy
-from obspy.core import Trace, Stream
+from obspy import Trace, Stream
 from obspy.signal.headers import clibsignal
 from obspy.signal import cosTaper
 
