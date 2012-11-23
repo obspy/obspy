@@ -14,7 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
 from obspy.core.util.decorator import uncompressFile
-from obspy.imaging.waveform import WaveformPlotting
+import obspy.imaging
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -972,7 +972,8 @@ class Stream(object):
             st = read()
             st.plot()
         """
-        waveform = WaveformPlotting(stream=self, *args, **kwargs)
+        waveform = obspy.imaging.waveform.WaveformPlotting(stream=self, *args,
+                                                           **kwargs)
         return waveform.plotWaveform(*args, **kwargs)
 
     def spectrogram(self, *args, **kwargs):

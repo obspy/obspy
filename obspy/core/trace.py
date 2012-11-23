@@ -13,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.imaging.waveform import WaveformPlotting
+import obspy.imaging
 from obspy.imaging.spectrogram import spectrogram as _spectogram
 import math
 import numpy as np
@@ -748,7 +748,8 @@ class Trace(object):
             tr = st[0]
             tr.plot()
         """
-        waveform = WaveformPlotting(stream=self, **kwargs)
+        waveform = obspy.imaging.waveform.WaveformPlotting(stream=self,
+                                                           **kwargs)
         return waveform.plotWaveform()
 
     def spectrogram(self, **kwargs):
