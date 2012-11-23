@@ -14,6 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
 from obspy.core.util.decorator import uncompressFile
+from obspy.imaging.waveform import WaveformPlotting
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -36,8 +37,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     attribute.
 
     The format of the waveform file will be automatically detected if not
-    given. Allowed formats mainly depend on ObsPy packages installed. See the
-    `Supported Formats`_ section below.
+    given. See the `Supported Formats`_ section below for available formats.
 
     This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
@@ -972,13 +972,6 @@ class Stream(object):
             st = read()
             st.plot()
         """
-        try:
-            from obspy.imaging.waveform import WaveformPlotting
-        except:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "plot ObsPy Stream objects."
-            warnings.warn(msg, category=ImportWarning)
-            raise
         waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform(*args, **kwargs)
 
@@ -1196,11 +1189,11 @@ class Stream(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
-            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``, ``"PICKLE"``. See the `Supported Formats`_ section
-            below for a full list of supported formats.
+        :param format: The format to write must be specified. One of
+            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
+            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
+            the `Supported Formats`_ section below for a full list of supported
+            formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 

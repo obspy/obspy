@@ -13,6 +13,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
+from obspy.imaging.waveform import WaveformPlotting
+from obspy.imaging.spectrogram import spectrogram as _spectogram
 import math
 import numpy as np
 import warnings
@@ -746,12 +748,6 @@ class Trace(object):
             tr = st[0]
             tr.plot()
         """
-        try:
-            from obspy.imaging.waveform import WaveformPlotting
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "plot ObsPy Trace objects."
-            raise ImportError(msg)
         waveform = WaveformPlotting(stream=self, **kwargs)
         return waveform.plotWaveform()
 
@@ -776,12 +772,6 @@ class Trace(object):
             tr = st[0]
             tr.spectrogram(sphinx=True)
         """
-        try:
-            from obspy.imaging.spectrogram import spectrogram as _spectogram
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "use the spectrogram plotting routine."
-            raise ImportError(msg)
         # set some default values
         if 'samp_rate' not in kwargs:
             kwargs['samp_rate'] = self.stats.sampling_rate
@@ -796,10 +786,9 @@ class Trace(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
-            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``, ``"PICKLE"``. See
+        :param format: The format to write must be specified. One of
+            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
+            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
             :meth:`obspy.core.stream.Stream.write` method for all possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying

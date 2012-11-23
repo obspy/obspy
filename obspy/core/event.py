@@ -51,9 +51,9 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. Depending on your ObsPy
-        installation one of ``"QUAKEML"``. See the `Supported Formats`_ section
-        below for a full list of supported formats.
+    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
+        `Supported Formats`_ section below for a full list of supported
+        formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
@@ -2536,10 +2536,9 @@ class Catalog(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"QUAKEML"``. See the
-            `Supported Formats`_ section below for a full list of supported
-            formats.
+        :param format: The format to write must be specified. One of
+            ``"QUAKEML"``. See the `Supported Formats`_ section below for a
+            full list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 

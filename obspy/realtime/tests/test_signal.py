@@ -259,13 +259,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
 
 
 def suite():
-    # skip test suite if obspy.sac is not installed
-    try:
-        import obspy.sac  # @UnusedImport
-    except ImportError:
-        pass
-    else:
-        return unittest.makeSuite(RealTimeSignalTestCase, 'test')
+    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
 
 
 if __name__ == '__main__':

@@ -137,11 +137,11 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: str, optional
-        :param format: Output format. Depending on your ObsPy installation one
-            of ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``. See the Supported
-            Formats section in method :meth:`~obspy.core.stream.Stream.write`
-            for a full list of supported formats. Defaults to ``'MSEED'``.
+        :param format: Output format. One of ``"MSEED"``, ``"GSE2"``,
+            ``"SAC"``, ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``,
+            ``"SU"``, ``"WAV"``. See the Supported Formats section in method
+            :meth:`~obspy.core.stream.Stream.write` for a full list of
+            supported formats. Defaults to ``'MSEED'``.
         :type cleanup: bool
         :param cleanup: Specifies whether perfectly aligned traces should be
             merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
