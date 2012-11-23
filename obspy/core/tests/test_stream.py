@@ -1670,10 +1670,10 @@ class StreamTestCase(unittest.TestCase):
         st[3:].normalize()
         st2 = st.copy()
         # rotate to RT and back with 6 traces
-        st.rotate(ba=[30, 50])
+        st.rotate(method='RT', ba=[30, 50])
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'ZRT')
-        st.rotate(method='NE', ba=[30, 50], components='ZRT')
+        st.rotate(method='NE', ba=[30, 50])
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'ZNE')
         self.assertTrue(np.allclose(st[0].data, st2[0].data) and
@@ -1684,8 +1684,8 @@ class StreamTestCase(unittest.TestCase):
         st = st[1:3] + st[4:]
         st[0].stats.ba = 190
         st[2].stats.ba = 200
-        st.rotate()
-        st.rotate(method='NE', components='ZRT')
+        st.rotate(method='RT')
+        st.rotate(method='NE')
         self.assertTrue(np.allclose(st[0].data, st2[1].data) and
                         np.allclose(st[1].data, st2[2].data))
         # rotate to LQT and back with 6 traces
@@ -1693,7 +1693,7 @@ class StreamTestCase(unittest.TestCase):
         st.rotate(method='LQT', ba=100, inc=30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'LQT')
-        st.rotate(method='ZNE', ba=100, inc=30, components='LQT')
+        st.rotate(method='ZNE', ba=100, inc=30)
         self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                         st[2].stats.channel[-1] == 'ZNE')
         self.assertTrue(np.allclose(st[0].data, st2[0].data) and

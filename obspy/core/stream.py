@@ -2217,37 +2217,41 @@ class Stream(object):
             raise ValueError('List of angles has wrong length.')
         return angle
 
-    def rotate(self, method='RT', ba=None, inc=None,
-                components=('Z', 'N', 'E')):
+    def rotate(self, method='RT', ba=None, inc=None, components=None):
         """
         Method for rotating stream.
         
         This method uses the functions ``signal.rotate_NE_RT``,
         ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
-        The stream will be rotated by the angles given as back-azimuths and
+        The stream is rotated by the angles given as back-azimuths and
         inclinations in the parameters ``ba`` and ``inc`` or by the entries in
-        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` is ``None``.
+        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` are not
+        specified. ``stats.channel`` is adapted so that it reflects the new
+        component.
         
-        :type method: 'RT', 'LQT', 'ZN', 'ZNE'
-        :param method: 'RT' will rotate the NE components of a stream to RT.
-            'LQT' will rotate the ZNE components of a stream to LQT.
-            'ZN' will rotate RT components back to ZN
-            'ZNE' will rotate LQT components back to ZNE
-        :type ba: ``None``, float or list
+        :type method: ``'RT'``, ``'LQT'``, ``'ZN'`` or ``'ZNE'``
+        :param method: ``'RT'`` will rotate the NE components of a stream to RT.
+            ``'LQT'`` will rotate the ZNE components of a stream to LQT.
+            ``'ZN'`` will rotate RT components back to ZN.
+            ``'ZNE'`` will rotate LQT components back to ZNE.
+        :type ba: float or list, optional
         :param ba: list of back-azimuths or float (all rotations with the same
-            angle) or ``None`` (angles will be taken from ``stats.ba`` of N or
-            R componenent traces for method='RT' or 'NE' resp.
-            Z or L component traces for method='LQT', 'ZNE')
-        :type inc: ``None``, float or list
+            angle) or if not specified the angles will be taken from
+            ``stats.ba`` of the first used component.
+        :type inc: float or list, optional
         :param inc: List of inclinations or float (all rotations with the same
-            angle) or ``None`` (same as for ba)
-            This parameter is ignored for method='RT' and method='NE'.
-        :type components: tuple of length 3
-        :param components: The three components to select for rotation.
-            Wildcards can be used eg. ('Z', '[N1]', '[E2]').
-            The first entry is ignored for method='RT' and 'NE'.  
+            angle) or if not specified the angles will be taken from
+            ``stats.ba`` of the first used component.
+            This parameter is ignored for ``method='RT'`` and ``method='NE'``.
+        :type components: tuple, optional
+        :param components: The two or three components to select for rotation.
+            Wildcards can be used eg. ``('Z', '[N1]', '[E2]')``.
+            Standard values are
+            ``'NE'`` for ``method='RT'``,
+            ``'ZNE'`` for ``method='LQT'``,
+            ``'RT'`` for ``method='NE'`` and
+            ``'LQT'`` for ``method='ZNE'``.
         """
-        assert len(components) == 3
         if method == 'RT' or method == 'NE':
             from obspy.signal import rotate_NE_RT
             rotate = rotate_NE_RT
@@ -2260,9 +2264,12 @@ class Stream(object):
         else:
             raise ValueError("Method has to be one of ('RT', 'LQT', 'ZN', "
                              "'ZNE').")
+        if components is None:
+            components = ('NE' if method == 'RT' else 'ZNE' if method == 'LQT'
+                          else 'RT' if method == 'NE' else 'LQT')
         if method == 'RT' or method == 'NE':
-            N = self.select(component=components[1])
-            E = self.select(component=components[2])
+            N = self.select(component=components[0])
+            E = self.select(component=components[1])
             if not (len(N) == len(E)):
                 raise ValueError('The streams consisting of the different '
                                  'components must have same lengths.')
