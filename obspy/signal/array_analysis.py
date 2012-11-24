@@ -1231,14 +1231,13 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 x = []
                 w = (C.c_void_p * nstat)()
                 for i, tr in enumerate(stream):
-                    dat = np.zeros(nsamp + 1)
-                    dat[1:] = tr.data[spoint[i] + offset:
+                    dat = tr.data[spoint[i] + offset:
                         spoint[i] + offset + nsamp]
-                    mymean = dat[:-1].mean()
-                    dat[:-1] = (dat[:-1] - dat[:-1].mean()) * taper
+                    mymean = dat.mean()
+                    dat = (dat - dat.mean()) * taper
                     x.append(mymean)
                     dat = np.require(dat, 'f8', ['C_CONTIGUOUS'])
-                    fft[i, :] = np.fft.rfft(dat[1:], nfft)
+                    fft[i, :] = np.fft.rfft(dat, nfft)
                     fft[i, :] = np.require(fft[i, :], 'c16', ['C_CONTIGUOUS'])
                     w[i] = fft[i, :].view('f8').ctypes.data_as(C.c_void_p)
                 buf = bbfk(w, spoint, offset, time_shift_table,
