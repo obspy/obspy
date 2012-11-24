@@ -37,16 +37,6 @@ typedef struct cplxS {
 } cplx;
 
 
-/************************************************************************/
-/* numpy fftpack_lite definitions, must be linked with fftpack_lite.so  */
-/* e.g. link with -L/path/to/fftpack_lite -l:fftpack_lite.so            */       
-/* numpy has no floating point transfrom compiled, therefore we need to */
-/* cast the result to double                                            */    
-/************************************************************************/
-extern void rfftf(int N, double* data, double* wrk);
-extern void rffti(int N, double* wrk);
-
-
 /* splint: cannot be static, is exported and used from python */
 int cosine_taper(double *taper, int ndat, double fraction)
 {
@@ -109,18 +99,13 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 }
 
 
-int bbfk(int *spoint, int offset, double **trace, int *ntrace, 
+int bbfk(double **window, int *spoint, int offset,
          float ***stat_tshift_table, float *abs, float *rel, int *ix, 
          int *iy, float flow, float fhigh, float digfreq, int nsamp,
          int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
     int		j,k,l,w;
-    int		n;
     int		wlow,whigh;
-    int     errcode;
     float	df;
-    double	**window;
-    double  *taper;
-    double	mean;
     float	denom = 0;
     float	dpow;
     double	re;
@@ -130,7 +115,6 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     float	*maxpow;
     double	absval;
     float maxinmap = 0.;
-    double *fftpack_work = 0;
     float sumre;
     float sumim;
     float wtau;
@@ -146,26 +130,6 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
 #endif
 
     /* mtrace(); */
-    /***********************************************************************/
-    /* do not remove this comment, get next power of two for window length */
-    /***********************************************************************
-    while (nfft<nsamp) {
-        nfft = nfft << 1;
-    }*/
-
-    /********************************************************************/
-    /* do not remove this comment, it shows how to allocate the plan of */
-    /* fftpack with magic number the fftt                               */
-    /********************************************************************/
-    /* Magic size needed by rffti (see also
-     * http://projects.scipy.org/numpy/browser/trunk/
-     * +numpy/fft/fftpack_litemodule.c#L277)*/
-    fftpack_work = (double *)calloc((size_t) (2*nfft+15), sizeof(double));
-    if (fftpack_work == NULL) {
-        fprintf(stderr,"\nMemory allocation error (fftpack_work)!\n");
-        exit(EXIT_FAILURE);
-    }
-    rffti(nfft, fftpack_work);
 
     df = digfreq/(float)nfft;
     wlow = (int)(flow/df+0.5);
@@ -197,61 +161,6 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     }
 #endif
 
-    /****************************************************************************/
-    /* first we need the fft'ed window of traces for the stations of this group */
-    /****************************************************************************/
-    window = (double **)calloc((size_t) nstat, sizeof(double *));
-    if (window == NULL) {
-        fprintf(stderr,"\nMemory allocation error (window)!\n");
-        exit(EXIT_FAILURE);
-    }
-    /* we allocate the taper buffer, size nsamp! */
-    taper = (double *)calloc((size_t) nsamp, sizeof(double));
-    if (taper == NULL) {
-        fprintf(stderr,"\nMemory allocation error (taper)!\n");
-        exit(EXIT_FAILURE);
-    }
-    errcode = cosine_taper(taper, nsamp, 0.1);
-    if (errcode != 0) {
-        fprintf(stderr,"\nError during cosine tapering!\n");
-    }
-    for (j=0;j<nstat;j++) {
-        /* be sure we are inside our memory */
-        if ((spoint[j] + offset + nsamp) > ntrace[j]) {
-            free((void *)window);
-            free((void *)taper);
-            free((void *)fftpack_work);
-            free ((void *)sine_table);
-            return 1;
-        }
-        /* doing calloc is automatically zero-padding, too */
-        /* mimic realft, allocate an extra word/index in the array dimensions */
-        window[j] = (double *)calloc((size_t) (nfft+1), sizeof(double));
-        if (window[j] == NULL) {
-            fprintf(stderr,"\nMemory allocation error (window[j])!\n");
-            exit(EXIT_FAILURE);
-        }
-        memcpy((void *)(window[j]+1),(void *)(trace[j]+spoint[j]+offset),nsamp*sizeof(double));
-        /*************************************************/
-        /* 4.6.98, we insert offset removal and tapering */
-        /*************************************************/
-        mean = 0.;
-        for (n=0;n<nsamp;n++) {
-            mean += window[j][n];
-        }
-        mean /= (double)nsamp;
-        for (n=0;n<nsamp;n++) {
-            window[j][n] -= mean;
-            window[j][n] *= taper[n];
-        }
-        /* mimic realft */
-        rfftf(nfft, (double *)(window[j]+1), fftpack_work);
-        window[j][0] = window[j][1]; /* mean of signal */
-        window[j][1] = window[j][nfft]; /* real part of nyquist frequency */
-    }
-    /* we free the taper buffer and the fft plan already! */
-    free((void *)taper);
-    free((void *)fftpack_work);
 
     /***********************************************************************/
     /* we calculate the scaling factor or denominator, if not prewhitening */
@@ -423,10 +332,6 @@ int bbfk(int *spoint, int offset, double **trace, int *ntrace,
     free((void *)pow);
     free((void *)maxpow);
     free((void *)nomin);
-    for (j=0;j<nstat;j++) {
-        free((void *)window[j]);
-    }
-    free((void *)window);
 #ifdef USE_SINE_TABLE
     free((void *)sine_table);
 #endif

@@ -27,7 +27,6 @@ from obspy.core import Stream
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 from scipy.signal import detrend
-import genbeam
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -785,7 +784,7 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     return np.array(res)
 
 
-def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
+def bbfk(wdw, spoint, offset, stat_tshift_table, flow, fhigh,
          digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
     """
     Note: Interface not fixed jet
@@ -794,11 +793,6 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     :param spoint: Start sample point, probably in julian seconds
     :type offset: int
     :param offset: The Offset which is counted upwards nwin for shifting array
-    :type trace: ??
-    :param trace: The trace matrix, containing the time serious for various
-        stations
-    :type ntrace: float
-    :param ntrace: ntrace vector
     :type stat_tshift_table: ??
     :param stat_tshift_table: The time shift table for each station for the
         slowness grid
@@ -833,8 +827,7 @@ def bbfk(spoint, offset, trace, ntrace, stat_tshift_table, flow, fhigh,
     ix = C.c_int()
     iy = C.c_int()
 
-    errcode = clibsignal.bbfk(spoint, offset,
-                              C.cast(trace, C.POINTER(C.c_void_p)), ntrace,
+    errcode = clibsignal.bbfk(C.cast(wdw, C.POINTER(C.c_void_p)), spoint, offset,
                               C.byref(stat_tshift_table), C.byref(abspow),
                               C.byref(power), C.byref(ix), C.byref(iy), flow,
                               fhigh, digfreq, nsamp, nstat, prewhiten,
@@ -1125,116 +1118,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
-
-#def generalized_beamformer(spoint, offset, stream, ntrace, steer, flow, fhigh,
-#         digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft,method):
-#    """
-#
-#    """
-#    # start the code -------------------------------------------------
-#    # This assumes that all stations and components have the same number of
-#    # time samples, nt
-#    df = digfreq/float(nfft)
-#    nf = int((fhigh-flow)/df)+1
-#    if nf > (nfft/2+1): nf = nfft/2+1
-#    nlow = int(flow/df)
-#
-#    tap = cosTaper(nsamp,p=0.1)
-#
-#    trace = np.zeros((nstat,nfft),dtype=float)
-#    for i,tr in enumerate(stream):
-#       trace[i][:nsamp] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
-#       trace[i][:nsamp] = detrend(trace[i][:nsamp],type='constant')
-#       trace[i][:nsamp] *= tap
-#
-#
-#    # in general, beamforming is done by simply computing the co-variances 
-#    # of the signal at different receivers and than stear the matrix R with 
-#    # "weights" which are the trial-DOAs e.g., Kirlin & Done, 1999
-#    R = np.zeros((nstat, nstat,nf),dtype=complex)
-#    dpow = 0.
-#
-#    # fill up R
-#    for i in xrange(nstat):
-#       for j in xrange(i,nstat):
-#            xx = np.fft.rfft(trace[i],nfft) * np.fft.rfft(trace[j],nfft).conjugate()
-#            if method == 'capon':
-#                 R[i,j,0:nf] = xx[nlow:nlow+nf]/np.abs(np.sum(xx[nlow:nlow+nf]))
-#                 if i != j:
-#                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()/np.abs(np.sum(xx[nlow:nlow+nf]))
-#            else :
-#                 R[i,j,0:nf] = xx[nlow:nlow+nf]
-#                 if i != j:
-#                     R[j,i,0:nf] = xx[nlow:nlow+nf].conjugate()
-#                 else:
-#                     dpow += np.abs(np.sum(R[i,j,:]))
-#
-#    dpow *= nstat
-#    
-#    p = np.zeros((grdpts_x,grdpts_y,nf),dtype=float)
-#    abspow = np.zeros((grdpts_x,grdpts_y),dtype=float)
-#    relpow = np.zeros((grdpts_x,grdpts_y),dtype=float)
-#    white = np.zeros((nf),dtype=float)
-#
-#    if method == "bf":
-#    # P(f) = e.H R(f) e
-#        for x in xrange(grdpts_x):
-#            for y in xrange(grdpts_y):
-#              for n in xrange(nf):
-#                 e = np.zeros(nstat,dtype=complex)
-#                 C = R[:,:,n]
-#                 e = steer[:,x,y,n]
-#                 eH = e.T
-#                 Ce = np.dot(C,e) 
-#                 p[x,y,n] = np.abs(np.dot(eH.conjugate(),Ce))
-#              if prewhiten == 0:
-#                 abspow[x,y] = np.sum(p[x,y,:])
-#                 relpow[x,y] = abspow[x,y]/dpow
-#              if prewhiten == 1:
-#                 for n in xrange(nf):
-#                   if p[x][y][n] > white[n]:
-#                      white[n] = p[x,y,n]
-#        if prewhiten == 1:
-#            for x in xrange(grdpts_x):
-#               for y in xrange(grdpts_y):
-#                   abspow[x,y] = np.sum(p[x,y,:])
-#                   relpow[x,y] = np.sum(p[x,y,:]/(white[:]*nf*nstat))
-#        
-#    elif method == "capon":
-#    # P(f) = 1/(e.H R(f)^-1 e)
-#        for x in xrange(grdpts_x):
-#            for y in xrange(grdpts_y):
-#              for n in xrange(nf):
-#                  e = np.zeros(nstat,dtype=complex)
-#                  C = R[:,:,n]
-#                  IC = np.linalg.pinv(C)
-#                  e = steer[:,x,y,n]
-#                  eH = e.T
-#                  ICe = np.dot(IC,e)
-#                  p[x,y,n] = np.abs(1./np.dot(eH.conjugate(),ICe))
-#              abspow[x,y] = np.sum(p[x,y,:])
-#              if prewhiten == 0:
-#                 relpow[x,y] = abspow[x,y]
-#              if prewhiten == 1:
-#                 for n in xrange(nf):
-#                   if p[x][y][n] > white[n]:
-#                      white[n] = p[x,y,n]
-#        if prewhiten == 1:
-#            for x in xrange(grdpts_x):
-#               for y in xrange(grdpts_y):
-#                  relpow[x,y] = np.sum(p[x,y,:]/(white[:]*nf*nstat))
-#
-#    # find the maximum in the map and return its value and the indices
-#    ix,iy = np.unravel_index(relpow.argmax(), relpow.shape)
-#
-#    print "%lf %lf %d %d %d %d\n"%(abspow.max(), relpow.max(), ix, iy,grdpts_x,grdpts_y)
-#
-#    return abspow.max(), relpow.max(), ix, iy
-
-
-def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabday',method='bbfk'):
+def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
+    sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
+    verbose=False, coordsys='lonlat', timestamp='mlabday', method='bbfk'):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -1307,104 +1193,107 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
                                                     sl_s, grdpts_x, grdpts_y)
     time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
     # fillup the double trace pointer
-    nstat = len(stream)
-    trace = (C.c_void_p * nstat)()
-    ntrace = np.empty(nstat, dtype="int32", order="C")
-    for i, tr in enumerate(stream):
-        # assure data are of correct type
-        tr.data = np.require(tr.data, 'float64', ['C_CONTIGUOUS'])
-        trace[i] = tr.data.ctypes.data_as(C.c_void_p)
-        ntrace[i] = len(tr.data)
-
     # offset of arrays
     spoint, _epoint = get_spoint(stream, stime, etime)
     #
-    # loop with a sliding window over the data trace array and apply bbfk
+    # loop with a sliding window over the dat trace array and apply bbfk
     #
+    nstat = len(stream)
     fs = stream[0].stats.sampling_rate
     nsamp = int(win_len * fs)
     nstep = int(nsamp * win_frac)
 
     # generate plan for rfftr
     nfft = nextpow2(nsamp)
-    deltaf = fs/float(nfft)
-    nf = int((frqhigh-frqlow)/deltaf)+1
-    if nf > (nfft/2+1): nf = nfft/2+1
-    nlow = int(frqlow/deltaf)
+    deltaf = fs / float(nfft)
+    nf = int((frqhigh - frqlow) / deltaf) + 1
+    if nf > (nfft / 2 + 1):
+        nf = nfft / 2 + 1
+    nlow = int(frqlow / deltaf)
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
-        STEER = np.empty((grdpts_x,grdpts_y,nf,nstat), dtype='c16')
+        STEER = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
     R = np.empty((nf, nstat, nstat), dtype='c16')
+    ft = np.empty((nstat, nf), dtype='c16')
+    fft = np.empty((nstat, nfft / 2 + 1), dtype='c16')
     newstart = stime
+    tap = cosTaper(nsamp, p=0.1)
+    taper = np.zeros(nsamp, 'f8')
+    clibsignal.cosine_taper(taper, nsamp, 0.1)
     offset = 0
     while eotr:
         if method == 'bbfk':
             try:
-                  buf = bbfk(spoint, offset, trace, ntrace, time_shift_table, frqlow,
-                       frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
-                       grdpts_y, nfft)
-                  abspow, power, ix, iy = buf
+                from copy import deepcopy
+                _copy = deepcopy(stream[5].data)
+                x = []
+                w = (C.c_void_p * nstat)()
+                for i, tr in enumerate(stream):
+                    dat = np.zeros(nsamp + 1)
+                    dat[1:] = tr.data[spoint[i] + offset:
+                        spoint[i] + offset + nsamp]
+                    mymean = dat[:-1].mean()
+                    dat[:-1] = (dat[:-1] - dat[:-1].mean()) * taper
+                    x.append(mymean)
+                    dat = np.require(dat, 'f8', ['C_CONTIGUOUS'])
+                    fft[i, :] = np.fft.rfft(dat[1:], nfft)
+                    fft[i, :] = np.require(fft[i, :], 'c16', ['C_CONTIGUOUS'])
+                    w[i] = fft[i, :].view('f8').ctypes.data_as(C.c_void_p)
+                buf = bbfk(w, spoint, offset, time_shift_table,
+                     frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
+                     grdpts_y, nfft)
+                abspow, power, ix, iy = buf
             except IndexError:
-                  break
+                break
         elif method == 'bf' or method == 'capon':
-            tap = cosTaper(nsamp,p=0.1)
-            trace = np.zeros((nstat,nsamp),dtype=float)
             try:
-                  for i,tr in enumerate(stream):
-                     trace[i, :] = tr.data[spoint[i]+offset:spoint[i]+offset+nsamp]
-                     trace[i, :] = detrend(trace[i, :],type='constant')
-                     trace[i, :] = trace[i, :]*tap[:]
+                for i, tr in enumerate(stream):
+                    dat = tr.data[spoint[i] + offset:
+                        spoint[i] + offset + nsamp]
+                    dat = detrend(dat, type='constant') * tap
+                    ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
 
-                  df = fs/float(nfft)
-                  nlow = int(frqlow/df)
+                # in general, beamforming is done by simply computing the co
+                # variances of the signal at different receivers and than stear
+                # the matrix R with "weights" which are the trial-DOAs e.g.,
+                # Kirlin & Done, 1999
 
-                  # in general, beamforming is done by simply computing the co-variances
-                  # of the signal at different receivers and than stear the matrix R with
-                  # "weights" which are the trial-DOAs e.g., Kirlin & Done, 1999
-                  dpow = 0.
+                # fill up R
+                dpow = 0.
+                R.fill(0. + 0j)
+                for i in xrange(nstat):
+                    for j in xrange(i, nstat):
+                        R[:, i, j] = ft[i, :] * ft[j, :].conj()
+                        if method == 'capon':
+                            R[:, i, j] /= np.abs(R[:, i, j].sum())
+                        if i != j:
+                            R[:, j, i] = R[:, i, j].conjugate()
+                        else:
+                            dpow += np.abs(R[:, i, j].sum())
+                dpow *= nstat
+                if method == "capon":
+                    # P(f) = 1/(e.H R(f)^-1 e)
+                    for n in xrange(nf):
+                        R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
-                  # fill up R
-                  ft = []
-                  R.fill(0. + 0j)
-                  for i in xrange(nstat):
-                      ft.append(np.fft.rfft(trace[i, :],nfft)[nlow:nlow+nf])
-                  for i in xrange(nstat):
-                      for j in xrange(i, nstat):
-                          R[:, i, j] = ft[i] * ft[j].conj()
-                          if method == 'capon':
-                              R[:, i, j] /= np.abs(R[:, i, j].sum())
-                          if i != j:
-                              R[:, j, i] = R[:, i, j].conjugate() 
-                          else:
-                              dpow += np.abs(R[:,i,j].sum())
+                methodint = {"capon": 2, "bf": 1}[method]
 
-                  dpow *= nstat
-                  if method == "capon":
-                      # P(f) = 1/(e.H R(f)^-1 e)
-                      for n in xrange(nf):
-                          R[n, :, :] = np.linalg.pinv(R[n, :, :])
-
-                  methodint = {"capon": 2, "bf": 1}[method]
-                  if 0:
-                      buf = genbeam.generalized_beamformer(STEER, R, frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow, methodint)
-                      abspow, power, ix, iy = buf
-                  else:
-                      cabspow = C.c_double()
-                      cpower = C.c_double()
-                      cix = C.c_int()
-                      ciy = C.c_int()
-                      clibsignal.generalizedBeamformer(STEER,
-                          R, C.c_double(frqlow),
-                          C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
-                          prewhiten, grdpts_x, grdpts_y, nfft, nf, 
-                          C.c_double(dpow), C.byref(cix), C.byref(ciy),
-                          C.byref(cabspow), C.byref(cpower), methodint)
-                      abspow, power, ix, iy = cabspow.value, cpower.value, cix.value, ciy.value
+                cabspow = C.c_double()
+                cpower = C.c_double()
+                cix = C.c_int()
+                ciy = C.c_int()
+                clibsignal.generalizedBeamformer(STEER,
+                    R, C.c_double(frqlow),
+                    C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
+                    prewhiten, grdpts_x, grdpts_y, nfft, nf,
+                    C.c_double(dpow), C.byref(cix), C.byref(ciy),
+                    C.byref(cabspow), C.byref(cpower), methodint)
+                abspow, power = cabspow.value, cpower.value
+                ix, iy = cix.value, ciy.value
             except IndexError:
-                  break
-
+                break
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
@@ -1439,4 +1328,3 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
-

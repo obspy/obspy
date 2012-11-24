@@ -58,7 +58,7 @@ if not clibevresp:
     raise ImportError(msg)
 
 clibsignal.calcSteer.argtypes = [
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, 
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
     C.c_float, C.POINTER(C.c_void_p),
     np.ctypeslib.ndpointer(dtype='c16', ndim=4, flags='C_CONTIGUOUS'),
 ]
@@ -80,11 +80,10 @@ clibsignal.generalizedBeamformer.restype = C.c_int
 
 #XXX moritz: add a note where params are pointers
 clibsignal.bbfk.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int,
     C.POINTER(C.c_void_p),
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_void_p,
+    C.c_int,
+    C.c_void_p,  # time shift table
     C.POINTER(C.c_float),
     C.POINTER(C.c_float),
     C.POINTER(C.c_int),
