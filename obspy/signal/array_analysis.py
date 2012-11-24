@@ -26,7 +26,6 @@ from obspy.signal.headers import clibsignal
 from obspy.core import Stream
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
-from scipy.signal import detrend
 
 
 def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
@@ -784,64 +783,6 @@ def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
     return np.array(res)
 
 
-def bbfk(wdw, spoint, offset, stat_tshift_table, flow, fhigh,
-         digfreq, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft):
-    """
-    Note: Interface not fixed jet
-
-    :type spoint: int
-    :param spoint: Start sample point, probably in julian seconds
-    :type offset: int
-    :param offset: The Offset which is counted upwards nwin for shifting array
-    :type stat_tshift_table: ??
-    :param stat_tshift_table: The time shift table for each station for the
-        slowness grid
-    :type flow: float
-    :param flow: Lower frequency for fk
-    :type fhigh: float
-    :param fhigh: Higher frequency for fk
-    :type digfreq: float
-    :param digfreq: The common sampling rate in group
-    :type nsamp: int
-    :int nsamp: Number of samples
-    :tpye nstat: int
-    :param nstat: Number of stations
-    :type prewhiten: int
-    :param prewhiten: Integer regulating prewhitening
-    :type grdpts_x: int
-    :param grdpts_x: Number of grid points in x direction to loop over
-    :type grdpts_y: int
-    :param grdpts_y: Number of grid points in y direction to loop over
-    :type nfft: int
-    :param nfft: Number of points to use for fft
-
-    :return: Tuple with fields:
-        | **float abs:** The absolut power, output variable printed to file
-        | **float rel:** The relative power, output variable printed to file
-        | **int ix:** ix output for backazimuth calculation
-        | **int iy:** iy output for backazimuth calculation
-    """
-    # allocate output variables
-    abspow = C.c_float()
-    power = C.c_float()
-    ix = C.c_int()
-    iy = C.c_int()
-
-    errcode = clibsignal.bbfk(C.cast(wdw, C.POINTER(C.c_void_p)), spoint, offset,
-                              C.byref(stat_tshift_table), C.byref(abspow),
-                              C.byref(power), C.byref(ix), C.byref(iy), flow,
-                              fhigh, digfreq, nsamp, nstat, prewhiten,
-                              grdpts_x, grdpts_y, nfft)
-
-    if errcode == 0:
-        pass
-    elif errcode == 1:
-        raise IndexError('bbfk: Index out of bounds, window exceeds data')
-    else:
-        raise Exception('bbfk: C-Extension returned error %d' % errcode)
-    return abspow.value, power.value, ix.value, iy.value
-
-
 def get_geometry(stream, coordsys='lonlat', return_center=False,
                  verbose=False):
     """
@@ -1092,7 +1033,7 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
 
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-    verbose=False, coordsys='lonlat', timestamp='mlabday', method='bbfk'):
+    verbose=False, coordsys='lonlat', timestamp='mlabday', method=0):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -1136,9 +1077,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         returns the timestamp in days (decimals represent hours, minutes
         and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
         date plotting (see e.g. matplotlibs num2date)
+    :type method: int
+    :param method: the method to use 0 == bbfk, 1 == bf, 2 == capon
     :return: numpy.ndarray of timestamp, relative power, absolute power,
         backazimut, slowness
     """
+    BBFK, BF, CAPON = 0, 1, 2
     res = []
     eotr = True
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
@@ -1178,25 +1122,25 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     # generate plan for rfftr
     nfft = nextpow2(nsamp)
     deltaf = fs / float(nfft)
-    nf = int((frqhigh - frqlow) / deltaf) + 1
-    if nf > (nfft / 2 + 1):
-        nf = nfft / 2 + 1
-    nlow = int(frqlow / deltaf)
-    wlow = int(frqlow / float(deltaf) + 0.5)
-    wlow = max(1, wlow)  # avoid using the offset
-    whigh = int(frqhigh / float(deltaf) + 0.5)
-    whigh = min(nfft / 2 - 1, whigh)  # avoid using nyquist
-    nw = whigh - wlow
+    nlow = int(frqlow / float(deltaf) + 0.5)
+    nhigh = int(frqhigh / float(deltaf) + 0.5)
+    nlow = max(1, nlow)  # avoid using the offset
+    nhigh = min(nfft / 2 - 1, nhigh)  # avoid using nyquist
+    nf = nhigh - nlow + 1  # include upper and lower frequency
     # to spead up the routine a bit we estimate all steering vectors in advance
-    if method != 'bbfk':
-        STEER = np.empty((grdpts_x, grdpts_y, nw + 1, nstat), dtype='c16')
-        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nw + 1, wlow,
-            C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
-    R = np.empty((nw + 1, nstat, nstat), dtype='c16')
-    ft = np.empty((nstat, nw + 1), dtype='c16')
+    if method != BBFK:
+        steer = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
+        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+            deltaf, ndarray2ptr3D(time_shift_table_numpy), steer)
+    R = np.empty((nf, nstat, nstat), dtype='c16')
+    ft = np.empty((nstat, nf), dtype='c16')
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
+    cabs = C.c_double()
+    crel = C.c_double()
+    cix = C.c_int()
+    ciy = C.c_int()
     #from IPython.core.debugger import Tracer; Tracer()()
     while eotr:
         try:
@@ -1204,19 +1148,24 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 dat = tr.data[spoint[i] + offset:
                     spoint[i] + offset + nsamp]
                 dat = (dat - dat.mean()) * tap
-                ft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]
+                ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
         except IndexError:
             break
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
-        if method == 'bbfk':
+        if method == BBFK:
             w = (C.c_void_p * nstat)()
             for i in xrange(nstat):
                 w[i] = ft[i, :].view('f8').ctypes.data_as(C.c_void_p)
-            buf = bbfk(w, spoint, offset, time_shift_table,
-                 frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
-                 grdpts_y, nfft)
-            abspow, power, ix, iy = buf
-        elif method == 'bf' or method == 'capon':
+            # allocate output variables
+            errnr = clibsignal.bbfk(C.cast(w, C.POINTER(C.c_void_p)), spoint,
+                offset, C.byref(time_shift_table), C.byref(cabs),
+                C.byref(crel), C.byref(cix), C.byref(ciy), frqlow,
+                frqhigh, fs, nsamp, nstat, prewhiten,
+                grdpts_x, grdpts_y, nfft)
+            if errnr != 0:
+                raise Exception('bbfk: C-Extension returned error %d' % errnr)
+            abspow, power, ix, iy = cabs.value, crel.value, cix.value, ciy.value
+        elif method in (BF, CAPON):
             # in general, beamforming is done by simply computing the co
             # variances of the signal at different receivers and than stear
             # the matrix R with "weights" which are the trial-DOAs e.g.,
@@ -1228,31 +1177,25 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             for i in xrange(nstat):
                 for j in xrange(i, nstat):
                     R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                    if method == 'capon':
+                    if method == CAPON:
                         R[:, i, j] /= np.abs(R[:, i, j].sum())
                     if i != j:
                         R[:, j, i] = R[:, i, j].conjugate()
                     else:
                         dpow += np.abs(R[:, i, j].sum())
             dpow *= nstat
-            if method == "capon":
+            if method == CAPON:
                 # P(f) = 1/(e.H R(f)^-1 e)
                 for n in xrange(nf):
                     R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
-            methodint = {"capon": 2, "bf": 1}[method]
-
-            cabspow = C.c_double()
-            cpower = C.c_double()
-            cix = C.c_int()
-            ciy = C.c_int()
-            clibsignal.generalizedBeamformer(STEER,
+            clibsignal.generalizedBeamformer(steer,
                 R, C.c_double(frqlow),
                 C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
-                prewhiten, grdpts_x, grdpts_y, nfft, nw + 1,
+                prewhiten, grdpts_x, grdpts_y, nfft, nf,
                 C.c_double(dpow), C.byref(cix), C.byref(ciy),
-                C.byref(cabspow), C.byref(cpower), methodint)
-            abspow, power = cabspow.value, cpower.value
+                C.byref(cabs), C.byref(crel), method)
+            abspow, power = cabs.value, crel.value
             ix, iy = cix.value, ciy.value
 
         # here we compute baz, slow

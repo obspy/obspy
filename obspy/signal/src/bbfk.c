@@ -61,7 +61,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 
 
 int bbfk(double **window, int *spoint, int offset,
-         float ***stat_tshift_table, float *abs, float *rel, int *ix, 
+         float ***stat_tshift_table, double *abs, double *rel, int *ix,
          int *iy, float flow, float fhigh, float digfreq, int nsamp,
          int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
     int		j,k,l,w;

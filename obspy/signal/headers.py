@@ -84,8 +84,8 @@ clibsignal.bbfk.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.c_void_p,  # time shift table
-    C.POINTER(C.c_float),
-    C.POINTER(C.c_float),
+    C.POINTER(C.c_double),
+    C.POINTER(C.c_double),
     C.POINTER(C.c_int),
     C.POINTER(C.c_int),
     C.c_float, C.c_float, C.c_float,
