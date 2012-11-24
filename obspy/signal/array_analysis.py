@@ -988,34 +988,6 @@ def ndarray2ptr3D(ndarray):
     return (ptr * dim1)(*voids)
 
 
-def cosine_taper(ndat, fraction=0.1):
-    """
-    Returns cosine taper of size ndat and taper_fraction.
-
-    C Extension for generating cosine taper
-
-    :param ndat: Number of data points
-    :param fraction: Taper fraction. Default is 10% which tapers 5% from
-        the beginning and 5% form the end
-
-    .. rubric:: Example
-
-    >>> tap = cosine_taper(100, fraction=1.0)
-    >>> buf = 0.5*(1+np.cos(np.linspace(np.pi, 3*np.pi, 100)))
-    >>> abs(tap - buf).max() < 1e-2
-    True
-    """
-    data = np.empty(ndat, dtype='float64')
-    # the c extension tapers fraction from the beginning and the end,
-    # therefore we half it
-    frac = C.c_double(fraction / 2.0)
-
-    errcode = clibsignal.cosine_taper(data, ndat, frac)
-    if errcode != 0:
-        raise Exception('bbfk: C-Extension returned error %d' % errcode)
-    return data
-
-
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     """
     Returns array transfer function as a function of wavenumber difference
@@ -1219,9 +1191,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     ft = np.empty((nstat, nf), dtype='c16')
     fft = np.empty((nstat, nfft / 2 + 1), dtype='c16')
     newstart = stime
-    tap = cosTaper(nsamp, p=0.1)
-    taper = np.zeros(nsamp, 'f8')
-    clibsignal.cosine_taper(taper, nsamp, 0.1)
+    tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
     while eotr:
         if method == 'bbfk':
@@ -1234,7 +1204,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                     dat = tr.data[spoint[i] + offset:
                         spoint[i] + offset + nsamp]
                     mymean = dat.mean()
-                    dat = (dat - dat.mean()) * taper
+                    dat = (dat - dat.mean()) * tap
                     x.append(mymean)
                     dat = np.require(dat, 'f8', ['C_CONTIGUOUS'])
                     fft[i, :] = np.fft.rfft(dat, nfft)

@@ -94,11 +94,6 @@ clibsignal.bbfk.argtypes = [
 ]
 clibsignal.bbfk.restype = C.c_int
 
-clibsignal.cosine_taper.argtypes = [
-    np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int, C.c_double]
-clibsignal.cosine_taper.restype = C.c_int
-
 clibsignal.X_corr.argtypes = [
     np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),

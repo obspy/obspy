@@ -13,5 +13,4 @@ EXPORTS
     spr_coef_paz
     ppick
     bbfk
-    cosine_taper
     stalta

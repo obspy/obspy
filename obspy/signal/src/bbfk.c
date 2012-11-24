@@ -37,45 +37,6 @@ typedef struct cplxS {
 } cplx;
 
 
-/* splint: cannot be static, is exported and used from python */
-int cosine_taper(double *taper, int ndat, double fraction)
-{
-    int	i1,i2,i3,i4,k;
-    double fact,temp;
-
-    /* get i1-4 out of ndat and fraction */
-    i1 = 0;
-    i4 = ndat-1;
-    i2 = (int)(fraction*(double)ndat +0.5);
-    if ( (double)i2 > (double)(ndat-1)/2. ) {
-        i2 = (int)((double)(ndat-1)/2.);
-    }
-    i3 = ndat - 1 - (int)(fraction*(double)ndat +0.5);
-    if ( (double)i3 < (double)(ndat-1)/2. ) {
-        i3 = (int)((double)(ndat-1)/2.+1.);
-    }
-
-    for (k=0;k<ndat;k++) {
-        if ((k <= i1) || (k >= i4)) {
-            if ((k == i2) || (k == i3)) {
-                taper[k] = 1.0;
-            } else {
-                taper[k] = 0.0;
-            }
-        } else if ((k > i1) && (k <= i2)) {
-            temp =  M_PI * (double)(k-i1)/((double)(i2-i1+1));
-            fact = 0.5 - 0.5*cos(temp);
-            taper[k] = (double) fabs(fact);
-        } else if ((k >= i3) && (k < i4)) {
-            temp = M_PI * (double)(i4-k)/((double)(i4-i3+1));
-            fact = 0.5 - 0.5*cos(temp);
-            taper[k] = fabs(fact);
-        } else
-            taper[k] = 1.0;
-    }
-    return 0;
-}
-
 
 void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
         const int nf, const int nlow, const float deltaf, float
