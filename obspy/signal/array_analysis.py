@@ -1194,81 +1194,66 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
     R = np.empty((nw + 1, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nw + 1), dtype='c16')
-    fft = np.empty((nstat, nw + 1), dtype='c16')
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
     #from IPython.core.debugger import Tracer; Tracer()()
     while eotr:
+        try:
+            for i, tr in enumerate(stream):
+                dat = tr.data[spoint[i] + offset:
+                    spoint[i] + offset + nsamp]
+                dat = (dat - dat.mean()) * tap
+                ft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]
+        except IndexError:
+            break
+        ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
         if method == 'bbfk':
-            try:
-                from copy import deepcopy
-                _copy = deepcopy(stream[5].data)
-                x = []
-                w = (C.c_void_p * nstat)()
-                for i, tr in enumerate(stream):
-                    dat = tr.data[spoint[i] + offset:
-                        spoint[i] + offset + nsamp]
-                    mymean = dat.mean()
-                    dat = (dat - dat.mean()) * tap
-                    x.append(mymean)
-                    dat = np.require(dat, 'f8', ['C_CONTIGUOUS'])
-                    fft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]  # include whigh
-                    fft[i, :] = np.require(fft[i, :], 'c16', ['C_CONTIGUOUS'])
-                    w[i] = fft[i, :].view('f8').ctypes.data_as(C.c_void_p)
-                buf = bbfk(w, spoint, offset, time_shift_table,
-                     frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
-                     grdpts_y, nfft)
-                abspow, power, ix, iy = buf
-            except IndexError:
-                break
+            w = (C.c_void_p * nstat)()
+            for i in xrange(nstat):
+                w[i] = ft[i, :].view('f8').ctypes.data_as(C.c_void_p)
+            buf = bbfk(w, spoint, offset, time_shift_table,
+                 frqlow, frqhigh, fs, nsamp, nstat, prewhiten, grdpts_x,
+                 grdpts_y, nfft)
+            abspow, power, ix, iy = buf
         elif method == 'bf' or method == 'capon':
-            try:
-                for i, tr in enumerate(stream):
-                    dat = tr.data[spoint[i] + offset:
-                        spoint[i] + offset + nsamp]
-                    dat = detrend(dat, type='constant') * tap
-                    ft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]
+            # in general, beamforming is done by simply computing the co
+            # variances of the signal at different receivers and than stear
+            # the matrix R with "weights" which are the trial-DOAs e.g.,
+            # Kirlin & Done, 1999
 
-                # in general, beamforming is done by simply computing the co
-                # variances of the signal at different receivers and than stear
-                # the matrix R with "weights" which are the trial-DOAs e.g.,
-                # Kirlin & Done, 1999
+            # fill up R
+            dpow = 0.
+            R.fill(0. + 0j)
+            for i in xrange(nstat):
+                for j in xrange(i, nstat):
+                    R[:, i, j] = ft[i, :] * ft[j, :].conj()
+                    if method == 'capon':
+                        R[:, i, j] /= np.abs(R[:, i, j].sum())
+                    if i != j:
+                        R[:, j, i] = R[:, i, j].conjugate()
+                    else:
+                        dpow += np.abs(R[:, i, j].sum())
+            dpow *= nstat
+            if method == "capon":
+                # P(f) = 1/(e.H R(f)^-1 e)
+                for n in xrange(nf):
+                    R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
-                # fill up R
-                dpow = 0.
-                R.fill(0. + 0j)
-                for i in xrange(nstat):
-                    for j in xrange(i, nstat):
-                        R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                        if method == 'capon':
-                            R[:, i, j] /= np.abs(R[:, i, j].sum())
-                        if i != j:
-                            R[:, j, i] = R[:, i, j].conjugate()
-                        else:
-                            dpow += np.abs(R[:, i, j].sum())
-                dpow *= nstat
-                if method == "capon":
-                    # P(f) = 1/(e.H R(f)^-1 e)
-                    for n in xrange(nf):
-                        R[n, :, :] = np.linalg.pinv(R[n, :, :])
+            methodint = {"capon": 2, "bf": 1}[method]
 
-                methodint = {"capon": 2, "bf": 1}[method]
-
-                cabspow = C.c_double()
-                cpower = C.c_double()
-                cix = C.c_int()
-                ciy = C.c_int()
-                clibsignal.generalizedBeamformer(STEER,
-                    R, C.c_double(frqlow),
-                    C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
-                    prewhiten, grdpts_x, grdpts_y, nfft, nw + 1,
-                    C.c_double(dpow), C.byref(cix), C.byref(ciy),
-                    C.byref(cabspow), C.byref(cpower), methodint)
-                abspow, power = cabspow.value, cpower.value
-                ix, iy = cix.value, ciy.value
-            except IndexError:
-                break
+            cabspow = C.c_double()
+            cpower = C.c_double()
+            cix = C.c_int()
+            ciy = C.c_int()
+            clibsignal.generalizedBeamformer(STEER,
+                R, C.c_double(frqlow),
+                C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
+                prewhiten, grdpts_x, grdpts_y, nfft, nw + 1,
+                C.c_double(dpow), C.byref(cix), C.byref(ciy),
+                C.byref(cabspow), C.byref(cpower), methodint)
+            abspow, power = cabspow.value, cpower.value
+            ix, iy = cix.value, ciy.value
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
