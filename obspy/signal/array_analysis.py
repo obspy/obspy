@@ -1079,7 +1079,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         date plotting (see e.g. matplotlibs num2date)
     :type method: int
     :param method: the method to use 0 == bbfk, 1 == bf, 2 == capon
-    :return: numpy.ndarray of timestamp, relative power, absolute power,
+    :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
     BBFK, BF, CAPON = 0, 1, 2
@@ -1141,7 +1141,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     crel = C.c_double()
     cix = C.c_int()
     ciy = C.c_int()
-    #from IPython.core.debugger import Tracer; Tracer()()
     while eotr:
         try:
             for i, tr in enumerate(stream):
@@ -1164,7 +1163,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 grdpts_x, grdpts_y, nfft)
             if errnr != 0:
                 raise Exception('bbfk: C-Extension returned error %d' % errnr)
-            abspow, power, ix, iy = cabs.value, crel.value, cix.value, ciy.value
+            abspow, relpow, ix, iy = [c.value for c in (cabs, crel, cix, ciy)]
         elif method in (BF, CAPON):
             # in general, beamforming is done by simply computing the co
             # variances of the signal at different receivers and than stear
@@ -1173,7 +1172,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
 
             # fill up R
             dpow = 0.
-            R.fill(0. + 0j)
             for i in xrange(nstat):
                 for j in xrange(i, nstat):
                     R[:, i, j] = ft[i, :] * ft[j, :].conj()
@@ -1189,14 +1187,10 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 for n in xrange(nf):
                     R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
-            clibsignal.generalizedBeamformer(steer,
-                R, C.c_double(frqlow),
-                C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
-                prewhiten, grdpts_x, grdpts_y, nfft, nf,
-                C.c_double(dpow), C.byref(cix), C.byref(ciy),
-                C.byref(cabs), C.byref(crel), method)
-            abspow, power = cabs.value, crel.value
-            ix, iy = cix.value, ciy.value
+            clibsignal.generalizedBeamformer(steer, R, frqlow, frqhigh, fs,
+                nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
+                C.byref(cix), C.byref(ciy), C.byref(cabs), C.byref(crel), method)
+            abspow, relpow, ix, iy = [c.value for c in (cabs, crel, cix, ciy)]
 
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
@@ -1207,8 +1201,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
         baz = azimut - np.sign(azimut) * 180
-        if power > semb_thres and 1. / slow > vel_thres:
-            res.append(np.array([newstart.timestamp, power, abspow, baz,
+        if relpow > semb_thres and 1. / slow > vel_thres:
+            res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
             if verbose:
                 print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
