@@ -1189,11 +1189,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nw = whigh - wlow
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
-        STEER = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
-        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+        STEER = np.empty((grdpts_x, grdpts_y, nw + 1, nstat), dtype='c16')
+        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nw + 1, wlow,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
-    R = np.empty((nf, nstat, nstat), dtype='c16')
-    ft = np.empty((nstat, nf), dtype='c16')
+    R = np.empty((nw + 1, nstat, nstat), dtype='c16')
+    ft = np.empty((nstat, nw + 1), dtype='c16')
     fft = np.empty((nstat, nw + 1), dtype='c16')
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
@@ -1228,7 +1228,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                     dat = tr.data[spoint[i] + offset:
                         spoint[i] + offset + nsamp]
                     dat = detrend(dat, type='constant') * tap
-                    ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
+                    ft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]
 
                 # in general, beamforming is done by simply computing the co
                 # variances of the signal at different receivers and than stear
@@ -1262,7 +1262,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 clibsignal.generalizedBeamformer(STEER,
                     R, C.c_double(frqlow),
                     C.c_double(frqhigh), C.c_double(fs), nsamp, nstat,
-                    prewhiten, grdpts_x, grdpts_y, nfft, nf,
+                    prewhiten, grdpts_x, grdpts_y, nfft, nw + 1,
                     C.c_double(dpow), C.byref(cix), C.byref(ciy),
                     C.byref(cabspow), C.byref(cpower), methodint)
                 abspow, power = cabspow.value, cpower.value
