@@ -66,6 +66,7 @@ int bbfk(double **window, int *spoint, int offset,
          int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
     int		j,k,l,w;
     int		wlow,whigh;
+    int nf;
     float	df;
     float	denom = 0;
     float	dpow;
@@ -107,6 +108,7 @@ int bbfk(double **window, int *spoint, int offset,
         /***************************************************/
         whigh = nfft/2-1;
     }
+    nf = whigh - wlow;
 
 #ifdef USE_SINE_TABLE
     /********************************************************************/
@@ -128,7 +130,7 @@ int bbfk(double **window, int *spoint, int offset,
     /***********************************************************************/
     if (prewhiten!=TRUE) {
         denom = 0.;
-        for(w=wlow;w<=whigh;w++) {
+        for(w=0;w<=nf;w++) {
             dpow = 0;
             for (j=0;j<nstat;j++) {
                 /* mimic realft, imaginary part is negativ in realft */
@@ -156,17 +158,17 @@ int bbfk(double **window, int *spoint, int offset,
             exit(EXIT_FAILURE);
         }
     }
-    maxpow = (float *)calloc((size_t) (nfft/2), sizeof(float));
+    maxpow = (float *)calloc((size_t) (nf+1), sizeof(float));
     if (maxpow == NULL) {
         fprintf(stderr,"\nMemory allocation error (maxpow)!\n");
         exit(EXIT_FAILURE);
     }
-    pow = (float ***)calloc((size_t) (nfft/2), sizeof(float **));
+    pow = (float ***)calloc((size_t) (nf+1), sizeof(float **));
     if (pow == NULL) {
         fprintf(stderr,"\nMemory allocation error (pow)!\n");
         exit(EXIT_FAILURE);
     }
-    for (w=0;w<nfft/2;w++) {
+    for (w=0;w<=nf;w++) {
         pow[w] = (float **)calloc((size_t) (grdpts_x), sizeof(float *));
         if (pow[w] == NULL) {
             fprintf(stderr,"\nMemory allocation error (pow[w])!\n");
@@ -185,8 +187,8 @@ int bbfk(double **window, int *spoint, int offset,
     /* we start with loop over angular frequency, this allows us */
     /* to prewhiten the fk map, if we want to			 */
     /*************************************************************/
-    for (w=wlow;w<=whigh;w++) {
-    	float PI_2_df_w = 2.*M_PI*df*(float)w;
+    for (w=0;w<=nf;w++) {
+    	float PI_2_df_w = 2.*M_PI*df*(float)(w + wlow);
         /***********************************/
         /* now we loop over x index (east) */
         /***********************************/
@@ -239,7 +241,7 @@ int bbfk(double **window, int *spoint, int offset,
     /**********************************************/
     for (k=0;k<grdpts_x;k++) {
         for (l=0;l<grdpts_y;l++) {
-            for (w=wlow;w<=whigh;w++) {
+            for (w=0;w<=nf;w++) {
                 if (prewhiten==TRUE) {
                     nomin[k][l] += pow[w][k][l] / maxpow[w];
                 }
@@ -284,7 +286,7 @@ int bbfk(double **window, int *spoint, int offset,
     /* now we free everything */
     for (k=0;k<grdpts_x;k++) 
         free((void *)nomin[k]);
-    for (w=0;w<nfft/2;w++) {
+    for (w=0;w<=nf;w++) {
         for (k=0;k<grdpts_x;k++) {
             free((void *)pow[w][k]);
         }

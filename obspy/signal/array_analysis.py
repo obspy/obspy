@@ -1182,6 +1182,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if nf > (nfft / 2 + 1):
         nf = nfft / 2 + 1
     nlow = int(frqlow / deltaf)
+    wlow = int(frqlow / float(deltaf) + 0.5)
+    wlow = max(1, wlow)  # avoid using the offset
+    whigh = int(frqhigh / float(deltaf) + 0.5)
+    whigh = min(nfft / 2 - 1, whigh)  # avoid using nyquist
+    nw = whigh - wlow
     # to spead up the routine a bit we estimate all steering vectors in advance
     if method != 'bbfk':
         STEER = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
@@ -1189,10 +1194,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             C.c_float(deltaf), ndarray2ptr3D(time_shift_table_numpy), STEER)
     R = np.empty((nf, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nf), dtype='c16')
-    fft = np.empty((nstat, nfft / 2 + 1), dtype='c16')
+    fft = np.empty((nstat, nw + 1), dtype='c16')
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
+    #from IPython.core.debugger import Tracer; Tracer()()
     while eotr:
         if method == 'bbfk':
             try:
@@ -1207,7 +1213,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                     dat = (dat - dat.mean()) * tap
                     x.append(mymean)
                     dat = np.require(dat, 'f8', ['C_CONTIGUOUS'])
-                    fft[i, :] = np.fft.rfft(dat, nfft)
+                    fft[i, :] = np.fft.rfft(dat, nfft)[wlow:wlow + nw + 1]  # include whigh
                     fft[i, :] = np.require(fft[i, :], 'c16', ['C_CONTIGUOUS'])
                     w[i] = fft[i, :].view('f8').ctypes.data_as(C.c_void_p)
                 buf = bbfk(w, spoint, offset, time_shift_table,
