@@ -24,6 +24,7 @@ import numpy as np
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
+from obspy.core.util.decorator import deprecated
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 
@@ -587,200 +588,17 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-def sonic_pp(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabday', njobs=2,
-          ppservers=(), secret='verysecret'):
-    """
-    Parrallelized Version of sonic. EXPERIMENTAL!
-
-    .. rubric:: Usage
-
-    - multiprocessing on local machine only: just replace sonic by sonic_pp
-      and set njobs to number of cores in local machine
-
-    - serveral machines:
-        1. goto clients and start workers (important to make sure it uses
-           the right python version with obspy installed)::
-
-               $ python /usr/bin/ppserver -s <secret> -w <ncpus>
-
-        2. replace sonic by sonic_pp and set njobs, clientlist and secret:
-
-           >>> sonic_pp(*args, **kwargs, njobs=njobs,  # doctest: +SKIP
-           ...          pservers=('client1', 'client2',), secret=<secret>)
-    """
-    import pp
-
-    job_server = pp.Server(ppservers=ppservers, secret=secret)
-    if verbose:
-        print("Starting pp with", job_server.get_ncpus(), "workers")
-    jobs = list()
-    job_len = (etime - stime) / njobs
-
-    for ts in np.arange(njobs):
-        job_stime = stime + ts * job_len
-        job_etime = stime + (ts + 1) * job_len + win_len
-        if job_etime > etime:
-            job_etime = etime
-
-        jobs.append(job_server.submit(sonic, (stream, win_len, win_frac, sll_x,
-            slm_x, sll_y, slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh,
-            job_stime, job_etime, prewhiten, verbose, coordsys, timestamp),
-            (sonic, bbfk, get_geometry, get_timeshift, get_spoint,
-             ndarray2ptr3D, cosine_taper), ('math', 'warnings', 'ctypes',
-            'numpy', 'obspy.signal.util', 'obspy.core', 'scipy.integrate'),
-            globals=globals()))
-
-    i = 0
-    for job in jobs:
-        if i == 0:
-            ret = job()
-        else:
-            ret = np.r_[ret, job()]
-        i += 1
-
-    if verbose:
-        job_server.print_stats()
-
-    return ret
-
-
+@deprecated
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
           verbose=False, coordsys='lonlat', timestamp='mlabday'):
     """
-    Method for Seismic-Array-Beamforming/FK-Analysis
-
-    :param stream: Stream object, the trace.stats dict like class must
-        contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
-        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
-        items/attributes. See param coordsys
-    :type win_len: Float
-    :param win_len: Sliding window length in seconds
-    :type win_frac: Float
-    :param win_frac: Fraction of sliding window to use for step
-    :type sll_x: Float
-    :param sll_x: slowness x min (lower)
-    :type slm_x: Float
-    :param slm_x: slowness x max
-    :type sll_y: Float
-    :param sll_y: slowness y min (lower)
-    :type slm_y: Float
-    :param slm_y: slowness y max
-    :type sl_s: Float
-    :param sl_s: slowness step
-    :type semb_thres: Float
-    :param semb_thres: Threshold for semblance
-    :type vel_thres: Float
-    :param vel_thres: Threshold for velocity
-    :type frqlow: Float
-    :param frqlow: lower frequency for fk
-    :type frqhigh: Float
-    :param frqhigh: higher frequency for fk
-    :type stime: UTCDateTime
-    :param stime: Starttime of interest
-    :type etime: UTCDateTime
-    :param etime: Endtime of interest
-    :type prewhiten: int
-    :param prewhiten: Do prewhitening, values: 1 or 0
-    :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
-        attributes to use for coordinates
-    :type timestamp: string
-    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
-        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
-        returns the timestamp in days (decimals represent hours, minutes
-        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
-        date plotting (see e.g. matplotlibs num2date)
-    :return: numpy.ndarray of timestamp, relative power, absolute power,
-        backazimut, slowness
+    DEPRECATED: Please use ``obspy.signal.array_processing()``
     """
-    res = []
-    eotr = True
-    #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
-
-    # check that sampling rates do not vary
-    df = stream[0].stats.sampling_rate
-    if len(stream) != len(stream.select(sampling_rate=df)):
-        msg = 'in sonic sampling rates of traces in stream are not equal'
-        raise ValueError(msg)
-
-    grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
-    grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
-
-    geometry = get_geometry(stream, coordsys=coordsys, verbose=verbose)
-
-    if verbose:
-        print("geometry:")
-        print(geometry)
-        print("stream contains following traces:")
-        print(stream)
-        print("stime = " + str(stime) + ", etime = " + str(etime))
-
-    time_shift_table_numpy = get_timeshift(geometry, sll_x, sll_y,
-                                                    sl_s, grdpts_x, grdpts_y)
-    time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
-    # fillup the double trace pointer
-    nstat = len(stream)
-    trace = (C.c_void_p * nstat)()
-    ntrace = np.empty(nstat, dtype="int32", order="C")
-    for i, tr in enumerate(stream):
-        # assure data are of correct type
-        tr.data = np.require(tr.data, 'float64', ['C_CONTIGUOUS'])
-        trace[i] = tr.data.ctypes.data_as(C.c_void_p)
-        ntrace[i] = len(tr.data)
-
-    # offset of arrays
-    spoint, _epoint = get_spoint(stream, stime, etime)
-    #
-    # loop with a sliding window over the data trace array and apply bbfk
-    #
-    df = stream[0].stats.sampling_rate
-    nsamp = int(win_len * df)
-    nstep = int(nsamp * win_frac)
-
-    # generate plan for rfftr
-    nfft = nextpow2(nsamp)
-    newstart = stime
-    offset = 0
-    while eotr:
-        try:
-            buf = bbfk(spoint, offset, trace, ntrace, time_shift_table, frqlow,
-                       frqhigh, df, nsamp, nstat, prewhiten, grdpts_x,
-                       grdpts_y, nfft)
-            abspow, power, ix, iy = buf
-        except IndexError:
-            break
-
-        # here we compute baz, slow
-        slow_x = sll_x + ix * sl_s
-        slow_y = sll_y + iy * sl_s
-
-        slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
-        if slow < 1e-8:
-            slow = 1e-8
-        azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
-        baz = azimut - np.sign(azimut) * 180
-        if power > semb_thres and 1. / slow > vel_thres:
-            res.append(np.array([newstart.timestamp, power, abspow, baz,
-                                 slow]))
-            if verbose:
-                print(newstart, (newstart + (nsamp / df)), res[-1][1:])
-        if (newstart + (nsamp + nstep) / df) > etime:
-            eotr = False
-        offset += nstep
-
-        newstart += nstep / df
-    res = np.array(res)
-    if timestamp == 'julsec':
-        pass
-    elif timestamp == 'mlabday':
-        # 719162 == hours between 1970 and 0001
-        res[:, 0] = res[:, 0] / (24. * 3600) + 719162
-    else:
-        msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
-        raise ValueError(msg)
-    return np.array(res)
+    return array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y,
+        slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
+        prewhiten, verbose=False, coordsys='lonlat', timestamp='mlabday',
+        method=0)
 
 
 def get_geometry(stream, coordsys='lonlat', return_center=False,
