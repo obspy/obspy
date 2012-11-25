@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-from obspy import Stats, Stream, Trace, UTCDateTime
-from obspy.core.util import AttribDict
+from obspy import Stats, Stream, Trace, UTCDateTime, AttribDict
 import copy
 import pickle
 import unittest

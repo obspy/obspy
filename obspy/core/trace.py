@@ -9,8 +9,8 @@ Module for handling ObsPy Trace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import deepcopy, copy
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import AttribDict, createEmptyDataChunk
+from obspy.core import AttribDict, UTCDateTime
+from obspy.core.util import createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
 import obspy.imaging

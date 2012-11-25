@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import AttribDict
+from obspy import AttribDict
 import unittest
 
 

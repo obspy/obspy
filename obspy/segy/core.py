@@ -8,8 +8,7 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import Stream, Trace, UTCDateTime
-from obspy.core import AttribDict
+from obspy import Stream, Trace, UTCDateTime, AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader

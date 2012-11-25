@@ -5,9 +5,8 @@ The obspy.arclink.client test suite.
 
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
-from obspy import read
-from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict
+from obspy import read, UTCDateTime, AttribDict
+from obspy.core.util import NamedTemporaryFile
 import numpy as np
 import os
 import unittest
