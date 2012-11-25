@@ -36,6 +36,13 @@ typedef struct cplxS {
     double im;
 } cplx;
 
+typedef enum _methodE
+{
+    BBFK   = 0,
+    BF     = 1,
+    CAPON  = 2,
+} methodE;
+
 
 
 void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
@@ -306,7 +313,7 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
         const double flow, const double fhigh, const double digfreq,
         const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
         const int grdpts_y, const int nfft, const int nf, double dpow,
-        int *ix, int *iy, double *absmax, double *relmax, const int method) {
+        int *ix, int *iy, double *absmax, double *relmax, const methodE method) {
     /* method: 1 == "bf, 2 == "capon"
      * start the code -------------------------------------------------
      * This assumes that all stations and components have the same number of
@@ -314,7 +321,7 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
 
     int x, y, i, j, n;
     cplx eHR_ne;
-    cplx R_ne;
+    register cplx R_ne;
     const cplx cplx_zero = {0., 0.};
     double *p;
     double *abspow;
@@ -344,7 +351,7 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
         exit(EXIT_FAILURE);
     }
 
-    if (method == 2) {
+    if (method == CAPON) {
         /* general way of abspow normalization */
         dpow = 1.0;
     }
@@ -362,15 +369,23 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
                 for (i = 0; i < nstat; ++i) {
                     R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
+#if 1
                         R_ne.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
                         R_ne.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
+#else
+                        register const cplx s = STEER(x,y,n,j);
+                        register const cplx r = RPTR(n,i,j);
+                        R_ne.re += r.re * s.re - r.im * (-s.im);
+                        R_ne.im += r.re * (-s.im) + r.im * s.re;
+#endif
+
                     }
                     eHR_ne.re += STEER(x,y,n,i).re * R_ne.re - STEER(x,y,n,i).im * R_ne.im;
                     eHR_ne.im += STEER(x,y,n,i).re * R_ne.im + STEER(x,y,n,i).im * R_ne.re;
                 }
 
                 power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
-                if (method == 2) {
+                if (method == CAPON) {
                     power = 1. / power;
                 }
                 if (prewhiten == 0) {
@@ -400,7 +415,7 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
                 for (n = 0; n < nf; ++n) {
                     RELPOW(x,y) += P(x,y,n)/(white[n]*nf*nstat);
                 }
-                if (method == 1) {
+                if (method == BF) {
                     ABSPOW(x,y) = 0.;
                     for (n = 0; n < nf; ++n) {
                         ABSPOW(x,y) += P(x,y,n);
