@@ -99,7 +99,7 @@ class SonicTestCase(unittest.TestCase):
 9.49727714e-01 4.28060799e-13 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:])
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
 
     def test_sonicBbfkPrew(self):
         out = self.arrayProcessing(prewhiten=1, method=0)
@@ -125,7 +125,7 @@ class SonicTestCase(unittest.TestCase):
 9.49731735e-01 9.66531018e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:])
+        np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
 
     def test_sonicBfPrew(self):
         out = self.arrayProcessing(prewhiten=1, method=1)

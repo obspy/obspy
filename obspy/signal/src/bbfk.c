@@ -60,7 +60,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 }
 
 
-int bbfk(double **window, int *spoint, int offset,
+int bbfk(cplx **window, int *spoint, int offset,
          float ***stat_tshift_table, double *abs, double *rel, int *ix,
          int *iy, float flow, float fhigh, float digfreq, int nsamp,
          int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
@@ -77,8 +77,8 @@ int bbfk(double **window, int *spoint, int offset,
     float	*maxpow;
     double	absval;
     float maxinmap = 0.;
-    float sumre;
-    float sumim;
+    cplx sum;
+    const cplx cplx_zero = {0., 0.};
     float wtau;
     float cos_wtau;
     float sin_wtau;
@@ -134,8 +134,8 @@ int bbfk(double **window, int *spoint, int offset,
             dpow = 0;
             for (j=0;j<nstat;j++) {
                 /* mimic realft, imaginary part is negativ in realft */
-                re = window[j][2*w];
-                im = -window[j][2*w+1];
+                re = window[j][w].re;
+                im = -window[j][w].im;
                 dpow += (float) (re*re+im*im);
             }
             denom += dpow;
@@ -200,8 +200,7 @@ int bbfk(double **window, int *spoint, int offset,
                 /********************************************/
                 /* this is the loop over the stations group */
                 /********************************************/
-                sumre = 0.f;
-                sumim = 0.f;
+                sum = cplx_zero;
                 for (j = 0; j < nstat; j++) {
                     wtau =
                             (float) (PI_2_df_w * stat_tshift_table[j][k][l]);
@@ -223,12 +222,12 @@ int bbfk(double **window, int *spoint, int offset,
                     cos_wtau = cos(wtau);
 #endif
                     /* here the real stuff happens */
-                    re = window[j][2 * w];
-                    im = window[j][2 * w + 1];
-                    sumre += (float) (re * cos_wtau - im * sin_wtau);
-                    sumim += (float) (im * cos_wtau + re * sin_wtau);
+                    re = window[j][w].re;
+                    im = window[j][w].im;
+                    sum.re += (float) (re * cos_wtau - im * sin_wtau);
+                    sum.im += (float) (im * cos_wtau + re * sin_wtau);
                 }
-                pow[w][k][l] = (sumre * sumre + sumim * sumim);
+                pow[w][k][l] = (sum.re * sum.re + sum.im * sum.im);
                 if (pow[w][k][l] >= maxpow[w]) {
                     maxpow[w] = pow[w][k][l];
                 }
