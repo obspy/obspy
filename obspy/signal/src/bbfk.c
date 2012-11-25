@@ -60,10 +60,11 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 }
 
 
-int bbfk(cplx **window, int *spoint, int offset,
-         float ***stat_tshift_table, double *abs, double *rel, int *ix,
-         int *iy, float flow, float fhigh, float digfreq, int nsamp,
-         int nstat, int prewhiten, int grdpts_x, int grdpts_y, int nfft) {
+int bbfk(const cplx ** const window,const int * const spoint,const int offset,
+         const float *** const stat_tshift_table, double *abs, double *rel, int *ix,
+         int *iy, const float flow, const float fhigh, const float digfreq,
+         const int nsamp, const int nstat, const int prewhiten,
+         const int grdpts_x, const int grdpts_y, const int nfft) {
     int		j,k,l,w;
     int		wlow,whigh;
     int nf;
@@ -312,9 +313,9 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
      * time samples, nt */
 
     int x, y, i, j, n;
-    cplx bufi;
-    cplx bufj;
-    cplx cplx_zero = {0., 0.};
+    cplx eHR_ne;
+    cplx R_ne;
+    const cplx cplx_zero = {0., 0.};
     double *p;
     double *abspow;
     double *relpow;
@@ -344,27 +345,31 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
     }
 
     if (method == 2) {
-        /* P(f) = 1/(e.H R(f)^-1 e) */
-        dpow = 1.0;  // needed for general way of abspow normalization
+        /* general way of abspow normalization */
+        dpow = 1.0;
     }
-    /* if "bf"
-     *   P(f) = e.H R(f) e */
     for (x = 0; x < grdpts_x; ++x) {
         for (y = 0; y < grdpts_y; ++y) {
+            /* in general, beamforming is done by simply computing the
+             * covariances of the signal at different receivers and than steer
+             * the matrix R with "weights" which are the trial-DOAs e.g.,
+             * Kirlin & Done, 1999:
+             * bf: P(f) = e.H R(f) e
+             * capon: P(f) = 1/(e.H R(f)^-1 e) */
             ABSPOW(x, y) = 0.;
             for (n = 0; n < nf; ++n) {
-                bufi = cplx_zero;
+                eHR_ne = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
-                    bufj = cplx_zero;
+                    R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
-                        bufj.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
-                        bufj.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
+                        R_ne.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
+                        R_ne.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
                     }
-                    bufi.re += STEER(x,y,n,i).re * bufj.re - STEER(x,y,n,i).im * bufj.im;
-                    bufi.im += STEER(x,y,n,i).re * bufj.im + STEER(x,y,n,i).im * bufj.re;
+                    eHR_ne.re += STEER(x,y,n,i).re * R_ne.re - STEER(x,y,n,i).im * R_ne.im;
+                    eHR_ne.im += STEER(x,y,n,i).re * R_ne.im + STEER(x,y,n,i).im * R_ne.re;
                 }
 
-                power = sqrt(bufi.re * bufi.re + bufi.im * bufi.im);
+                power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
                 if (method == 2) {
                     power = 1. / power;
                 }

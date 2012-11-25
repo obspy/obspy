@@ -1165,12 +1165,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 raise Exception('bbfk: C-Extension returned error %d' % errnr)
             abspow, relpow, ix, iy = [c.value for c in (cabs, crel, cix, ciy)]
         elif method in (BF, CAPON):
-            # in general, beamforming is done by simply computing the co
-            # variances of the signal at different receivers and than stear
-            # the matrix R with "weights" which are the trial-DOAs e.g.,
-            # Kirlin & Done, 1999
-
-            # fill up R
+            # computing the covariances of the signal at different receivers
             dpow = 0.
             for i in xrange(nstat):
                 for j in xrange(i, nstat):
