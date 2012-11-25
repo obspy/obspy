@@ -85,8 +85,8 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     float	dpow;
     double	re;
     double	im;
-    float	***pow;
-    float	**nomin;
+    float	*pow;
+    float	*nomin;
     float	*maxpow;
     double	absval;
     float maxinmap = 0.;
@@ -159,41 +159,20 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     /****************************************************/
     /* allocate w-maps, maxpow values and nominator-map */
     /****************************************************/
-    nomin = (float **)calloc((size_t) grdpts_x, sizeof(float *));
+    nomin = (float *)calloc((size_t) (grdpts_x * grdpts_y), sizeof(float));
     if (nomin == NULL) {
         fprintf(stderr,"\nMemory allocation error (nomin)!\n");
         exit(EXIT_FAILURE);
-    }
-    for (k=0;k<grdpts_x;k++) {
-        nomin[k]  = (float *)calloc((size_t) grdpts_y, sizeof(float));
-        if (nomin[k] == NULL) {
-            fprintf(stderr,"\nMemory allocation error (nomin[k])!\n");
-            exit(EXIT_FAILURE);
-        }
     }
     maxpow = (float *)calloc((size_t) (nf+1), sizeof(float));
     if (maxpow == NULL) {
         fprintf(stderr,"\nMemory allocation error (maxpow)!\n");
         exit(EXIT_FAILURE);
     }
-    pow = (float ***)calloc((size_t) (nf+1), sizeof(float **));
+    pow = (float *)calloc((size_t) ((nf+1) * grdpts_x * grdpts_y), sizeof(float));
     if (pow == NULL) {
         fprintf(stderr,"\nMemory allocation error (pow)!\n");
         exit(EXIT_FAILURE);
-    }
-    for (w=0;w<=nf;w++) {
-        pow[w] = (float **)calloc((size_t) (grdpts_x), sizeof(float *));
-        if (pow[w] == NULL) {
-            fprintf(stderr,"\nMemory allocation error (pow[w])!\n");
-            exit(EXIT_FAILURE);
-        }
-        for (k=0;k<grdpts_x;k++) {
-            pow[w][k] = (float *)calloc((size_t) grdpts_y, sizeof(float));
-            if (pow[w][k] == NULL) {
-                fprintf(stderr,"\nMemory allocation error (pow[w][k])!\n");
-                exit(EXIT_FAILURE);
-            }
-        }
     }
 
     /*************************************************************/
@@ -240,9 +219,9 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
                     sum.re += (float) (re * cos_wtau - im * sin_wtau);
                     sum.im += (float) (im * cos_wtau + re * sin_wtau);
                 }
-                pow[w][k][l] = (sum.re * sum.re + sum.im * sum.im);
-                if (pow[w][k][l] >= maxpow[w]) {
-                    maxpow[w] = pow[w][k][l];
+                POW(w, k, l) = (sum.re * sum.re + sum.im * sum.im);
+                if (POW(w, k, l) >= maxpow[w]) {
+                    maxpow[w] = POW(w, k, l);
                 }
             }
         }
@@ -255,26 +234,26 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
         for (l=0;l<grdpts_y;l++) {
             for (w=0;w<=nf;w++) {
                 if (prewhiten==TRUE) {
-                    nomin[k][l] += pow[w][k][l] / maxpow[w];
+                    NOMIN(k, l) += POW(w, k, l) / maxpow[w];
                 }
                 else {
-                    nomin[k][l] += pow[w][k][l] / denom;
+                    NOMIN(k, l) += POW(w, k, l) / denom;
                 }
 #if 0
-                map[k][l] = nomin[k][l];
+                map[k][l] = NOMIN(k, l);
 #endif
             }
 #if 0
             if (prewhiten!=TRUE) {
-                nomin[k][l] /= denom;
+                NOMIN(k, l) /= denom;
             }
 
 #endif
             /*****************************************/
             /* we get the maximum in map and indices */
             /*****************************************/
-            if (nomin[k][l] > maxinmap) {
-                maxinmap = nomin[k][l];
+            if (NOMIN(k, l) > maxinmap) {
+                maxinmap = NOMIN(k, l);
                 *ix = k;
                 *iy = l;
             }
@@ -296,14 +275,6 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     }
 
     /* now we free everything */
-    for (k=0;k<grdpts_x;k++) 
-        free((void *)nomin[k]);
-    for (w=0;w<=nf;w++) {
-        for (k=0;k<grdpts_x;k++) {
-            free((void *)pow[w][k]);
-        }
-        free((void *)pow[w]);
-    }
     free((void *)pow);
     free((void *)maxpow);
     free((void *)nomin);
