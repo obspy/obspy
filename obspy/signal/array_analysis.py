@@ -862,16 +862,24 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     :param grdpts_x: number of grid points in x direction
     :param grdpts_x: number of grid points in y direction
     """
-    nstat = len(geometry)  # last index are center coordinates
-
-    time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
-    for k in xrange(grdpts_x):
-        sx = sll_x + k * sl_s
-        for l in xrange(grdpts_y):
-            sy = sll_y + l * sl_s
-            time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
-
-    return time_shift_tbl
+    # unoptimized version for reference
+    #nstat = len(geometry)  # last index are center coordinates
+    #
+    #time_shift_tbl = np.empty((nstat, grdpts_x, grdpts_y), dtype="float32")
+    #for k in xrange(grdpts_x):
+    #    sx = sll_x + k * sl_s
+    #    for l in xrange(grdpts_y):
+    #        sy = sll_y + l * sl_s
+    #        time_shift_tbl[:,k,l] = sx * geometry[:, 0] + sy * geometry[:,1]
+    #time_shift_tbl[:, k, l] = sx * geometry[:, 0] + sy * geometry[:, 1]
+    #return time_shift_tbl
+    # optimized version
+    mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
+    my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
+    return np.require( \
+        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) + \
+        my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
+        dtype='float32')
 
 
 def get_spoint(stream, stime, etime):
@@ -913,20 +921,6 @@ def get_spoint(stream, stime, etime):
         epoint[i] += negoffset
 
     return spoint, epoint
-
-
-def ndarray2ptr3D(ndarray):
-    """
-    Construct pointer for ctypes from numpy.ndarray
-    """
-    ptr = C.c_void_p
-    dim1, dim2, _dim3 = ndarray.shape
-    voids = []
-    for i in xrange(dim1):
-        row = ndarray[i]
-        p = (ptr * dim2)(*[col.ctypes.data_as(ptr) for col in row])
-        voids.append(C.cast(p, C.c_void_p))
-    return (ptr * dim1)(*voids)
 
 
 def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
@@ -1105,10 +1099,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         print(stream)
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
-    time_shift_table_numpy = get_timeshift(geometry, sll_x, sll_y,
-                                                    sl_s, grdpts_x, grdpts_y)
-    time_shift_table = ndarray2ptr3D(time_shift_table_numpy)
-    # fillup the double trace pointer
+    time_shift_table = get_timeshift(geometry, sll_x, sll_y,
+                                     sl_s, grdpts_x, grdpts_y)
     # offset of arrays
     spoint, _epoint = get_spoint(stream, stime, etime)
     #
@@ -1131,7 +1123,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     if method != BBFK:
         steer = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
         clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-            deltaf, ndarray2ptr3D(time_shift_table_numpy), steer)
+            deltaf, time_shift_table, steer)
     R = np.empty((nf, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nf), dtype='c16')
     newstart = stime
@@ -1153,7 +1145,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
         if method == BBFK:
             errnr = clibsignal.bbfk(ft, spoint,
-                offset, C.byref(time_shift_table), C.byref(cabs),
+                offset, time_shift_table, C.byref(cabs),
                 C.byref(crel), C.byref(cix), C.byref(ciy), frqlow,
                 frqhigh, fs, nsamp, nstat, prewhiten,
                 grdpts_x, grdpts_y, nfft)

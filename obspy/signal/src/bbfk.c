@@ -51,8 +51,8 @@ typedef enum _methodE
 
 
 void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
-        const int nf, const int nlow, const float deltaf, float
-        ***stat_tshift_table, cplx * const steer) {
+        const int nf, const int nlow, const float deltaf,
+        const float * const stat_tshift_table, cplx * const steer) {
     int i;
     int x;
     int y;
@@ -62,7 +62,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
         for (x=0; x < grdpts_x; x++) {
             for (y=0; y < grdpts_y; y++) {
                 for (n=0; n < nf; n++) {
-                    wtau = 2.*M_PI*(float)(nlow+n)*deltaf*stat_tshift_table[i][x][y];
+                    wtau = 2.*M_PI*(float)(nlow+n)*deltaf*STAT_TSHIFT_TABLE(i, x, y);
                     STEER(x,y,n,i).re = cos(wtau);
                     STEER(x,y,n,i).im = sin(wtau);
                 }
@@ -73,7 +73,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 
 
 int bbfk(const cplx * const window, const int * const spoint,const int offset,
-         const float *** const stat_tshift_table, double *abs, double *rel, int *ix,
+         const float * const stat_tshift_table, double *abs, double *rel, int *ix,
          int *iy, const float flow, const float fhigh, const float digfreq,
          const int nsamp, const int nstat, const int prewhiten,
          const int grdpts_x, const int grdpts_y, const int nfft) {
@@ -216,7 +216,7 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
                 sum = cplx_zero;
                 for (j = 0; j < nstat; j++) {
                     wtau =
-                            (float) (PI_2_df_w * stat_tshift_table[j][k][l]);
+                            (float) (PI_2_df_w * STAT_TSHIFT_TABLE(j, k, l));
 #ifdef USE_SINE_TABLE
                     /* calculate index in sine table */
                     while (wtau > 2.f * M_PI) {

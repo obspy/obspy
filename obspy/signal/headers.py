@@ -58,8 +58,8 @@ if not clibevresp:
     raise ImportError(msg)
 
 clibsignal.calcSteer.argtypes = [
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
-    C.c_float, C.POINTER(C.c_void_p),
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
+    np.ctypeslib.ndpointer(dtype='f4', ndim=3, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='c16', ndim=4, flags='C_CONTIGUOUS'),
 ]
 clibsignal.calcSteer.restype = C.c_void_p
@@ -83,7 +83,7 @@ clibsignal.bbfk.argtypes = [
     np.ctypeslib.ndpointer(dtype='c16', ndim=2, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='i4', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
-    C.c_void_p,  # time shift table
+    np.ctypeslib.ndpointer(dtype='f4', ndim=3, flags='C_CONTIGUOUS'),
     C.POINTER(C.c_double),
     C.POINTER(C.c_double),
     C.POINTER(C.c_int),
