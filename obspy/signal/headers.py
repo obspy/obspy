@@ -80,8 +80,8 @@ clibsignal.generalizedBeamformer.restype = C.c_int
 
 #XXX moritz: add a note where params are pointers
 clibsignal.bbfk.argtypes = [
-    C.POINTER(C.c_void_p),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='c16', ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='i4', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.c_void_p,  # time shift table
     C.POINTER(C.c_double),

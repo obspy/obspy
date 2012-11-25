@@ -22,6 +22,11 @@
 #define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
 #define ABSPOW(I, J) abspow[(I)*grdpts_y + (J)]
+#define POW(I, J, K) pow[(I) * grdpts_x * grdpts_y + (J) * grdpts_y + K]
+#define STAT_TSHIFT_TABLE(I, J, K) stat_tshift_table[(I) * grdpts_x * grdpts_y + (J) * grdpts_y + K]
+#define WINDOW(I, J) window[(I) * (nf + 1) + J]
+#define NOMIN(I, J) nomin[(I) * grdpts_y + J]
+
 
 #define USE_SINE_TABLE
 
@@ -67,7 +72,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 }
 
 
-int bbfk(const cplx ** const window,const int * const spoint,const int offset,
+int bbfk(const cplx * const window, const int * const spoint,const int offset,
          const float *** const stat_tshift_table, double *abs, double *rel, int *ix,
          int *iy, const float flow, const float fhigh, const float digfreq,
          const int nsamp, const int nstat, const int prewhiten,
@@ -142,8 +147,8 @@ int bbfk(const cplx ** const window,const int * const spoint,const int offset,
             dpow = 0;
             for (j=0;j<nstat;j++) {
                 /* mimic realft, imaginary part is negativ in realft */
-                re = window[j][w].re;
-                im = -window[j][w].im;
+                re = WINDOW(j, w).re;
+                im = -WINDOW(j, w).im;
                 dpow += (float) (re*re+im*im);
             }
             denom += dpow;
@@ -230,8 +235,8 @@ int bbfk(const cplx ** const window,const int * const spoint,const int offset,
                     cos_wtau = cos(wtau);
 #endif
                     /* here the real stuff happens */
-                    re = window[j][w].re;
-                    im = window[j][w].im;
+                    re = WINDOW(j, w).re;
+                    im = WINDOW(j, w).im;
                     sum.re += (float) (re * cos_wtau - im * sin_wtau);
                     sum.im += (float) (im * cos_wtau + re * sin_wtau);
                 }

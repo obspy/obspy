@@ -1152,11 +1152,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             break
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
         if method == BBFK:
-            w = (C.c_void_p * nstat)()
-            for i in xrange(nstat):
-                w[i] = ft[i, :].view('f8').ctypes.data_as(C.c_void_p)
-            # allocate output variables
-            errnr = clibsignal.bbfk(C.cast(w, C.POINTER(C.c_void_p)), spoint,
+            errnr = clibsignal.bbfk(ft, spoint,
                 offset, C.byref(time_shift_table), C.byref(cabs),
                 C.byref(crel), C.byref(cix), C.byref(ciy), frqlow,
                 frqhigh, fs, nsamp, nstat, prewhiten,
