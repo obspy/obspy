@@ -361,19 +361,15 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
                 if (prewhiten == 0) {
                     ABSPOW(x,y) += power;
                 }
-                if (prewhiten == 1) {
+                else {
+                    if (power > white[n]) {
+                        white[n] = power;
+                    }
                     P(x,y,n) = power;
                 }
             }
             if (prewhiten == 0) {
                 RELPOW(x,y) = ABSPOW(x,y)/dpow;
-            }
-            if (prewhiten == 1) {
-                for (n = 0; n < nf; ++n) {
-                    if (P(x,y,n) > white[n]) {
-                        white[n] = P(x,y,n);
-                    }
-                }
             }
         }
     }
