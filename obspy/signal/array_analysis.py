@@ -843,9 +843,18 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
+def nop(pow_map, i):
+    pass
+
+
+def dump(pow_map, i):
+    np.savez('pow_map_%d.npz' % i, pow_map)
+
+
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-    verbose=False, coordsys='lonlat', timestamp='mlabday', method=0):
+    verbose=False, coordsys='lonlat', timestamp='mlabday', method=0,
+    store=nop):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -891,6 +900,11 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         date plotting (see e.g. matplotlibs num2date)
     :type method: int
     :param method: the method to use 0 == bbfk, 1 == bf, 2 == capon
+    :type store: int
+    :param store: a function which is called on each iteration with the relative
+        power map and the time offset as argument. Usefull for storing or
+        plotting the map for each iteration. For this purpose the dump and
+        nop function of this module can be used.
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
@@ -951,6 +965,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     crel = C.c_double()
     cix = C.c_int()
     ciy = C.c_int()
+    pow_map = np.empty((grdpts_x, grdpts_y), dtype=('f4', 'f8', 'f8')[method])
     while eotr:
         try:
             for i, tr in enumerate(stream):
@@ -961,15 +976,15 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         except IndexError:
             break
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
+        pow_map.fill(0.)
         if method == BBFK:
-            errnr = clibsignal.bbfk(ft, spoint,
+            errnr = clibsignal.bbfk(pow_map, ft, spoint,
                 offset, time_shift_table, C.byref(cabs),
                 C.byref(crel), C.byref(cix), C.byref(ciy), frqlow,
                 frqhigh, fs, nsamp, nstat, prewhiten,
                 grdpts_x, grdpts_y, nfft)
             if errnr != 0:
                 raise Exception('bbfk: C-Extension returned error %d' % errnr)
-            abspow, relpow, ix, iy = [c.value for c in (cabs, crel, cix, ciy)]
         elif method in (BF, CAPON):
             # computing the covariances of the signal at different receivers
             dpow = 0.
@@ -988,11 +1003,14 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 for n in xrange(nf):
                     R[n, :, :] = np.linalg.pinv(R[n, :, :])
 
-            clibsignal.generalizedBeamformer(steer, R, frqlow, frqhigh, fs,
+            clibsignal.generalizedBeamformer(pow_map, steer, R, frqlow, frqhigh, fs,
                 nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
                 C.byref(cix), C.byref(ciy), C.byref(cabs), C.byref(crel), method)
-            abspow, relpow, ix, iy = [c.value for c in (cabs, crel, cix, ciy)]
-
+        # TODO, do also relpow and abspow calculation here. This can then be
+        # removed from the C source file, making the C-code shorter
+        relpow, abspow = crel.value, cabs.value
+        ix, iy = np.unravel_index(pow_map.argmax(), pow_map.shape)
+        store(pow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s

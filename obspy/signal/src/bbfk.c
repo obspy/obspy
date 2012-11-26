@@ -72,7 +72,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
 }
 
 
-int bbfk(const cplx * const window, const int * const spoint,const int offset,
+int bbfk(float * nomin, const cplx * const window, const int * const spoint,const int offset,
          const float * const stat_tshift_table, double *abs, double *rel, int *ix,
          int *iy, const float flow, const float fhigh, const float digfreq,
          const int nsamp, const int nstat, const int prewhiten,
@@ -86,7 +86,6 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     double	re;
     double	im;
     float	*pow;
-    float	*nomin;
     float	*maxpow;
     double	absval;
     float maxinmap = 0.;
@@ -159,11 +158,6 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     /****************************************************/
     /* allocate w-maps, maxpow values and nominator-map */
     /****************************************************/
-    nomin = (float *)calloc((size_t) (grdpts_x * grdpts_y), sizeof(float));
-    if (nomin == NULL) {
-        fprintf(stderr,"\nMemory allocation error (nomin)!\n");
-        exit(EXIT_FAILURE);
-    }
     maxpow = (float *)calloc((size_t) (nf+1), sizeof(float));
     if (maxpow == NULL) {
         fprintf(stderr,"\nMemory allocation error (maxpow)!\n");
@@ -277,7 +271,6 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
     /* now we free everything */
     free((void *)pow);
     free((void *)maxpow);
-    free((void *)nomin);
 #ifdef USE_SINE_TABLE
     free((void *)sine_table);
 #endif
@@ -285,7 +278,7 @@ int bbfk(const cplx * const window, const int * const spoint,const int offset,
 }
 
 
-int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
+int generalizedBeamformer(double *relpow, const cplx * const steer, const cplx * const Rptr,
         const double flow, const double fhigh, const double digfreq,
         const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
         const int grdpts_y, const int nfft, const int nf, double dpow,
@@ -301,7 +294,6 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
     const cplx cplx_zero = {0., 0.};
     double *p;
     double *abspow;
-    double *relpow;
     double *white;
     double power;
 
@@ -313,11 +305,6 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
     }
     abspow = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
     if (abspow == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (taper)!\n");
-        exit(EXIT_FAILURE);
-    }
-    relpow = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
-    if (relpow == NULL ) {
         fprintf(stderr, "\nMemory allocation error (taper)!\n");
         exit(EXIT_FAILURE);
     }
@@ -407,7 +394,6 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
     }
 
     free((void *) p);
-    free((void *) relpow);
     free((void *) abspow);
     free((void *) white);
 
