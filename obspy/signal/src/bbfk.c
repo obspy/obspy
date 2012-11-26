@@ -64,7 +64,7 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
                 for (n=0; n < nf; n++) {
                     wtau = 2.*M_PI*(float)(nlow+n)*deltaf*STAT_TSHIFT_TABLE(i, x, y);
                     STEER(x,y,n,i).re = cos(wtau);
-                    STEER(x,y,n,i).im = sin(wtau);
+                    STEER(x,y,n,i).im = -sin(wtau);
                 }
             }
         }
@@ -345,19 +345,13 @@ int generalizedBeamformer(const cplx * const steer, const cplx * const Rptr,
                 for (i = 0; i < nstat; ++i) {
                     R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
-#if 1
-                        R_ne.re += RPTR(n,i,j).re * STEER(x,y,n,j).re - RPTR(n,i,j).im * (-STEER(x,y,n,j).im);
-                        R_ne.im += RPTR(n,i,j).re * (-STEER(x,y,n,j).im) + RPTR(n,i,j).im * STEER(x,y,n,j).re;
-#else
                         register const cplx s = STEER(x,y,n,j);
                         register const cplx r = RPTR(n,i,j);
-                        R_ne.re += r.re * s.re - r.im * (-s.im);
-                        R_ne.im += r.re * (-s.im) + r.im * s.re;
-#endif
-
+                        R_ne.re += r.re * s.re - r.im * s.im;
+                        R_ne.im += r.re * s.im + r.im * s.re;
                     }
-                    eHR_ne.re += STEER(x,y,n,i).re * R_ne.re - STEER(x,y,n,i).im * R_ne.im;
-                    eHR_ne.im += STEER(x,y,n,i).re * R_ne.im + STEER(x,y,n,i).im * R_ne.re;
+                    eHR_ne.re += STEER(x,y,n,i).re * R_ne.re + STEER(x,y,n,i).im * R_ne.im; /* eH, conjugate */
+                    eHR_ne.im += STEER(x,y,n,i).re * R_ne.im - STEER(x,y,n,i).im * R_ne.re; /* eH, conjugate */
                 }
 
                 power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
