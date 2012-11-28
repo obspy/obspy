@@ -44,7 +44,7 @@ dev:
    * fixing SH_ASC and Q reading/writing of empty traces or traces containing
      only one or two data points
  - obspy.signal:
-   * module psd has been refactored to spectral_estimation 
+   * module psd has been refactored to spectral_estimation
    * adding function for cross correlation pick correction
    * removing pitsa-compatibility in response function calculation
      (no complex conjugate)
@@ -59,7 +59,10 @@ dev:
    * fixed a bug with Dataless to XSEED conversion using split_stations=True
    * fixed a bug affecting getPAZ() and getCoordinates() when selecting
      specific channels from complex dataless files
-     (see: https://github.com/obspy/obspy/issues/412) 
+     (see: https://github.com/obspy/obspy/issues/412)
+   * added getInventory() method to the Parser object. Returns a dictionary
+     about the contents of the Parser object. This is also integrated in the
+     string representation and makes it more informative.
  - obspy.mseed:
    * adding experimental details option, which extracts timing quality and
      info on the calibration
@@ -139,7 +142,7 @@ dev:
      the time of all records without interfering with the rest of the file.
  - obspy.neries:
    * new format 'catalog' for getEvents, getEventDetail and getLatestEvents
-     methods - deprecating old format defaults 
+     methods - deprecating old format defaults
  - obspy.sac:
    * bugfix for SAC files containing null terminated strings
  - obspy.seg2:
@@ -151,7 +154,7 @@ dev:
    * adding coincidence triggering routine
  - obspy.taup:
    * deprecated kilometer2degrees and locations2degrees - one can find those
-     methods on obspy.core.util now 
+     methods on obspy.core.util now
  - obspy.xseed:
    * fixed a bug with exactly one pole or one zero in response information
 
