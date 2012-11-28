@@ -86,9 +86,46 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)
         sp = str(p).split(os.linesep)
-        self.assertEquals(sp, ["BW.MANZ..EHZ | 2005-12-06T00:00:00.000000Z - ",
-                               "BW.MANZ..EHN | 2005-12-06T00:00:00.000000Z - ",
-                               "BW.MANZ..EHE | 2005-12-06T00:00:00.000000Z -"])
+        sp = [_i.strip() for _i in sp]
+        self.assertEquals(sp, [
+            "Networks:",
+            "BW (BayernNetz)",
+            "Stations:",
+            "BW.MANZ (Manzenberg,Bavaria, BW-Net)",
+            "Channels:",
+            ("BW.MANZ..EHE | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -"),
+            ("BW.MANZ..EHN | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -"),
+            ("BW.MANZ..EHZ | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -")])
+
+    def test_get_inventory(self):
+        """
+        Tests the parser's getInventory() method.
+        """
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        p = Parser(filename)
+        self.assertEqual(p.getInventory(),
+            {'networks': [{'network_code': 'BW',
+                'network_name': 'BayernNetz'}],
+            'stations': [{'station_name': 'Furstenfeldbruck, Bavaria, BW-Net',
+                'station_id': 'BW.FURT'}],
+            'channels': [
+                {'channel_id': 'BW.FURT..EHZ',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '', 'sampling_rate': 200.0},
+                {'channel_id': 'BW.FURT..EHN',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '',
+                    'sampling_rate': 200.0},
+                {'channel_id': 'BW.FURT..EHE',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '',
+                    'sampling_rate': 200.0}]})
 
     def test_nonExistingFilename(self):
         """
