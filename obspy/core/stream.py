@@ -2217,15 +2217,15 @@ class Stream(object):
             raise ValueError('List of angles has wrong length.')
         return angle
 
-    def rotate(self, method='RT', ba=None, inc=None, components=None):
+    def rotate(self, method='RT', angle=None, components=None):
         """
         Method for rotating stream.
         
         This method uses the functions ``signal.rotate_NE_RT``,
         ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
         The stream is rotated by the angles given as back-azimuths and
-        inclinations in the parameters ``ba`` and ``inc`` or by the entries in
-        ``stats.ba`` resp. ``stats.inc`` if ``ba`` resp. ``inc`` are not
+        inclinations in the parameters ``angle`` or by the entries in
+        ``stats.ba`` resp. ``stats.inc`` if ``angle`` is not
         specified. ``stats.channel`` is adapted so that it reflects the new
         component.
         
@@ -2234,15 +2234,17 @@ class Stream(object):
             ``'LQT'`` will rotate the ZNE components of a stream to LQT.
             ``'ZN'`` will rotate RT components back to ZN.
             ``'ZNE'`` will rotate LQT components back to ZNE.
-        :type ba: float or list, optional
-        :param ba: list of back-azimuths or float (all rotations with the same
-            angle) or if not specified the angles will be taken from
-            ``stats.ba`` of the first used component.
-        :type inc: float or list, optional
-        :param inc: List of inclinations or float (all rotations with the same
-            angle) or if not specified the angles will be taken from
-            ``stats.ba`` of the first used component.
-            This parameter is ignored for ``method='RT'`` and ``method='NE'``.
+        :type angle: float, list or tuple, optional
+        :param angle: The back-azimuths in the case of two-component rotation
+            or back-azimuths and inclinations in the case of three-component
+            rotation.
+            For two-component rotation list of back-azimuths or float (all
+            rotations with the same angle).
+            For three component rotation tuple of two lists or tuple of two
+            floats. The first entry specifies back-azimuths, the second the
+            inclinations.
+            If angle is not specified the angles will be taken from ``stats.ba``
+            and ``stats.inc`` of the first used component.
         :type components: tuple, optional
         :param components: The two or three components to select for rotation.
             Wildcards can be used eg. ``('Z', '[N1]', '[E2]')``.
@@ -2279,7 +2281,7 @@ class Stream(object):
                     or not (N[i].stats.npts == E[i].stats.npts)):
                     raise ValueError('Associated traces must have same '
                                      'starttime, sampling_rate and npts.')
-            ba = N.__get_rot_angles(ba, 'ba')
+            ba = N.__get_rot_angles(angle, 'ba')
             if method == 'NE':
                 ba = [360 - value for value in ba]
             for i in range(len(N)):
@@ -2301,8 +2303,10 @@ class Stream(object):
                     (Z[i].stats.npts == N[i].stats.npts == E[i].stats.npts)):
                     raise ValueError('Associated traces must have same '
                                      'starttime, sampling_rate and npts.')
-            ba = Z.__get_rot_angles(ba, 'ba')
-            inc = Z.__get_rot_angles(inc, 'inc')
+            if angle is None:
+                angle = (None, None)
+            ba = Z.__get_rot_angles(angle[0], 'ba')
+            inc = Z.__get_rot_angles(angle[1], 'inc')
             for i in range(len(N)):
                 Z[i].data, N[i].data, E[i].data = rotate(
                                 Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
