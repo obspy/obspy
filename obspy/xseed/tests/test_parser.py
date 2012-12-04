@@ -464,6 +464,16 @@ class ParserTestCase(unittest.TestCase):
         paz = sp2.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
+    def test_selectDoesNotChangeTheParserFormat(self):
+        """
+        Test that using the _select() method of the Parser object does
+        not change the _format attribute.
+        """
+        p = Parser(os.path.join(self.path, "dataless.seed.BW_FURT.xml"))
+        self.assertEqual(p._format, "XSEED")
+        p._select(p.getInventory()["channels"][0]["channel_id"])
+        self.assertEqual(p._format, "XSEED")
+
     def test_createRESPFromXSEED(self):
         """
         Tests RESP file creation from XML-SEED.

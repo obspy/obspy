@@ -383,9 +383,13 @@ class Parser(object):
         """
         Selects all blockettes related to given SEED id and datetime.
         """
-        # parse blockettes if not SEED
+        old_format = self._format
+        # parse blockettes if not SEED. Needed foe XSEED to be intialized.
+        # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
             self.__init__(self.getSEED())
+        if old_format == "XSEED":
+            self._format = "XSEED"
         # split id
         if '.' in seed_id:
             net, sta, loc, cha = seed_id.split('.')
