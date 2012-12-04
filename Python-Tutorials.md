@@ -1,5 +1,5 @@
 - http://software-carpentry.org/4_0/python/
-- http://scipy-lectures.github.com/
+- Python Scientific Lecture Notes: http://scipy-lectures.github.com/
 - EuroScipy 2012:
   - Python: http://www.euroscipy.org/talk/6563
   - Scipy: http://www.euroscipy.org/talk/6578
