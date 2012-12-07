@@ -452,7 +452,7 @@ class ParserTestCase(unittest.TestCase):
         # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
-                  'longitude': 12.795714}
+            'longitude': 12.795714, 'local_depth': 0}
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -587,7 +587,7 @@ class ParserTestCase(unittest.TestCase):
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
-                    'longitude': 11.2752}
+            'longitude': 11.2752, 'local_depth': 0.0}
         filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
         filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         t = UTCDateTime("2010-07-01")

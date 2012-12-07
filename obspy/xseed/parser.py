@@ -536,6 +536,7 @@ class Parser(object):
                 data['latitude'] = blockette.latitude
                 data['longitude'] = blockette.longitude
                 data['elevation'] = blockette.elevation
+                data['local_depth'] = blockette.local_depth
                 break
         return data
 
