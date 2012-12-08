@@ -9,7 +9,8 @@ Module for handling ObsPy RtTrace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy import Trace, Stats
+from obspy import Trace
+from obspy.core import Stats
 from obspy.realtime import signal
 from obspy.realtime.rtmemory import RtMemory
 import copy

@@ -10,7 +10,8 @@ SH bindings to ObsPy core module.
 """
 
 from StringIO import StringIO
-from obspy import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.util import loadtxt
 import numpy as np
 import os

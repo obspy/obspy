@@ -32,7 +32,8 @@ Simple ASCII time series formats
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from StringIO import StringIO
-from obspy import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 import numpy as np
 

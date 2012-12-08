@@ -9,7 +9,8 @@ SEISAN bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 import numpy as np
 
 
