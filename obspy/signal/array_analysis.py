@@ -843,12 +843,13 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
-def nop(pow_map, i):
+def nop(pow_map, apow_map, i):
     pass
 
 
-def dump(pow_map, i):
+def dump(pow_map, apow_map, i):
     np.savez('pow_map_%d.npz' % i, pow_map)
+    np.savez('apow_map_%d.npz' % i, apow_map)
 
 
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
@@ -996,7 +997,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             method)
         ix, iy = np.unravel_index(pow_map.argmax(), pow_map.shape)
         relpow, abspow = pow_map[ix, iy], apow_map[ix, iy]
-        store(pow_map, offset)
+        store(pow_map, apow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s
