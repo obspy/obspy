@@ -9,7 +9,7 @@ Various additional utilities for ObsPy xseed.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 import sys
 
 

@@ -8,7 +8,8 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core import Stream, Trace, UTCDateTime, AttribDict
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
@@ -145,7 +146,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/00001034.sgy_first_trace")
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
@@ -473,7 +474,7 @@ def readSU(filename, headonly=False, byteorder=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/1.su_first_trace")
     >>> st #doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>

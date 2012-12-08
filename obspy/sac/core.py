@@ -9,7 +9,7 @@ SAC bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import Trace, Stream
+from obspy import Trace, Stream
 from obspy.sac.sacio import SacIO, _isText
 import os
 import struct
@@ -112,7 +112,7 @@ def readSACXY(filename, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read # doctest: +SKIP
+    >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/testxy.sac") # doctest: +SKIP
     """
     t = SacIO(debug_headers=debug_headers)
@@ -146,7 +146,7 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write("testxy.sac", format="SACXY")  #doctest: +SKIP
     """
@@ -186,7 +186,7 @@ def readSAC(filename, headonly=False, debug_headers=False,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read # doctest: +SKIP
+    >>> from obspy import read # doctest: +SKIP
     >>> st = read("/path/to/test.sac") # doctest: +SKIP
     """
     # read SAC file
@@ -221,7 +221,7 @@ def writeSAC(stream, filename, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write("test.sac", format="SAC")  #doctest: +SKIP
     """

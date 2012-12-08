@@ -2,7 +2,7 @@
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Float, Integer, VariableString
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 
 
 class Blockette010(Blockette):

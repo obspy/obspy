@@ -10,7 +10,8 @@ SH bindings to ObsPy core module.
 """
 
 from StringIO import StringIO
-from obspy.core import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.util import loadtxt
 import numpy as np
 import os
@@ -111,7 +112,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
     >>> st  # doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
@@ -349,7 +350,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/QFILE-TEST.QHD")
     >>> st    #doctest: +ELLIPSIS
     <obspy.core.stream.Stream object at 0x...>
@@ -628,7 +629,7 @@ def fromUTCDateTime(dt):
 
     .. rubric:: Example
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> dt = UTCDateTime(2008, 1, 2, 3, 4, 5, 123456)
     >>> fromUTCDateTime(dt)
     ' 2-JAN-2008_03:04:05.123'

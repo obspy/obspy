@@ -10,7 +10,7 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream
 from obspy.core.event import readEvents
 from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
@@ -520,7 +520,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neries import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2011-01-01T00:00:00")
         >>> result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt, dt+10,

@@ -13,6 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
+import obspy.imaging
 import math
 import numpy as np
 import warnings
@@ -387,7 +388,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
         >>> st = tr * 5
         >>> len(st)
@@ -395,7 +396,7 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         st = Stream()
         for _i in range(num):
             st += self.copy()
@@ -412,7 +413,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
         >>> print tr  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -429,7 +430,7 @@ class Trace(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         total_length = np.size(self.data)
         rest_length = total_length % num
         if rest_length:
@@ -456,7 +457,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> tr = read()[0]
         >>> print tr  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -472,7 +473,7 @@ class Trace(object):
             raise TypeError("Integer expected")
         elif num <= 0:
             raise ValueError("Positive Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         st = Stream()
         total_length = np.size(self.data)
         if num >= total_length:
@@ -734,25 +735,20 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.plot()
         """
-        try:
-            from obspy.imaging.waveform import WaveformPlotting
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "plot ObsPy Trace objects."
-            raise ImportError(msg)
-        waveform = WaveformPlotting(stream=self, **kwargs)
+        waveform = obspy.imaging.waveform.WaveformPlotting(stream=self,
+                                                           **kwargs)
         return waveform.plotWaveform()
 
     def spectrogram(self, **kwargs):
@@ -764,30 +760,24 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
         >>> tr.spectrogram() # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.spectrogram(sphinx=True)
         """
-        try:
-            from obspy.imaging.spectrogram import spectrogram as _spectogram
-        except ImportError:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "use the spectrogram plotting routine."
-            raise ImportError(msg)
         # set some default values
         if 'samp_rate' not in kwargs:
             kwargs['samp_rate'] = self.stats.sampling_rate
         if 'title' not in kwargs:
             kwargs['title'] = str(self)
-        return _spectogram(data=self.data, **kwargs)
+        return obspy.imaging.spectogram.spectrogram(data=self.data, **kwargs)
 
     def write(self, filename, format, **kwargs):
         """
@@ -796,10 +786,9 @@ class Trace(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
-            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``, ``"PICKLE"``. See
+        :param format: The format to write must be specified. One of
+            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
+            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
             :meth:`obspy.core.stream.Stream.write` method for all possible
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
@@ -812,7 +801,7 @@ class Trace(object):
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
-        from obspy.core import Stream
+        from obspy import Stream
         Stream([self]).write(filename, format, **kwargs)
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True,
@@ -1109,7 +1098,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
         >>> tr = st[0]
@@ -1127,7 +1116,7 @@ class Trace(object):
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             from obspy.signal import cornFreq2Paz
             st = read()
             tr = st[0]
@@ -1210,7 +1199,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)
@@ -1218,7 +1207,7 @@ class Trace(object):
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.filter("highpass", freq=1.0)
@@ -1284,7 +1273,7 @@ class Trace(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)
@@ -1294,7 +1283,7 @@ class Trace(object):
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             tr = st[0]
             tr.filter("highpass", freq=1.0)

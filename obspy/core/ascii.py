@@ -32,7 +32,8 @@ Simple ASCII time series formats
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from StringIO import StringIO
-from obspy.core import Stream, Trace, UTCDateTime, Stats
+from obspy import Stream, Trace, UTCDateTime
+from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
 import numpy as np
 
@@ -108,7 +109,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
     fh = open(filename, 'rt')
@@ -174,7 +175,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
     fh = open(filename, 'rt')
@@ -238,7 +239,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write("slist.ascii", format="SLIST")  #doctest: +SKIP
 
@@ -341,7 +342,7 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write("tspair.ascii", format="TSPAIR")  #doctest: +SKIP
 

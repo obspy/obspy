@@ -3,7 +3,7 @@
 """
 The SacIO test suite.
 """
-from obspy.core import Trace, read
+from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO, SacError, attach_paz, attach_resp
 import StringIO

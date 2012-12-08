@@ -25,7 +25,7 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 """
 
 from distutils import sysconfig
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import c_file_p
 import ctypes as C
 import doctest

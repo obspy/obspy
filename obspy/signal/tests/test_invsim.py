@@ -4,7 +4,7 @@
 The InvSim test suite.
 """
 
-from obspy.core import Trace, UTCDateTime, read
+from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp

@@ -9,7 +9,7 @@ Additional utilities for obspy.db.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 
 
 def parseMappingData(lines):

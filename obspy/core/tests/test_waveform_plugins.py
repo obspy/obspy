@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import Trace, read
+from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 from pkg_resources import load_entry_point
@@ -16,7 +16,7 @@ import warnings
 
 class WaveformPluginsTestCase(unittest.TestCase):
     """
-    Test suite for all installed waveform plug-ins.
+    Test suite for all waveform plug-ins.
     """
 
     def test_raiseOnEmptyFile(self):
@@ -37,7 +37,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
 
     def test_readAndWrite(self):
         """
-        Tests read and write methods for all installed waveform plug-ins.
+        Tests read and write methods for all waveform plug-ins.
         """
         data = np.arange(0, 2000)
         start = UTCDateTime(2009, 1, 13, 12, 1, 2, 999000)

@@ -501,7 +501,7 @@ def run(interactive=True):
                       help="quiet mode")
     # filter options
     filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
-        "will test all installed ObsPy packages which don't require a " + \
+        "will test all ObsPy modules which don't require a " + \
         "active network connection.")
     filter.add_option("--all", default=False,
                       action="store_true", dest="all",

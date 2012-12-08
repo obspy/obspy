@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util.decorator import skipIf
 import copy
 import datetime

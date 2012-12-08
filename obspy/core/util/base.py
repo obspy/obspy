@@ -141,7 +141,7 @@ def getExampleFile(filename):
 
     The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
-    installed ObsPy modules and checks weather the file is in any of
+    installed ObsPy modules and checks whether the file is in any of
     the "tests/data" subdirectories.
 
     :param filename: A test file name to which the path should be returned.
@@ -158,13 +158,10 @@ def getExampleFile(filename):
     IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        try:
-            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
-            file = os.path.join(mod.__path__[0], "data", filename)
-            if os.path.isfile(file):
-                return file
-        except ImportError:
-            pass
+        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        file = os.path.join(mod.__path__[0], "data", filename)
+        if os.path.isfile(file):
+            return file
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
     raise IOError(msg)
@@ -341,8 +338,8 @@ def _getFunctionFromEntryPoint(group, type):
         # check if any entry points are available at all
         if not ep_dict:
             msg = "Your current ObsPy installation does not support " + \
-                  "any %s functions. Please make sure obspy.signal " + \
-                  "and SciPy are installed properly."
+                  "any %s functions. Please make sure " + \
+                  "SciPy is installed properly."
             raise ImportError(msg % (group.capitalize()))
         # ok we have entry points, but specified function is not supported
         msg = "%s type \"%s\" is not supported. Supported types: %s"
@@ -387,16 +384,10 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     if not format:
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
-            try:
-                # search isFormat for given entry point
-                isFormat = load_entry_point(format_ep.dist.key,
-                    'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
-                    'isFormat')
-            except ImportError, e:
-                # verbose error handling/parsing
-                msg = "Cannot load module %s:\n%s" % (format_ep.dist.key, e)
-                warnings.warn(msg, category=ImportWarning)
-                continue
+            # search isFormat for given entry point
+            isFormat = load_entry_point(format_ep.dist.key,
+                'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
+                'isFormat')
             # check format
             if isFormat(filename):
                 break
