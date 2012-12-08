@@ -386,8 +386,6 @@ int generalizedBeamformer(double *relpow, const cplx * const steer, const cplx *
                 *relmax = RELPOW(x,y);
                 *ix = x;
                 *iy = y;
-            }
-            if (ABSPOW(x,y) > *absmax) {
                 *absmax = ABSPOW(x,y);
             }
         }
