@@ -136,9 +136,6 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 for (n = 0; n < nf; ++n) {
                     RELPOW(x,y) += P(x,y,n)/(white[n]*nf*nstat);
                 }
-                if (method == CAPON) {
-                    ABSPOW(x,y) = 0.;
-                }
             }
         }
     }
