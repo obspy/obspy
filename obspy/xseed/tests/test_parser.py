@@ -85,7 +85,7 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)
-        sp = str(p).split(os.linesep)
+        sp = str(p).splitlines()
         sp = [_i.strip() for _i in sp]
         self.assertEquals(sp, [
             "Networks:",
