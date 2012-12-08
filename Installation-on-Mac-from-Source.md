@@ -28,14 +28,15 @@ Furthermore pkg-config and a Fortran compiler are needed and a very easy way to 
 
   *   http://mxcl.github.com/homebrew/
 
-Install the needed packages using brew:
+You can install further requirements using brew (other ways of installing are of course fine as well):
 ```
 brew install pkg-config
 brew install gfortran
 ```
-obspy.taup is linked against libgfortran.a and for some reason it is not found. You will have to search for libgfortran.a on your system and add the corresponding path to the LIBRARY_PATH variable to be able to link anything against the fortran library using another compiler. I am not sure how this can be avoided (See ticket #262 for more information). Change the path according to your system (it will be something similiar if you installed gfortran using brew):
-```
-export LIBRARY_PATH=$LIBRARY_PATH:/usr/local/Cellar/gfortran/4.2.4-5666.3/lib/gcc/i686-apple-darwin11/4.2.1/x86_64/
+obspy.taup is linked against libgfortran.a and for some reason it is not found on most systems. You will have to search for libgfortran.a on your system and add the corresponding path to the LIBRARY_PATH variable to be able to link anything against the fortran library using another compiler. I am not sure how this can be avoided (See ticket #262 for more information). Change the path **according to your system** - if you use homebrew, you can use something like this (make sure the version number is correct):
+
+```bash
+export LIBRARY_PATH=/usr/local/Cellar/gfortran/4.7.2/gfortran/lib/
 ```
 #### Creating a virtual environment
 
