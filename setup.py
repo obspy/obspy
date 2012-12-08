@@ -626,7 +626,12 @@ def setupPackage(gfortran=True, ccompiler=True):
         ext_modules += [setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
                         setupLibEvalResp(), setupLibSEGY()]
     if gfortran:
-        ext_modules.append(setupLibTauP())
+        if IS_WINDOWS or ccompiler:
+            ext_modules.append(setupLibTauP())
+    kwargs = {}
+    if ext_modules:
+        kwargs['ext_package'] = 'obspy.lib'
+        kwargs['ext_modules'] = ext_modules
     # setup package
     setup(
         name='obspy',
@@ -657,9 +662,8 @@ def setupPackage(gfortran=True, ccompiler=True):
         download_url="https://github.com/obspy/obspy/zipball/master",
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        ext_package='obspy.lib',
-        ext_modules=ext_modules,
         use_2to3=True,
+        **kwargs
     )
     # cleanup after using lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
