@@ -966,6 +966,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     cix = C.c_int()
     ciy = C.c_int()
     pow_map = np.empty((grdpts_x, grdpts_y), dtype=('f4', 'f8', 'f8')[method])
+    apow_map = np.empty((grdpts_x, grdpts_y), dtype=('f4', 'f8', 'f8')[method])
     while eotr:
         try:
             for i, tr in enumerate(stream):
@@ -977,6 +978,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             break
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
         pow_map.fill(0.)
+        apow_map.fill(0.)
         if method == BBFK:
             errnr = clibsignal.bbfk(pow_map, ft, spoint,
                 offset, time_shift_table, C.byref(cabs),
@@ -1003,13 +1005,17 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                 for n in xrange(nf):
                     R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
-            clibsignal.generalizedBeamformer(pow_map, steer, R, frqlow, frqhigh, fs,
+            clibsignal.generalizedBeamformer(pow_map, apow_map, steer, R,
                 nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
-                C.byref(cix), C.byref(ciy), C.byref(cabs), C.byref(crel), method)
+                method)
         # TODO, do also relpow and abspow calculation here. This can then be
         # removed from the C source file, making the C-code shorter
-        relpow, abspow = crel.value, cabs.value
+        #relpow, abspow = crel.value, cabs.value
         ix, iy = np.unravel_index(pow_map.argmax(), pow_map.shape)
+        if method == BBFK:
+            relpow, abspow = crel.value, cabs.value
+        else:
+            relpow, abspow = pow_map[ix, iy], apow_map[ix, iy]
         store(pow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s

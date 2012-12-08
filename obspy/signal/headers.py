@@ -66,15 +66,11 @@ clibsignal.calcSteer.restype = C.c_void_p
 
 clibsignal.generalizedBeamformer.argtypes = [
     np.ctypeslib.ndpointer(dtype='f8', ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=2, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='c16', ndim=4, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='c16', ndim=3, flags='C_CONTIGUOUS'),
-    C.c_double, C.c_double, C.c_double,
     C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
     C.c_double,
-    C.POINTER(C.c_int),
-    C.POINTER(C.c_int),
-    C.POINTER(C.c_double),
-    C.POINTER(C.c_double),
     C.c_int,
 ]
 clibsignal.generalizedBeamformer.restype = C.c_int

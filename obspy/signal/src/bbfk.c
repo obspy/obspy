@@ -278,11 +278,11 @@ int bbfk(float * nomin, const cplx * const window, const int * const spoint,cons
 }
 
 
-int generalizedBeamformer(double *relpow, const cplx * const steer, const cplx * const Rptr,
-        const double flow, const double fhigh, const double digfreq,
+int generalizedBeamformer(double *relpow, double *abspow, const cplx * const steer,
+        const cplx * const Rptr,
         const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
         const int grdpts_y, const int nfft, const int nf, double dpow,
-        int *ix, int *iy, double *absmax, double *relmax, const methodE method) {
+        const methodE method) {
     /* method: 1 == "bf, 2 == "capon"
      * start the code -------------------------------------------------
      * This assumes that all stations and components have the same number of
@@ -293,18 +293,12 @@ int generalizedBeamformer(double *relpow, const cplx * const steer, const cplx *
     register cplx R_ne;
     const cplx cplx_zero = {0., 0.};
     double *p;
-    double *abspow;
     double *white;
     double power;
 
     /* we allocate the taper buffer, size nsamp! */
     p = (double *) calloc((size_t) (grdpts_x * grdpts_y * nf), sizeof(double));
     if (p == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (taper)!\n");
-        exit(EXIT_FAILURE);
-    }
-    abspow = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
-    if (abspow == NULL ) {
         fprintf(stderr, "\nMemory allocation error (taper)!\n");
         exit(EXIT_FAILURE);
     }
@@ -378,21 +372,7 @@ int generalizedBeamformer(double *relpow, const cplx * const steer, const cplx *
         }
     }
 
-    *relmax = 0.;
-    *absmax = 0.;
-    for (x = 0; x < grdpts_x; ++x) {
-        for (y = 0; y < grdpts_y; ++y) {
-            if (RELPOW(x,y) > *relmax) {
-                *relmax = RELPOW(x,y);
-                *ix = x;
-                *iy = y;
-                *absmax = ABSPOW(x,y);
-            }
-        }
-    }
-
     free((void *) p);
-    free((void *) abspow);
     free((void *) white);
 
     return 0;
