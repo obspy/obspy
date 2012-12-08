@@ -78,6 +78,14 @@ g/dh_numpy/d
 wq
 EOL
     fi
+    # adjust dh compatibility for older dh versions
+    if [ $CODENAME = "lucid" ]
+        then
+        echo "7" > ./debian/compat
+    elif [ $CODENAME = "squeeze" ]
+        then
+        echo "8" > ./debian/compat
+    fi
     # build the package
     fakeroot ./debian/rules clean build binary
     mv ../python-obspy_*.deb $PACKAGEDIR/
