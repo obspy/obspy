@@ -899,7 +899,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
         date plotting (see e.g. matplotlibs num2date)
     :type method: int
-    :param method: the method to use 0 == bbfk, 1 == bf, 2 == capon
+    :param method: the method to use 0 == bf, 1 == capon
     :type store: int
     :param store: a function which is called on each iteration with the relative
         power map and the time offset as argument. Usefull for storing or
@@ -908,7 +908,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    BBFK, BF, CAPON = 0, 1, 2
+    BF, CAPON = 0, 1
     res = []
     eotr = True
     #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
@@ -952,21 +952,16 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     nhigh = min(nfft / 2 - 1, nhigh)  # avoid using nyquist
     nf = nhigh - nlow + 1  # include upper and lower frequency
     # to spead up the routine a bit we estimate all steering vectors in advance
-    if method != BBFK:
-        steer = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
-        clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-            deltaf, time_shift_table, steer)
+    steer = np.empty((grdpts_x, grdpts_y, nf, nstat), dtype='c16')
+    clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
+        deltaf, time_shift_table, steer)
     R = np.empty((nf, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nf), dtype='c16')
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
-    cabs = C.c_double()
-    crel = C.c_double()
-    cix = C.c_int()
-    ciy = C.c_int()
-    pow_map = np.empty((grdpts_x, grdpts_y), dtype=('f4', 'f8', 'f8')[method])
-    apow_map = np.empty((grdpts_x, grdpts_y), dtype=('f4', 'f8', 'f8')[method])
+    pow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    apow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
     while eotr:
         try:
             for i, tr in enumerate(stream):
@@ -979,43 +974,28 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
         pow_map.fill(0.)
         apow_map.fill(0.)
-        if method == BBFK:
-            errnr = clibsignal.bbfk(pow_map, ft, spoint,
-                offset, time_shift_table, C.byref(cabs),
-                C.byref(crel), C.byref(cix), C.byref(ciy), frqlow,
-                frqhigh, fs, nsamp, nstat, prewhiten,
-                grdpts_x, grdpts_y, nfft)
-            if errnr != 0:
-                raise Exception('bbfk: C-Extension returned error %d' % errnr)
-        elif method in (BF, CAPON):
-            # computing the covariances of the signal at different receivers
-            dpow = 0.
-            for i in xrange(nstat):
-                for j in xrange(i, nstat):
-                    R[:, i, j] = ft[i, :] * ft[j, :].conj()
-                    if method == CAPON:
-                        R[:, i, j] /= np.abs(R[:, i, j].sum())
-                    if i != j:
-                        R[:, j, i] = R[:, i, j].conjugate()
-                    else:
-                        dpow += np.abs(R[:, i, j].sum())
-            dpow *= nstat
-            if method == CAPON:
-                # P(f) = 1/(e.H R(f)^-1 e)
-                for n in xrange(nf):
-                    R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
+        # computing the covariances of the signal at different receivers
+        dpow = 0.
+        for i in xrange(nstat):
+            for j in xrange(i, nstat):
+                R[:, i, j] = ft[i, :] * ft[j, :].conj()
+                if method == CAPON:
+                    R[:, i, j] /= np.abs(R[:, i, j].sum())
+                if i != j:
+                    R[:, j, i] = R[:, i, j].conjugate()
+                else:
+                    dpow += np.abs(R[:, i, j].sum())
+        dpow *= nstat
+        if method == CAPON:
+            # P(f) = 1/(e.H R(f)^-1 e)
+            for n in xrange(nf):
+                R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
-            clibsignal.generalizedBeamformer(pow_map, apow_map, steer, R,
-                nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
-                method)
-        # TODO, do also relpow and abspow calculation here. This can then be
-        # removed from the C source file, making the C-code shorter
-        #relpow, abspow = crel.value, cabs.value
+        clibsignal.generalizedBeamformer(pow_map, apow_map, steer, R,
+            nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
+            method)
         ix, iy = np.unravel_index(pow_map.argmax(), pow_map.shape)
-        if method == BBFK:
-            relpow, abspow = crel.value, cabs.value
-        else:
-            relpow, abspow = pow_map[ix, iy], apow_map[ix, iy]
+        relpow, abspow = pow_map[ix, iy], apow_map[ix, iy]
         store(pow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s

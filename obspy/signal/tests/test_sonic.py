@@ -88,34 +88,8 @@ class SonicTestCase(unittest.TestCase):
             print '\n', out[:, 1:]
         return out
 
-    def test_sonicBbfk(self):
-        out = self.arrayProcessing(prewhiten=0, method=0)
-        raw = """
-9.69512105e-01 8.64673947e-13 1.84349488e+01 1.26491106e+00
-9.59917307e-01 7.46868442e-13 1.84349488e+01 1.26491106e+00
-9.63363886e-01 6.03434783e-13 1.84349488e+01 1.26491106e+00
-9.65261817e-01 5.98235383e-13 1.84349488e+01 1.26491106e+00
-9.56272662e-01 5.09821189e-13 1.84349488e+01 1.26491106e+00
-9.49727714e-01 4.28060799e-13 1.84349488e+01 1.26491106e+00
-        """
-        ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
-
-    def test_sonicBbfkPrew(self):
-        out = self.arrayProcessing(prewhiten=1, method=0)
-        raw = """
-3.85865678e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-3.51731906e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-3.56623459e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-3.64871194e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-3.62874234e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-3.60890990e-05 0.00000000e+00 1.84349488e+01 1.26491106e+00
-        """
-        ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:])
-
     def test_sonicBf(self):
-        out = self.arrayProcessing(prewhiten=0, method=1)
+        out = self.arrayProcessing(prewhiten=0, method=0)
         raw = """
 9.69515476e-01 1.95237117e-05 1.84349488e+01 1.26491106e+00
 9.59920378e-01 1.68637467e-05 1.84349488e+01 1.26491106e+00
@@ -128,7 +102,7 @@ class SonicTestCase(unittest.TestCase):
         np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
 
     def test_sonicBfPrew(self):
-        out = self.arrayProcessing(prewhiten=1, method=1)
+        out = self.arrayProcessing(prewhiten=1, method=0)
         raw = """
 1.41116437e-01 1.95237117e-05 1.84349488e+01 1.26491106e+00
 1.28633209e-01 1.68637467e-05 1.84349488e+01 1.26491106e+00
@@ -141,7 +115,7 @@ class SonicTestCase(unittest.TestCase):
         np.testing.assert_allclose(ref, out[:, 1:])
 
     def test_sonicCapon(self):
-        out = self.arrayProcessing(prewhiten=0, method=2)
+        out = self.arrayProcessing(prewhiten=0, method=1)
         raw = """
 8.57600009e-01 8.57600009e-01  1.49314172e+01 1.55241747e+00
 1.72793618e+04 1.72793618e+04 -1.48240520e+02 2.46981781e+00
@@ -154,7 +128,7 @@ class SonicTestCase(unittest.TestCase):
         np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
 
     def test_sonicCaponPrew(self):
-        out = self.arrayProcessing(prewhiten=1, method=2)
+        out = self.arrayProcessing(prewhiten=1, method=1)
         raw = """
 1.28958194e-01 0.00000000e+00  1.49314172e+01 1.55241747e+00
 8.67841733e-03 0.00000000e+00  6.11550357e+00 2.81602557e+00

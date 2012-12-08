@@ -75,23 +75,6 @@ clibsignal.generalizedBeamformer.argtypes = [
 ]
 clibsignal.generalizedBeamformer.restype = C.c_int
 
-#XXX moritz: add a note where params are pointers
-clibsignal.bbfk.argtypes = [
-    np.ctypeslib.ndpointer(dtype='f4', ndim=2, flags='C_CONTIGUOUS'),
-    np.ctypeslib.ndpointer(dtype='c16', ndim=2, flags='C_CONTIGUOUS'),
-    np.ctypeslib.ndpointer(dtype='i4', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int,
-    np.ctypeslib.ndpointer(dtype='f4', ndim=3, flags='C_CONTIGUOUS'),
-    C.POINTER(C.c_double),
-    C.POINTER(C.c_double),
-    C.POINTER(C.c_int),
-    C.POINTER(C.c_int),
-    C.c_float, C.c_float, C.c_float,
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
-    C.c_int,
-]
-clibsignal.bbfk.restype = C.c_int
-
 clibsignal.X_corr.argtypes = [
     np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
