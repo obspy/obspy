@@ -12,6 +12,6 @@ EXPORTS
     decim
     spr_coef_paz
     ppick
-    bbfk
-    cosine_taper
     stalta
+    calcSteer
+    generalizedBeamformer
