@@ -62,33 +62,36 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
         const int nsamp, const int nstat, const int prewhiten, const int grdpts_x,
         const int grdpts_y, const int nfft, const int nf, double dpow,
         const methodE method) {
-    /* method: 1 == "bf, 2 == "capon"
+    /* method: 0 == "bf, 1 == "capon"
      * start the code -------------------------------------------------
      * This assumes that all stations and components have the same number of
      * time samples, nt */
 
     int x, y, i, j, n;
-    cplx eHR_ne;
-    register cplx R_ne;
     const cplx cplx_zero = {0., 0.};
     double *p;
     double *white;
-    double power;
+    double gen_power[2];
+
+    if (method >= sizeof(gen_power)) {
+        fprintf(stderr, "\nUnkown method!\n");
+        exit(EXIT_FAILURE);
+    }
 
     /* we allocate the taper buffer, size nsamp! */
     p = (double *) calloc((size_t) (grdpts_x * grdpts_y * nf), sizeof(double));
     if (p == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        fprintf(stderr, "\nMemory allocation error (p)!\n");
         exit(EXIT_FAILURE);
     }
     white = (double *) calloc((size_t) nf, sizeof(double));
     if (white == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (taper)!\n");
+        fprintf(stderr, "\nMemory allocation error (white)!\n");
         exit(EXIT_FAILURE);
     }
 
-    if (method == CAPON) {
-        /* general way of abspow normalization */
+    if ((method == CAPON) || (prewhiten == 1)) {
+        /* optimized way of abspow normalization */
         dpow = 1.0;
     }
     for (x = 0; x < grdpts_x; ++x) {
@@ -97,13 +100,14 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
              * covariances of the signal at different receivers and than steer
              * the matrix R with "weights" which are the trial-DOAs e.g.,
              * Kirlin & Done, 1999:
-             * bf: P(f) = e.H R(f) e
-             * capon: P(f) = 1/(e.H R(f)^-1 e) */
+             * a) bf: P(f) = e.H R(f) e
+             * b) capon: P(f) = 1/(e.H R(f)^-1 e) */
             ABSPOW(x, y) = 0.;
             for (n = 0; n < nf; ++n) {
-                eHR_ne = cplx_zero;
+                double power;
+                cplx eHR_ne = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
-                    R_ne = cplx_zero;
+                    register cplx R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
                         register const cplx s = STEER(x,y,n,j);
                         register const cplx r = RPTR(n,i,j);
@@ -113,24 +117,15 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                     eHR_ne.re += STEER(x,y,n,i).re * R_ne.re + STEER(x,y,n,i).im * R_ne.im; /* eH, conjugate */
                     eHR_ne.im += STEER(x,y,n,i).re * R_ne.im - STEER(x,y,n,i).im * R_ne.re; /* eH, conjugate */
                 }
-
-                power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
-                if (method == CAPON) {
-                    power = 1. / power;
-                }
-                if (prewhiten == 0) {
-                    ABSPOW(x,y) += power;
-                }
-                else {
-                    if (power > white[n]) {
-                        white[n] = power;
-                    }
-                    P(x,y,n) = power;
-                }
+                /* optimization: avoid if condition on BW / CAPON through array access of gen_power */
+                gen_power[BF] = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
+                gen_power[CAPON] = 1. / gen_power[BF];
+                power = gen_power[method];
+                ABSPOW(x,y) += power;
+                white[n] = fmax(power, white[n]);
+                P(x,y,n) = power;
             }
-            if (prewhiten == 0) {
-                RELPOW(x,y) = ABSPOW(x,y)/dpow;
-            }
+            RELPOW(x,y) = ABSPOW(x,y)/dpow;
         }
     }
 
@@ -141,11 +136,8 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 for (n = 0; n < nf; ++n) {
                     RELPOW(x,y) += P(x,y,n)/(white[n]*nf*nstat);
                 }
-                if (method == BF) {
+                if (method == CAPON) {
                     ABSPOW(x,y) = 0.;
-                    for (n = 0; n < nf; ++n) {
-                        ABSPOW(x,y) += P(x,y,n);
-                    }
                 }
             }
         }
