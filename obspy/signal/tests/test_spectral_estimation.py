@@ -4,7 +4,7 @@
 The psd test suite.
 """
 
-from obspy.core import Trace, Stream, UTCDateTime
+from obspy import Trace, Stream, UTCDateTime
 from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np

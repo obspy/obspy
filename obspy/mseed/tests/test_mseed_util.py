@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from StringIO import StringIO
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile

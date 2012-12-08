@@ -33,7 +33,7 @@ comparison with the other traces in the plot.
     :meth:`Stream.filter() <obspy.core.stream.Stream.filter>` and
     :meth:`Trace.filter() <obspy.core.trace.Trace.filter>`.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> import obspy.signal
 >>> st = read()
 >>> tr = st[0]
@@ -49,7 +49,7 @@ works similar:
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     import obspy.signal
     st = read()
     tr = st[0]
@@ -64,13 +64,13 @@ The response of the instrument can be removed by the
 the the instrument response of a STS2 and simulate an instrument with 2Hz
 corner frequency.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> st.plot() #doctest: +SKIP
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     st.plot()
 
@@ -99,7 +99,7 @@ Again, there are convenience methods implemented on
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     from obspy.signal import seisSim, cornFreq2Paz
     inst2hz = cornFreq2Paz(2.0)
     st = read()
@@ -127,7 +127,7 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 
 The following example demonstrates a recursive STA/LTA triggering:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
@@ -142,7 +142,7 @@ The following example demonstrates a recursive STA/LTA triggering:
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     from obspy.signal.trigger import recSTALTA, plotTrigger
     st = read()
     tr = st.select(component="Z")[0]
@@ -166,7 +166,7 @@ But it also means that the trace's built-in methods can be used.
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)

@@ -25,7 +25,7 @@ Additionally the start- and endtime of the plot can be given as
 
 Examples files may be retrieved via http://examples.obspy.org.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
@@ -38,7 +38,7 @@ BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     st.plot(color='gray', tick_format='%I:%M %p',
             starttime=st[0].stats.starttime,
@@ -52,13 +52,13 @@ The spectrogram will on default have 90% overlap and a maximum sliding window
 size of 4096 points. For more info see
 :func:`obspy.imaging.spectrogram.spectrogram`.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> st[0].spectrogram(log=True) #doctest: +SKIP
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     st[0].spectrogram(log=True)
 
@@ -187,7 +187,7 @@ The ``outfile`` parameter is also used to automatically determine the file
 format. Available output formats mainly depend on your matplotlib settings.
 Common formats are png, svg, pdf or ps.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> st.plot(outfile='graph.png') #doctest: +SKIP
 """

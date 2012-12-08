@@ -11,7 +11,7 @@ ArcLink/WebDC client for ObsPy.
 
 from fnmatch import fnmatch
 from lxml import objectify, etree
-from obspy.core import read, UTCDateTime
+from obspy import read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
@@ -366,7 +366,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.arclink import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime("2009-08-20 04:03:12")
         >>> st = client.getWaveform("BW", "RJOB", "", "EH*", t - 3, t + 15)
@@ -374,7 +374,7 @@ class Client(object):
 
         .. plot::
 
-            from obspy.core import UTCDateTime
+            from obspy import UTCDateTime
             from obspy.arclink.client import Client
             client = Client("webdc.eu", 18001, 'test@obspy.org')
             t = UTCDateTime("2009-08-20 04:03:12")
@@ -488,7 +488,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.arclink import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1, 12, 0)
         >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
@@ -721,7 +721,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.arclink import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
         >>> data = client.getMetadata('BW', 'MANZ', '', 'EHZ', t)
@@ -867,7 +867,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.arclink import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
         >>> paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', t)
@@ -952,7 +952,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.arclink import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("webdc.eu", 18001, user='test@obspy.org')
         >>> t = UTCDateTime(2009, 1, 1)
         >>> client.saveResponse('BW.MANZ..EHZ.dataless', 'BW', 'MANZ', '', '*',

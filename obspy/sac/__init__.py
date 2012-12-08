@@ -3,8 +3,7 @@
 obspy.sac - SAC read and write support for ObsPy
 ================================================
 This module provides read and write support for ASCII and binary SAC-files as
-defined by IRIS (http://www.iris.edu/manuals/sac/manual.html). It depends on
-numpy and obspy.core.
+defined by IRIS (http://www.iris.edu/manuals/sac/manual.html).
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org) & C. J. Annon
@@ -14,9 +13,10 @@ numpy and obspy.core.
 
 Reading
 -------
-Similiar to reading any other waveform data format using obspy.core:
+Similiar to reading any other waveform data format using
+:func:`~obspy.core.read`:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read('/path/to/test.sac')
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>

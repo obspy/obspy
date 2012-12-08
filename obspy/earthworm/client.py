@@ -12,7 +12,7 @@ Earthworm Wave Server client for ObsPy.
 """
 
 from fnmatch import fnmatch
-from obspy.core import Stream, UTCDateTime
+from obspy import Stream, UTCDateTime
 from obspy.earthworm.waveserver import readWaveServerV, getMenu
 
 
@@ -73,7 +73,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> dt = UTCDateTime() - 2000  # now - 2000 seconds
         >>> st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
@@ -84,7 +84,7 @@ class Client(object):
         .. plot::
 
             from obspy.earthworm import Client
-            from obspy.core import UTCDateTime
+            from obspy import UTCDateTime
             client = Client("pele.ess.washington.edu", 16017)
             dt = UTCDateTime() - 2000  # now - 2000 seconds
             st = client.getWaveform('UW', 'TUCA', '', 'BHZ', dt, dt + 10)
@@ -137,11 +137,11 @@ class Client(object):
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
         :type format: str, optional
-        :param format: Output format. Depending on your ObsPy installation one
-            of ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``. See the Supported
-            Formats section in method :meth:`~obspy.core.stream.Stream.write`
-            for a full list of supported formats. Defaults to ``'MSEED'``.
+        :param format: Output format. One of ``"MSEED"``, ``"GSE2"``,
+            ``"SAC"``, ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``,
+            ``"SU"``, ``"WAV"``. See the Supported Formats section in method
+            :meth:`~obspy.core.stream.Stream.write` for a full list of
+            supported formats. Defaults to ``'MSEED'``.
         :type cleanup: bool
         :param cleanup: Specifies whether perfectly aligned traces should be
             merged or not. See :meth:`~obspy.core.stream.Stream.merge`,
@@ -151,7 +151,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.earthworm import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client("pele.ess.washington.edu", 16017)
         >>> t = UTCDateTime() - 2000  # now - 2000 seconds
         >>> client.saveWaveform('UW.TUCA..BHZ.mseed', 'UW', 'TUCA', '', 'BHZ',

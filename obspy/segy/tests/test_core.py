@@ -4,7 +4,7 @@ The obspy.segy core test suite.
 """
 
 import numpy as np
-from obspy.core import UTCDateTime, read
+from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.core import isSEGY, readSEGY, writeSEGY, SEGYCoreWritingError
 from obspy.segy.core import SEGYSampleIntervalError

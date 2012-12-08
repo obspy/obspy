@@ -40,7 +40,7 @@ class MinMaxAmplitudeFeature(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import Trace
+        >>> from obspy import Trace
         >>> import numpy as np
         >>> tr = Trace(data=np.arange(-5,5))
         >>> result = MinMaxAmplitudeFeature().process(tr)

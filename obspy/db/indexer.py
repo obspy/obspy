@@ -10,7 +10,7 @@ storing in into a standard SQL database.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import read
+from obspy import read
 from obspy.core.preview import createPreview
 from obspy.core.util.base import _getEntryPoints
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \

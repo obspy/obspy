@@ -4,7 +4,7 @@
 The libgse2 test suite.
 """
 from ctypes import ArgumentError
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError

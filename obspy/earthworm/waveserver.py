@@ -9,7 +9,8 @@ Low-level Earthworm Wave Server tools.
     (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
 """
 
-from obspy.core import Trace, UTCDateTime, Stats, Stream
+from obspy import Trace, UTCDateTime, Stream
+from obspy.core import Stats
 import struct
 import socket
 import numpy as np

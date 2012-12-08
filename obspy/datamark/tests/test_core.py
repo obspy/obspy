@@ -4,7 +4,7 @@
 The obspy.datamark.core test suite.
 """
 
-from obspy.core import read
+from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.datamark.core import readDATAMARK
 import os

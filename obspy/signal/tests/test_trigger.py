@@ -3,7 +3,7 @@
 The obspy.signal.trigger test suite.
 """
 from ctypes import ArgumentError
-from obspy.core import read, Stream, UTCDateTime
+from obspy import read, Stream, UTCDateTime
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
     coincidenceTrigger, arPick, classicSTALTA, classicSTALTAPy
 from obspy.signal.util import clibsignal

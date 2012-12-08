@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf

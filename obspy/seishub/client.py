@@ -13,7 +13,7 @@ from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
@@ -99,7 +99,7 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()

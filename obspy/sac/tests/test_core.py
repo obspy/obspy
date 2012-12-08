@@ -3,7 +3,7 @@
 The sac.core test suite.
 """
 
-from obspy.core import Stream, Trace, read, UTCDateTime
+from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.sac import SacIO
 import copy

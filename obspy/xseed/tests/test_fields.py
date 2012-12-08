@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from StringIO import StringIO
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.xseed.fields import Float, VariableString
 import unittest
 

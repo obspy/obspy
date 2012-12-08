@@ -23,7 +23,7 @@ import ctypes as C
 import numpy as np
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
-from obspy.core import Stream
+from obspy import Stream
 from scipy.integrate import cumtrapz
 
 

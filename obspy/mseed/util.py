@@ -3,7 +3,7 @@
 Mini-SEED specific utilities.
 """
 from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
 import sys

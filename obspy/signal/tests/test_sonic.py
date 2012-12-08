@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from obspy.core import Trace, Stream, UTCDateTime
+from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import sonic, array_transff_freqslowness
 from obspy.signal.array_analysis import array_transff_wavenumber
