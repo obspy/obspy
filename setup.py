@@ -29,7 +29,6 @@ from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
 import glob
-import numpy as np
 import os
 import platform
 import shutil
@@ -468,9 +467,6 @@ def setupLibSignal():
     """
     macros = []
     src = os.path.join('obspy', 'signal', 'src') + os.sep
-    src_fft = os.path.join('obspy', 'signal', 'src', 'fft') + os.sep
-    numpy_include_dir = os.path.join(os.path.dirname(np.core.__file__),
-                                     'include')
     symbols = [s.strip() for s in open(src + 'libsignal.def').readlines()[2:]
                if s.strip() != '']
     # system specific settings
@@ -487,13 +483,10 @@ def setupLibSignal():
     # setup C extension
     lib = MyExtension(lib_name,
                       define_macros=macros,
-                      include_dirs=[numpy_include_dir],
                       sources=[src + 'recstalta.c', src + 'xcorr.c',
                                src + 'coordtrans.c', src + 'pk_mbaer.c',
                                src + 'filt_util.c', src + 'arpicker.c',
-                               src + 'bbfk.c', src + 'stalta.c',
-                               src_fft + 'fftpack.c',
-                               src_fft + 'fftpack_litemodule.c'],
+                               src + 'bbfk.c', src + 'stalta.c'],
                       export_symbols=symbols)
     return lib
 
