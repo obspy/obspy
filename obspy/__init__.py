@@ -29,7 +29,6 @@ for seismology.
 """
 
 # don't change order
-from obspy.core.util.attribdict import AttribDict
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import _getVersionString
 from obspy.core.trace import Stats, Trace

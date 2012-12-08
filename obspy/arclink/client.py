@@ -11,8 +11,8 @@ ArcLink/WebDC client for ObsPy.
 
 from fnmatch import fnmatch
 from lxml import objectify, etree
-from obspy import read, UTCDateTime, AttribDict
-from obspy.core.util import NamedTemporaryFile, complexifyString
+from obspy import read, UTCDateTime
+from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os

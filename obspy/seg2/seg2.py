@@ -14,7 +14,8 @@ import numpy as np
 from struct import unpack
 import warnings
 
-from obspy import Trace, Stream, UTCDateTime, AttribDict
+from obspy import Trace, Stream, UTCDateTime
+from obspy.core import AttribDict
 from header import MONTHS
 
 

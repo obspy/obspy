@@ -81,8 +81,8 @@ UTCDateTime(2009, 8, 24, 0, 20, 3)
 """
 
 # don't change order
-from obspy.core.util.attribdict import AttribDict
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
 from obspy.core.scripts.runtests import runTests
