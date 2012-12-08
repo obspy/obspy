@@ -39,8 +39,8 @@ dev:
    * adding obspy.xseed as dependency (in setup.py and debian/control)
    * changing obspy.client.station.getPAZ() call syntax to use seed_id
      (args/kwargs)
-   * adding local caching of requests for PAZ and coordinates to avoid repeated
-     requests to server
+   * adding local caching of requests for PAZ and coordinates to avoid
+     repeated requests to server
  - obspy.sh:
    * file extension 'QBN' not added twice anymore if data_directory was set
    * fixing SH_ASC and Q reading/writing of empty traces or traces containing
@@ -71,33 +71,37 @@ dev:
 
 0.7.1:
  - obspy.arclink:
-   * proper DeprecationWarning for deprecated keywords for Client.getWaveform()
+   * proper DeprecationWarning for deprecated keywords for
+     Client.getWaveform()
  - obspy.core:
    * fixing negative azimuths returned by gps2DistAzimuth [#375]
 
 0.7.0:
  - obspy.arclink:
    * requesting time spans (using 'starttime' and 'endtime' keywords) are
-     deprecated in Client.getPAZ() and Client.getMetadata() - use 'time' instead
+     deprecated in Client.getPAZ() and Client.getMetadata() - use 'time'
+     instead
    * output format has changed for Client.getPAZ(..., time=dt)
    * 'getCoordinates' and 'getPAZ' keywords are deprecated in
      Client.getWaveform() - use 'metadata' instead
-   * Client.getWaveform(..., metadata=True) will return both keywords as well as
-     PAZ - inventory request is done only once per request -> huge performance
-     improvement compared to previous implementation
+   * Client.getWaveform(..., metadata=True) will return both keywords as well
+     as PAZ - inventory request is done only once per request -> huge
+     performance improvement compared to previous implementation
    * traces requested via Client.getWaveform(..., metadata=True) covering
      multiple instrumentations will be split and the correct PAZ are appended
  - obspy.core:
    * new Catalog/Event classes
    * read/write support for QuakeML files
    * new resample method for Trace and Stream object
-   * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
+   * Trace.__mod__ (splits Trace into Stream containing traces with num
+     samples)
    * Trace.__div__ (splits Trace into Stream containing num traces)
    * implementation of __mul__ method for Trace and Stream objects
    * new formatSeedLink method for UTCDateTime object
    * new split method for transforming streams containing masked arrays into
      contiguous traces
-   * new util.xmlwrapper module for uniform API for Python's default xml and lxml
+   * new util.xmlwrapper module for uniform API for Python's default xml and
+     lxml
    * new obspy.core.util.types.Enum class
    * refactored obspy.core.util.ordereddict into obspy.core.util.types
    * refactored kilometer2degrees and locations2degrees from obspy.taup into
@@ -106,10 +110,12 @@ dev:
    * removing __hash__ fixture for Stream and Trace
    * stream.select works now case insensitive
    * support for initialization of UTCDateTime from numpy.string_ types
-   * new dtype parameter on read method allows converting data into given dtype
+   * new dtype parameter on read method allows converting data into given
+     dtype
    * AttribDict may now be initialized with (key, value) kwarg pairs, e.g.
      AttribDict(a=1, b=2).
-    * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate
+    * changed many setter/getter in UTCDateTime to private methods, e.g.
+      _getDate
    * added UTCDateTime.DEFAULT_PRECISION
    * import of an unsupported waveform will result into a TypeError [#338]
    * added compatibility methods for AttribDict and UTCDateTime
@@ -137,9 +143,10 @@ dev:
  - obspy.mseed:
    * changing license to LGPL (same as libmseed)
    * libmseed 2.7 (fixes sampling rates above 32,767 Hz)
-   * adding read/write support for very large and very small sampling rates using
-     blockette 100 in MiniSEED
-   * new obspy-mseed-recordanalyzer script for analyzing SEED files via console
+   * adding read/write support for very large and very small sampling rates
+     using blockette 100 in MiniSEED
+   * new obspy-mseed-recordanalyzer script for analyzing SEED files via
+     console
    * new obspy.mseed.util.shiftTimeOfFile() function for shifting
      the time of all records without interfering with the rest of the file.
  - obspy.neries:
