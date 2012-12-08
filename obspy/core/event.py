@@ -2153,15 +2153,18 @@ class Event(__Event):
         2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
         """
         out = ''
+        origin = None
         if self.origins:
-            out += '%s | %+7.3f, %+8.3f' % (self.origins[0].time,
-                                            self.origins[0].latitude,
-                                            self.origins[0].longitude)
+            origin = self.preferred_origin() or self.origins[0]
+            out += '%s | %+7.3f, %+8.3f' % (origin.time,
+                                            origin.latitude,
+                                            origin.longitude)
         if self.magnitudes:
-            out += ' | %s %-2s' % (self.magnitudes[0].mag,
-                                   self.magnitudes[0].magnitude_type)
-        if self.origins and self.origins[0].evaluation_mode:
-            out += ' | %s' % (self.origins[0].evaluation_mode)
+            magnitude = self.preferred_magnitude() or self.magnitudes[0]
+            out += ' | %s %-2s' % (magnitude.mag,
+                                   magnitude.magnitude_type)
+        if origin and origin.evaluation_mode:
+            out += ' | %s' % (origin.evaluation_mode)
         return out
 
     def __str__(self):
@@ -2170,6 +2173,35 @@ class Event(__Event):
         """
         return "Event:\t%s\n\n%s" % (self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
+
+    def preferred_origin(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_origin_id).getReferredObject()
+        except KeyError:
+            return None
+
+    def preferred_magnitude(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_magnitude_id).\
+                getReferredObject()
+        except KeyError:
+            return None
+
+    def preferred_focal_mechanism(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
+                getReferredObject()
+        except KeyError:
+            return None
 
 
 class Catalog(object):

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
+from obspy.core.event import ResourceIdentifier, WaveformStreamID, \
+    readEvents, Event
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
@@ -561,7 +562,33 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'neries_events.xml')
         data = open(filename, 'rt').read()
         catalog = readEvents(data)
-        self.assertTrue(len(catalog), 3)
+        self.assertEquals(len(catalog), 3)
+
+    def test_preferred_tags(self):
+        """
+        Testing preferred magnitude, origin and focal mechanism tags
+        """
+        # testing empty event
+        ev = Event()
+        self.assertEquals(ev.preferred_origin(), None)
+        self.assertEquals(ev.preferred_magnitude(), None)
+        self.assertEquals(ev.preferred_focal_mechanism(), None)
+        # testing existing event
+        filename = os.path.join(self.path, 'preferred.xml')
+        catalog = readEvents(filename)
+        self.assertEquals(len(catalog), 1)
+        ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 | 2.0 MW"
+        self.assertTrue(ev_str in str(catalog.events[0]))
+        # testing ids
+        ev = catalog.events[0]
+        self.assertEquals('smi:orig2', ev.preferred_origin_id)
+        self.assertEquals('smi:mag2', ev.preferred_magnitude_id)
+        self.assertEquals('smi:fm2', ev.preferred_focal_mechanism_id)
+        # testing objects
+        self.assertEquals(ev.preferred_origin(), ev.origins[1])
+        self.assertEquals(ev.preferred_magnitude(), ev.magnitudes[1])
+        self.assertEquals(ev.preferred_focal_mechanism(),
+            ev.focal_mechanisms[1])
 
 
 def suite():
