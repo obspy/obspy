@@ -55,8 +55,8 @@ dev:
    * adding optimized C-code for classic STALTA. Runs approximately, 1000x
      faster than pure python code. It has now the same order of speed as the
      recursive STALTA
-   * optimizing bbfk C-source: Array analysis (sonic / bbfk) now runs at
-     least twice as fast
+   * new CAPON method for array_analysis / array_processing
+   * sonic was renamed to array_processing, sonic is now deprecated
  - obspy.xseed:
    * fixed a bug with Dataless to XSEED conversion using split_stations=True
    * fixed a bug affecting getPAZ() and getCoordinates() when selecting
