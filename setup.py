@@ -244,6 +244,36 @@ DOCSTRING = __doc__.split("\n")
 IS_WINDOWS = platform.system() == "Windows"
 IS_DEVELOP = 'develop' in sys.argv
 
+NO_GFORTRAN_MSG = """
+
+###############################################################################
+
+ERROR: gfortran compiler not found! Retrying now without FORTRAN support.
+
+All FORTRAN extensions in the following modules will *not* work:
+  * obspy.taup
+
+###############################################################################
+
+"""
+
+NO_CCOMPILER_MSG = """
+
+###############################################################################
+
+ERROR: C compiler not found! Retrying now without C support.
+
+All C-extensions in following modules will *not* work:
+  * obspy.gse2
+  * obspy.mseed
+  * obspy.segy
+  * obspy.signal
+
+###############################################################################
+
+"""
+
+
 
 if IS_WINDOWS:
     # ugly Monkey patch for MSVCCompiler & Mingw32CCompiler for Windows
@@ -584,12 +614,19 @@ def setupLibTauP():
     return lib
 
 
-def setupPackage():
+def setupPackage(gfortran=True, ccompiler=True):
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         convert2to3()
+    # external modules
+    ext_modules = []
+    if ccompiler:
+        ext_modules += [setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
+                        setupLibEvalResp(), setupLibSEGY()]
+    if gfortran:
+        ext_modules.append(setupLibTauP())
     # setup package
     setup(
         name='obspy',
@@ -621,9 +658,7 @@ def setupPackage():
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
-        # build taup last!!
-        ext_modules=[setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
-                     setupLibEvalResp(), setupLibSEGY(), setupLibTauP()],
+        ext_modules=ext_modules,
         use_2to3=True,
     )
     # cleanup after using lib2to3 for Python 3.x
@@ -632,4 +667,42 @@ def setupPackage():
 
 
 if __name__ == '__main__':
-    setupPackage()
+    gfortran = True
+    ccompiler = True
+    while True:
+        try:
+            setupPackage(gfortran=gfortran, ccompiler=ccompiler)
+        except SystemExit, e:
+            if 'gfortran' in str(e):
+                if not gfortran:
+                    break
+                # retry
+                print NO_GFORTRAN_MSG
+                gfortran = False
+                continue
+            elif 'gcc' in str(e):
+                if not ccompiler:
+                    break
+                # retry
+                print NO_CCOMPILER_MSG
+                ccompiler = False
+                continue
+            else:
+                raise
+        except ValueError, e:
+            # Windows specific exception if MSVC compiler is missing
+            if IS_WINDOWS and 'path' in str(e):
+                if not ccompiler:
+                    break
+                # retry
+                print NO_CCOMPILER_MSG
+                ccompiler = False
+                continue
+            else:
+                raise
+        else:
+            break
+    if not gfortran:
+        print NO_GFORTRAN_MSG
+    if not ccompiler:
+        print NO_CCOMPILER_MSG
