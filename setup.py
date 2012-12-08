@@ -57,6 +57,7 @@ INSTALL_REQUIRES = [
     'suds>=0.4.0']
 ENTRY_POINTS = {
     'console_scripts': [
+        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
@@ -235,7 +236,7 @@ ENTRY_POINTS = {
 UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
                                          "core", "util"))
 sys.path.append(UTIL_PATH)
-from base import _getVersionString  # @UnresolvedImport
+from version import get_git_version as _getVersionString
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")
@@ -353,6 +354,7 @@ def convert2to3():
     # copy original tree into 2to3 folder ignoring some unneeded files
     def ignored_files(adir, filenames):  # @UnusedVariable
         return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
+               ['.git', '.gitignore'] + \
                [fn for fn in filenames if fn.startswith('distribute')] + \
                [fn for fn in filenames if fn.endswith('.egg-info')]
     shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)

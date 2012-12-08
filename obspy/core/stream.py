@@ -8,12 +8,13 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from glob import glob, iglob, has_magic
+from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
 from obspy.core.util.decorator import uncompressFile
+import obspy.imaging
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -26,7 +27,8 @@ import warnings
 
 
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
-        endtime=None, nearest_sample=True, dtype=None, **kwargs):
+         endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
+         **kwargs):
     """
     Read waveform files into an ObsPy Stream object.
 
@@ -35,8 +37,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     attribute.
 
     The format of the waveform file will be automatically detected if not
-    given. Allowed formats mainly depend on ObsPy packages installed. See the
-    `Supported Formats`_ section below.
+    given. See the `Supported Formats`_ section below for available formats.
 
     This function returns an ObsPy :class:`~obspy.core.stream.Stream` object, a
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
@@ -55,8 +56,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         which results in a slightly slower reading. If you specify a format no
         further format checking is done.
     :type headonly: bool, optional
-    :param headonly: If set to True, read only the data header. This is most
-        useful for scanning available meta information of huge data sets.
+    :param headonly: If set to ``True``, read only the data header. This is
+        most useful for scanning available meta information of huge data sets.
     :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
     :param starttime: Specify the start time to read.
     :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
@@ -67,6 +68,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         more info, see :meth:`~obspy.core.trace.Trace.trim`.
     :type dtype: :class:`numpy.dtype`, optional
     :param dtype: Convert data of all traces into given numpy.dtype.
+    :type apply_calib: bool, optional
+    :param apply_calib: Automatically applies the calibration factor
+        ``trace.stats.calib`` for each trace, if set. Defaults to ``False``.
     :param kwargs: Additional keyword arguments passed to the underlying
         waveform reader method.
     :return: An ObsPy :class:`~obspy.core.stream.Stream` object.
@@ -79,7 +83,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     Further usages of the :func:`~obspy.core.stream.read` function can
     be seen in the `Further Examples`_ section underneath.
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> print(st)  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
@@ -133,7 +137,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         Both files are then read into a single
         :class:`~obspy.core.stream.Stream` object.
 
-        >>> from obspy.core import read  # doctest: +SKIP
+        >>> from obspy import read  # doctest: +SKIP
         >>> st = read("/path/to/loc_R*.z")  # doctest: +SKIP
         >>> print(st)  # doctest: +SKIP
         2 Trace(s) in Stream:
@@ -145,7 +149,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         Using the ``format`` parameter disables the automatic detection and
         enforces reading a file in a given format.
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read("/path/to/loc_RJOB20050831023349.z", format="GSE2")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -153,7 +157,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (3) Reading a remote file via HTTP protocol.
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -161,7 +165,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (4) Reading a compressed files.
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read("/path/to/tspair.ascii.gz")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -185,7 +189,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (6) Using 'starttime' and 'endtime' parameters
 
-        >>> from obspy.core import read, UTCDateTime
+        >>> from obspy import read, UTCDateTime
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
         ...           starttime=dt, endtime=dt+10)
@@ -239,7 +243,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     else:
         # some file name
         pathname = pathname_or_url
-        for file in iglob(pathname):
+        for file in sorted(glob(pathname)):
             st.extend(_read(file, format, headonly, **kwargs).traces)
         if len(st) == 0:
             # try to give more specific information why the stream is empty
@@ -268,6 +272,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if dtype:
         for tr in st:
             tr.data = np.require(tr.data, dtype)
+    # applies calibration factor
+    if apply_calib:
+        for tr in st:
+            tr.data = tr.data * tr.stats.calib
     return st
 
 
@@ -442,7 +450,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> len(st)
         3
@@ -452,7 +460,7 @@ class Stream(object):
         """
         if not isinstance(num, int):
             raise TypeError("Integer expected")
-        from obspy.core import Stream
+        from obspy import Stream
         st = Stream()
         for _i in range(num):
             st += self.copy()
@@ -469,7 +477,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import Stream
+        >>> from obspy import Stream
         >>> st = Stream()
         >>> for component in ["1", "Z", "2", "3", "Z", "N", "E", "4", "5"]:
         ...     channel = "EH" + component
@@ -557,7 +565,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st2 = st.copy()
         >>> st is st2
@@ -589,7 +597,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st2 = st.copy()
         >>> st is st2
@@ -664,7 +672,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read, Trace
+        >>> from obspy import read, Trace
         >>> st = read()
         >>> tr = Trace()
         >>> tr.stats.station = 'TEST'
@@ -691,7 +699,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read, Trace
+        >>> from obspy import read, Trace
         >>> st = read()
         >>> tr1 = Trace()
         >>> tr1.stats.station = 'TEST1'
@@ -740,7 +748,7 @@ class Stream(object):
 
         Our example stream has no gaps:
 
-        >>> from obspy.core import read, UTCDateTime
+        >>> from obspy import read, UTCDateTime
         >>> st = read()
         >>> st.getGaps()
         []
@@ -954,24 +962,18 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             st.plot()
         """
-        try:
-            from obspy.imaging.waveform import WaveformPlotting
-        except:
-            msg = "Please install module obspy.imaging to be able to " + \
-                  "plot ObsPy Stream objects."
-            warnings.warn(msg, category=ImportWarning)
-            raise
-        waveform = WaveformPlotting(stream=self, *args, **kwargs)
+        waveform = obspy.imaging.waveform.WaveformPlotting(stream=self, *args,
+                                                           **kwargs)
         return waveform.plotWaveform(*args, **kwargs)
 
     def spectrogram(self, *args, **kwargs):
@@ -983,13 +985,13 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st[0].spectrogram() # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             st[0].spectrogram()
         """
@@ -1011,7 +1013,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1041,7 +1043,7 @@ class Stream(object):
 
         Our example stream has no gaps:
 
-        >>> from obspy.core import read, UTCDateTime
+        >>> from obspy import read, UTCDateTime
         >>> st = read()
         >>> st.getGaps()
         []
@@ -1090,7 +1092,7 @@ class Stream(object):
 
         This example shows how to delete all "E" component traces in a stream:
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1112,7 +1114,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1150,7 +1152,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
@@ -1188,17 +1190,17 @@ class Stream(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"MSEED"``, ``"GSE2"``, ``"SAC"``,
-            ``"SACXY"``, ``"Q"``, ``"SH_ASC"``, ``"SEGY"``, ``"SU"``,
-            ``"WAV"``, ``"PICKLE"``. See the `Supported Formats`_ section
-            below for a full list of supported formats.
+        :param format: The format to write must be specified. One of
+            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
+            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
+            the `Supported Formats`_ section below for a full list of supported
+            formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read() # doctest: +SKIP
         >>> st.write("example.mseed", format="MSEED") # doctest: +SKIP
 
@@ -1231,7 +1233,7 @@ class Stream(object):
         SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
         TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.wav.stream.writePICKLE`
+        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.readPickle`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.
@@ -1432,7 +1434,7 @@ class Stream(object):
 
         .. rubric:: Examples
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st2 = st.select(station="R*")
         >>> print(st2)  # doctest: +ELLIPSIS
@@ -1505,7 +1507,8 @@ class Stream(object):
             if npts and int(npts) != trace.stats.npts:
                 continue
             if component and \
-               component.upper() != trace.stats.channel[-1].upper():
+                    not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                                        component.upper()):
                 continue
             traces.append(trace)
         return self.__class__(traces=traces)
@@ -1516,7 +1519,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import Trace, Stream
+        >>> from obspy import Trace, Stream
         >>> tr = Trace(data=np.array([1, 2, 3, 4]))
         >>> tr.stats.npts = 100
         >>> st = Stream([tr])
@@ -1701,7 +1704,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
         >>> st.plot()  # doctest: +SKIP
@@ -1717,7 +1720,7 @@ class Stream(object):
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             from obspy.signal import cornFreq2Paz
             st = read()
             st.plot()
@@ -1785,14 +1788,14 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st.filter("highpass", freq=1.0)
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             st.filter("highpass", freq=1.0)
             st.plot()
@@ -1848,7 +1851,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> st.filter("highpass", freq=1.0)
         >>> st.plot() # doctest: +SKIP
@@ -1857,7 +1860,7 @@ class Stream(object):
 
         .. plot::
 
-            from obspy.core import read
+            from obspy import read
             st = read()
             st.filter("highpass", freq=1.0)
             st.plot()
@@ -1955,7 +1958,7 @@ class Stream(object):
         For the example we switch off the automatic pre-filtering so that
         the effect of the downsampling routine becomes clearer.
 
-        >>> from obspy.core import Trace, Stream
+        >>> from obspy import Trace, Stream
         >>> tr = Trace(data=np.arange(10))
         >>> st = Stream(traces=[tr])
         >>> tr.stats.sampling_rate
@@ -1981,7 +1984,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import Trace, Stream
+        >>> from obspy import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0, -3, -9, 6, 4]))
         >>> tr3 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
@@ -2094,7 +2097,7 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type)
+            tr.taper(type=type, *args, **kwargs)
 
     def std(self):
         """
@@ -2109,7 +2112,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import Trace, Stream
+        >>> from obspy import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0.3, -3.5, 9.0, 6.4, 4.3]))
         >>> st = Stream(traces=[tr1, tr2])
@@ -2146,7 +2149,7 @@ class Stream(object):
 
         Make a Stream with two Traces:
 
-        >>> from obspy.core import Trace, Stream
+        >>> from obspy import Trace, Stream
         >>> tr1 = Trace(data=np.array([0, -3, 9, 6, 4]))
         >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])
@@ -2202,7 +2205,7 @@ class Stream(object):
 
         1. Create a Stream and copy it
 
-            >>> from obspy.core import read
+            >>> from obspy import read
             >>> st = read()
             >>> st2 = st.copy()
 
@@ -2239,7 +2242,7 @@ class Stream(object):
 
         .. rubric:: Example
 
-        >>> from obspy.core import read
+        >>> from obspy import read
         >>> st = read()
         >>> len(st)
         3

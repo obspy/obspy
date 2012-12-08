@@ -10,7 +10,7 @@ Helper module containing xseed fields.
 """
 
 from lxml.etree import Element, SubElement
-from obspy.core import util, UTCDateTime
+from obspy import UTCDateTime
 from obspy.xseed import utils
 import re
 import warnings
@@ -287,7 +287,7 @@ class Float(Field):
         # special format for exponential output
         result = format_str % (self.mask % temp)
         if 'E' in self.mask or 'e' in self.mask:
-            result = util.formatScientific(result.upper())
+            result = result.upper()
         if len(result) != self.length:
             msg = "Invalid field length %d of %d in %s." % \
                   (len(result), self.length, self.attribute_name)

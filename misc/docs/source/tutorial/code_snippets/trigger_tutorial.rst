@@ -75,7 +75,7 @@ After loading the data, we are able to pass the waveform data to the following
 trigger routines defined in :mod:`obspy.signal.trigger`:
 
     .. autosummary::
-       :toctree: ../packages/autogen
+       :toctree: ../../packages/autogen
 
        ~obspy.signal.trigger.recSTALTA
        ~obspy.signal.trigger.carlSTATrig
@@ -152,6 +152,8 @@ Delayed Sta Lta
     >>> plotTrigger(trace, cft, 5, 10)
 
 .. plot:: source/tutorial/code_snippets/trigger_tutorial_delayed_sta_lta.py
+
+.. _trigger-tutorial-coincidence:
 
 -----------------------------------
 Network Coincidence Trigger Example

@@ -1,11 +1,13 @@
-include RELEASE-VERSION
+include obspy/RELEASE-VERSION
+include obspy/core/docs/*.xsd
 include obspy/core/tests/data/*
+include obspy/core/util/geodetics/data/*
 include obspy/datamark/tests/data/*
 include obspy/gse2/tests/data/*
 include obspy/iris/tests/data/*
 include obspy/mseed/tests/data/*
-include obspy/mseed/tests/data/encoding/*
 include obspy/mseed/tests/data/bizarre/*
+include obspy/mseed/tests/data/encoding/*
 include obspy/realtime/tests/data/*
 include obspy/sac/tests/data/*
 include obspy/segy/tests/data/*
@@ -15,5 +17,6 @@ include obspy/signal/tests/data/*
 include obspy/taup/tables/*
 include obspy/taup/tests/data/*
 include obspy/wav/tests/data/*
-include obspy/xseed/tests/data/*
 include obspy/xseed/tests/blockette-tests/*
+include obspy/xseed/tests/data/*
+include obspy/sh/filter/*

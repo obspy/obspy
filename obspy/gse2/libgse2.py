@@ -25,8 +25,8 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 """
 
 from distutils import sysconfig
-from obspy.core import UTCDateTime
-from obspy.core.util import c_file_p, formatScientific
+from obspy import UTCDateTime
+from obspy.core.util import c_file_p
 import ctypes as C
 import doctest
 import numpy as np
@@ -193,7 +193,7 @@ def writeHeader(f, head):
     :type head: Ctypes struct
     :param head: Ctypes structure to write
     """
-    calib = formatScientific("%10.2e" % head.calib)
+    calib = "%10.2e" % (head.calib)
     header = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
              "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
     f.write(header % (

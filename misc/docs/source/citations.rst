@@ -28,6 +28,14 @@ Citations
    | **Rupture geometry from high-precision relative hypocentre locations of microearthquake clusters**,
    | *Geophysical Journal International*, 110 (3), 501-517.
    | http://doi.wiley.com/10.1111/j.1365-246X.1992.tb02088.x
+.. [Flinn1965]  
+   | Flinn, E. A. and Engdahl, E. R. (1965),
+   | **A proposed basis for geographical and seismic regionalization**,
+   | *Reviews of Geophysics*, 3 (1), 123-149.
+.. [Flinn1974]  
+   | Flinn, E. A., Engdahl, E. R., and Hill, A. R. (1974),
+   | **Seismic and geographical regionalization**,
+   | *Bulletin of the Seismological Society of America*, 64 (3-2), 771-992.
 .. [Jurkevics1988]  
    | Jurkevics, A. (1988),
    | **Polarization analysis of three-component array data**,
@@ -117,3 +125,7 @@ Citations
    | **A comparison of select trigger algorithms for automated global seismic phase and event detection**,
    | *Bulletin of the Seismological Society of America*, 88 (1), 95-106.
    | http://www.bssaonline.org/content/88/1/95.abstract
+.. [Young1996]  
+   | Young, J. B., Presgrave, B. W., Aichele, H., Wiens, D. A., and Flinn, E. A. (1996),
+   | **The Flinn-Engdahl regionalisation scheme: the 1995 revision**,
+   | *Physics of the Earth and Planetary Interiors*, 96 (4), 223-297.

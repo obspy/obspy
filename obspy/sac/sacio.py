@@ -7,7 +7,7 @@
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
-from obspy.core import UTCDateTime, Trace
+from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt
 import numpy as np
 import obspy.core
@@ -537,7 +537,7 @@ class SacIO(object):
         self.hi = np.fromfile(f, dtype='<i4', count=40)
         # read in the char values
         self.hs = np.fromfile(f, dtype='|S8', count=24)
-        if len(self.hf)!=70 or len(self.hi)!=40 or len(self.hs)!=24:
+        if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
             raise SacIOError("Cannot read all header values")
@@ -638,7 +638,7 @@ class SacIO(object):
         self.hi = np.fromfile(f, dtype='<i4', count=40)
         # read in the char values
         self.hs = np.fromfile(f, dtype='|S8', count=24)
-        if len(self.hf)!=70 or len(self.hi)!=40 or len(self.hs)!=24:
+        if len(self.hf) != 70 or len(self.hi) != 40 or len(self.hs) != 24:
             self.hf = self.hi = self.hs = None
             f.close()
             raise SacIOError("Cannot read all header values")
@@ -905,7 +905,7 @@ class SacIO(object):
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
-        
+
         f.close()
 
     def PrintIValue(self, label='=', value=-12345):

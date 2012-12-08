@@ -71,9 +71,13 @@ the names of all available test cases.
 
         $ obspy-runtests -r
 
+(8) To get a full list of all options, use::
+
+        $ obspy-runtests --help
+
 Of course you may combine most of the options here, e.g. in order to test
-all modules ecept the module obspy.sh and obspy.seishub, have a verbose output
-and report everything you would run::
+all modules except the module obspy.sh and obspy.seishub, have a verbose output
+and report everything, you would run::
 
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
@@ -91,6 +95,7 @@ import sys
 import time
 import unittest
 import warnings
+import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
@@ -105,6 +110,8 @@ The following commands will produce the same output as shown above:
 
 Type "help" to see all available options.
 """
+
+HOSTNAME = platform.node().split('.', 1)[0]
 
 
 #XXX: start of ugly monkey patch for Python 2.7
@@ -157,12 +164,11 @@ def _getSuites(verbosity=1, names=[]):
     return suites
 
 
-def _createReport(ttrs, timetaken, log, server):
+def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
     import httplib
     import urllib
     from urlparse import urlparse
-    import platform
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -236,7 +242,7 @@ def _createReport(ttrs, timetaken, log, server):
             result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
-    for func in ['system', 'node', 'release', 'version', 'machine',
+    for func in ['system', 'release', 'version', 'machine',
                  'processor', 'python_version', 'python_implementation',
                  'python_compiler', 'architecture']:
         try:
@@ -246,6 +252,8 @@ def _createReport(ttrs, timetaken, log, server):
             result['platform'][func] = temp
         except:
             result['platform'][func] = ''
+    # set node name to hostname if set
+    result['platform']['node'] = hostname
     # post only the first part of the node name (only applies to MacOS X)
     try:
         result['platform']['node'] = result['platform']['node'].split('.')[0]
@@ -395,12 +403,13 @@ class _TextTestRunner:
             self.stream.writeln(")")
         elif self.verbosity:
             self.stream.writeln("OK")
-        return results, time_taken
+        return results, time_taken, (faileds + erroreds)
 
 
 def runTests(verbosity=1, tests=[], report=False, log=None,
              server="tests.obspy.org", all=False, timeit=False,
-             interactive=False, slowest=0, exclude=[], tutorial=False):
+             interactive=False, slowest=0, exclude=[], tutorial=False,
+             hostname=HOSTNAME):
     """
     This function executes ObsPy test suites.
 
@@ -447,8 +456,8 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             msg = "Could not add tutorial files to tests."
             warnings.warn(msg)
     # run test suites
-    ttr, total_time = _TextTestRunner(verbosity=verbosity,
-                                      timeit=timeit).run(suites)
+    ttr, total_time, errors = _TextTestRunner(verbosity=verbosity,
+                                              timeit=timeit).run(suites)
     if slowest:
         mydict = {}
         # loop over modules
@@ -470,7 +479,9 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
-        _createReport(ttr, total_time, log, server)
+        _createReport(ttr, total_time, log, server, hostname)
+    if errors:
+        return errors
 
 
 def run(interactive=True):
@@ -490,7 +501,7 @@ def run(interactive=True):
                       help="quiet mode")
     # filter options
     filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
-        "will test all installed ObsPy packages which don't require a " + \
+        "will test all ObsPy modules which don't require a " + \
         "active network connection.")
     filter.add_option("--all", default=False,
                       action="store_true", dest="all",
@@ -526,6 +537,9 @@ def run(interactive=True):
     report.add_option("-u", "--server", default="tests.obspy.org",
                       type="string", dest="server",
                       help="report server (default is tests.obspy.org)")
+    report.add_option("-n", "--node", default=HOSTNAME,
+                      type="string", dest="hostname",
+                      help="nodename visible at the report server")
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
@@ -561,9 +575,10 @@ def run(interactive=True):
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
-    runTests(verbosity, parser.largs, report, options.log, options.server,
-             options.all, options.timeit, interactive, options.n,
-             exclude=options.module, tutorial=options.tutorial)
+    return runTests(verbosity, parser.largs, report, options.log,
+        options.server, options.all, options.timeit, interactive, options.n,
+        exclude=options.module, tutorial=options.tutorial,
+        hostname=options.hostname)
 
 
 def main(interactive=True):
@@ -588,7 +603,9 @@ def main(interactive=True):
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
         print PSTATS_HELP
     else:
-        run(interactive)
+        errors = run(interactive)
+        if errors:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

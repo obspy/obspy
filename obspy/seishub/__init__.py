@@ -15,7 +15,7 @@ Basic Example
 -------------
 
 >>> from obspy.seishub import Client
->>> from obspy.core import UTCDateTime
+>>> from obspy import UTCDateTime
 
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')

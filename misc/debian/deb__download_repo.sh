@@ -5,12 +5,11 @@
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2011 ObsPy Development Team
+# Copyright (C) 2011-2012 ObsPy Development Team
 #---------------------------------------------------------------------
 
-# Must be executed in the misc/debian directory
-BASEDIR=`pwd`
-DEBDIR=$BASEDIR/deb
+BUILDDIR=/tmp/python-obspy_build
+DEBDIR=$BUILDDIR/deb
 
 FTPHOST=obspy.org
 FTPUSER=obspy
@@ -19,8 +18,8 @@ FTPUSER=obspy
 rm -rf $DEBDIR
 
 # download deb repository from server
-echo -n "Give password for FTPUSER $FTPUSER and press [ENTER]: "
-read FTPPASSWD
+read -s -p "Give password for FTPUSER $FTPUSER and press [ENTER]: " FTPPASSWD
+echo
 lftp << EOF
 set ftp:ssl-allow 0
 open $FTPUSER:$FTPPASSWD@$FTPHOST

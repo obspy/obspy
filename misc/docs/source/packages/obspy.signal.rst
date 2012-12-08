@@ -26,8 +26,8 @@
        ~filter.lowpass
        ~invsim.pazToFreqResp
        ~trigger.pkBaer
-       ~psd.PPSD
-       ~psd.psd
+       ~spectral_estimation.PPSD
+       ~spectral_estimation.psd
        ~trigger.recSTALTA
        ~rotate.rotate_NE_RT
        ~invsim.seisSim
@@ -56,7 +56,7 @@
        invsim
        konnoohmachismoothing
        polarization
-       psd
+       spectral_estimation
        rotate
        tf_misfit
        trigger

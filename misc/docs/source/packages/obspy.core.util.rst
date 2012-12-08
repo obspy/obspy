@@ -20,7 +20,6 @@
        ~misc.BAND_CODE
        ~misc.complexifyString
        ~misc.guessDelta
-       ~misc.formatScientific
        ~misc.scoreatpercentile
        ~misc.toIntOrZero
        ~types.OrderedDict

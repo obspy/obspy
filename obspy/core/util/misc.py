@@ -142,56 +142,6 @@ def flatnotmaskedContiguous(a):
     return result or None
 
 
-def formatScientific(value):
-    """
-    Returns a float string in a fixed exponential style.
-
-    :type value: float
-    :param value: Floating point number
-    :rtype: str
-    :return: Fixed string of given float number.
-
-    Different operation systems are delivering different output for the
-    exponential format of floats.
-
-    (1) **Python 2.5.2** (r252:60911, Feb 21 2008, 13:11:45)
-        [MSC v.1310 32 bit (Intel)] on **win32**
-
-        >>> '%E' % 2.5 # doctest: +SKIP
-        '2.500000E+000'
-
-    (2) **Python 2.5.2** (r252:60911, Apr  2 2008, 18:38:52)
-        [GCC 4.1.2 20061115 (prerelease) (Debian 4.1.1-21)] on **linux2**
-
-        >>> '%E' % 2.5 # doctest: +SKIP
-        '2.500000E+00'
-
-    This function ensures a valid format independent of the operation system.
-    For speed issues any number ending with `E+0XX` or `E-0XX` is simply cut
-    down to `E+XX` or `E-XX`. This will fail for numbers `XX>99`.
-
-    .. rubric:: Example
-
-    >>> formatScientific("3.4e+002")
-    '3.4e+02'
-
-    >>> formatScientific("3.4E+02")
-    '3.4E+02'
-
-    >>> formatScientific("%-10.4e" % 0.5960000)
-    '5.9600e-01'
-    """
-    if 'e' in value:
-        mantissa, exponent = value.split('e')
-        return "%se%+03d" % (mantissa, int(exponent))
-    elif 'E' in value:
-        mantissa, exponent = value.split('E')
-        return "%sE%+03d" % (mantissa, int(exponent))
-    else:
-        msg = "Can't format scientific %s" % (value)
-        raise TypeError(msg)
-
-
 def complexifyString(line):
     """
     Converts a string in the form "(real, imag)" into a complex type.

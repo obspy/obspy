@@ -10,7 +10,7 @@
 from copy import copy
 from datetime import datetime
 from math import ceil
-from obspy.core import UTCDateTime, Stream, Trace
+from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk
 import StringIO

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
-from obspy.core import UTCDateTime, Stream, Trace, read, AttribDict
+from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -605,7 +604,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         st.write(tempfile, format="MSEED")
         os.remove(tempfile)
 
-    @skipIfPython25
     def test_allDataTypesAndEndiansInSingleFile(self):
         """
         Tests all data and endian types into a single file.
@@ -823,7 +821,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'data', 'fullseed.mseed')
         self.assertTrue(isMSEED(file))
 
-    @skipIfPython25
     def test_bizarreFiles(self):
         """
         Tests reading some bizarre MSEED files.
@@ -897,7 +894,6 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEquals(len(st[0]), 2)
         os.remove(tempfile)
 
-    @skipIfPython25
     def test_emptyTrace(self):
         """
         Tests writing empty Traces should raise an exception.
@@ -922,14 +918,13 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         dt = np.dtype([('npts', 'i4'), ('qual', 'i4')])
         res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
-        one_big_st = read(filename) # do not read timing quality info
+        one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionaly when timing quality
         # changes, sum of all points in stream must stay the same
         self.assertEquals(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
         self.assertEquals((res[:]['qual'] >= 0).sum(),  res.shape[0])
         self.assertEquals((res[:]['qual'] <= 100).sum(),  res.shape[0])
-
 
 
 def suite():

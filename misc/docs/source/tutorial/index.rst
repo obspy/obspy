@@ -74,5 +74,4 @@ are also included in the :doc:`Gallery <../gallery>`.
    code_snippets/time_frequency_misfit
    code_snippets/visualize_data_availability_of_local_waveform_archive
    code_snippets/travel_time_plot
-   code_snippets/obspyDMT.rst
    code_snippets/xcorr_pick_correction

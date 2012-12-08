@@ -6,7 +6,7 @@ The obspy.seishub.client test suite.
 
 from obspy.seishub import Client
 import unittest
-from obspy.core import UTCDateTime, AttribDict
+from obspy import UTCDateTime, AttribDict
 from obspy.xseed.utils import SEEDParserException
 
 
@@ -237,6 +237,97 @@ class ClientTestCase(unittest.TestCase):
         datas.append(c.station.getPAZ("BW", "RLAS", t, channel="BJZ"))
         for data in datas:
             self.assertEqual(data, result)
+
+    def test_localcache(self):
+        """
+        Tests local 'caching' of xml seed resources and station list coordinate
+        information to avoid repeat requests to server.
+        Tests..
+            - returned information is stored with client instance in memory
+            - repeat requests do not get stored duplicated locally
+            - repeat requests do not issue a request to server anymore
+           (- right results for example with two different metadata sets at
+              different times)
+        """
+        net = "BW"
+        sta = "RTSA"
+        netsta = ".".join([net, sta])
+        seed_id = ".".join([net, sta, "", "EHZ"])
+        t1 = UTCDateTime("2009-09-01")
+        t2 = UTCDateTime("2012-10-23")
+        coords1 = dict(elevation=1022.0, latitude=47.7673, longitude=12.842417)
+        coords2 = dict(elevation=1066.0, latitude=47.768345,
+                       longitude=12.841651)
+        paz1 = {'digitizer_gain': 16000000.0,
+                'gain': 1.0,
+                'poles': [(-0.88 + 0.88j), (-0.88 - 0.88j), (-0.22 + 0j)],
+                'seismometer_gain': 400.0,
+                'sensitivity': 6400000000.0,
+                'zeros': [0j, 0j, 0j]}
+        paz2 = {'digitizer_gain': 1677850.0,
+                'gain': 1.0,
+                'poles': [(-4.444 + 4.444j), (-4.444 - 4.444j), (-1.083 + 0j)],
+                'seismometer_gain': 400.0,
+                'sensitivity': 671140000.0,
+                'zeros': [0j, 0j, 0j]}
+        c = self.client
+        # before any requests
+        self.assertTrue(len(c.xml_seeds) == 0)
+        self.assertTrue(len(c.station_list) == 0)
+        # after first t1 requests
+        ret = c.station.getCoordinates(net, sta, t1)
+        self.assertTrue(ret == coords1)
+        self.assertTrue(len(c.station_list) == 1)
+        self.assertTrue(len(c.station_list[netsta]) == 1)
+        ret = c.station.getPAZ(seed_id, t1)
+        self.assertTrue(ret == paz1)
+        self.assertTrue(len(c.xml_seeds) == 1)
+        self.assertTrue(len(c.xml_seeds[seed_id]) == 1)
+        # after first t2 requests
+        ret = c.station.getCoordinates(net, sta, t2)
+        self.assertTrue(ret == coords2)
+        self.assertTrue(len(c.station_list) == 1)
+        self.assertTrue(len(c.station_list[netsta]) == 2)
+        ret = c.station.getPAZ(seed_id, t2)
+        self.assertTrue(ret == paz2)
+        self.assertTrue(len(c.xml_seeds) == 1)
+        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        # getList() is called if getPAZ or getCoordinates ends up making a
+        # request to server so we just overwrite it and let it raise to check
+        # that no request is issued
+        c.station.getList = raiseOnCall
+        # after second t1 requests
+        ret = c.station.getCoordinates(net, sta, t1)
+        self.assertTrue(ret == coords1)
+        self.assertTrue(len(c.station_list) == 1)
+        self.assertTrue(len(c.station_list[netsta]) == 2)
+        ret = c.station.getPAZ(seed_id, t1)
+        self.assertTrue(ret == paz1)
+        self.assertTrue(len(c.xml_seeds) == 1)
+        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        # after second t2 requests
+        ret = c.station.getCoordinates(net, sta, t2)
+        self.assertTrue(ret == coords2)
+        self.assertTrue(len(c.station_list) == 1)
+        self.assertTrue(len(c.station_list[netsta]) == 2)
+        ret = c.station.getPAZ(seed_id, t2)
+        self.assertTrue(ret == paz2)
+        self.assertTrue(len(c.xml_seeds) == 1)
+        self.assertTrue(len(c.xml_seeds[seed_id]) == 2)
+        # new request that needs to connect to server, just to make sure the
+        # monkey patch for raising on requests really works
+        self.assertRaises(RequestException, c.station.getCoordinates,
+                          "GR", "FUR", t2)
+        self.assertRaises(RequestException, c.station.getPAZ,
+                          "GR.FUR..HHZ", t2)
+
+
+class RequestException(Exception):
+    pass
+
+
+def raiseOnCall(*args, **kwargs):
+    raise RequestException("Unwanted request to server.")
 
 
 def suite():

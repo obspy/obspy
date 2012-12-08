@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
-    Origin, CreationInfo, ResourceIdentifier
-import obspy.core.event
+    Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.decorator import skipIfPython25
 import os
 import sys
 import unittest
@@ -22,10 +19,9 @@ class EventTestCase(unittest.TestCase):
         """
         event = readEvents()[1]
         s = event.short_str()
-        self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" + \
+        self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                           " | 4.3 ML | manual", s)
 
-    @skipIfPython25
     def test_eq(self):
         """
         Testing the __eq__ method of the Event object.
@@ -45,6 +41,40 @@ class EventTestCase(unittest.TestCase):
         # comparing with other objects fails
         self.assertFalse(ev1 == 1)
         self.assertFalse(ev2 == "id1")
+
+    def test_clear_method_resets_objects(self):
+        """
+        Tests that the clear() method properly resets all objects. Test for
+        #449.
+        """
+        # Test with basic event object.
+        e = Event()
+        e.comments.append(Comment("test"))
+        e.event_type = "explosion"
+        self.assertEqual(len(e.comments), 1)
+        self.assertEqual(e.event_type, "explosion")
+        e.clear()
+        self.assertTrue(e == Event())
+        self.assertEqual(len(e.comments), 0)
+        self.assertEqual(e.event_type, None)
+        # Test with pick object. Does not really fit in the event test case but
+        # it tests the same thing...
+        p = Pick()
+        p.comments.append(Comment("test"))
+        p.phase_hint = "p"
+        self.assertEqual(len(p.comments), 1)
+        self.assertEqual(p.phase_hint, "p")
+        # Add some more random attributes. These should disappear upon
+        # cleaning.
+        p.test_1 = "a"
+        p.test_2 = "b"
+        self.assertEqual(p.test_1, "a")
+        self.assertEqual(p.test_2, "b")
+        p.clear()
+        self.assertEqual(len(p.comments), 0)
+        self.assertEqual(p.phase_hint, None)
+        self.assertFalse(hasattr(p, "test_1"))
+        self.assertFalse(hasattr(p, "test_2"))
 
 
 class OriginTestCase(unittest.TestCase):
@@ -311,6 +341,7 @@ class CatalogTestCase(unittest.TestCase):
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
 
+
 class WaveformStreamIDTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.event.WaveformStreamID.
@@ -340,7 +371,6 @@ class WaveformStreamIDTestCase(unittest.TestCase):
         self.assertEqual(waveform_id.location_code, "02")
         self.assertEqual(waveform_id.channel_code, None)
 
-    @skipIfPython25
     def test_initialization_with_invalid_seed_string(self):
         """
         Test initialization with an invalid seed string. Should raise a
@@ -373,7 +403,6 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         # otherwise.
         ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict.clear()
 
-    @skipIfPython25
     def test_same_resource_id_different_referred_object(self):
         """
         Tests the handling of the case that different ResourceIdentifier

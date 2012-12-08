@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime, read, Trace
+from obspy import UTCDateTime, read, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.sh.core import readASC, writeASC, isASC, isQ, readQ, writeQ, \
-                                                           STANDARD_ASC_HEADERS
+    STANDARD_ASC_HEADERS
 import numpy as np
 import os
 import unittest
+import warnings
 
 
 class CoreTestCase(unittest.TestCase):
@@ -121,8 +122,8 @@ class CoreTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         writeASC(stream1, tempfile, STANDARD_ASC_HEADERS + ['COMMENT'])
         # read both files and compare the content
-        text1 = open(origfile, 'rb').read()
-        text2 = open(tempfile, 'rb').read()
+        text1 = open(origfile, 'rt').readlines()
+        text2 = open(tempfile, 'rt').readlines()
         self.assertEquals(text1, text2)
         # read again
         stream2 = readASC(tempfile)
@@ -250,7 +251,9 @@ class CoreTestCase(unittest.TestCase):
                     tempfile += '.QHD'
                 tr.write(tempfile, format=format)
                 # test results
-                st = read(tempfile, format=format)
+                with warnings.catch_warnings() as _:
+                    warnings.simplefilter("ignore")
+                    st = read(tempfile, format=format)
                 self.assertEquals(len(st), 1)
                 self.assertEquals(len(st[0]), num)
                 # Q files consist of two files - deleting additional file

@@ -5,8 +5,9 @@ The audio wav.core test suite.
 """
 
 from __future__ import division
-from obspy.core import read, Stream, Trace
+from obspy import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
+from obspy.wav.core import width2dtype
 import os
 import unittest
 import numpy as np
@@ -80,9 +81,10 @@ class CoreTestCase(unittest.TestCase):
                      rescale=True)
             tr2 = read(testfile, format='WAV')[0]
             maxint = 2 ** (8 * width - 1) - 1
+            dtype = width2dtype[width]
             self.assertEqual(maxint, abs(tr2.data).max())
-            np.testing.assert_array_almost_equal(tr2.data / 1000.0,
-                (tr.data / abs(tr.data).max() * maxint) / 1000.0, 3)
+            expected = (tr.data / abs(tr.data).max() * maxint).astype(dtype)
+            np.testing.assert_array_almost_equal(tr2.data, expected)
             os.remove(testfile)
 
     def test_writeStreamViaObsPy(self):

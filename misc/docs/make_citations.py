@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pybtex.database import BibliographyData
 from pybtex.database.input import bibtex
-from pybtex.style.formatting.unsrt import Style
 from pybtex.style.names.lastfirst import NameStyle
 from pybtex.style.template import sentence, field, optional, words, node, join
 import glob

@@ -18,7 +18,7 @@ format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
 http://examples.obspy.org.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
 >>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:

@@ -16,7 +16,7 @@ different bandpass, lowpass, highpass, bandstop and FIR filter.
 .. warning::
 
     Before filtering you should make sure that data is demeaned/detrended, e.g.
-    using :meth:`obspy.core.stream.Stream.detrend`. Otherwise there can be
+    using :meth:`~obspy.core.stream.Stream.detrend`. Otherwise there can be
     massive artifacts from filtering.
 
 The following example shows how to highpass a seismogram at 1.0Hz.
@@ -30,16 +30,16 @@ comparison with the other traces in the plot.
     also specified. It returns the filtered data.  For
     :class:`~obspy.core.stream.Stream` and :class:`~obspy.core.trace.Trace`
     objects simply use their respective filtering methods
-    :meth:`obspy.core.stream.Stream.filter` and
-    :meth:`obspy.core.trace.Trace.filter`.
+    :meth:`Stream.filter() <obspy.core.stream.Stream.filter>` and
+    :meth:`Trace.filter() <obspy.core.trace.Trace.filter>`.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> import obspy.signal
 >>> st = read()
 >>> tr = st[0]
->>> tr.data = obspy.signal.highpass(tr.data, 1.0,
-...         df=tr.stats.sampling_rate, corners=1, zerophase=True)
->>> st.plot() #doctest: +SKIP
+>>> tr.data = obspy.signal.highpass(tr.data, 1.0, corners=1, zerophase=True,
+...                                 df=tr.stats.sampling_rate)
+>>> st.plot()  # doctest: +SKIP
 
 Working with the convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`
@@ -49,7 +49,7 @@ works similar:
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     import obspy.signal
     st = read()
     tr = st[0]
@@ -64,13 +64,13 @@ The response of the instrument can be removed by the
 the the instrument response of a STS2 and simulate an instrument with 2Hz
 corner frequency.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read()
 >>> st.plot() #doctest: +SKIP
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     st.plot()
 
@@ -90,7 +90,7 @@ Now we apply the instrument correction and simulation:
 ...     df = tr.stats.sampling_rate
 ...     tr.data = seisSim(tr.data, df, paz_remove=sts2, paz_simulate=inst2hz,
 ...                       water_level=60.0)
->>> st.plot() #doctest: +SKIP
+>>> st.plot()  # doctest: +SKIP
 
 Again, there are convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`:
@@ -99,7 +99,7 @@ Again, there are convenience methods implemented on
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     from obspy.signal import seisSim, cornFreq2Paz
     inst2hz = cornFreq2Paz(2.0)
     st = read()
@@ -127,7 +127,7 @@ M. Bear. The implementation is based on [Withers1998]_ and [Baer1987]_.
 
 The following example demonstrates a recursive STA/LTA triggering:
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
@@ -142,7 +142,7 @@ The following example demonstrates a recursive STA/LTA triggering:
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     from obspy.signal.trigger import recSTALTA, plotTrigger
     st = read()
     tr = st.select(component="Z")[0]
@@ -166,7 +166,7 @@ But it also means that the trace's built-in methods can be used.
 
 .. plot::
 
-    from obspy.core import read
+    from obspy import read
     st = read()
     tr = st.select(component="Z")[0]
     tr.filter("bandpass", freqmin=1, freqmax=20)
@@ -175,29 +175,29 @@ But it also means that the trace's built-in methods can be used.
 
 For more examples check out the `triggering page`_ in the `Tutorial`_. For
 network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
-and the same page in the `Tutorial`_. For automated use there are some example
-scripts in the `svn repository`_.
+and the same page in the `Tutorial`_. For automated use see the following
+`stalta`_ example scripts.
 
 .. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
-.. _`svn repository`: http://www.obspy.org/browser/branches/sandbox/stalta
+.. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
 
-from filter import bandpass, bandstop, lowpass, highpass, remezFIR, lowpassFIR
-from filter import envelope, integerDecimation
+from filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
+    lowpassFIR, envelope, integerDecimation
 from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
     delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
     coincidenceTrigger, classicSTALTAPy
-from invsim import cosTaper, cornFreq2Paz
-from invsim import pazToFreqResp, seisSim, specInv, estimateMagnitude
+from invsim import cosTaper, cornFreq2Paz, pazToFreqResp, seisSim, specInv, \
+    estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
 from util import utlGeoKm, utlLonLat
 from cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection
 from freqattributes import cfrequency, bwith, domperiod, logcep
 from hoctavbands import sonogram
 from polarization import eigval
-from psd import psd, PPSD
+from spectral_estimation import psd, PPSD
 from konnoohmachismoothing import konnoOhmachiSmoothing
 
 

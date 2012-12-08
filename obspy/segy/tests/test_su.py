@@ -3,7 +3,6 @@
 The obspy.segy Seismic Unix test suite.
 """
 
-from __future__ import with_statement
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.segy import readSU, SEGYTraceReadingError
 from StringIO import StringIO

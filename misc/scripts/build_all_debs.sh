@@ -1,29 +1,39 @@
-#!/bin/sh
+#!/bin/bash
 # Automated script to build all packages for all distributions.
 # schroot environments have to be set up accordingly beforehand.
 
-DIR=/tmp/debian
-TAGSDIR=$DIR/tags
-LOG=$DIR/build_all_debs.log
+BASEDIR=/tmp/python-obspy_buildall
+GITDIR=$BASEDIR/git
+DEBSCRIPTDIR=$GITDIR/misc/debian
+LOG=$BASEDIR/build_all_debs.log
 
-echo '#############' >> $LOG
-echo `date` >> $LOG
+BUILDDIR=/tmp/python-obspy_build
+PACKAGEDIR=$BUILDDIR/packages
 
-rm -rf $DIR
-mkdir $HOME/build_all_debs
+rm -rf $BASEDIR
+mkdir -p $BASEDIR
+exec 2>&1 >> $LOG
+echo '#############'
+echo "#### `date`"
 
-svn checkout --non-interactive --trust-server-cert https://svn.obspy.org/trunk/misc/debian $DIR
+git clone https://github.com/obspy/obspy.git $GITDIR
 
-for DIST in squeeze lucid natty oneiric precise; do
+for DIST in squeeze wheezy lucid natty oneiric precise quantal; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
-        echo "$DISTARCH" >> $LOG
-        rm -rf $TAGSDIR
-        svn checkout --non-interactive --trust-server-cert https://svn.obspy.org/tags $TAGSDIR
-        svn revert --non-interactive --trust-server-cert $DIR/control
-        echo "cd $DIR; ./deb__build_debs.sh &>> $LOG" | schroot -c $DISTARCH
-        mv $DIR/packages/* $HOME/build_all_debs/
+        echo "#### $DISTARCH"
+        cd $GITDIR
+        git clean -fxd
+        cd /tmp  # can make problems to enter schroot environment from a folder not present in the schroot
+        COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh &>> $LOG"
+        if [[ "$DIST" == "quantal" ]]
+        then
+            COMMAND="export GIT_SSL_NO_VERIFY=true; $COMMAND"
+        fi
+        SCHROOT_SESSION=$(schroot --begin-session -c $DISTARCH)
+        echo "$COMMAND" | schroot --run-session -c "$SCHROOT_SESSION"
+        schroot -f --end-session -c "$SCHROOT_SESSION"
+        mv $PACKAGEDIR/* $BASEDIR
     done
 done
-
-cp $LOG $HOME/
+ln $BASEDIR/*.deb $PACKAGEDIR/

@@ -13,12 +13,11 @@ from datetime import datetime
 from lxml import objectify
 from lxml.etree import Element, SubElement, tostring
 from math import log
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import guessDelta
 from obspy.xseed import Parser
 import os
 import pickle
-import sys
 import time
 import urllib
 import urllib2
@@ -100,7 +99,7 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()
@@ -140,6 +139,8 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
         self.retries = retries
+        self.xml_seeds = {}
+        self.station_list = {}
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -199,15 +200,10 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:
-            timeout_kwarg = {}
-        else:
-            timeout_kwarg = {'timeout': self.timeout}
         # certain requests randomly fail on rare occasions, retry
         for _i in xrange(self.retries):
             try:
-                response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
+                response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
                 doc = response.read()
                 return doc
             # XXX currently there are random problems with SeisHub's internal
@@ -215,7 +211,7 @@ class Client(object):
             # XXX this can be circumvented by issuing the same request again..
             except Exception:
                 continue
-        response = urllib2.urlopen(remoteaddr, **timeout_kwarg)
+        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -334,8 +330,8 @@ class _WaveformMapperClient(object):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.waveform` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/waveform.py
     """
     def __init__(self, client):
         self.client = client
@@ -501,6 +497,7 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
         stream = pickle.loads(data)
         if len(stream) == 0:
             raise Exception("No waveform data available")
+        stream._cleanup()
 
         # trimming needs to be done only if we extend the datetime above
         if channel:
@@ -532,7 +529,6 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/waveform.py
                     raise Exception(msg)
             for tr in stream:
                 tr.stats['coordinates'] = coords.copy()
-        stream._cleanup()
         return stream
 
     def getPreview(self, network, station, location=None, channel=None,
@@ -608,8 +604,8 @@ class _StationMapperClient(_BaseRESTClient):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.station` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/waveform.py
     """
     package = 'seismology'
     resourcetype = 'station'
@@ -659,11 +655,33 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
             if key not in ["self", "kwargs"]:
                 kwargs[key] = value
 
+        # try to read coordinates from previously obtained station lists
+        netsta = ".".join([network, station])
+        for data in self.client.station_list.get(netsta, []):
+            # check if starttime is present and fitting
+            if data['start_datetime'] == "":
+                pass
+            elif datetime < UTCDateTime(data['start_datetime']):
+                continue
+            # check if endtime is present and fitting
+            if data['end_datetime'] == "":
+                pass
+            elif datetime > UTCDateTime(data['end_datetime']):
+                continue
+            coords = {}
+            for key in ['latitude', 'longitude', 'elevation']:
+                coords[key] = data[key]
+            return coords
+
         metadata = self.getList(**kwargs)
         if not metadata:
             msg = "No coordinates for station %s.%s at %s" % \
                     (network, station, datetime)
             raise Exception(msg)
+        stalist = self.client.station_list.setdefault(netsta, [])
+        for data in metadata:
+            if data not in stalist:
+                stalist.append(data)
         if len(metadata) > 1:
             warnings.warn("Received more than one metadata set. Using first.")
         metadata = metadata[0]
@@ -702,6 +720,15 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
         >>> paz['sensitivity']
         2516800000.0
         """
+        # try to read PAZ from previously obtained XSEED data
+        for res in self.client.xml_seeds.get(seed_id, []):
+            parser = Parser(res)
+            try:
+                paz = parser.getPAZ(seed_id=seed_id,
+                                    datetime=UTCDateTime(datetime))
+                return paz
+            except:
+                continue
         network, station, location, channel = seed_id.split(".")
         # request station information
         station_list = self.getList(network=network, station=station,
@@ -719,6 +746,9 @@ browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/station.py
 
         xml_doc = station_list[0]
         res = self.client.station.getResource(xml_doc['resource_name'])
+        reslist = self.client.xml_seeds.setdefault(seed_id, [])
+        if res not in reslist:
+            reslist.append(res)
         parser = Parser(res)
         paz = parser.getPAZ(seed_id=seed_id, datetime=UTCDateTime(datetime))
         return paz
@@ -732,8 +762,8 @@ class _EventMapperClient(_BaseRESTClient):
         This function should NOT be initialized directly, instead access the
         object via the :attr:`obspy.seishub.Client.event` attribute.
 
-    .. seealso:: http://svn.geophysik.uni-muenchen.de/trac/seishub/\
-browser/trunk/seishub.plugins.seismology/seishub/plugins/seismology/event.py
+    .. seealso:: https://github.com/barsch/seishub.plugins.seismology/blob/\
+master/seishub/plugins/seismology/event.py
     """
     package = 'seismology'
     resourcetype = 'event'

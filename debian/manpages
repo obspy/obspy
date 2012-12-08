@@ -1,3 +1,4 @@
+./debian/obspy-flinn-engdahl.1
 ./debian/obspy-runtests.1
 ./debian/obspy-reftek-rescue.1
 ./debian/obspy-indexer.1
@@ -7,3 +8,4 @@
 ./debian/obspy-dataless2resp.1
 ./debian/obspy-dataless2xseed.1
 ./debian/obspy-xseed2dataless.1
+./debian/obspy-mseed-recordanalyzer.1

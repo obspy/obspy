@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
 from StringIO import StringIO
 from lxml import etree
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
 from obspy.xseed.blockette.blockette053 import Blockette053
@@ -29,7 +27,6 @@ class ParserTestCase(unittest.TestCase):
                 ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
                  'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
-    @skipIfPython25
     def test_issue165(self):
         """
         Test cases related to #165:
@@ -88,10 +85,47 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)
-        sp = str(p).split(os.linesep)
-        self.assertEquals(sp, ["BW.MANZ..EHZ | 2005-12-06T00:00:00.000000Z - ",
-                               "BW.MANZ..EHN | 2005-12-06T00:00:00.000000Z - ",
-                               "BW.MANZ..EHE | 2005-12-06T00:00:00.000000Z -"])
+        sp = str(p).splitlines()
+        sp = [_i.strip() for _i in sp]
+        self.assertEquals(sp, [
+            "Networks:",
+            "BW (BayernNetz)",
+            "Stations:",
+            "BW.MANZ (Manzenberg,Bavaria, BW-Net)",
+            "Channels:",
+            ("BW.MANZ..EHE | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -"),
+            ("BW.MANZ..EHN | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -"),
+            ("BW.MANZ..EHZ | 200.00 Hz | Streckeisen STS-2/N seismometer | "
+                "2005-12-06 -")])
+
+    def test_get_inventory(self):
+        """
+        Tests the parser's getInventory() method.
+        """
+        filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
+        p = Parser(filename)
+        self.assertEqual(p.getInventory(),
+            {'networks': [{'network_code': 'BW',
+                'network_name': 'BayernNetz'}],
+            'stations': [{'station_name': 'Furstenfeldbruck, Bavaria, BW-Net',
+                'station_id': 'BW.FURT'}],
+            'channels': [
+                {'channel_id': 'BW.FURT..EHZ',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '', 'sampling_rate': 200.0},
+                {'channel_id': 'BW.FURT..EHN',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '',
+                    'sampling_rate': 200.0},
+                {'channel_id': 'BW.FURT..EHE',
+                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                    'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'end_date': '',
+                    'sampling_rate': 200.0}]})
 
     def test_nonExistingFilename(self):
         """
@@ -122,7 +156,6 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(strict=True)
         parser.read(data)
 
-    @skipIfPython25
     def test_multipleContinuedStationControlHeader(self):
         """
         """
@@ -293,7 +326,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
 
-    @skipIfPython25
     def test_getPAZ(self):
         """
         Test extracting poles and zeros information
@@ -420,7 +452,7 @@ class ParserTestCase(unittest.TestCase):
         # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
-                  'longitude': 12.795714}
+            'longitude': 12.795714, 'local_depth': 0}
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -431,6 +463,16 @@ class ParserTestCase(unittest.TestCase):
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp2.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
+
+    def test_selectDoesNotChangeTheParserFormat(self):
+        """
+        Test that using the _select() method of the Parser object does
+        not change the _format attribute.
+        """
+        p = Parser(os.path.join(self.path, "dataless.seed.BW_FURT.xml"))
+        self.assertEqual(p._format, "XSEED")
+        p._select(p.getInventory()["channels"][0]["channel_id"])
+        self.assertEqual(p._format, "XSEED")
 
     def test_createRESPFromXSEED(self):
         """
@@ -482,7 +524,6 @@ class ParserTestCase(unittest.TestCase):
         self.assertFalse(p._compareBlockettes(blockette2, blockette3))
         self.assertTrue(p._compareBlockettes(blockette3, blockette4))
 
-    @skipIfPython25
     def test_missingRequiredDateTimes(self):
         """
         A warning should be raised if a blockette misses a required date.
@@ -527,7 +568,6 @@ class ParserTestCase(unittest.TestCase):
         parser = Parser(file)
         parser.getRESP()
 
-    @skipIfPython25
     def test_issue319(self):
         """
         Test case for issue #319: multiple abbreviation dictionaries.
@@ -542,13 +582,12 @@ class ParserTestCase(unittest.TestCase):
             parser = Parser(filename)
             self.assertEquals(parser.version, 2.3)
 
-    @skipIfPython25
     def test_issue157(self):
         """
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
-                    'longitude': 11.2752}
+            'longitude': 11.2752, 'local_depth': 0.0}
         filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
         filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         t = UTCDateTime("2010-07-01")
@@ -574,7 +613,6 @@ class ParserTestCase(unittest.TestCase):
         dt = UTCDateTime('2012-01-01')
         parser.getPAZ('CL.AIO.00.EHZ', dt)
 
-    @skipIfPython25
     def test_issue361(self):
         """
         Test case for issue #361.

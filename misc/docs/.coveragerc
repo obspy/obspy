@@ -16,10 +16,6 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     if __name__ == .__main__.:
 
-    # ignore Python 2.5.x
-    sys.hexversion < 0x02060000
-    sys.hexversion < 0x020600F0
-
     # ignore ImportErrors
     except ImportError
 

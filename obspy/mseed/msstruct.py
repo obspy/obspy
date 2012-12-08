@@ -4,7 +4,7 @@ Convenience class for handling MSRecord and MSFileparam.
 """
 
 from headers import clibmseed, MSRecord, MSFileParam, MS_NOERROR, HPTMODULUS
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 import ctypes as C
 import os
 

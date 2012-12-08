@@ -4,7 +4,7 @@ The obspy.earthworm.client test suite.
 """
 
 from obspy.earthworm import Client
-from obspy.core import read
+from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 import os

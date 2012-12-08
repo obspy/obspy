@@ -21,7 +21,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
     QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
     PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier
+    ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
@@ -101,6 +101,17 @@ class Unpickler(object):
                 comment.resource_id = temp
             comment.creation_info = self._creation_info(el)
             obj.append(comment)
+        return obj
+
+    def _station_magnitude_contributions(self, element):
+        obj = []
+        for el in self._xpath("stationMagnitudeContribution", element):
+            contrib = StationMagnitudeContribution()
+            contrib.weight = self._xpath2obj("weight", el, float)
+            contrib.residual = self._xpath2obj("residual", el, float)
+            contrib.station_magnitude_id = \
+                self._xpath2obj("stationMagnitudeID", el, str)
+            obj.append(contrib)
         return obj
 
     def _creation_info(self, element):
@@ -404,6 +415,8 @@ class Unpickler(object):
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
+        obj.station_magnitude_contributions = \
+            self._station_magnitude_contributions(element)
         obj.comments = self._comments(element)
         return obj
 
@@ -467,11 +480,11 @@ class Unpickler(object):
         :type element: etree.Element
         :rtype: :class:`~obspy.core.event.PrincipalAxes`
         """
-        obj = PrincipalAxes()
         try:
             sub_el = self._xpath('principalAxes', element)[0]
         except:
-            return obj
+            return None
+        obj = PrincipalAxes()
         # required parameter
         obj.t_axis = self._axis(sub_el, 'tAxis')
         obj.p_axis = self._axis(sub_el, 'pAxis')
@@ -806,7 +819,7 @@ class Pickler(object):
             attrib['networkCode'] = obj.network_code
         if obj.station_code:
             attrib['stationCode'] = obj.station_code
-        if obj.location_code:
+        if obj.location_code is not None:
             attrib['locationCode'] = obj.location_code
         if obj.channel_code:
             attrib['channelCode'] = obj.channel_code
@@ -833,6 +846,19 @@ class Pickler(object):
         # append only if at least one sub-element is set
         if len(subelement) > 0:
             element.append(subelement)
+
+    def _station_magnitude_contributions(self, stat_contrib, element):
+        for contrib in stat_contrib:
+            contrib_el = etree.Element('stationMagnitudeContribution')
+            etree.SubElement(contrib_el, 'stationMagnitudeID').text = \
+                contrib.station_magnitude_id.resource_id
+            if contrib.weight:
+                etree.SubElement(contrib_el, 'weight').text = \
+                    str(contrib.weight)
+            if contrib.residual:
+                etree.SubElement(contrib_el, 'residual').text = \
+                    str(contrib.residual)
+            element.append(contrib_el)
 
     def _comments(self, comments, element):
         for comment in comments:
@@ -904,6 +930,8 @@ class Pickler(object):
         self._str(magnitude.station_count, element, 'stationCount')
         self._str(magnitude.azimuthal_gap, element, 'azimuthalGap')
         self._str(magnitude.evaluation_status, element, 'evaluationStatus')
+        self._station_magnitude_contributions(
+            magnitude.station_magnitude_contributions, element)
         self._comments(magnitude.comments, element)
         self._creation_info(magnitude.creation_info, element)
         return element
@@ -1343,10 +1371,18 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     :type filename: str
     :param filename: Name of file to write.
     """
-    fh = open(filename, 'wt')
+    # Open filehandler or use an existing file like object.
+    if not hasattr(filename, 'write'):
+        fh = open(filename, 'wt')
+    else:
+        fh = filename
+
     xml_doc = Pickler().dumps(catalog)
     fh.write(xml_doc)
     fh.close()
+    # Close if its a file handler.
+    if isinstance(fh, file):
+        fh.close()
 
 
 def readSeisHubEventXML(filename):

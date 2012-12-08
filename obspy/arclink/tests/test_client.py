@@ -5,7 +5,7 @@ The obspy.arclink.client test suite.
 
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
-from obspy.core import read
+from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
@@ -294,6 +294,7 @@ class ClientTestCase(unittest.TestCase):
             'station': 'RJOB',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 12, 0),
+            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'npts': 1370,
             'calib': 1.0,
             'sampling_rate': 200.0,
@@ -335,6 +336,7 @@ class ClientTestCase(unittest.TestCase):
             'station': 'VRAC',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
+            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 59, 993400),
             'npts': 2401,
             'calib': 1.0,
             'sampling_rate': 40.0,
@@ -635,7 +637,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Test case for issue #372.
         """
-        dt = UTCDateTime("20120529070000")
+        dt = UTCDateTime("20120729070000")
         client = Client()
         st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
                                 metadata=True)

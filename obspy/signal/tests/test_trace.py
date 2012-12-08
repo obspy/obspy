@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 import numpy as np
-from obspy.core import UTCDateTime, Trace, read
+from obspy import UTCDateTime, Trace, read
 from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
 from obspy.signal.filter import lowpassCheby2
 import unittest

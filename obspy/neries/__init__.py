@@ -66,7 +66,7 @@ Basic Usage
     how to fetch and display waveforms.
 
     >>> from obspy.neries import Client
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> client = Client(user='test@obspy.org')
     >>> dt = UTCDateTime("2009-08-20 04:03:12")
     >>> st = client.getWaveform("BW", "RJOB", "", "EH*", dt - 3, dt + 15)
@@ -75,7 +75,7 @@ Basic Usage
     .. plot::
 
         from obspy.neries import Client
-        from obspy.core import UTCDateTime
+        from obspy import UTCDateTime
         client = Client(user='test@obspy.org')
         dt = UTCDateTime("2009-08-20 04:03:12")
         st = client.getWaveform("BW", "RJOB", "", "EH*", dt - 3, dt + 15)

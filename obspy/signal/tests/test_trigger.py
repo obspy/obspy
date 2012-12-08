@@ -2,10 +2,8 @@
 """
 The obspy.signal.trigger test suite.
 """
-from __future__ import with_statement
 from ctypes import ArgumentError
-from obspy.core import read, Stream, UTCDateTime
-from obspy.core.util.decorator import skipIfPython25
+from obspy import read, Stream, UTCDateTime
 from obspy.signal import recSTALTA, recSTALTAPy, triggerOnset, pkBaer, \
     coincidenceTrigger, arPick, classicSTALTA, classicSTALTAPy
 from obspy.signal.util import clibsignal
@@ -126,7 +124,6 @@ class TriggerTestCase(unittest.TestCase):
             plt.legend()
             plt.show()
 
-    @skipIfPython25
     def test_coincidenceTrigger(self):
         """
         Test network coincidence trigger.
