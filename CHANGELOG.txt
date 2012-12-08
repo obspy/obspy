@@ -3,7 +3,7 @@ dev:
    Use "import obspy; print obspy.__version__"
  - discontinuing Python 2.5 support
  - most important classes/functions can be imported like "from obspy import
-   ...", currently: read, Trace, Stream, UTCDateTime and Stats
+   ...", currently: read, Trace, Stream, UTCDateTime and readEvents
  - obspy.arclink:
    * refactored attributes in getPAZ to stick better with the SEED standard
  - obspy.core:
