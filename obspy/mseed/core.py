@@ -8,7 +8,7 @@ from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
     blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
 from math import log
-from obspy.core import Stream, Trace, UTCDateTime
+from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
 import ctypes as C
@@ -137,14 +137,14 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/two_channels.mseed")
     >>> print(st)  # doctest: +ELLIPSIS
     2 Trace(s) in Stream:
     BW.UH3..EHE | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
     BW.UH3..EHZ | 2010-06-20T00:00:00.279999Z - ... | 200.0 Hz, 386 samples
 
-    >>> from obspy.core import UTCDateTime
+    >>> from obspy import UTCDateTime
     >>> st = read("/path/to/test.mseed",
     ...           starttime=UTCDateTime("2003-05-29T02:16:00"),
     ...           selection="NL.*.*.?HZ")
@@ -380,7 +380,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write('filename.mseed', format='MSEED')  # doctest: +SKIP
     """

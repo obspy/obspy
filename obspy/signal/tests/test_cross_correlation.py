@@ -6,7 +6,7 @@ The cross correlation test suite.
 
 import os
 import unittest
-from obspy.core import read, UTCDateTime
+from obspy import read, UTCDateTime
 from obspy.signal.cross_correlation import xcorrPickCorrection
 
 

@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from numpy.ma import is_masked
-from obspy.core import UTCDateTime, Trace, read
+from obspy import UTCDateTime, Trace, read
 import unittest
 import math
 

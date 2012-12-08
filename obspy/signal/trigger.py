@@ -28,7 +28,7 @@ characteristic functions and a coincidence triggering routine.
 import warnings
 import ctypes as C
 import numpy as np
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 

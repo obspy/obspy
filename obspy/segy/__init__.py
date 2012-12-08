@@ -57,7 +57,7 @@ only unpacked on demand by default.
 
 >>> from obspy.segy.core import readSEGY
 >>> from obspy.core.util import getExampleFile
->>> # or 'from obspy.core import read' if file wide headers are of no interest
+>>> # or 'from obspy import read' if file wide headers are of no interest
 >>> filename = getExampleFile("00001034.sgy_first_trace")
 >>> st = readSEGY(filename)
 >>> st #doctest: +ELLIPSIS
@@ -171,7 +171,8 @@ The other possibility is to autogenerate the headers with the help of ObsPy and
 a potential manual review of them which is demonstrated in the following
 script::
 
-    from obspy.core import read, Trace, AttribDict, Stream, UTCDateTime
+    from obspy import read, Trace, Stream, UTCDateTime
+    from obspy.core import AttribDict
     from obspy.segy.segy import SEGYTraceHeader, SEGYBinaryFileHeader
     from obspy.segy.core import readSEGY
     import numpy as np

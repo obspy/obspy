@@ -10,7 +10,7 @@ Helper module containing xseed fields.
 """
 
 from lxml.etree import Element, SubElement
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.xseed import utils
 import re
 import warnings

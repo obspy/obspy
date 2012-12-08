@@ -5,7 +5,7 @@ The audio wav.core test suite.
 """
 
 from __future__ import division
-from obspy.core import read, Stream, Trace
+from obspy import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.wav.core import width2dtype
 import os

@@ -2,7 +2,7 @@
 """
 The obspy.realtime.signal test suite.
 """
-from obspy.core import read
+from obspy import read
 from obspy.core.stream import Stream
 from obspy.realtime import RtTrace, signal
 import numpy as np
@@ -259,13 +259,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
 
 
 def suite():
-    # skip test suite if obspy.sac is not installed
-    try:
-        import obspy.sac  # @UnusedImport
-    except ImportError:
-        pass
-    else:
-        return unittest.makeSuite(RealTimeSignalTestCase, 'test')
+    return unittest.makeSuite(RealTimeSignalTestCase, 'test')
 
 
 if __name__ == '__main__':

@@ -12,17 +12,18 @@ PACKAGEDIR=$BUILDDIR/packages
 
 rm -rf $BASEDIR
 mkdir -p $BASEDIR
-echo '#############' >> $LOG
-echo "#### `date`" >> $LOG
+exec 2>&1 >> $LOG
+echo '#############'
+echo "#### `date`"
 
-git clone https://github.com/obspy/obspy.git $GITDIR 2>&1 >> $LOG
-cd $GITDIR 2>&1 >> $LOG
+git clone https://github.com/obspy/obspy.git $GITDIR
 
 for DIST in squeeze wheezy lucid natty oneiric precise quantal; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
-        echo "#### $DISTARCH" >> $LOG
-        git clean -fxd 2>&1 >> $LOG
+        echo "#### $DISTARCH"
+        cd $GITDIR
+        git clean -fxd
         cd /tmp  # can make problems to enter schroot environment from a folder not present in the schroot
         COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh &>> $LOG"
         if [[ "$DIST" == "quantal" ]]
@@ -30,9 +31,9 @@ for DIST in squeeze wheezy lucid natty oneiric precise quantal; do
             COMMAND="export GIT_SSL_NO_VERIFY=true; $COMMAND"
         fi
         SCHROOT_SESSION=$(schroot --begin-session -c $DISTARCH)
-        echo "$COMMAND" | schroot --run-session -c "$SCHROOT_SESSION" 2>&1 >> $LOG
-        schroot -f --end-session -c "$SCHROOT_SESSION" 2>&1 >> $LOG
-        mv $PACKAGEDIR/* $BASEDIR 2>&1 >> $LOG
+        echo "$COMMAND" | schroot --run-session -c "$SCHROOT_SESSION"
+        schroot -f --end-session -c "$SCHROOT_SESSION"
+        mv $PACKAGEDIR/* $BASEDIR
     done
 done
-ln $BASEDIR/*.deb $PACKAGEDIR/ 2>&1 >> $LOG
+ln $BASEDIR/*.deb $PACKAGEDIR/

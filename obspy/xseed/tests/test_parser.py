@@ -2,7 +2,7 @@
 
 from StringIO import StringIO
 from lxml import etree
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.xseed.blockette.blockette010 import Blockette010
 from obspy.xseed.blockette.blockette051 import Blockette051
@@ -85,7 +85,7 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         p = Parser(filename)
-        sp = str(p).split(os.linesep)
+        sp = str(p).splitlines()
         sp = [_i.strip() for _i in sp]
         self.assertEquals(sp, [
             "Networks:",

@@ -17,7 +17,7 @@ Low-level module internally used for handling GSE1 files
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.gse2.libgse2 import uncompress_CM6, verifyChecksum
 import doctest
 import numpy as np

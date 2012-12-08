@@ -3,7 +3,7 @@
 DATAMARK bindings to ObsPy core module.
 """
 
-from obspy.core import Trace, UTCDateTime, Stream
+from obspy import Trace, UTCDateTime, Stream
 import numpy as np
 import warnings
 

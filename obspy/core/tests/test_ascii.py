@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime, read, Trace
+from obspy import UTCDateTime, read, Trace
 from obspy.core.ascii import readSLIST, readTSPAIR, isSLIST, isTSPAIR, \
     writeTSPAIR, writeSLIST
 from obspy.core.util import NamedTemporaryFile

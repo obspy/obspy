@@ -57,28 +57,23 @@ if not clibevresp:
           'obspy.signal.invsim.evalresp\n\n %s' % (e)
     raise ImportError(msg)
 
+clibsignal.calcSteer.argtypes = [
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_float,
+    np.ctypeslib.ndpointer(dtype='f4', ndim=3, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='c16', ndim=4, flags='C_CONTIGUOUS'),
+]
+clibsignal.calcSteer.restype = C.c_void_p
 
-#XXX moritz: add a note where params are pointers
-clibsignal.bbfk.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int,
-    C.POINTER(C.c_void_p),
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_void_p,
-    C.POINTER(C.c_float),
-    C.POINTER(C.c_float),
-    C.POINTER(C.c_int),
-    C.POINTER(C.c_int),
-    C.c_float, C.c_float, C.c_float,
-    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+clibsignal.generalizedBeamformer.argtypes = [
+    np.ctypeslib.ndpointer(dtype='f8', ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='f8', ndim=2, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='c16', ndim=4, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='c16', ndim=3, flags='C_CONTIGUOUS'),
+    C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int, C.c_int,
+    C.c_double,
     C.c_int,
 ]
-clibsignal.bbfk.restype = C.c_int
-
-clibsignal.cosine_taper.argtypes = [
-    np.ctypeslib.ndpointer(dtype='float64', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int, C.c_double]
-clibsignal.cosine_taper.restype = C.c_int
+clibsignal.generalizedBeamformer.restype = C.c_int
 
 clibsignal.X_corr.argtypes = [
     np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),

@@ -31,6 +31,7 @@ import urllib2
 import warnings
 import weakref
 import cStringIO
+from lxml import etree
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -51,9 +52,9 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. Depending on your ObsPy
-        installation one of ``"QUAKEML"``. See the `Supported Formats`_ section
-        below for a full list of supported formats.
+    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
+        `Supported Formats`_ section below for a full list of supported
+        formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
@@ -2568,10 +2569,9 @@ class Catalog(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"QUAKEML"``. See the
-            `Supported Formats`_ section below for a full list of supported
-            formats.
+        :param format: The format to write must be specified. One of
+            ``"QUAKEML"``. See the `Supported Formats`_ section below for a
+            full list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -2819,17 +2819,12 @@ class Catalog(object):
 
 def validate(xml_file):
     """
-    Validates a QuakeML file against the QuakeML 1.2 RC4 schema. Returns either
-    True or False.
-
-    This method requires lxml and will raise an ImportError if it does not
-    exist.
+    Validates a QuakeML file against the QuakeML 1.2 RC4 XML Schema. Returns
+    either True or False.
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
-
-    from lxml import etree
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
     xmldoc = etree.parse(xml_file)

@@ -19,7 +19,7 @@ format within ObsPy by using the :func:`~obspy.core.stream.read()` method of
 the :mod:`obspy.core` module. Examples seismograms files may be found at
 http://examples.obspy.org.
 
->>> from obspy.core import read
+>>> from obspy import read
 >>> st = read("/path/to/QFILE-TEST-ASC.ASC")
 >>> st #doctest: +ELLIPSIS
 <obspy.core.stream.Stream object at 0x...>
