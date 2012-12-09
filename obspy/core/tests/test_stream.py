@@ -548,7 +548,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(stream[4] in stream2)
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
-                                network='aA', station='ZzZz', )
+                                network='aA', station='ZzZz',)
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
@@ -1661,6 +1661,44 @@ class StreamTestCase(unittest.TestCase):
         st.merge(fill_value='interpolate')
         self.assertEquals(len(st), 1)
 
+    def test_rotate(self):
+        """
+        Testing the rotate method.
+        """
+        st = read()
+        st += st.copy()
+        st[3:].normalize()
+        st2 = st.copy()
+        # rotate to RT and back with 6 traces
+        st.rotate(method='RT', angle=[30, 50])
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZRT')
+        st.rotate(method='NE', angle=[30, 50])
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
+                        np.allclose(st[1].data, st2[1].data) and
+                        np.allclose(st[2].data, st2[2].data))
+        # again, with angles given in stats and just 2 components
+        st = st2.copy()
+        st = st[1:3] + st[4:]
+        st[0].stats.ba = 190
+        st[2].stats.ba = 200
+        st.rotate(method='RT')
+        st.rotate(method='NE')
+        self.assertTrue(np.allclose(st[0].data, st2[1].data) and
+                        np.allclose(st[1].data, st2[2].data))
+        # rotate to LQT and back with 6 traces
+        st = st2.copy()
+        st.rotate(method='LQT', angle=(100, 30))
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'LQT')
+        st.rotate(method='ZNE', angle=(100, 30))
+        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                        st[2].stats.channel[-1] == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
+                        np.allclose(st[1].data, st2[1].data) and
+                        np.allclose(st[2].data, st2[2].data))
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

@@ -17,6 +17,7 @@ dev:
    * removed all deprecated UTCDateTime methods
    * adding a class and script to determine flinn-engdahl regions for given
      longitude and latitude
+   * adding rotate() method to Stream wrapping rotate functions in obspy.signal
  - obspy.imaging:
    * obspy-scan: adding options to control start/endtime and channels, adding
      options to not plot gaps and reducing file size for plots considerably.
