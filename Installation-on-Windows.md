@@ -12,5 +12,5 @@ It is safe to re-run the installer to upgrade an existing installation.
 
 If you feel comfortable installing Python modules by your own, you may be interested on the following options:
 
- * [[Installation using prepacked modules|Installation on Windows Using Prepackaged Modules]]
+ * [[Installation using a pre-build package (PyPI)|Installation on Windows using a pre-build package (PyPI)]]
  * [[Installation from source (recommended only for developers)|Installation on Windows From Source]]
