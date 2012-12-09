@@ -1,6 +1,6 @@
 ## Automatically
 
-The easiest way to install ObsPy under Windows (XP, Vista, 7) is using the ObsPy Installer.
+The easiest way to install ObsPy under Windows (XP, Vista, 7, 8) is using the ObsPy Installer.
 
  * [ObsPy Installer for Python 2.7.2 (32-bit and 64-bit)](http://www.obspy.org/www/files/obspy-setup.exe)
 
