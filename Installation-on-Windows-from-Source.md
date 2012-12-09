@@ -12,7 +12,7 @@ See  http://docs.python.org/using/windows.html#excursus-setting-environment-vari
 
 Building ObsPy requires a C as well as a gfortran compiler. ObsPy has been successfully built using the free GNU compiler of the MinGW project (32- and 64-bit) and Microsoft Visual Studio (32- and 64-bit).
 
-## Git Client
+### Git Client
 
 In order to check out the latest developer version of ObsPy you need a Git command line client. You may find a binary installers e.g. at http://git-scm.com/downloads.
 
