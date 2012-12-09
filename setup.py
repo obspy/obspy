@@ -273,7 +273,6 @@ All C-extensions in following modules will *not* work:
 """
 
 
-
 if IS_WINDOWS:
     # ugly Monkey patch for MSVCCompiler & Mingw32CCompiler for Windows
     # using MinGW64 (http://mingw-w64.sourceforge.net/)

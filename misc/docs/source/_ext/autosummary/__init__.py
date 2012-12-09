@@ -67,10 +67,11 @@ from sphinx import addnodes
 from sphinx.util.compat import Directive
 
 
-# -- autosummary_toc node ------------------------------------------------------
+# -- autosummary_toc node -----------------------------------------------------
 
 class autosummary_toc(nodes.comment):
     pass
+
 
 def process_autosummary_toc(app, doctree):
     """Insert items described in autosummary:: to the TOC tree, but do
@@ -78,6 +79,7 @@ def process_autosummary_toc(app, doctree):
     """
     env = app.builder.env
     crawled = {}
+
     def crawl_toc(node, depth=1):
         crawled[node] = True
         for j, subnode in enumerate(node):
@@ -91,21 +93,24 @@ def process_autosummary_toc(app, doctree):
             if not isinstance(subnode, nodes.section):
                 continue
             if subnode not in crawled:
-                crawl_toc(subnode, depth+1)
+                crawl_toc(subnode, depth + 1)
     crawl_toc(doctree)
+
 
 def autosummary_toc_visit_html(self, node):
     """Hide autosummary toctree list in HTML output."""
     raise nodes.SkipNode
 
+
 def autosummary_noop(self, node):
     pass
 
 
-# -- autosummary_table node ----------------------------------------------------
+# -- autosummary_table node ---------------------------------------------------
 
 class autosummary_table(nodes.comment):
     pass
+
 
 def autosummary_table_visit_html(self, node):
     """Make the first column of the table non-breaking."""
@@ -123,11 +128,12 @@ def autosummary_table_visit_html(self, node):
         pass
 
 
-# -- autodoc integration -------------------------------------------------------
+# -- autodoc integration ------------------------------------------------------
 
 class FakeDirective:
     env = {}
     genopt = {}
+
 
 def get_documenter(obj, parent):
     """Get an autodoc.Documenter class suitable for documenting the given
@@ -165,7 +171,7 @@ def get_documenter(obj, parent):
         return DataDocumenter
 
 
-# -- .. autosummary:: ----------------------------------------------------------
+# -- .. autosummary:: ---------------------------------------------------------
 
 class Autosummary(Directive):
     """
@@ -244,7 +250,8 @@ class Autosummary(Directive):
                 display_name = name.split('.')[-1]
 
             try:
-                real_name, obj, parent = import_by_name(name, prefixes=prefixes)
+                real_name, obj, parent = import_by_name(name,
+                                                        prefixes=prefixes)
             except ImportError:
                 self.warn('failed to import %s' % name)
                 items.append((name, '', '', name))
@@ -334,6 +341,7 @@ class Autosummary(Directive):
 
         return [table_spec, table]
 
+
 def mangle_signature(sig, max_chars=30):
     """Reformat a function signature to a more compact form."""
     s = re.sub(r"^\((.*)\)$", r"\1", sig).strip()
@@ -359,15 +367,16 @@ def mangle_signature(sig, max_chars=30):
         s = m.group(1)[:-2]
 
     # Produce a more compact signature
-    sig = limited_join(", ", args, max_chars=max_chars-2)
+    sig = limited_join(", ", args, max_chars=max_chars - 2)
     if opts:
         if not sig:
-            sig = "[%s]" % limited_join(", ", opts, max_chars=max_chars-4)
+            sig = "[%s]" % limited_join(", ", opts, max_chars=max_chars - 4)
         elif len(sig) < max_chars - 4 - 2 - 3:
-            sig += "[, %s]" % limited_join(", ", opts,
-                                           max_chars=max_chars-len(sig)-4-2)
+            sig += "[, %s]" % limited_join(
+                ", ", opts, max_chars=max_chars - len(sig) - 4 - 2)
 
     return u"(%s)" % sig
+
 
 def limited_join(sep, items, max_chars=30, overflow_marker="..."):
     """Join a number of strings to one, limiting the length to *max_chars*.
@@ -392,7 +401,8 @@ def limited_join(sep, items, max_chars=30, overflow_marker="..."):
 
     return sep.join(list(items[:n_items]) + [overflow_marker])
 
-# -- Importing items -----------------------------------------------------------
+# -- Importing items ----------------------------------------------------------
+
 
 def get_import_prefixes_from_env(env):
     """
@@ -414,6 +424,7 @@ def get_import_prefixes_from_env(env):
 
     return prefixes
 
+
 def import_by_name(name, prefixes=[None]):
     """Import a Python object that has the given *name*, under one of the
     *prefixes*.  The first name that succeeds is used.
@@ -430,6 +441,7 @@ def import_by_name(name, prefixes=[None]):
         except ImportError:
             tried.append(prefixed_name)
     raise ImportError('no module named %s' % ' or '.join(tried))
+
 
 def _import_by_name(name):
     """Import a Python object given its full name."""
@@ -449,7 +461,7 @@ def _import_by_name(name):
         # ... then as MODNAME, MODNAME.OBJ1, MODNAME.OBJ1.OBJ2, ...
         last_j = 0
         modname = None
-        for j in reversed(range(1, len(name_parts)+1)):
+        for j in reversed(range(1, len(name_parts) + 1)):
             last_j = j
             modname = '.'.join(name_parts[:j])
             try:
@@ -472,7 +484,7 @@ def _import_by_name(name):
         raise ImportError(*e.args)
 
 
-# -- :autolink: (smart default role) -------------------------------------------
+# -- :autolink: (smart default role) ------------------------------------------
 
 def autolink_role(typ, rawtext, etext, lineno, inliner,
                   options={}, content=[]):
