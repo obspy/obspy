@@ -33,7 +33,8 @@ RequestExecutionLevel admin
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2-5
+!define VERSION 2.7.2-6
+!define PRODNAME "ObsPy - a Python framework for seismological observatories."
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
 
@@ -104,7 +105,7 @@ InstallDir $PROFILE\ObsPy
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 2.7.2.3
+VIProductVersion 2.7.2.6
 VIAddVersionKey ProductName ObsPy
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -324,6 +325,7 @@ Function InstallDependencies
     # pyzmq
     DetailPrint "Running easy_install.exe -U pyzmq"
     nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "pyzmq"'
+    DetailPrint "Copying TCL folder"
     # copy tcl folder in virtualenv as this is not done automatically
     CopyFiles "$PythonDirectory\tcl" "$INSTDIR"
 FunctionEnd
@@ -331,46 +333,8 @@ FunctionEnd
 Function InstallObsPy
     DetailPrint "Installing ObsPy ($INSTDIR)"
     # installation of all ObsPy modules
-    DetailPrint "Running easy_install.exe -U obspy.core"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.core"'
-    DetailPrint "Running easy_install.exe -U obspy.mseed"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.mseed"'
-    DetailPrint "Running easy_install.exe -U obspy.arclink"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.arclink"'
-    DetailPrint "Running easy_install.exe -U obspy.earthworm"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.earthworm"'
-    DetailPrint "Running easy_install.exe -U obspy.gse2"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.gse2"'
-    DetailPrint "Running easy_install.exe -U obspy.imaging"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.imaging"'
-    DetailPrint "Running easy_install.exe -U obspy.iris"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.iris"'
-    DetailPrint "Running easy_install.exe -U obspy.neries"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.neries"'
-    DetailPrint "Running easy_install.exe -U obspy.sac"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.sac"'
-    DetailPrint "Running easy_install.exe -U obspy.seishub"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seg2"'
-    DetailPrint "Running easy_install.exe -U obspy.seg2"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.segy"'
-    DetailPrint "Running easy_install.exe -U obspy.seisan"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seisan"'
-    DetailPrint "Running easy_install.exe -U obspy.segy"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.seishub"'
-    DetailPrint "Running easy_install.exe -U obspy.signal"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.signal"'
-    DetailPrint "Running easy_install.exe -U obspy.sh"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.sh"'
-    DetailPrint "Running easy_install.exe -U obspy.taup"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.taup"'
-    DetailPrint "Running easy_install.exe -U obspy.wav"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.wav"'
-    DetailPrint "Running easy_install.exe -U obspy.xseed"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.xseed"'
-    DetailPrint "Running easy_install.exe -U obspy.realtime"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.realtime"'
-    DetailPrint "Running easy_install.exe -U obspy.datamark"
-    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy.datamark"'
+    DetailPrint "Running easy_install.exe -U obspy"
+    nsExec::Exec '"$INSTDIR\Scripts\easy_install.exe" -U "obspy"'
 FunctionEnd
 
 # Installer sections
