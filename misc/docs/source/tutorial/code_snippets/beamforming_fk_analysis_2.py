@@ -1,11 +1,61 @@
-from obspy.core import UTCDateTime
+from obspy.core import read, UTCDateTime, AttribDict
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import sonic
-import pickle
-import urllib
 
 # Load data
-st = pickle.load(urllib.urlopen("http://examples.obspy.org/agfa.dump"))
+st = read("http://examples.obspy.org/agfa.mseed")
+
+# Set PAZ and coordinates for all 5 channels
+st[0].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 205479446.68601453,
+    'gain': 1.0})
+st[0].stats.coordinates = AttribDict({
+    'latitude': 48.108589,
+    'elevation': 0.450000,
+    'longitude': 11.582967})
+
+st[1].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 205479446.68601453,
+    'gain': 1.0})
+st[1].stats.coordinates = AttribDict({
+    'latitude': 48.108192,
+    'elevation': 0.450000,
+    'longitude': 11.583120})
+
+st[2].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 250000000.0,
+    'gain': 1.0})
+st[2].stats.coordinates = AttribDict({
+    'latitude': 48.108692,
+    'elevation': 0.450000,
+    'longitude': 11.583414})
+
+st[3].stats.paz = AttribDict({
+    'poles': [(-4.39823 + 4.48709j), (-4.39823 - 4.48709j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 222222228.10910088,
+    'gain': 1.0})
+st[3].stats.coordinates = AttribDict({
+    'latitude': 48.108456,
+    'elevation': 0.450000,
+    'longitude': 11.583049})
+
+st[4].stats.paz = AttribDict({
+    'poles': [(-4.39823 + 4.48709j), (-4.39823 - 4.48709j), (-2.105 + 0j)],
+    'zeros': [0j, 0j, 0j],
+    'sensitivity': 222222228.10910088,
+    'gain': 1.0})
+st[4].stats.coordinates = AttribDict({
+    'latitude': 48.108730,
+    'elevation': 0.450000,
+    'longitude': 11.583157})
+
 
 # Instrument correction to 1Hz corner frequency
 paz1hz = cornFreq2Paz(1.0, damp=0.707)
