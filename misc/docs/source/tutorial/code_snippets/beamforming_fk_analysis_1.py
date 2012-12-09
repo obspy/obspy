@@ -1,6 +1,7 @@
 from obspy.core import read, UTCDateTime, AttribDict
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import sonic
+import matplotlib.pyplot as plt
 
 # Load data
 st = read("http://examples.obspy.org/agfa.mseed")
@@ -76,7 +77,6 @@ kwargs = dict(
 out = sonic(st, **kwargs)
 
 # Plot
-import matplotlib.pyplot as plt
 labels = ['rel.power', 'abs.power', 'baz', 'slow']
 
 fig = plt.figure()
@@ -85,7 +85,9 @@ for i, lab in enumerate(labels):
     ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
                edgecolors='none')
     ax.set_ylabel(lab)
-    ax.xaxis_date()
+    ax.set_xlim(out[0, 0], out[-1, 0])
+    ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+
 
 fig.autofmt_xdate()
 fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)
