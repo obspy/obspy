@@ -49,11 +49,11 @@ easy_install ipython
 
 Checkout the latest sources using a Git client on command line:
 ```
-git clone https://github.com/obspy/obspy.git src
+git clone https://github.com/obspy/obspy.git /path/to/obspy/src
 ```
 
 Install ObsPy by running the following command:
 ```
-cd src/obspy
+cd /path/to/obspy/src
 python setup.py develop
 ```
