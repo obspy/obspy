@@ -1,4 +1,4 @@
-dev:
+0.8.0:
  - version numbering: one single, common version number for ObsPy now.
    Use "import obspy; print obspy.__version__"
  - discontinuing Python 2.5 support
