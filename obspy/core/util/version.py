@@ -47,8 +47,9 @@ def call_git_describe(abbrev=4):
                   cwd=os.path.dirname(VERSION_FILE), stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readlines()[0]
-        if "-" not in line:
-            line = "0.0.0-%s" % line
+        # this line prevents official releases
+        # if "-" not in line:
+        #    line = "0.0.0-%s" % line
         return line.strip()
     except:
         return None
