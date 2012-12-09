@@ -2197,12 +2197,12 @@ class Stream(object):
     def __get_rot_angles(self, angle, stats_entry):
         """
         Helper method for rotation: Return list of angles.
-        
+
         :param angle: ``None``, float or list.
         :param stats_entry: if param_angle is None, list of angles is taken
         from the entry ``stats_entry`` of the stats object.
-        
-        :return: list of angles        
+
+        :return: list of angles
         """
         if isinstance(angle, (float, int, long)):
             angle = [angle] * (len(self))
@@ -2215,7 +2215,7 @@ class Stream(object):
     def rotate(self, method='RT', angle=None, components=None):
         """
         Method for rotating stream.
-        
+
         This method uses the functions ``signal.rotate_NE_RT``,
         ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
         The stream is rotated by the angles given as back-azimuths and
@@ -2223,9 +2223,10 @@ class Stream(object):
         ``stats.ba`` resp. ``stats.inc`` if ``angle`` is not
         specified. ``stats.channel`` is adapted so that it reflects the new
         component.
-        
+
         :type method: ``'RT'``, ``'LQT'``, ``'ZN'`` or ``'ZNE'``
-        :param method: ``'RT'`` will rotate the NE components of a stream to RT.
+        :param method: ``'RT'`` will rotate the NE components of a stream to
+            RT.
             ``'LQT'`` will rotate the ZNE components of a stream to LQT.
             ``'ZN'`` will rotate RT components back to ZN.
             ``'ZNE'`` will rotate LQT components back to ZNE.
@@ -2238,8 +2239,8 @@ class Stream(object):
             For three component rotation tuple of two lists or tuple of two
             floats. The first entry specifies back-azimuths, the second the
             inclinations.
-            If angle is not specified the angles will be taken from ``stats.ba``
-            and ``stats.inc`` of the first used component.
+            If angle is not specified the angles will be taken from
+            ``stats.ba`` and ``stats.inc`` of the first used component.
         :type components: tuple, optional
         :param components: The two or three components to select for rotation.
             Wildcards can be used eg. ``('Z', '[N1]', '[E2]')``.

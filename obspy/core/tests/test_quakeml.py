@@ -577,7 +577,8 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'preferred.xml')
         catalog = readEvents(filename)
         self.assertEquals(len(catalog), 1)
-        ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 | 2.0 MW"
+        ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
+                 "| 2.0 MW"
         self.assertTrue(ev_str in str(catalog.events[0]))
         # testing ids
         ev = catalog.events[0]

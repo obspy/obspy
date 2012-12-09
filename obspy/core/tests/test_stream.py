@@ -1700,6 +1700,7 @@ class StreamTestCase(unittest.TestCase):
                         np.allclose(st[1].data, st2[1].data) and
                         np.allclose(st[2].data, st2[2].data))
 
+
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
 

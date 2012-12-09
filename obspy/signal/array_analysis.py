@@ -19,7 +19,6 @@ Functions for Array Analysis
 
 import math
 import warnings
-import ctypes as C
 import numpy as np
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
@@ -902,9 +901,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
     :type store: int
-    :param store: a function which is called on each iteration with the relative
-        power map and the time offset as argument. Usefull for storing or
-        plotting the map for each iteration. For this purpose the dump and
+    :param store: a function which is called on each iteration with the
+        relative power map and the time offset as argument. Usefull for storing
+        or plotting the map for each iteration. For this purpose the dump and
         nop function of this module can be used.
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
@@ -912,7 +911,6 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     BF, CAPON = 0, 1
     res = []
     eotr = True
-    #XXX move all the the ctypes related stuff to bbfk (Moritz's job)
 
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate

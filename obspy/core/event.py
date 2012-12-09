@@ -2180,7 +2180,8 @@ class Event(__Event):
         Returns the preferred origin
         """
         try:
-            return ResourceIdentifier(self.preferred_origin_id).getReferredObject()
+            return ResourceIdentifier(self.preferred_origin_id).\
+                getReferredObject()
         except KeyError:
             return None
 
