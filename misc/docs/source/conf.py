@@ -16,7 +16,7 @@ import obspy
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #sys.path.insert(0, os.path.abspath('.'))
 
-# -- General configuration -----------------------------------------------------
+# -- General configuration ----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
 needs_sphinx = '1.1'
@@ -24,7 +24,7 @@ needs_sphinx = '1.1'
 # Add extensions into path
 sys.path = [os.path.dirname(__file__) + os.sep + '_ext'] + sys.path
 
-# Add any Sphinx extension module names here, as strings. They can be extensions
+# Add any Sphinx extension module names here, as strings. They can be extension
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
 extensions = ['sphinx.ext.intersphinx',
               'sphinx.ext.doctest',
@@ -77,7 +77,7 @@ today_fmt = "%B %d %H o'clock, %Y"
 # directories to ignore when looking for source files.
 exclude_patterns = ['**/.svn', '_build', '_templates', '_ext']
 
-# The reST default role (used for this markup: `text`) to use for all documents.
+# The reST default role (used for this markup: `text`) to use for all documents
 #default_role = None
 
 # If true, '()' will be appended to :func: etc. cross-reference text.
@@ -98,7 +98,7 @@ pygments_style = 'sphinx'
 modindex_common_prefix = ['obspy.']
 
 
-# -- Options for HTML output ---------------------------------------------------
+# -- Options for HTML output --------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -181,7 +181,7 @@ html_show_copyright = True
 htmlhelp_basename = 'ObsPyDocumentation'
 
 
-# -- Options for LaTeX output --------------------------------------------------
+# -- Options for LaTeX output -------------------------------------------------
 
 # The paper size ('letter' or 'a4').
 #latex_paper_size = 'letter'
@@ -190,7 +190,7 @@ htmlhelp_basename = 'ObsPyDocumentation'
 #latex_font_size = '10pt'
 
 # Grouping the document tree into LaTeX files. List of tuples
-# (source start file, target name, title, author, documentclass [howto/manual]).
+# (source start file, target name, title, author, documentclass [howto/manual])
 latex_documents = [
   ('index', 'ObsPyDocumentation.tex', u'ObsPy Tutorial',
    u'The ObsPy Development Team (devs@obspy.org)', 'manual'),
@@ -220,7 +220,7 @@ latex_documents = [
 #latex_domain_indices = True
 
 
-# -- Options for manual page output --------------------------------------------
+# -- Options for manual page output -------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
@@ -247,6 +247,6 @@ autoclass_content = 'class'
 
 # This value is a list of autodoc directive flags that should be automatically
 # applied to all autodoc directives. The supported flags are 'members',
-# 'undoc-members', 'private-members', 'special-members', 'inherited-members' and
+# 'undoc-members', 'private-members', 'special-members', 'inherited-members' an
 # 'show-inheritance'. Don't set it to anything !
 autodoc_default_flags = ['show-inheritance']

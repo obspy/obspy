@@ -67,7 +67,13 @@ configuration file, use::
     warnings.simplefilter('error', plot_directive.PlotWarning)
 """
 
-import sys, os, shutil, imp, warnings, cStringIO, re
+import sys
+import os
+import shutil
+import imp
+import warnings
+import cStringIO
+import re
 try:
     from hashlib import md5
 except ImportError:
@@ -118,28 +124,32 @@ else:
 
     def relpath(target, base=os.curdir):
         """
-        Return a relative path to the target from either the current dir or an optional base dir.
-        Base can be a directory specified either as absolute or relative to current dir.
+        Return a relative path to the target from either the current dir or an
+        optional base dir. Base can be a directory specified either as absolute
+        or relative to current dir.
         """
 
         if not os.path.exists(target):
-            raise OSError, 'Target does not exist: ' + target
+            raise OSError('Target does not exist: ' + target)
 
         if not os.path.isdir(base):
-            raise OSError, 'Base is not a directory or does not exist: ' + base
+            raise OSError('Base is not a directory or does not exist: ' + base)
 
         base_list = (os.path.abspath(base)).split(os.sep)
         target_list = (os.path.abspath(target)).split(os.sep)
 
         # On the windows platform the target may be on a completely
         # different drive from the base.
-        if os.name in ['nt', 'dos', 'os2'] and base_list[0] <> target_list[0]:
-            raise OSError, 'Target is on a different drive to base. Target: ' + target_list[0].upper() + ', base: ' + base_list[0].upper()
+        if os.name in ['nt', 'dos', 'os2'] and base_list[0] != target_list[0]:
+            msg = 'Target is on a different drive to base. Target: ' + \
+                  target_list[0].upper() + ', base: ' + base_list[0].upper()
+            raise OSError(msg)
 
         # Starting from the filepath root, work out how much of the
         # filepath is shared by base and target.
         for i in range(min(len(base_list), len(target_list))):
-            if base_list[i] <> target_list[i]: break
+            if base_list[i] != target_list[i]:
+                break
         else:
             # If we broke out of the loop, i is pointing to the first
             # differing path elements.  If we didn't break out of the
@@ -187,6 +197,7 @@ template_content_indent = '      '
 # :context: option
 plot_context = dict()
 
+
 def out_of_date(original, derived):
     """
     Returns True if derivative is out-of-date wrt original,
@@ -195,6 +206,7 @@ def out_of_date(original, derived):
     return (not os.path.exists(derived) or
             (os.path.exists(original) and
              os.stat(derived).st_mtime < os.stat(original).st_mtime))
+
 
 def run_code(plot_path, function_name, plot_code, context=False):
     """
@@ -207,7 +219,8 @@ def run_code(plot_path, function_name, plot_code, context=False):
     # so it can import any helper modules sitting beside it.
 
     if plot_code is not None:
-        exec_code = 'import numpy as np; import matplotlib.pyplot as plt\n%s' % plot_code
+        exec_code = 'import numpy as np; ' + \
+                    'import matplotlib.pyplot as plt\n%s' % plot_code
         #print 'CONTEXT', context, plot_context, exec_code
         if context:
             exec(exec_code, None, plot_context)
@@ -244,6 +257,7 @@ def run_code(plot_path, function_name, plot_code, context=False):
         if function_name is not None:
             getattr(module, function_name)()
 
+
 def run_savefig(plot_path, basename, tmpdir, destdir, formats):
     """
     Once a plot script has been imported, this function runs savefig
@@ -261,7 +275,8 @@ def run_savefig(plot_path, basename, tmpdir, destdir, formats):
             try:
                 figman.canvas.figure.savefig(outpath, dpi=dpi)
             except:
-                s = cbook.exception_to_str("Exception saving plot %s" % plot_path)
+                s = cbook.exception_to_str(
+                    "Exception saving plot %s" % plot_path)
                 warnings.warn(s, PlotWarning)
                 return 0
             if j > 0:
@@ -274,6 +289,7 @@ def clear_state():
     plt.close('all')
     matplotlib.rcdefaults()
 
+
 def render_figures(plot_path, function_name, plot_code, tmpdir, destdir,
                    formats, context=False):
     """
@@ -283,8 +299,6 @@ def render_figures(plot_path, function_name, plot_code, tmpdir, destdir,
     plot_path = str(plot_path)  # todo, why is unicode breaking this
     basedir, fname = os.path.split(plot_path)
     basename, ext = os.path.splitext(fname)
-
-
 
     all_exists = True
 
@@ -341,12 +355,12 @@ def render_figures(plot_path, function_name, plot_code, tmpdir, destdir,
 
 def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
                     options, state_machine):
-    context = options.has_key('context')
+    context = 'context' in options
     if context:
         # remove for figure directive
         del options['context']
 
-    nofigs = options.has_key('nofigs')
+    nofigs = 'nofigs' in options
     if nofigs:
         # remove for figure directive
         del options['nofigs']
@@ -364,7 +378,8 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
     # and not the embedded image.  That is given an absolute path to
     # the temporary directory, and then sphinx moves the file to
     # build/html/_images for us later.
-    rstdir, rstfile = os.path.split(state_machine.document.attributes['source'])
+    rstdir, rstfile = os.path.split(
+        state_machine.document.attributes['source'])
     outdir = os.path.join('plot_directive', basedir)
     reldir = relpath(setup.confdir, rstdir)
     linkdir = os.path.join(reldir, outdir)
@@ -405,7 +420,7 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
     if plot_code is None:
         shutil.copyfile(plot_path, os.path.join(destdir, fname))
 
-    if options.has_key('include-source'):
+    if 'include-source' in options:
         if plot_code is None:
             if sphinx_version > (1,):
                 include_prefix = '/'
@@ -415,7 +430,7 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
             lines.extend(
                 ['.. include:: %s' % os.path.join(include_prefix, plot_path),
                  '    :literal:'])
-            if options.has_key('encoding'):
+            if 'encoding' in options:
                 lines.append('    :encoding: %s' % options['encoding'])
                 del options['encoding']
         else:
@@ -439,14 +454,16 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
                 else:
                     outname = "%s_%02d" % (basename, i)
 
-                # Copy the linked-to files to the destination within the build tree,
-                # and add a link for them
+                # Copy the linked-to files to the destination within the build
+                # tree, and add a link for them
                 links = []
                 newlinkdir = linkdir.replace(os.sep, '/')
                 if plot_code is None:
-                    links.append('`source code <%(newlinkdir)s/%(basename)s.py>`__')
+                    links.append('`source code ' +
+                                 '<%(newlinkdir)s/%(basename)s.py>`__')
                 for format, dpi in formats[1:]:
-                    links.append('`%s <%s/%s.%s>`__' % (format, newlinkdir, outname, format))
+                    links.append('`%s <%s/%s.%s>`__' % (format, newlinkdir,
+                                                        outname, format))
                 if len(links):
                     links = '[%s]' % (', '.join(links) % locals())
                 else:
@@ -464,6 +481,7 @@ def _plot_directive(plot_path, basedir, function_name, plot_code, caption,
             lines, state_machine.input_lines.source(0))
 
     return []
+
 
 def plot_directive(name, arguments, options, content, lineno,
                    content_offset, block_text, state, state_machine):
@@ -489,16 +507,17 @@ def plot_directive(name, arguments, options, content, lineno,
         else:
             function_name = None
 
-        return _plot_directive(plot_path, basedir, function_name, None, caption,
-                               options, state_machine)
+        return _plot_directive(plot_path, basedir, function_name, None,
+                               caption, options, state_machine)
     else:
         plot_code = '\n'.join(content)
 
         # Since we don't have a filename, use a hash based on the content
         plot_path = md5(plot_code).hexdigest()[-10:]
 
-        return _plot_directive(plot_path, 'inline', None, plot_code, '', options,
-                               state_machine)
+        return _plot_directive(plot_path, 'inline', None, plot_code, '',
+                               options, state_machine)
+
 
 def mark_plot_labels(app, document):
     """
@@ -531,6 +550,7 @@ def mark_plot_labels(app, document):
                     print n
                     break
 
+
 def setup(app):
     setup.app = app
     setup.config = app.config
@@ -547,7 +567,7 @@ def setup(app):
                'include-source': directives.flag,
                'context': directives.flag,
                'nofigs': directives.flag,
-               'encoding': directives.encoding }
+               'encoding': directives.encoding}
 
     app.add_directive('plot', plot_directive, True, (0, 2, 0), **options)
     app.add_config_value(
