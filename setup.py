@@ -243,6 +243,36 @@ DOCSTRING = __doc__.split("\n")
 IS_WINDOWS = platform.system() == "Windows"
 IS_DEVELOP = 'develop' in sys.argv
 
+NO_GFORTRAN_MSG = """
+
+###############################################################################
+
+ERROR: gfortran compiler not found! Retrying now without FORTRAN support.
+
+All FORTRAN extensions in the following modules will *not* work:
+  * obspy.taup
+
+###############################################################################
+
+"""
+
+NO_CCOMPILER_MSG = """
+
+###############################################################################
+
+ERROR: C compiler not found! Retrying now without C support.
+
+All C-extensions in following modules will *not* work:
+  * obspy.gse2
+  * obspy.mseed
+  * obspy.segy
+  * obspy.signal
+
+###############################################################################
+
+"""
+
+
 
 if IS_WINDOWS:
     # ugly Monkey patch for MSVCCompiler & Mingw32CCompiler for Windows
@@ -577,12 +607,41 @@ def setupLibTauP():
     return lib
 
 
-def setupPackage():
+def setupPackage(gfortran=True, ccompiler=True):
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         convert2to3()
+    # external modules
+    ext_modules = []
+    if ccompiler:
+        ext_modules += [setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
+                        setupLibEvalResp(), setupLibSEGY()]
+    if gfortran:
+        ext_modules.append(setupLibTauP())
+    kwargs = {}
+    if ext_modules:
+        kwargs['ext_package'] = 'obspy.lib'
+        kwargs['ext_modules'] = ext_modules
+    # remove clean from second call of this function so nothing gets rebuild
+    if not gfortran or not ccompiler:
+        argvs = sys.argv[1:]
+        if 'clean' in argvs:
+            # get index of clean command
+            i0 = argvs.index('clean')
+            # backup everything in front of clean
+            temp = argvs[:i0]
+            # search and remove options after clean starting with a dash
+            rest = argvs[(i0 + 1):]
+            for i, arg in enumerate(rest):
+                if arg.startswith('-'):
+                    continue
+                # append everything after clean at its options to backup
+                temp += rest[i:]
+                break
+            # set setup command line arguments
+            kwargs['script_args'] = temp
     # setup package
     setup(
         name='obspy',
@@ -613,11 +672,8 @@ def setupPackage():
         download_url="https://github.com/obspy/obspy/zipball/master",
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        ext_package='obspy.lib',
-        # build taup last!!
-        ext_modules=[setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
-                     setupLibEvalResp(), setupLibSEGY(), setupLibTauP()],
         use_2to3=True,
+        **kwargs
     )
     # cleanup after using lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
@@ -625,4 +681,50 @@ def setupPackage():
 
 
 if __name__ == '__main__':
-    setupPackage()
+    gfortran = True
+    ccompiler = True
+    # the following construct will retry building even if the C or gfortran
+    # compilers are missing - it will warn the user if something went wrong
+    while True:
+        try:
+            setupPackage(gfortran=gfortran, ccompiler=ccompiler)
+        except SystemExit, e:
+            if 'gfortran' in str(e):
+                if not gfortran:
+                    break
+                # retry
+                print NO_GFORTRAN_MSG
+                gfortran = False
+                continue
+            elif 'gcc' in str(e):
+                if not ccompiler:
+                    break
+                # retry
+                print NO_CCOMPILER_MSG
+                ccompiler = False
+                # gcc is also needed for gfortran on non windows system
+                if not IS_WINDOWS:
+                    print NO_GFORTRAN_MSG
+                    gfortran = False
+                continue
+            else:
+                raise
+        except ValueError, e:
+            # Windows specific exception if MSVC compiler is missing
+            if IS_WINDOWS and 'path' in str(e):
+                if not ccompiler:
+                    break
+                # retry
+                print NO_CCOMPILER_MSG
+                ccompiler = False
+                continue
+            else:
+                raise
+        else:
+            # no exception - everything seems to be fine - exit
+            break
+    # print any error message again for better visibility
+    if not gfortran:
+        print NO_GFORTRAN_MSG
+    if not ccompiler:
+        print NO_CCOMPILER_MSG
