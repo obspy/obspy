@@ -31,6 +31,8 @@ from obspy.signal.util import prevpow2
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
 
+dtiny = np.finfo(0.0).tiny
+
 
 if MATPLOTLIB_VERSION is None:
     # if matplotlib is not present be silent about it and only raise the
@@ -614,6 +616,10 @@ class PPSD():
 
         # working with the periods not frequencies later so reverse spectrum
         spec = spec[::-1]
+
+        # avoid calculating log of zero
+        idx = spec < dtiny
+        spec[idx] = dtiny
 
         # go to dB
         spec = np.log10(spec)

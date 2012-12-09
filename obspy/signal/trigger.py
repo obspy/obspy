@@ -237,6 +237,7 @@ def classicSTALTAPy(a, nsta, nlta):
     # pad zeros of length nlta to avoid overfit and
     # return STA/LTA ratio
     sta[0:nlta_1] = 0
+    lta[0:nlta_1] = 1  # avoid devision by zero
     return sta / lta
 
 
@@ -266,6 +267,7 @@ def delayedSTALTA(a, nsta, nlta):
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
                  nlta + lta[i - 1]
     sta[0:nlta + nsta + 50] = 0
+    lta[0:nlta + nsta + 50] = 1  # avoid division by zero
     return sta / lta
 
 
