@@ -2194,6 +2194,121 @@ class Stream(object):
             tr.normalize(norm=norm)
         return
 
+    def __get_rot_angles(self, angle, stats_entry):
+        """
+        Helper method for rotation: Return list of angles.
+        
+        :param angle: ``None``, float or list.
+        :param stats_entry: if param_angle is None, list of angles is taken
+        from the entry ``stats_entry`` of the stats object.
+        
+        :return: list of angles        
+        """
+        if isinstance(angle, (float, int, long)):
+            angle = [angle] * (len(self))
+        elif angle is None:
+            angle = [tr.stats[stats_entry] for tr in self]
+        if len(angle) != len(self):
+            raise ValueError('List of angles has wrong length.')
+        return angle
+
+    def rotate(self, method='RT', angle=None, components=None):
+        """
+        Method for rotating stream.
+        
+        This method uses the functions ``signal.rotate_NE_RT``,
+        ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
+        The stream is rotated by the angles given as back-azimuths and
+        inclinations in the parameters ``angle`` or by the entries in
+        ``stats.ba`` resp. ``stats.inc`` if ``angle`` is not
+        specified. ``stats.channel`` is adapted so that it reflects the new
+        component.
+        
+        :type method: ``'RT'``, ``'LQT'``, ``'ZN'`` or ``'ZNE'``
+        :param method: ``'RT'`` will rotate the NE components of a stream to RT.
+            ``'LQT'`` will rotate the ZNE components of a stream to LQT.
+            ``'ZN'`` will rotate RT components back to ZN.
+            ``'ZNE'`` will rotate LQT components back to ZNE.
+        :type angle: float, list or tuple, optional
+        :param angle: The back-azimuths in the case of two-component rotation
+            or back-azimuths and inclinations in the case of three-component
+            rotation.
+            For two-component rotation list of back-azimuths or float (all
+            rotations with the same angle).
+            For three component rotation tuple of two lists or tuple of two
+            floats. The first entry specifies back-azimuths, the second the
+            inclinations.
+            If angle is not specified the angles will be taken from ``stats.ba``
+            and ``stats.inc`` of the first used component.
+        :type components: tuple, optional
+        :param components: The two or three components to select for rotation.
+            Wildcards can be used eg. ``('Z', '[N1]', '[E2]')``.
+            Standard values are
+            ``'NE'`` for ``method='RT'``,
+            ``'ZNE'`` for ``method='LQT'``,
+            ``'RT'`` for ``method='NE'`` and
+            ``'LQT'`` for ``method='ZNE'``.
+        """
+        if method == 'RT' or method == 'NE':
+            from obspy.signal import rotate_NE_RT
+            rotate = rotate_NE_RT
+        elif method == 'LQT':
+            from obspy.signal import rotate_ZNE_LQT
+            rotate = rotate_ZNE_LQT
+        elif method == 'ZNE':
+            from obspy.signal import rotate_LQT_ZNE
+            rotate = rotate_LQT_ZNE
+        else:
+            raise ValueError("Method has to be one of ('RT', 'LQT', 'ZN', "
+                             "'ZNE').")
+        if components is None:
+            components = ('NE' if method == 'RT' else 'ZNE' if method == 'LQT'
+                          else 'RT' if method == 'NE' else 'LQT')
+        if method == 'RT' or method == 'NE':
+            N = self.select(component=components[0])
+            E = self.select(component=components[1])
+            if not (len(N) == len(E)):
+                raise ValueError('The streams consisting of the different '
+                                 'components must have same lengths.')
+            for i in range(len(N)):
+                if (not (N[i].stats.starttime == E[i].stats.starttime) or
+                    not (N[i].stats.sampling_rate == E[i].stats.sampling_rate)
+                    or not (N[i].stats.npts == E[i].stats.npts)):
+                    raise ValueError('Associated traces must have same '
+                                     'starttime, sampling_rate and npts.')
+            ba = N.__get_rot_angles(angle, 'ba')
+            if method == 'NE':
+                ba = [360 - value for value in ba]
+            for i in range(len(N)):
+                N[i].data, E[i].data = rotate(N[i].data, E[i].data, ba[i])
+                N[i].stats.channel = N[i].stats.channel[-1] + method[0]
+                E[i].stats.channel = E[i].stats.channel[-1] + method[1]
+        else:
+            Z = self.select(component=components[0])
+            N = self.select(component=components[1])
+            E = self.select(component=components[2])
+            if not (len(Z) == len(N) == len(E)):
+                raise ValueError('The streams consisting of the different '
+                                 'components must have same lengths.')
+            for i in range(len(N)):
+                if (not (Z[i].stats.starttime == N[i].stats.starttime ==
+                         E[i].stats.starttime) or not
+                    (Z[i].stats.sampling_rate == N[i].stats.sampling_rate ==
+                     E[i].stats.sampling_rate) or not
+                    (Z[i].stats.npts == N[i].stats.npts == E[i].stats.npts)):
+                    raise ValueError('Associated traces must have same '
+                                     'starttime, sampling_rate and npts.')
+            if angle is None:
+                angle = (None, None)
+            ba = Z.__get_rot_angles(angle[0], 'ba')
+            inc = Z.__get_rot_angles(angle[1], 'inc')
+            for i in range(len(N)):
+                Z[i].data, N[i].data, E[i].data = rotate(
+                                Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
+                Z[i].stats.channel = Z[i].stats.channel[-1] + method[0]
+                N[i].stats.channel = N[i].stats.channel[-1] + method[1]
+                E[i].stats.channel = E[i].stats.channel[-1] + method[2]
+
     def copy(self):
         """
         Returns a deepcopy of the Stream object.
