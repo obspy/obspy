@@ -626,12 +626,29 @@ def setupPackage(gfortran=True, ccompiler=True):
         ext_modules += [setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
                         setupLibEvalResp(), setupLibSEGY()]
     if gfortran:
-        if IS_WINDOWS or ccompiler:
-            ext_modules.append(setupLibTauP())
+        ext_modules.append(setupLibTauP())
     kwargs = {}
     if ext_modules:
         kwargs['ext_package'] = 'obspy.lib'
         kwargs['ext_modules'] = ext_modules
+    # remove clean from second call of this function so nothing gets rebuild
+    if not gfortran or not ccompiler:
+        argvs = sys.argv[1:]
+        if 'clean' in argvs:
+            # get index of clean command
+            i0 = argvs.index('clean')
+            # backup everything in front of clean
+            temp = argvs[:i0]
+            # search and remove options after clean starting with a dash
+            rest = argvs[(i0 + 1):]
+            for i, arg in enumerate(rest):
+                if arg.startswith('-'):
+                    continue
+                # append everything after clean at its options to backup
+                temp += rest[i:]
+                break
+            # set setup command line arguments
+            kwargs['script_args'] = temp
     # setup package
     setup(
         name='obspy',
@@ -673,6 +690,8 @@ def setupPackage(gfortran=True, ccompiler=True):
 if __name__ == '__main__':
     gfortran = True
     ccompiler = True
+    # the following construct will retry building even if the C or gfortran
+    # compilers are missing - it will warn the user if something went wrong
     while True:
         try:
             setupPackage(gfortran=gfortran, ccompiler=ccompiler)
@@ -690,6 +709,10 @@ if __name__ == '__main__':
                 # retry
                 print NO_CCOMPILER_MSG
                 ccompiler = False
+                # gcc is also needed for gfortran on non windows system
+                if not IS_WINDOWS:
+                    print NO_GFORTRAN_MSG
+                    gfortran = False
                 continue
             else:
                 raise
@@ -705,7 +728,9 @@ if __name__ == '__main__':
             else:
                 raise
         else:
+            # no exception - everything seems to be fine - exit
             break
+    # print any error message again for better visibility
     if not gfortran:
         print NO_GFORTRAN_MSG
     if not ccompiler:
