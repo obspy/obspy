@@ -70,7 +70,7 @@ kwargs = dict(
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres=-1e9, vel_thres=-1e9, verbose=True, timestamp='mlabday',
+    semb_thres=-1e9, vel_thres=-1e9, timestamp='mlabday',
     stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
 )
 out = sonic(st, **kwargs)
