@@ -99,7 +99,7 @@ class SonicTestCase(unittest.TestCase):
 9.49731735e-01 9.66531018e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:], rtol=1e-6)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=1e-6))
 
     def test_sonicBfPrew(self):
         out = self.arrayProcessing(prewhiten=1, method=0)
@@ -112,7 +112,7 @@ class SonicTestCase(unittest.TestCase):
 1.31982873e-01 9.66531018e-06 1.84349488e+01 1.26491106e+00
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
-        np.testing.assert_allclose(ref, out[:, 1:])
+        self.assertTrue(np.allclose(ref, out[:, 1:]))
 
     def test_sonicCapon(self):
         out = self.arrayProcessing(prewhiten=0, method=1)
@@ -126,7 +126,7 @@ class SonicTestCase(unittest.TestCase):
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
         # XXX relative tolerance should be lower!
-        np.testing.assert_allclose(ref, out[:, 1:], rtol=5e-3)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=5e-3))
 
     def test_sonicCaponPrew(self):
         out = self.arrayProcessing(prewhiten=1, method=1)
@@ -140,7 +140,7 @@ class SonicTestCase(unittest.TestCase):
         """
         ref = np.loadtxt(StringIO(raw), dtype='f4')
         # XXX relative tolerance should be lower!
-        np.testing.assert_allclose(ref, out[:, 1:], rtol=4e-5)
+        self.assertTrue(np.allclose(ref, out[:, 1:], rtol=4e-5))
 
     def test_array_transff_freqslowness(self):
 
