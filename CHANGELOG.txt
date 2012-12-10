@@ -1,3 +1,7 @@
+0.8.1:
+ - fixing a bug parsing QuakeML from a StringIO object using xml and
+   autodetection
+
 0.8.0:
  - version numbering: one single, common version number for ObsPy now.
    Use "import obspy; print obspy.__version__"
