@@ -20,7 +20,6 @@ import numpy as np
 import os
 import sys
 import tempfile
-import warnings
 
 
 # defining ObsPy modules currently used by runtests and the path function
