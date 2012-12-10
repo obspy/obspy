@@ -67,6 +67,10 @@ class XMLParser:
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):
             self.xml_doc = etree.parse(xml_doc)
+            # fixes a problem on debian squeeze default python installation.
+            # xml.etree.parse seems to not rewind the file after parsing, see
+            # http://tests.obspy.org/?id=3430#0
+            xml_doc.seek(0)
         else:
             self.xml_doc = xml_doc
         self.xml_root = self.xml_doc.getroot()
