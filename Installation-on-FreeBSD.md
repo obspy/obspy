@@ -1,3 +1,7 @@
+## The following instructions are outdated as of ObsPy version >= 0.8.0
+***
+***
+
 ## Automatically
 
 Quote from Wen Heping (ObsPy package maintainer for FreeBSD):
