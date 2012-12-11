@@ -6,21 +6,16 @@ Then, make sure the version of distribute is recent enough (the current develope
 easy_install -U distribute
 ```
 
-To install ObsPy packages run the following commands (see [here](http://pypi.python.org/pypi?%3Aaction=search&term=obspy.&submit=search) for a list of packages available from Python Package Index):
+To install ObsPy packages run the following command:
 
 ```bash
-easy_install -N obspy.core
-easy_install -N obspy.mseed
-easy_install -N obspy.sac
-easy_install -N obspy.gse2
-easy_install -N obspy.imaging
-...
+easy_install -N obspy
 ```
 
 ### Notes
- * Packages may be updated to a newer version using the **-U** option:
+ * ObsPy may be updated to a newer version using the **-U** option:
 ```bash
-easy_install -N -U obspy.core
+easy_install -N -U obspy
 ```
  * **-N**: Option will prevent easy_install to resolve the dependencies on its own (can be useful if dependencies are already installed and installing them via PyPI fails).
- * **==dev**: The latest development version can be obtained by adding ==dev to the package name, e.g. `easy_install -N obspy.sac==dev`.
+ * **==dev**: The latest development version can be obtained by adding ==dev to the package name, i.e. `easy_install -N obspy==dev`.
