@@ -942,6 +942,14 @@ class Stream(object):
             german, use the following:
                 localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
+        :param data_unit: If given, the scale of the data will be drawn on the
+            right hand side in the form "%f {data_unit}". The unit is supposed
+            to be a string containing the actual unit of the data. Can be a
+            LaTeX expression if matplotlib has been built with LaTeX support,
+            e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
+            use r-prepended strings, e.g. r"$\frac{m}{s}$". Please be aware of
+            issues with overlap y-ticks for certain interval lengths.
+            Defaults to None, e.g.  no scale will be drawn.
 
         .. rubric:: Color Options
 
