@@ -1,4 +1,4 @@
-For installation append the ObsPy apt repository to the file `/etc/apt/sources.list` (needs root privileges):
+For installation add the ObsPy apt repository to your package manager by adding the following line to the file `/etc/apt/sources.list` (needs root privileges):
 ObsPy is packed for all Debian and Ubuntu releases which are still officially supported.
 Replace **CODENAME** with the  codename of your [Debian](http://en.wikipedia.org/wiki/Debian#Releases)/[Ubuntu](http://en.wikipedia.org/wiki/Ubuntu_releases) release.
 
