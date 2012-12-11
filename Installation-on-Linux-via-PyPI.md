@@ -17,5 +17,8 @@ easy_install -N obspy
 ```bash
 easy_install -N -U obspy
 ```
+ * ObsPy may be updated to the current developer snapshot by using the **-U** option and **==dev**
+```bash
+easy_install -N -U obspy==dev
+```
  * **-N**: Option will prevent easy_install to resolve the dependencies on its own (can be useful if dependencies are already installed and installing them via PyPI fails).
- * **==dev**: The latest development version can be obtained by adding ==dev to the package name, i.e. `easy_install -N obspy==dev`.
