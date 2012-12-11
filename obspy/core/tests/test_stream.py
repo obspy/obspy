@@ -1700,6 +1700,26 @@ class StreamTestCase(unittest.TestCase):
                         np.allclose(st[1].data, st2[1].data) and
                         np.allclose(st[2].data, st2[2].data))
 
+    def test_plot(self):
+        """
+        Tests plot method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        self.mseed_stream.plot(show=False)
+
+    def test_spectrogram(self):
+        """
+        Tests spectrogram method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        self.mseed_stream.spectrogram(show=False)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

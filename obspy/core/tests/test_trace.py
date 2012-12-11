@@ -1094,6 +1094,29 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
+    def test_plot(self):
+        """
+        Tests plot method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        tr = Trace(data=np.arange(25))
+        tr.plot(show=False)
+
+    def test_spectrogram(self):
+        """
+        Tests spectrogram method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        tr = Trace(data=np.arange(25))
+        tr.stats.sampling_rate = 20
+        tr.spectrogram(show=False)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

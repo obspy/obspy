@@ -8,9 +8,8 @@
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 from obspy import UTCDateTime, Trace
-from obspy.core.util import gps2DistAzimuth, loadtxt
+from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 import numpy as np
-import obspy.core
 import os
 import string
 import time
@@ -1319,7 +1318,8 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     :param torad: change to radians
     :param tohz: change to Hertz
 
-    >>> tr = obspy.core.Trace()
+    >>> from obspy import Trace
+    >>> tr = Trace()
     >>> import StringIO
     >>> f = StringIO.StringIO("""ZEROS 3
     ... -5.032 0.0
@@ -1438,7 +1438,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     # In SAC pole-zero files CONSTANT is defined as:
     # digitizer_gain*seismometer_gain*A0
 
-    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz = AttribDict()
     tr.stats.paz.seismometer_gain = 1.0
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles
@@ -1470,7 +1470,8 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     :param torad: change to radians
     :param tohz: change to Hertz
 
-    >>> tr = obspy.core.Trace()
+    >>> from obspy import Trace
+    >>> tr = Trace()
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')
     >>> attach_resp(tr, respfile, torad=True, todisp=False)
@@ -1548,7 +1549,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     # In SAC pole-zero files CONSTANT is defined as:
     # digitizer_gain*seismometer_gain*A0
 
-    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz = AttribDict()
     tr.stats.paz.seismometer_gain = sens
     tr.stats.paz.digitizer_gain = 1.0
     tr.stats.paz.poles = poles

@@ -146,6 +146,7 @@ class WaveformPlotting(object):
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
+        self.show = kwargs.get('show', True)
 
     def __getMergeId(self, tr):
         tr_id = tr.id
@@ -229,7 +230,7 @@ class WaveformPlotting(object):
             elif self.handle:
                 return self.fig
             else:
-                if not self.fig_obj:
+                if not self.fig_obj and self.show:
                     plt.show()
 
     def plot(self, *args, **kwargs):
