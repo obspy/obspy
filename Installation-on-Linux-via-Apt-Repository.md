@@ -9,14 +9,14 @@ deb http://deb.obspy.org CODENAME main
 Currently supported releases are:
 
  * Debian:
-   - squeeze (i386, amd64)
-   - wheezy (i386, amd64)
+   - squeeze *(i386, amd64)*
+   - wheezy *(i386, amd64)*
  * Ubuntu:
-   - lucid (i386, amd64)
-   - natty (i386, amd64)
-   - oneiric (i386, amd64)
-   - precise (i386, amd64)
-   - quantal (i386, amd64)
+   - lucid *(i386, amd64)*
+   - natty *(i386, amd64)*
+   - oneiric *(i386, amd64)*
+   - precise *(i386, amd64)*
+   - quantal *(i386, amd64)*
 
 If you are unsure about the codename of your installation you can use the following command to display it:
 
