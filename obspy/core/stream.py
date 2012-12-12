@@ -2291,8 +2291,8 @@ class Stream(object):
                 ba = [360 - value for value in ba]
             for i in range(len(N)):
                 N[i].data, E[i].data = rotate(N[i].data, E[i].data, ba[i])
-                N[i].stats.channel = N[i].stats.channel[-1] + method[0]
-                E[i].stats.channel = E[i].stats.channel[-1] + method[1]
+                N[i].stats.channel = N[i].stats.channel[:-1] + method[0]
+                E[i].stats.channel = E[i].stats.channel[:-1] + method[1]
         else:
             Z = self.select(component=components[0])
             N = self.select(component=components[1])
@@ -2315,9 +2315,9 @@ class Stream(object):
             for i in range(len(N)):
                 Z[i].data, N[i].data, E[i].data = rotate(
                                 Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
-                Z[i].stats.channel = Z[i].stats.channel[-1] + method[0]
-                N[i].stats.channel = N[i].stats.channel[-1] + method[1]
-                E[i].stats.channel = E[i].stats.channel[-1] + method[2]
+                Z[i].stats.channel = Z[i].stats.channel[:-1] + method[0]
+                N[i].stats.channel = N[i].stats.channel[:-1] + method[1]
+                E[i].stats.channel = E[i].stats.channel[:-1] + method[2]
 
     def copy(self):
         """
