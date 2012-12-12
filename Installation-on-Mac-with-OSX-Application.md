@@ -1,9 +1,9 @@
 Due to the fact that the OSX installation of ObsPy and mainly its dependencies has proven to be problematic, a completely self-contained version of ObsPy and all its dependencies is offered here. Its intention is to facilitate the usage of ObsPy on OSX but the underlying Python installation can of course also be used for other purposes. It currently contains Python 2.7.2 and the [[modules listed here|Installation on Mac with OSX Application: Contents]].
 
-[![OSX install](http://www.obspy.org/osx/thumb_image.png)](http://www.obspy.org/osx/image.png)
-[![OSX install](http://www.obspy.org/osx/thumb_app.png)](http://www.obspy.org/osx/app.png)
-[![OSX install](http://www.obspy.org/osx/thumb_virtualenv.png)](http://www.obspy.org/osx/virtualenv.png)
-[![OSX install](http://www.obspy.org/osx/thumb_update.png)](http://www.obspy.org/osx/update.png)
+[![OSX install](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/thumb_image.png)](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/image.png)
+[![OSX install](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/thumb_app.png)](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/app.png)
+[![OSX install](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/thumb_virtualenv.png)](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/virtualenv.png)
+[![OSX install](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/thumb_update.png)](https://raw.github.com/obspy/obspy/master/misc/installer/osx_app/screenshots/update.png)
 
 ## Download and Installation
 
