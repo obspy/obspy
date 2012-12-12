@@ -317,7 +317,9 @@ def _createExampleStream(headonly=False):
                   'npts': 3000,
                   'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3),
                   'sampling_rate': 100.0,
-                  'calib': 1.0}
+                  'calib': 1.0,
+                  'ba': 100.,
+                  'inc': 30.}
         header['channel'] = channel
         if not headonly:
             st.append(Trace(data=data[channel], header=header))
@@ -2210,7 +2212,11 @@ class Stream(object):
         if isinstance(angle, (float, int, long)):
             angle = [angle] * (len(self))
         elif angle is None:
-            angle = [tr.stats[stats_entry] for tr in self]
+            try:
+                angle = [tr.stats[stats_entry] for tr in self]
+            except KeyError:
+                msg = 'Angle information in stats.%s missing for trace %s'
+                raise ValueError(msg % (stats_entry, tr.id))
         if len(angle) != len(self):
             raise ValueError('List of angles has wrong length.')
         return angle
