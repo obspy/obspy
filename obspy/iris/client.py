@@ -189,6 +189,12 @@ class Client(object):
             TA.A25A..BHN | 2010-03-25T00:00:00... | 40.0 Hz, 72001 samples
             TA.A25A..BHZ | 2010-03-25T00:00:00... | 40.0 Hz, 72001 samples
         """
+        # XXX changes to be made: see #486
+        # XXX  - prevent handling of "  " and "--" in location code as
+        # XXX    wildcards. only "*" and "?" should be wildcards.
+        # XXX  - use station WS to determine channels to be fetched in
+        # XXX    wildcarded requests. availability WS is not suited for this
+        # XXX    task.
         kwargs = {}
         kwargs['network'] = str(network)[0:2]
         kwargs['station'] = str(station)[0:5]
