@@ -2280,6 +2280,8 @@ class Stream(object):
             if not (len(N) == len(E)):
                 raise ValueError('The streams consisting of the different '
                                  'components must have same lengths.')
+            if len(N) == 0 and len(self) != 0:
+                warnings.warn('No traces selected for rotation.')
             for i in range(len(N)):
                 if (not (N[i].stats.starttime == E[i].stats.starttime) or
                     not (N[i].stats.sampling_rate == E[i].stats.sampling_rate)
@@ -2300,6 +2302,8 @@ class Stream(object):
             if not (len(Z) == len(N) == len(E)):
                 raise ValueError('The streams consisting of the different '
                                  'components must have same lengths.')
+            if len(Z) == 0 and len(self) != 0:
+                warnings.warn('No traces selected for rotation.')
             for i in range(len(N)):
                 if (not (Z[i].stats.starttime == N[i].stats.starttime ==
                          E[i].stats.starttime) or not
