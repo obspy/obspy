@@ -34,7 +34,7 @@ RequestExecutionLevel admin
 
 # General Symbol Definitions
 !define REGKEY "SOFTWARE\$(^Name)"
-!define VERSION 2.7.2-6
+!define VERSION 2.7.2-7
 !define PRODNAME "ObsPy - a Python framework for seismological observatories."
 !define COMPANY "ObsPy Developer Team"
 !define URL http://www.obspy.org
@@ -112,7 +112,7 @@ InstallDir $PROFILE\ObsPy
 CRCCheck on
 XPStyle on
 ShowInstDetails show
-VIProductVersion 2.7.2.6
+VIProductVersion 2.7.2.7
 VIAddVersionKey ProductName ObsPy
 VIAddVersionKey ProductVersion "${VERSION}"
 VIAddVersionKey CompanyName "${COMPANY}"
@@ -403,9 +403,4 @@ Section uninstall
     DeleteRegKey /IfEmpty HKLM "${REGKEY}"
     RMDir /r $SMPROGRAMS\ObsPy
     RMDir /r $INSTDIR
-#    Push $R0
-#    StrCpy $R0 $StartMenuGroup 1
-#    StrCmp $R0 ">" no_smgroup
-#no_smgroup:
-#    Pop $R0
 SectionEnd
