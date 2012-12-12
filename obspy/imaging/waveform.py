@@ -13,6 +13,7 @@ from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk
+from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
@@ -304,6 +305,7 @@ class WaveformPlotting(object):
         self.__plotSetXTicks()
         self.__plotSetYTicks()
 
+    @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
         """
         Extend the seismogram.
@@ -876,42 +878,19 @@ class WaveformPlotting(object):
             ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
 
-        left_time_offset = 0
-        right_time_offset = self.time_offset
-        left_ylabel = 'UTC'
-
         # Complicated way to calculate the label of the y-Axis showing the
         # second time zone.
         sign = '%+i' % self.time_offset
         sign = sign[0]
-        time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
-                     (sign, abs(self.time_offset), (self.time_offset % 1 * 60))
-        right_ylabel = time_label
+        label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
+            abs(self.time_offset), (self.time_offset % 1 * 60))
 
-        if kwargs.get('swap_time_axis', False):
-            left_time_offset, right_time_offset = \
-                    right_time_offset, left_time_offset
-            left_ylabel, right_ylabel = right_ylabel, left_ylabel
-
-        left_ticklabels = [(self.starttime + _i * self.interval +
-                            left_time_offset * 3600).strftime('%H:%M')
-                      for _i in tick_steps]
-        right_ticklabels = [(self.starttime + (_i + 1) * self.interval +
-                            right_time_offset * 3600).strftime('%H:%M')
+        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M')
                       for _i in tick_steps]
 
         self.axis[0].set_yticks(ticks)
-        self.axis[0].set_yticklabels(left_ticklabels)
-        self.axis[0].set_ylabel(left_ylabel)
-        # Save range.
-        yrange = self.axis[0].get_ylim()
-        # Create twin axis.
-        #XXX
-        self.twin = self.axis[0].twinx()
-        self.twin.set_ylim(yrange)
-        self.twin.set_yticks(ticks)
-        self.twin.set_yticklabels(right_ticklabels)
-        self.twin.set_ylabel(right_ylabel)
+        self.axis[0].set_yticklabels(ticklabels)
+        self.axis[0].set_ylabel(label)
 
     def __setupFigure(self):
         """

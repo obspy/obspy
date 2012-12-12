@@ -927,16 +927,14 @@ class Stream(object):
             Defaults to None.
         :param interval: This defines the interval length in minutes for one
             line.
-        :param time_offset: Only used if ``type='dayplot'``. The dayplot will
-            have two vertical scales. One showing UTC time and the other a user
-            defined timezone. This argument specifies the offset of the other
-            time scale in hours relative to UTC time.
+        :param time_offset: Only used if ``type='dayplot'``. The difference
+            between the timezone of the data (specified with the kwarg
+            'timezone') and UTC time in hours. Will be displayed in a string.
             Defaults to the current offset of the system time to UTC time.
-        :param timezone: Defines the name of the user defined time scale.
+        :param timezone: Defines the name of the user defined time scale. Will
+            be displayed in a string together with the actual offset defined in
+            the kwarg 'time_offset'.
             Defaults to ``'local time'``.
-        :param swap_time_axis: By default the UTC time axis is on the left and
-            the user defined local time zone axis on the right. If this
-            parameter is set to True, they will be swapped.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
             german, use the following:
@@ -947,9 +945,7 @@ class Stream(object):
             to be a string containing the actual unit of the data. Can be a
             LaTeX expression if matplotlib has been built with LaTeX support,
             e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prepended strings, e.g. r"$\frac{m}{s}$". Please be aware of
-            issues with overlap y-ticks for certain interval lengths.
-            Defaults to None, e.g.  no scale will be drawn.
+            use r-prepended strings, e.g. r"$\frac{m}{s}$".
 
         .. rubric:: Color Options
 
