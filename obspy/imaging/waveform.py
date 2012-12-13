@@ -12,13 +12,14 @@ from datetime import datetime
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk
+from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
 from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
 import numpy as np
+import warnings
 """
 Waveform plotting for obspy.Stream objects.
 
@@ -380,14 +381,50 @@ class WaveformPlotting(object):
         self.fig.axes[0].yaxis.grid(False)
         # Now try to plot some events.
         events = kwargs.get("events", [])
-        for event in events:
-            self._plotEvent(event)
+        # Potentially download some events with the help of obspy.neries.
+        if "min_magnitude" in events:
+            try:
+                from obspy.neries import Client
+                c = Client()
+                events = c.getEvents(min_datetime=self.starttime,
+                        max_datetime=self.endtime, format="catalog",
+                        min_magnitude=events["min_magnitude"])
+            except Exception, e:
+                msg = "Could not download the events because of '%s: %s'." % \
+                    (e.__class__.__name__, e.message)
+                warnings.warn(msg)
+        if events:
+            for event in events:
+                self._plotEvent(event)
 
     def _plotEvent(self, event):
         """
         Helper function to plot an event into the dayplot.
         """
-        time = event["time"]
+        if hasattr(event, "preferred_origin"):
+            # Get the time from the preferred origin.
+            origin = event.preferred_origin()
+            if origin is None:
+                if event.origins:
+                    origin = event.origins[0]
+                else:
+                    return
+            time = origin.time
+            # Attempt to get a magnitude string.
+            mag = event.preferred_magnitude()
+            if mag is not None:
+                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
+            else:
+                mag = ""
+            region = FlinnEngdahl().get_region(origin.longitude,
+                origin.latitude)
+            text = region
+            if mag:
+                text += ", %s" % mag
+        else:
+            time = event["time"]
+            text = event["text"] if "text" in event else None
+
         # Nothing to do if the event is not on the plot.
         if time < self.starttime or time > self.endtime:
             return
@@ -398,7 +435,7 @@ class WaveformPlotting(object):
         y_pos = self.extreme_values.shape[0] - int(event_frac) - 0.5
         x_pos = (event_frac - int(event_frac)) * self.width
 
-        if "text" in event:
+        if text:
             # Some logic to get a somewhat sane positioning of the annotation
             # box and the arrow..
             text_offset_x = 0.10 * self.width
@@ -430,7 +467,7 @@ class WaveformPlotting(object):
                     arc_sign = "-"
 
             # Draw the annotation including box.
-            self.fig.axes[0].annotate(event["text"],
+            self.fig.axes[0].annotate(text,
                 # The position of the event.
                 xy=(x_pos, y_pos),
                 # The position of the text, offset depending on the previously

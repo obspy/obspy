@@ -958,6 +958,13 @@ class Stream(object):
             displayed as an annotation.
             Example:
                 events=[{"time": UTCDateTime(...), "text": "Event A"}, {...}]
+            It can also be a :class:`~obspy.core.event.Catalog` object. In this
+            case each event will be annotated with its corresponding
+            Flinn-Engdahl region and the magnitude.
+            Events can also be automatically downloaded with the help of
+            obspy.neries. Just pass a dictionary with a "min_magnitude" key,
+            e.g.
+                events={"min_magnitude": 5.5}
 
         .. rubric:: Color Options
 
