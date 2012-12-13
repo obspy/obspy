@@ -17,8 +17,7 @@
 
 #define STEER(I, J, K, L) steer[(I)*nstat*nf*grdpts_y + (J)*nstat*nf + (K)*nstat + (L)]
 #define RPTR(I, J, K) Rptr[(I)*nstat*nstat + (J)*nstat + (K)]
-#define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
-#define P_N(I, J) p[(I)*grdpts_y + (J)]
+#define P_N(I, J) p_n[(I)*grdpts_y + (J)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
 #define ABSPOW(I, J) abspow[(I)*grdpts_y + (J)]
 #define STAT_TSHIFT_TABLE(I, J, K) stat_tshift_table[(I) * grdpts_x * grdpts_y + (J) * grdpts_y + K]
@@ -70,17 +69,11 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
 
     int x, y, i, j, n;
     const cplx cplx_zero = {0., 0.};
-    double *p;
-    double gen_power[2];
-
-    if (method >= sizeof(gen_power)) {
-        fprintf(stderr, "\nUnkown method!\n");
-        exit(EXIT_FAILURE);
-    }
+    double *p_n;
 
     /* we allocate the taper buffer, size nsamp! */
-    p = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
-    if (p == NULL ) {
+    p_n = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
+    if (p_n == NULL ) {
         fprintf(stderr, "\nMemory allocation error (p)!\n");
         exit(EXIT_FAILURE);
     }
@@ -113,10 +106,8 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                     eHR_ne.re += STEER(x,y,n,i).re * R_ne.re + STEER(x,y,n,i).im * R_ne.im; /* eH, conjugate */
                     eHR_ne.im += STEER(x,y,n,i).re * R_ne.im - STEER(x,y,n,i).im * R_ne.re; /* eH, conjugate */
                 }
-                /* optimization: avoid if condition on BW / CAPON through array access of gen_power */
-                gen_power[BF] = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
-                gen_power[CAPON] = 1. / gen_power[BF];
-                power = gen_power[method];
+                power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
+                power = (method == CAPON) ? 1. / power : power;
                 ABSPOW(x,y) += power;
                 white = fmax(power, white);
                 P_N(x,y) = power;
@@ -137,7 +128,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     }
 
 
-    free((void *) p);
+    free((void *) p_n);
 
     return 0;
 }
