@@ -15,7 +15,7 @@
 #include <math.h>
 #include "platform.h"
 
-#define STEER(I, J, K, L) steer[(I)*nstat*nf*grdpts_y + (J)*nstat*nf + (K)*nstat + (L)]
+#define STEER(I, J, K, L) steer[(I)*nstat*grdpts_y*grdpts_x + (J)*nstat*grdpts_y + (K)*nstat + (L)]
 #define RPTR(I, J, K) Rptr[(I)*nstat*nstat + (J)*nstat + (K)]
 #define P_N(I, J) p_n[(I)*grdpts_y + (J)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
@@ -48,8 +48,8 @@ void calcSteer(const int nstat, const int grdpts_x, const int grdpts_y,
             for (y=0; y < grdpts_y; y++) {
                 for (n=0; n < nf; n++) {
                     wtau = 2.*M_PI*(float)(nlow+n)*deltaf*STAT_TSHIFT_TABLE(i, x, y);
-                    STEER(x,y,n,i).re = cos(wtau);
-                    STEER(x,y,n,i).im = -sin(wtau);
+                    STEER(n,x,y,i).re = cos(wtau);
+                    STEER(n,x,y,i).im = -sin(wtau);
                 }
             }
         }
@@ -98,13 +98,13 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 for (i = 0; i < nstat; ++i) {
                     register cplx R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
-                        register const cplx s = STEER(x,y,n,j);
+                        register const cplx s = STEER(n,x,y,j);
                         register const cplx r = RPTR(n,i,j);
                         R_ne.re += r.re * s.re - r.im * s.im;
                         R_ne.im += r.re * s.im + r.im * s.re;
                     }
-                    eHR_ne.re += STEER(x,y,n,i).re * R_ne.re + STEER(x,y,n,i).im * R_ne.im; /* eH, conjugate */
-                    eHR_ne.im += STEER(x,y,n,i).re * R_ne.im - STEER(x,y,n,i).im * R_ne.re; /* eH, conjugate */
+                    eHR_ne.re += STEER(n,x,y,i).re * R_ne.re + STEER(n,x,y,i).im * R_ne.im; /* eH, conjugate */
+                    eHR_ne.im += STEER(n,x,y,i).re * R_ne.im - STEER(n,x,y,i).im * R_ne.re; /* eH, conjugate */
                 }
                 power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
                 power = (method == CAPON) ? 1. / power : power;
