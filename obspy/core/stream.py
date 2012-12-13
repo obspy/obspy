@@ -949,6 +949,15 @@ class Stream(object):
             LaTeX expression if matplotlib has been built with LaTeX support,
             e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
             use r-prepended strings, e.g. r"$\frac{m}{s}$".
+        :param events: An optional list of events can be drawn on the plot if
+            given.  They will be displayed as yellow stars with optional
+            annotations.  They are given as a list of dictionaries. Each
+            dictionary at least needs to have a "time" key, containing a
+            UTCDateTime object with the origin time of the event. Furthermore
+            every event can have an optional "text" key which will then be
+            displayed as an annotation.
+            Example:
+                events=[{"time": UTCDateTime(...), "text": "Event A"}, {...}]
 
         .. rubric:: Color Options
 

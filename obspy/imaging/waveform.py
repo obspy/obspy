@@ -378,6 +378,79 @@ class WaveformPlotting(object):
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
+        # Now try to plot some events.
+        events = kwargs.get("events", [])
+        for event in events:
+            self._plotEvent(event)
+
+    def _plotEvent(self, event):
+        """
+        Helper function to plot an event into the dayplot.
+        """
+        time = event["time"]
+        # Nothing to do if the event is not on the plot.
+        if time < self.starttime or time > self.endtime:
+            return
+        # Now find the position of the event in plot coordinates.
+        frac = (time - self.starttime) / (self.endtime - self.starttime)
+        int_frac = (self.interval) / (self.endtime - self.starttime)
+        event_frac = frac / int_frac
+        y_pos = self.extreme_values.shape[0] - int(event_frac) - 0.5
+        x_pos = (event_frac - int(event_frac)) * self.width
+
+        if "text" in event:
+            # Some logic to get a somewhat sane positioning of the annotation
+            # box and the arrow..
+            text_offset_x = 0.10 * self.width
+            text_offset_y = 1.00
+            # Relpos determines the connection of the arrow on the box in
+            # relative coordinates.
+            relpos = [0.0, 0.5]
+            # Arc strength is the amount of bending of the arrow.
+            arc_strength = 0.25
+            if x_pos < (self.width / 2.0):
+                text_offset_x_sign = 1.0
+                ha = "left"
+                # Arc sign determines the direction of bending.
+                arc_sign = "+"
+            else:
+                text_offset_x_sign = -1.0
+                ha = "right"
+                relpos[0] = 1.0
+                arc_sign = "-"
+            if y_pos < (self.extreme_values.shape[0] / 2.0):
+                text_offset_y_sign = 1.0
+                va = "bottom"
+            else:
+                text_offset_y_sign = -1.0
+                va = "top"
+                if arc_sign == "-":
+                    arc_sign = "+"
+                else:
+                    arc_sign = "-"
+
+            # Draw the annotation including box.
+            self.fig.axes[0].annotate(event["text"],
+                # The position of the event.
+                xy=(x_pos, y_pos),
+                # The position of the text, offset depending on the previously
+                # calculated variables.
+                xytext=(x_pos + text_offset_x_sign * text_offset_x,
+                    y_pos + text_offset_y_sign * text_offset_y),
+                # Everything in data coordinates.
+                xycoords="data", textcoords="data",
+                # Set the text alignment.
+                ha=ha, va=va,
+                # Text box style.
+                bbox=dict(boxstyle="round", fc="w", alpha=0.6),
+                # Arrow style
+                arrowprops=dict(arrowstyle="-",
+                    connectionstyle="arc3, rad=%s%.1f" % (arc_sign,
+                    arc_strength), relpos=relpos, shrinkB=7),
+                zorder=10)
+        # Draw the actual point. Use a marker with a star shape.
+        self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
+            markersize=12)
 
     def _plotDayplotScale(self, unit):
         """
