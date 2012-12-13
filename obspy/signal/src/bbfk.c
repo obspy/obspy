@@ -94,6 +94,8 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
         /* optimized way of abspow normalization */
         dpow = 1.0;
     }
+            for (n = 0; n < nf; ++n) {
+                double inv_fac;
     for (x = 0; x < grdpts_x; ++x) {
         for (y = 0; y < grdpts_y; ++y) {
             /* in general, beamforming is done by simply computing the
@@ -102,8 +104,6 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
              * Kirlin & Done, 1999:
              * a) bf: P(f) = e.H R(f) e
              * b) capon: P(f) = 1/(e.H R(f)^-1 e) */
-            ABSPOW(x, y) = 0.;
-            for (n = 0; n < nf; ++n) {
                 double power;
                 cplx eHR_ne = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
@@ -125,20 +125,21 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 white[n] = fmax(power, white[n]);
                 P(x,y,n) = power;
             }
-            RELPOW(x,y) = ABSPOW(x,y)/dpow;
         }
-    }
-
     if (prewhiten == 1) {
+        inv_fac = 1. / (white[n]*nf*nstat);
+    }
+    else {
+        inv_fac = 1. / dpow;
+            }
+
         for (x = 0; x < grdpts_x; ++x) {
             for (y = 0; y < grdpts_y; ++y) {
-                RELPOW(x,y)= 0.;
-                for (n = 0; n < nf; ++n) {
-                    RELPOW(x,y) += P(x,y,n)/(white[n]*nf*nstat);
-                }
+                    RELPOW(x,y) += P(x,y,n) * inv_fac;
             }
         }
     }
+
 
     free((void *) p);
     free((void *) white);
