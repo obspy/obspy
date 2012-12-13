@@ -4,7 +4,8 @@
 The Rotate test suite.
 """
 
-from obspy.signal import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
+from obspy.signal import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, \
+    rotate_LQT_ZNE
 import gzip
 import numpy as np
 import os
@@ -122,6 +123,29 @@ class RotateTestCase(unittest.TestCase):
             #show()
             self.assertTrue(rms < 1.0e-5)
             self.assertTrue(rms2 < 1.0e-5)
+
+    def test_rotate_NE_RT_NE(self):
+        """
+        Rotating there and back with the same back-azimuth should not change
+        the data.
+        """
+        # load the data
+        file = os.path.join(self.path, 'rjob_20051006_n.gz')
+        f = gzip.open(file)
+        data_n = np.loadtxt(f)
+        f.close()
+        file = os.path.join(self.path, 'rjob_20051006_e.gz')
+        f = gzip.open(file)
+        data_e = np.loadtxt(f)
+        f.close()
+        # Use double precision to get more accuracy for testing.
+        data_n = np.require(data_n, "float64")
+        data_e = np.require(data_e, "float64")
+        ba = 33.3
+        new_n, new_e = rotate_NE_RT(data_n, data_e, ba)
+        new_n, new_e = rotate_RT_NE(new_n, new_e, ba)
+        np.testing.assert_allclose(data_n, new_n, rtol=1E-7, atol=1E-12)
+        np.testing.assert_allclose(data_e, new_e, rtol=1E-7, atol=1E-12)
 
 
 def suite():
