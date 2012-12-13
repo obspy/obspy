@@ -82,18 +82,17 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
         /* optimized way of abspow normalization */
         dpow = 1.0;
     }
-            for (n = 0; n < nf; ++n) {
-                double inv_fac;
-                double white = 0.;
-    for (x = 0; x < grdpts_x; ++x) {
-        for (y = 0; y < grdpts_y; ++y) {
-            /* in general, beamforming is done by simply computing the
-             * covariances of the signal at different receivers and than steer
-             * the matrix R with "weights" which are the trial-DOAs e.g.,
-             * Kirlin & Done, 1999:
-             * a) bf: P(f) = e.H R(f) e
-             * b) capon: P(f) = 1/(e.H R(f)^-1 e) */
-                double power;
+    /* in general, beamforming is done by simply computing the covariances of
+     * the signal at different receivers and than steer the matrix R with
+     * "weights" which are the trial-DOAs e.g., Kirlin & Done, 1999:
+     * BF: P(f) = e.H R(f) e
+     * CAPON: P(f) = 1/(e.H R(f)^-1 e) */
+    for (n = 0; n < nf; ++n) {
+        double inv_fac;
+        double white = 0.;
+        for (x = 0; x < grdpts_x; ++x) {
+            for (y = 0; y < grdpts_y; ++y) {
+                double pow;
                 cplx eHR_ne = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
                     register cplx R_ne = cplx_zero;
@@ -103,26 +102,26 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                         R_ne.re += r.re * s.re - r.im * s.im;
                         R_ne.im += r.re * s.im + r.im * s.re;
                     }
-                    eHR_ne.re += STEER(n,x,y,i).re * R_ne.re + STEER(n,x,y,i).im * R_ne.im; /* eH, conjugate */
+                    eHR_ne.re += STEER(n,x,y,i).re * R_ne.re + STEER(n,x,y,i).im * R_ne.im ; /* eH, conjugate */
                     eHR_ne.im += STEER(n,x,y,i).re * R_ne.im - STEER(n,x,y,i).im * R_ne.re; /* eH, conjugate */
                 }
-                power = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
-                power = (method == CAPON) ? 1. / power : power;
-                ABSPOW(x,y) += power;
-                white = fmax(power, white);
-                P_N(x,y) = power;
+                pow = sqrt(eHR_ne.re * eHR_ne.re + eHR_ne.im * eHR_ne.im);
+                pow = (method == CAPON) ? 1. / pow : pow;
+                white = fmax(pow, white);
+                P_N(x,y)= pow;
             }
         }
-    if (prewhiten == 1) {
-        inv_fac = 1. / (white*nf*nstat);
-    }
-    else {
-        inv_fac = 1. / dpow;
-            }
+        if (prewhiten == 1) {
+            inv_fac = 1. / (white * nf * nstat);
+        }
+        else {
+            inv_fac = 1. / dpow;
+        }
 
         for (x = 0; x < grdpts_x; ++x) {
             for (y = 0; y < grdpts_y; ++y) {
-                    RELPOW(x,y) += P_N(x,y) * inv_fac;
+                RELPOW(x,y) += P_N(x,y) * inv_fac;
+                ABSPOW(x,y) += P_N(x,y);
             }
         }
     }
