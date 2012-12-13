@@ -199,8 +199,8 @@ ENTRY_POINTS = {
     'obspy.plugin.rotate': [
         'rotate_NE_RT = obspy.signal:rotate_NE_RT',
         'rotate_RT_NE = obspy.signal:rotate_RT_NE',
-        'rotate_ZNE_LQT = obspy.signalgnal:rotate_ZNE_LQT',
-        'rotate_LQT_ZNE = obspy.signalgnal:rotate_LQT_ZNE'
+        'rotate_ZNE_LQT = obspy.signal:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
     ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosTaper',
