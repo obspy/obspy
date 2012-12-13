@@ -78,7 +78,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
         exit(EXIT_FAILURE);
     }
 
-    if ((method == CAPON) || (prewhiten == 1)) {
+    if (method == CAPON) {
         /* optimized way of abspow normalization */
         dpow = 1.0;
     }
@@ -95,10 +95,10 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 double pow;
                 cplx eHR_ne = cplx_zero;
                 for (i = 0; i < nstat; ++i) {
-                    register cplx R_ne = cplx_zero;
+                    cplx R_ne = cplx_zero;
                     for (j = 0; j < nstat; ++j) {
-                        register const cplx s = STEER(n,x,y,j);
-                        register const cplx r = RPTR(n,i,j);
+                        const cplx s = STEER(n,x,y,j);
+                        const cplx r = RPTR(n,i,j);
                         R_ne.re += r.re * s.re - r.im * s.im;
                         R_ne.im += r.re * s.im + r.im * s.re;
                     }
@@ -109,19 +109,19 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 pow = (method == CAPON) ? 1. / pow : pow;
                 white = fmax(pow, white);
                 P_N(x,y)= pow;
+                ABSPOW(x,y) += pow;
             }
         }
+        /* scale for each frequency individually */
         if (prewhiten == 1) {
             inv_fac = 1. / (white * nf * nstat);
         }
         else {
             inv_fac = 1. / dpow;
         }
-
         for (x = 0; x < grdpts_x; ++x) {
             for (y = 0; y < grdpts_y; ++y) {
                 RELPOW(x,y) += P_N(x,y) * inv_fac;
-                ABSPOW(x,y) += P_N(x,y);
             }
         }
     }
