@@ -18,6 +18,7 @@
 #define STEER(I, J, K, L) steer[(I)*nstat*nf*grdpts_y + (J)*nstat*nf + (K)*nstat + (L)]
 #define RPTR(I, J, K) Rptr[(I)*nstat*nstat + (J)*nstat + (K)]
 #define P(I, J, K) p[(I)*nf*grdpts_y + (J)*nf + (K)]
+#define P_N(I, J) p[(I)*grdpts_y + (J)]
 #define RELPOW(I, J) relpow[(I)*grdpts_y + (J)]
 #define ABSPOW(I, J) abspow[(I)*grdpts_y + (J)]
 #define STAT_TSHIFT_TABLE(I, J, K) stat_tshift_table[(I) * grdpts_x * grdpts_y + (J) * grdpts_y + K]
@@ -78,7 +79,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     }
 
     /* we allocate the taper buffer, size nsamp! */
-    p = (double *) calloc((size_t) (grdpts_x * grdpts_y * nf), sizeof(double));
+    p = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
     if (p == NULL ) {
         fprintf(stderr, "\nMemory allocation error (p)!\n");
         exit(EXIT_FAILURE);
@@ -118,7 +119,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 power = gen_power[method];
                 ABSPOW(x,y) += power;
                 white = fmax(power, white);
-                P(x,y,n) = power;
+                P_N(x,y) = power;
             }
         }
     if (prewhiten == 1) {
@@ -130,7 +131,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
 
         for (x = 0; x < grdpts_x; ++x) {
             for (y = 0; y < grdpts_y; ++y) {
-                    RELPOW(x,y) += P(x,y,n) * inv_fac;
+                    RELPOW(x,y) += P_N(x,y) * inv_fac;
             }
         }
     }
