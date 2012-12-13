@@ -70,7 +70,6 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     int x, y, i, j, n;
     const cplx cplx_zero = {0., 0.};
     double *p;
-    double *white;
     double gen_power[2];
 
     if (method >= sizeof(gen_power)) {
@@ -84,11 +83,6 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
         fprintf(stderr, "\nMemory allocation error (p)!\n");
         exit(EXIT_FAILURE);
     }
-    white = (double *) calloc((size_t) nf, sizeof(double));
-    if (white == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (white)!\n");
-        exit(EXIT_FAILURE);
-    }
 
     if ((method == CAPON) || (prewhiten == 1)) {
         /* optimized way of abspow normalization */
@@ -96,6 +90,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     }
             for (n = 0; n < nf; ++n) {
                 double inv_fac;
+                double white = 0.;
     for (x = 0; x < grdpts_x; ++x) {
         for (y = 0; y < grdpts_y; ++y) {
             /* in general, beamforming is done by simply computing the
@@ -122,12 +117,12 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
                 gen_power[CAPON] = 1. / gen_power[BF];
                 power = gen_power[method];
                 ABSPOW(x,y) += power;
-                white[n] = fmax(power, white[n]);
+                white = fmax(power, white);
                 P(x,y,n) = power;
             }
         }
     if (prewhiten == 1) {
-        inv_fac = 1. / (white[n]*nf*nstat);
+        inv_fac = 1. / (white*nf*nstat);
     }
     else {
         inv_fac = 1. / dpow;
@@ -142,7 +137,6 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
 
 
     free((void *) p);
-    free((void *) white);
 
     return 0;
 }
