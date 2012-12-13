@@ -2264,6 +2264,7 @@ class Stream(object):
                     (i_1.stats.sampling_rate != i_2.stats.sampling_rate):
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
+            for i_1, i_2 in zip(input_1, input_2):
                 output_1, output_2 = func(i_1.data, i_2.data, back_azimuth)
                 i_1.data = output_1
                 i_2.data = output_2
@@ -2288,6 +2289,7 @@ class Stream(object):
                     (i_1.stats.sampling_rate != i_3.stats.sampling_rate):
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
+            for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
                 output_1, output_2, output_3 = func(i_1.data, i_2.data,
                     i_3.data, back_azimuth, inclination)
                 i_1.data = output_1
