@@ -36,10 +36,10 @@ class RotateTestCase(unittest.TestCase):
             data_pitsa_t = np.loadtxt(os.path.join(self.path,
                 'rjob_20051006_t_%sdeg.gz' % angle))
             # Assert.
-            np.testing.assert_allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
-                atol=1E-5)
+            self.assertTrue(np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
+                atol=1E-5))
 
     def test_rotate_ZNE_LQTVsPitsa(self):
         """
@@ -66,18 +66,18 @@ class RotateTestCase(unittest.TestCase):
                 'rjob_20051006_t_%sba_%sinc.gz' % (ba, inci)))
             # Assert the output. Has to be to rather low accuracy due to
             # rounding error prone rotation and single precision value.
-            np.testing.assert_allclose(data_l, data_pitsa_l, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(data_q, data_pitsa_q, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(data_t, data_pitsa_t, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(data_z, data_back_z, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(data_n, data_back_n, rtol=1E-3,
-                atol=1E-5)
-            np.testing.assert_allclose(data_e, data_back_e, rtol=1E-3,
-                atol=1E-5)
+            self.assertTrue(np.allclose(data_l, data_pitsa_l, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(data_q, data_pitsa_q, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(data_t, data_pitsa_t, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(data_z, data_back_z, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(data_n, data_back_n, rtol=1E-3,
+                atol=1E-5))
+            self.assertTrue(np.allclose(data_e, data_back_e, rtol=1E-3,
+                atol=1E-5))
 
     def test_rotate_NE_RT_NE(self):
         """
@@ -93,8 +93,8 @@ class RotateTestCase(unittest.TestCase):
         ba = 33.3
         new_n, new_e = rotate_NE_RT(data_n, data_e, ba)
         new_n, new_e = rotate_RT_NE(new_n, new_e, ba)
-        np.testing.assert_allclose(data_n, new_n, rtol=1E-7, atol=1E-12)
-        np.testing.assert_allclose(data_e, new_e, rtol=1E-7, atol=1E-12)
+        self.assertTrue(np.allclose(data_n, new_n, rtol=1E-7, atol=1E-12))
+        self.assertTrue(np.allclose(data_e, new_e, rtol=1E-7, atol=1E-12))
 
 
 def suite():

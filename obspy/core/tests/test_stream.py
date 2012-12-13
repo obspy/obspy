@@ -1680,12 +1680,12 @@ class StreamTestCase(unittest.TestCase):
                          st[2].stats.channel[-1]) == 'ZNE')
         self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
                          st[5].stats.channel[-1]) == 'ZNE')
-        np.testing.assert_allclose(st[0].data, st2[0].data)
-        np.testing.assert_allclose(st[1].data, st2[1].data)
-        np.testing.assert_allclose(st[2].data, st2[2].data)
-        np.testing.assert_allclose(st[3].data, st2[3].data)
-        np.testing.assert_allclose(st[4].data, st2[4].data)
-        np.testing.assert_allclose(st[5].data, st2[5].data)
+        self.assertTrue(np.allclose(st[0].data, st2[0].data))
+        self.assertTrue(np.allclose(st[1].data, st2[1].data))
+        self.assertTrue(np.allclose(st[2].data, st2[2].data))
+        self.assertTrue(np.allclose(st[3].data, st2[3].data))
+        self.assertTrue(np.allclose(st[4].data, st2[4].data))
+        self.assertTrue(np.allclose(st[5].data, st2[5].data))
         # again, with angles given in stats and just 2 components
         st = st2.copy()
         st = st[1:3] + st[4:]
@@ -1693,22 +1693,22 @@ class StreamTestCase(unittest.TestCase):
         st[2].stats.back_azimuth = 200
         st.rotate(method='NE->RT')
         st.rotate(method='RT->NE')
-        np.testing.assert_allclose(st[0].data, st2[1].data)
-        np.testing.assert_allclose(st[1].data, st2[2].data)
+        self.assertTrue(np.allclose(st[0].data, st2[1].data))
+        self.assertTrue(np.allclose(st[1].data, st2[2].data))
         # rotate to LQT and back with 6 traces
         st = st2.copy()
-        st.rotate(method='ZNE->LQT', back_azimuth=100, inclination= 30)
+        st.rotate(method='ZNE->LQT', back_azimuth=100, inclination=30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'LQT')
         st.rotate(method='LQT->ZNE', back_azimuth=100, inclination=30)
         self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                         st[2].stats.channel[-1] == 'ZNE')
-        np.testing.assert_allclose(st[0].data, st2[0].data)
-        np.testing.assert_allclose(st[1].data, st2[1].data)
-        np.testing.assert_allclose(st[2].data, st2[2].data)
-        np.testing.assert_allclose(st[3].data, st2[3].data)
-        np.testing.assert_allclose(st[4].data, st2[4].data)
-        np.testing.assert_allclose(st[5].data, st2[5].data)
+        self.assertTrue(np.allclose(st[0].data, st2[0].data))
+        self.assertTrue(np.allclose(st[1].data, st2[1].data))
+        self.assertTrue(np.allclose(st[2].data, st2[2].data))
+        self.assertTrue(np.allclose(st[3].data, st2[3].data))
+        self.assertTrue(np.allclose(st[4].data, st2[4].data))
+        self.assertTrue(np.allclose(st[5].data, st2[5].data))
 
     def test_plot(self):
         """
