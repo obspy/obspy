@@ -196,6 +196,12 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.rotate': [
+        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
+        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
+        'rotate_ZNE_LQT = obspy.signalgnal:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signalgnal:rotate_LQT_ZNE'
+    ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosTaper',
         'barthann = scipy.signal:barthann',
