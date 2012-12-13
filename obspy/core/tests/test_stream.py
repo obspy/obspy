@@ -1670,35 +1670,45 @@ class StreamTestCase(unittest.TestCase):
         st[3:].normalize()
         st2 = st.copy()
         # rotate to RT and back with 6 traces
-        st.rotate(method='RT', angle=[30, 50])
+        st.rotate(method='NE->RT', back_azimuth=30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'ZRT')
-        st.rotate(method='NE', angle=[30, 50])
+        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                         st[5].stats.channel[-1]) == 'ZRT')
+        st.rotate(method='RT->NE', back_azimuth=30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'ZNE')
-        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
-                        np.allclose(st[1].data, st2[1].data) and
-                        np.allclose(st[2].data, st2[2].data))
+        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                         st[5].stats.channel[-1]) == 'ZNE')
+        np.testing.assert_allclose(st[0].data, st2[0].data)
+        np.testing.assert_allclose(st[1].data, st2[1].data)
+        np.testing.assert_allclose(st[2].data, st2[2].data)
+        np.testing.assert_allclose(st[3].data, st2[3].data)
+        np.testing.assert_allclose(st[4].data, st2[4].data)
+        np.testing.assert_allclose(st[5].data, st2[5].data)
         # again, with angles given in stats and just 2 components
         st = st2.copy()
         st = st[1:3] + st[4:]
-        st[0].stats.ba = 190
-        st[2].stats.ba = 200
-        st.rotate(method='RT')
-        st.rotate(method='NE')
-        self.assertTrue(np.allclose(st[0].data, st2[1].data) and
-                        np.allclose(st[1].data, st2[2].data))
+        st[0].stats.back_azimuth = 190
+        st[2].stats.back_azimuth = 200
+        st.rotate(method='NE->RT')
+        st.rotate(method='RT->NE')
+        np.testing.assert_allclose(st[0].data, st2[1].data)
+        np.testing.assert_allclose(st[1].data, st2[2].data)
         # rotate to LQT and back with 6 traces
         st = st2.copy()
-        st.rotate(method='LQT', angle=(100, 30))
+        st.rotate(method='ZNE->LQT', back_azimuth=100, inclination= 30)
         self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                          st[2].stats.channel[-1]) == 'LQT')
-        st.rotate(method='ZNE', angle=(100, 30))
+        st.rotate(method='LQT->ZNE', back_azimuth=100, inclination=30)
         self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
                         st[2].stats.channel[-1] == 'ZNE')
-        self.assertTrue(np.allclose(st[0].data, st2[0].data) and
-                        np.allclose(st[1].data, st2[1].data) and
-                        np.allclose(st[2].data, st2[2].data))
+        np.testing.assert_allclose(st[0].data, st2[0].data)
+        np.testing.assert_allclose(st[1].data, st2[1].data)
+        np.testing.assert_allclose(st[2].data, st2[2].data)
+        np.testing.assert_allclose(st[3].data, st2[3].data)
+        np.testing.assert_allclose(st[4].data, st2[4].data)
+        np.testing.assert_allclose(st[5].data, st2[5].data)
 
     def test_plot(self):
         """
