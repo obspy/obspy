@@ -10,7 +10,6 @@
 # Copyright (C) 2010 M. Beyreuther, J. Wassermann, M. Ohrnberger
 #---------------------------------------------------------------------*/
 #include <stdlib.h>
-#include <stdio.h>
 #include <math.h>
 #include "platform.h"
 
@@ -73,8 +72,7 @@ int generalizedBeamformer(double *relpow, double *abspow, const cplx * const ste
     /* we allocate the taper buffer, size nsamp! */
     p_n = (double *) calloc((size_t) (grdpts_x * grdpts_y), sizeof(double));
     if (p_n == NULL ) {
-        fprintf(stderr, "\nMemory allocation error (p)!\n");
-        exit(EXIT_FAILURE);
+        return 1;
     }
 
     if (method == CAPON) {

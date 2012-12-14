@@ -959,8 +959,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     newstart = stime
     tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = 0
-    pow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
-    apow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    relpow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
     while eotr:
         try:
             for i, tr in enumerate(stream):
@@ -971,8 +971,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         except IndexError:
             break
         ft = np.require(ft, 'c16', ['C_CONTIGUOUS'])
-        pow_map.fill(0.)
-        apow_map.fill(0.)
+        relpow_map.fill(0.)
+        abspow_map.fill(0.)
         # computing the covariances of the signal at different receivers
         dpow = 0.
         for i in xrange(nstat):
@@ -990,12 +990,15 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             for n in xrange(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
-        clibsignal.generalizedBeamformer(pow_map, apow_map, steer, R,
-            nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf, dpow,
-            method)
-        ix, iy = np.unravel_index(pow_map.argmax(), pow_map.shape)
-        relpow, abspow = pow_map[ix, iy], apow_map[ix, iy]
-        store(pow_map, apow_map, offset)
+        errcode = clibsignal.generalizedBeamformer(relpow_map, abspow_map,
+            steer, R, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf,
+            dpow, method)
+        if errcode != 0:
+            msg = 'generalizedBeamforming exited with error %d'
+            raise Exception(msg % errcode)
+        ix, iy = np.unravel_index(relpow_map.argmax(), relpow_map.shape)
+        relpow, abspow = relpow_map[ix, iy], abspow_map[ix, iy]
+        store(relpow_map, abspow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s
