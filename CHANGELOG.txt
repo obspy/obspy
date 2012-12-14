@@ -1,5 +1,6 @@
 0.8.2:
  - fixing a bug in plotting methods of Trace and Stream
+ - stream/trace.plot(type="dayplot") can display event information now
 
 0.8.1:
  - fixing a bug parsing QuakeML from a StringIO object using xml and
