@@ -12,10 +12,14 @@ from datetime import datetime
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk
+from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
+from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
+from matplotlib.path import Path
+import matplotlib.patches as patches
 import numpy as np
+import warnings
 """
 Waveform plotting for obspy.Stream objects.
 
@@ -65,10 +69,10 @@ class WaveformPlotting(object):
         self.fig_obj = kwargs.get('fig', None)
         # If no times are given take the min/max values from the stream object.
         if not self.starttime:
-            self.starttime = min([trace.stats.starttime for \
+            self.starttime = min([trace.stats.starttime for
                              trace in self.stream])
         if not self.endtime:
-            self.endtime = max([trace.stats.endtime for \
+            self.endtime = max([trace.stats.endtime for
                            trace in self.stream])
         # Map stream object and slice just in case.
         self.stream.trim(self.starttime, self.endtime)
@@ -146,6 +150,7 @@ class WaveformPlotting(object):
         # File format of the resulting file. Usually defaults to PNG but might
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
+        self.show = kwargs.get('show', True)
 
     def __getMergeId(self, tr):
         tr_id = tr.id
@@ -229,7 +234,7 @@ class WaveformPlotting(object):
             elif self.handle:
                 return self.fig
             else:
-                if not self.fig_obj:
+                if not self.fig_obj and self.show:
                     plt.show()
 
     def plot(self, *args, **kwargs):
@@ -292,7 +297,7 @@ class WaveformPlotting(object):
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
             if self.plotting_method != 'full' and \
-                ((self.endtime - self.starttime) * sampling_rate > \
+                ((self.endtime - self.starttime) * sampling_rate >
                  self.max_npts):
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
@@ -301,6 +306,7 @@ class WaveformPlotting(object):
         self.__plotSetXTicks()
         self.__plotSetYTicks()
 
+    @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
         """
         Extend the seismogram.
@@ -359,6 +365,10 @@ class WaveformPlotting(object):
             # Plot the values.
             ax.plot(x_values, y_values,
                     color=self.color[_i % len(self.color)])
+        # Plot the scale, if required.
+        scale_unit = kwargs.get("data_unit", None)
+        if scale_unit is not None:
+            self._plotDayplotScale(unit=scale_unit)
         # Set ranges.
         ax.set_xlim(0, self.width - 1)
         ax.set_ylim(-0.3, intervals + 0.3)
@@ -369,6 +379,161 @@ class WaveformPlotting(object):
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
+        # Now try to plot some events.
+        events = kwargs.get("events", [])
+        # Potentially download some events with the help of obspy.neries.
+        if "min_magnitude" in events:
+            try:
+                from obspy.neries import Client
+                c = Client()
+                events = c.getEvents(min_datetime=self.starttime,
+                        max_datetime=self.endtime, format="catalog",
+                        min_magnitude=events["min_magnitude"])
+            except Exception, e:
+                msg = "Could not download the events because of '%s: %s'." % \
+                    (e.__class__.__name__, e.message)
+                warnings.warn(msg)
+        if events:
+            for event in events:
+                self._plotEvent(event)
+
+    def _plotEvent(self, event):
+        """
+        Helper function to plot an event into the dayplot.
+        """
+        if hasattr(event, "preferred_origin"):
+            # Get the time from the preferred origin.
+            origin = event.preferred_origin()
+            if origin is None:
+                if event.origins:
+                    origin = event.origins[0]
+                else:
+                    return
+            time = origin.time
+            # Attempt to get a magnitude string.
+            mag = event.preferred_magnitude()
+            if mag is not None:
+                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
+            else:
+                mag = ""
+            region = FlinnEngdahl().get_region(origin.longitude,
+                origin.latitude)
+            text = region
+            if mag:
+                text += ", %s" % mag
+        else:
+            time = event["time"]
+            text = event["text"] if "text" in event else None
+
+        # Nothing to do if the event is not on the plot.
+        if time < self.starttime or time > self.endtime:
+            return
+        # Now find the position of the event in plot coordinates.
+        frac = (time - self.starttime) / (self.endtime - self.starttime)
+        int_frac = (self.interval) / (self.endtime - self.starttime)
+        event_frac = frac / int_frac
+        y_pos = self.extreme_values.shape[0] - int(event_frac) - 0.5
+        x_pos = (event_frac - int(event_frac)) * self.width
+
+        if text:
+            # Some logic to get a somewhat sane positioning of the annotation
+            # box and the arrow..
+            text_offset_x = 0.10 * self.width
+            text_offset_y = 1.00
+            # Relpos determines the connection of the arrow on the box in
+            # relative coordinates.
+            relpos = [0.0, 0.5]
+            # Arc strength is the amount of bending of the arrow.
+            arc_strength = 0.25
+            if x_pos < (self.width / 2.0):
+                text_offset_x_sign = 1.0
+                ha = "left"
+                # Arc sign determines the direction of bending.
+                arc_sign = "+"
+            else:
+                text_offset_x_sign = -1.0
+                ha = "right"
+                relpos[0] = 1.0
+                arc_sign = "-"
+            if y_pos < (self.extreme_values.shape[0] / 2.0):
+                text_offset_y_sign = 1.0
+                va = "bottom"
+            else:
+                text_offset_y_sign = -1.0
+                va = "top"
+                if arc_sign == "-":
+                    arc_sign = "+"
+                else:
+                    arc_sign = "-"
+
+            # Draw the annotation including box.
+            self.fig.axes[0].annotate(text,
+                # The position of the event.
+                xy=(x_pos, y_pos),
+                # The position of the text, offset depending on the previously
+                # calculated variables.
+                xytext=(x_pos + text_offset_x_sign * text_offset_x,
+                    y_pos + text_offset_y_sign * text_offset_y),
+                # Everything in data coordinates.
+                xycoords="data", textcoords="data",
+                # Set the text alignment.
+                ha=ha, va=va,
+                # Text box style.
+                bbox=dict(boxstyle="round", fc="w", alpha=0.6),
+                # Arrow style
+                arrowprops=dict(arrowstyle="-",
+                    connectionstyle="arc3, rad=%s%.1f" % (arc_sign,
+                    arc_strength), relpos=relpos, shrinkB=7),
+                zorder=10)
+        # Draw the actual point. Use a marker with a star shape.
+        self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
+            markersize=12)
+
+    def _plotDayplotScale(self, unit):
+        """
+        Plots the dayplot scale if requested.
+        """
+        left = self.width
+        right = left + 5
+        top = self.extreme_values.shape[0] - 1
+        top = 2
+        bottom = top - 1
+
+        very_right = right + (right - left)
+        middle = bottom + (top - bottom) / 2.0
+
+        verts = [
+            (left, top),
+            (right, top),
+            (right, bottom),
+            (left, bottom),
+            (right, middle),
+            (very_right, middle)
+            ]
+
+        codes = [Path.MOVETO,
+                 Path.LINETO,
+                 Path.LINETO,
+                 Path.LINETO,
+                 Path.MOVETO,
+                 Path.LINETO
+                 ]
+
+        path = Path(verts, codes)
+        patch = patches.PathPatch(path, lw=1, facecolor="none")
+        patch.set_clip_on(False)
+        self.fig.axes[0].add_patch(patch)
+        factor = self._normalization_factor
+        # Manually determine the number of after comma digits
+        if factor >= 1000:
+            fmt_string = "%.0f %s"
+        elif factor >= 100:
+            fmt_string = "%.1f %s"
+        else:
+            fmt_string = "%.2f %s"
+        self.fig.axes[0].text(very_right + 3, middle,
+            fmt_string % (self._normalization_factor, unit), ha="left",
+            va="center", fontsize="small")
 
     def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -467,7 +632,7 @@ class WaveformPlotting(object):
             # trace does not match the starttime of the plot.
             ts = tr.stats.starttime
             if ts > self.starttime:
-                start = int(ceil(((ts - self.starttime) * \
+                start = int(ceil(((ts - self.starttime) *
                         sampling_rate) / pixel_length))
                 # Samples before start.
                 prestart = int(((self.starttime + start * pixel_length /
@@ -563,11 +728,11 @@ class WaveformPlotting(object):
                        (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
-                labels = ['%.2f' % (self.starttime + _i * interval).timestamp \
+                labels = ['%.2f' % (self.starttime + _i * interval).timestamp
                           for _i in range(self.number_of_ticks)]
             else:
-                labels = [(self.starttime + _i * \
-                          interval).strftime(self.tick_format) for _i in \
+                labels = [(self.starttime + _i *
+                          interval).strftime(self.tick_format) for _i in
                           range(self.number_of_ticks)]
 
             ax.set_xticklabels(labels, fontsize='small',
@@ -729,9 +894,11 @@ class WaveformPlotting(object):
         else:
             max_val = min_val = abs(self.vertical_scaling_range) / 2.0
 
+        # Normalization factor.
+        self._normalization_factor = max(abs(max_val), abs(min_val)) * 2
+
         # Scale from 0 to 1.
-        self.extreme_values = self.extreme_values / (max(abs(max_val),
-                                                         abs(min_val)) * 2)
+        self.extreme_values = self.extreme_values / self._normalization_factor
         self.extreme_values += 0.5
 
     def __dayplotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
@@ -821,42 +988,19 @@ class WaveformPlotting(object):
             ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
 
-        left_time_offset = 0
-        right_time_offset = self.time_offset
-        left_ylabel = 'UTC'
-
         # Complicated way to calculate the label of the y-Axis showing the
         # second time zone.
         sign = '%+i' % self.time_offset
         sign = sign[0]
-        time_label = self.timezone.strip() + ' (UTC%s%02i:%02i)' % \
-                     (sign, abs(self.time_offset), (self.time_offset % 1 * 60))
-        right_ylabel = time_label
+        label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
+            abs(self.time_offset), (self.time_offset % 1 * 60))
 
-        if kwargs.get('swap_time_axis', False):
-            left_time_offset, right_time_offset = \
-                    right_time_offset, left_time_offset
-            left_ylabel, right_ylabel = right_ylabel, left_ylabel
-
-        left_ticklabels = [(self.starttime + _i * self.interval + \
-                            left_time_offset * 3600).strftime('%H:%M') \
-                      for _i in tick_steps]
-        right_ticklabels = [(self.starttime + (_i + 1) * self.interval + \
-                            right_time_offset * 3600).strftime('%H:%M') \
+        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M')
                       for _i in tick_steps]
 
         self.axis[0].set_yticks(ticks)
-        self.axis[0].set_yticklabels(left_ticklabels)
-        self.axis[0].set_ylabel(left_ylabel)
-        # Save range.
-        yrange = self.axis[0].get_ylim()
-        # Create twin axis.
-        #XXX
-        self.twin = self.axis[0].twinx()
-        self.twin.set_ylim(yrange)
-        self.twin.set_yticks(ticks)
-        self.twin.set_yticklabels(right_ticklabels)
-        self.twin.set_ylabel(right_ylabel)
+        self.axis[0].set_yticklabels(ticklabels)
+        self.axis[0].set_ylabel(label)
 
     def __setupFigure(self):
         """

@@ -196,6 +196,12 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.rotate': [
+        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
+        'rotate_RT_NE = obspy.signal:rotate_RT_NE',
+        'rotate_ZNE_LQT = obspy.signal:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
+    ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosTaper',
         'barthann = scipy.signal:barthann',
@@ -235,8 +241,9 @@ ENTRY_POINTS = {
 
 UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
                                          "core", "util"))
-sys.path.append(UTIL_PATH)
+sys.path.insert(0, UTIL_PATH)
 from version import get_git_version as _getVersionString
+sys.path.pop(0)
 
 LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
 DOCSTRING = __doc__.split("\n")

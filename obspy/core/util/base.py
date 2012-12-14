@@ -20,7 +20,6 @@ import numpy as np
 import os
 import sys
 import tempfile
-import warnings
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -297,6 +296,7 @@ def _getOrderedEntryPoints(group, subgroup=None, order_list=[]):
 ENTRY_POINTS = {
     'trigger': _getEntryPoints('obspy.plugin.trigger'),
     'filter': _getEntryPoints('obspy.plugin.filter'),
+    'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),

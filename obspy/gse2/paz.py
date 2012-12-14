@@ -22,7 +22,7 @@ The read in PAZ information can be used with
 
 import doctest
 import numpy as np
-import obspy.core
+from obspy.core import AttribDict
 
 
 def readPaz(paz_file):
@@ -103,7 +103,8 @@ def attach_paz(tr, paz_file):
             attributes
     :param paz_file: path to pazfile or file pointer
 
-    >>> tr = obspy.core.Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
+    >>> from obspy import Trace
+    >>> tr = Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
     >>> import StringIO
     >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
@@ -135,7 +136,7 @@ def attach_paz(tr, paz_file):
     calibration = tr.stats.calib * 2 * np.pi / tr.stats.gse2.calper
 
     # fill up ObsPy Poles and Zeros AttribDict
-    tr.stats.paz = obspy.core.AttribDict()
+    tr.stats.paz = AttribDict()
     # convert seismometer gain from [muVolt/nm/s] to [Volt/m/s]
     tr.stats.paz.seismometer_gain = seismometer_gain * 1e3
     # convert digitizer gain [count/muVolt] to [count/Volt]

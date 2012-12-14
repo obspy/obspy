@@ -12,9 +12,9 @@ from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
-from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
+from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
+    _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile
-import obspy.imaging
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -318,7 +318,9 @@ def _createExampleStream(headonly=False):
                   'npts': 3000,
                   'starttime': UTCDateTime(2009, 8, 24, 0, 20, 3),
                   'sampling_rate': 100.0,
-                  'calib': 1.0}
+                  'calib': 1.0,
+                  'back_azimuth': 100.0,
+                  'inclination': 30.0}
         header['channel'] = channel
         if not headonly:
             st.append(Trace(data=data[channel], header=header))
@@ -928,21 +930,41 @@ class Stream(object):
             Defaults to None.
         :param interval: This defines the interval length in minutes for one
             line.
-        :param time_offset: Only used if ``type='dayplot'``. The dayplot will
-            have two vertical scales. One showing UTC time and the other a user
-            defined timezone. This argument specifies the offset of the other
-            time scale in hours relative to UTC time.
+        :param time_offset: Only used if ``type='dayplot'``. The difference
+            between the timezone of the data (specified with the kwarg
+            'timezone') and UTC time in hours. Will be displayed in a string.
             Defaults to the current offset of the system time to UTC time.
-        :param timezone: Defines the name of the user defined time scale.
+        :param timezone: Defines the name of the user defined time scale. Will
+            be displayed in a string together with the actual offset defined in
+            the kwarg 'time_offset'.
             Defaults to ``'local time'``.
-        :param swap_time_axis: By default the UTC time axis is on the left and
-            the user defined local time zone axis on the right. If this
-            parameter is set to True, they will be swapped.
         :param localization_dict: Enables limited localization of the dayplot
             through the usage of a dictionary. To change the labels to, e.g.
             german, use the following:
                 localization_dict={'time in': 'Zeit in', 'seconds': 'Sekunden',
                                    'minutes': 'Minuten', 'hours': 'Stunden'}
+        :param data_unit: If given, the scale of the data will be drawn on the
+            right hand side in the form "%f {data_unit}". The unit is supposed
+            to be a string containing the actual unit of the data. Can be a
+            LaTeX expression if matplotlib has been built with LaTeX support,
+            e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
+            use r-prepended strings, e.g. r"$\frac{m}{s}$".
+        :param events: An optional list of events can be drawn on the plot if
+            given.  They will be displayed as yellow stars with optional
+            annotations.  They are given as a list of dictionaries. Each
+            dictionary at least needs to have a "time" key, containing a
+            UTCDateTime object with the origin time of the event. Furthermore
+            every event can have an optional "text" key which will then be
+            displayed as an annotation.
+            Example:
+                events=[{"time": UTCDateTime(...), "text": "Event A"}, {...}]
+            It can also be a :class:`~obspy.core.event.Catalog` object. In this
+            case each event will be annotated with its corresponding
+            Flinn-Engdahl region and the magnitude.
+            Events can also be automatically downloaded with the help of
+            obspy.neries. Just pass a dictionary with a "min_magnitude" key,
+            e.g.
+                events={"min_magnitude": 5.5}
 
         .. rubric:: Color Options
 
@@ -972,8 +994,8 @@ class Stream(object):
             st = read()
             st.plot()
         """
-        waveform = obspy.imaging.waveform.WaveformPlotting(stream=self, *args,
-                                                           **kwargs)
+        from obspy.imaging.waveform import WaveformPlotting
+        waveform = WaveformPlotting(stream=self, *args, **kwargs)
         return waveform.plotWaveform(*args, **kwargs)
 
     def spectrogram(self, *args, **kwargs):
@@ -2194,121 +2216,112 @@ class Stream(object):
             tr.normalize(norm=norm)
         return
 
-    def __get_rot_angles(self, angle, stats_entry):
+    def rotate(self, method, back_azimuth=None, inclination=None):
         """
-        Helper method for rotation: Return list of angles.
+        Convenience method for rotating stream objects.
 
-        :param angle: ``None``, float or list.
-        :param stats_entry: if param_angle is None, list of angles is taken
-        from the entry ``stats_entry`` of the stats object.
-
-        :return: list of angles
+        :type method: string
+        :param method: Determines the rotation method.
+            ``'NE->RT'``: Rotates the North- and East-components of a
+                seismogram to radial and transverse components.
+            ``'RT->NE'``: Rotates the radial and transverse components of a
+                seismogram to North- and East-components.
+            ``'ZNE->LQT'``: Rotates from left-handed Z, North, and  East system
+                to LQT, e.g. right-handed ray coordinate system.
+            ``'LQR->ZNE'``: Rotates from LQT, e.g. right-handed ray coordinate
+                system to left handed Z, North, and East system.
+        :type back_azimuth: float, optional
+        :param angle: Depends on the chosen method.
+            A single float, the back azimuth from station to source in degrees.
+            If not given, ``stats.back_azimuth`` will be used. It will also be
+            written after the rotation is done.
+        :type inclination: float, optional
+        :param inclination: Inclination of the ray at the station in degrees.
+            Only necessary for three component rotations. If not given,
+            ``stats.inclination`` will be used. It will also be written after
+            the rotation is done.
         """
-        if isinstance(angle, (float, int, long)):
-            angle = [angle] * (len(self))
-        elif angle is None:
-            angle = [tr.stats[stats_entry] for tr in self]
-        if len(angle) != len(self):
-            raise ValueError('List of angles has wrong length.')
-        return angle
-
-    def rotate(self, method='RT', angle=None, components=None):
-        """
-        Method for rotating stream.
-
-        This method uses the functions ``signal.rotate_NE_RT``,
-        ``signal.rotate_ZNE_LQT`` and ``signal.rotate_LQT_ZNE``.
-        The stream is rotated by the angles given as back-azimuths and
-        inclinations in the parameters ``angle`` or by the entries in
-        ``stats.ba`` resp. ``stats.inc`` if ``angle`` is not
-        specified. ``stats.channel`` is adapted so that it reflects the new
-        component.
-
-        :type method: ``'RT'``, ``'LQT'``, ``'ZN'`` or ``'ZNE'``
-        :param method: ``'RT'`` will rotate the NE components of a stream to
-            RT.
-            ``'LQT'`` will rotate the ZNE components of a stream to LQT.
-            ``'ZN'`` will rotate RT components back to ZN.
-            ``'ZNE'`` will rotate LQT components back to ZNE.
-        :type angle: float, list or tuple, optional
-        :param angle: The back-azimuths in the case of two-component rotation
-            or back-azimuths and inclinations in the case of three-component
-            rotation.
-            For two-component rotation list of back-azimuths or float (all
-            rotations with the same angle).
-            For three component rotation tuple of two lists or tuple of two
-            floats. The first entry specifies back-azimuths, the second the
-            inclinations.
-            If angle is not specified the angles will be taken from
-            ``stats.ba`` and ``stats.inc`` of the first used component.
-        :type components: tuple, optional
-        :param components: The two or three components to select for rotation.
-            Wildcards can be used eg. ``('Z', '[N1]', '[E2]')``.
-            Standard values are
-            ``'NE'`` for ``method='RT'``,
-            ``'ZNE'`` for ``method='LQT'``,
-            ``'RT'`` for ``method='NE'`` and
-            ``'LQT'`` for ``method='ZNE'``.
-        """
-        if method == 'RT' or method == 'NE':
-            from obspy.signal import rotate_NE_RT
-            rotate = rotate_NE_RT
-        elif method == 'LQT':
-            from obspy.signal import rotate_ZNE_LQT
-            rotate = rotate_ZNE_LQT
-        elif method == 'ZNE':
-            from obspy.signal import rotate_LQT_ZNE
-            rotate = rotate_LQT_ZNE
+        if method == "NE->RT":
+            func = "rotate_NE_RT"
+        elif method == "RT->NE":
+            func = "rotate_RT_NE"
+        elif method == "ZNE->LQT":
+            func = "rotate_ZNE_LQT"
+        elif method == "LQT->ZNE":
+            func = "rotate_LQT_ZNE"
         else:
-            raise ValueError("Method has to be one of ('RT', 'LQT', 'ZN', "
-                             "'ZNE').")
-        if components is None:
-            components = ('NE' if method == 'RT' else 'ZNE' if method == 'LQT'
-                          else 'RT' if method == 'NE' else 'LQT')
-        if method == 'RT' or method == 'NE':
-            N = self.select(component=components[0])
-            E = self.select(component=components[1])
-            if not (len(N) == len(E)):
-                raise ValueError('The streams consisting of the different '
-                                 'components must have same lengths.')
-            for i in range(len(N)):
-                if (not (N[i].stats.starttime == E[i].stats.starttime) or
-                    not (N[i].stats.sampling_rate == E[i].stats.sampling_rate)
-                    or not (N[i].stats.npts == E[i].stats.npts)):
-                    raise ValueError('Associated traces must have same '
-                                     'starttime, sampling_rate and npts.')
-            ba = N.__get_rot_angles(angle, 'ba')
-            if method == 'NE':
-                ba = [360 - value for value in ba]
-            for i in range(len(N)):
-                N[i].data, E[i].data = rotate(N[i].data, E[i].data, ba[i])
-                N[i].stats.channel = N[i].stats.channel[-1] + method[0]
-                E[i].stats.channel = E[i].stats.channel[-1] + method[1]
+            raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
+                "'ZNE->LQT', or 'LQT->ZNE').")
+        # Retrieve function call from entry points
+        func = _getFunctionFromEntryPoint("rotate", func)
+        # Split to get the components. No need for further checks for the
+        # method as invalid methods will be caught by previous conditional.
+        input_components, output_components = method.split("->")
+        # Figure out inclination and back-azimuth.
+        if back_azimuth is None:
+            try:
+                back_azimuth = self[0].stats.back_azimuth
+            except:
+                msg = "No back-azimuth specified."
+                raise TypeError(msg)
+        if len(input_components) == 3 and inclination is None:
+            try:
+                inclination = self[0].stats.inclination
+            except:
+                msg = "No inclination specified."
+                raise TypeError(msg)
+        # Do one of the two-component rotations.
+        if len(input_components) == 2:
+            input_1 = self.select(component=input_components[0])
+            input_2 = self.select(component=input_components[1])
+            for i_1, i_2 in zip(input_1, input_2):
+                if (len(i_1) != len(i_2)) or \
+                    (i_1.stats.starttime != i_2.stats.starttime) or \
+                    (i_1.stats.sampling_rate != i_2.stats.sampling_rate):
+                    msg = "All components need to have the same time span."
+                    raise ValueError(msg)
+            for i_1, i_2 in zip(input_1, input_2):
+                output_1, output_2 = func(i_1.data, i_2.data, back_azimuth)
+                i_1.data = output_1
+                i_2.data = output_2
+                # Rename the components.
+                i_1.stats.channel = i_1.stats.channel[:-1] + \
+                    output_components[0]
+                i_2.stats.channel = i_2.stats.channel[:-1] +\
+                    output_components[1]
+                # Add the azimuth and inclination to the stats object.
+                for comp in (i_1, i_2):
+                    comp.stats.back_azimuth = back_azimuth
+        # Do one of the three-component rotations.
         else:
-            Z = self.select(component=components[0])
-            N = self.select(component=components[1])
-            E = self.select(component=components[2])
-            if not (len(Z) == len(N) == len(E)):
-                raise ValueError('The streams consisting of the different '
-                                 'components must have same lengths.')
-            for i in range(len(N)):
-                if (not (Z[i].stats.starttime == N[i].stats.starttime ==
-                         E[i].stats.starttime) or not
-                    (Z[i].stats.sampling_rate == N[i].stats.sampling_rate ==
-                     E[i].stats.sampling_rate) or not
-                    (Z[i].stats.npts == N[i].stats.npts == E[i].stats.npts)):
-                    raise ValueError('Associated traces must have same '
-                                     'starttime, sampling_rate and npts.')
-            if angle is None:
-                angle = (None, None)
-            ba = Z.__get_rot_angles(angle[0], 'ba')
-            inc = Z.__get_rot_angles(angle[1], 'inc')
-            for i in range(len(N)):
-                Z[i].data, N[i].data, E[i].data = rotate(
-                                Z[i].data, N[i].data, E[i].data, ba[i], inc[i])
-                Z[i].stats.channel = Z[i].stats.channel[-1] + method[0]
-                N[i].stats.channel = N[i].stats.channel[-1] + method[1]
-                E[i].stats.channel = E[i].stats.channel[-1] + method[2]
+            input_1 = self.select(component=input_components[0])
+            input_2 = self.select(component=input_components[1])
+            input_3 = self.select(component=input_components[2])
+            for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
+                if (len(i_1) != len(i_2)) or (len(i_1) != len(i_3)) or \
+                    (i_1.stats.starttime != i_2.stats.starttime) or \
+                    (i_1.stats.starttime != i_3.stats.starttime) or \
+                    (i_1.stats.sampling_rate != i_2.stats.sampling_rate) or \
+                    (i_1.stats.sampling_rate != i_3.stats.sampling_rate):
+                    msg = "All components need to have the same time span."
+                    raise ValueError(msg)
+            for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
+                output_1, output_2, output_3 = func(i_1.data, i_2.data,
+                    i_3.data, back_azimuth, inclination)
+                i_1.data = output_1
+                i_2.data = output_2
+                i_3.data = output_3
+                # Rename the components.
+                i_1.stats.channel = i_1.stats.channel[:-1] + \
+                    output_components[0]
+                i_2.stats.channel = i_2.stats.channel[:-1] +\
+                    output_components[1]
+                i_3.stats.channel = i_3.stats.channel[:-1] +\
+                    output_components[2]
+                # Add the azimuth and inclination to the stats object.
+                for comp in (i_1, i_2, i_3):
+                    comp.stats.back_azimuth = back_azimuth
+                    comp.stats.inclination = inclination
 
     def copy(self):
         """

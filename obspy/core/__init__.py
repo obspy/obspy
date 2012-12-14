@@ -63,7 +63,7 @@ BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z - ... | 100.0 Hz, 3000 samples
 >>> tr.data
 array([ 0.        ,  0.00694644,  0.07597424, ...,  1.93449584,
         0.98196204,  0.44196924])
->>> print tr.stats  # doctest: +NORMALIZE_WHITESPACE
+>>> print tr.stats  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
          network: BW
          station: RJOB
         location:
@@ -74,6 +74,7 @@ array([ 0.        ,  0.00694644,  0.07597424, ...,  1.93449584,
            delta: 0.01
             npts: 3000
            calib: 1.0
+           ...
 >>> tr.stats.starttime
 UTCDateTime(2009, 8, 24, 0, 20, 3)
 

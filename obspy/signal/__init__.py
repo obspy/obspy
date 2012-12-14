@@ -185,7 +185,7 @@ and the same page in the `Tutorial`_. For automated use see the following
 
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
     lowpassFIR, envelope, integerDecimation
-from rotate import rotate_NE_RT, rotate_ZNE_LQT, rotate_LQT_ZNE
+from rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, rotate_LQT_ZNE
 from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
     delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
     coincidenceTrigger, classicSTALTAPy

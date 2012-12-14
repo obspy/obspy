@@ -33,6 +33,7 @@ for TAG in $TAGS; do
     echo "#### Working on $TAG"
     cd $GITDIR
     git clean -fxd
+    git checkout -- .
     git checkout $TAG
     git clean -fxd
     # remove dependencies of distribute for obspy.core

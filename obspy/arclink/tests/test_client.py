@@ -309,7 +309,7 @@ class ClientTestCase(unittest.TestCase):
             '_format': 'MSEED',
             'paz': AttribDict({
                 'normalization_factor': 60077000.0,
-                'name': 'GFZ:STS-2/N/g=20000',
+                'name': 'GFZ:CZ1980:STS-2/N/g=20000',
                 'sensitivity': 8200000000.0,
                 'normalization_frequency': 1.0,
                 'sensor_manufacturer': 'Streckeisen',
