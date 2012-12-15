@@ -589,7 +589,7 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking FLOAT-32 data samples\n", UNPACK_SRCNAME_2);
 
-      nsamples = msr_unpack_float_32 ((float *)dbuf, msr->samplecnt,
+      nsamples = msr_unpack_float_32 ((uint32_t *)dbuf, msr->samplecnt,
                                       msr->samplecnt, msr->datasamples,
                                       swapflag);
       msr->sampletype = 'f';
@@ -599,7 +599,7 @@ msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
       if ( verbose > 1 )
         ms_log (1, "%s: Unpacking FLOAT-64 data samples\n", UNPACK_SRCNAME_2);
 
-      nsamples = msr_unpack_float_64 ((double *)dbuf, msr->samplecnt,
+      nsamples = msr_unpack_float_64 ((uint64_t *)dbuf, msr->samplecnt,
                                       msr->samplecnt, msr->datasamples,
                                       swapflag);
       msr->sampletype = 'd';
