@@ -38,6 +38,11 @@ GITDIR=$BUILDDIR/git
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
 git clone https://github.com/${GITFORK}/obspy.git $GITDIR
+if [ "$GITFORK" != "obspy" ]
+then
+    git remote add upstream https://github.com/obspy/obspy.git
+    git fetch upstream
+fi
 
 # Build ObsPy Package
 echo "#### Working on $GITTARGET"
