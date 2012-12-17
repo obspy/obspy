@@ -2,6 +2,18 @@
 # Automated script to build all packages for all distributions.
 # schroot environments have to be set up accordingly beforehand.
 
+GITFORK=obspy
+GITTARGET=master
+# Process command line arguments
+while getopts f:t: opt
+do
+   case "$opt" in
+      f) GITFORK=$OPTARG;;
+      t) GITTARGET=$OPTARG;;
+   esac
+done
+
+
 BASEDIR=/tmp/python-obspy_buildall
 GITDIR=$BASEDIR/git
 DEBSCRIPTDIR=$GITDIR/misc/debian
@@ -25,7 +37,7 @@ for DIST in squeeze wheezy lucid natty oneiric precise quantal; do
         cd $GITDIR
         git clean -fxd
         cd /tmp  # can make problems to enter schroot environment from a folder not present in the schroot
-        COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh &>> $LOG"
+        COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh -f $GITFORK -t $GITTARGET &>> $LOG"
         if [[ "$DIST" == "quantal" ]]
         then
             COMMAND="export GIT_SSL_NO_VERIFY=true; $COMMAND"
