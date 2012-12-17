@@ -1,3 +1,7 @@
+0.8.3:
+ - circumventing an issue in the current libmseed release that can lead to
+   some float values being read in wrongly
+
 0.8.2:
  - fixing a bug in plotting methods of Trace and Stream
  - stream/trace.plot(type="dayplot") can display event information now
