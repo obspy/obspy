@@ -42,13 +42,13 @@ def isQuakeML(filename):
     True
     """
     try:
-        p = XMLParser(filename)
+        xml_doc = XMLParser(filename)
     except:
-        False
-    # check node "*/eventParameters/event" for the global namespace exists
+        return False
+    # check if node "*/eventParameters/event" for the global namespace exists
     try:
-        namespace = p._getFirstChildNamespace()
-        p.xpath('eventParameters', namespace=namespace)[0]
+        namespace = xml_doc._getFirstChildNamespace()
+        xml_doc.xpath('eventParameters', namespace=namespace)[0]
     except:
         return False
     return True

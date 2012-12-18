@@ -67,6 +67,7 @@ class XMLParser:
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):
             # some file-based content
+            xml_doc.seek(0)
             self.xml_doc = etree.parse(xml_doc)
         else:
             self.xml_doc = xml_doc
