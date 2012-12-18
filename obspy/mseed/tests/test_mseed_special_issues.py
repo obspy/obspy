@@ -518,11 +518,11 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         """
         ref = [-1188.07800293, 638.16400146, 395.07809448, 1060.28112793]
         for filename in ('nan_float32.mseed', 'nan_float64.mseed'):
-          filename = os.path.join(self.path, 'data', 'encoding', filename)
-          data = read(filename)[0].data.tolist()
-          np.testing.assert_array_almost_equal(data, ref,
-            decimal=8, err_msg='Data of file %s not equal' % filename)
-          
+            filename = os.path.join(self.path, 'data', 'encoding', filename)
+            data = read(filename)[0].data.tolist()
+            np.testing.assert_array_almost_equal(data, ref,
+                decimal=8, err_msg='Data of file %s not equal' % filename)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
