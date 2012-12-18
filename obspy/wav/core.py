@@ -137,11 +137,12 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
                      'not compressed'))
         data = trace.data
+        dtype = WIDTH2DTYPE[width]
         if rescale:
             # optimal scale, account for +/- and the zero
-            data = (2 ** (width * 8 - 1) - 1) * \
-                data.astype('i8') / abs(data).max()
-        data = np.require(data, dtype=WIDTH2DTYPE[width])
+            maxint = 2 ** (width * 8 - 1) - 1
+            data = (tr.data / abs(tr.data).max() * maxint)
+        data = np.require(data, dtype=dtype)
         w.writeframes(data.tostring())
         w.close()
         i += 1
