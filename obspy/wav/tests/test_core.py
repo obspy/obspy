@@ -84,10 +84,7 @@ class CoreTestCase(unittest.TestCase):
             dtype = WIDTH2DTYPE[width]
             self.assertEqual(maxint, abs(tr2.data).max())
             expected = (tr.data / abs(tr.data).max() * maxint).astype(dtype)
-            # on really old system this fails due to floating point errors
-            # therefore we divide by 1000 and ignore the last three digits
-            np.testing.assert_array_almost_equal(tr2.data / 1000,
-                                                 expected / 1000, 0)
+            np.testing.assert_array_almost_equal(tr2.data, expected)
             os.remove(testfile)
 
     def test_writeStreamViaObsPy(self):
