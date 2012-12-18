@@ -141,7 +141,7 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         if rescale:
             # optimal scale, account for +/- and the zero
             maxint = 2 ** (width * 8 - 1) - 1
-            data = (tr.data / abs(tr.data).max() * maxint)
+            data = (data / abs(data).max() * maxint)
         data = np.require(data, dtype=dtype)
         w.writeframes(data.tostring())
         w.close()
