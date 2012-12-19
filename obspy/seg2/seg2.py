@@ -188,9 +188,10 @@ class SEG2(object):
         elif data_format_code == 5:
             dtype = 'float64'
             sample_size = 8
-        elif (data_format_code == 1) or \
-             (data_format_code == 2) or \
-             (data_format_code == 3):
+        elif data_format_code == 2:
+            dtype = 'int32'
+            sample_size = 4
+        elif data_format_code in [1, 3]:
             msg = '\nData format code %i not supported yet.\n' \
                     % data_format_code
             msg += 'Please contact the ObsPy developers with a sample file.'
