@@ -129,3 +129,7 @@ Citations
    | Young, J. B., Presgrave, B. W., Aichele, H., Wiens, D. A., and Flinn, E. A. (1996),
    | **The Flinn-Engdahl regionalisation scheme: the 1995 revision**,
    | *Physics of the Earth and Planetary Interiors*, 96 (4), 223-297.
+.. [pullan1990recommended]  
+   | Pullan, S. (1990),
+   | **Recommended standard for seismic (/radar) data files in the personal computer environment**,
+   | *Geophysics*, 55 (9), 1260-1271.
