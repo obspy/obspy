@@ -148,7 +148,7 @@ class SEG2(object):
         # a free form section.
         self.stream.stats = AttribDict()
         self.stream.stats.seg2 = AttribDict()
-        self.parseFreeForm(self.file_pointer.read(\
+        self.parseFreeForm(self.file_pointer.read(
                            self.trace_pointers[0] - self.file_pointer.tell()),
                            self.stream.stats.seg2)
 
@@ -175,8 +175,6 @@ class SEG2(object):
             raise SEG2InvalidFileError(msg)
         size_of_this_block = unpack('%sH' % self.endian,
                                     trace_descriptor_block[2:4])[0]
-        _size_of_corresponding_data_block = \
-                unpack('%sL' % self.endian, trace_descriptor_block[4:8])[0]
         number_of_samples_in_data_block = \
                 unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
         data_format_code = unpack('B', trace_descriptor_block[12])[0]
@@ -188,13 +186,16 @@ class SEG2(object):
         elif data_format_code == 5:
             dtype = 'float64'
             sample_size = 8
+        elif data_format_code == 1:
+            dtype = 'int16'
+            sample_size = 2
         elif data_format_code == 2:
             dtype = 'int32'
             sample_size = 4
-        elif data_format_code in [1, 3]:
-            msg = '\nData format code %i not supported yet.\n' \
-                    % data_format_code
-            msg += 'Please contact the ObsPy developers with a sample file.'
+        elif data_format_code == 3:
+            msg = ('\nData format code 3 (20-bit SEG-D floating point) not '
+                   'supported yet.\nPlease contact the ObsPy developers with '
+                   'a sample file.')
             raise NotImplementedError(msg)
         else:
             msg = 'Unrecognized data format code'
@@ -203,14 +204,14 @@ class SEG2(object):
         # The rest of the trace block is free form.
         header = {}
         header['seg2'] = AttribDict()
-        self.parseFreeForm(\
+        self.parseFreeForm(
                          self.file_pointer.read(size_of_this_block - 32),
                           header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's starttime.
         header['starttime'] = deepcopy(self.starttime)
         # Unpack the data.
-        data = np.fromstring(self.file_pointer.read(\
+        data = np.fromstring(self.file_pointer.read(
                 number_of_samples_in_data_block * sample_size), dtype=dtype)
         return Trace(data=data, header=header)
 
