@@ -30,7 +30,7 @@ for seismology.
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util.base import _getVersionString
+from obspy.core.util import _getVersionString
 from obspy.core.trace import Trace
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents

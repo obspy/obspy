@@ -11,8 +11,7 @@ Base utilities and constants for ObsPy.
 
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.types import OrderedDict
-from obspy.core.util.version import get_git_version as _getVersionString
-from pkg_resources import require, iter_entry_points, load_entry_point
+from pkg_resources import iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
 import glob
