@@ -1,4 +1,4 @@
-The current version `ObsPy-0.1.4.dmg` contains:
+The current version `ObsPy-0.1.5.dmg` contains:
  *   numpy==1.6.1
  *   scipy==0.9.0
  *   matplotlib==1.1.0
@@ -11,24 +11,4 @@ The current version `ObsPy-0.1.4.dmg` contains:
  *   suds==0.4
  *   virtualenv==1.6.4
  *   wsgiref==0.1.2
- *   obspy.arclink==0.7.1
- *   obspy.core==0.7.1
- *   obspy.datamark==0.1.0
- *   obspy.db==0.7.0
- *   obspy.earthworm==0.1.0
- *   obspy.gse2==0.7.0
- *   obspy.imaging==0.7.0
- *   obspy.iris==0.7.0
- *   obspy.mseed==0.7.0
- *   obspy.neries==0.7.0
- *   obspy.realtime==0.1.0
- *   obspy.sac==0.7.0
- *   obspy.seg2==0.7.0
- *   obspy.segy==0.5.2
- *   obspy.seisan==0.5.1
- *   obspy.seishub==0.5.1
- *   obspy.sh==0.5.2
- *   obspy.signal==0.7.0
- *   obspy.taup==0.7.0
- *   obspy.wav==0.5.1
- *   obspy.xseed==0.7.0
+ *   obspy==0.8.3
