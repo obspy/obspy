@@ -43,19 +43,19 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 * [obspy.xseed](http://docs.obspy.org/packages/obspy.xseed.html) - Converter for Dataless SEED, [XML-SEED](http://adsabs.harvard.edu/abs/2004AGUFMSF31B..03T) and SEED RESP files
 
 ### Waveform import/export plug-ins:
-* [obspy.datamark](http://docs.obspy.org/packages/obspy.datamark.html) - DATAMARK read support ("experimental")
+* [obspy.datamark](http://docs.obspy.org/packages/obspy.datamark.html) - DATAMARK read support
 * [obspy.gse2](http://docs.obspy.org/packages/obspy.gse2.html) - GSE2 and GSE1 read and write support
 * [obspy.mseed](http://docs.obspy.org/packages/obspy.mseed.html) - MiniSEED read and write support
 * [obspy.sac](http://docs.obspy.org/packages/obspy.sac.html) - SAC read and write support
 * [obspy.seisan](http://docs.obspy.org/packages/obspy.seisan.html) - SEISAN read support
-* [obspy.seg2](http://docs.obspy.org/packages/obspy.seg2.html) - SEG2 read support ("experimental")
+* [obspy.seg2](http://docs.obspy.org/packages/obspy.seg2.html) - SEG2 read support
 * [obspy.segy](http://docs.obspy.org/packages/obspy.segy.html) - SEGY read and write support
 * [obspy.sh](http://docs.obspy.org/packages/obspy.sh.html) - Q and ASC read and write support (file formats of [SeismicHandler](http://www.seismic-handler.org))
 * [obspy.wav](http://docs.obspy.org/packages/obspy.wav.html) - WAV (audio) read and write support
 
 ### Database or Web service access clients:
 * [obspy.arclink](http://docs.obspy.org/packages/obspy.arclink.html) - [ArcLink/WebDC](http://www.webdc.eu) request client
-* [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client ("experimental")
+* [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client
 * [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](https://github.com/barsch/seishub.core) database client
