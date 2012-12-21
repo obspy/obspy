@@ -85,6 +85,10 @@ Citations
    | **Observations and Modeling of Seismic Background Noise**,
    | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
    | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+.. [Pullan1990]  
+   | Pullan, S. (1990),
+   | **Recommended standard for seismic (/radar) data files in the personal computer environment**,
+   | *Geophysics*, 55 (9), 1260-1271.
 .. [Snoke2009]  
    | Snoke, J. A. (2009),
    | **Traveltime Tables for iasp91 and ak135**,

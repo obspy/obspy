@@ -3,6 +3,8 @@
 """
 SEG-2 support for ObsPy.
 
+A file format description is given by [Pullan1990]_.
+
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2011
 :license:
