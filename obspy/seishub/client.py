@@ -431,7 +431,7 @@ master/seishub/plugins/seismology/waveform.py
                 for node in root.getchildren()]
 
     def getWaveform(self, network, station, location=None, channel=None,
-                    starttime=None, endtime=None, apply_filter=False,
+                    starttime=None, endtime=None, apply_filter=None,
                     getPAZ=False, getCoordinates=False,
                     metadata_timecheck=True, **kwargs):
         """
