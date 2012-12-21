@@ -27,8 +27,8 @@ A command-line program that indexes seismogram files into a database.
 
 from obspy import __version__
 from obspy.db.db import Base
-from obspy.db.util import parseMappingData
 from obspy.db.indexer import worker, WaveformFileCrawler
+from obspy.db.util import parseMappingData
 from optparse import OptionParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -63,6 +63,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         out += '<table>'
         for key, value in sorted(self.server.options.__dict__.items()):
             out += "<tr><th>%s</th><td>%s</td></tr>" % (key, value)
+        if self.server.mappings:
+            out += "<tr><th>mapping rules</th><td>%s</td></tr>" % (self.server.mappings)
         out += '</table>'
         out += '<h2>Status</h2>'
         out += '<table>'
@@ -114,6 +116,8 @@ def _runIndexer(options):
         if options.map_file:
             data = open(options.map_file, 'r').readlines()
             mappings = parseMappingData(data)
+            logging.info("Parsed %d lines from mapping file %s" % \
+                (len(data), options.map_file))
         else:
             mappings = {}
         # create file queue and worker processes
@@ -140,6 +144,7 @@ def _runIndexer(options):
         Session = sessionmaker(bind=engine)
         service.session = Session
         service.options = options
+        service.mappings = mappings
         # set queues
         service.input_queue = in_queue
         service.work_queue = work_queue
