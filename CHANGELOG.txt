@@ -1,3 +1,7 @@
+dev:
+ - obspy-indexer uses now hash symbols (#) instead of pipes (|) for features as
+   pipe has a special meaning on most operation systems
+
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
    some float values being read in wrongly

@@ -293,12 +293,10 @@ class WaveformFileCrawler(object):
         out = {}
         for path in paths:
             # strip features
-            if '|' in path:
-                path, features = path.split('|', 1)
-                if ' ' in features:
-                    features = features.split(' ')
-                else:
-                    features = [features.strip()]
+            if '#' in path:
+                parts = path.split('#')
+                path = parts[0]
+                features = parts[1:]
             else:
                 features = []
             # strip patterns
