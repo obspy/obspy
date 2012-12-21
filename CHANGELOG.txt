@@ -1,6 +1,9 @@
 dev:
- - obspy-indexer uses now hash symbols (#) instead of pipes (|) for features as
-   pipe has a special meaning on most operation systems
+ - obspy.arclink:
+   * user keyword is now required during client initialization
+ - obspy.db:
+   * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
+     for features because pipe has a special meaning on most operation systems
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
