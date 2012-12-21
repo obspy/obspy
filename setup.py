@@ -232,8 +232,8 @@ ENTRY_POINTS = {
         'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
     ],
     'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.features:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.features:BandpassPreviewFeature',
+        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
+        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
 
