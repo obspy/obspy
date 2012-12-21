@@ -30,6 +30,10 @@ _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 MSG_NOPAZ = "No Poles and Zeros information returned by server."
 
+MSG_USER_REQUIRED = """Initializing a ArcLink client without the user keyword
+is deprecated! Please provide a proper user identification string such as your
+email address. Defaulting to 'ObsPy client' for now."""
+
 
 class ArcLinkException(Exception):
     """
@@ -49,11 +53,11 @@ class Client(object):
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
         ``20`` seconds).
-    :type user: str, optional
+    :type user: str
     :param user: The user name is used for identification with the ArcLink
         server. This entry is also used for usage statistics within the data
-        centers, so please provide a meaningful user id (default is
-        ``'ObsPy client'``).
+        centers, so please provide a meaningful user id such as your email
+        address.
     :type password: str, optional
     :param password: A password used for authentication with the ArcLink server
         (default is an empty string).
@@ -61,7 +65,7 @@ class Client(object):
     :param institution: A string containing the name of the institution of the
         requesting person (default is an ``'Anonymous'``).
     :type dcid_keys: dict, optional
-    :param dcid_keys: Dictionary of datacenter ids (DCID) and passwords used
+    :param dcid_keys: Dictionary of data center ids (DCID) and passwords used
         for decoding encrypted waveform requests.
     :type dcid_key_file: str, optional
     :param dcid_key_file: Simple text configuration file containing lines of
@@ -89,7 +93,7 @@ class Client(object):
     #: Delay in seconds between each status request
     status_delay = 0.5
 
-    def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
+    def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
                  command_delay=0):
@@ -98,7 +102,11 @@ class Client(object):
 
         See :class:`obspy.arclink.client.Client` for all parameters.
         """
-        self.user = user
+        if user is None:
+            warnings.warn(MSG_USER_REQUIRED, category=DeprecationWarning)
+            self.user = 'ObsPy client'
+        else:
+            self.user = user
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
