@@ -5,7 +5,7 @@ USAGE: make_c_coverage.py output_dir
 
 from os import walk, rename, makedirs
 import sys
-from os.path import join, exists, dirname, abspath, pardir
+from os.path import join, exists, dirname, abspath, pardir, sep
 from subprocess import call
 from fnmatch import fnmatch
 import tempfile
@@ -38,7 +38,7 @@ for root, dirs, files in walk(build_dir):
 # GENERATE REPORTS WITH GCOV
 cov = []
 for gcda in profs:
-    source = gcda[gcda.rfind('obspy'):].replace('gcda', 'c')
+    source = gcda[gcda.rfind('obspy' + sep):].replace('gcda', 'c')
     if not exists(join(obspy_dir, source)):
         source = source.replace('.c', '.f')
     with tempfile.NamedTemporaryFile() as fp:
