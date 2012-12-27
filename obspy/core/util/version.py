@@ -39,27 +39,25 @@ from obspy.core.util import getScriptDirName
 import os
 from subprocess import Popen, PIPE
 
-OBSPY_ROOT_PATH = os.path.abspath(os.path.join(getScriptDirName(), os.pardir,
-                                               os.pardir, os.pardir))
-VERSION_FILE = os.path.join(OBSPY_ROOT_PATH, "obspy", "RELEASE-VERSION")
+OBSPY_ROOT = os.path.abspath(os.path.join(getScriptDirName(), os.pardir,
+                                          os.pardir, os.pardir))
+VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
 
 
 def call_git_describe(abbrev=4):
     try:
         p = Popen(['git', 'rev-parse', '--show-toplevel'],
-                  cwd=os.path.dirname(OBSPY_ROOT_PATH), stdout=PIPE,
-                  stderr=PIPE)
+                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         path = p.stdout.readlines()[0].strip()
     except:
         return None
-    if path != OBSPY_ROOT_PATH:
+    if path != OBSPY_ROOT:
         return None
     try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
                    '--always'],
-                  cwd=os.path.dirname(OBSPY_ROOT_PATH), stdout=PIPE,
-                  stderr=PIPE)
+                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readlines()[0]
         # (this line prevents official releases)
