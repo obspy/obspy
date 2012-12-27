@@ -55,6 +55,9 @@ coverager:
 	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
 
+c_coverage:
+	@python make_c_coverage.py $(BUILDDIR)/html/c_coverage
+
 pep8:
 	@python make_pep8.py 1
 	@pep8 --show-source source/tutorial
