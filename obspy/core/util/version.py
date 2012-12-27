@@ -39,8 +39,8 @@ from obspy.core.util import getScriptDirName
 import os
 from subprocess import Popen, PIPE
 
-OBSPY_ROOT_PATH = os.path.join(getScriptDirName(), os.pardir, os.pardir,
-    os.pardir)
+OBSPY_ROOT_PATH = os.path.abspath(os.path.join(getScriptDirName(), os.pardir,
+                                               os.pardir, os.pardir))
 VERSION_FILE = os.path.join(OBSPY_ROOT_PATH, "obspy", "RELEASE-VERSION")
 
 
@@ -50,7 +50,7 @@ def call_git_describe(abbrev=4):
                   cwd=os.path.dirname(OBSPY_ROOT_PATH), stdout=PIPE,
                   stderr=PIPE)
         p.stderr.close()
-        path = p.stdout.readlines()[0]
+        path = p.stdout.readlines()[0].strip()
     except:
         return None
     if path != OBSPY_ROOT_PATH:
