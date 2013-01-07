@@ -1,4 +1,4 @@
-.TH MSR_UNPACK 3 2007/03/24 "Libmseed API"
+.TH MSR_UNPACK 3 2012/12/22 "Libmseed API"
 .SH DESCRIPTION
 Unpacking of Mini-SEED records.
 
@@ -10,6 +10,9 @@ Unpacking of Mini-SEED records.
 .BI "                 flag " dataflag ", flag " verbose " );
 .fi
 
+.BI "int \fBmsr_unpack_data\fP ( MSRecord *" msr ", int " swapflag ", flag " verbose " );
+.fi
+
 .SH DESCRIPTION
 \fBmsr_unpack\fP will unpack a Mini-SEED data record and populate a
 MSRecord data structure, optionally unpacking data samples.  All
@@ -19,7 +22,7 @@ The MSRecord data structure is described in \fBms_intro(3)\fP.
 The \fIreclen\fP parameter specifies the length of the data record
 pointed to by \fIrecord\fP in bytes.
 
-If the \f*Ippmsr\fP pointer is NULL a new MSRecord will be allocated,
+If the \fI*ppmsr\fP pointer is NULL a new MSRecord will be allocated,
 if not the existing MSRecord will be reinitialized and reused
 destroying any previous contents.  The \fIppmsr\fP pointer itself must
 not be NULL.
@@ -38,6 +41,14 @@ returned by the get_samplesize(3) lookup routine.
 
 The \fIverbose\fP flag controls verbosity, a value of zero will result
 in no diagnostic output.
+
+\fBmsr_unpack_data\fP will unpack the data samples for an already
+parsed MSRecord structure from the original record available at the
+\fIMSRecord->record\fP pointer.  Normally this is called by
+\fBmsr_unpack\fP when the \fIdataflag\fP is not zero, but it can be
+useful when the program needs to first unpack the header of a record
+and decide later if the samples are needed.  If called independently
+the caller must determine if byte swapping of data samples is needed.
 
 .SH UNPACKING OVERRIDES
 The following macros and environment variables effect the unpacking of
