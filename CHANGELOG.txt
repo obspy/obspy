@@ -1,5 +1,6 @@
 dev:
- - adding support for SEG2 data format code 2 (signed 32bit integer)
+ - adding support for SEG2 data format code 1 and 2 (signed 16bit/32bit
+   integer)
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
