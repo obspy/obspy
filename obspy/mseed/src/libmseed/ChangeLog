@@ -1,4 +1,4 @@
-2012.363: 2.8rc
+2012.363: 2.8
 	- Implement msr_parse_selection() which is a wrapper of msr_parse()
 	that searches for the first parsable miniSEED record in a memory
 	buffer and returns it.  Optionally a Selections list may be specified
