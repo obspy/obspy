@@ -33,13 +33,15 @@
 
 __all__ = ("get_git_version")
 
-from obspy.core.util import getScriptDirName
-
-
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 import os
+import inspect
 from subprocess import Popen, PIPE
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
-OBSPY_ROOT = os.path.abspath(os.path.join(getScriptDirName(), os.pardir,
+script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
+                                             inspect.currentframe())))
+OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
                                           os.pardir, os.pardir))
 VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
 
