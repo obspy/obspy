@@ -911,7 +911,6 @@ class Stream(object):
             Defaults to ``'normal'``.
         :param equal_scale: Is enabled all plots are equally scaled. Defaults
             to ``True``.
-
         :param block: If True (default) block call to showing plot.
 
         **Dayplot parameters**
