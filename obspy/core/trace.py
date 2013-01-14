@@ -13,6 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
+from obspy.core.util.decorator import raiseIfMasked
 import math
 import numpy as np
 import warnings
@@ -1583,6 +1584,7 @@ class Trace(object):
         proc_info = "integrate:%s" % (type)
         self._addProcessingInfo(proc_info)
 
+    @raiseIfMasked
     def detrend(self, type='simple', **options):
         """
         Method to remove a linear trend from the trace.
