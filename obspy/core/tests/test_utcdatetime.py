@@ -437,7 +437,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Tests subtraction of floats from UTCDateTime
         """
-        time = UTCDateTime(2010, 05, 31, 19, 54, 24.490)
+        time = UTCDateTime(2010, 5, 31, 19, 54, 24.490)
         res = -0.045149
 
         result1 = UTCDateTime("2010-05-31T19:54:24.535148Z")
