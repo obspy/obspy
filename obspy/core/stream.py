@@ -14,7 +14,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
-from obspy.core.util.decorator import uncompressFile
+from obspy.core.util.decorator import uncompressFile, raiseIfMasked
 from pkg_resources import load_entry_point
 import cPickle
 import copy
@@ -2073,6 +2073,7 @@ class Stream(object):
         for tr in self:
             tr.integrate(type=type)
 
+    @raiseIfMasked
     def detrend(self, type='simple'):
         """
         Method to remove a linear trend from all traces.

@@ -1117,6 +1117,15 @@ class TraceTestCase(unittest.TestCase):
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
 
+    def test_raiseMasked(self):
+        """
+        Tests that detrend() raises in case of a masked array. (see #498)
+        """
+        x = np.arange(10)
+        x = np.ma.masked_inside(x, 3, 4)
+        tr = Trace(x)
+        self.assertRaises(NotImplementedError, tr.detrend)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
