@@ -1720,16 +1720,6 @@ class StreamTestCase(unittest.TestCase):
             return
         self.mseed_stream.plot(show=False)
 
-    def test_plot_nonblocking(self):
-        """
-        Tests plot method (without block) if matplotlib is installed
-        """
-        try:
-            import matplotlib
-        except ImportError:
-            return
-        self.mseed_stream.plot(block=False, show=True)
-
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
