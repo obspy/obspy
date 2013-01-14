@@ -282,7 +282,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
     def test_add(self):
         a = UTCDateTime(0.0)
         self.assertEquals(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
-        self.assertEquals(a + long(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
+        self.assertEquals(a + 1, UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEquals(a + np.int32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEquals(a + np.int64(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
         self.assertEquals(a + np.float32(1), UTCDateTime(1970, 1, 1, 0, 0, 1))
