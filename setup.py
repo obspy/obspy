@@ -24,7 +24,7 @@ For more information visit http://www.obspy.org.
 from distutils.ccompiler import get_default_compiler
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsExecError, CompileError
-from distutils.unixccompiler import UnixCCompiler, _darwin_compiler_fixup
+from numpy.distutils.unixccompiler import UnixCCompiler#, _darwin_compiler_fixup
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
@@ -365,11 +365,11 @@ else:
         UnixCCompiler.linker_so = ["gfortran"]
         self.compiler_so = ["gfortran"]
         cc_args = ['-c', '-fno-underscoring']
-        if sys.platform == 'darwin':
-            self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                      cc_args)
-        else:
-            cc_args.append('-fPIC')
+        #if sys.platform == 'darwin':
+            #self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
+                                                      #cc_args)
+        #else:
+        cc_args.append('-fPIC')
         try:
             self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
         except DistutilsExecError:
@@ -695,34 +695,34 @@ if __name__ == '__main__':
     while True:
         try:
             setupPackage(gfortran=gfortran, ccompiler=ccompiler)
-        except SystemExit, e:
+        except SystemExit as e:
             if 'gfortran' in str(e):
                 if not gfortran:
                     break
                 # retry
-                print NO_GFORTRAN_MSG
+                print(NO_GFORTRAN_MSG)
                 gfortran = False
                 continue
             elif 'gcc' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print NO_CCOMPILER_MSG
+                print(NO_CCOMPILER_MSG)
                 ccompiler = False
                 # gcc is also needed for gfortran on non windows system
                 if not IS_WINDOWS:
-                    print NO_GFORTRAN_MSG
+                    print(NO_GFORTRAN_MSG)
                     gfortran = False
                 continue
             else:
                 raise
-        except ValueError, e:
+        except ValueError as e:
             # Windows specific exception if MSVC compiler is missing
             if IS_WINDOWS and 'path' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print NO_CCOMPILER_MSG
+                print(NO_CCOMPILER_MSG)
                 ccompiler = False
                 continue
             else:
@@ -732,6 +732,6 @@ if __name__ == '__main__':
             break
     # print any error message again for better visibility
     if not gfortran:
-        print NO_GFORTRAN_MSG
+        print(NO_GFORTRAN_MSG)
     if not ccompiler:
-        print NO_CCOMPILER_MSG
+        print(NO_CCOMPILER_MSG)
