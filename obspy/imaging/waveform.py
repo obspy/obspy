@@ -151,6 +151,7 @@ class WaveformPlotting(object):
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
         self.show = kwargs.get('show', True)
+        self.block = kwargs.get ('block', True)
 
     def __getMergeId(self, tr):
         tr_id = tr.id
@@ -235,7 +236,7 @@ class WaveformPlotting(object):
                 return self.fig
             else:
                 if not self.fig_obj and self.show:
-                    plt.show()
+                    plt.show(block = self.block)
 
     def plot(self, *args, **kwargs):
         """
