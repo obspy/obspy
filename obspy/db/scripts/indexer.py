@@ -64,7 +64,8 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         for key, value in sorted(self.server.options.__dict__.items()):
             out += "<tr><th>%s</th><td>%s</td></tr>" % (key, value)
         if self.server.mappings:
-            out += "<tr><th>mapping rules</th><td>%s</td></tr>" % (self.server.mappings)
+            out += "<tr><th>mapping rules</th><td>%s</td></tr>" % \
+                   (self.server.mappings)
         out += '</table>'
         out += '<h2>Status</h2>'
         out += '<table>'
