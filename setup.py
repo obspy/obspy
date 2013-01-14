@@ -617,8 +617,8 @@ def setupPackage(gfortran=True, ccompiler=True):
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        convert2to3()
+    #if sys.version_info[0] == 3:
+        #convert2to3()
     # external modules
     ext_modules = []
     if ccompiler:
