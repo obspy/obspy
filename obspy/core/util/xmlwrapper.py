@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import StringIO
+from io import StringIO
 import warnings
 try:
     # try using lxml as it is faster
@@ -62,7 +62,7 @@ class XMLParser:
         if isinstance(xml_doc, basestring):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith('<?XML'):
-                xml_doc = StringIO.StringIO(xml_doc)
+                xml_doc = StringIO(xml_doc)
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):

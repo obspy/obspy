@@ -23,14 +23,14 @@ from pkg_resources import load_entry_point
 from uuid import uuid4
 import copy
 import glob
+from io import StringIO
 import inspect
 import numpy as np
 import os
 import re
-import urllib2
+import urllib
 import warnings
 import weakref
-import cStringIO
 from lxml import etree
 
 
@@ -46,7 +46,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.StringIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
@@ -109,14 +109,14 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathname_or_url.seek(0)
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        catalog = _read(StringIO(pathname_or_url), format, **kwargs)
         cat.extend(catalog.events)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
+        fh.write(urllib.urlopen(pathname_or_url).read())
         fh.close()
         cat.extend(_read(fh.name, format, **kwargs).events)
         os.remove(fh.name)
@@ -2834,9 +2834,9 @@ def validate(xml_file):
 
     # Pretty error printing if the validation fails.
     if valid is not True:
-        print "Error validating QuakeML file:"
+        print("Error validating QuakeML file:")
         for entry in xmlschema.error_log:
-            print "\t%s" % entry
+            print("\t%s" % entry)
     return valid
 
 

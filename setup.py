@@ -52,9 +52,9 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
-    'lxml',
-    'sqlalchemy',
-    'suds>=0.4.0']
+    'lxml']
+    #'sqlalchemy',
+    #'suds>=0.4.0']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
@@ -379,27 +379,27 @@ else:
     UnixCCompiler._compile = _compile
 
 
-def convert2to3():
-    """
-    Convert source to Python 3.x syntax using lib2to3.
-    """
-    # create a new 2to3 directory for converted source files
-    dst_path = os.path.join(LOCAL_PATH, '2to3')
-    shutil.rmtree(dst_path, ignore_errors=True)
+#def convert2to3():
+    #"""
+    #Convert source to Python 3.x syntax using lib2to3.
+    #"""
+    ## create a new 2to3 directory for converted source files
+    #dst_path = os.path.join(LOCAL_PATH, '2to3')
+    #shutil.rmtree(dst_path, ignore_errors=True)
 
-    # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):  # @UnusedVariable
-        return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
-               ['.git', '.gitignore'] + \
-               [fn for fn in filenames if fn.startswith('distribute')] + \
-               [fn for fn in filenames if fn.endswith('.egg-info')]
-    shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
-    os.chdir(dst_path)
-    sys.path.insert(0, dst_path)
-    # run lib2to3 script on duplicated source
-    from lib2to3.main import main
-    print("Converting to Python3 via lib2to3...")
-    main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
+    ## copy original tree into 2to3 folder ignoring some unneeded files
+    #def ignored_files(adir, filenames):  # @UnusedVariable
+        #return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
+               #['.git', '.gitignore'] + \
+               #[fn for fn in filenames if fn.startswith('distribute')] + \
+               #[fn for fn in filenames if fn.endswith('.egg-info')]
+    #shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
+    #os.chdir(dst_path)
+    #sys.path.insert(0, dst_path)
+    ## run lib2to3 script on duplicated source
+    #from lib2to3.main import main
+    #print("Converting to Python3 via lib2to3...")
+    #main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
 
 
 # hack to prevent build_ext to append __init__ to the export symbols
@@ -679,7 +679,7 @@ def setupPackage(gfortran=True, ccompiler=True):
             "#egg=obspy=dev",  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        use_2to3=True,
+        #use_2to3=True,
         **kwargs
     )
     # cleanup after using lib2to3 for Python 3.x

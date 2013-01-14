@@ -16,13 +16,13 @@ from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
 from pkg_resources import load_entry_point
-import cPickle
+import pickle
 import copy
 import fnmatch
 import math
 import numpy as np
 import os
-import urllib2
+import urllib
 import warnings
 
 
@@ -180,9 +180,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     (5) Reading a file-like object.
 
         >>> from StringIO import StringIO
-        >>> import urllib2
+        >>> import urllib
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urllib2.urlopen(example_url).read())
+        >>> stringio_obj = StringIO(urllib.urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -237,7 +237,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
+        fh.write(urllib.urlopen(pathname_or_url).read())
         fh.close()
         st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         os.remove(fh.name)
@@ -2445,7 +2445,7 @@ class Stream(object):
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
-        except Exception, e:
+        except Exception as e:
             if "Can't merge traces with same ids but" in str(e):
                 msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
                       "with same id detected. Doing nothing."
@@ -2530,12 +2530,12 @@ def isPickle(filename):  # @UnusedVariable
     """
     if isinstance(filename, basestring):
         try:
-            st = cPickle.load(open(filename, 'rb'))
+            st = pickle.load(open(filename, 'rb'))
         except:
             return False
     else:
         try:
-            st = cPickle.load(filename)
+            st = pickle.load(filename)
         except:
             return False
     return isinstance(st, Stream)
@@ -2555,9 +2555,9 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     if isinstance(filename, basestring):
-        return cPickle.load(open(filename, 'rb'))
+        return pickle.load(open(filename, 'rb'))
     else:
-        return cPickle.load(filename)
+        return pickle.load(filename)
 
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
@@ -2581,9 +2581,9 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :param protocol: Pickle protocol, defaults to ``2``.
     """
     if isinstance(filename, basestring):
-        cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+        pickle.dump(stream, open(filename, 'wb'), protocol=protocol)
     else:
-        cPickle.dump(stream, filename, protocol=protocol)
+        pickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':
