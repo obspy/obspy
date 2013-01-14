@@ -233,7 +233,7 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._fromDateTime(dt)
                 return
-            elif isinstance(value, basestring):
+            elif isinstance(value, str):
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
@@ -882,8 +882,13 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
+        # Make a temporary copy to be able to round to only six digits.
+        old_timestamp = self.timestamp
+        self.timestamp = round(self.timestamp, 6)
+        string = "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
+        self.timestamp = old_timestamp
+        return string
 
     def __unicode__(self):
         """
