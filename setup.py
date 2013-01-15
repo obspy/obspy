@@ -24,7 +24,7 @@ For more information visit http://www.obspy.org.
 from distutils.ccompiler import get_default_compiler
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsExecError, CompileError
-from numpy.distutils.unixccompiler import UnixCCompiler#, _darwin_compiler_fixup
+from distutils.unixccompiler import UnixCCompiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
@@ -52,9 +52,9 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
-    'lxml']
-    #'sqlalchemy',
-    #'suds>=0.4.0']
+    'lxml',
+    'sqlalchemy',
+    'suds>=0.4.0']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
@@ -350,56 +350,47 @@ else:
     # Monkey patch CCompiler for Unix, Linux and Mac
     # Pretend .f is a C extension and change corresponding compilation call
     CCompiler.language_map['.f'] = "c"
-    # Monkey patch UnixCCompiler for Unix, Linux and MacOS
     UnixCCompiler.src_extensions.append(".f")
 
-    def _compile(self, obj, src, *args, **kwargs):  # @UnusedVariable
-        # we check if 'taup' is in sources
-        IS_FORTRAN = False
+    def _compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts): \
+            # @UnusedVariable
+        # FORTRAN if 'taup' is in sources
         if 'taup' in src:
-            IS_FORTRAN = True
-        if not IS_FORTRAN:
-            # otherwise we just use the original compile method
-            UnixCCompiler.linker_so = None
-            return self._original_compile(obj, src, *args, **kwargs)
-        UnixCCompiler.linker_so = ["gfortran"]
-        self.compiler_so = ["gfortran"]
-        cc_args = ['-c', '-fno-underscoring']
-        #if sys.platform == 'darwin':
-            #self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                      #cc_args)
-        #else:
-        cc_args.append('-fPIC')
-        try:
-            self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
-        except DistutilsExecError:
-            _, msg, _ = sys.exc_info()
-            raise CompileError(msg)
+            self.linker_so[0] = "gfortran"
+            self.compiler_so[0] = "gfortran"
+            cc_args = list(cc_args)  # copy
+            cc_args.append('-fno-underscoring')
+            try:
+                self.compiler_so.remove("-Wstrict-prototypes")
+            except ValueError:
+                pass
+        return self._original_compile(obj, src, ext, cc_args, extra_postargs,
+            pp_opts)
     UnixCCompiler._original_compile = UnixCCompiler._compile
     UnixCCompiler._compile = _compile
 
 
-#def convert2to3():
-    #"""
-    #Convert source to Python 3.x syntax using lib2to3.
-    #"""
-    ## create a new 2to3 directory for converted source files
-    #dst_path = os.path.join(LOCAL_PATH, '2to3')
-    #shutil.rmtree(dst_path, ignore_errors=True)
+def convert2to3():
+    """
+    Convert source to Python 3.x syntax using lib2to3.
+    """
+    # create a new 2to3 directory for converted source files
+    dst_path = os.path.join(LOCAL_PATH, '2to3')
+    shutil.rmtree(dst_path, ignore_errors=True)
 
-    ## copy original tree into 2to3 folder ignoring some unneeded files
-    #def ignored_files(adir, filenames):  # @UnusedVariable
-        #return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
-               #['.git', '.gitignore'] + \
-               #[fn for fn in filenames if fn.startswith('distribute')] + \
-               #[fn for fn in filenames if fn.endswith('.egg-info')]
-    #shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
-    #os.chdir(dst_path)
-    #sys.path.insert(0, dst_path)
-    ## run lib2to3 script on duplicated source
-    #from lib2to3.main import main
-    #print("Converting to Python3 via lib2to3...")
-    #main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
+    # copy original tree into 2to3 folder ignoring some unneeded files
+    def ignored_files(adir, filenames):  # @UnusedVariable
+        return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
+               ['.git', '.gitignore'] + \
+               [fn for fn in filenames if fn.startswith('distribute')] + \
+               [fn for fn in filenames if fn.endswith('.egg-info')]
+    shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
+    os.chdir(dst_path)
+    sys.path.insert(0, dst_path)
+    # run lib2to3 script on duplicated source
+    from lib2to3.main import main
+    print("Converting to Python3 via lib2to3...")
+    main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
 
 
 # hack to prevent build_ext to append __init__ to the export symbols
@@ -617,8 +608,8 @@ def setupPackage(gfortran=True, ccompiler=True):
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
-    #if sys.version_info[0] == 3:
-        #convert2to3()
+    if sys.version_info[0] == 3:
+        convert2to3()
     # external modules
     ext_modules = []
     if ccompiler:
@@ -679,7 +670,7 @@ def setupPackage(gfortran=True, ccompiler=True):
             "#egg=obspy=dev",  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        #use_2to3=True,
+        use_2to3=True,
         **kwargs
     )
     # cleanup after using lib2to3 for Python 3.x
@@ -695,34 +686,34 @@ if __name__ == '__main__':
     while True:
         try:
             setupPackage(gfortran=gfortran, ccompiler=ccompiler)
-        except SystemExit as e:
+        except SystemExit, e:
             if 'gfortran' in str(e):
                 if not gfortran:
                     break
                 # retry
-                print(NO_GFORTRAN_MSG)
+                print NO_GFORTRAN_MSG
                 gfortran = False
                 continue
             elif 'gcc' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print(NO_CCOMPILER_MSG)
+                print NO_CCOMPILER_MSG
                 ccompiler = False
                 # gcc is also needed for gfortran on non windows system
                 if not IS_WINDOWS:
-                    print(NO_GFORTRAN_MSG)
+                    print NO_GFORTRAN_MSG
                     gfortran = False
                 continue
             else:
                 raise
-        except ValueError as e:
+        except ValueError, e:
             # Windows specific exception if MSVC compiler is missing
             if IS_WINDOWS and 'path' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print(NO_CCOMPILER_MSG)
+                print NO_CCOMPILER_MSG
                 ccompiler = False
                 continue
             else:
@@ -732,6 +723,6 @@ if __name__ == '__main__':
             break
     # print any error message again for better visibility
     if not gfortran:
-        print(NO_GFORTRAN_MSG)
+        print NO_GFORTRAN_MSG
     if not ccompiler:
-        print(NO_CCOMPILER_MSG)
+        print NO_CCOMPILER_MSG
