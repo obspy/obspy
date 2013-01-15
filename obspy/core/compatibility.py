@@ -30,23 +30,12 @@ if PY3K is True:
 else:
     raw_input = raw_input
 
-# Cascading import chain for StringIO and BytesIO. Under Py2K, BytesIO is
-# mapped to StringIO.
-if PY3K is True:
-    from io import StringIO, BytesIO
-else:
-    try:
-        from cStringIO import StringIO
-    except:
-        from StringIO import StringIO
-    BytesIO = StringIO
-
-
 # PY3K does not have iteritems(), instead items() is already an iterator.
 if PY3K is True:
     __iteritems__ = "items"
 else:
     __iteritems__ = "iteritems"
+
 def iteritems(obj):
     return getattr(obj, __iteritems__)()
 

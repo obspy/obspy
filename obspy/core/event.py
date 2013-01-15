@@ -10,7 +10,6 @@ Module for handling ObsPy Catalog and Event objects.
 """
 
 from obspy.core import compatibility
-from obspy.core.compatibility import StringIO
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
     EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
@@ -26,6 +25,7 @@ from uuid import uuid4
 import copy
 import glob
 import inspect
+import io
 import numpy as np
 import os
 import re
@@ -47,7 +47,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or io.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
@@ -113,7 +113,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathname_or_url.seek(0)
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(StringIO(pathname_or_url), format, **kwargs)
+        catalog = _read(io.BytesIO(pathname_or_url), format, **kwargs)
         cat.extend(catalog.events)
     elif "://" in pathname_or_url:
         # URL

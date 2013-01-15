@@ -16,7 +16,6 @@ by a distributed team in a transparent collaborative manner.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core.compatibility import StringIO
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -25,6 +24,8 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
+
+import io
 
 
 def isQuakeML(filename):
@@ -82,7 +83,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(StringIO(string))
+        self.parser = XMLParser(io.BytesIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -1392,7 +1393,7 @@ def readSeisHubEventXML(filename):
     lines.insert(3, '  <eventParameters>')
     lines.append('  </eventParameters>\n')
     lines.append('</quakeml>\n')
-    temp = StringIO(''.join(lines))
+    temp = io.BytesIO(''.join(lines))
     return readQuakeML(temp)
 
 

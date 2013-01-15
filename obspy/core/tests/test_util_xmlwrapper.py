@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import io
 from lxml import etree as lxml_etree
 from obspy.core import compatibility
 from obspy.core.util.xmlwrapper import XMLParser, tostring
@@ -47,13 +48,10 @@ class XMLWrapperTestCase(unittest.TestCase):
         fh = open(self.iris_xml, 'rt')
         XMLParser(fh)
         fh.close()
-        # 4 - StringIO
-        data = compatibility.StringIO(XML_DOC)
+        # 4 - BytesIO
+        data = io.BytesIO(XML_DOC.encode("utf-8"))
         XMLParser(data)
-        # 5 - BytesIO
-        data = compatibility.BytesIO(XML_DOC.encode("utf-8"))
-        XMLParser(data)
-        # 6 - with lxml parsed XML documents
+        # 5 - with lxml parsed XML documents
         xml_doc = lxml_etree.parse(self.iris_xml)
         XMLParser(xml_doc)
 
