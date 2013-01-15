@@ -454,16 +454,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         ResourceIdentifier()
-        self.assertEqual(len(r_dict.keys()), 0)
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
         # pretty much immediately.
         ResourceIdentifier(referred_object=UTCDateTime())
-        self.assertEqual(len(r_dict.keys()), 0)
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
         ResourceIdentifier(referred_object=obj)
-        self.assertEqual(len(r_dict.keys()), 1)
+        self.assertEqual(len(list(r_dict.keys())), 1)
 
     def test_adding_a_referred_object_after_creation(self):
         """
@@ -499,10 +499,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         ResourceIdentifier(referred_object=obj_b)
         # Now two keys should be in the global dict.
         rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(rdict.keys()), 2)
+        self.assertEqual(len(list(rdict.keys())), 2)
         # Deleting the objects should also remove the from the dictionary.
         del obj_a, obj_b
-        self.assertEqual(len(rdict.keys()), 0)
+        self.assertEqual(len(list(rdict.keys())), 0)
 
 
 def suite():
