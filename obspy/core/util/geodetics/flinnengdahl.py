@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from obspy.core import compatibility
 import os
 
 
@@ -35,7 +36,8 @@ class FlinnEngdahl(object):
 
         self.lons_per_lat = dict(zip(
             self.quads_order,
-            [indexes[x:x + 91] for x in xrange(0, len(indexes), 91)]
+            [indexes[x:x + 91] for x in \
+                compatibility.range(0, len(indexes), 91)]
         ))
 
         self.lat_begins = {}
