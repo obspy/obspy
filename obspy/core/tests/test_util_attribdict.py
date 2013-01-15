@@ -228,7 +228,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
         # should raise KeyError without default item
         self.assertRaises(KeyError, ad.__getitem__, 'xxx')
-        self.assertRaises(KeyError, ad.__getattr__, 'xxx')
+        # should raise AttributeError without default item
+        self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
 
     def test_set_readonly(self):
         """
