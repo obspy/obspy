@@ -19,7 +19,7 @@ class EventTestCase(unittest.TestCase):
         """
         event = readEvents()[1]
         s = event.short_str()
-        self.assertEquals("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
+        self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
                           " | 4.3 ML | manual", s)
 
     def test_eq(self):
@@ -84,22 +84,22 @@ class OriginTestCase(unittest.TestCase):
     def test_creationInfo(self):
         # 1 - empty Origin class will set creation_info to None
         orig = Origin()
-        self.assertEquals(orig.creation_info, None)
+        self.assertEqual(orig.creation_info, None)
         # 2 - preset via dict or existing CreationInfo object
         orig = Origin(creation_info={})
         self.assertTrue(isinstance(orig.creation_info, CreationInfo))
         orig = Origin(creation_info=CreationInfo(author='test2'))
         self.assertTrue(isinstance(orig.creation_info, CreationInfo))
-        self.assertEquals(orig.creation_info.author, 'test2')
+        self.assertEqual(orig.creation_info.author, 'test2')
         # 3 - check set values
         orig = Origin(creation_info={'author': 'test'})
-        self.assertEquals(orig.creation_info, orig['creation_info'])
-        self.assertEquals(orig.creation_info.author, 'test')
-        self.assertEquals(orig['creation_info']['author'], 'test')
+        self.assertEqual(orig.creation_info, orig['creation_info'])
+        self.assertEqual(orig.creation_info.author, 'test')
+        self.assertEqual(orig['creation_info']['author'], 'test')
         orig.creation_info.agency_id = "muh"
-        self.assertEquals(orig.creation_info, orig['creation_info'])
-        self.assertEquals(orig.creation_info.agency_id, 'muh')
-        self.assertEquals(orig['creation_info']['agency_id'], 'muh')
+        self.assertEqual(orig.creation_info, orig['creation_info'])
+        self.assertEqual(orig.creation_info.agency_id, 'muh')
+        self.assertEqual(orig['creation_info']['agency_id'], 'muh')
 
     def test_multipleOrigins(self):
         """
@@ -112,17 +112,17 @@ class OriginTestCase(unittest.TestCase):
         origin.latitude_errors.confidence_level = 95
         origin.longitude = 42
         origin.depth_type = 'from location'
-        self.assertEquals(origin.latitude, 12)
-        self.assertEquals(origin.latitude_errors.confidence_level, 95)
-        self.assertEquals(origin.latitude_errors.uncertainty, None)
-        self.assertEquals(origin.longitude, 42)
+        self.assertEqual(origin.latitude, 12)
+        self.assertEqual(origin.latitude_errors.confidence_level, 95)
+        self.assertEqual(origin.latitude_errors.uncertainty, None)
+        self.assertEqual(origin.longitude, 42)
         origin2 = Origin()
         origin2.latitude = 13.4
-        self.assertEquals(origin2.depth_type, None)
-        self.assertEquals(origin2.resource_id, None)
-        self.assertEquals(origin2.latitude, 13.4)
-        self.assertEquals(origin2.latitude_errors.confidence_level, None)
-        self.assertEquals(origin2.longitude, None)
+        self.assertEqual(origin2.depth_type, None)
+        self.assertEqual(origin2.resource_id, None)
+        self.assertEqual(origin2.latitude, 13.4)
+        self.assertEqual(origin2.latitude_errors.confidence_level, None)
+        self.assertEqual(origin2.longitude, None)
 
 
 class CatalogTestCase(unittest.TestCase):
@@ -139,14 +139,14 @@ class CatalogTestCase(unittest.TestCase):
         cat = Catalog()
         cat.creation_info = CreationInfo(author='test2')
         self.assertTrue(isinstance(cat.creation_info, CreationInfo))
-        self.assertEquals(cat.creation_info.author, 'test2')
+        self.assertEqual(cat.creation_info.author, 'test2')
 
     def test_readEventsWithoutParameters(self):
         """
         Calling readEvents w/o any parameter will create an example catalog.
         """
         catalog = readEvents()
-        self.assertEquals(len(catalog), 3)
+        self.assertEqual(len(catalog), 3)
 
     def test_str(self):
         """
@@ -162,15 +162,15 @@ class CatalogTestCase(unittest.TestCase):
         """
         # iris
         catalog = readEvents(self.iris_xml)
-        self.assertEquals(len(catalog), 2)
-        self.assertEquals(catalog[0]._format, 'QUAKEML')
-        self.assertEquals(catalog[1]._format, 'QUAKEML')
+        self.assertEqual(len(catalog), 2)
+        self.assertEqual(catalog[0]._format, 'QUAKEML')
+        self.assertEqual(catalog[1]._format, 'QUAKEML')
         # neries
         catalog = readEvents(self.neries_xml)
-        self.assertEquals(len(catalog), 3)
-        self.assertEquals(catalog[0]._format, 'QUAKEML')
-        self.assertEquals(catalog[1]._format, 'QUAKEML')
-        self.assertEquals(catalog[2]._format, 'QUAKEML')
+        self.assertEqual(len(catalog), 3)
+        self.assertEqual(catalog[0]._format, 'QUAKEML')
+        self.assertEqual(catalog[1]._format, 'QUAKEML')
+        self.assertEqual(catalog[2]._format, 'QUAKEML')
 
     def test_append(self):
         """
@@ -180,13 +180,13 @@ class CatalogTestCase(unittest.TestCase):
         catalog = Catalog()
         event1 = Event()
         event2 = Event()
-        self.assertEquals(len(catalog), 0)
+        self.assertEqual(len(catalog), 0)
         catalog.append(event1)
-        self.assertEquals(len(catalog), 1)
-        self.assertEquals(catalog.events, [event1])
+        self.assertEqual(len(catalog), 1)
+        self.assertEqual(catalog.events, [event1])
         catalog.append(event2)
-        self.assertEquals(len(catalog), 2)
-        self.assertEquals(catalog.events, [event1, event2])
+        self.assertEqual(len(catalog), 2)
+        self.assertEqual(catalog.events, [event1, event2])
         # 2 - adding objects other as Event should fails
         self.assertRaises(TypeError, catalog.append, str)
         self.assertRaises(TypeError, catalog.append, Catalog)
@@ -200,18 +200,18 @@ class CatalogTestCase(unittest.TestCase):
         catalog = Catalog()
         event1 = Event()
         event2 = Event()
-        self.assertEquals(len(catalog), 0)
+        self.assertEqual(len(catalog), 0)
         catalog.extend([event1, event2])
-        self.assertEquals(len(catalog), 2)
-        self.assertEquals(catalog.events, [event1, event2])
+        self.assertEqual(len(catalog), 2)
+        self.assertEqual(catalog.events, [event1, event2])
         # 2 - extend it with other catalog
         event3 = Event()
         event4 = Event()
         catalog2 = Catalog([event3, event4])
-        self.assertEquals(len(catalog), 2)
+        self.assertEqual(len(catalog), 2)
         catalog.extend(catalog2)
-        self.assertEquals(len(catalog), 4)
-        self.assertEquals(catalog.events, [event1, event2, event3, event4])
+        self.assertEqual(len(catalog), 4)
+        self.assertEqual(catalog.events, [event1, event2, event3, event4])
         # adding objects other as Catalog or list should fails
         self.assertRaises(TypeError, catalog.extend, str)
         self.assertRaises(TypeError, catalog.extend, event1)
@@ -227,16 +227,16 @@ class CatalogTestCase(unittest.TestCase):
         event3 = Event()
         catalog = Catalog([event1])
         catalog2 = Catalog([event2, event3])
-        self.assertEquals(len(catalog), 1)
+        self.assertEqual(len(catalog), 1)
         catalog += catalog2
-        self.assertEquals(len(catalog), 3)
-        self.assertEquals(catalog.events, [event1, event2, event3])
+        self.assertEqual(len(catalog), 3)
+        self.assertEqual(catalog.events, [event1, event2, event3])
         # 3 - extend it with another Event
         event4 = Event()
-        self.assertEquals(len(catalog), 3)
+        self.assertEqual(len(catalog), 3)
         catalog += event4
-        self.assertEquals(len(catalog), 4)
-        self.assertEquals(catalog.events, [event1, event2, event3, event4])
+        self.assertEqual(len(catalog), 4)
+        self.assertEqual(catalog.events, [event1, event2, event3, event4])
         # adding objects other as Catalog or Event should fails
         self.assertRaises(TypeError, catalog.__iadd__, str)
         self.assertRaises(TypeError, catalog.__iadd__, (event1, event2))
