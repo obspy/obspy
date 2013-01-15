@@ -50,7 +50,10 @@ class XMLWrapperTestCase(unittest.TestCase):
         # 4 - StringIO
         data = compatibility.StringIO(XML_DOC)
         XMLParser(data)
-        # 5 - with lxml parsed XML documents
+        # 5 - BytesIO
+        data = compatibility.BytesIO(XML_DOC.encode("utf-8"))
+        XMLParser(data)
+        # 6 - with lxml parsed XML documents
         xml_doc = lxml_etree.parse(self.iris_xml)
         XMLParser(xml_doc)
 
