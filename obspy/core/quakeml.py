@@ -1329,7 +1329,7 @@ class Pickler(object):
                 event_el.append(self._focal_mechanism(focal_mechanism))
             # add event node to catalog
             catalog_el.append(event_el)
-        return tostring(root_el, pretty_print=pretty_print, encoding="unicode")
+        return tostring(root_el, pretty_print=pretty_print)
 
 
 def readQuakeML(filename):
@@ -1373,16 +1373,13 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     """
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'write'):
-        fh = open(filename, 'wt')
+        fh = open(filename, 'wb')
     else:
         fh = filename
 
     xml_doc = Pickler().dumps(catalog)
     fh.write(xml_doc)
     fh.close()
-    # Close if its a file handler.
-    if isinstance(fh, file):
-        fh.close()
 
 
 def readSeisHubEventXML(filename):
