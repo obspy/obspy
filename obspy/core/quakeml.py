@@ -1329,7 +1329,7 @@ class Pickler(object):
                 event_el.append(self._focal_mechanism(focal_mechanism))
             # add event node to catalog
             catalog_el.append(event_el)
-        return tostring(root_el, pretty_print=pretty_print)
+        return tostring(root_el, pretty_print=pretty_print, encoding="unicode")
 
 
 def readQuakeML(filename):
