@@ -34,11 +34,16 @@ except:
         from StringIO import StringIO
 
 
+# PY3K does not have iteritems(), instead items() is already an iterator.
 if PY3K is True:
     __iteritems__ = "items"
 else:
     __iteritems__ = "iteritems"
-
-
 def iteritems(obj):
     return getattr(obj, __iteritems__)()
+
+# range() in PY3K is an iterator.
+if PY3K is True:
+    range = range
+else:
+    range = xrange
