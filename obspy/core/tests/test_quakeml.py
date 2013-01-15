@@ -582,9 +582,10 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertTrue(ev_str in str(catalog.events[0]))
         # testing ids
         ev = catalog.events[0]
-        self.assertEquals('smi:orig2', ev.preferred_origin_id)
-        self.assertEquals('smi:mag2', ev.preferred_magnitude_id)
-        self.assertEquals('smi:fm2', ev.preferred_focal_mechanism_id)
+        self.assertEquals('smi:orig2', ev.preferred_origin_id.resource_id)
+        self.assertEquals('smi:mag2', ev.preferred_magnitude_id.resource_id)
+        self.assertEquals('smi:fm2',
+            ev.preferred_focal_mechanism_id.resource_id)
         # testing objects
         self.assertEquals(ev.preferred_origin(), ev.origins[1])
         self.assertEquals(ev.preferred_magnitude(), ev.magnitudes[1])

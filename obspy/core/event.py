@@ -601,7 +601,7 @@ class ResourceIdentifier(object):
         """
         try:
             return ResourceIdentifier.__resource_id_weak_dict[self]
-        except KeyError:
+        except (KeyError, AttributeError):
             return None
 
     def setReferredObject(self, referred_object):
@@ -2064,7 +2064,10 @@ __Event = _eventTypeClassFactory("__Event",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
-                      ("creation_info", CreationInfo)],
+                      ("creation_info", CreationInfo),
+                      ("preferred_origin_id", ResourceIdentifier),
+                      ("preferred_magnitude_id", ResourceIdentifier),
+                      ("preferred_focal_mechanism_id", ResourceIdentifier)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'focal_mechanisms', 'origins', 'magnitudes',
                     'station_magnitudes'])
@@ -2180,31 +2183,25 @@ class Event(__Event):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_origin_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_origin_id:
+            return self.preferred_origin_id.getReferredObject()
+        return None
 
     def preferred_magnitude(self):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_magnitude_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_magnitude_id:
+            return self.preferred_magnitude_id.getReferredObject()
+        return None
 
     def preferred_focal_mechanism(self):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_focal_mechanism_id:
+            return self.preferred_focal_mechanism_id.getReferredObject()
+        return None
 
 
 class Catalog(object):
