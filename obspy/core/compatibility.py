@@ -23,3 +23,12 @@ if PY3K is True:
     string = str
 else:
     string = basestring
+
+# Cascading import chain for StringIO
+try:
+    from io import StringIO
+except:
+    try:
+        from cStringIO import StringIO
+    except:
+        from StringIO import StringIO
