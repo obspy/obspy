@@ -25,9 +25,9 @@ else:
     string = basestring
 
 # Cascading import chain for StringIO
-try:
+if PY3K is True:
     from io import StringIO
-except:
+else:
     try:
         from cStringIO import StringIO
     except:
