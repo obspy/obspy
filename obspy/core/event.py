@@ -9,6 +9,8 @@ Module for handling ObsPy Catalog and Event objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core import compatibility
+from obspy.core.compatibility import StringIO
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
     EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
@@ -23,7 +25,6 @@ from pkg_resources import load_entry_point
 from uuid import uuid4
 import copy
 import glob
-from io import StringIO
 import inspect
 import numpy as np
 import os
@@ -78,7 +79,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     the file system.
     """
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
+    if isinstance(pathname_or_url, compatibility.string) and \
        pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
@@ -90,7 +91,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         cat = _createExampleCatalog()
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, compatibility.string):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -2361,7 +2362,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, basestring):
+        if not isinstance(index, compatibility.string):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
