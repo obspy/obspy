@@ -2,6 +2,7 @@
 from obspy.core import compatibility
 from obspy.core.compatibility import StringIO
 import warnings
+import io
 from lxml import etree
 from lxml.etree import register_namespace
 import re
@@ -43,6 +44,22 @@ class XMLParser:
         elif hasattr(xml_doc, 'seek'):
             # some file-based content
             xml_doc.seek(0)
+            # etree.parse() does not read from StringIO with specified
+            # encoding. The argument is that StringIO is always utf-8 and thus
+            # specifying the encoding does not make any sense.
+            # Remove the encoding specifier in that case.
+            # XXX: Rather ugly hack. A true solution should be found.
+            if isinstance(xml_doc, io.StringIO):
+                temp = xml_doc.read(100)
+                if "encoding" in temp:
+                    new_doc = compatibility.StringIO()
+                    index = temp.find(">") + 1
+                    new_doc.write("<?xml version='1.0'?>")
+                    new_doc.write(temp[index:])
+                    new_doc.write(xml_doc.read())
+                    new_doc.seek(0, 0)
+                    xml_doc = new_doc
+                xml_doc.seek(0, 0)
             self.xml_doc = etree.parse(xml_doc)
         else:
             self.xml_doc = xml_doc

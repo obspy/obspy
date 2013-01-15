@@ -92,8 +92,11 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # if no pathname or URL specified, return example catalog
         cat = _createExampleCatalog()
     elif not isinstance(pathname_or_url, compatibility.string):
+        # Bytes will also end up here - they are not a string. Transform to a
+        # BytesIO.
+        if not hasattr(pathname_or_url, "seek"):
+            pathname_or_url = compatibility.BytesIO(pathname_or_url)
         # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
         try:
             # first try reading directly
             catalog = _read(pathname_or_url, format, **kwargs)

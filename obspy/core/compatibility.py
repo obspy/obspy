@@ -24,14 +24,16 @@ if PY3K is True:
 else:
     string = basestring
 
-# Cascading import chain for StringIO
+# Cascading import chain for StringIO and BytesIO. Under Py2K, BytesIO is
+# mapped to StringIO.
 if PY3K is True:
-    from io import StringIO
+    from io import StringIO, BytesIO
 else:
     try:
         from cStringIO import StringIO
     except:
         from StringIO import StringIO
+    BytesIO = StringIO
 
 
 # PY3K does not have iteritems(), instead items() is already an iterator.
