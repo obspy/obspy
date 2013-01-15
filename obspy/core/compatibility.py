@@ -32,3 +32,13 @@ except:
         from cStringIO import StringIO
     except:
         from StringIO import StringIO
+
+
+if PY3K is True:
+    __iteritems__ = "items"
+else:
+    __iteritems__ = "iteritems"
+
+
+def iteritems(obj):
+    return getattr(obj, __iteritems__)()
