@@ -29,8 +29,8 @@ class QuakeMLTestCase(unittest.TestCase):
         str2 = ''.join([s.strip() for s in tostring(obj2).splitlines()])
         if str1 != str2:
             print
-            print str1
-            print str2
+            print(str1)
+            print(str2)
         self.assertEquals(str1, str2)
 
     def test_readQuakeML(self):
