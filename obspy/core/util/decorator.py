@@ -48,7 +48,7 @@ def deprecated_keywords(keywords):
     :param keywords: old/new keyword names as key/value pairs.
     """
     def fdec(func):
-        fname = func.func_name
+        fname = func.__name__
         msg = "Deprecated keyword %s in %s() call - please use %s instead."
         msg2 = "Deprecated keyword %s in %s() call - ignoring."
 
