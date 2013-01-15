@@ -198,7 +198,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c.semi_major_axis_length, 0.123)
         self.assertEqual(c.major_axis_azimuth, 4.123)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -239,7 +240,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.creation_info.creation_time, None)
         self.assertEqual(mag.creation_info.version, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -270,7 +272,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(stat_contrib.residual, 0.11)
 
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -302,7 +305,8 @@ class QuakeMLTestCase(unittest.TestCase):
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -368,7 +372,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(pick.comments), 2)
         self.assertEqual(pick.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -457,7 +462,8 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests writing a QuakeML document.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
         catalog = readQuakeML(filename)
         self.assertTrue(len(catalog), 1)
         writeQuakeML(catalog, tmpfile)
@@ -468,6 +474,7 @@ class QuakeMLTestCase(unittest.TestCase):
             catalog2 = readQuakeML(tmpfile)
         self.assertTrue(len(catalog2), 1)
         # clean up
+        tmpfile_object.close()
         os.remove(tmpfile)
 
     def test_readEvents(self):
@@ -475,7 +482,8 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests reading a QuakeML document via readEvents.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
         catalog = readEvents(filename)
         self.assertTrue(len(catalog), 3)
         catalog.write(tmpfile, format='QUAKEML')
@@ -486,6 +494,7 @@ class QuakeMLTestCase(unittest.TestCase):
             catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
         # clean up
+        tmpfile_object.close()
         os.remove(tmpfile)
 
     def test_enums(self):
@@ -565,7 +574,8 @@ class QuakeMLTestCase(unittest.TestCase):
         2.6/2.7 this is the same as test_read_string().
         """
         filename = os.path.join(self.path, 'neries_events.xml')
-        data = open(filename, 'rb').read()
+        with open(filename, 'rb') as open_file:
+            data = open_file.read()
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -574,7 +584,8 @@ class QuakeMLTestCase(unittest.TestCase):
         Test reading a QuakeML string/unicode object via readEvents.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
-        data = open(filename, 'rt').read()
+        with open(filename, "rt") as open_file:
+            data = open_file.read()
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 

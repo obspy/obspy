@@ -95,7 +95,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # Bytes will also end up here - they are not a string. Transform to a
         # BytesIO.
         if not hasattr(pathname_or_url, "seek"):
-            pathname_or_url = compatibility.BytesIO(pathname_or_url)
+            pathname_or_url = io.BytesIO(pathname_or_url)
         # not a string - we assume a file-like object
         try:
             # first try reading directly
@@ -113,7 +113,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathname_or_url.seek(0)
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(io.BytesIO(pathname_or_url), format, **kwargs)
+        catalog = _read(io.BytesIO(pathname_or_url.encode()), format, **kwargs)
         cat.extend(catalog.events)
     elif "://" in pathname_or_url:
         # URL
