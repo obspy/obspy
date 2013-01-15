@@ -31,7 +31,6 @@ import distribute_setup
 import glob
 import os
 import platform
-import shutil
 import sys
 
 
@@ -53,8 +52,10 @@ INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
     'lxml',
-    'sqlalchemy',
-    'suds>=0.4.0']
+    'sqlalchemy']
+
+    # XXX: Reenable
+    #'suds>=0.4.0']
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
@@ -370,29 +371,6 @@ else:
     UnixCCompiler._compile = _compile
 
 
-def convert2to3():
-    """
-    Convert source to Python 3.x syntax using lib2to3.
-    """
-    # create a new 2to3 directory for converted source files
-    dst_path = os.path.join(LOCAL_PATH, '2to3')
-    shutil.rmtree(dst_path, ignore_errors=True)
-
-    # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):  # @UnusedVariable
-        return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
-               ['.git', '.gitignore'] + \
-               [fn for fn in filenames if fn.startswith('distribute')] + \
-               [fn for fn in filenames if fn.endswith('.egg-info')]
-    shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
-    os.chdir(dst_path)
-    sys.path.insert(0, dst_path)
-    # run lib2to3 script on duplicated source
-    from lib2to3.main import main
-    print("Converting to Python3 via lib2to3...")
-    main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
-
-
 # hack to prevent build_ext to append __init__ to the export symbols
 class finallist(list):
     def append(self, object):
@@ -607,9 +585,6 @@ def setupLibTauP():
 def setupPackage(gfortran=True, ccompiler=True):
     # automatically install distribute if the user does not have it installed
     distribute_setup.use_setuptools()
-    # use lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        convert2to3()
     # external modules
     ext_modules = []
     if ccompiler:
@@ -670,13 +645,8 @@ def setupPackage(gfortran=True, ccompiler=True):
             "#egg=obspy=dev",  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        use_2to3=True,
         **kwargs
     )
-    # cleanup after using lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        os.chdir(LOCAL_PATH)
-
 
 if __name__ == '__main__':
     gfortran = True
@@ -686,34 +656,34 @@ if __name__ == '__main__':
     while True:
         try:
             setupPackage(gfortran=gfortran, ccompiler=ccompiler)
-        except SystemExit, e:
+        except SystemExit as e:
             if 'gfortran' in str(e):
                 if not gfortran:
                     break
                 # retry
-                print NO_GFORTRAN_MSG
+                print(NO_GFORTRAN_MSG)
                 gfortran = False
                 continue
             elif 'gcc' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print NO_CCOMPILER_MSG
+                print(NO_CCOMPILER_MSG)
                 ccompiler = False
                 # gcc is also needed for gfortran on non windows system
                 if not IS_WINDOWS:
-                    print NO_GFORTRAN_MSG
+                    print(NO_GFORTRAN_MSG)
                     gfortran = False
                 continue
             else:
                 raise
-        except ValueError, e:
+        except ValueError as e:
             # Windows specific exception if MSVC compiler is missing
             if IS_WINDOWS and 'path' in str(e):
                 if not ccompiler:
                     break
                 # retry
-                print NO_CCOMPILER_MSG
+                print(NO_CCOMPILER_MSG)
                 ccompiler = False
                 continue
             else:
@@ -723,6 +693,6 @@ if __name__ == '__main__':
             break
     # print any error message again for better visibility
     if not gfortran:
-        print NO_GFORTRAN_MSG
+        print(NO_GFORTRAN_MSG)
     if not ccompiler:
-        print NO_CCOMPILER_MSG
+        print(NO_CCOMPILER_MSG)
