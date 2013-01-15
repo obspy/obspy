@@ -24,6 +24,12 @@ if PY3K is True:
 else:
     string = basestring
 
+
+if PY3K is True:
+    raw_input = input
+else:
+    raw_input = raw_input
+
 # Cascading import chain for StringIO and BytesIO. Under Py2K, BytesIO is
 # mapped to StringIO.
 if PY3K is True:

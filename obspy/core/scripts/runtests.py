@@ -82,6 +82,7 @@ and report everything, you would run::
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
 
+from obspy.core import compatibility
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
 from optparse import OptionParser, OptionGroup
@@ -99,7 +100,9 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap']
+        # XXX: Reenable suds!
+                #'suds', 'mpl_toolkits.basemap']
+    'mpl_toolkits.basemap']
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -475,7 +478,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         print()
     if interactive and not report:
         msg = "Do you want to report this to tests.obspy.org? [n]: "
-        var = raw_input(msg).lower()
+        var = compatibility.raw_input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
