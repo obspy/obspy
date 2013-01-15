@@ -2444,24 +2444,36 @@ class Catalog(object):
         """
         # Helper functions.
         def __is_smaller(value_1, value_2):
-            if value_1 < value_2:
-                return True
-            return False
+            try:
+                if value_1 < value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_smaller_or_equal(value_1, value_2):
-            if value_1 <= value_2:
-                return True
-            return False
+            try:
+                if value_1 <= value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_greater(value_1, value_2):
-            if value_1 > value_2:
-                return True
-            return False
+            try:
+                if value_1 > value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_greater_or_equal(value_1, value_2):
-            if value_1 >= value_2:
-                return True
-            return False
+            try:
+                if value_1 >= value_2:
+                    return True
+                return False
+            except:
+                return False
 
         # Map the function to the operators.
         operator_map = {"<": __is_smaller,
