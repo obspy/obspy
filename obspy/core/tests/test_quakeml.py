@@ -559,6 +559,16 @@ class QuakeMLTestCase(unittest.TestCase):
                     enumerations=", ".join(additional_items))
                 raise Exception(msg)
 
+    def test_read_bytes(self):
+        """
+        Test reading a QuakeML bytes object via readEvents. Under Python
+        2.6/2.7 this is the same as test_read_string().
+        """
+        filename = os.path.join(self.path, 'neries_events.xml')
+        data = open(filename, 'rb').read()
+        catalog = readEvents(data)
+        self.assertEqual(len(catalog), 3)
+
     def test_read_string(self):
         """
         Test reading a QuakeML string/unicode object via readEvents.
