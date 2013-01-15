@@ -9,6 +9,7 @@ Decorator used in ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core import compatibility
 from obspy.core.util.base import NamedTemporaryFile
 import numpy as np
 import functools
@@ -108,7 +109,7 @@ def uncompressFile(func):
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
     """
     def wrapped_func(filename, *args, **kwargs):
-        if not isinstance(filename, basestring):
+        if not isinstance(filename, compatibility.string):
             return func(filename, *args, **kwargs)
         elif not os.path.exists(filename):
             msg = "File not found '%s'" % (filename)
