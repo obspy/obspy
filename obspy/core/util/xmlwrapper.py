@@ -18,7 +18,7 @@ def tostring(element, xml_declaration=True, pretty_print=False):
     :return: Encoded string containing the XML data.
     """
     return etree.tostring(element, method="xml", encoding="utf-8",
-        pretty_print=pretty_print, xml_declaration=True)
+        pretty_print=pretty_print, xml_declaration=True).decode("utf-8")
 
 
 class XMLParser:

@@ -1373,7 +1373,7 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     """
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'write'):
-        fh = open(filename, 'wb')
+        fh = open(filename, 'wt')
     else:
         fh = filename
 
