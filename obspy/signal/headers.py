@@ -26,7 +26,7 @@ for lib_name in lib_names:
     try:
         clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', lib_name + lib_extension))
-    except Exception, e:
+    except Exception as e:
         pass
     else:
         break
@@ -48,7 +48,7 @@ for erlib_name in erlib_names:
     try:
         clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', erlib_name + lib_extension))
-    except Exception, e:
+    except Exception as e:
         pass
     else:
         break

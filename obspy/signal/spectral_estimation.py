@@ -246,7 +246,7 @@ class PPSD():
     ...        'zeros': [0j, 0j]}
 
     >>> ppsd = PPSD(tr.stats, paz)
-    >>> print ppsd.id
+    >>> print(ppsd.id)
     BW.RJOB..EHZ
     >>> print ppsd.times
     []
@@ -255,7 +255,7 @@ class PPSD():
     demeaning, tapering and so on is done internally) and plot it like ...
 
     >>> ppsd.add(st) # doctest: +SKIP
-    >>> print ppsd.times # doctest: +SKIP
+    >>> print(ppsd.times) # doctest: +SKIP
     >>> ppsd.plot() # doctest: +SKIP
 
     ... but the example stream is too short and does not contain enough data.
@@ -534,7 +534,7 @@ class PPSD():
                     if success:
                         self.__insert_used_time(t1)
                         if verbose:
-                            print t1
+                            print(t1)
                         changed = True
                 t1 += PPSD_STRIDE  # advance half an hour
 
@@ -560,7 +560,7 @@ class PPSD():
         if len(tr) != self.len:
             msg = "Got an non-one-hour piece of data to process. Skipping"
             warnings.warn(msg)
-            print len(tr), self.len
+            print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
         tr.data = tr.data.astype("float64")
@@ -575,7 +575,7 @@ class PPSD():
         # get instrument response preferably from parser object
         try:
             paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
-        except Exception, e:
+        except Exception as e:
             if self.parser is not None:
                 msg = "Error getting response from parser:\n%s: %s\n" \
                       "Skipping time segment(s)."

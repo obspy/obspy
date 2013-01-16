@@ -16,9 +16,9 @@ Half Octave Bands
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.signal import util
 from scipy import fftpack
 import numpy as np
-import util
 
 
 def sonogram(data, fs, fc1, nofb, no_win):
