@@ -9,6 +9,7 @@ Module for handling ObsPy Stream objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from glob import glob, has_magic
+from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
@@ -203,7 +204,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
+    if isinstance(pathname_or_url, compatibility.string) and \
        pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
@@ -215,7 +216,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _createExampleStream(headonly=headonly)
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, compatibility.string):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -2528,7 +2529,7 @@ def isPickle(filename):  # @UnusedVariable
     >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, compatibility.string):
         try:
             st = pickle.load(open(filename, 'rb'))
         except:
@@ -2554,7 +2555,7 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, compatibility.string):
         return pickle.load(open(filename, 'rb'))
     else:
         return pickle.load(filename)
@@ -2580,7 +2581,7 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, compatibility.string):
         pickle.dump(stream, open(filename, 'wb'), protocol=protocol)
     else:
         pickle.dump(stream, filename, protocol=protocol)
