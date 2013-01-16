@@ -10,7 +10,7 @@ import os
 import platform
 
 
-HPTERROR = -2145916800000000L
+HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
@@ -30,7 +30,7 @@ for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
-    except Exception, e:
+    except Exception as e:
         pass
     else:
         break

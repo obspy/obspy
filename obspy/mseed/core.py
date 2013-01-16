@@ -3,9 +3,10 @@
 MSEED bindings to ObsPy core module.
 """
 
-from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
-    SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, \
-    blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
+from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
+    SAMPLETYPE, DATATYPES, SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, \
+    SelectTime, Selections, blkt_1001_s, VALID_CONTROL_HEADERS, \
+    SEED_CONTROL_HEADERS
 from itertools import izip
 from math import log
 from obspy import Stream, Trace, UTCDateTime
