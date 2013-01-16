@@ -728,10 +728,12 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
 
+# XXX: Disabled for now! A simple call to isSEGY() will trigger the monkey
+# patch. Not really a desired side effect.
 
 # Monkey patch the __str__ method for the all Trace instances used in the
 # following.
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
-setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', __segy_trace__str__)
+#setattr(Trace, '__original_str__', Trace.__str__)
+#setattr(Trace, '__str__', __segy_trace__str__)
