@@ -103,7 +103,8 @@ class QuakeMLTestCase(unittest.TestCase):
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -339,7 +340,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
@@ -453,7 +455,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mt.tensor.m_tp, 3.000e+16)
         self.assertAlmostEqual(mt.clvd, 0.22)
         # exporting back to XML should result in the same document
-        original = open(filename, "rt").read()
+        with open(filename, "rt") as open_file:
+            original = open_file.read()
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
