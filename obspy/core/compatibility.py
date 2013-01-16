@@ -45,6 +45,14 @@ if PY3K is True:
 else:
     range = xrange
 
+# range() in PY3K is an iterator.
+if PY3K is True:
+    izip = zip
+else:
+    from itertools import izip
+    izip = izip
+
+
 # Should work under Python 2 and 3.
 try:
     import cPickle as pickle
