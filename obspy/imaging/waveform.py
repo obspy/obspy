@@ -9,13 +9,13 @@
 #---------------------------------------------------------------------
 from copy import copy
 from datetime import datetime
+import io
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
 from obspy.core.util.decorator import deprecated_keywords
-import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -228,7 +228,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = StringIO.StringIO()
+                imgdata = io.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)
