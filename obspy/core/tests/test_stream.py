@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
+from obspy.core import compatibility
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.base import NamedTemporaryFile
-import cPickle
 import numpy as np
 import os
-import pickle
 import unittest
 import warnings
 
@@ -84,7 +83,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(8, len(stream))
         # This will not create copies of Traces and thus the objects should
         # be identical (and the Traces attributes should be identical).
-        for _i in xrange(4):
+        for _i in compatibility.range(4):
             self.assertEqual(stream[_i], stream[_i + 4])
             self.assertEqual(stream[_i] == stream[_i + 4], True)
             self.assertEqual(stream[_i] != stream[_i + 4], False)
@@ -96,7 +95,7 @@ class StreamTestCase(unittest.TestCase):
         new_stream = stream + other_stream
         self.assertEqual(9, len(new_stream))
         # The traces of all streams are copied.
-        for _i in xrange(8):
+        for _i in compatibility.range(8):
             self.assertEqual(new_stream[_i], stream[_i])
             self.assertEqual(new_stream[_i] is stream[_i], True)
         # Also test for the newly added stream.
@@ -266,9 +265,9 @@ class StreamTestCase(unittest.TestCase):
              4.125, 824.0)]
         # Assert the number of gaps.
         self.assertEqual(len(mseed_gap_list), len(gap_list))
-        for _i in xrange(len(mseed_gap_list)):
+        for _i in compatibility.range(len(mseed_gap_list)):
             # Compare the string values directly.
-            for _j in xrange(6):
+            for _j in compatibility.range(6):
                 self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
             # The small differences are probably due to rounding errors.
             self.assertAlmostEqual(mseed_gap_list[_i][6], gap_list[_i][6],
@@ -327,7 +326,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all remaining Traces.
         self.assertEqual(2, len(stream))
         self.assertEqual(2, len(traces))
-        for _i in xrange(len(traces)):
+        for _i in compatibility.range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -453,7 +452,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all Traces.
         self.assertEqual(4, len(stream))
         self.assertEqual(4, len(traces))
-        for _i in xrange(len(traces)):
+        for _i in compatibility.range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -486,77 +485,77 @@ class StreamTestCase(unittest.TestCase):
         stream = Stream(traces=traces)
         # Test cases:
         stream2 = stream.select()
-        self.assertEquals(stream, stream2)
+        self.assertEqual(stream, stream2)
         self.assertRaises(Exception, stream.select, channel="EHZ",
                           component="N")
         stream2 = stream.select(channel='EHE')
-        self.assertEquals(len(stream2), 0)
+        self.assertEqual(len(stream2), 0)
         stream2 = stream.select(channel='EHZ')
-        self.assertEquals(len(stream2), 2)
+        self.assertEqual(len(stream2), 2)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(component='Z')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(component='n')
-        self.assertEquals(len(stream2), 2)
+        self.assertEqual(len(stream2), 2)
         self.assertTrue(stream[1] in stream2)
         self.assertTrue(stream[3] in stream2)
         stream2 = stream.select(channel='BHZ', npts=100, sampling_rate='20.0',
                                 network='AA', component='Z', station='ZZZZ')
-        self.assertEquals(len(stream2), 1)
+        self.assertEqual(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='EHZ', station="XXXX")
-        self.assertEquals(len(stream2), 1)
+        self.assertEqual(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(network='AA')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(sampling_rate=20.0)
-        self.assertEquals(len(stream2), 2)
+        self.assertEqual(len(stream2), 2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[3] in stream2)
         # tests for wildcarded channel:
         stream2 = stream.select(channel='B*')
-        self.assertEquals(len(stream2), 2)
+        self.assertEqual(len(stream2), 2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[3] in stream2)
         stream2 = stream.select(channel='EH*')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[1] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(channel='*Z')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[0] in stream2)
         self.assertTrue(stream[2] in stream2)
         self.assertTrue(stream[4] in stream2)
         # tests for other wildcard operations:
         stream2 = stream.select(station='[XY]*')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[1] in stream2)
         self.assertTrue(stream[3] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(station='[A-Y]*')
-        self.assertEquals(len(stream2), 3)
+        self.assertEqual(len(stream2), 3)
         self.assertTrue(stream[1] in stream2)
         self.assertTrue(stream[3] in stream2)
         self.assertTrue(stream[4] in stream2)
         stream2 = stream.select(station='[A-Y]??*', network='A?')
-        self.assertEquals(len(stream2), 1)
+        self.assertEqual(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
                                 network='aA', station='ZzZz',)
-        self.assertEquals(len(stream2), 1)
+        self.assertEqual(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
                                 location='00', component='z')
-        self.assertEquals(len(stream2), 1)
+        self.assertEqual(len(stream2), 1)
         self.assertTrue(stream[4] in stream2)
 
     def test_sort(self):
@@ -740,26 +739,26 @@ class StreamTestCase(unittest.TestCase):
         stream = self.mseed_stream
         start = UTCDateTime("2007-12-31T23:59:59.915000")
         end = UTCDateTime("2008-01-01T00:04:31.790000")
-        self.assertEquals(len(stream), 4)
-        self.assertEquals(len(stream[0]), 412)
-        self.assertEquals(len(stream[1]), 824)
-        self.assertEquals(len(stream[2]), 824)
-        self.assertEquals(len(stream[3]), 50668)
-        self.assertEquals(stream[0].stats.starttime, start)
-        self.assertEquals(stream[3].stats.endtime, end)
-        for i in xrange(4):
-            self.assertEquals(stream[i].stats.sampling_rate, 200)
-            self.assertEquals(stream[i].getId(), 'BW.BGLD..EHE')
+        self.assertEqual(len(stream), 4)
+        self.assertEqual(len(stream[0]), 412)
+        self.assertEqual(len(stream[1]), 824)
+        self.assertEqual(len(stream[2]), 824)
+        self.assertEqual(len(stream[3]), 50668)
+        self.assertEqual(stream[0].stats.starttime, start)
+        self.assertEqual(stream[3].stats.endtime, end)
+        for i in compatibility.range(4):
+            self.assertEqual(stream[i].stats.sampling_rate, 200)
+            self.assertEqual(stream[i].getId(), 'BW.BGLD..EHE')
         stream.verify()
         # merge it
         stream.merge()
         stream.verify()
-        self.assertEquals(len(stream), 1)
-        self.assertEquals(len(stream[0]), stream[0].data.size)
-        self.assertEquals(stream[0].stats.starttime, start)
-        self.assertEquals(stream[0].stats.endtime, end)
-        self.assertEquals(stream[0].stats.sampling_rate, 200)
-        self.assertEquals(stream[0].getId(), 'BW.BGLD..EHE')
+        self.assertEqual(len(stream), 1)
+        self.assertEqual(len(stream[0]), stream[0].data.size)
+        self.assertEqual(stream[0].stats.starttime, start)
+        self.assertEqual(stream[0].stats.endtime, end)
+        self.assertEqual(stream[0].stats.sampling_rate, 200)
+        self.assertEqual(stream[0].getId(), 'BW.BGLD..EHE')
 
     def test_mergeGaps2(self):
         """
@@ -845,18 +844,18 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
         # now we split again
         st2 = st.split()
-        self.assertEquals(len(st2), 4)
-        self.assertEquals(len(st2[0]), 412)
-        self.assertEquals(len(st2[1]), 824)
-        self.assertEquals(len(st2[2]), 824)
-        self.assertEquals(len(st2[3]), 50668)
-        self.assertEquals(st2[0].stats.starttime,
+        self.assertEqual(len(st2), 4)
+        self.assertEqual(len(st2[0]), 412)
+        self.assertEqual(len(st2[1]), 824)
+        self.assertEqual(len(st2[2]), 824)
+        self.assertEqual(len(st2[3]), 50668)
+        self.assertEqual(st2[0].stats.starttime,
                           UTCDateTime("2007-12-31T23:59:59.915000"))
-        self.assertEquals(st2[3].stats.endtime,
+        self.assertEqual(st2[3].stats.endtime,
                           UTCDateTime("2008-01-01T00:04:31.790000"))
-        for i in xrange(4):
-            self.assertEquals(st2[i].stats.sampling_rate, 200)
-            self.assertEquals(st2[i].getId(), 'BW.BGLD..EHE')
+        for i in compatibility.range(4):
+            self.assertEqual(st2[i].stats.sampling_rate, 200)
+            self.assertEqual(st2[i].getId(), 'BW.BGLD..EHE')
 
     def test_mergeOverlapsDefaultMethod(self):
         """
@@ -946,7 +945,7 @@ class StreamTestCase(unittest.TestCase):
         # create a stream with multiple traces overlapping
         trace1 = Trace(data=np.empty(10))
         traces = [trace1]
-        for _ in xrange(10):
+        for _ in compatibility.range(10):
             trace = Trace(data=np.empty(10))
             trace.stats.starttime = \
                 traces[-1].stats.endtime - trace1.stats.delta
@@ -993,13 +992,13 @@ class StreamTestCase(unittest.TestCase):
         # merge
         st.merge()
         # compare results
-        self.assertEquals(len(st), 1)
-        self.assertEquals(st[0].stats.delta, 60.0)
-        self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.delta, 60.0)
+        self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
         # endtime of last trace
         endtime = trace1.stats.starttime + \
                   (4 * 1440 - 1) * trace1.stats.delta
-        self.assertEquals(st[0].stats.endtime, endtime)
+        self.assertEqual(st[0].stats.endtime, endtime)
 
     def test_mergeOverlapsMethod1(self):
         """
@@ -1117,10 +1116,10 @@ class StreamTestCase(unittest.TestCase):
         # trim
         st.trim(trace1.stats.starttime, trace4.stats.endtime)
         # compare results
-        self.assertEquals(len(st), 4)
-        self.assertEquals(st[0].stats.delta, 60.0)
-        self.assertEquals(st[0].stats.starttime, trace1.stats.starttime)
-        self.assertEquals(st[3].stats.endtime, trace4.stats.endtime)
+        self.assertEqual(len(st), 4)
+        self.assertEqual(st[0].stats.delta, 60.0)
+        self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
+        self.assertEqual(st[3].stats.endtime, trace4.stats.endtime)
 
     def test_writingMaskedArrays(self):
         """
@@ -1143,43 +1142,20 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr])
         st.verify()
         # protocol 0 (ASCII)
-        temp = pickle.dumps(st, protocol=0)
-        st2 = pickle.loads(temp)
+        temp = compatibility.pickle.dumps(st, protocol=0)
+        st2 = compatibility.pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
+        self.assertEqual(st[0].stats, st2[0].stats)
         # protocol 1 (old binary)
-        temp = pickle.dumps(st, protocol=1)
-        st2 = pickle.loads(temp)
+        temp = compatibility.pickle.dumps(st, protocol=1)
+        st2 = compatibility.pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
+        self.assertEqual(st[0].stats, st2[0].stats)
         # protocol 2 (new binary)
-        temp = pickle.dumps(st, protocol=2)
-        st2 = pickle.loads(temp)
+        temp = compatibility.pickle.dumps(st, protocol=2)
+        st2 = compatibility.pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
-
-    def test_cpickle(self):
-        """
-        Testing pickling of Stream objects..
-        """
-        tr = Trace(data=np.random.randn(1441))
-        st = Stream([tr])
-        st.verify()
-        # protocol 0 (ASCII)
-        temp = cPickle.dumps(st, protocol=0)
-        st2 = cPickle.loads(temp)
-        np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
-        # protocol 1 (old binary)
-        temp = cPickle.dumps(st, protocol=1)
-        st2 = cPickle.loads(temp)
-        np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
-        # protocol 2 (new binary)
-        temp = cPickle.dumps(st, protocol=2)
-        st2 = cPickle.loads(temp)
-        np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEquals(st[0].stats, st2[0].stats)
+        self.assertEqual(st[0].stats, st2[0].stats)
 
     def test_readWritePickle(self):
         """
@@ -1193,15 +1169,15 @@ class StreamTestCase(unittest.TestCase):
         # check and read directly
         self.assertTrue(isPickle(tmpfile), True)
         st2 = readPickle(tmpfile)
-        self.assertEquals(len(st2), 3)
+        self.assertEqual(len(st2), 3)
         np.testing.assert_array_equal(st2[0].data, st[0].data)
         # use read() with given format
         st2 = read(tmpfile2, format='PICKLE')
-        self.assertEquals(len(st2), 3)
+        self.assertEqual(len(st2), 3)
         np.testing.assert_array_equal(st2[0].data, st[0].data)
         # use read() and autodetect format
         st2 = read(tmpfile2)
-        self.assertEquals(len(st2), 3)
+        self.assertEqual(len(st2), 3)
         np.testing.assert_array_equal(st2[0].data, st[0].data)
         # clean up
         os.remove(tmpfile)
@@ -1227,19 +1203,19 @@ class StreamTestCase(unittest.TestCase):
         st.verify()
         # same sampling rate should have no gaps
         gaps = st.getGaps()
-        self.assertEquals(len(gaps), 0)
+        self.assertEqual(len(gaps), 0)
         # different sampling rate should result in a gap
         tr3.stats.sampling_rate = 50.0
         gaps = st.getGaps()
-        self.assertEquals(len(gaps), 1)
+        self.assertEqual(len(gaps), 1)
         # but different ids will be skipped (if only one trace)
         tr3.stats.station = 'MANZ'
         gaps = st.getGaps()
-        self.assertEquals(len(gaps), 0)
+        self.assertEqual(len(gaps), 0)
         # multiple traces with same id will be handled again
         tr2.stats.station = 'MANZ'
         gaps = st.getGaps()
-        self.assertEquals(len(gaps), 1)
+        self.assertEqual(len(gaps), 1)
 
     def test_comparisons(self):
         """
@@ -1382,10 +1358,10 @@ class StreamTestCase(unittest.TestCase):
         st.trim(t + 3.5, t + 6.5)
         start = [4.0, 4.25, 4.5, 3.75, 4.0]
         end = [6.0, 6.25, 6.50, 5.75, 6.0]
-        for i in xrange(len(st)):
-            self.assertEquals(3, st[i].stats.npts)
-            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
-            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+        for i in compatibility.range(len(st)):
+            self.assertEqual(3, st[i].stats.npts)
+            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
+            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
 
     def test_trimConsistentStartEndtimeNearestSamplePadded(self):
         """
@@ -1403,10 +1379,10 @@ class StreamTestCase(unittest.TestCase):
         st.trim(t - 3.5, t + 16.5, pad=True)
         start = [-4.0, -3.75, -3.5, -4.25, -4.0]
         end = [17.0, 17.25, 17.50, 16.75, 17.0]
-        for i in xrange(len(st)):
-            self.assertEquals(22, st[i].stats.npts)
-            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
-            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+        for i in compatibility.range(len(st)):
+            self.assertEqual(22, st[i].stats.npts)
+            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
+            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
 
     def test_trimConsistentStartEndtime(self):
         """
@@ -1424,10 +1400,10 @@ class StreamTestCase(unittest.TestCase):
         start = [4.00, 4.25, 3.50, 3.75, 4.00]
         end = [6.00, 6.25, 6.50, 5.75, 6.00]
         npts = [3, 3, 4, 3, 3]
-        for i in xrange(len(st)):
-            self.assertEquals(st[i].stats.npts, npts[i])
-            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
-            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+        for i in compatibility.range(len(st)):
+            self.assertEqual(st[i].stats.npts, npts[i])
+            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
+            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
 
     def test_trimConsistentStartEndtimePad(self):
         """
@@ -1445,10 +1421,10 @@ class StreamTestCase(unittest.TestCase):
         start = [-3.00, -2.75, -3.50, -3.25, -3.00]
         end = [16.00, 16.25, 16.50, 15.75, 16.00]
         npts = [20, 20, 21, 20, 20]
-        for i in xrange(len(st)):
-            self.assertEquals(st[i].stats.npts, npts[i])
-            self.assertEquals(st[i].stats.starttime.timestamp, start[i])
-            self.assertEquals(st[i].stats.endtime.timestamp, end[i])
+        for i in compatibility.range(len(st)):
+            self.assertEqual(st[i].stats.npts, npts[i])
+            self.assertEqual(st[i].stats.starttime.timestamp, start[i])
+            self.assertEqual(st[i].stats.endtime.timestamp, end[i])
 
     def test_str(self):
         """
@@ -1579,7 +1555,7 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = UTCDateTime(0) + 1000.000001
         st = Stream([tr1, tr2])
         st._cleanup()
-        self.assertEquals(len(st), 2)
+        self.assertEqual(len(st), 2)
         # precision of 4 decimals
         UTCDateTime.DEFAULT_PRECISION = 4
         tr1 = Trace(data=np.ones(1000))
@@ -1588,7 +1564,7 @@ class StreamTestCase(unittest.TestCase):
         tr2.stats.starttime = UTCDateTime(0) + 1000.000001
         st = Stream([tr1, tr2])
         st._cleanup()
-        self.assertEquals(len(st), 1)
+        self.assertEqual(len(st), 1)
         UTCDateTime.DEFAULT_PRECISION = 6
 
     def test_readArguments(self):
@@ -1598,12 +1574,12 @@ class StreamTestCase(unittest.TestCase):
         # 1 - default example
         # dtype
         tr = read(dtype='int64')[0]
-        self.assertEquals(tr.data.dtype, np.int64)
+        self.assertEqual(tr.data.dtype, np.int64)
         # start-/endtime
         tr2 = read(starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
-        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 1)
-        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 2)
+        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
+        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
         tr = read(headonly=True)[0]
         self.assertFalse(tr.data)
@@ -1611,13 +1587,13 @@ class StreamTestCase(unittest.TestCase):
         # 2 - via http
         # dtype
         tr = read('http://examples.obspy.org/test.sac', dtype='int32')[0]
-        self.assertEquals(tr.data.dtype, np.int32)
+        self.assertEqual(tr.data.dtype, np.int32)
         # start-/endtime
         tr2 = read('http://examples.obspy.org/test.sac',
                    starttime=tr.stats.starttime + 1,
                    endtime=tr.stats.endtime - 2)[0]
-        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 1)
-        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 2)
+        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 1)
+        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 2)
         # headonly
         tr = read('http://examples.obspy.org/test.sac', headonly=True)[0]
         self.assertFalse(tr.data)
@@ -1625,13 +1601,13 @@ class StreamTestCase(unittest.TestCase):
         # 3 - some example within obspy
         # dtype
         tr = read('/path/to/slist_float.ascii', dtype='int32')[0]
-        self.assertEquals(tr.data.dtype, np.int32)
+        self.assertEqual(tr.data.dtype, np.int32)
         # start-/endtime
         tr2 = read('/path/to/slist_float.ascii',
                    starttime=tr.stats.starttime + 0.025,
                    endtime=tr.stats.endtime - 0.05)[0]
-        self.assertEquals(tr2.stats.starttime, tr.stats.starttime + 0.025)
-        self.assertEquals(tr2.stats.endtime, tr.stats.endtime - 0.05)
+        self.assertEqual(tr2.stats.starttime, tr.stats.starttime + 0.025)
+        self.assertEqual(tr2.stats.endtime, tr.stats.endtime - 0.05)
         # headonly
         tr = read('/path/to/slist_float.ascii', headonly=True)[0]
         self.assertFalse(tr.data)
@@ -1662,7 +1638,7 @@ class StreamTestCase(unittest.TestCase):
         st[1].data = np.array([])
         # merge
         st.merge(fill_value='interpolate')
-        self.assertEquals(len(st), 1)
+        self.assertEqual(len(st), 1)
 
     def test_rotate(self):
         """

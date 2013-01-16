@@ -3,11 +3,12 @@
 MSEED bindings to ObsPy core module.
 """
 
+from obspy.core.compatibility import izip
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
     SAMPLETYPE, DATATYPES, SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, \
     SelectTime, Selections, blkt_1001_s, VALID_CONTROL_HEADERS, \
     SEED_CONTROL_HEADERS
-from itertools import izip
+from obspy.mseed import util
 from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
@@ -15,7 +16,6 @@ from obspy.mseed.headers import blkt_100_s
 import ctypes as C
 import numpy as np
 import os
-import util
 import warnings
 
 
@@ -43,7 +43,7 @@ def isMSEED(filename):
     if len(header) != 7:
         return False
     # Sequence number must contains a single number or be empty
-    seqnr = header[0:6].replace('\x00', ' ').strip()
+    seqnr = header[0:6].replace(b'\x00', b' ')
     if not seqnr.isdigit() and seqnr != '':
         return False
     # Check for any valid control header types.

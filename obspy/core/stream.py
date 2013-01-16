@@ -17,7 +17,6 @@ from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
 from pkg_resources import load_entry_point
-import pickle
 import copy
 import fnmatch
 import math
@@ -44,7 +43,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
@@ -180,10 +179,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from StringIO import StringIO
+        >>> from io import BytesIO
         >>> import urllib
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urllib.urlopen(example_url).read())
+        >>> stringio_obj = BytesIO(urllib.urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -2531,12 +2530,12 @@ def isPickle(filename):  # @UnusedVariable
     """
     if isinstance(filename, compatibility.string):
         try:
-            st = pickle.load(open(filename, 'rb'))
+            st = compatibility.pickle.load(open(filename, 'rb'))
         except:
             return False
     else:
         try:
-            st = pickle.load(filename)
+            st = compatibility.pickle.load(filename)
         except:
             return False
     return isinstance(st, Stream)
@@ -2556,9 +2555,9 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     if isinstance(filename, compatibility.string):
-        return pickle.load(open(filename, 'rb'))
+        return compatibility.pickle.load(open(filename, 'rb'))
     else:
-        return pickle.load(filename)
+        return compatibility.pickle.load(filename)
 
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
@@ -2582,9 +2581,10 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :param protocol: Pickle protocol, defaults to ``2``.
     """
     if isinstance(filename, compatibility.string):
-        pickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+        compatibility.pickle.dump(stream, open(filename, 'wb'),
+            protocol=protocol)
     else:
-        pickle.dump(stream, filename, protocol=protocol)
+        compatibility.pickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':
