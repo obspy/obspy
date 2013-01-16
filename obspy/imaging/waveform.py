@@ -11,6 +11,7 @@ from copy import copy
 from datetime import datetime
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
+from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
 from obspy.core.util.decorator import deprecated_keywords
@@ -128,7 +129,7 @@ class WaveformPlotting(object):
         if self.type == 'dayplot':
             self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
                                               '#0E01FF'))
-            if isinstance(self.color, basestring):
+            if isinstance(self.color, compatibility.string):
                 self.color = (self.color,)
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
@@ -390,7 +391,7 @@ class WaveformPlotting(object):
                 events = c.getEvents(min_datetime=self.starttime,
                         max_datetime=self.endtime, format="catalog",
                         min_magnitude=events["min_magnitude"])
-            except Exception, e:
+            except Exception as e:
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)
