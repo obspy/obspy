@@ -542,7 +542,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         try:
             self.IsSACfile(fname)
-        except SacError, e:
+        except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
@@ -553,7 +553,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 self.hf = self.hi = self.hs = None
                 f.close()
                 raise SacError(e)
@@ -599,7 +599,7 @@ class SacIO(object):
                 self.hf.tofile(f)
                 self.hi.tofile(f)
                 self.hs.tofile(f)
-            except Exception, e:
+            except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
         f.close()
@@ -655,7 +655,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 f.close()
                 raise SacError(e)
         #--------------------------------------------------------------
@@ -730,7 +730,7 @@ class SacIO(object):
             # read in the seismogram points
             #--------------------------------------------------------------
             self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
@@ -788,13 +788,13 @@ class SacIO(object):
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline()  # strip the newline
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
         try:
             self.IsSACfile(fname, fsize=False)
-        except SacError, e:
+        except SacError as e:
             f.close()
             raise SacError(e)
         try:
@@ -900,7 +900,7 @@ class SacIO(object):
             self.hi.tofile(f)
             self.hs.tofile(f)
             self.seis.tofile(f)
-        except Exception, e:
+        except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)

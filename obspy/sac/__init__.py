@@ -59,7 +59,8 @@ stats and stats['sac'] are written with the following command to a file:
 >>> st.write('tmp.sac', format='SAC') #doctest: +SKIP
 """
 
-from sacio import SacIO, SacError, SacIOError, attach_paz, attach_resp
+from obspy.sac.sacio import SacIO, SacError, SacIOError, attach_paz, \
+    attach_resp
 
 
 if __name__ == '__main__':
