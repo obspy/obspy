@@ -351,11 +351,14 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         def __repr__(self):
             return self.__str__()
 
-        def __nonzero__(self):
+        def __bool__(self):
             if any([bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
+
+        def __nonzero__(self):
+            return self.__bool__()
 
         def __eq__(self, other):
             """
