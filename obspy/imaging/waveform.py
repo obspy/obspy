@@ -157,13 +157,13 @@ class WaveformPlotting(object):
         tr_id = tr.id
         # don't merge normal traces with previews
         try:
-            if tr.stats.preview:
+            if "preview" in tr.stats and tr.stats.preview:
                 tr_id += 'preview'
         except KeyError:
             pass
         # don't merge traces with different processing steps
         try:
-            if tr.stats.processing:
+            if "processing" in tr.stats and tr.stats.processing:
                 tr_id += str(tr.stats.processing)
         except KeyError:
             pass
