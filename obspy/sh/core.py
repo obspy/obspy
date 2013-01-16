@@ -9,8 +9,9 @@ SH bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from StringIO import StringIO
+from io import StringIO
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core import compatibility
 from obspy.core import Stats
 from obspy.core.util import loadtxt
 import numpy as np
@@ -56,9 +57,11 @@ SH_IDX = {
 
 STANDARD_ASC_HEADERS = ['START', 'COMP', 'CHAN1', 'CHAN2', 'STATION', 'CALIB']
 
-SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
-SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('R')]
-INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
+SH_KEYS_INT = [k for (k, v) in compatibility.iteritems(SH_IDX)
+    if v.startswith('I')]
+SH_KEYS_FLOAT = [k for (k, v) in compatibility.iteritems(SH_IDX)
+    if v.startswith('R')]
+INVERTED_SH_IDX = dict([(v, k) for (k, v) in compatibility.iteritems(SH_IDX)])
 
 
 def isASC(filename):

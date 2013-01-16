@@ -108,10 +108,15 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-    _null_trans = string.maketrans("", "")
-    s = open(filename).read(blocksize)
-    if "\0" in s:
+    text_characters = "".join(list(map(chr, range(32, 127))) + \
+        list("\n\r\t\b"))
+    #text_characters = text_characters.encode()
+    try:
+        _null_trans = str.maketrans("", "")
+    except:
+        _null_trans = string.maketrans("", "")
+    s = open(filename, "rb").read(blocksize)
+    if b"\0" in s:
         return False
 
     if not s:  # Empty files are considered text
