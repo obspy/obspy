@@ -60,14 +60,14 @@ if not clibgse2:
     raise ImportError(msg)
 
 
-class ChksumError(StandardError):
+class ChksumError(Exception):
     """
     Exception type for mismatching checksums
     """
     pass
 
 
-class GSEUtiError(StandardError):
+class GSEUtiError(Exception):
     """
     Exception type for other errors in GSE_UTI
     """
@@ -102,12 +102,12 @@ class HEADER(C.Structure):
 
 # ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
 # pointer descriptor
-C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-C.pythonapi.PyFile_AsFile.restype = c_file_p
+#C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
+#C.pythonapi.PyFile_AsFile.restype = c_file_p
 
 # reading C memory into buffer which can be converted to numpy array
-C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
+#C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
+#C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
 
 ## gse_functions read_header
 clibgse2.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
@@ -226,7 +226,8 @@ def uncompress_CM6(f, n_samps):
     :param n_samps: Number of samples
     """
     # transform to a C file pointer
-    fp = C.pythonapi.PyFile_AsFile(f)
+    #fp = C.pythonapi.PyFile_AsFile(f)
+    fp = C.fdopen(f.fileno)
     data = np.empty(n_samps, dtype='int32')
     n = clibgse2.decomp_6b(fp, n_samps, data)
     if n != n_samps:
@@ -286,7 +287,8 @@ def read(f, verify_chksum=True):
     :rtype: Dictionary, Numpy.ndarray int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
+    #fp = C.pythonapi.PyFile_AsFile(f)
+    fp = C.fdopen(f.fileno)
     head = HEADER()
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
@@ -348,7 +350,8 @@ def write(headdict, data, f, inplace=False):
         'hang': float,
         'vang': float
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
+    #fp = C.pythonapi.PyFile_AsFile(f)
+    fp = C.fdopen(f.fileno)
     n = len(data)
     clibgse2.buf_init(None)
     #
@@ -395,7 +398,8 @@ def readHead(f):
     :rtype: Dictionary
     :return: Header entries.
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
+    #fp = C.pythonapi.PyFile_AsFile(f)
+    fp = C.fdopen(f.fileno)
     head = HEADER()
     clibgse2.read_header(fp, C.pointer(head))
     headdict = {}
@@ -419,7 +423,8 @@ def getStartAndEndTime(f):
     :return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
              Julian seconds and as date string.
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
+    #fp = C.pythonapi.PyFile_AsFile(f)
+    fp = C.fdopen(f.fileno)
     head = HEADER()
     clibgse2.read_header(fp, C.pointer(head))
     seconds = int(head.t_sec)
