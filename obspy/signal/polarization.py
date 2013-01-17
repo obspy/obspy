@@ -147,8 +147,6 @@ def flinn(stream,noise_thres=0):
             N.append(stream[1][i])
             E.append(stream[2][i])
 
-    new_points = len(Z)
-
     covmat = np.zeros([3, 3])
     X = np.vstack((E,N,Z))
     covmat = np.cov(X)
@@ -316,7 +314,6 @@ def particle_motion_ord(stream,noise_thres=0):
             N.append(stream[1][i])
             E.append(stream[2][i])
 
-    new_points = len(Z)
 
     try:
         import scipy.odr

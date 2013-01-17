@@ -688,7 +688,7 @@ def setupPackage(gfortran=True, ccompiler=True):
 
 
 if __name__ == '__main__':
-    gfortran = True
+    gfortran = False
     ccompiler = True
     # the following construct will retry building even if the C or gfortran
     # compilers are missing - it will warn the user if something went wrong
