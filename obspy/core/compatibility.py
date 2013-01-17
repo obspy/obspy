@@ -52,10 +52,13 @@ else:
     from itertools import izip
     izip = izip
 
-
 # Should work under Python 2 and 3.
 try:
     import cPickle as pickle
 except:
     import pickle
-pickle = pickle
+
+if PY3K is True:
+    from urllib.request import urlopen
+else:
+    from urllib2 import urlopen
