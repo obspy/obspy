@@ -33,7 +33,7 @@ Simple ASCII time series formats
 """
 from io import BytesIO
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
+from obspy.core import compatibility, Stats
 from obspy.core.util import AttribDict, loadtxt
 import numpy as np
 
@@ -131,11 +131,11 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
             continue
         elif key:
             # data entry - may be written in multiple columns
-            headers[key].write(line.strip() + ' ')
+            headers[key].write((line.strip() + ' ').encode())
     fh.close()
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in compatibility.iteritems(headers):
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -201,7 +201,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     fh.close()
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in compatibility.iteritems(headers):
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
