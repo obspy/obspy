@@ -18,12 +18,13 @@ def isGSE2(filename):
     :return: ``True`` if a GSE2 file.
     """
     # Open file.
+    f = open(filename)
     try:
-        f = open(filename)
         libgse2.isGse2(f)
-        f.close()
     except:
+        f.close()
         return False
+    f.close()
     return True
 
 
@@ -176,10 +177,11 @@ def isGSE1(filename):
     :return: ``True`` if a GSE1 file.
     """
     # Open file.
+    f = open(filename)
     try:
-        f = open(filename)
         data = f.readline()
     except:
+        f.close()
         return False
     f.close()
     if data.startswith('WID1') or data.startswith('XW01'):

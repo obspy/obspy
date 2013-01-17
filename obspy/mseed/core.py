@@ -41,16 +41,20 @@ def isMSEED(filename):
     header = fp.read(7)
     # File has less than 7 characters
     if len(header) != 7:
+        fp.close()
         return False
     # Sequence number must contains a single number or be empty
     seqnr = header[0:6].replace(b'\x00', b' ')
     if not seqnr.isdigit() and seqnr != '':
+        fp.close()
         return False
     # Check for any valid control header types.
     if header[6] in ['D', 'R', 'Q', 'M']:
+        fp.close()
         return True
     # Check if Full-SEED
     if not header[6] == 'V':
+        fp.close()
         return False
     # Parse the whole file and check whether it has has a data record.
     fp.seek(1, 1)
@@ -66,16 +70,19 @@ def isMSEED(filename):
         try:
             fp.seek(int(fp.read(4)) - 7, 1)
         except:
+            fp.close()
             return False
         _i += 1
         # break after 3 cycles
         if _i == 3:
+            fp.close()
             return False
     # Try to get a record length.
     fp.seek(8, 1)
     try:
         record_length = pow(2, int(fp.read(2)))
     except:
+        fp.close()
         return False
     file_size = os.path.getsize(filename)
     # Jump to the second record.
@@ -85,8 +92,10 @@ def isMSEED(filename):
     while fp.tell() < file_size:
         flag = fp.read(1)
         if flag in ['D', 'R', 'Q', 'M']:
+            fp.close()
             return True
         fp.seek(record_length - 1, 1)
+    fp.close()
     return False
 
 

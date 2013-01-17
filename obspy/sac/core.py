@@ -69,8 +69,8 @@ def isSACXY(filename):
     ### http://code.activestate.com/
     if not _isText(filename, blocksize=512):
         return False
+    f = open(filename)
     try:
-        f = open(filename)
         hdcards = []
         # read in the header cards
         for _i in xrange(30):
@@ -79,7 +79,9 @@ def isSACXY(filename):
         # read in the seismogram
         seis = f.read(-1).split()
     except:
+        f.close()
         return False
+    f.close()
     # check that npts header value and seismogram length are consistent
     if npts != len(seis):
         return False
