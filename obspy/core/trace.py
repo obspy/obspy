@@ -402,6 +402,13 @@ class Trace(object):
             st += self.copy()
         return st
 
+    def __truediv__(self, num):
+        """
+        '/' does not map to __div__ anymore in Python 3. Therefore is is mapped
+        here.
+        """
+        return self.__div__(num)
+
     def __div__(self, num):
         """
         Splits Trace into new Stream containing num Traces of the same size.
@@ -415,10 +422,10 @@ class Trace(object):
 
         >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr / 7
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 429 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z ... | 100.0 Hz, 429 samples

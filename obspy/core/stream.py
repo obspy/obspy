@@ -22,7 +22,6 @@ import fnmatch
 import math
 import numpy as np
 import os
-import urllib
 import warnings
 
 
@@ -180,9 +179,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     (5) Reading a file-like object.
 
         >>> from io import BytesIO
-        >>> import urllib
+        >>> from obspy.core.compatibility import urlopen
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = BytesIO(urllib.urlopen(example_url).read())
+        >>> stringio_obj = BytesIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -237,7 +236,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib.urlopen(pathname_or_url).read())
+        fh.write(compatibility.urlopen(pathname_or_url).read())
         fh.close()
         st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         os.remove(fh.name)
@@ -2530,7 +2529,8 @@ def isPickle(filename):  # @UnusedVariable
     """
     if isinstance(filename, compatibility.string):
         try:
-            st = compatibility.pickle.load(open(filename, 'rb'))
+            with open(filename, "rb") as open_file:
+                st = compatibility.pickle.load(open_file)
         except:
             return False
     else:
@@ -2555,7 +2555,8 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :return: A ObsPy Stream object.
     """
     if isinstance(filename, compatibility.string):
-        return compatibility.pickle.load(open(filename, 'rb'))
+        with open(filename, "rb") as open_file:
+            return compatibility.pickle.load(open_file)
     else:
         return compatibility.pickle.load(filename)
 
@@ -2581,8 +2582,8 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :param protocol: Pickle protocol, defaults to ``2``.
     """
     if isinstance(filename, compatibility.string):
-        compatibility.pickle.dump(stream, open(filename, 'wb'),
-            protocol=protocol)
+        with open(filename, "wb") as open_file:
+            compatibility.pickle.dump(stream, open_file, protocol=protocol)
     else:
         compatibility.pickle.dump(stream, filename, protocol=protocol)
 

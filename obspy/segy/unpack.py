@@ -11,7 +11,7 @@
 Functions that will all take a file pointer and the sample count and return a
 numpy array with the unpacked values.
 """
-from util import clibsegy
+from obspy.segy.util import clibsegy
 
 import ctypes as C
 import numpy as np

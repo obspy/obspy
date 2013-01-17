@@ -80,7 +80,8 @@ def isASC(filename):
     """
     # first six chars should contain 'DELTA:'
     try:
-        temp = open(filename, 'rb').read(6)
+        with open(filename, "rb") as open_file:
+            temp = open_file.read(6)
     except:
         return False
     if temp != 'DELTA:':
@@ -305,7 +306,8 @@ def isQ(filename):
     """
     # file must start with magic number 43981
     try:
-        temp = open(filename, 'rb').read(5)
+        with open(filename, "rb") as open_file:
+            temp = open_file.read(5)
     except:
         return False
     if temp != '43981':

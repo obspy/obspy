@@ -8,6 +8,7 @@
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 from obspy import UTCDateTime, Trace
+from obspy.core import compatibility
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 import numpy as np
 import os
@@ -115,7 +116,8 @@ def _isText(filename, blocksize=512):
         _null_trans = str.maketrans("", "")
     except:
         _null_trans = string.maketrans("", "")
-    s = open(filename, "rb").read(blocksize)
+    with open(filename, "rb") as open_file:
+        s = open_file.read(blocksize)
     if b"\0" in s:
         return False
 
@@ -828,7 +830,7 @@ class SacIO(object):
         self.fromarray(trace.data, begin=b, delta=trace.stats.delta,
                        starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in compatibility.iteritems(convert_dict):
             self.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
         # note that the SAC reference time values (including B and E) are
@@ -1252,7 +1254,7 @@ class SacIO(object):
         """
         header = {}
         # convert common header types of the ObsPy trace object
-        for i, j in convert_dict.iteritems():
+        for i, j in compatibility.iteritems(convert_dict):
             value = self.GetHvalue(i)
             if isinstance(value, str):
                 null_term = value.find('\x00')

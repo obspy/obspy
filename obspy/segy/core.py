@@ -383,11 +383,11 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace.data = trace.data
         # Create empty trace header if none is there.
         if not hasattr(trace.stats, 'segy'):
-            print "CREATING TRACE HEADER"
+            print("CREATING TRACE HEADER")
             trace.stats.segy = {}
             trace.stats.segy.trace_header = SEGYTraceHeader(endian=byteorder)
         elif not hasattr(trace.stats.segy, 'trace_header'):
-            print "CREATING TRACE HEADER"
+            print("CREATING TRACE HEADER")
             trace.stats.segy.trace_header = SEGYTraceHeader()
         this_trace_header = trace.stats.segy.trace_header
         new_trace_header = new_trace.header

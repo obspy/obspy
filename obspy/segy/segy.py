@@ -16,8 +16,8 @@ from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
 from struct import pack, unpack
-from unpack import OnTheFlyDataUnpacker
-import StringIO
+from obspy.segy.unpack import OnTheFlyDataUnpacker
+from io import BytesIO
 import numpy as np
 import os
 
@@ -305,7 +305,7 @@ class SEGYFile(object):
         """
         self.traces = []
         # Determine the filesize once.
-        if isinstance(self.file, StringIO.StringIO):
+        if isinstance(self.file, BytesIO):
             filesize = self.file.len
         else:
             filesize = os.fstat(self.file.fileno())[6]
@@ -469,7 +469,7 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            if isinstance(self.file, StringIO.StringIO):
+            if isinstance(self.file, BytesIO):
                 self.filesize = self.file.len
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
@@ -963,7 +963,7 @@ def autodetectEndianAndSanityCheckSU(file):
     the Trace header.
     """
     pos = file.tell()
-    if isinstance(file, StringIO.StringIO):
+    if isinstance(file, BytesIO):
         size = file.len
     else:
         size = os.fstat(file.fileno())[6]

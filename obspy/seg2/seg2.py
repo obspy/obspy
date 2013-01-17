@@ -17,8 +17,8 @@ from struct import unpack
 import warnings
 
 from obspy import Trace, Stream, UTCDateTime
-from obspy.core import AttribDict
-from header import MONTHS
+from obspy.core import AttribDict, compatibility
+from obspy.seg2.header import MONTHS
 
 
 class SEG2BaseError(Exception):
@@ -58,7 +58,7 @@ class SEG2(object):
         beginning of the SEG-2 file.
         """
         # Read the file if it is a filename.
-        if isinstance(file_object, basestring):
+        if isinstance(file_object, compatibility.string):
             self.file_pointer = open(file_object, 'rb')
         else:
             self.file_pointer = file_object
@@ -252,7 +252,7 @@ class SEG2(object):
 
 
 def isSEG2(filename):
-    if isinstance(filename, basestring):
+    if isinstance(filename, compatibility.string):
         is_filename = True
         file_pointer = open(filename, 'rb')
     else:

@@ -1162,8 +1162,10 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         # write
-        tmpfile = NamedTemporaryFile().name
-        tmpfile2 = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
+        tmpfile2_object = NamedTemporaryFile()
+        tmpfile2 = tmpfile2_object.name
         writePickle(st, tmpfile)
         st.write(tmpfile2, format='PICKLE')
         # check and read directly
@@ -1180,6 +1182,8 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st2), 3)
         np.testing.assert_array_equal(st2[0].data, st[0].data)
         # clean up
+        tmpfile_object.close()
+        tmpfile2_object.close()
         os.remove(tmpfile)
         os.remove(tmpfile2)
 

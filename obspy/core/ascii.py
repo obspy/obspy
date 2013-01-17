@@ -31,7 +31,7 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from StringIO import StringIO
+from io import BytesIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
@@ -56,7 +56,8 @@ def isSLIST(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, "rt") as open_file:
+            temp = open_file.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -81,7 +82,8 @@ def isTSPAIR(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, "rt") as open_file:
+            temp = open_file.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -123,7 +125,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
         elif line.startswith('TIMESERIES'):
             # new header line
             key = line
-            headers[key] = StringIO()
+            headers[key] = BytesIO()
         elif headonly:
             # skip data for option headonly
             continue
@@ -454,7 +456,7 @@ def _parse_data(data, data_type):
     data.seek(0)
     # Data will always be a StringIO. Avoid to send empty StringIOs to
     # numpy.readtxt() which raises a warning.
-    if not data.buf:
+    if not data:
         return np.array([], dtype=dtype)
     return loadtxt(data, dtype=dtype, ndlim=1)
 
