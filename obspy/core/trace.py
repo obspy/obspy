@@ -9,6 +9,7 @@ Module for handling ObsPy Trace objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import deepcopy, copy
+from obspy.core import compatibility
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
@@ -835,21 +836,22 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((starttime - self.stats.starttime) *
-                          self.stats.sampling_rate)
+            delta = compatibility.round_away(
+                (starttime - self.stats.starttime) * self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                         float(self.stats.sampling_rate)
-                newdelta = round((starttime - newstarttime) *
-                                 self.stats.sampling_rate)
+                newdelta = compatibility.round_away(
+                    (starttime - newstarttime) * self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
-            delta = int(math.floor(round((self.stats.starttime - starttime) *
-                                          self.stats.sampling_rate, 7))) * -1
+            # Seven digits. The wrapped round_away is not necessary.
+            delta = int(math.floor(round((self.stats.starttime - starttime) * \
+                self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -895,15 +897,16 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) *
+            delta = compatibility.round_away((endtime - self.stats.starttime) *
                            self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
             #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
             #                       self.stats.sampling_rate, 7)))
-            delta = int(math.floor(round((endtime - self.stats.endtime) *
-                                   self.stats.sampling_rate, 7)))
+            # Seven digit rounding. The wrapped round_away is not necessary.
+            delta = int(math.floor(round((endtime - self.stats.endtime) * \
+                self.stats.sampling_rate, 7)))
         if delta == 0 or (delta > 0 and not pad):
             return
         if delta > 0 and pad:

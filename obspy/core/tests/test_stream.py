@@ -1383,7 +1383,7 @@ class StreamTestCase(unittest.TestCase):
         st.trim(t - 3.5, t + 16.5, pad=True)
         start = [-4.0, -3.75, -3.5, -4.25, -4.0]
         end = [17.0, 17.25, 17.50, 16.75, 17.0]
-        for i in compatibility.range(len(st)):
+        for i in range(len(st)):
             self.assertEqual(22, st[i].stats.npts)
             self.assertEqual(st[i].stats.starttime.timestamp, start[i])
             self.assertEqual(st[i].stats.endtime.timestamp, end[i])
