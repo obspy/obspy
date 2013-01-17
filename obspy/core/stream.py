@@ -1339,12 +1339,12 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = round((starttime - tr.stats.starttime) * \
-                               tr.stats.sampling_rate)
+                delta = compatibility.round((starttime - tr.stats.starttime) \
+                    * tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = round((endtime - tr.stats.endtime) * \
-                               tr.stats.sampling_rate)
+                delta = compatibility.round((endtime - tr.stats.endtime) * \
+                    tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
