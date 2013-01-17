@@ -82,11 +82,21 @@ def round_away(number):
     3
     >>> round_away(-2.5)
     -3
+
+    >>> round_away(10.5)
+    11
+    >>> round_away(-10.5)
+    -11
+
+    >>> round_away(11.0)
+    11
+    >>> round_away(-11.0)
+    -11
     """
     floor = np.floor(number)
     ceil = np.ceil(number)
-    if (abs(number - floor) == abs(ceil - number)):
-        return int(int(number) + np.sign(number))
+    if (floor != ceil) and (abs(number - floor) == abs(ceil - number)):
+        return int(int(number) + int(np.sign(number)))
     else:
         return int(np.round(number))
 
