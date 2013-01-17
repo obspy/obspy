@@ -109,13 +109,15 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(list(map(chr, range(32, 127))) + \
-        list("\n\r\t\b"))
-    #text_characters = text_characters.encode()
-    try:
-        _null_trans = str.maketrans("", "")
-    except:
-        _null_trans = string.maketrans("", "")
+    # Differentiate between Python 2 and 3. In this case this is really
+    # necessary.
+    if bytes == str:
+        _null_trans = "".join(map(chr, range(256)))
+        text_characters = "".join(list(map(chr, range(32, 127))) + \
+            list("\n\r\t\b"))
+    else:
+        _null_trans = bytes(range(256))
+        text_characters = bytes(range(32, 127)) +  "\n\r\t\b".encode()
     with open(filename, "rb") as open_file:
         s = open_file.read(blocksize)
     if b"\0" in s:
