@@ -100,7 +100,7 @@ class Field(object):
         """
         try:
             text = self.read(data, blockette.strict)
-        except Exception, e:
+        except Exception as e:
             if blockette.strict:
                 raise e
             # default value if not set

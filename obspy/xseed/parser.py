@@ -12,6 +12,7 @@ Main module containing XML-SEED parser.
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
+from obspy.core import compatibility
 from obspy.core.util import getExampleFile, deprecated_keywords
 from io import BytesIO
 import math
@@ -19,7 +20,6 @@ import os
 import warnings
 import zipfile
 import copy
-import urllib2
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -149,7 +149,7 @@ class Parser(object):
                     pass
             if "://" in data:
                 # some URL
-                data = urllib2.urlopen(data).read()
+                data = compatibility.urlopen(data).read()
             elif os.path.isfile(data):
                 # looks like a file - read it
                 data = open(data, 'rb').read()
