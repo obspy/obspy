@@ -4,6 +4,7 @@ GSE2/GSE1 bindings to ObsPy core module.
 """
 
 from obspy import Trace, UTCDateTime, Stream
+from obspy.core import compatibility
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
 
@@ -91,7 +92,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
             # assign all header entries to a new dictionary compatible with an
             # ObsPy Trace object.
             new_header = {}
-            for i, j in convert_dict.iteritems():
+            for i, j in compatibility.iteritems(convert_dict):
                 value = header[i]
                 if isinstance(value, str):
                     value = value.strip()
@@ -141,7 +142,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     f = open(filename, 'wb')
     for trace in stream:
         header = {}
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in compatibility.iteritems(convert_dict):
             header[_j] = trace.stats[_k]
         for _j in gse2_extra:
             try:

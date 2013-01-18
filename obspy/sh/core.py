@@ -173,7 +173,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
         header['sh'] = {}
         channel = [' ', ' ', ' ']
         # generate headers
-        for key, value in headers.iteritems():
+        for key, value in compatibility.iteritems(headers):
             if key == 'DELTA':
                 header['delta'] = float(value)
             elif key == 'LENGTH':
@@ -256,28 +256,28 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         fh = open(filename, 'wb')
     for trace in stream:
         # write headers
-        fh.write("DELTA: %-.6e\n" % (trace.stats.delta))
-        fh.write("LENGTH: %d\n" % trace.stats.npts)
+        fh.write(("DELTA: %-.6e\n" % (trace.stats.delta)).encode())
+        fh.write(("LENGTH: %d\n" % trace.stats.npts).encode())
         # additional headers
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in compatibility.iteritems(trace.stats.get('sh', {})):
             if included_headers and key not in included_headers:
                 continue
             fh.write("%s: %s\n" % (key, value))
         # special format for start time
         if "START" in included_headers:
             dt = trace.stats.starttime
-            fh.write("START: %s\n" % fromUTCDateTime(dt))
+            fh.write(("START: %s\n" % fromUTCDateTime(dt)).encode())
         # component must be split
         if len(trace.stats.channel) > 2 and "COMP" in included_headers:
-            fh.write("COMP: %c\n" % trace.stats.channel[2])
+            fh.write(("COMP: %c\n" % trace.stats.channel[2]).encode())
         if len(trace.stats.channel) > 0 and "CHAN1" in included_headers:
-            fh.write("CHAN1: %c\n" % trace.stats.channel[0])
+            fh.write(("CHAN1: %c\n" % trace.stats.channel[0]).encode())
         if len(trace.stats.channel) > 1 and "CHAN2" in included_headers:
-            fh.write("CHAN2: %c\n" % trace.stats.channel[1])
+            fh.write(("CHAN2: %c\n" % trace.stats.channel[1]).encode())
         if "STATION" in included_headers:
-            fh.write("STATION: %s\n" % trace.stats.station)
+            fh.write(("STATION: %s\n" % trace.stats.station).encode())
         if "CALIB" in included_headers:
-            fh.write("CALIB: %-.6e\n" % (trace.stats.calib))
+            fh.write(("CALIB: %-.6e\n" % (trace.stats.calib)).encode())
         # write data in npl columns
         mask = ([''] * (npl - 1)) + ['\n']
         delimiter = mask * ((trace.stats.npts / npl) + 1)
@@ -381,7 +381,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     cmtlines = int(line[5:7]) - 1
     # comment lines
     comments = []
-    for _i in xrange(0, cmtlines):
+    for _i in compatibility.range(0, cmtlines):
         comments += [fh.readline()]
     # trace lines
     traces = {}
@@ -538,7 +538,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         # special format for start time
         dt = trace.stats.starttime
         temp += "S021:%s~ " % fromUTCDateTime(dt)
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in compatibility.iteritems(trace.stats.get('sh', {})):
             # skip unknown keys
             if not key or key not in SH_IDX.keys():
                 continue
@@ -554,16 +554,17 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     # first line: magic number, cmtlines, trclines
     # XXX: comment lines are ignored
     if not append:
-        fh.write("43981 1 %d\n" % minnol)
+        fh.write(("43981 1 %d\n" % minnol).encode())
 
     for i, trace in enumerate(stream):
         # write headers
         temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
-        for j in xrange(0, minnol):
+        for j in compatibility.range(0, minnol):
             try:
-                fh.write("%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j]))
+                fh.write(("%02d|%s\n" % ((i + 1 + count_offset) % 100,
+                    temp[j])).encode())
             except:
-                fh.write("%02d|\n" % ((i + 1 + count_offset) % 100))
+                fh.write(("%02d|\n" % ((i + 1 + count_offset) % 100)).encode())
         # write data in given byte order
         dtype = byteorder + 'f4'
         data = np.require(trace.data, dtype=dtype)

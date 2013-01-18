@@ -3,6 +3,7 @@
 MSEED bindings to ObsPy core module.
 """
 
+from obspy.core import compatibility
 from obspy.core.compatibility import izip
 from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
     SAMPLETYPE, DATATYPES, SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, \
@@ -327,7 +328,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             trace = Trace(header=header, data=data)
             # Append information if necessary.
             if recinfo:
-                for key, value in info.iteritems():
+                for key, value in compatibility.iteritems(info):
                     setattr(trace.stats.mseed, key, value)
             traces.append(trace)
             # A Null pointer access results in a ValueError
@@ -414,7 +415,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking NumPy support.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
+    encoding_strings = dict([(v[0], k) for (k, v) in
+        compatibility.iteritems(ENCODINGS)])
 
     if encoding is not None:
         if isinstance(encoding, int) and encoding in ENCODINGS:

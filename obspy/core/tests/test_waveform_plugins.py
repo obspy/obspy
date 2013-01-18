@@ -211,7 +211,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 streams.append(st)
             # Read the ten files at one and save the output in the just created
             # class.
-            for _i in xrange(n_threads):
+            for _i in range(n_threads):
                 thread = threading.Thread(target=testFunction,
                                           args=(streams,))
                 thread.start()
