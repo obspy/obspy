@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
+from io import BytesIO
 from lxml import etree
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
@@ -303,7 +303,7 @@ class ParserTestCase(unittest.TestCase):
                 xseed_string = parser2.getXSEED(version=version)
                 del parser2
                 # Validate XSEED.
-                doc = etree.parse(StringIO(xseed_string))
+                doc = etree.parse(BytesIO(xseed_string))
                 self.assertTrue(xmlschema.validate(doc))
                 del doc
                 parser3 = Parser(xseed_string)
@@ -368,7 +368,7 @@ class ParserTestCase(unittest.TestCase):
         # And the same for yet another dataless file
         #
         filename = os.path.join(self.path, 'nied.dataless.gz')
-        f = StringIO(gzip.open(filename).read())
+        f = BytesIO(gzip.open(filename).read())
         sp = Parser(f)
         gain = [+3.94857E+03, +4.87393E+04, +3.94857E+03]
         zeros = [[+0.00000E+00 + 0.00000E+00j, +0.00000E+00 + 0.00000E+00j],
