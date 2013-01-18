@@ -139,7 +139,7 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into BytesIO object
-        if isinstance(data, basestring):
+        if isinstance(data, compatibility.string):
             # if it starts with /path/to/ try to search in examples
             if data.startswith('/path/to/'):
                 try:
@@ -154,7 +154,10 @@ class Parser(object):
                 # looks like a file - read it
                 data = open(data, 'rb').read()
             # but could also be a big string with data
-            data = BytesIO(data)
+            try:
+                data = BytesIO(data)
+            except:
+                data = BytesIO(data.encode())
         elif not hasattr(data, "read"):
             raise TypeError
         # check first byte of data BytesIO object
@@ -251,8 +254,8 @@ class Parser(object):
         Writes a XML-SEED file with given name.
         """
         result = self.getXSEED(*args, **kwargs)
-        if isinstance(result, basestring):
-            open(filename, 'w').write(result)
+        if isinstance(result, compatibility.string):
+            open(filename, 'wb').write(result)
             return
         elif isinstance(result, dict):
             for key, value in result.iteritems():
@@ -263,7 +266,7 @@ class Parser(object):
                 else:
                     # current meta data - leave original filename
                     fn = filename
-                open(fn, 'w').write(value)
+                open(fn, 'wb').write(value)
             return
         else:
             raise TypeError
@@ -560,9 +563,9 @@ class Parser(object):
             # Write single files.
             for response in new_resp_list:
                 if folder:
-                    file = open(os.path.join(folder, response[0]), 'w')
+                    file = open(os.path.join(folder, response[0]), 'wb')
                 else:
-                    file = open(response[0], 'w')
+                    file = open(response[0], 'wb')
                 response[1].seek(0, 0)
                 file.write(response[1].read())
                 file.close()
@@ -588,11 +591,11 @@ class Parser(object):
         temp = data.read(8)
         # Check whether it starts with record sequence number 1 and a volume
         # index control header.
-        if temp != '000001V ':
+        if temp != b'000001V ':
             raise SEEDParserException("Expecting 000001V ")
         # The first blockette has to be Blockette 10.
         temp = data.read(3)
-        if temp not in ['010', '008', '005']:
+        if temp not in [b'010', b'008', b'005']:
             raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
         data.seek(4, 1)
@@ -603,7 +606,7 @@ class Parser(object):
         # Test record length.
         data.seek(length)
         temp = data.read(6)
-        if temp != '000002':
+        if temp != b'000002':
             msg = "Got an invalid logical record length %d" % length
             raise SEEDParserException(msg)
         self.record_length = length
@@ -659,7 +662,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, basestring):
+                    if isinstance(network_id, compatibility.string):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():

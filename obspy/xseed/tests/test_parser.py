@@ -251,7 +251,7 @@ class ParserTestCase(unittest.TestCase):
         """
         # Loop over all files.
         for file in self.BW_SEED_files:
-            f = open(file, 'r')
+            f = open(file, 'rb')
             # Original SEED file.
             original_seed = f.read()
             f.seek(0)
@@ -286,7 +286,7 @@ class ParserTestCase(unittest.TestCase):
             # Path to XML schema file.
             xsd_path = os.path.join(self.path, 'xml-seed-%s.xsd' % version)
             # Prepare validator.
-            f = open(xsd_path, 'r')
+            f = open(xsd_path, 'rb')
             xmlschema_doc = etree.parse(f)
             f.close()
             xmlschema = etree.XMLSchema(xmlschema_doc)

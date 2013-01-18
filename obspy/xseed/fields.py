@@ -348,9 +348,9 @@ class VariableString(Field):
             # default value
             if data:
                 # create a full SEED date string
-                temp = "0000,000,00:00:00.0000"
+                temp = b"0000,000,00:00:00.0000"
                 data += temp[len(data):]
-                return UTCDateTime(data)
+                return UTCDateTime(data.decode())
             if self.default_value:
                 return self.default_value
             if self.min_length:
@@ -368,7 +368,7 @@ class VariableString(Field):
         buffer = ''
         if self.min_length:
             buffer = data.read(self.min_length)
-            if '~' in buffer:
+            if b'~' in buffer:
                 return buffer.split('~')[0]
         temp = ''
         i = self.min_length
