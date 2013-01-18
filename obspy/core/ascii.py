@@ -453,12 +453,13 @@ def _parse_data(data, data_type):
         dtype = "float32"
     else:
         raise NotImplementedError
-    # Seek to the beginning of the BytesIO.
-    data.seek(0)
     # Data will always be a BytesIO. Avoid to send empty BytesIO to
     # numpy.readtxt() which raises a warning.
-    if not data:
+    data.seek(0)
+    if not data.read(1):
         return np.array([], dtype=dtype)
+    data.seek(0)
+
     return loadtxt(data, dtype=dtype, ndlim=1)
 
 
