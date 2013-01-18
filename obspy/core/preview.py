@@ -9,6 +9,7 @@ Tools for creating and merging previews.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from copy import copy
+from obspy.core import compatibility
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
@@ -210,7 +211,7 @@ def resamplePreview(trace, samples, method='accurate'):
     elif method == 'accurate':
         new_data = np.empty(samples, dtype=dtype)
         step = trace.stats.npts / float(samples)
-        for _i in xrange(samples):
+        for _i in compatibility.range(samples):
             new_data[_i] = trace.data[int(_i * step):
                                       int((_i + 1) * step)].max()
         trace.data = new_data
