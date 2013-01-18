@@ -841,7 +841,7 @@ class SacIO(object):
         for _i in SAC_EXTRA:
             try:
                 self.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
+            except AttributeError:
                 pass
         return
 

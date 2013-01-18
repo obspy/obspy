@@ -59,6 +59,14 @@ if not clibgse2:
     msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (e)
     raise ImportError(msg)
 
+# Import libc. This is hopefully somewhat platform independent.
+try:
+    try:
+        libc = C.CDLL("libc.so.6")
+    except:
+        libc = C.CDLL("libc.dylib")
+except:
+    libc = C.cdll.msvcrt
 
 class ChksumError(Exception):
     """
@@ -104,6 +112,9 @@ class HEADER(C.Structure):
 # pointer descriptor
 #C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 #C.pythonapi.PyFile_AsFile.restype = c_file_p
+
+libc.fdopen.argtypes = [C.c_int, C.c_char_p]
+libc.fdopen.restype = c_file_p
 
 # reading C memory into buffer which can be converted to numpy array
 #C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
@@ -288,7 +299,7 @@ def read(f, verify_chksum=True):
     :return: Header entries and data as numpy.ndarray of type int32.
     """
     #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = C.fdopen(f.fileno)
+    fp = libc.fdopen(f.fileno(), "r")
     head = HEADER()
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
@@ -351,7 +362,7 @@ def write(headdict, data, f, inplace=False):
         'vang': float
     """
     #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = C.fdopen(f.fileno)
+    fp = libc.fdopen(f.fileno(), b"w")
     n = len(data)
     clibgse2.buf_init(None)
     #
@@ -399,7 +410,7 @@ def readHead(f):
     :return: Header entries.
     """
     #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = C.fdopen(f.fileno)
+    fp = libc.fdopen(f.fileno(), b"r")
     head = HEADER()
     clibgse2.read_header(fp, C.pointer(head))
     headdict = {}

@@ -9,7 +9,7 @@ SH bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from io import StringIO
+from io import BytesIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import compatibility
 from obspy.core import Stats
@@ -126,11 +126,11 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
     .TEST..BHE | 2009-10-01T12:46:01.000000Z - ... | 20.0 Hz, 801 samples
     .WET..HHZ  | 2010-01-01T01:01:05.999000Z - ... | 100.0 Hz, 4001 samples
     """
-    fh = open(filename, 'rt')
+    fh = open(filename, 'rb')
     # read file and split text into channels
     channels = []
     headers = {}
-    data = StringIO()
+    data = BytesIO()
     for line in fh.readlines()[skip:]:
         if line.isspace():
             # blank line
@@ -142,7 +142,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
             channels.append((headers, data))
             # create new channel
             headers = {}
-            data = StringIO()
+            data = BytesIO()
             if skip:
                 # if skip is set only one trace is read, everything else makes
                 # no sense.

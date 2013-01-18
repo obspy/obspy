@@ -717,12 +717,12 @@ class MSTG(object):
         c_dtype = DATATYPES[sampletype]
 
         # Set the header values.
-        chain.contents.network = trace.stats.network
-        chain.contents.station = trace.stats.station
-        chain.contents.location = trace.stats.location
-        chain.contents.channel = trace.stats.channel
-        chain.contents.dataquality = dataquality
-        chain.contents.type = '\x00'
+        chain.contents.network = trace.stats.network.encode()
+        chain.contents.station = trace.stats.station.encode()
+        chain.contents.location = trace.stats.location.encode()
+        chain.contents.channel = trace.stats.channel.encode()
+        chain.contents.dataquality = dataquality.encode()
+        chain.contents.type = b'\x00'
         chain.contents.starttime = \
                 util._convertDatetimeToMSTime(trace.stats.starttime)
         chain.contents.endtime = \
@@ -730,7 +730,7 @@ class MSTG(object):
         chain.contents.samprate = trace.stats.sampling_rate
         chain.contents.samplecnt = trace.stats.npts
         chain.contents.numsamples = trace.stats.npts
-        chain.contents.sampletype = sampletype
+        chain.contents.sampletype = sampletype.encode()
 
         # Create a single datapoint and resize its memory to be able to
         # hold all datapoints.
