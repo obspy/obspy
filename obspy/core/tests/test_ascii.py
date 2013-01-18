@@ -307,7 +307,6 @@ class ASCIITestCase(unittest.TestCase):
         stream_orig = readTSPAIR(testfile)
         tmpfile_object = NamedTemporaryFile()
         tmpfile = tmpfile_object.name
-        tmpfile_object.close()
         # write
         writeTSPAIR(stream_orig, tmpfile)
         # look at the raw data
@@ -357,6 +356,7 @@ class ASCIITestCase(unittest.TestCase):
         data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
         # clean up
+        tmpfile_object.close()
         os.remove(tmpfile)
 
     def test_writeSLIST(self):

@@ -1,3 +1,5 @@
+    # Data will always be a BytesIO. Avoid to send empty BytesIO to
+    # numpy.readtxt() which raises a warning.
 # -*- coding: utf-8 -*-
 """
 Simple ASCII time series formats
@@ -34,7 +36,7 @@ Simple ASCII time series formats
 from io import BytesIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import compatibility, Stats
-from obspy.core.util import AttribDict, loadtxt
+from obspy.core.util import AttribDict, loadtxt, OrderedDict
 import numpy as np
 
 
@@ -116,7 +118,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     fh = open(filename, 'rb')
     # read file and split text into channels
-    headers = {}
+    headers = OrderedDict()
     key = None
     for line in fh:
         if line.isspace():
@@ -182,7 +184,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     fh = open(filename, 'rb')
     # read file and split text into channels
-    headers = {}
+    headers = OrderedDict()
     key = None
     for line in fh:
         if line.isspace():
