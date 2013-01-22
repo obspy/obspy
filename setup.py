@@ -24,7 +24,7 @@ For more information visit http://www.obspy.org.
 from distutils.ccompiler import get_default_compiler
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsExecError, CompileError
-from distutils.unixccompiler import UnixCCompiler, _darwin_compiler_fixup
+from distutils.unixccompiler import UnixCCompiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
@@ -350,31 +350,22 @@ else:
     # Monkey patch CCompiler for Unix, Linux and Mac
     # Pretend .f is a C extension and change corresponding compilation call
     CCompiler.language_map['.f'] = "c"
-    # Monkey patch UnixCCompiler for Unix, Linux and MacOS
     UnixCCompiler.src_extensions.append(".f")
 
-    def _compile(self, obj, src, *args, **kwargs):  # @UnusedVariable
-        # we check if 'taup' is in sources
-        IS_FORTRAN = False
+    def _compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts): \
+            # @UnusedVariable
+        # FORTRAN if 'taup' is in sources
         if 'taup' in src:
-            IS_FORTRAN = True
-        if not IS_FORTRAN:
-            # otherwise we just use the original compile method
-            UnixCCompiler.linker_so = None
-            return self._original_compile(obj, src, *args, **kwargs)
-        UnixCCompiler.linker_so = ["gfortran"]
-        self.compiler_so = ["gfortran"]
-        cc_args = ['-c', '-fno-underscoring']
-        if sys.platform == 'darwin':
-            self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                      cc_args)
-        else:
-            cc_args.append('-fPIC')
-        try:
-            self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
-        except DistutilsExecError:
-            _, msg, _ = sys.exc_info()
-            raise CompileError(msg)
+            self.linker_so[0] = "gfortran"
+            self.compiler_so[0] = "gfortran"
+            cc_args = list(cc_args)  # copy
+            cc_args.append('-fno-underscoring')
+            try:
+                self.compiler_so.remove("-Wstrict-prototypes")
+            except ValueError:
+                pass
+        return self._original_compile(obj, src, ext, cc_args, extra_postargs,
+            pp_opts)
     UnixCCompiler._original_compile = UnixCCompiler._compile
     UnixCCompiler._compile = _compile
 
