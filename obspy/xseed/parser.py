@@ -664,12 +664,15 @@ class Parser(object):
                                 new_id += _i
                         network_id = int(new_id)
                     network_name = self._get_abbreviation(network_id)
-                    info["networks"].append({"network_code": current_network,
-                        "network_name": network_name})
+                    cur_nw = {"network_code": current_network,
+                        "network_name": network_name}
+                    if cur_nw not in info["networks"]:
+                        info["networks"].append(cur_nw)
                     current_station = blkt.station_call_letters.strip()
-                    info["stations"].append({"station_id": "%s.%s" %
-                        (current_network, current_station),
-                        "station_name": blkt.site_name})
+                    cur_stat = {"station_id": "%s.%s" % (current_network,
+                        current_station), "station_name": blkt.site_name}
+                    if cur_stat not in info["stations"]:
+                        info["stations"].append(cur_stat)
                     continue
                 if blkt.id == 52:
                     if current_network is None or current_station is None:
