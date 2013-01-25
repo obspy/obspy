@@ -842,11 +842,11 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     return transff
 
 
-def nop(pow_map, apow_map, i):
-    pass
-
-
 def dump(pow_map, apow_map, i):
+    """
+    Example function to use with `store` kwarg in
+    :func:`~obspy.signal.array_analysis.array_processing`.
+    """
     np.savez('pow_map_%d.npz' % i, pow_map)
     np.savez('apow_map_%d.npz' % i, apow_map)
 
@@ -854,7 +854,7 @@ def dump(pow_map, apow_map, i):
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
     verbose=False, coordsys='lonlat', timestamp='mlabday', method=0,
-    store=nop):
+    store=None):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -900,11 +900,12 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         date plotting (see e.g. matplotlibs num2date)
     :type method: int
     :param method: the method to use 0 == bf, 1 == capon
-    :type store: int
-    :param store: a function which is called on each iteration with the
-        relative power map and the time offset as argument. Usefull for storing
-        or plotting the map for each iteration. For this purpose the dump and
-        nop function of this module can be used.
+    :type store: function
+    :param store: A custom function which gets called on each iteration. It is
+        called with the relative power map and the time offset as first and
+        second arguments and the iteration number as third argument. Useful for
+        storing or plotting the map for each iteration. For this purpose the
+        dump function of this module can be used.
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
@@ -998,7 +999,8 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             raise Exception(msg % errcode)
         ix, iy = np.unravel_index(relpow_map.argmax(), relpow_map.shape)
         relpow, abspow = relpow_map[ix, iy], abspow_map[ix, iy]
-        store(relpow_map, abspow_map, offset)
+        if store is not None:
+            store(relpow_map, abspow_map, offset)
         # here we compute baz, slow
         slow_x = sll_x + ix * sl_s
         slow_y = sll_y + iy * sl_s
