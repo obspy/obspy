@@ -52,6 +52,7 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
+    'matplotlib',
     'lxml',
     'sqlalchemy',
     'suds>=0.4.0']
