@@ -123,7 +123,8 @@ def eigval(datax, datay, dataz, fk, normf=1):
 def flinn(stream,noise_thres=0):
     """
     Computes the azimuth, incidence, rectilinearity and planarity after the eigenstructur decomposition method
-    of Flinn (1965). 
+    of [Flinn1965b]_.
+
     :param stream: ZNE sorted trace data
     :param noise_tresh: variance of noise sphere; data points are excluded when falling within the sphere with radius 
      sqrt(noise_thres), default is set to 0 
@@ -185,7 +186,7 @@ def instantFreq(data,sampling_rate):
 
 def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     """
-    Adaptive window polarization analysis after Vidale (1986) with the modification of adapted analysis
+    Adaptive window polarization analysis after [Vidale1986]_ with the modification of adapted analysis
     window estimated by estimating the instantenous frequency. It returns the azimuth, incidence, rectilinearty
     planarity and ellipticity.
     :param stream: ZNE sorted trace data

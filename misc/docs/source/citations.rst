@@ -32,6 +32,10 @@ Citations
    | Flinn, E. A. and Engdahl, E. R. (1965),
    | **A proposed basis for geographical and seismic regionalization**,
    | *Reviews of Geophysics*, 3 (1), 123-149.
+.. [Flinn1965b]  
+   | Flinn, E. A. (1965),
+   | **Signal analysis using rectilinearity and direction of particle motion**,
+   | *Proceedings of the IEEE*, 53 (12), 1874-1876.
 .. [Flinn1974]  
    | Flinn, E. A., Engdahl, E. R., and Hill, A. R. (1974),
    | **Seismic and geographical regionalization**,
@@ -124,6 +128,10 @@ Citations
    | **Application of Mwp to deep and teleseismic earthquakes**,
    | *Bulletin of the Seismological Society of America*, 89 (5), 1345-1351.
    | http://www.bssaonline.org/content/89/5/1345.abstract
+.. [Vidale1986]  
+   | Vidale, J. E. (1986),
+   | **Complex polarization analysis of particle motion**,
+   | *Bulletin of the Seismological Society of America*, 76 (5), 1393-1405.
 .. [Withers1998]  
    | Withers, M., Aster, R., Young, C., Beiriger, J., Harris, M., Moore, S., and Trujillo, J. (1998),
    | **A comparison of select trigger algorithms for automated global seismic phase and event detection**,
