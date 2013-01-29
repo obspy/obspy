@@ -171,7 +171,7 @@ def flinn(stream,noise_thres=0):
 
     return azimuth,incidence,rect,plan
 
-def instFreq(data,sampling_rate):
+def instantFreq(data,sampling_rate):
     """
     simple program to estimate the instaneuous frequency based on the derivative
     of data and the analytical (hilbert) data
@@ -215,7 +215,6 @@ def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float, float
     """
     newstart = stime
-    print etime
 
     W = 3.
     stream.sort(reverse=True)
@@ -223,11 +222,11 @@ def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     N = stream[1].data.copy()
     E = stream[2].data.copy()
 
-    Zi = instFreq(Z,fs)
+    Zi = instantFreq(Z,fs)
     Za = sp.signal.hilbert(Z)
-    Ni = instFreq(N,fs)
+    Ni = instantFreq(N,fs)
     Na = sp.signal.hilbert(N)
-    Ei = instFreq(E,fs)
+    Ei = instantFreq(E,fs)
     Ea = sp.signal.hilbert(E)
     res = []
 
