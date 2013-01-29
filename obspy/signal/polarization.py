@@ -18,15 +18,9 @@ Polarization Analysis
 import math
 import warnings
 import numpy as np
-import scipy as sp
-from obspy.signal.util import utlGeoKm, nextpow2
-from obspy.signal.headers import clibsignal
-from obspy.core import Stream
-from obspy.core.util.decorator import deprecated
-from scipy.optimize import anneal
+from scipy import signal
 from scipy.optimize import fminbound
 from obspy.signal.invsim import cosTaper
-from obspy.signal.filter import bandpass
 
 
 def eigval(datax, datay, dataz, fk, normf=1):
@@ -181,7 +175,7 @@ def instantFreq(data,sampling_rate):
     :type sampling_rate: float
     """
     x = data.copy()
-    X = sp.signal.hilbert(x)
+    X = signal.hilbert(x)
     DX = np.gradient(X)*sampling_rate
 
     instf = ((X.real*DX.imag - X.imag*DX.real)/(2*math.pi*(abs(X)**2)))
@@ -223,11 +217,11 @@ def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     E = stream[2].data.copy()
 
     Zi = instantFreq(Z,fs)
-    Za = sp.signal.hilbert(Z)
+    Za = signal.hilbert(Z)
     Ni = instantFreq(N,fs)
-    Na = sp.signal.hilbert(N)
+    Na = signal.hilbert(N)
     Ei = instantFreq(E,fs)
-    Ea = sp.signal.hilbert(E)
+    Ea = signal.hilbert(E)
     res = []
 
     #tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
