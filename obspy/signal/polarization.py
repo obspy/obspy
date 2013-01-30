@@ -199,7 +199,7 @@ def instantFreq(data, sampling_rate):
     return instf
 
 
-def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
+def vidaleAdapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     """
     Adaptive window polarization analysis after [Vidale1986]_ with the
     modification of adapted analysis window estimated by estimating the
@@ -245,8 +245,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
 
     #tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
     offset = int(3 * fs / flow)
-    eotr = True
-    while eotr:
+    while True:
         adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
         # in order to account for errors in the inst freq estimation
         if adapt > int(3 * fs / flow):
@@ -312,7 +311,7 @@ def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     return res
 
 
-def particle_motion_ord(stream, noise_thres=0):
+def particleMotionOdr(stream, noise_thres=0):
     """
     Computes the orientation of the particle motion vector based on
     orthogonal regression algorithm.
@@ -383,7 +382,7 @@ def particle_motion_ord(stream, noise_thres=0):
     return azim, inc, az_error, in_error
 
 
-def get_spoint(stream, stime, etime):
+def getSpoint(stream, stime, etime):
     """
     Function for computing trace dependend start time in samples
 
@@ -430,9 +429,9 @@ def get_spoint(stream, stime, etime):
     return spoint, epoint
 
 
-def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
-                          etime, verbose=False, timestamp='mlabday', method=0,
-                          var_noise=0.0):
+def polarizationAnalysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
+                         etime, verbose=False, timestamp='mlabday',
+                         method="pm", var_noise=0.0):
     """
     Method for Flinn/Jurkevics/ParticleMotion/Vidale calling
 
@@ -460,14 +459,16 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         returns the timestamp in days (decimals represent hours, minutes
         and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
         date plotting (see e.g. matplotlibs num2date)
-    :type method: int
-    :param method: the method to use 0 == PM, 1 == flinn, 2 == vidale
+    :type method: str
+    :param method: the method to use. one of "pm", "flinn" or "vidale".
     :return numpy.ndarray of timestamp, azimuth, incidence, reclin (az_error),
         plan (in_error), (ellip):
     """
-    PM, FLINN, VIDALE = 0, 1, 2
+    if method.lower() not in ["pm", "flinn", "vidale"]:
+        msg = "Invalid method ('%s')" % method
+        raise ValueError(msg)
+
     res = []
-    eotr = True
 
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
@@ -481,12 +482,12 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         print("stime = " + str(stime) + ", etime = " + str(etime))
 
     # offset of arrays
-    spoint, _epoint = get_spoint(stream, stime, etime)
+    spoint, _epoint = getSpoint(stream, stime, etime)
     # loop with a sliding window over the dat trace array and apply bbfk
     fs = stream[0].stats.sampling_rate
-    if method == VIDALE:
-        res = vidale_adapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
-                           stime, etime)
+    if method.lower() == "vidale":
+        res = vidaleAdapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
+                          stime, etime)
     else:
         nsamp = int(win_len * fs)
         nstep = int(nsamp * win_frac)
@@ -495,7 +496,7 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
         tap = cosTaper(nsamp, p=0.22)
         offset = 0
         # tr.sort(reverse=True)
-        while eotr:
+        while (newstart + (nsamp + nstep) / fs) < etime:
             try:
                 data = []
                 Z = []
@@ -515,27 +516,26 @@ def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
                 data.append(Z)
                 data.append(N)
                 data.append(E)
-
             except IndexError:
                 break
-        if method == PM:
-            azimuth, incidence, error_az, error_inc = \
-                particle_motion_ord(data, var_noise)
-            if abs(error_az) < 0.1 and abs(error_inc) < 0.1:
+
+            if method.lower() == "pm":
+                azimuth, incidence, error_az, error_inc = \
+                    particleMotionOdr(data, var_noise)
+                if abs(error_az) < 0.1 and abs(error_inc) < 0.1:
+                    res.append(np.array([newstart.timestamp + nsamp / fs,
+                                         azimuth, incidence, error_az,
+                                         error_inc]))
+            if method.lower() == "flinn":
+                azimuth, incidence, reclin, plan = flinn(data, var_noise)
                 res.append(np.array([newstart.timestamp + nsamp / fs, azimuth,
-                                     incidence, error_az, error_inc]))
-        if method == FLINN:
-            azimuth, incidence, reclin, plan = flinn(data, var_noise)
-            res.append(np.array([newstart.timestamp + nsamp / fs, azimuth,
-                                 incidence, reclin, plan]))
+                                     incidence, reclin, plan]))
 
-        if verbose:
-            print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
-        if (newstart + (nsamp + nstep) / fs) > etime:
-            eotr = False
-        offset += nstep
+            if verbose:
+                print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
+            offset += nstep
 
-        newstart += nstep / fs
+            newstart += nstep / fs
     res = np.array(res)
     if timestamp == 'julsec':
         pass
