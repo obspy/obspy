@@ -1105,7 +1105,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
@@ -1375,7 +1375,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
@@ -1553,7 +1553,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     if show:
         plt.show()
     else:
-        if len(st.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
