@@ -2,7 +2,7 @@
 #-------------------------------------------------------------------
 # Filename: polarization.py
 #   Author: Conny Hammer,Joachim Wassermann
-#    Email: conny.hammer@geo.uni-potsdam.de,j.wassermann@lmu.de 
+#    Email: conny.hammer@geo.uni-potsdam.de,j.wassermann@lmu.de
 #
 # Copyright (C) 2008-2012 Conny Hammer, 2013 Joachim Wassermann
 #-------------------------------------------------------------------
@@ -20,6 +20,7 @@ import warnings
 import numpy as np
 from scipy import signal
 from scipy.optimize import fminbound
+import scipy.odr
 from obspy.signal.invsim import cosTaper
 
 
@@ -86,112 +87,128 @@ def eigval(datax, datay, dataz, fk, normf=1):
     leigenv3 = leigenv3 / normf
 
     leigenv1_add = np.append(np.append([leigenv1[0]] * (np.size(fk) // 2),
-           leigenv1), [leigenv1[np.size(leigenv1) - 1]] * (np.size(fk) // 2))
+                                       leigenv1),
+                             [leigenv1[np.size(leigenv1) - 1]] *
+                             (np.size(fk) // 2))
     dleigenv1 = signal.lfilter(fk, 1, leigenv1_add)
     dleigenv[:, 0] = dleigenv1[len(fk) - 1:]
     #dleigenv1 = dleigenv1[np.size(fk) // 2:(np.size(dleigenv1) - np.size(fk) /
     #        2)]
 
     leigenv2_add = np.append(np.append([leigenv2[0]] * (np.size(fk) // 2),
-           leigenv2), [leigenv2[np.size(leigenv2) - 1]] * (np.size(fk) // 2))
+                                       leigenv2),
+                             [leigenv2[np.size(leigenv2) - 1]] *
+                             (np.size(fk) // 2))
     dleigenv2 = signal.lfilter(fk, 1, leigenv2_add)
     dleigenv[:, 1] = dleigenv2[len(fk) - 1:]
     #dleigenv2 = dleigenv2[np.size(fk) // 2:(np.size(dleigenv2) - np.size(fk) /
     #        2)]
 
     leigenv3_add = np.append(np.append([leigenv3[0]] * (np.size(fk) // 2),
-           leigenv3), [leigenv3[np.size(leigenv3) - 1]] * (np.size(fk) // 2))
+                                       leigenv3),
+                             [leigenv3[np.size(leigenv3) - 1]] *
+                             (np.size(fk) // 2))
     dleigenv3 = signal.lfilter(fk, 1, leigenv3_add)
     dleigenv[:, 2] = dleigenv3[len(fk) - 1:]
     #dleigenv3 = dleigenv3[np.size(fk) // 2:(np.size(dleigenv3) - np.size(fk) /
     #        2)]
 
-    rect_add = np.append(np.append([rect[0]] * (np.size(fk) // 2),
-           rect), [rect[np.size(rect) - 1]] * (np.size(fk) // 2))
+    rect_add = np.append(np.append([rect[0]] * (np.size(fk) // 2), rect),
+                         [rect[np.size(rect) - 1]] * (np.size(fk) // 2))
     drect = signal.lfilter(fk, 1, rect_add)
     drect = drect[len(fk) - 1:]
     #drect = drect[np.size(fk) // 2:(np.size(drect3) - np.size(fk) // 2)]
 
-    plan_add = np.append(np.append([plan[0]] * (np.size(fk) // 2),
-           plan), [plan[np.size(plan) - 1]] * (np.size(fk) // 2))
+    plan_add = np.append(np.append([plan[0]] * (np.size(fk) // 2), plan),
+                         [plan[np.size(plan) - 1]] * (np.size(fk) // 2))
     dplan = signal.lfilter(fk, 1, plan_add)
     dplan = dplan[len(fk) - 1:]
     #dplan = dplan[np.size(fk) // 2:(np.size(dplan) - np.size(fk) // 2)]
 
     return leigenv1, leigenv2, leigenv3, rect, plan, dleigenv, drect, dplan
 
-def flinn(stream,noise_thres=0):
+
+def flinn(stream, noise_thres=0):
     """
-    Computes the azimuth, incidence, rectilinearity and planarity after the eigenstructur decomposition method
-    of [Flinn1965b]_.
+    Computes the azimuth, incidence, rectilinearity and planarity after the
+    eigenstructur decomposition method of [Flinn1965b]_.
 
     :param stream: ZNE sorted trace data
-    :param noise_tresh: variance of noise sphere; data points are excluded when falling within the sphere with radius 
-     sqrt(noise_thres), default is set to 0 
+    :param noise_tresh: variance of noise sphere; data points are excluded when
+        falling within the sphere with radius
+     sqrt(noise_thres), default is set to 0
     :type noise_thres: float
-    :return azimuth, incidence, reclin, plan:  azimuth, incidence, rectilinearity and planarity
+    :return azimuth, incidence, reclin, plan:  azimuth, incidence,
+        rectilinearity and planarity
     :type azimuth, incidence, reclin, plan: flaot, float, float, float
     """
 
-    
-    Z =[]; N = []; E = []
-    comp,npts = np.shape(stream)
-    for i in xrange(0,npts):
-       if (stream[0][i]**2 + stream[1][i]**2  + stream[2][i]**2) > noise_thres:
+    Z = []
+    N = []
+    E = []
+    comp, npts = np.shape(stream)
+    for i in xrange(0, npts):
+        if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
+           > noise_thres:
             Z.append(stream[0][i])
             N.append(stream[1][i])
             E.append(stream[2][i])
 
     covmat = np.zeros([3, 3])
-    X = np.vstack((E,N,Z))
+    X = np.vstack((E, N, Z))
     covmat = np.cov(X)
     eigvec, eigenval, v = (np.linalg.svd(covmat))
     rect = 1 - (eigenval[1] / eigenval[0])
-    plan = 1 - math.sqrt(eigenval[2]/eigenval[1])
-    azimuth = 180 * math.atan2(eigvec[0][0],eigvec[1][0]) / math.pi
-    eve = np.sqrt(eigvec[0][0]**2 + eigvec[1][0]**2)
-    incidence = 180 * math.atan2(eve,eigvec[2][0]) / math.pi
+    plan = 1 - math.sqrt(eigenval[2] / eigenval[1])
+    azimuth = 180 * math.atan2(eigvec[0][0], eigvec[1][0]) / math.pi
+    eve = np.sqrt(eigvec[0][0] ** 2 + eigvec[1][0] ** 2)
+    incidence = 180 * math.atan2(eve, eigvec[2][0]) / math.pi
     if azimuth < 0.:
-         azimuth = 360. + azimuth
+        azimuth = 360. + azimuth
     if incidence < 0.0:
-         incidence += 180.
+        incidence += 180.
     if incidence > 90.:
-         incidence = 180. - incidence
-         if azimuth > 180.:
-             azimuth -= 180.
-         else :
-             azimuth += 180.
+        incidence = 180. - incidence
+        if azimuth > 180.:
+            azimuth -= 180.
+        else:
+            azimuth += 180.
     if azimuth > 180.:
-         azimuth -= 180.;
+        azimuth -= 180.
 
-    return azimuth,incidence,rect,plan
+    return azimuth, incidence, rect, plan
 
-def instantFreq(data,sampling_rate):
+
+def instantFreq(data, sampling_rate):
     """
-    simple program to estimate the instaneuous frequency based on the derivative
-    of data and the analytical (hilbert) data
+    simple program to estimate the instaneuous frequency based on the
+    derivative of data and the analytical (hilbert) data
+
     :param data: ndarray(dtype(float))
     :type data: ndarray(dtype(float))
-    :param sampling_rate: in Hz 
+    :param sampling_rate: in Hz
     :type sampling_rate: float
     """
     x = data.copy()
     X = signal.hilbert(x)
-    DX = np.gradient(X)*sampling_rate
+    DX = np.gradient(X) * sampling_rate
 
-    instf = ((X.real*DX.imag - X.imag*DX.real)/(2*math.pi*(abs(X)**2)))
-    
+    instf = (X.real * DX.imag - X.imag * DX.real) / \
+            (2 * math.pi * (abs(X) ** 2))
+
     return instf
 
 
-def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
+def vidale_adapt(stream, noise_thres, fs, flow, fhigh, spoint, stime, etime):
     """
-    Adaptive window polarization analysis after [Vidale1986]_ with the modification of adapted analysis
-    window estimated by estimating the instantenous frequency. It returns the azimuth, incidence, rectilinearty
+    Adaptive window polarization analysis after [Vidale1986]_ with the
+    modification of adapted analysis window estimated by estimating the
+    instantenous frequency. It returns the azimuth, incidence, rectilinearity
     planarity and ellipticity.
+
     :param stream: ZNE sorted trace data
-    :param noise_thres: variance of noise sphere; data points are excluded when falling within the sphere with radius 
-    sqrt(noise_thres), Default = 0, 
+    :param noise_thres: variance of noise sphere; data points are excluded when
+        falling within the sphere with radius sqrt(noise_thres), Default = 0
     :type noise_thres: float
     :param fs: sampling rate
     :type fs: float
@@ -205,9 +222,10 @@ def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     :type stime: UTCDateTime
     :param etime: endtime (UTCDateTime) for analysis
     :type etime: UTCDateTime
-    :return azimuth, incidence, rectlit, plan, ellip: azimuth, incidence, rectilinearty
-        planarity and ellipticity
-    :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float, float
+    :return azimuth, incidence, rectlit, plan, ellip: azimuth, incidence,
+        rectilinearity planarity and ellipticity
+    :type azimuth, incidence, rectlit, plan, ellip: float, float, float, float,
+        float
     """
     newstart = stime
 
@@ -217,155 +235,158 @@ def vidale_adapt(stream,noise_thres,fs,flow,fhigh,spoint,stime,etime):
     N = stream[1].data.copy()
     E = stream[2].data.copy()
 
-    Zi = instantFreq(Z,fs)
+    Zi = instantFreq(Z, fs)
     Za = signal.hilbert(Z)
-    Ni = instantFreq(N,fs)
+    Ni = instantFreq(N, fs)
     Na = signal.hilbert(N)
-    Ei = instantFreq(E,fs)
+    Ei = instantFreq(E, fs)
     Ea = signal.hilbert(E)
     res = []
 
     #tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
-    offset = int(3*fs/(flow))
+    offset = int(3 * fs / flow)
     eotr = True
     while eotr:
-            adapt = (int)(3.*W*fs/(Zi[offset]+Ni[offset]+Ei[offset]))
-            # in order to account for errors in the inst freq estimation 
-            if adapt > int(3*fs/(flow)): adapt = int(3*fs/(flow))
-            if adapt < int(3*fs/(fhigh)): adapt = int(3*fs/(fhigh))
-            adapt /= 2
-            adapt = (2*adapt)+1
-            newstart = stime + offset/fs
-            if (newstart + (adapt/2)/fs) > etime:
-               break;
+        adapt = int(3. * W * fs / (Zi[offset] + Ni[offset] + Ei[offset]))
+        # in order to account for errors in the inst freq estimation
+        if adapt > int(3 * fs / flow):
+            adapt = int(3 * fs / flow)
+        if adapt < int(3 * fs / fhigh):
+            adapt = int(3 * fs / fhigh)
+        adapt /= 2
+        adapt = (2 * adapt) + 1
+        newstart = stime + offset / fs
+        if (newstart + (adapt / 2) / fs) > etime:
+            break
 
-            Zx = Za[spoint[2] + offset-adapt/2: spoint[2] + offset + adapt/2]
-            Nx = Na[spoint[1] + offset-adapt/2: spoint[1] + offset + adapt/2]
-            Ex = Ea[spoint[0] + offset-adapt/2: spoint[0] + offset + adapt/2]
-            Zx -= Zx.mean()
-            Nx -= Nx.mean()
-            Ex -= Ex.mean()
+        Zx = Za[spoint[2] + offset - adapt / 2: spoint[2] + offset + adapt / 2]
+        Nx = Na[spoint[1] + offset - adapt / 2: spoint[1] + offset + adapt / 2]
+        Ex = Ea[spoint[0] + offset - adapt / 2: spoint[0] + offset + adapt / 2]
+        Zx -= Zx.mean()
+        Nx -= Nx.mean()
+        Ex -= Ex.mean()
 
-            covmat = np.zeros([3, 3],dtype=complex)
+        covmat = np.zeros([3, 3], dtype=complex)
 
-            covmat[0][0] = np.dot(Ex,Ex.conjugate())
-            covmat[0][1] = np.dot(Ex, Nx.conjugate())
-            covmat[1][0] = covmat[0][1].conjugate()
-            covmat[0][2] =  np.dot(Ex, Zx.conjugate())
-            covmat[2][0] = covmat[0][2].conjugate()
-            covmat[1][1] = np.dot(Nx,Nx.conjugate())
-            covmat[1][2] = np.dot(Zx, Nx.conjugate())
-            covmat[2][1] = covmat[1][2].conjugate()
-            covmat[2][2] = np.dot(Zx,Zx.conjugate())
+        covmat[0][0] = np.dot(Ex, Ex.conjugate())
+        covmat[0][1] = np.dot(Ex, Nx.conjugate())
+        covmat[1][0] = covmat[0][1].conjugate()
+        covmat[0][2] = np.dot(Ex, Zx.conjugate())
+        covmat[2][0] = covmat[0][2].conjugate()
+        covmat[1][1] = np.dot(Nx, Nx.conjugate())
+        covmat[1][2] = np.dot(Zx, Nx.conjugate())
+        covmat[2][1] = covmat[1][2].conjugate()
+        covmat[2][2] = np.dot(Zx, Zx.conjugate())
 
-            eigvec, eigenval, v = (np.linalg.svd(covmat))
-            fun = lambda x: 1.- math.sqrt(((eigvec[0][0]*(math.cos(x)+math.sin(x)*1.j)).real)**2 + \
-                ((eigvec[1][0]*(math.cos(x)+math.sin(x)*1.j)).real)**2 + \
-                ((eigvec[2][0]*(math.cos(x)+math.sin(x)*1.j)).real)**2)
-            final = fminbound(fun, 0.,math.pi,full_output = True)
-            X = 1. - final[1];
-            ellip = math.sqrt(1 - X**2)/X 
-            rect = 1 - (eigenval[1] / eigenval[0])
-            plan = 1 - math.sqrt(eigenval[2]/eigenval[1])
-            azimuth = 180 * math.atan2(eigvec[0][0].real,eigvec[1][0].real) / math.pi
-            eve = np.sqrt(eigvec[0][0].real**2 + eigvec[1][0].real**2)
+        eigvec, eigenval, v = (np.linalg.svd(covmat))
+        fun = lambda x: 1. - math.sqrt(((eigvec[0][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 + \
+            ((eigvec[1][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2 + \
+            ((eigvec[2][0] * (math.cos(x) + math.sin(x) * 1j)).real) ** 2)
+        final = fminbound(fun, 0., math.pi, full_output=True)
+        X = 1. - final[1]
+        ellip = math.sqrt(1 - X ** 2) / X
+        rect = 1 - (eigenval[1] / eigenval[0])
+        plan = 1 - math.sqrt(eigenval[2] / eigenval[1])
+        azimuth = 180 * math.atan2(eigvec[0][0].real, eigvec[1][0].real) / \
+            math.pi
+        eve = np.sqrt(eigvec[0][0].real ** 2 + eigvec[1][0].real ** 2)
 
-            incidence = 180 * math.atan2(eve,eigvec[2][0].real) / math.pi
-            if azimuth < 0.:
-                 azimuth = 360. + azimuth
-            if incidence < 0.0:
-                 incidence += 180.
-            if incidence > 90.:
-                 incidence = 180. - incidence
-                 if azimuth > 180.:
-                       azimuth -= 180.
-                 else :
-                       azimuth += 180.
+        incidence = 180 * math.atan2(eve, eigvec[2][0].real) / math.pi
+        if azimuth < 0.:
+            azimuth = 360. + azimuth
+        if incidence < 0.0:
+            incidence += 180.
+        if incidence > 90.:
+            incidence = 180. - incidence
             if azimuth > 180.:
-                 azimuth -= 180.;
+                azimuth -= 180.
+            else:
+                azimuth += 180.
+        if azimuth > 180.:
+            azimuth -= 180.
 
-            res.append(np.array([newstart.timestamp, azimuth, incidence, rect, plan,ellip]))
-            offset += 1
+        res.append(np.array([newstart.timestamp, azimuth, incidence, rect,
+                             plan, ellip]))
+        offset += 1
 
     return res
 
-def particle_motion_ord(stream,noise_thres=0):
+
+def particle_motion_ord(stream, noise_thres=0):
     """
     Computes the orientation of the particle motion vector based on
-    othortogonal regression algorithm.
-    :param stream: ZNE sorted trace data
-    :param noise_tres: variance of noise sphere; data points are excluded when falling within the sphere with radius 
-    sqrt(noise_thres)
-    :type noise_thres: float
-    :return azimuth, incidence, az_error, in_error: Returns azimuth, incidence, error of azimuth, error of incidence
-    """
+    orthogonal regression algorithm.
 
-    Z =[]; N = []; E = []
-    comp,npts = np.shape(stream)
-    for i in xrange(0,npts):
-        if (stream[0][i]**2 + stream[1][i]**2  + stream[2][i]**2) > noise_thres:
+    :param stream: ZNE sorted trace data
+    :param noise_tres: variance of noise sphere; data points are excluded when
+        falling within the sphere with radius sqrt(noise_thres)
+    :type noise_thres: float
+    :return azimuth, incidence, az_error, in_error: Returns azimuth, incidence,
+        error of azimuth, error of incidence
+    """
+    Z = []
+    N = []
+    E = []
+    comp, npts = np.shape(stream)
+    for i in xrange(0, npts):
+        if (stream[0][i] ** 2 + stream[1][i] ** 2 + stream[2][i] ** 2) \
+                > noise_thres:
             Z.append(stream[0][i])
             N.append(stream[1][i])
             E.append(stream[2][i])
 
+    #def fit_func(beta, x):
+    #    return beta[0] * x + beta[1]
 
-    try:
-        import scipy.odr
-        #def fit_func(beta, x):
-        #    return beta[0] * x + beta[1]
+    fit_func = lambda beta, x: beta[0] * x
 
-        fit_func = lambda beta, x: beta[0] * x 
+    data = scipy.odr.Data(E, N)
+    model = scipy.odr.Model(fit_func)
+    odr = scipy.odr.ODR(data, model, beta0=[1.])
+    out = odr.run()
+    az_slope = out.beta[0]
+    az_error = out.sd_beta[0]
+    # az_relerror = out.rel_error
 
-        data = scipy.odr.Data(E, N)
-        model = scipy.odr.Model(fit_func)
-        odr = scipy.odr.ODR(data, model, beta0=[1.])
-        out = odr.run()
-        az_slope = out.beta[0]
-        az_error = out.sd_beta[0]
-        az_relerror = out.rel_error
+    N = np.asarray(N)
+    E = np.asarray(E)
+    Z = np.asarray(Z)
+    R = np.sqrt(N ** 2 + E ** 2)
 
-        N = np.asarray(N)
-        E = np.asarray(E)
-        Z = np.asarray(Z)
-        R = np.sqrt(N**2 + E**2)
-        
-        data = scipy.odr.Data(R, np.sqrt(Z**2))
-        model = scipy.odr.Model(fit_func)
-        odr = scipy.odr.ODR(data, model, beta0=[1.])
-        out = odr.run()
-        in_slope = out.beta[0]
-        in_error = out.sd_beta[0]
-        in_relerror = out.rel_error
+    data = scipy.odr.Data(R, np.sqrt(Z ** 2))
+    model = scipy.odr.Model(fit_func)
+    odr = scipy.odr.ODR(data, model, beta0=[1.0])
+    out = odr.run()
+    in_slope = out.beta[0]
+    in_error = out.sd_beta[0]
+    # in_relerror = out.rel_error
 
-        azim = math.atan2(1.,az_slope)
-        inc = math.atan2(1.,in_slope)
-        az_error = 1./((1.**2 + az_slope**2)*azim)*az_error
-        in_error = 1./((1.**2 + in_slope**2)*inc)*in_error
-        azim *= 180./math.pi
-        inc *= 180./math.pi
-        if azimuth < 0.:
-             azimuth = 360. + azimuth
-        if incidence < 0.0:
-             incidence += 180.
-        if incidence > 90.:
-             incidence = 180. - incidence
-             if azimuth > 180.:
-                          azimuth -= 180.
-             else :
-                          azimuth += 180.
-        if azimuth > 180.:
-             azimuth -= 180.;
+    azim = math.atan2(1.0, az_slope)
+    inc = math.atan2(1.0, in_slope)
+    az_error = 1.0 / ((1.0 ** 2 + az_slope ** 2) * azim) * az_error
+    in_error = 1.0 / ((1.0 ** 2 + in_slope ** 2) * inc) * in_error
+    azim *= 180.0 / math.pi
+    inc *= 180.0 / math.pi
+    # XXX if azimuth < 0:
+    # XXX     azimuth = 360.0 + azimuth
+    # XXX if incidence < 0:
+    # XXX     incidence += 180.0
+    # XXX if incidence > 90:
+    # XXX     incidence = 180. - incidence
+    # XXX     if azimuth > 180.:
+    # XXX         azimuth -= 180.0
+    # XXX     else:
+    # XXX         azimuth += 180.0
+    # XXX if azimuth > 180:
+    # XXX     azimuth -= 180.0
 
-        return azim,inc,az_error,in_error
+    return azim, inc, az_error, in_error
 
-
-    except ImportError:
-                print "Error importing scipy.odr..."
 
 def get_spoint(stream, stime, etime):
     """
-    Function for computing trace dependend start time
-    in samples
+    Function for computing trace dependend start time in samples
+
     :param stime: UTCDateTime to start
     :type : UTCDatTime
     :param etime: UTCDateTime to end
@@ -409,20 +430,22 @@ def get_spoint(stream, stime, etime):
     return spoint, epoint
 
 
-def polarization_analysis(stream, win_len, win_frac, 
-        frqlow, frqhigh, stime, etime, verbose=False, timestamp='mlabday', method=0,var_noise=0.):
+def polarization_analysis(stream, win_len, win_frac, frqlow, frqhigh, stime,
+                          etime, verbose=False, timestamp='mlabday', method=0,
+                          var_noise=0.0):
     """
-    Method for Flinn/Jurkevics/ParticleMotion/Vidale calling 
+    Method for Flinn/Jurkevics/ParticleMotion/Vidale calling
 
-    :param stream: Stream object, the trace.stats dict like class must
-        contain a three component trace. In case of Jurkevics or Vidale also an array like
-        processing should be possible
+    :param stream: Stream object, the trace.stats dict like class must contain
+        a three component trace. In case of Jurkevics or Vidale also an array
+        like processing should be possible
     :type win_len: Float
     :param win_len: Sliding window length in seconds
     :type win_frac: Float
     :param win_frac: Fraction of sliding window to use for step
     :type var_noise: Float
-    :param var_noise: resembles a sphere of noise in PM where the 3C is excluded
+    :param var_noise: resembles a sphere of noise in PM where the 3C is
+        excluded
     :type frqlow: Float
     :param frqlow: lower frequency for PM
     :type frqhigh: Float
@@ -440,12 +463,11 @@ def polarization_analysis(stream, win_len, win_frac,
     :type method: int
     :param method: the method to use 0 == PM, 1 == flinn, 2 == vidale
     :return numpy.ndarray of timestamp, azimuth, incidence, reclin (az_error),
-        plan (in_error), (ellip): 
+        plan (in_error), (ellip):
     """
     PM, FLINN, VIDALE = 0, 1, 2
     res = []
     eotr = True
-
 
     # check that sampling rates do not vary
     fs = stream[0].stats.sampling_rate
@@ -460,49 +482,52 @@ def polarization_analysis(stream, win_len, win_frac,
 
     # offset of arrays
     spoint, _epoint = get_spoint(stream, stime, etime)
-    #
     # loop with a sliding window over the dat trace array and apply bbfk
-    #
-    nstat = len(stream)
     fs = stream[0].stats.sampling_rate
     if method == VIDALE:
-       res = vidale_adapt(stream,var_noise,fs,frqlow,frqhigh,spoint,stime,etime)
+        res = vidale_adapt(stream, var_noise, fs, frqlow, frqhigh, spoint,
+                           stime, etime)
     else:
-       nsamp = int(win_len * fs)
-       nstep = int(nsamp * win_frac)
-       newstart = stime
-       tap = cosTaper(nsamp, p=0.22)  # 0.22 matches 0.2 of historical C bbfk.c
-       offset = 0
-       tr.sort(reverse=True)
-       while eotr:
-        try:
-            data=[];Z=[];N=[];E=[]
-            for i, tr in enumerate(stream):
-                dat = tr.data[spoint[i] + offset:
-                    spoint[i] + offset + nsamp]
-                dat = (dat - dat.mean()) * tap
-                if 'Z' in tr.stats.channel:
-                    Z = dat.copy()
-                if 'N' in tr.stats.channel:
-                    N = dat.copy()
-                if 'E' in tr.stats.channel:
-                    E = dat.copy()
+        nsamp = int(win_len * fs)
+        nstep = int(nsamp * win_frac)
+        newstart = stime
+        # 0.22 matches 0.2 of historical C bbfk.c
+        tap = cosTaper(nsamp, p=0.22)
+        offset = 0
+        # tr.sort(reverse=True)
+        while eotr:
+            try:
+                data = []
+                Z = []
+                N = []
+                E = []
+                for i, tr in enumerate(stream):
+                    dat = tr.data[spoint[i] + offset:
+                                  spoint[i] + offset + nsamp]
+                    dat = (dat - dat.mean()) * tap
+                    if 'Z' in tr.stats.channel:
+                        Z = dat.copy()
+                    if 'N' in tr.stats.channel:
+                        N = dat.copy()
+                    if 'E' in tr.stats.channel:
+                        E = dat.copy()
 
-            data.append(Z) 
-            data.append(N) 
-            data.append(E) 
+                data.append(Z)
+                data.append(N)
+                data.append(E)
 
-        except IndexError:
-            break
+            except IndexError:
+                break
         if method == PM:
-            azimuth,incidence,error_az,error_inc = particle_motion_ord(data,var_noise)
+            azimuth, incidence, error_az, error_inc = \
+                particle_motion_ord(data, var_noise)
             if abs(error_az) < 0.1 and abs(error_inc) < 0.1:
-                res.append(np.array([newstart.timestamp+nsamp/(fs), azimuth, incidence, error_az,
-                                 error_inc]))
+                res.append(np.array([newstart.timestamp + nsamp / fs, azimuth,
+                                     incidence, error_az, error_inc]))
         if method == FLINN:
-            azimuth,incidence,reclin,plan = flinn(data,var_noise)
-            res.append(np.array([newstart.timestamp+nsamp/(fs), azimuth, incidence, reclin,
-                                 plan]))
+            azimuth, incidence, reclin, plan = flinn(data, var_noise)
+            res.append(np.array([newstart.timestamp + nsamp / fs, azimuth,
+                                 incidence, reclin, plan]))
 
         if verbose:
             print(newstart, (newstart + (nsamp / fs)), res[-1][1:])
@@ -521,6 +546,7 @@ def polarization_analysis(stream, win_len, win_frac,
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
     return np.array(res)
+
 
 if __name__ == '__main__':
     import doctest
