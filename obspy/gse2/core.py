@@ -76,12 +76,12 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     traces = []
     # read GSE2 file
     f = open(filename, 'rb')
-    for _k in xrange(10000):  # avoid endless loop
+    for _k in range(10000):  # avoid endless loop
         pos = f.tell()
         widi = f.readline()[0:4]
         if widi == '':  # end of file
             break
-        elif widi != 'WID2':
+        elif widi not in ('WID2', b'WID2'):
             continue
         else:  # valid gse2 part
             f.seek(pos)

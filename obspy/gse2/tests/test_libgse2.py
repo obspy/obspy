@@ -34,8 +34,8 @@ class LibGSE2TestCase(unittest.TestCase):
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
         header, data = libgse2.read(f, verify_chksum=True)
-        self.assertEqual('RJOB ', header['station'])
-        self.assertEqual('  Z', header['channel'])
+        self.assertEqual('RJOB', header['station'])
+        self.assertEqual('Z', header['channel'])
         self.assertEqual(200.0, header['samp_rate'])
         self.assertEqual('20050831023349.850', "%04d%02d%02d%02d%02d%06.3f" % (
             header['d_year'],
@@ -90,8 +90,8 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         header = libgse2.readHead(open(gse2file, 'rb'))
-        self.assertEqual('RNON ', header['station'])
-        self.assertEqual('  Z', header['channel'])
+        self.assertEqual(b'RNON ', header['station'])
+        self.assertEqual(b'  Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
         self.assertEqual('20040609200559.850', "%04d%02d%02d%02d%02d%06.3f" % (
             header['d_year'],
@@ -153,12 +153,12 @@ class LibGSE2TestCase(unittest.TestCase):
         header['datatype'] = 'CM6'
         f = open(testfile, 'wb')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
-                          testfile)
+                          f)
         f.close()
         f = open(testfile, 'wb')
         data = np.array([2, 26, 1], dtype='f')
         self.assertRaises(ArgumentError, libgse2.write, header, data,
-                          testfile)
+                          f)
         f.close()
         os.remove(testfile)
 

@@ -33,6 +33,7 @@ import numpy as np
 import os
 import platform
 import warnings
+from contextlib import contextmanager
 
 
 # Import shared libgse2
@@ -60,13 +61,15 @@ if not clibgse2:
     raise ImportError(msg)
 
 # Import libc. This is hopefully somewhat platform independent.
-try:
-    try:
-        libc = C.CDLL("libc.so.6")
-    except:
-        libc = C.CDLL("libc.dylib")
-except:
-    libc = C.cdll.msvcrt
+# TODO: currently I'm using the pythonapi to call fdopen fclose ftell and
+# fseek, needs to be checked if this works on windows
+#try:
+#    try:
+#        libc = C.CDLL("libc.so.6")
+#    except:
+#        libc = C.CDLL("libc.dylib")
+#except:
+#    libc = C.cdll.msvcrt
 
 class ChksumError(Exception):
     """
@@ -107,18 +110,29 @@ class HEADER(C.Structure):
         ('vang', C.c_float),
     ]
 
+C.pythonapi.PyObject_AsFileDescriptor.argtypes = [C.py_object]
+C.pythonapi.PyObject_AsFileDescriptor.restype = C.c_int
 
-# ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
-# pointer descriptor
-#C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-#C.pythonapi.PyFile_AsFile.restype = c_file_p
+C.pythonapi.fdopen.argtypes = [C.c_int, C.c_char_p]
+C.pythonapi.fdopen.restype = c_file_p
 
-libc.fdopen.argtypes = [C.c_int, C.c_char_p]
-libc.fdopen.restype = c_file_p
+C.pythonapi.fseek.argtypes = [c_file_p, C.c_long, C.c_int]
+C.pythonapi.fseek.restype = C.c_int
 
-# reading C memory into buffer which can be converted to numpy array
-#C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-#C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
+C.pythonapi.ftell.argtypes = [c_file_p]
+C.pythonapi.ftell.restype = C.c_long
+
+@contextmanager
+def cfdopen(f, mode):
+    try: 
+        f.flush()
+        fd = C.pythonapi.fdopen(os.dup(f.fileno()), mode.encode('ascii'))
+        C.pythonapi.fseek(fd, f.tell(), 0)
+        yield fd
+    finally:
+        f.seek(C.pythonapi.ftell(fd))
+        C.pythonapi.fclose(fd)
+
 
 ## gse_functions read_header
 clibgse2.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
@@ -185,7 +199,7 @@ def isGse2(f):
     pos = f.tell()
     widi = f.read(4)
     f.seek(pos)
-    if widi != 'WID2':
+    if widi not in ('WID2', b'WID2'):
         raise TypeError("File is not in GSE2 format")
 
 
@@ -207,24 +221,24 @@ def writeHeader(f, head):
     calib = "%10.2e" % (head.calib)
     header = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
              "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
-    f.write(header % (
+    f.write((header % (
             head.d_year,
             head.d_mon,
             head.d_day,
             head.t_hour,
             head.t_min,
             head.t_sec,
-            head.station,
-            head.channel,
-            head.auxid,
-            head.datatype,
+            head.station.decode(),
+            head.channel.decode(),
+            head.auxid.decode(),
+            head.datatype.decode(),
             head.n_samps,
             head.samp_rate,
             calib,
             head.calper,
-            head.instype,
+            head.instype.decode(),
             head.hang,
-            head.vang))
+            head.vang)).encode('ascii'))
 
 
 def uncompress_CM6(f, n_samps):
@@ -237,35 +251,34 @@ def uncompress_CM6(f, n_samps):
     :param n_samps: Number of samples
     """
     # transform to a C file pointer
-    #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = C.fdopen(f.fileno)
     data = np.empty(n_samps, dtype='int32')
-    n = clibgse2.decomp_6b(fp, n_samps, data)
+    with cfdopen(f, "rb") as fd:
+        n = clibgse2.decomp_6b(fd, n_samps, data)
     if n != n_samps:
         raise GSEUtiError("Mismatching length in lib.decomp_6b")
     clibgse2.rem_2nd_diff(data, n_samps)
     return data
 
 
-def verifyChecksum(fh, data, version=2):
+def verifyChecksum(f, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
 
-    :type fh: File Pointer
-    :param fh: File Pointer
+    :type f: File Pointer
+    :param f: File Pointer
     :type version: Int
     :param version: GSE version, either 1 or 2, defaults to 2.
     """
     chksum_data = clibgse2.check_sum(data, len(data), C.c_int32(0))
     # find checksum within file
-    buf = fh.readline()
+    buf = f.readline()
     chksum_file = 0
     CHK_LINE = 'CHK%d' % version
     while buf:
-        if buf.startswith(CHK_LINE):
+        if buf.startswith(CHK_LINE.encode('ascii')):
             chksum_file = int(buf.strip().split()[1])
             break
-        buf = fh.readline()
+        buf = f.readline()
     if chksum_data != chksum_file:
         # 2012-02-12, should be deleted in a year from now
         if abs(chksum_data) == abs(chksum_file):
@@ -298,10 +311,9 @@ def read(f, verify_chksum=True):
     :rtype: Dictionary, Numpy.ndarray int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
-    #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = libc.fdopen(f.fileno(), "r")
     head = HEADER()
-    errcode = clibgse2.read_header(fp, C.pointer(head))
+    with cfdopen(f, "rb") as fd:
+        errcode = clibgse2.read_header(fd, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
     data = uncompress_CM6(f, head.n_samps)
@@ -311,8 +323,10 @@ def read(f, verify_chksum=True):
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
+        if isinstance(headdict[i[0]], bytes):
+            headdict[i[0]] = headdict[i[0]].decode().strip()
     # cleaning up
-    del fp, head
+    del head
     return headdict, data
 
 
@@ -361,8 +375,6 @@ def write(headdict, data, f, inplace=False):
         'hang': float,
         'vang': float
     """
-    #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = libc.fdopen(f.fileno(), b"w")
     n = len(data)
     clibgse2.buf_init(None)
     #
@@ -383,17 +395,20 @@ def write(headdict, data, f, inplace=False):
     headdict.setdefault('calper', 1.0)
     headdict.setdefault('calib', 1.0)
     head = HEADER()
-    for _i in headdict.keys():
-        if _i in gse2head:
-            setattr(head, _i, headdict[_i])
+    for k, v in headdict.items():
+        if isinstance(v, str):
+            v = v.encode('ascii')
+        if k in gse2head:
+            setattr(head, k, v)
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, head)
-    clibgse2.buf_dump(fp)
-    f.write("CHK2 %8ld\n\n" % chksum)
+    with cfdopen(f, "wb") as fd:
+      clibgse2.buf_dump(fd)
+    f.write(("CHK2 %8ld\n\n" % chksum).encode('ascii'))
     clibgse2.buf_free(None)
-    del fp, head
+    del head
 
 
 def readHead(f):
@@ -409,14 +424,15 @@ def readHead(f):
     :rtype: Dictionary
     :return: Header entries.
     """
-    #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = libc.fdopen(f.fileno(), b"r")
     head = HEADER()
-    clibgse2.read_header(fp, C.pointer(head))
+    with cfdopen(f, "rb") as fd:
+        clibgse2.read_header(fd, C.pointer(head))
     headdict = {}
     for i in head._fields_:
         headdict[i[0]] = getattr(head, i[0])
-    del fp, head
+        if isinstance(headdict[i[0]], bytes):
+            headdict[i[0]] = headdict[i[0]].decode().strip()
+    del head
     return headdict
 
 
@@ -434,17 +450,16 @@ def getStartAndEndTime(f):
     :return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
              Julian seconds and as date string.
     """
-    #fp = C.pythonapi.PyFile_AsFile(f)
-    fp = C.fdopen(f.fileno)
     head = HEADER()
-    clibgse2.read_header(fp, C.pointer(head))
+    with cfdopen(f, "rb") as fd:
+        clibgse2.read_header(fd, C.pointer(head))
     seconds = int(head.t_sec)
     microseconds = int(1e6 * (head.t_sec - seconds))
     startdate = UTCDateTime(head.d_year, head.d_mon, head.d_day,
                             head.t_hour, head.t_min, seconds, microseconds)
     stopdate = UTCDateTime(startdate.timestamp +
                            head.n_samps / float(head.samp_rate))
-    del fp, head
+    del head
     return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
 
 

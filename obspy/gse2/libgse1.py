@@ -43,9 +43,9 @@ def read(fh, verify_chksum=True):
     """
     header = readHeader(fh)
     dtype = header['gse1']['datatype']
-    if dtype == 'CMP6':
+    if dtype in ('CMP6', b'CMP6'):
         data = uncompress_CM6(fh, header['npts'])
-    elif dtype == 'INTV':
+    elif dtype in ('INTV', b'INTV'):
         data = readIntegerData(fh, header['npts'])
     else:
         raise Exception("Unsupported data type %s in GSE1 file" % dtype)
@@ -62,7 +62,7 @@ def readIntegerData(fh, npts):
     # find next DAT1 section within file
     buf = fh.readline()
     while buf:
-        if buf.startswith("DAT1"):
+        if buf.startswith(b"DAT1"):
             data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
             break
         buf = fh.readline()
@@ -79,7 +79,7 @@ def readHeader(fh):
     # search for WID1 field
     line = fh.readline()
     while line:
-        if line.startswith("WID1"):
+        if line.startswith(b"WID1"):
             # valid GSE1 header
             break
         line = fh.readline()
