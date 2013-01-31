@@ -1,6 +1,9 @@
 dev:
  - obspy.arclink:
    * user keyword is now required during client initialization
+ - obspy.css:
+   * new module for CSS (Center for Seismic Studies) format
+   * currently read support for waveform data
  - obspy.db:
    * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
      for features because pipe has a special meaning on most operation systems
