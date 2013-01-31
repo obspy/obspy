@@ -75,11 +75,11 @@ def convert(parts):
 def calcfmt(format, samples):
     # four byte floats
     if format.lower() == "s4":
-        fmt = ">"+"f"*samples
+        fmt = ">"+"i"*samples
         return (fmt, struct.calcsize(fmt))
     # 4 byte ints
     elif format.lower() == "t4":
-        fmt = ">"+"i"*samples
+        fmt = ">"+"f"*samples
         return (fmt, struct.calcsize(fmt))
     # 3 byte floats
     elif format.lower() == "s3":
