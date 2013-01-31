@@ -18,15 +18,22 @@ class CoreTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.filename = os.path.join(self.path, 'test.wfdisc')
+        self.filename2 = os.path.join(self.path, '201101311155.10.ascii.gz')
+
+    def test_isCSS(self):
+        """
+        Read files via obspy.core.stream.read function.
+        """
+        # 1
+        assert(isCSS(self.filename))
 
     def test_readViaObsPy(self):
         """
         Read files via obspy.core.stream.read function.
         """
-        filename1 = os.path.join(self.path, '201101311155.10.w.gz')
-        filename2 = os.path.join(self.path, '201101311155.10.ascii.gz')
         # 1
-        st = read(filename1)
+        st = read(self.filename)
         st.verify()
         self.assertEquals(len(st), 3)
         for tr in st:
@@ -41,10 +48,8 @@ class CoreTestCase(unittest.TestCase):
         """
         Read files via obspy.css.core.readCSS function.
         """
-        filename1 = os.path.join(self.path, '201101311155.10.w.gz')
-        filename2 = os.path.join(self.path, '201101311155.10.ascii.gz')
         # 1
-        st = readCSS(filename1)
+        st = readCSS(self.filename)
         st.verify()
         self.assertEquals(len(st), 3)
         for tr in st:
