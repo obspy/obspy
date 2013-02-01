@@ -74,6 +74,7 @@ ENTRY_POINTS = {
         'TSPAIR = obspy.core.ascii',
         'SLIST = obspy.core.ascii',
         'PICKLE = obspy.core.stream',
+        'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
@@ -102,6 +103,11 @@ ENTRY_POINTS = {
         'isFormat = obspy.core.stream:isPickle',
         'readFormat = obspy.core.stream:readPickle',
         'writeFormat = obspy.core.stream:writePickle',
+    ],
+    'obspy.plugin.waveform.CSS': [
+        'isFormat = obspy.css.core:isCSS',
+        'readFormat = obspy.css.core:readCSS',
+        'writeFormat = obspy.css.core:writeCSS',
     ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
