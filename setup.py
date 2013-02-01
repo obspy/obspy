@@ -107,7 +107,6 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.CSS': [
         'isFormat = obspy.css.core:isCSS',
         'readFormat = obspy.css.core:readCSS',
-        'writeFormat = obspy.css.core:writeCSS',
     ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
