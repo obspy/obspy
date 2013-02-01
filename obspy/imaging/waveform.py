@@ -12,7 +12,8 @@ from datetime import datetime
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
+from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
+    getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
@@ -29,6 +30,8 @@ Waveform plotting for obspy.Stream objects.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class WaveformPlotting(object):
@@ -236,7 +239,10 @@ class WaveformPlotting(object):
                 return self.fig
             else:
                 if not self.fig_obj and self.show:
-                    plt.show(block=self.block)
+                    if MATPLOTLIB_VERSION >= [1, 0, 0]:
+                        plt.show(block=self.block)
+                    else:
+                        plt.show()
 
     def plot(self, *args, **kwargs):
         """
