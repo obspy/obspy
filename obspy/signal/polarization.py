@@ -32,7 +32,7 @@ def eigval(datax, datay, dataz, fk, normf=1):
     calculate. If you do not want to use derivatives you can simply
     use [1,1,1,1,1] for ``fk``.
 
-    The algorithm is mainly based on the paper by Jurkevics. The rest is just
+    The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is just
     the numerical differentiation by central differences (carried out by the
     routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
@@ -50,8 +50,6 @@ def eigval(datax, datay, dataz, fk, normf=1):
         dplan** - Smallest eigenvalue, Intermediate eigenvalue, Largest
         eigenvalue, Rectilinearity, Planarity, Time derivative of eigenvalues,
         time derivative of rectilinearity, Time derivative of planarity.
-
-    .. seealso:: [Jurkevics1988]_
     """
     covmat = np.zeros([3, 3])
     leigenv1 = np.zeros(datax.shape[0], dtype='float64')
