@@ -5,9 +5,10 @@ The obspy.css.core test suite.
 """
 
 from obspy import read
-from obspy.core.utcdatetime import UTCDateTime
+from obspy.core import UTCDateTime, Trace, Stream
 from obspy.css.core import readCSS, isCSS
 import os
+import numpy as np
 import unittest
 
 
@@ -19,7 +20,23 @@ class CoreTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         self.filename = os.path.join(self.path, 'test.wfdisc')
-        self.filename2 = os.path.join(self.path, '201101311155.10.ascii.gz')
+        # set up stream for validation
+        header = {}
+        header['station'] = 'TEST'
+        header['starttime'] = UTCDateTime(1296474900.0)
+        header['sampling_rate'] = 80.0
+        header['calib'] = 1.0
+        header['calper'] = 1.0
+        header['_format'] = 'CSS'
+        filename = os.path.join(self.path, '201101311155.10.ascii.gz')
+        data = np.loadtxt(filename, dtype='int')
+        # traces in the test files are sorted ZEN
+        st = Stream()
+        for x, cha in zip(data.reshape((3, 4800)), ('HHZ', 'HHE', 'HHN')):
+            tr = Trace(x, header.copy())
+            tr.stats.channel = cha
+            st += tr
+        self.st_result = st
 
     def test_isCSS(self):
         """
@@ -34,15 +51,7 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         st = read(self.filename)
-        st.verify()
-        self.assertEquals(len(st), 3)
-        for tr in st:
-            self.assertEquals(tr.stats.starttime,
-                              UTCDateTime(2011, 1, 31, 11, 55))
-            self.assertEquals(len(tr), 4800)
-            self.assertEquals(tr.stats.sampling_rate, 80.0)
-            self.assertEquals(tr.stats.channel[:-1], 'HH')
-        # XXX also test data here
+        self.assertTrue(st == self.st_result)
 
     def test_readViaModule(self):
         """
@@ -50,15 +59,10 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         st = readCSS(self.filename)
-        st.verify()
-        self.assertEquals(len(st), 3)
-        for tr in st:
-            self.assertEquals(tr.stats.starttime,
-                              UTCDateTime(2011, 1, 31, 11, 55))
-            self.assertEquals(len(tr), 4800)
-            self.assertEquals(tr.stats.sampling_rate, 80.0)
-            self.assertEquals(tr.stats.channel[:-1], 'HH')
-        # XXX also test data here
+        # _format entry is not present when using low-level function
+        for tr in self.st_result:
+            tr.stats.pop('_format')
+        self.assertTrue(st == self.st_result)
 
 
 def suite():
