@@ -29,7 +29,12 @@ def isCSS(filename):
     #  - supported data type descriptor
     try:
         with open(filename, "rb") as fh:
-            for line in fh.readlines():
+            lines = fh.readlines()
+            # check for empty file
+            if not lines:
+                return False
+            # check every line
+            for line in lines:
                 assert(len(line.rstrip("\n\r")) == 283)
                 assert(line[26] == ".")
                 UTCDateTime(float(line[16:33]))

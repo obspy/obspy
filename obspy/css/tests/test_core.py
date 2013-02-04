@@ -6,6 +6,7 @@ The obspy.css.core test suite.
 
 from obspy import read
 from obspy.core import UTCDateTime, Trace, Stream
+from obspy.core.util import NamedTemporaryFile
 from obspy.css.core import readCSS, isCSS
 import os
 import numpy as np
@@ -44,6 +45,15 @@ class CoreTestCase(unittest.TestCase):
         """
         # 1
         assert(isCSS(self.filename))
+        # check that empty files are not recognized as CSS
+        tempfile = NamedTemporaryFile().name
+        with open(tempfile, "wb") as fh:
+            pass
+        try:
+            assert(not isCSS(tempfile))
+        finally:
+            # cleanup
+            os.remove(tempfile)
 
     def test_readViaObsPy(self):
         """
