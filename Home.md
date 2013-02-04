@@ -43,6 +43,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 * [obspy.xseed](http://docs.obspy.org/packages/obspy.xseed.html) - Converter for Dataless SEED, [XML-SEED](http://adsabs.harvard.edu/abs/2004AGUFMSF31B..03T) and SEED RESP files
 
 ### Waveform import/export plug-ins:
+* [obspy.css](http://docs.obspy.org/packages/obspy.css.html) - CSS read support
 * [obspy.datamark](http://docs.obspy.org/packages/obspy.datamark.html) - DATAMARK read support
 * [obspy.gse2](http://docs.obspy.org/packages/obspy.gse2.html) - GSE2 and GSE1 read and write support
 * [obspy.mseed](http://docs.obspy.org/packages/obspy.mseed.html) - MiniSEED read and write support
