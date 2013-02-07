@@ -62,7 +62,7 @@ if not clibgse2:
 
 # Import libc. This is hopefully somewhat platform independent.
 # TODO: currently I'm using the pythonapi to call fdopen fclose ftell and
-# fseek, needs to be checked if this works on windows
+# fseek, needs to be verfied that this also works on windows
 #try:
 #    try:
 #        libc = C.CDLL("libc.so.6")
@@ -110,9 +110,6 @@ class HEADER(C.Structure):
         ('vang', C.c_float),
     ]
 
-C.pythonapi.PyObject_AsFileDescriptor.argtypes = [C.py_object]
-C.pythonapi.PyObject_AsFileDescriptor.restype = C.c_int
-
 C.pythonapi.fdopen.argtypes = [C.c_int, C.c_char_p]
 C.pythonapi.fdopen.restype = c_file_p
 
@@ -127,14 +124,14 @@ def cfdopen(f, mode):
     try: 
         f.flush()
         pos = f.tell()
-        fd = C.pythonapi.fdopen(os.dup(f.fileno()), mode.encode('ascii'))
-        C.pythonapi.fseek(fd, pos, 0)
-        yield fd
+        fp = C.pythonapi.fdopen(os.dup(f.fileno()), mode.encode('ascii'))
+        C.pythonapi.fseek(fp, pos, 0)
+        yield fp
     finally:
-        pos = C.pythonapi.ftell(fd)
-        C.pythonapi.fclose(fd)
-        # operating on dup C file descripter get's python file object out
-        # of sync, we must seek 0 first
+        pos = C.pythonapi.ftell(fp)
+        C.pythonapi.fclose(fp)
+        # operating on dup C file pointer gets python file object out
+        # of sync, we must seek 0 first for resync
         f.seek(0)
         f.seek(pos)
 

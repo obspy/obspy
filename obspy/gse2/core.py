@@ -19,7 +19,7 @@ def isGSE2(filename):
     :return: ``True`` if a GSE2 file.
     """
     # Open file.
-    f = open(filename)
+    f = open(filename, 'rb')
     try:
         libgse2.isGse2(f)
     except:
@@ -79,9 +79,9 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     for _k in range(10000):  # avoid endless loop
         pos = f.tell()
         widi = f.readline()[0:4]
-        if widi == '':  # end of file
+        if widi == b'':  # end of file
             break
-        elif widi not in ('WID2', b'WID2'):
+        elif widi != b'WID2':
             continue
         else:  # valid gse2 part
             f.seek(pos)
@@ -178,14 +178,14 @@ def isGSE1(filename):
     :return: ``True`` if a GSE1 file.
     """
     # Open file.
-    f = open(filename)
+    f = open(filename, 'rb')
     try:
         data = f.readline()
     except:
         f.close()
         return False
     f.close()
-    if data.startswith('WID1') or data.startswith('XW01'):
+    if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
     return False
 

@@ -55,14 +55,14 @@ def readPaz(paz_file):
         paz_file = open(paz_file, 'r')
 
     PAZ = paz_file.readlines()
-    if PAZ[0][0:4] != 'CAL1':
+    if PAZ[0][0:4] != b'CAL1':
         raise NameError("Unknown GSE PAZ format %s" % PAZ[0][0:4])
-    if PAZ[0][31:34] != 'PAZ':
+    if PAZ[0][31:34] != b'PAZ':
         raise NameError("%s type is not known" % PAZ[0][31:34])
 
     ind = 1
     npoles = int(PAZ[ind])
-    for i in xrange(npoles):
+    for i in range(npoles):
         try:
             poles.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))
@@ -72,7 +72,7 @@ def readPaz(paz_file):
 
     ind += i + 2
     nzeros = int(PAZ[ind])
-    for i in xrange(nzeros):
+    for i in range(nzeros):
         try:
             zeros.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))

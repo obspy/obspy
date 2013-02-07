@@ -43,9 +43,9 @@ def read(fh, verify_chksum=True):
     """
     header = readHeader(fh)
     dtype = header['gse1']['datatype']
-    if dtype in ('CMP6', b'CMP6'):
+    if dtype == 'CMP6':
         data = uncompress_CM6(fh, header['npts'])
-    elif dtype in ('INTV', b'INTV'):
+    elif dtype == 'INTV':
         data = readIntegerData(fh, header['npts'])
     else:
         raise Exception("Unsupported data type %s in GSE1 file" % dtype)
@@ -83,7 +83,7 @@ def readHeader(fh):
             # valid GSE1 header
             break
         line = fh.readline()
-    if line == '':
+    if line == b'':
         raise EOFError
     # fetch header
     header = {}
@@ -100,12 +100,12 @@ def readHeader(fh):
                                       second=second,
                                       microsecond=millisec * 1000)
     header['npts'] = int(line[27:35])
-    header['station'] = line[36:42].strip()
-    header['gse1']['instype'] = line[43:51].strip()
-    header['channel'] = "%03s" % line[52:54].strip().upper()
+    header['station'] = line[36:42].strip().decode()
+    header['gse1']['instype'] = line[43:51].strip().decode()
+    header['channel'] = "%03s" % line[52:54].strip().upper().decode()
     header['sampling_rate'] = float(line[55:66])
-    header['gse1']['type'] = line[67:73].strip()
-    header['gse1']['datatype'] = line[74:78].strip()
+    header['gse1']['type'] = line[67:73].strip().decode()
+    header['gse1']['datatype'] = line[74:78].strip().decode()
     header['gse1']['dflag'] = int(line[79:80])
     # second line
     line = fh.readline()

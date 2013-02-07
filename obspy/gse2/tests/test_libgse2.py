@@ -90,8 +90,8 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
         header = libgse2.readHead(open(gse2file, 'rb'))
-        self.assertEqual(b'RNON ', header['station'])
-        self.assertEqual(b'  Z', header['channel'])
+        self.assertEqual('RNON', header['station'])
+        self.assertEqual('Z', header['channel'])
         self.assertEqual(200, header['samp_rate'])
         self.assertEqual('20040609200559.850', "%04d%02d%02d%02d%02d%06.3f" % (
             header['d_year'],

@@ -17,7 +17,7 @@ class PAZTestCase(unittest.TestCase):
         """
         Reading PAZ files where PAZ are separated by spaces.
         """
-        f = io.BytesIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.BytesIO(b"""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
         2
         -4.39823 4.48709
         -4.39823 -4.48709
@@ -41,7 +41,7 @@ class PAZTestCase(unittest.TestCase):
 
         Tests uses unrealistic PAZ information.
         """
-        f = io.BytesIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+        f = io.BytesIO(b"""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
 2
 -4.3982340.48709
 -4.39823-4.48709
