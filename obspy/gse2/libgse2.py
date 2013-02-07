@@ -126,12 +126,17 @@ C.pythonapi.ftell.restype = C.c_long
 def cfdopen(f, mode):
     try: 
         f.flush()
+        pos = f.tell()
         fd = C.pythonapi.fdopen(os.dup(f.fileno()), mode.encode('ascii'))
-        C.pythonapi.fseek(fd, f.tell(), 0)
+        C.pythonapi.fseek(fd, pos, 0)
         yield fd
     finally:
-        f.seek(C.pythonapi.ftell(fd))
+        pos = C.pythonapi.ftell(fd)
         C.pythonapi.fclose(fd)
+        # operating on dup C file descripter get's python file object out
+        # of sync, we must seek 0 first
+        f.seek(0)
+        f.seek(pos)
 
 
 ## gse_functions read_header
