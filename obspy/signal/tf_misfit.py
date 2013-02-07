@@ -39,7 +39,8 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
         resolution
     :param fmin: minimum frequency (in Hz)
     :param fmax: maximum frequency (in Hz)
-    :param nf: number of logarithmically spaced frequencies between fmin and fmax
+    :param nf: number of logarithmically spaced frequencies between fmin and
+        fmax
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
