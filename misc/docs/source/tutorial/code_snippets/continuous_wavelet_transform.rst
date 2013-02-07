@@ -11,7 +11,7 @@ ObsPy's internal routine based on [Kristekova2006]_.
 .. include:: continuous_wavelet_transform_obspy.py
    :literal:
 
-.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform_mlpy_obspy.py
+.. plot:: source/tutorial/code_snippets/continuous_wavelet_transform_obspy.py
 
 Using MLPY
 ----------
