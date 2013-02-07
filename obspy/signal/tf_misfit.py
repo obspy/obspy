@@ -43,7 +43,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
-        values, shape = (len(st), nf).
+        values, shape = (nf, len(st)).
     """
     npts = len(st) * 2
     tmax = (npts - 1) * dt
