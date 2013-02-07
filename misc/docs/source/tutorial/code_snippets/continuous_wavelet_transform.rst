@@ -17,7 +17,7 @@ Using MLPY
 ----------
 
 Small script doing the continuous wavelet transform using the
-`mlpy <https://mlpy.fbk.eu/>`_ package for infrasound data recorded at Yasur
+`mlpy <https://mlpy.fbk.eu/>`_ package (version 3.5.0) for infrasound data recorded at Yasur
 in 2008. Further details on wavelets can be found at
 `Wikipedia <http://en.wikipedia.org/wiki/Morlet_wavelet>`_ - in the article the
 omega0 factor is denoted as sigma. *(really sloppy and possibly incorrect: the

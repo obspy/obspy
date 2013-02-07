@@ -21,7 +21,7 @@ ax3 = fig.add_axes([0.83, 0.1, 0.03, 0.6])
 t = np.arange(tr.stats.npts) / tr.stats.sampling_rate
 ax1.plot(t, tr.data, 'k')
 img = ax2.imshow(np.abs(spec), extent=[t[0], t[-1], freq[-1], freq[0]],
-                 aspect='auto')
+                 aspect='auto', interpolation="nearest")
 ax2.set_yscale('log')
 fig.colorbar(img, cax=ax3)
 plt.show()
