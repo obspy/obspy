@@ -8,9 +8,9 @@ tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
 omega0 = 8
 wavelet_fct = "morlet"
 scales = mlpy.wavelet.autoscales(N=len(tr.data), dt=tr.stats.delta, dj=0.05,
-    wf=wavelet_fct, p=omega0)
+                                 wf=wavelet_fct, p=omega0)
 spec = mlpy.wavelet.cwt(tr.data, dt=tr.stats.delta, scales=scales,
-    wf=wavelet_fct, p=omega0)
+                        wf=wavelet_fct, p=omega0)
 # approximate scales through frequencies
 freq = (omega0 + np.sqrt(2.0 + omega0 ** 2)) / (4 * np.pi * scales[1:])
 
