@@ -34,14 +34,16 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     .. seealso:: [Kristekova2006]_, eq. (4)
 
     :param st: time dependent signal.
-    :param dt: time step between two samples in st
+    :param dt: time step between two samples in st (in seconds)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param f: frequency discretization, type numpy.ndarray.
+    :param fmin: minimum frequency (in Hz)
+    :param fmax: maximum frequency (in Hz)
+    :param nf: number of logarithmically spaced frequencies between fmin and fmax
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
-        values.
+        values, shape = (len(st), nf).
     """
     npts = len(st) * 2
     tmax = (npts - 1) * dt
