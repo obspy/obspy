@@ -210,6 +210,14 @@ class SEG2(object):
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's starttime.
         header['starttime'] = deepcopy(self.starttime)
+        if 'DELAY' in header['seg2']:
+            if float(header['seg2']['DELAY']) != 0:
+                msg = "Non-zero value found in Trace's 'DELAY' field. " + \
+                      "This is not supported/tested yet and might lead " + \
+                      "to a wrong starttime of the Trace. Please contact " + \
+                      "the ObsPy developers with a sample file."
+                warnings.warn(msg)
+        header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
         # Unpack the data.
         data = np.fromstring(self.file_pointer.read(
                 number_of_samples_in_data_block * sample_size), dtype=dtype)

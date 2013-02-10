@@ -28,12 +28,12 @@ class SEG2TestCase(unittest.TestCase):
         st = read(basename + ".seg2.gz")
         # read reference ASCII data (in micrometer/s)
         results = np.loadtxt(basename + ".DAT.gz").T
-        # convert SEG2 data to micrometer (descaling goes to mm/s)
-        for tr in st:
-            tr.data = tr.data * float(tr.stats.seg2.DESCALING_FACTOR) * 1e3
         # test all three components
         for tr, result in zip(st, results):
-            self.assertTrue(np.allclose(tr.data, result, rtol=1e-7, atol=1e-7))
+            # convert raw data to micrometer/s (descaling goes to mm/s)
+            scaled_data = tr.data * float(tr.stats.seg2.DESCALING_FACTOR) * 1e3
+            self.assertTrue(np.allclose(scaled_data, result, rtol=1e-7,
+                                        atol=1e-7))
 
 
 def suite():
