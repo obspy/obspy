@@ -9,6 +9,7 @@ Module for handling ObsPy Stream objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from glob import glob, has_magic
+from obspy.core import compatibility
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
@@ -16,13 +17,11 @@ from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
 from pkg_resources import load_entry_point
-import cPickle
 import copy
 import fnmatch
 import math
 import numpy as np
 import os
-import urllib2
 import warnings
 
 
@@ -43,7 +42,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     ``list``-like object of multiple ObsPy :class:`~obspy.core.trace.Trace`
     objects.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
@@ -180,10 +179,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from StringIO import StringIO
-        >>> import urllib2
+        >>> from io import BytesIO
+        >>> from obspy.core.compatibility import urlopen
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urllib2.urlopen(example_url).read())
+        >>> stringio_obj = BytesIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
@@ -204,7 +203,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
+    if isinstance(pathname_or_url, compatibility.string) and \
        pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
@@ -216,7 +215,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _createExampleStream(headonly=headonly)
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, compatibility.string):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -238,7 +237,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
+        fh.write(compatibility.urlopen(pathname_or_url).read())
         fh.close()
         st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         os.remove(fh.name)
@@ -779,7 +778,7 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in xrange(len(self.traces) - 1):
+        for _i in compatibility.range(len(self.traces) - 1):
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
@@ -835,7 +834,7 @@ class Stream(object):
                     msg = 'Trace object or a list of Trace objects expected!'
                     raise TypeError(msg)
             # Insert each item of the list.
-            for _i in xrange(len(object)):
+            for _i in compatibility.range(len(object)):
                 self.traces.insert(position + _i, object[_i])
         elif isinstance(object, Stream):
             self.insert(position, object.traces)
@@ -1341,12 +1340,12 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = round((starttime - tr.stats.starttime) * \
-                               tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (starttime - tr.stats.starttime) * tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = round((endtime - tr.stats.endtime) * \
-                               tr.stats.sampling_rate)
+                delta = compatibility.round_away(
+                    (endtime - tr.stats.endtime) * tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
@@ -1661,7 +1660,7 @@ class Stream(object):
         for _id in traces_dict.keys():
             cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
-            for _i in xrange(len(traces_dict[_id])):
+            for _i in compatibility.range(len(traces_dict[_id])):
                 trace = traces_dict[_id].pop(0)
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(trace, method,
@@ -2446,7 +2445,7 @@ class Stream(object):
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
-        except Exception, e:
+        except Exception as e:
             if "Can't merge traces with same ids but" in str(e):
                 msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
                       "with same id detected. Doing nothing."
@@ -2529,14 +2528,15 @@ def isPickle(filename):  # @UnusedVariable
     >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, compatibility.string):
         try:
-            st = cPickle.load(open(filename, 'rb'))
+            with open(filename, "rb") as open_file:
+                st = compatibility.pickle.load(open_file)
         except:
             return False
     else:
         try:
-            st = cPickle.load(filename)
+            st = compatibility.pickle.load(filename)
         except:
             return False
     return isinstance(st, Stream)
@@ -2555,10 +2555,11 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
-    if isinstance(filename, basestring):
-        return cPickle.load(open(filename, 'rb'))
+    if isinstance(filename, compatibility.string):
+        with open(filename, "rb") as open_file:
+            return compatibility.pickle.load(open_file)
     else:
-        return cPickle.load(filename)
+        return compatibility.pickle.load(filename)
 
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
@@ -2581,10 +2582,11 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, basestring):
-        cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+    if isinstance(filename, compatibility.string):
+        with open(filename, "wb") as open_file:
+            compatibility.pickle.dump(stream, open_file, protocol=protocol)
     else:
-        cPickle.dump(stream, filename, protocol=protocol)
+        compatibility.pickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':

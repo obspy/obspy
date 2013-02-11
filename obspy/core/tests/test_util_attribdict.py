@@ -18,7 +18,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via pop
         temp = ad.pop('test')
-        self.assertEquals(temp, 1)
+        self.assertEqual(temp, 1)
         self.assertFalse('test' in ad)
         self.assertTrue('test2' in ad)
         self.assertFalse('test' in ad.__dict__)
@@ -36,7 +36,7 @@ class AttribDictTestCase(unittest.TestCase):
         ad['test2'] = 'test'
         # removing via popitem
         temp = ad.popitem()
-        self.assertEquals(temp, ('test2', 'test'))
+        self.assertEqual(temp, ('test2', 'test'))
         self.assertFalse('test2' in ad)
         self.assertFalse('test2' in ad.__dict__)
         self.assertFalse(hasattr(ad, 'test2'))
@@ -205,7 +205,7 @@ class AttribDictTestCase(unittest.TestCase):
         """
         # one dict works as expected
         ad = AttribDict({'test': 1})
-        self.assertEquals(ad.test, 1)
+        self.assertEqual(ad.test, 1)
         # multiple dicts results into TypeError
         self.assertRaises(TypeError, AttribDict, {}, {})
         self.assertRaises(TypeError, AttribDict, {}, {}, blah=1)
@@ -228,7 +228,8 @@ class AttribDictTestCase(unittest.TestCase):
         self.assertEqual(ad.__getattr__('test', 'blub'), 'NEW')
         # should raise KeyError without default item
         self.assertRaises(KeyError, ad.__getitem__, 'xxx')
-        self.assertRaises(KeyError, ad.__getattr__, 'xxx')
+        # should raise AttributeError without default item
+        self.assertRaises(AttributeError, ad.__getattr__, 'xxx')
 
     def test_set_readonly(self):
         """
@@ -239,7 +240,7 @@ class AttribDictTestCase(unittest.TestCase):
             defaults = {'test': 1}
 
         ad = MyAttribDict()
-        self.assertEquals(ad.test, 1)
+        self.assertEqual(ad.test, 1)
         self.assertRaises(AttributeError, ad.__setitem__, 'test', 1)
 
     def test_deepcopy(self):
@@ -252,8 +253,8 @@ class AttribDictTestCase(unittest.TestCase):
         ad = MyAttribDict()
         ad.muh = 2
         ad2 = ad.__deepcopy__()
-        self.assertEquals(ad2.test, 1)
-        self.assertEquals(ad2.muh, 2)
+        self.assertEqual(ad2.test, 1)
+        self.assertEqual(ad2.muh, 2)
 
     def test_compare_with_dict(self):
         """
@@ -261,8 +262,8 @@ class AttribDictTestCase(unittest.TestCase):
         """
         adict = {'test': 1}
         ad = AttribDict(adict)
-        self.assertEquals(ad, adict)
-        self.assertEquals(adict, ad)
+        self.assertEqual(ad, adict)
+        self.assertEqual(adict, ad)
 
 
 def suite():

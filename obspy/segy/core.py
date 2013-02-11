@@ -383,11 +383,11 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace.data = trace.data
         # Create empty trace header if none is there.
         if not hasattr(trace.stats, 'segy'):
-            print "CREATING TRACE HEADER"
+            print("CREATING TRACE HEADER")
             trace.stats.segy = {}
             trace.stats.segy.trace_header = SEGYTraceHeader(endian=byteorder)
         elif not hasattr(trace.stats.segy, 'trace_header'):
-            print "CREATING TRACE HEADER"
+            print("CREATING TRACE HEADER")
             trace.stats.segy.trace_header = SEGYTraceHeader()
         this_trace_header = trace.stats.segy.trace_header
         new_trace_header = new_trace.header
@@ -728,10 +728,12 @@ if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
 
+# XXX: Disabled for now! A simple call to isSEGY() will trigger the monkey
+# patch. Not really a desired side effect.
 
 # Monkey patch the __str__ method for the all Trace instances used in the
 # following.
 # XXX: Check if this is not messing anything up. Patching every single
 # instance did not reliably work.
-setattr(Trace, '__original_str__', Trace.__str__)
-setattr(Trace, '__str__', __segy_trace__str__)
+#setattr(Trace, '__original_str__', Trace.__str__)
+#setattr(Trace, '__str__', __segy_trace__str__)

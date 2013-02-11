@@ -1,49 +1,24 @@
 # -*- coding: utf-8 -*-
-import StringIO
+from obspy.core import compatibility
 import warnings
-try:
-    # try using lxml as it is faster
-    from lxml import etree
-    from lxml.etree import register_namespace
-except ImportError:
-    from xml.etree import ElementTree as etree  # @UnusedImport
-    try:
-        from xml.etree import register_namespace  # @UnusedImport
-    except ImportError:
-        def register_namespace(prefix, uri):
-            etree._namespace_map[uri] = prefix
+import io
+from lxml import etree
+from lxml.etree import register_namespace
 import re
 
 
-def tostring(element, xml_declaration=True, encoding="utf-8",
-             pretty_print=False, __etree=etree):
+def tostring(element, xml_declaration=True, pretty_print=False):
     """
     Generates a string representation of an XML element, including all
     subelements.
 
     :param element: Element instance.
-    :type xml_declaration: bool, optional
-    :param xml_declaration: Adds a XML declaration.. Defaults to ``True``.
-    :type encoding: str, optional
-    :param encoding: output encoding. Defaults to ''"utf-8"''. Note that
-        changing the encoding to a non UTF-8 compatible encoding will enable a
-        declaration by default.
     :type pretty_print: bool, optional
     :param pretty_print: Enables formatted XML. Defaults to ``False``.
     :return: Encoded string containing the XML data.
     """
-    try:
-        # use lxml
-        return __etree.tostring(element, xml_declaration=xml_declaration,
-                              method="xml", encoding=encoding,
-                              pretty_print=pretty_print)
-    except:
-        pass
-    # use xml
-    out = __etree.tostring(element, encoding=encoding)
-    if xml_declaration:
-        out = "<?xml version='1.0' encoding='%s'?>\n%s" % (encoding, out)
-    return out
+    return etree.tostring(element, method="xml", encoding="utf-8",
+        pretty_print=pretty_print, xml_declaration=True).decode("utf-8")
 
 
 class XMLParser:
@@ -59,10 +34,10 @@ class XMLParser:
         :type namespace: str, optional
         :param namespace: Document-wide default namespace. Defaults to ``''``.
         """
-        if isinstance(xml_doc, basestring):
+        if isinstance(xml_doc, compatibility.string):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith('<?XML'):
-                xml_doc = StringIO.StringIO(xml_doc)
+                xml_doc = io.BytesIO(xml_doc.encode())
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):

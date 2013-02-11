@@ -2,7 +2,8 @@
 """
 Mini-SEED specific utilities.
 """
-from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
+from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, \
+    ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack

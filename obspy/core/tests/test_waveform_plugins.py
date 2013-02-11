@@ -4,8 +4,7 @@ from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 from pkg_resources import load_entry_point
-import StringIO
-import cStringIO
+import io
 import numpy as np
 import os
 import threading
@@ -75,7 +74,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     st = read(outfile, format=format)
                     self.assertEquals(len(st), 1)
                     self.assertEquals(st[0].stats._format, format)
-                    # read in using a StringIO instances, skip Q files as it
+                    # read in using a BytesIO instances, skip Q files as it
                     # needs multiple files
                     if format not in ['Q']:
                         # file handler without format
@@ -88,23 +87,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         st = read(temp, format=format)
                         self.assertEquals(len(st), 1)
                         self.assertEquals(st[0].stats._format, format)
-                        # StringIO without format
-                        temp = StringIO.StringIO(open(outfile, 'rb').read())
+                        # BytesIO without format
+                        temp = io.BytesIO(open(outfile, 'rb').read())
                         st = read(temp)
                         self.assertEquals(len(st), 1)
                         self.assertEquals(st[0].stats._format, format)
-                        # StringIO with format
-                        temp = StringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # cStringIO without format
-                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # cStringIO with format
-                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
+                        # BytesIO with format
+                        temp = io.BytesIO(open(outfile, 'rb').read())
                         st = read(temp, format=format)
                         self.assertEquals(len(st), 1)
                         self.assertEquals(st[0].stats._format, format)
@@ -222,7 +211,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 streams.append(st)
             # Read the ten files at one and save the output in the just created
             # class.
-            for _i in xrange(n_threads):
+            for _i in range(n_threads):
                 thread = threading.Thread(target=testFunction,
                                           args=(streams,))
                 thread.start()

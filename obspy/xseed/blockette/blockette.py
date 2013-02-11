@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
+from io import BytesIO
 from lxml.etree import Element
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
+from obspy.core import compatibility
 import os
 import warnings
 
@@ -82,9 +83,9 @@ class Blockette(object):
         Parse given data for blockette fields and create attributes.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, compatibility.string):
             expected_length = len(data)
-            data = StringIO(data)
+            data = BytesIO(data.encode())
         start_pos = data.tell()
         # debug
         if self.debug:

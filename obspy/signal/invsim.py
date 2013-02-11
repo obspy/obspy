@@ -21,6 +21,7 @@ to m/s.
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import deprecated_keywords
+from obspy.signal import util
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
 import ctypes as C
@@ -28,7 +29,6 @@ import math as M
 import numpy as np
 import os
 import scipy.signal
-import util
 import warnings
 
 

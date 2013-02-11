@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
+from io import BytesIO
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
     Loop
@@ -42,14 +42,14 @@ class Blockette041(Blockette):
         # convert to stream for test issues
         if isinstance(data, basestring):
             expected_length = len(data)
-            data = StringIO(data)
+            data = BytesIO(data)
         # get current lookup key
         pos = data.tell()
         data.read(7)
         global_lookup_key = int(data.read(4))
         data.seek(pos)
         # read first blockette
-        temp = StringIO()
+        temp = BytesIO()
         temp.write(data.read(expected_length))
         # check next blockettes
         while True:
@@ -80,8 +80,10 @@ class Blockette041(Blockette):
         # reposition file pointer
         data.seek(pos)
         # parse new combined temporary blockette
+        temp.read()
+        length = temp.tell()
         temp.seek(0)
-        Blockette.parseSEED(self, temp, expected_length=temp.len)
+        Blockette.parseSEED(self, temp, expected_length=length)
 
     def parseXML(self, xml_doc, *args, **kwargs):
         if self.xseed_version == '1.0':

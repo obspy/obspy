@@ -3,10 +3,13 @@
 MSEED bindings to ObsPy core module.
 """
 
-from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
-    SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, \
-    blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
-from itertools import izip
+from obspy.core import compatibility
+from obspy.core.compatibility import izip
+from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
+    SAMPLETYPE, DATATYPES, SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, \
+    SelectTime, Selections, blkt_1001_s, VALID_CONTROL_HEADERS, \
+    SEED_CONTROL_HEADERS
+from obspy.mseed import util
 from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
@@ -14,7 +17,6 @@ from obspy.mseed.headers import blkt_100_s
 import ctypes as C
 import numpy as np
 import os
-import util
 import warnings
 
 
@@ -40,16 +42,20 @@ def isMSEED(filename):
     header = fp.read(7)
     # File has less than 7 characters
     if len(header) != 7:
+        fp.close()
         return False
     # Sequence number must contains a single number or be empty
-    seqnr = header[0:6].replace('\x00', ' ').strip()
+    seqnr = header[0:6].replace(b'\x00', b' ')
     if not seqnr.isdigit() and seqnr != '':
+        fp.close()
         return False
     # Check for any valid control header types.
     if header[6] in ['D', 'R', 'Q', 'M']:
+        fp.close()
         return True
     # Check if Full-SEED
     if not header[6] == 'V':
+        fp.close()
         return False
     # Parse the whole file and check whether it has has a data record.
     fp.seek(1, 1)
@@ -65,16 +71,19 @@ def isMSEED(filename):
         try:
             fp.seek(int(fp.read(4)) - 7, 1)
         except:
+            fp.close()
             return False
         _i += 1
         # break after 3 cycles
         if _i == 3:
+            fp.close()
             return False
     # Try to get a record length.
     fp.seek(8, 1)
     try:
         record_length = pow(2, int(fp.read(2)))
     except:
+        fp.close()
         return False
     file_size = os.path.getsize(filename)
     # Jump to the second record.
@@ -84,8 +93,10 @@ def isMSEED(filename):
     while fp.tell() < file_size:
         flag = fp.read(1)
         if flag in ['D', 'R', 'Q', 'M']:
+            fp.close()
             return True
         fp.seek(record_length - 1, 1)
+    fp.close()
     return False
 
 
@@ -317,7 +328,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             trace = Trace(header=header, data=data)
             # Append information if necessary.
             if recinfo:
-                for key, value in info.iteritems():
+                for key, value in compatibility.iteritems(info):
                     setattr(trace.stats.mseed, key, value)
             traces.append(trace)
             # A Null pointer access results in a ValueError
@@ -404,7 +415,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking NumPy support.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
+    encoding_strings = dict([(v[0], k) for (k, v) in
+        compatibility.iteritems(ENCODINGS)])
 
     if encoding is not None:
         if isinstance(encoding, int) and encoding in ENCODINGS:
@@ -705,12 +717,12 @@ class MSTG(object):
         c_dtype = DATATYPES[sampletype]
 
         # Set the header values.
-        chain.contents.network = trace.stats.network
-        chain.contents.station = trace.stats.station
-        chain.contents.location = trace.stats.location
-        chain.contents.channel = trace.stats.channel
-        chain.contents.dataquality = dataquality
-        chain.contents.type = '\x00'
+        chain.contents.network = trace.stats.network.encode()
+        chain.contents.station = trace.stats.station.encode()
+        chain.contents.location = trace.stats.location.encode()
+        chain.contents.channel = trace.stats.channel.encode()
+        chain.contents.dataquality = dataquality.encode()
+        chain.contents.type = b'\x00'
         chain.contents.starttime = \
                 util._convertDatetimeToMSTime(trace.stats.starttime)
         chain.contents.endtime = \
@@ -718,7 +730,7 @@ class MSTG(object):
         chain.contents.samprate = trace.stats.sampling_rate
         chain.contents.samplecnt = trace.stats.npts
         chain.contents.numsamples = trace.stats.npts
-        chain.contents.sampletype = sampletype
+        chain.contents.sampletype = sampletype.encode()
 
         # Create a single datapoint and resize its memory to be able to
         # hold all datapoints.

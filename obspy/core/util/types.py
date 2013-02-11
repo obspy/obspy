@@ -8,6 +8,7 @@ Various types used in ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy.core import compatibility
 
 # try native OrderDict implementations first (Python >= 2.7.x)
 try:
@@ -203,7 +204,7 @@ class Enum(object):
 
     def get(self, key):
         if isinstance(key, int):
-            return self.__enums.values()[key]
+            return [_i for _i in self.__enums.values()][key]
         return self.__enums.__getitem__(key.lower())
 
     __getattr__ = get
@@ -222,16 +223,16 @@ class Enum(object):
         return value.lower() in self.__enums
 
     def values(self):
-        return self.__enums.values()
+        return [_i for _i in self.__enums.values()]
 
     def keys(self):
-        return self.__enums.keys()
+        return [_i for _i in self.__enums.keys()]
 
     def items(self):
-        return self.__enums.items()
+        return [_i for _i in self.__enums.items()]
 
     def iteritems(self):
-        return self.__enums.iteritems()
+        return compatibility.iteritems(self.__enums)
 
     def __str__(self):
         """

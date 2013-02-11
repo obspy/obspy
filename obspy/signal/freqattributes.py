@@ -16,11 +16,11 @@ Frequency Attributes
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.signal import util
 from operator import itemgetter
 from scipy import fftpack, signal, sparse
 from obspy.signal.invsim import seisSim, cornFreq2Paz
 import numpy as np
-import util
 
 
 def mper(data, win, Nfft, n1=0, n2=0):

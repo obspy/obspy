@@ -24,7 +24,8 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
-import StringIO
+
+import io
 
 
 def isQuakeML(filename):
@@ -82,7 +83,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(StringIO.StringIO(string))
+        self.parser = XMLParser(io.BytesIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -1380,9 +1381,6 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     xml_doc = Pickler().dumps(catalog)
     fh.write(xml_doc)
     fh.close()
-    # Close if its a file handler.
-    if isinstance(fh, file):
-        fh.close()
 
 
 def readSeisHubEventXML(filename):
@@ -1395,7 +1393,7 @@ def readSeisHubEventXML(filename):
     lines.insert(3, '  <eventParameters>')
     lines.append('  </eventParameters>\n')
     lines.append('</quakeml>\n')
-    temp = StringIO.StringIO(''.join(lines))
+    temp = io.BytesIO(''.join(lines))
     return readQuakeML(temp)
 
 

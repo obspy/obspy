@@ -8,6 +8,7 @@
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
 from obspy import UTCDateTime, Trace
+from obspy.core import compatibility
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 import numpy as np
 import os
@@ -108,10 +109,18 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
-    _null_trans = string.maketrans("", "")
-    s = open(filename).read(blocksize)
-    if "\0" in s:
+    # Differentiate between Python 2 and 3. In this case this is really
+    # necessary.
+    if bytes == str:
+        _null_trans = "".join(map(chr, range(256)))
+        text_characters = "".join(list(map(chr, range(32, 127))) + \
+            list("\n\r\t\b"))
+    else:
+        _null_trans = bytes(range(256))
+        text_characters = bytes(range(32, 127)) +  "\n\r\t\b".encode()
+    with open(filename, "rb") as open_file:
+        s = open_file.read(blocksize)
+    if b"\0" in s:
         return False
 
     if not s:  # Empty files are considered text
@@ -542,7 +551,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         try:
             self.IsSACfile(fname)
-        except SacError, e:
+        except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
@@ -553,7 +562,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 self.hf = self.hi = self.hs = None
                 f.close()
                 raise SacError(e)
@@ -599,7 +608,7 @@ class SacIO(object):
                 self.hf.tofile(f)
                 self.hi.tofile(f)
                 self.hs.tofile(f)
-            except Exception, e:
+            except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
         f.close()
@@ -655,7 +664,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 f.close()
                 raise SacError(e)
         #--------------------------------------------------------------
@@ -730,7 +739,7 @@ class SacIO(object):
             # read in the seismogram points
             #--------------------------------------------------------------
             self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
@@ -788,13 +797,13 @@ class SacIO(object):
             for i in xrange(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline()  # strip the newline
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
         try:
             self.IsSACfile(fname, fsize=False)
-        except SacError, e:
+        except SacError as e:
             f.close()
             raise SacError(e)
         try:
@@ -823,7 +832,7 @@ class SacIO(object):
         self.fromarray(trace.data, begin=b, delta=trace.stats.delta,
                        starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in compatibility.iteritems(convert_dict):
             self.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
         # note that the SAC reference time values (including B and E) are
@@ -832,7 +841,7 @@ class SacIO(object):
         for _i in SAC_EXTRA:
             try:
                 self.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
+            except AttributeError:
                 pass
         return
 
@@ -900,7 +909,7 @@ class SacIO(object):
             self.hi.tofile(f)
             self.hs.tofile(f)
             self.seis.tofile(f)
-        except Exception, e:
+        except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
@@ -1247,7 +1256,7 @@ class SacIO(object):
         """
         header = {}
         # convert common header types of the ObsPy trace object
-        for i, j in convert_dict.iteritems():
+        for i, j in compatibility.iteritems(convert_dict):
             value = self.GetHvalue(i)
             if isinstance(value, str):
                 null_term = value.find('\x00')

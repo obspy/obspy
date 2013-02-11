@@ -39,7 +39,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.gse2.get('vang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('hang'), -1.0)
         self.assertEqual(tr.stats.gse2.get('calper'), 1.0)
-        self.assertEqual(tr.stats.gse2.get('instype'), '      ')
+        self.assertEqual(tr.stats.gse2.get('instype'), '')
         self.assertAlmostEqual(tr.stats.starttime.timestamp,
                                1125455629.849998, 6)
         self.assertEqual(tr.data[0:13].tolist(), testdata)
@@ -114,7 +114,7 @@ class CoreTestCase(unittest.TestCase):
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         # write test file containing multiple GSE2 parts
         f = open(tmpfile1, 'wb')
-        for i in xrange(2):
+        for i in range(2):
             f1 = open(files[i], 'rb')
             f.write(f1.read())
             f1.close()

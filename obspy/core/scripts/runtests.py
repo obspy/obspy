@@ -82,6 +82,7 @@ and report everything, you would run::
         $ obspy-runtests -r -v -x seishub -x sh --all
 """
 
+from obspy.core import compatibility
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
 from optparse import OptionParser, OptionGroup
@@ -99,7 +100,9 @@ import platform
 
 
 DEPENDENCIES = ['numpy', 'scipy', 'matplotlib', 'lxml.etree', 'sqlalchemy',
-                'suds', 'mpl_toolkits.basemap']
+        # XXX: Reenable suds!
+                #'suds', 'mpl_toolkits.basemap']
+    'mpl_toolkits.basemap']
 
 PSTATS_HELP = """
 Call "python -m pstats obspy.pstats" for an interactive profiling session.
@@ -155,7 +158,7 @@ def _getSuites(verbosity=1, names=[]):
             test = name
         try:
             suite.append(ut.loadTestsFromName(test, None))
-        except Exception, e:
+        except Exception as e:
             if verbosity:
                 print(e)
                 print("Cannot import test suite for module obspy.%s" % name)
@@ -284,7 +287,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     root = etree.Element("report")
     _dict2xml(root, result)
     xml_doc = etree.tostring(root)
-    print
+    print()
     # send result to report server
     params = urllib.urlencode({
         'timestamp': timestamp,
@@ -467,15 +470,15 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         sorted_tests = sorted_tests[::-1][:slowest]
         sorted_tests = ["%0.3fs: %s" % (dt, desc)
                         for (desc, dt) in sorted_tests]
-        print
-        print "Slowest Tests"
-        print "-------------"
-        print os.linesep.join(sorted_tests)
-        print
-        print
+        print()
+        print("Slowest Tests")
+        print("-------------")
+        print(os.linesep.join(sorted_tests))
+        print()
+        print()
     if interactive and not report:
         msg = "Do you want to report this to tests.obspy.org? [n]: "
-        var = raw_input(msg).lower()
+        var = compatibility.raw_input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
@@ -598,10 +601,10 @@ def main(interactive=True):
                     'obspy.pstats')
         import pstats
         stats = pstats.Stats('obspy.pstats')
-        print
-        print "Profiling:"
+        print()
+        print("Profiling:")
         stats.sort_stats('cumulative').print_stats('obspy.', 20)
-        print PSTATS_HELP
+        print(PSTATS_HELP)
     else:
         errors = run(interactive)
         if errors:

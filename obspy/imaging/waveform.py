@@ -9,13 +9,14 @@
 #---------------------------------------------------------------------
 from copy import copy
 from datetime import datetime
+import io
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
+from obspy.core import compatibility
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
     getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
-import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
@@ -131,7 +132,7 @@ class WaveformPlotting(object):
         if self.type == 'dayplot':
             self.color = kwargs.get('color', ('#B2000F', '#004C12', '#847200',
                                               '#0E01FF'))
-            if isinstance(self.color, basestring):
+            if isinstance(self.color, compatibility.string):
                 self.color = (self.color,)
             self.number_of_ticks = kwargs.get('number_of_ticks', None)
         else:
@@ -160,13 +161,13 @@ class WaveformPlotting(object):
         tr_id = tr.id
         # don't merge normal traces with previews
         try:
-            if tr.stats.preview:
+            if "preview" in tr.stats and tr.stats.preview:
                 tr_id += 'preview'
         except KeyError:
             pass
         # don't merge traces with different processing steps
         try:
-            if tr.stats.processing:
+            if "processing" in tr.stats and tr.stats.processing:
                 tr_id += str(tr.stats.processing)
         except KeyError:
             pass
@@ -230,7 +231,7 @@ class WaveformPlotting(object):
         else:
             # Return an binary imagestring if not self.outfile but self.format.
             if self.format:
-                imgdata = StringIO.StringIO()
+                imgdata = io.BytesIO()
                 self.fig.savefig(imgdata, format=self.format,
                                  **extra_args)
                 imgdata.seek(0)
@@ -396,7 +397,7 @@ class WaveformPlotting(object):
                 events = c.getEvents(min_datetime=self.starttime,
                         max_datetime=self.endtime, format="catalog",
                         min_magnitude=events["min_magnitude"])
-            except Exception, e:
+            except Exception as e:
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
                 warnings.warn(msg)

@@ -16,11 +16,11 @@ Complex Trace Analysis
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.signal import util
 from numpy import size, pi
 from scipy import signal
 from scipy.integrate import cumtrapz
 import numpy as np
-import util
 
 
 def envelope(data):

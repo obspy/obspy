@@ -8,6 +8,7 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy.core.compatibility import iteritems
 
 import collections
 
@@ -90,7 +91,17 @@ class AttribDict(collections.MutableMapping):
         # update with pickle dictionary
         self.update(adict)
 
-    __getattr__ = __getitem__
+    def __getattr__(self, name, default=None):
+        """
+        __getattr__ should raise an AttributeError upon not finding an
+        attribute. In Py3K hasattr() expects an AttributeError to be raised if
+        the attribute is not found.
+        """
+        try:
+            return self.__getitem__(name, default)
+        except KeyError as e:
+            raise AttributeError(e.args[0])
+
     __setattr__ = __setitem__
     __delattr__ = __delitem__
 
@@ -103,7 +114,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in adict.iteritems():
+        for (key, value) in iteritems(adict):
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)

@@ -206,7 +206,7 @@ except TypeError:
         # lets get the data
         try:
             data = np.loadtxt(*args, **kwargs)
-        except IOError, e:
+        except IOError as e:
             # raises in older versions if no data could be read
             if 'reached before encountering data' in str(e):
                 # return empty array

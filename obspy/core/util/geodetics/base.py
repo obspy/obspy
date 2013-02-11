@@ -221,7 +221,7 @@ def gps2DistAzimuth(lat1, lon1, lat2, lon2):
               "Install the Python module 'geographiclib' to solve this issue."
         warnings.warn(msg)
         return (20004314.5, 0.0, 0.0)
-    except ValueError, e:
+    except ValueError as e:
         raise e
 
 

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from StringIO import StringIO
+from io import BytesIO
 from lxml.etree import Element, SubElement
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, Loop
@@ -69,7 +69,7 @@ class Blockette060(Blockette):
         # convert to stream for test issues
         if isinstance(data, basestring):
             length = len(data)
-            data = StringIO(data)
+            data = BytesIO(data)
         new_data = data.read(length)
         new_data = new_data[7:]
         number_of_stages = int(new_data[0:2])

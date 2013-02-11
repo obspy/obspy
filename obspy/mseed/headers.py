@@ -10,7 +10,7 @@ import os
 import platform
 
 
-HPTERROR = -2145916800000000L
+HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
@@ -30,7 +30,7 @@ for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
-    except Exception, e:
+    except Exception as e:
         pass
     else:
         break
@@ -39,7 +39,6 @@ if not clibmseed:
     raise ImportError(msg)
 
 
-# XXX: Do we still support Python 2.4 ????
 # Figure out Py_ssize_t (PEP 353).
 #
 # Py_ssize_t is only defined for Python 2.5 and above, so it defaults to
@@ -52,7 +51,9 @@ if hasattr(C.pythonapi, 'Py_InitModule4'):
 elif hasattr(C.pythonapi, 'Py_InitModule4_64'):
     Py_ssize_t = C.c_int64
 else:
-    raise TypeError("Cannot determine type of Py_ssize_t")
+    # XXX: Likely false!
+    Py_ssize_t = C.c_int64
+    #raise TypeError("Cannot determine type of Py_ssize_t")
 
 # Valid control headers in ASCII numbers.
 SEED_CONTROL_HEADERS = [ord('V'), ord('A'), ord('S'), ord('T')]
@@ -526,12 +527,6 @@ clibmseed.msr_parse.argtypes = [C.POINTER(C.c_char), C.c_int,
                                 C.POINTER(C.POINTER(MSRecord)),
                                 C.c_int, C.c_int, C.c_int]
 clibmseed.msr_parse.restype = C.c_int
-
-
-PyFile_FromFile = C.pythonapi.PyFile_FromFile
-PyFile_FromFile.argtypes = [
-    Py_ssize_t, C.c_char_p, C.c_char_p, C.CFUNCTYPE(C.c_int, Py_ssize_t)]
-PyFile_FromFile.restype = C.py_object
 
 
 #####################################

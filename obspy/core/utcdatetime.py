@@ -9,7 +9,10 @@ Module containing a UTC-based datetime class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import datetime
+import numpy as np
 import time
+
+from obspy.core import compatibility
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
@@ -224,6 +227,8 @@ class UTCDateTime(object):
                 return
             except:
                 pass
+            if isinstance(value, np.bytes_):
+                value = value.decode()
             if isinstance(value, datetime.datetime):
                 # got a Python datetime.datetime object
                 self._fromDateTime(value)
@@ -233,7 +238,7 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._fromDateTime(dt)
                 return
-            elif isinstance(value, basestring):
+            elif isinstance(value, compatibility.string):
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
@@ -882,8 +887,13 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
+        # Make a temporary copy to be able to round to only six digits.
+        old_timestamp = self.timestamp
+        self.timestamp = round(self.timestamp, 6)
+        string = "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
+        self.timestamp = old_timestamp
+        return string
 
     def __unicode__(self):
         """

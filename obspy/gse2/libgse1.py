@@ -62,7 +62,7 @@ def readIntegerData(fh, npts):
     # find next DAT1 section within file
     buf = fh.readline()
     while buf:
-        if buf.startswith("DAT1"):
+        if buf.startswith(b"DAT1"):
             data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
             break
         buf = fh.readline()
@@ -79,11 +79,11 @@ def readHeader(fh):
     # search for WID1 field
     line = fh.readline()
     while line:
-        if line.startswith("WID1"):
+        if line.startswith(b"WID1"):
             # valid GSE1 header
             break
         line = fh.readline()
-    if line == '':
+    if line == b'':
         raise EOFError
     # fetch header
     header = {}
@@ -100,12 +100,12 @@ def readHeader(fh):
                                       second=second,
                                       microsecond=millisec * 1000)
     header['npts'] = int(line[27:35])
-    header['station'] = line[36:42].strip()
-    header['gse1']['instype'] = line[43:51].strip()
-    header['channel'] = "%03s" % line[52:54].strip().upper()
+    header['station'] = line[36:42].strip().decode()
+    header['gse1']['instype'] = line[43:51].strip().decode()
+    header['channel'] = "%03s" % line[52:54].strip().upper().decode()
     header['sampling_rate'] = float(line[55:66])
-    header['gse1']['type'] = line[67:73].strip()
-    header['gse1']['datatype'] = line[74:78].strip()
+    header['gse1']['type'] = line[67:73].strip().decode()
+    header['gse1']['datatype'] = line[74:78].strip().decode()
     header['gse1']['dflag'] = int(line[79:80])
     # second line
     line = fh.readline()

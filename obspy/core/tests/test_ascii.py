@@ -269,7 +269,9 @@ class ASCIITestCase(unittest.TestCase):
         # float32
         testfile = os.path.join(self.path, 'data', 'tspair_float.ascii')
         stream_orig = readTSPAIR(testfile)
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
+        tmpfile_object.close()
         # write
         writeTSPAIR(stream_orig, tmpfile)
         # read again
@@ -289,8 +291,10 @@ class ASCIITestCase(unittest.TestCase):
                 209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
         np.testing.assert_array_almost_equal(stream[0].data, data, decimal=2)
         # compare raw header
-        lines_orig = open(testfile, 'rt').readlines()
-        lines_new = open(tmpfile, 'rt').readlines()
+        with open(testfile, "rt") as open_file:
+            lines_orig = open_file.readlines()
+        with open(tmpfile, "rt") as open_file:
+            lines_new = open_file.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
         # clean up
         os.remove(tmpfile)
@@ -301,11 +305,13 @@ class ASCIITestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'tspair_2_traces.ascii')
         stream_orig = readTSPAIR(testfile)
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
         # write
         writeTSPAIR(stream_orig, tmpfile)
         # look at the raw data
-        lines = open(tmpfile, 'rt').readlines()
+        with open(tmpfile, "rt") as open_file:
+            lines = open_file.readlines()
         self.assertTrue(lines[0].startswith('TIMESERIES'))
         self.assertTrue('TSPAIR' in lines[0])
         self.assertEqual(lines[1], '2008-01-15T00:00:00.025000  185\n')
@@ -350,6 +356,7 @@ class ASCIITestCase(unittest.TestCase):
         data = [761, 755, 748, 746]
         np.testing.assert_array_almost_equal(stream[1].data[-4:], data)
         # clean up
+        tmpfile_object.close()
         os.remove(tmpfile)
 
     def test_writeSLIST(self):
@@ -359,15 +366,18 @@ class ASCIITestCase(unittest.TestCase):
         # float32
         testfile = os.path.join(self.path, 'data', 'slist_float.ascii')
         stream_orig = readSLIST(testfile)
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
+        tmpfile_object.close()
         # write
         writeSLIST(stream_orig, tmpfile)
         # look at the raw data
-        lines = open(tmpfile, 'rt').readlines()
-        self.assertEquals(lines[0].strip(),
+        with open(tmpfile, "rt") as open_file:
+            lines = open_file.readlines()
+        self.assertEqual(lines[0].strip(),
             'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' + \
             '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
-        self.assertEquals(lines[1].strip(),
+        self.assertEqual(lines[1].strip(),
             '185.009995\t181.020004\t185.029999\t189.039993\t194.050003\t' + \
             '205.059998')
         # read again
@@ -387,8 +397,10 @@ class ASCIITestCase(unittest.TestCase):
                 209.07, 214.08, 222.09, 225.98, 226.99, 219.00]
         np.testing.assert_array_almost_equal(stream[0].data, data, decimal=2)
         # compare raw header
-        lines_orig = open(testfile, 'rt').readlines()
-        lines_new = open(tmpfile, 'rt').readlines()
+        with open(testfile, "rt") as open_file:
+            lines_orig = open_file.readlines()
+        with open(tmpfile, "rt") as open_file:
+            lines_new = open_file.readlines()
         self.assertEqual(lines_orig[0], lines_new[0])
         # clean up
         os.remove(tmpfile)
@@ -399,11 +411,14 @@ class ASCIITestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'slist_2_traces.ascii')
         stream_orig = readSLIST(testfile)
-        tmpfile = NamedTemporaryFile().name
+        tmpfile_object = NamedTemporaryFile()
+        tmpfile = tmpfile_object.name
+        tmpfile_object.close()
         # write
         writeSLIST(stream_orig, tmpfile)
         # look at the raw data
-        lines = open(tmpfile, 'rt').readlines()
+        with open(tmpfile, "rt") as open_file:
+            lines = open_file.readlines()
         self.assertTrue(lines[0].startswith('TIMESERIES'))
         self.assertTrue('SLIST' in lines[0])
         self.assertEqual(lines[1].strip(), '185\t181\t185\t189\t194\t205')
@@ -455,12 +470,14 @@ class ASCIITestCase(unittest.TestCase):
         for format in ['SLIST', 'TSPAIR']:
             for num in range(0, 4):
                 tr = Trace(data=np.arange(num))
-                tempfile = NamedTemporaryFile().name
+                tempfile_object = NamedTemporaryFile()
+                tempfile = tempfile_object.name
+                tempfile_object.close()
                 tr.write(tempfile, format=format)
                 # test results
                 st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                self.assertEqual(len(st), 1)
+                self.assertEqual(len(st[0]), num)
                 os.remove(tempfile)
 
 

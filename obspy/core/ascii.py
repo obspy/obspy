@@ -1,3 +1,5 @@
+    # Data will always be a BytesIO. Avoid to send empty BytesIO to
+    # numpy.readtxt() which raises a warning.
 # -*- coding: utf-8 -*-
 """
 Simple ASCII time series formats
@@ -31,10 +33,10 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from StringIO import StringIO
+from io import BytesIO
 from obspy import Stream, Trace, UTCDateTime
-from obspy.core import Stats
-from obspy.core.util import AttribDict, loadtxt
+from obspy.core import compatibility, Stats
+from obspy.core.util import AttribDict, loadtxt, OrderedDict
 import numpy as np
 
 
@@ -56,7 +58,8 @@ def isSLIST(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, "rt") as open_file:
+            temp = open_file.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -81,7 +84,8 @@ def isTSPAIR(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, "rt") as open_file:
+            temp = open_file.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -112,47 +116,47 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/slist.ascii')
     """
-    fh = open(filename, 'rt')
+    fh = open(filename, 'rb')
     # read file and split text into channels
-    headers = {}
+    headers = OrderedDict()
     key = None
     for line in fh:
         if line.isspace():
             # blank line
             continue
-        elif line.startswith('TIMESERIES'):
+        elif line.startswith(b'TIMESERIES'):
             # new header line
             key = line
-            headers[key] = StringIO()
+            headers[key] = BytesIO()
         elif headonly:
             # skip data for option headonly
             continue
         elif key:
             # data entry - may be written in multiple columns
-            headers[key].write(line.strip() + ' ')
+            headers[key].write((line.strip() + b' '))
     fh.close()
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in compatibility.iteritems(headers):
         # create Stats
         stats = Stats()
-        parts = header.replace(',', '').split()
-        temp = parts[1].split('_')
-        stats.network = temp[0]
-        stats.station = temp[1]
-        stats.location = temp[2]
-        stats.channel = temp[3]
+        parts = header.replace(b',', b'').split()
+        temp = parts[1].split(b'_')
+        stats.network = temp[0].decode()
+        stats.station = temp[1].decode()
+        stats.location = temp[2].decode()
+        stats.channel = temp[3].decode()
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
-        stats.ascii = AttribDict({'unit': parts[-1]})
-        stats.starttime = UTCDateTime(parts[6])
+        stats.mseed = AttribDict({'dataquality': temp[4].decode()})
+        stats.ascii = AttribDict({'unit': parts[-1].decode()})
+        stats.starttime = UTCDateTime(parts[6].decode())
         stats.npts = parts[2]
         if headonly:
             # skip data
             stream.append(Trace(header=stats))
         else:
-            data = _parse_data(data, parts[8])
+            data = _parse_data(data, parts[8].decode())
             stream.append(Trace(data=data, header=stats))
     return stream
 
@@ -178,47 +182,47 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     >>> from obspy import read
     >>> st = read('/path/to/tspair.ascii')
     """
-    fh = open(filename, 'rt')
+    fh = open(filename, 'rb')
     # read file and split text into channels
-    headers = {}
+    headers = OrderedDict()
     key = None
     for line in fh:
         if line.isspace():
             # blank line
             continue
-        elif line.startswith('TIMESERIES'):
+        elif line.startswith(b'TIMESERIES'):
             # new header line
             key = line
-            headers[key] = StringIO()
+            headers[key] = BytesIO()
         elif headonly:
             # skip data for option headonly
             continue
         elif key:
             # data entry - may be written in multiple columns
-            headers[key].write(line.strip().split()[-1] + ' ')
+            headers[key].write(line.strip().split()[-1] + b' ')
     fh.close()
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in compatibility.iteritems(headers):
         # create Stats
         stats = Stats()
-        parts = header.replace(',', '').split()
-        temp = parts[1].split('_')
-        stats.network = temp[0]
-        stats.station = temp[1]
-        stats.location = temp[2]
-        stats.channel = temp[3]
+        parts = header.replace(b',', b'').split()
+        temp = parts[1].split(b'_')
+        stats.network = temp[0].decode()
+        stats.station = temp[1].decode()
+        stats.location = temp[2].decode()
+        stats.channel = temp[3].decode()
         stats.sampling_rate = parts[4]
         # quality only used in MSEED
-        stats.mseed = AttribDict({'dataquality': temp[4]})
-        stats.ascii = AttribDict({'unit': parts[-1]})
-        stats.starttime = UTCDateTime(parts[6])
+        stats.mseed = AttribDict({'dataquality': temp[4].decode()})
+        stats.ascii = AttribDict({'unit': parts[-1].decode()})
+        stats.starttime = UTCDateTime(parts[6].decode())
         stats.npts = parts[2]
         if headonly:
             # skip data
             stream.append(Trace(header=stats))
         else:
-            data = _parse_data(data, parts[8])
+            data = _parse_data(data, parts[8].decode())
             stream.append(Trace(data=data, header=stats))
     return stream
 
@@ -285,7 +289,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
         2776        2766        2759        2760        2765        2767
         ...
     """
-    fh = open(filename, 'wt')
+    fh = open(filename, 'wb')
     for trace in stream:
         stats = trace.stats
         # quality code
@@ -312,7 +316,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
                            stats.channel, dataquality, stats.npts,
                            stats.sampling_rate, stats.starttime, 'SLIST',
                            dtype, unit)
-        fh.write(header)
+        fh.write(header.encode())
         # write data
         rest = stats.npts % 6
         if rest:
@@ -322,7 +326,8 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
         data = data.reshape((-1, 6))
         np.savetxt(fh, data, fmt=fmt, delimiter='\t')
         if rest:
-            fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) + '\n')
+            fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) + \
+                '\n').encode())
     fh.close()
 
 
@@ -395,7 +400,7 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    fh = open(filename, 'wt')
+    fh = open(filename, 'wb')
     for trace in stream:
         stats = trace.stats
         # quality code
@@ -422,7 +427,7 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
                            stats.channel, dataquality, stats.npts,
                            stats.sampling_rate, stats.starttime, 'TSPAIR',
                            dtype, unit)
-        fh.write(header)
+        fh.write(header.encode())
         # write data
         times = np.linspace(stats.starttime.timestamp, stats.endtime.timestamp,
                             stats.npts)
@@ -435,10 +440,10 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
 
 def _parse_data(data, data_type):
     """
-    Simple function to read data contained in a StringIO object to a numpy
+    Simple function to read data contained in a BytesIO object to a numpy
     array.
 
-    :type data: StringIO.StringIO object.
+    :type data: io.BytesIO object.
     :param data: The actual data.
     :type data_type: String
     :param data_type: The data type of the expected data. Currently supported
@@ -450,12 +455,13 @@ def _parse_data(data, data_type):
         dtype = "float32"
     else:
         raise NotImplementedError
-    # Seek to the beginning of the StringIO.
-    data.seek(0)
-    # Data will always be a StringIO. Avoid to send empty StringIOs to
+    # Data will always be a BytesIO. Avoid to send empty BytesIO to
     # numpy.readtxt() which raises a warning.
-    if not data.buf:
+    data.seek(0)
+    if not data.read(1):
         return np.array([], dtype=dtype)
+    data.seek(0)
+
     return loadtxt(data, dtype=dtype, ndlim=1)
 
 

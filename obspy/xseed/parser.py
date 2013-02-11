@@ -9,17 +9,17 @@ Main module containing XML-SEED parser.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
+from obspy.core import compatibility
 from obspy.core.util import getExampleFile, deprecated_keywords
+from io import BytesIO
 import math
 import os
 import warnings
 import zipfile
 import copy
-import urllib2
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -67,7 +67,7 @@ class Parser(object):
         """
         Initializes the SEED parser.
 
-        :param data: Filename, URL, XSEED/SEED string, file pointer or StringIO
+        :param data: Filename, URL, XSEED/SEED string, file pointer or BytesIO
         :type debug: Boolean.
         :param debug: Enables a verbose debug log during parsing of SEED file.
         :type strict: Boolean.
@@ -131,15 +131,15 @@ class Parser(object):
         """
         General parser method for XML-SEED and Dataless SEED files.
 
-        :type data: Filename, URL, Basestring or StringIO object.
+        :type data: Filename, URL, Basestring or BytesIO object.
         :param data: Filename, URL or XSEED/SEED string as file pointer or
-            StringIO.
+            BytesIO.
         """
         if getattr(self, "_format", None):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
-        # try to transform everything into StringIO object
-        if isinstance(data, basestring):
+        # try to transform everything into BytesIO object
+        if isinstance(data, compatibility.string):
             # if it starts with /path/to/ try to search in examples
             if data.startswith('/path/to/'):
                 try:
@@ -149,15 +149,18 @@ class Parser(object):
                     pass
             if "://" in data:
                 # some URL
-                data = urllib2.urlopen(data).read()
+                data = compatibility.urlopen(data).read()
             elif os.path.isfile(data):
                 # looks like a file - read it
                 data = open(data, 'rb').read()
             # but could also be a big string with data
-            data = StringIO(data)
+            try:
+                data = BytesIO(data)
+            except:
+                data = BytesIO(data.encode())
         elif not hasattr(data, "read"):
             raise TypeError
-        # check first byte of data StringIO object
+        # check first byte of data BytesIO object
         first_byte = data.read(1)
         data.seek(0)
         if first_byte.isdigit():
@@ -251,8 +254,8 @@ class Parser(object):
         Writes a XML-SEED file with given name.
         """
         result = self.getXSEED(*args, **kwargs)
-        if isinstance(result, basestring):
-            open(filename, 'w').write(result)
+        if isinstance(result, compatibility.string):
+            open(filename, 'wb').write(result)
             return
         elif isinstance(result, dict):
             for key, value in result.iteritems():
@@ -263,7 +266,7 @@ class Parser(object):
                 else:
                     # current meta data - leave original filename
                     fn = filename
-                open(fn, 'w').write(value)
+                open(fn, 'wb').write(value)
             return
         else:
             raise TypeError
@@ -325,7 +328,7 @@ class Parser(object):
         resp_list = []
         # Loop over all stations.
         for station in self.stations:
-            resp = StringIO('')
+            resp = BytesIO('')
             blockettes = []
             # Read the current station information and store it.
             cur_station = station[0].station_call_letters.strip()
@@ -337,15 +340,17 @@ class Parser(object):
                     cur_location = station[_i].location_identifier.strip()
                     cur_channel = station[_i].channel_identifier.strip()
                     # Take old list and send it to the RESP parser.
-                    if resp.len != 0:
+                    cur_pos = resp.tell()
+                    if resp.tell() != 0:
+                        resp.seek(cur_pos, 0)
                         # Send the blockettes to the parser and append to list.
                         self._getRESPString(resp, blockettes, cur_station)
                         resp_list.append([filename, resp])
                     # Create the filename.
                     filename = 'RESP.%s.%s.%s.%s' \
                         % (cur_network, cur_station, cur_location, cur_channel)
-                    # Create new StringIO and list.
-                    resp = StringIO('')
+                    # Create new BytesIO and list.
+                    resp = BytesIO('')
                     blockettes = []
                     blockettes.append(station[_i])
                     # Write header and the first two lines to the string.
@@ -355,7 +360,7 @@ class Parser(object):
                     '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
                     'B050F03     Station:     %s\n' % cur_station + \
                     'B050F16     Network:     %s\n' % cur_network
-                    # Write to StringIO.
+                    # Write to BytesIO.
                     resp.write(header)
                     continue
                 blockettes.append(station[_i])
@@ -558,9 +563,9 @@ class Parser(object):
             # Write single files.
             for response in new_resp_list:
                 if folder:
-                    file = open(os.path.join(folder, response[0]), 'w')
+                    file = open(os.path.join(folder, response[0]), 'wb')
                 else:
-                    file = open(response[0], 'w')
+                    file = open(response[0], 'wb')
                 response[1].seek(0, 0)
                 file.write(response[1].read())
                 file.close()
@@ -578,7 +583,7 @@ class Parser(object):
 
         It will always parse the whole file and skip any time span data.
 
-        :type data: File pointer or StringIO object.
+        :type data: File pointer or BytesIO object.
         """
         # Jump to the beginning of the file.
         data.seek(0)
@@ -586,11 +591,11 @@ class Parser(object):
         temp = data.read(8)
         # Check whether it starts with record sequence number 1 and a volume
         # index control header.
-        if temp != '000001V ':
+        if temp != b'000001V ':
             raise SEEDParserException("Expecting 000001V ")
         # The first blockette has to be Blockette 10.
         temp = data.read(3)
-        if temp not in ['010', '008', '005']:
+        if temp not in [b'010', b'008', b'005']:
             raise SEEDParserException("Expecting blockette 010, 008 or 005")
         # Skip the next four bytes containing the length of the blockette.
         data.seek(4, 1)
@@ -601,7 +606,7 @@ class Parser(object):
         # Test record length.
         data.seek(length)
         temp = data.read(6)
-        if temp != '000002':
+        if temp != b'000002':
             msg = "Got an invalid logical record length %d" % length
             raise SEEDParserException(msg)
         self.record_length = length
@@ -657,7 +662,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, basestring):
+                    if isinstance(network_id, compatibility.string):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():
@@ -708,7 +713,7 @@ class Parser(object):
         """
         Parse a XML-SEED string.
 
-        :type data: File pointer or StringIO object.
+        :type data: File pointer or BytesIO object.
         """
         data.seek(0)
         root = xmlparse(data).getroot()
@@ -739,7 +744,7 @@ class Parser(object):
     def _getRESPString(self, resp, blockettes, station):
         """
         Takes a file like object and a list of blockettes containing all
-        blockettes for one channel and writes them RESP like to the StringIO.
+        blockettes for one channel and writes them RESP like to the BytesIO.
         """
         blkt52 = blockettes[0]
         # The first blockette in the list always has to be Blockette 52.
@@ -988,8 +993,8 @@ class Parser(object):
         """
         if not data:
             return
-        # Create StringIO for easier access.
-        data = StringIO(data)
+        # Create BytesIO for easier access.
+        data = BytesIO(data)
         # Do not do anything if no data is passed or if a time series header
         # is passed.
         if record_type not in HEADERS:
@@ -1046,7 +1051,10 @@ class Parser(object):
                 msg = "Unknown blockette type %d found" % blockette_id
                 raise SEEDParserException(msg)
         # check if everything is parsed
-        if data.len != data.tell():
+        current_pos = data.tell()
+        # Read the rest.
+        data.read()
+        if current_pos != data.tell():
             warnings.warn("There exist unparsed elements!")
 
     def _createBlockettes11and12(self, blockette12=False):

@@ -4,6 +4,7 @@ GSE2/GSE1 bindings to ObsPy core module.
 """
 
 from obspy import Trace, UTCDateTime, Stream
+from obspy.core import compatibility
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
 
@@ -18,12 +19,13 @@ def isGSE2(filename):
     :return: ``True`` if a GSE2 file.
     """
     # Open file.
+    f = open(filename, 'rb')
     try:
-        f = open(filename)
         libgse2.isGse2(f)
-        f.close()
     except:
+        f.close()
         return False
+    f.close()
     return True
 
 
@@ -74,12 +76,12 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     traces = []
     # read GSE2 file
     f = open(filename, 'rb')
-    for _k in xrange(10000):  # avoid endless loop
+    for _k in range(10000):  # avoid endless loop
         pos = f.tell()
         widi = f.readline()[0:4]
-        if widi == '':  # end of file
+        if widi == b'':  # end of file
             break
-        elif widi != 'WID2':
+        elif widi != b'WID2':
             continue
         else:  # valid gse2 part
             f.seek(pos)
@@ -90,7 +92,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
             # assign all header entries to a new dictionary compatible with an
             # ObsPy Trace object.
             new_header = {}
-            for i, j in convert_dict.iteritems():
+            for i, j in compatibility.iteritems(convert_dict):
                 value = header[i]
                 if isinstance(value, str):
                     value = value.strip()
@@ -140,7 +142,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
     f = open(filename, 'wb')
     for trace in stream:
         header = {}
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in compatibility.iteritems(convert_dict):
             header[_j] = trace.stats[_k]
         for _j in gse2_extra:
             try:
@@ -176,13 +178,14 @@ def isGSE1(filename):
     :return: ``True`` if a GSE1 file.
     """
     # Open file.
+    f = open(filename, 'rb')
     try:
-        f = open(filename)
         data = f.readline()
     except:
+        f.close()
         return False
     f.close()
-    if data.startswith('WID1') or data.startswith('XW01'):
+    if data.startswith(b'WID1') or data.startswith(b'XW01'):
         return True
     return False
 

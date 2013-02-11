@@ -9,6 +9,7 @@ Module for handling ObsPy Catalog and Event objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from obspy.core import compatibility
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
     EventDescriptionType, EventType, EventTypeCertainty, OriginType, \
@@ -24,13 +25,13 @@ from uuid import uuid4
 import copy
 import glob
 import inspect
+import io
 import numpy as np
 import os
 import re
-import urllib2
+import urllib
 import warnings
 import weakref
-import cStringIO
 from lxml import etree
 
 
@@ -46,7 +47,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     multiple event files given via file name or URL using the
     ``pathname_or_url`` attribute.
 
-    :type pathname_or_url: str or StringIO.StringIO, optional
+    :type pathname_or_url: str or io.BytesIO, optional
     :param pathname_or_url: String containing a file name or a URL or a open
         file-like object. Wildcards are allowed for a file name. If this
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
@@ -78,7 +79,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     the file system.
     """
     # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
+    if isinstance(pathname_or_url, compatibility.string) and \
        pathname_or_url.startswith('/path/to/'):
         try:
             pathname_or_url = getExampleFile(pathname_or_url[9:])
@@ -90,9 +91,12 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         cat = _createExampleCatalog()
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, compatibility.string):
+        # Bytes will also end up here - they are not a string. Transform to a
+        # BytesIO.
+        if not hasattr(pathname_or_url, "seek"):
+            pathname_or_url = io.BytesIO(pathname_or_url)
         # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
         try:
             # first try reading directly
             catalog = _read(pathname_or_url, format, **kwargs)
@@ -109,14 +113,14 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         pathname_or_url.seek(0)
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        catalog = _read(io.BytesIO(pathname_or_url.encode()), format, **kwargs)
         cat.extend(catalog.events)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
+        fh.write(urllib.urlopen(pathname_or_url).read())
         fh.close()
         cat.extend(_read(fh.name, format, **kwargs).events)
         os.remove(fh.name)
@@ -347,11 +351,14 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         def __repr__(self):
             return self.__str__()
 
-        def __nonzero__(self):
+        def __bool__(self):
             if any([bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
+
+        def __nonzero__(self):
+            return self.__bool__()
 
         def __eq__(self, other):
             """
@@ -600,7 +607,7 @@ class ResourceIdentifier(object):
         """
         try:
             return ResourceIdentifier.__resource_id_weak_dict[self]
-        except KeyError:
+        except (KeyError, AttributeError):
             return None
 
     def setReferredObject(self, referred_object):
@@ -2063,7 +2070,10 @@ __Event = _eventTypeClassFactory("__Event",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
-                      ("creation_info", CreationInfo)],
+                      ("creation_info", CreationInfo),
+                      ("preferred_origin_id", ResourceIdentifier),
+                      ("preferred_magnitude_id", ResourceIdentifier),
+                      ("preferred_focal_mechanism_id", ResourceIdentifier)],
     class_contains=['event_descriptions', 'comments', 'picks', 'amplitudes',
                     'focal_mechanisms', 'origins', 'magnitudes',
                     'station_magnitudes'])
@@ -2179,31 +2189,25 @@ class Event(__Event):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_origin_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_origin_id:
+            return self.preferred_origin_id.getReferredObject()
+        return None
 
     def preferred_magnitude(self):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_magnitude_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_magnitude_id:
+            return self.preferred_magnitude_id.getReferredObject()
+        return None
 
     def preferred_focal_mechanism(self):
         """
         Returns the preferred origin
         """
-        try:
-            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
-                getReferredObject()
-        except KeyError:
-            return None
+        if self.preferred_focal_mechanism_id:
+            return self.preferred_focal_mechanism_id.getReferredObject()
+        return None
 
 
 class Catalog(object):
@@ -2361,7 +2365,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, basestring):
+        if not isinstance(index, compatibility.string):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
@@ -2443,24 +2447,36 @@ class Catalog(object):
         """
         # Helper functions.
         def __is_smaller(value_1, value_2):
-            if value_1 < value_2:
-                return True
-            return False
+            try:
+                if value_1 < value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_smaller_or_equal(value_1, value_2):
-            if value_1 <= value_2:
-                return True
-            return False
+            try:
+                if value_1 <= value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_greater(value_1, value_2):
-            if value_1 > value_2:
-                return True
-            return False
+            try:
+                if value_1 > value_2:
+                    return True
+                return False
+            except:
+                return False
 
         def __is_greater_or_equal(value_1, value_2):
-            if value_1 >= value_2:
-                return True
-            return False
+            try:
+                if value_1 >= value_2:
+                    return True
+                return False
+            except:
+                return False
 
         # Map the function to the operators.
         operator_map = {"<": __is_smaller,
@@ -2834,9 +2850,9 @@ def validate(xml_file):
 
     # Pretty error printing if the validation fails.
     if valid is not True:
-        print "Error validating QuakeML file:"
+        print("Error validating QuakeML file:")
         for entry in xmlschema.error_log:
-            print "\t%s" % entry
+            print("\t%s" % entry)
     return valid
 
 

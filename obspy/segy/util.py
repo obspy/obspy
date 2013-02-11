@@ -22,7 +22,7 @@ for lib_name in lib_names:
     try:
         clibsegy = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                        'lib', lib_name + lib_extension))
-    except Exception, e:
+    except Exception as e:
         pass
     else:
         break
