@@ -2491,7 +2491,6 @@ class BeachBall:
         Plot of the solution in the principal axes system.
         """
         import matplotlib
-        from matplotlib import interactive
         import pylab as P
 
         self._update_attributes(kwargs)
@@ -3815,7 +3814,6 @@ class BeachBall:
         """
         import matplotlib
         import pylab as P
-        from matplotlib import interactive
 
         plotfig = self._setup_plot_US(P, ax=ax)
 
@@ -4107,8 +4105,6 @@ def main():
         if kwargs_dict['plot_save_plot']:
             bb2plot.save_BB(kwargs_dict)
             return
-
-        import pylab as P
 
         if kwargs_dict['plot_pa_plot']:
             bb2plot.pa_plot(kwargs_dict)

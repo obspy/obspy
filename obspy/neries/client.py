@@ -10,7 +10,7 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy.core import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream
 from obspy.core.event import readEvents
 from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
@@ -19,18 +19,12 @@ from suds.sax.attribute import Attribute
 from suds.xsd.sxbase import SchemaObject
 import StringIO
 import functools
+import json
 import os
 import platform
-import sys
 import urllib
 import urllib2
 import warnings
-try:
-    import json
-    if not getattr(json, "loads", None):
-        json.loads = json.read  # @UndefinedVariable
-except ImportError:
-    import simplejson as json
 
 
 SEISMOLINK_WSDL = "http://www.orfeus-eu.org/wsdl/seismolink/seismolink.wsdl"
@@ -165,11 +159,7 @@ class Client(object):
         remoteaddr = self.base_url + url + '?' + urllib.urlencode(params)
         if self.debug:
             print('\nRequesting %s' % (remoteaddr))
-        # timeout exists only for Python >= 2.6
-        if sys.hexversion < 0x02060000:  # pragma: no cover
-            response = urllib2.urlopen(remoteaddr)
-        else:  # pragma: no cover
-            response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
+        response = urllib2.urlopen(remoteaddr, timeout=self.timeout)
         doc = response.read()
         return doc
 
@@ -530,7 +520,7 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neries import Client
-        >>> from obspy.core import UTCDateTime
+        >>> from obspy import UTCDateTime
         >>> client = Client(user='test@obspy.org')
         >>> dt = UTCDateTime("2011-01-01T00:00:00")
         >>> result = client.getInventory('GE', 'SNAA', '', 'BHZ', dt, dt+10,

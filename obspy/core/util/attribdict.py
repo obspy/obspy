@@ -8,10 +8,11 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import warnings
+
+import collections
 
 
-class AttribDict(dict, object):
+class AttribDict(collections.MutableMapping):
     """
     A class which behaves like a dictionary.
 
@@ -36,8 +37,8 @@ class AttribDict(dict, object):
     >>> x[0:3]
     ['network', 'station']
     """
+    defaults = {}
     readonly = []
-    priorized_keys = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -51,56 +52,43 @@ class AttribDict(dict, object):
         AttribDict({'a': 1, 'b': 2})
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
-        # Deprecated support of the data={} kwarg.
-        if kwargs.get("data") is not None and \
-                isinstance(kwargs["data"], dict):
-            kwargs.update(kwargs["data"])
-            del kwargs["data"]
-            msg = "The 'data' kwarg will be deprecated soon. Please use " + \
-                  "either AttribDict(data_dict) or pass the kwargs directly."
-            warnings.warn(msg, category=DeprecationWarning)
-        # Args is allowed to be exactly one dictionary which will then be
-        # appended to the kwarg dictionary.
-        if len(args) == 1 and isinstance(args[0], dict):
-            kwargs.update(args[0])
-        dict.__init__(kwargs)
-        self.update(kwargs)
+        # set default values directly
+        self.__dict__.update(self.defaults)
+        # use overwritable update method to set arguments
+        self.update(dict(*args, **kwargs))
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, dict.__repr__(self))
+        return "%s(%s)" % (self.__class__.__name__, self.__dict__)
+
+    def __getitem__(self, name, default=None):
+        try:
+            return self.__dict__[name]
+        except KeyError:
+            # check if we got any default value given at class level
+            if name in self.defaults:
+                return self.defaults[name]
+            # if both are missing check for a given default value
+            if default is None:
+                raise
+            return default
 
     def __setitem__(self, key, value):
-        super(AttribDict, self).__setattr__(key, value)
-        super(AttribDict, self).__setitem__(key, value)
-
-    def __getitem__(self, name):
-        if name in self.readonly:
-            return self.__dict__[name]
-        return super(AttribDict, self).__getitem__(name)
+        if key in self.readonly:
+            msg = 'Attribute "%s" in %s object is read only!'
+            raise AttributeError(msg % (key, self.__class__.__name__))
+        self.__dict__[key] = value
 
     def __delitem__(self, name):
-        super(AttribDict, self).__delattr__(name)
-        return super(AttribDict, self).__delitem__(name)
-
-    def clear(self):
-        self.__dict__ = {}
-        return super(AttribDict, self).clear()
-
-    def pop(self, name, default={}):
-        value = super(AttribDict, self).pop(name, default)
         del self.__dict__[name]
-        return value
-
-    def popitem(self):
-        (name, value) = super(AttribDict, self).popitem()
-        super(AttribDict, self).__delattr__(name)
-        return (name, value)
 
     def __getstate__(self):
         return self.__dict__
 
-    def __setstate__(self, pickle_dict):
-        self.update(pickle_dict)
+    def __setstate__(self, adict):
+        # set default values
+        self.__dict__.update(self.defaults)
+        # update with pickle dictionary
+        self.update(adict)
 
     __getattr__ = __getitem__
     __setattr__ = __setitem__
@@ -110,27 +98,15 @@ class AttribDict(dict, object):
         return self.__class__(self.__dict__.copy())
 
     def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
-        st = self.__class__()
-        st.update(self)
-        return st
+        ad = self.__class__()
+        ad.update(self.__dict__)
+        return ad
 
     def update(self, adict={}):
         for (key, value) in adict.iteritems():
             if key in self.readonly:
                 continue
-            self[key] = value
-
-    def setdefault(self, key, value=None):
-        """
-        If key is in the dictionary, return its value. If not, insert key with
-        a value of default and return default. Default defaults to None.
-        """
-        try:
-            return self.__dict__[key]
-        except KeyError:
-            super(AttribDict, self).__setattr__(key, value)
-            super(AttribDict, self).__setitem__(key, value)
-        return value
+            self.__setitem__(key, value)
 
     def _pretty_str(self, priorized_keys=[], min_label_length=16):
         """
@@ -159,6 +135,12 @@ class AttribDict(dict, object):
         keys = priorized_keys + sorted(other_keys)
         head = [pattern % (k, self.__dict__[k]) for k in keys]
         return "\n".join(head)
+
+    def __iter__(self):
+        return iter(self.__dict__)
+
+    def __len__(self):
+        return len(self.__dict__)
 
 
 if __name__ == '__main__':

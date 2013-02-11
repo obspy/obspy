@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2012.105
+ * modified: 2012.363
  ***************************************************************************/
 
 #include <stdio.h>
@@ -115,6 +115,97 @@ msr_parse ( char *record, int recbuflen, MSRecord **ppmsr, int reclen,
   
   return MS_NOERROR;
 }  /* End of msr_parse() */
+
+
+/**********************************************************************
+ * msr_parse_selection:
+ *
+ * This routine wraps msr_parse() to parse and return the first record
+ * from a memory buffer that matches optional Selections.  If the
+ * selections pointer is NULL the effect is to search the buffer for
+ * the first parsable record.
+ *
+ * The offset value specifies the starting offset in the buffer and,
+ * on success, the offset in the buffer to record parsed.
+ *
+ * The caller should manage the value of the offset in two ways:
+ * 
+ * 1) on subsequent calls after a record has been parsed the caller
+ * should increment the offset by the record length returned or
+ * properly manipulate the record buffer pointer, buffer length and
+ * offset to the same effect.
+ *
+ * 2) when the end of the buffer is reached MS_GENERROR (-1) is
+ * returned, the caller should check the offset value against the
+ * record buffer length to determine when the entire buffer has been
+ * searched.
+ * 
+ * Return values: same as msr_parse() except that MS_GENERROR is
+ * returned when end-of-buffer is reached.
+ *********************************************************************/
+int
+msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
+		      MSRecord **ppmsr, int reclen,
+		      Selections *selections, flag dataflag, flag verbose )
+{
+  int retval = MS_GENERROR;
+  int unpackretval;
+  flag dataswapflag = 0;
+  flag bigendianhost = ms_bigendianhost();
+  
+  if ( ! ppmsr )
+    return MS_GENERROR;
+  
+  if ( ! recbuf )
+    return MS_GENERROR;
+  
+  if ( ! offset )
+    return MS_GENERROR;
+  
+  while ( *offset < recbuflen )
+    {
+      retval = msr_parse (recbuf+*offset, recbuflen-*offset, ppmsr, reclen, 0, verbose);
+      
+      if ( retval )
+        {
+          if ( verbose )
+            ms_log (2, "Error parsing record at offset %lld\n", *offset);
+	  
+          *offset += 256;
+        }
+      else
+        {
+	  if ( selections && ! msr_matchselect (selections, *ppmsr, NULL) )
+	    {
+	      *offset += (*ppmsr)->reclen;
+	      retval = MS_GENERROR;
+	    }
+	  else
+	    {
+	      if ( dataflag )
+		{
+		  /* If BE host and LE data need swapping */
+		  if ( bigendianhost && (*ppmsr)->byteorder == 0 )
+		    dataswapflag = 1;
+		  /* If LE host and BE data (or bad byte order value) need swapping */
+		  else if ( !bigendianhost && (*ppmsr)->byteorder > 0 )
+		    dataswapflag = 1;
+		  
+		  unpackretval = msr_unpack_data (*ppmsr, dataswapflag, verbose);
+		  
+		  if ( unpackretval < 0 )
+		    return unpackretval;
+		  else
+		    (*ppmsr)->numsamples = unpackretval;
+		}
+	      
+	      break;
+	    }
+        }
+    }
+  
+  return retval;
+}  /* End of msr_parse_selection() */
 
 
 /********************************************************************

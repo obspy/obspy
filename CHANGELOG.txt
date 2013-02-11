@@ -1,15 +1,46 @@
 dev:
  - obspy.arclink:
+   * user keyword is now required during client initialization
+ - obspy.css:
+   * new module for CSS (Center for Seismic Studies) format
+   * currently read support for waveform data
+ - obspy.db:
+   * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
+     for features because pipe has a special meaning on most operation systems
+
+0.8.3:
+ - circumventing an issue in the current libmseed release that can lead to
+   some float values being read in wrongly
+
+0.8.2:
+ - fixing a bug in plotting methods of Trace and Stream
+ - stream/trace.plot(type="dayplot") can display event information now
+
+0.8.1:
+ - fixing a bug parsing QuakeML from a StringIO object using xml and
+   autodetection
+
+0.8.0:
+ - version numbering: one single, common version number for ObsPy now.
+   Use "import obspy; print obspy.__version__"
+ - discontinuing Python 2.5 support
+ - most important classes/functions can be imported like "from obspy import
+   ...", currently: read, Trace, Stream, UTCDateTime and readEvents
+ - obspy.arclink:
    * refactored attributes in getPAZ to stick better with the SEED standard
  - obspy.core:
    * fixing preview generation for sampling rates containing floats
    * fixing deprecated_keywords decorator for the case of removed keywords
-   * fixing SLIST and TSPAIR reading/writing of empty traces or traces containing
-     only one or two data points
+   * fixing SLIST and TSPAIR reading/writing of empty traces or traces
+     containing only one or two data points
    * adding taper() method to Trace/Stream using cosTaper of ObsPy and also
      all scipy windowing functions
    * adding cutout() method to Stream
    * removed all deprecated UTCDateTime methods
+   * adding a class and script to determine flinn-engdahl regions for given
+     longitude and latitude
+   * adding rotate() method to Stream wrapping rotate functions in
+     obspy.signal
  - obspy.imaging:
    * obspy-scan: adding options to control start/endtime and channels, adding
      options to not plot gaps and reducing file size for plots considerably.
@@ -30,55 +61,71 @@ dev:
  - obspy.seishub:
    * adding kwarg to control number of retries for failing requests
    * adding obspy.xseed as dependency (in setup.py and debian/control)
-   * changing obspy.client.station.getPAZ() call syntax to use seed_id (args/kwargs)
+   * changing obspy.client.station.getPAZ() call syntax to use seed_id
+     (args/kwargs)
+   * adding local caching of requests for PAZ and coordinates to avoid
+     repeated requests to server
  - obspy.sh:
    * file extension 'QBN' not added twice anymore if data_directory was set
    * fixing SH_ASC and Q reading/writing of empty traces or traces containing
      only one or two data points
  - obspy.signal:
+   * module psd has been refactored to spectral_estimation
    * adding function for cross correlation pick correction
    * removing pitsa-compatibility in response function calculation
      (no complex conjugate)
    * preventing a possible duplicated overall sensitivity removal in seisSim
      when using the option seedresp
-   * adding optimized C-code for classic STALTA. Runs aproximally, 1000x
+   * adding optimized C-code for classic STALTA. Runs approximately, 1000x
      faster than pure python code. It has now the same order of speed as the
      recursive STALTA
+   * new CAPON method for array_analysis / array_processing
+   * sonic was renamed to array_processing, sonic is now deprecated
  - obspy.xseed:
-   * fixed a bug with dataless to xseed conversion using split_stations=True
-   * fixed a bug affecting getPAZ() and getCoordinates() when selecting specific
-     channels from complex dataless files
-     (see: https://github.com/obspy/obspy/issues/412) 
+   * fixed a bug with Dataless to XSEED conversion using split_stations=True
+   * fixed a bug affecting getPAZ() and getCoordinates() when selecting
+     specific channels from complex dataless files
+     (see: https://github.com/obspy/obspy/issues/412)
+   * added getInventory() method to the Parser object. Returns a dictionary
+     about the contents of the Parser object. This is also integrated in the
+     string representation and makes it more informative.
+ - obspy.mseed:
+   * adding experimental details option, which extracts timing quality and
+     info on the calibration
 
 0.7.1:
  - obspy.arclink:
-   * proper DeprecationWarning for deprecated keywords for Client.getWaveform()
+   * proper DeprecationWarning for deprecated keywords for
+     Client.getWaveform()
  - obspy.core:
    * fixing negative azimuths returned by gps2DistAzimuth [#375]
 
 0.7.0:
  - obspy.arclink:
    * requesting time spans (using 'starttime' and 'endtime' keywords) are
-     deprecated in Client.getPAZ() and Client.getMetadata() - use 'time' instead
+     deprecated in Client.getPAZ() and Client.getMetadata() - use 'time'
+     instead
    * output format has changed for Client.getPAZ(..., time=dt)
    * 'getCoordinates' and 'getPAZ' keywords are deprecated in
      Client.getWaveform() - use 'metadata' instead
-   * Client.getWaveform(..., metadata=True) will return both keywords as well as
-     PAZ - inventory request is done only once per request -> huge performance
-     improvement compared to previous implementation
+   * Client.getWaveform(..., metadata=True) will return both keywords as well
+     as PAZ - inventory request is done only once per request -> huge
+     performance improvement compared to previous implementation
    * traces requested via Client.getWaveform(..., metadata=True) covering
      multiple instrumentations will be split and the correct PAZ are appended
  - obspy.core:
    * new Catalog/Event classes
    * read/write support for QuakeML files
    * new resample method for Trace and Stream object
-   * Trace.__mod__ (splits Trace into Stream containing traces with num samples)
+   * Trace.__mod__ (splits Trace into Stream containing traces with num
+     samples)
    * Trace.__div__ (splits Trace into Stream containing num traces)
    * implementation of __mul__ method for Trace and Stream objects
    * new formatSeedLink method for UTCDateTime object
    * new split method for transforming streams containing masked arrays into
      contiguous traces
-   * new util.xmlwrapper module for uniform API for Python's default xml and lxml
+   * new util.xmlwrapper module for uniform API for Python's default xml and
+     lxml
    * new obspy.core.util.types.Enum class
    * refactored obspy.core.util.ordereddict into obspy.core.util.types
    * refactored kilometer2degrees and locations2degrees from obspy.taup into
@@ -87,10 +134,12 @@ dev:
    * removing __hash__ fixture for Stream and Trace
    * stream.select works now case insensitive
    * support for initialization of UTCDateTime from numpy.string_ types
-   * new dtype parameter on read method allows converting data into given dtype
+   * new dtype parameter on read method allows converting data into given
+     dtype
    * AttribDict may now be initialized with (key, value) kwarg pairs, e.g.
      AttribDict(a=1, b=2).
-    * changed many setter/getter in UTCDateTime to private methods, e.g. _getDate
+    * changed many setter/getter in UTCDateTime to private methods, e.g.
+      _getDate
    * added UTCDateTime.DEFAULT_PRECISION
    * import of an unsupported waveform will result into a TypeError [#338]
    * added compatibility methods for AttribDict and UTCDateTime
@@ -118,14 +167,15 @@ dev:
  - obspy.mseed:
    * changing license to LGPL (same as libmseed)
    * libmseed 2.7 (fixes sampling rates above 32,767 Hz)
-   * adding read/write support for very large and very small sampling rates using
-     blockette 100 in MiniSEED
-   * new obspy-mseed-recordanalyzer script for analyzing SEED files via console
+   * adding read/write support for very large and very small sampling rates
+     using blockette 100 in MiniSEED
+   * new obspy-mseed-recordanalyzer script for analyzing SEED files via
+     console
    * new obspy.mseed.util.shiftTimeOfFile() function for shifting
      the time of all records without interfering with the rest of the file.
  - obspy.neries:
    * new format 'catalog' for getEvents, getEventDetail and getLatestEvents
-     methods - deprecating old format defaults 
+     methods - deprecating old format defaults
  - obspy.sac:
    * bugfix for SAC files containing null terminated strings
  - obspy.seg2:
@@ -137,7 +187,7 @@ dev:
    * adding coincidence triggering routine
  - obspy.taup:
    * deprecated kilometer2degrees and locations2degrees - one can find those
-     methods on obspy.core.util now 
+     methods on obspy.core.util now
  - obspy.xseed:
    * fixed a bug with exactly one pole or one zero in response information
 

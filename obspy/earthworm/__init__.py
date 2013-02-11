@@ -33,7 +33,7 @@ Basic Usage
     .. plot::
 
         from obspy.earthworm import Client
-        from obspy.core import UTCDateTime
+        from obspy import UTCDateTime
         client = Client("pele.ess.washington.edu", 16017)
         response = client.availability("UW", "TUCA", channel="BHZ")
         t = response[0][4]

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
 from obspy.core.util.base import getMatplotlibVersion
 import unittest
 

@@ -34,21 +34,24 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     .. seealso:: [Kristekova2006]_, eq. (4)
 
     :param st: time dependent signal.
-    :param dt: time step between two samples in st
+    :param dt: time step between two samples in st (in seconds)
     :param w0: parameter for the wavelet, tradeoff between time and frequency
         resolution
-    :param f: frequency discretization, type numpy.ndarray.
+    :param fmin: minimum frequency (in Hz)
+    :param fmax: maximum frequency (in Hz)
+    :param nf: number of logarithmically spaced frequencies between fmin and
+        fmax
     :param wl: wavelet to use, for now only 'morlet' is implemented
 
     :return: time frequency representation of st, type numpy.ndarray of complex
-        values.
+        values, shape = (nf, len(st)).
     """
     npts = len(st) * 2
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.empty((npts / 2, nf)) * 0j
+    cwt = np.zeros((npts / 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
         psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \
@@ -97,14 +100,14 @@ def tfem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -160,14 +163,14 @@ def tfpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         and (number of components, nf, len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -223,14 +226,14 @@ def tem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -286,14 +289,14 @@ def tpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         len(st1)) for multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -350,14 +353,14 @@ def fem(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -414,14 +417,14 @@ def fpm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
         multicomponent data
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -476,14 +479,14 @@ def em(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Envelope Misfit
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -537,14 +540,14 @@ def pm(st1, st2, dt=0.01, fmin=1., fmax=10., nf=100, w0=6, norm='global',
     :return: Single Valued Phase Misfit
     """
     if len(st1.shape) == 1:
-        W1 = np.empty((1, nf, st1.shape[0])) * 0j
-        W2 = np.empty((1, nf, st1.shape[0])) * 0j
+        W1 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
+        W2 = np.zeros((1, nf, st1.shape[0]), dtype=np.complex)
 
         W1[0] = cwt(st1, dt, w0, fmin, fmax, nf)
         W2[0] = cwt(st2, dt, w0, fmin, fmax, nf)
     else:
-        W1 = np.empty((st1.shape[0], nf, st1.shape[1])) * 0j
-        W2 = np.empty((st2.shape[0], nf, st2.shape[1])) * 0j
+        W1 = np.zeros((st1.shape[0], nf, st1.shape[1]), dtype=np.complex)
+        W2 = np.zeros((st2.shape[0], nf, st2.shape[1]), dtype=np.complex)
 
         for i in np.arange(st1.shape[0]):
             W1[i] = cwt(st1[i], dt, w0, fmin, fmax, nf)
@@ -1105,7 +1108,7 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
@@ -1375,7 +1378,7 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     if show:
         plt.show()
     else:
-        if len(st1.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs
@@ -1423,7 +1426,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
     >>> plotTfr(tr.data, dt=tr.stats.delta, fmin=.01, # doctest: +SKIP
     ...         fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
@@ -1431,7 +1434,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     .. plot::
 
         from obspy.signal.tf_misfit import plotTfr
-        from obspy.core import read
+        from obspy import read
         tr = read("http://examples.obspy.org/a02i.2008.240.mseed")[0]
         plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
                 fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
@@ -1473,17 +1476,17 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         cmap = LinearSegmentedColormap('cmap_tfr', CDICT_TFR, 1024)
 
     if len(st.shape) == 1:
-        W = np.empty((1, nf, npts)) * 0j
+        W = np.zeros((1, nf, npts), dtype=np.complex)
         W[0] = cwt(st, dt, w0, fmin, fmax, nf)
         ntr = 1
 
-        spec = np.empty((1, nfft / 2 + 1)) * 0j
+        spec = np.zeros((1, nfft / 2 + 1), dtype=np.complex)
         spec[0] = np.fft.rfft(st, n=nfft) * dt
 
         st = st.reshape((1, npts))
     else:
-        W = np.empty((st.shape[0], nf, npts)) * 0j
-        spec = np.empty((st.shape[0], nfft / 2 + 1)) * 0j
+        W = np.zeros((st.shape[0], nf, npts), dtype=np.complex)
+        spec = np.zeros((st.shape[0], nfft / 2 + 1), dtype=np.complex)
 
         for i in np.arange(st.shape[0]):
             W[i] = cwt(st[i], dt, w0, fmin, fmax, nf)
@@ -1553,7 +1556,7 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
     if show:
         plt.show()
     else:
-        if len(st.shape) == 1:
+        if ntr == 1:
             return figs[0]
         else:
             return figs

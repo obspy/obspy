@@ -28,7 +28,7 @@ characteristic functions and a coincidence triggering routine.
 import warnings
 import ctypes as C
 import numpy as np
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.signal.headers import clibsignal, head_stalta_t
 
 
@@ -163,7 +163,7 @@ def classicSTALTA(a, nsta, nlta):
     Computes the standard STA/LTA from a given input array a. The length of
     the STA is given by nsta in samples, respectively is the length of the
     LTA given by nlta in samples.
-    
+
     Fast version written in C.
 
     :type a: NumPy ndarray
@@ -237,6 +237,7 @@ def classicSTALTAPy(a, nsta, nlta):
     # pad zeros of length nlta to avoid overfit and
     # return STA/LTA ratio
     sta[0:nlta_1] = 0
+    lta[0:nlta_1] = 1  # avoid devision by zero
     return sta / lta
 
 
@@ -266,6 +267,7 @@ def delayedSTALTA(a, nsta, nlta):
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
                  nlta + lta[i - 1]
     sta[0:nlta + nsta + 50] = 0
+    lta[0:nlta + nsta + 50] = 1  # avoid division by zero
     return sta / lta
 
 
@@ -385,7 +387,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     :return: (pptime, pfm) pptime sample number of parrival; pfm direction
         of first motion (U or D)
 
-    .. note:: currently the first sample is not take into account
+    .. note:: currently the first sample is not taken into account
 
     .. seealso:: [Baer1987]_
     """

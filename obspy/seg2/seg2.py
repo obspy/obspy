@@ -3,6 +3,8 @@
 """
 SEG-2 support for ObsPy.
 
+A file format description is given by [Pullan1990]_.
+
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2011
 :license:
@@ -14,7 +16,8 @@ import numpy as np
 from struct import unpack
 import warnings
 
-from obspy.core import Trace, Stream, AttribDict, UTCDateTime
+from obspy import Trace, Stream, UTCDateTime
+from obspy.core import AttribDict
 from header import MONTHS
 
 

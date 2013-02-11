@@ -102,21 +102,30 @@ class Parser(object):
                 return 'No data'
         except:
             return 'No data'
-        else:
-            temp = ""
-            for station in self.stations:
-                for blockette in station:
-                    if blockette.id != 52:
-                        continue
-                    temp += station[0].network_code + '.'
-                    temp += station[0].station_call_letters + '.'
-                    temp += blockette.location_identifier.strip() + '.'
-                    temp += blockette.channel_identifier + ' | '
-                    # Add times.
-                    temp += str(blockette.start_date) + ' - '
-                    temp += str(blockette.end_date) + os.linesep
-
-            return temp.strip()
+        ret_str = ""
+        inv = self.getInventory()
+        ret_str += "Networks:\n"
+        # Sort alphabetically.
+        networks = sorted(inv["networks"], key=lambda x: x["network_code"])
+        for network in networks:
+            ret_str += "\t%s (%s)\n" % (network["network_code"],
+                network["network_name"])
+        stations = sorted(inv["stations"], key=lambda x: x["station_id"])
+        ret_str += "Stations:\n"
+        for station in stations:
+            ret_str += "\t%s (%s)\n" % (station["station_id"],
+                station["station_name"])
+        channels = sorted(inv["channels"], key=lambda x: x["channel_id"])
+        ret_str += "Channels:\n"
+        for channel in channels:
+            start_date = channel["start_date"].strftime("%Y-%m-%d") if \
+                    channel["start_date"] else ""
+            end_date = channel["end_date"].strftime("%Y-%m-%d") if \
+                    channel["end_date"] else ""
+            ret_str += "\t%s | %.2f Hz | %s | %s - %s\n" % \
+               (channel["channel_id"], channel["sampling_rate"],
+               channel["instrument"], start_date, end_date)
+        return ret_str.strip()
 
     def read(self, data):
         """
@@ -374,9 +383,13 @@ class Parser(object):
         """
         Selects all blockettes related to given SEED id and datetime.
         """
-        # parse blockettes if not SEED
+        old_format = self._format
+        # parse blockettes if not SEED. Needed foe XSEED to be intialized.
+        # XXX: Should potentially be fixed at some point.
         if self._format != 'SEED':
             self.__init__(self.getSEED())
+        if old_format == "XSEED":
+            self._format = "XSEED"
         # split id
         if '.' in seed_id:
             net, sta, loc, cha = seed_id.split('.')
@@ -523,6 +536,7 @@ class Parser(object):
                 data['latitude'] = blockette.latitude
                 data['longitude'] = blockette.longitude
                 data['elevation'] = blockette.elevation
+                data['local_depth'] = blockette.local_depth
                 break
         return data
 
@@ -535,6 +549,11 @@ class Parser(object):
             the folder name extended with the extension '.zip'.
         """
         new_resp_list = self.getRESP()
+        # Check if channel information could be found.
+        if len(new_resp_list) == 0:
+            msg = ("No channel information could be found. The SEED file "
+                   "needs to contain information about at least one channel.")
+            raise Exception(msg)
         if not zipped:
             # Write single files.
             for response in new_resp_list:
@@ -624,6 +643,66 @@ class Parser(object):
         self._parseMergedData(merged_data.strip(), record_type)
         # Update the internal structure to finish parsing.
         self._updateInternalSEEDStructure()
+
+    def getInventory(self):
+        """
+        Function returning a dictionary about whats actually in the Parser
+        object.
+        """
+        info = {"networks": [], "stations": [], "channels": []}
+        current_network = None
+        current_station = None
+        for station in self.stations:
+            for blkt in station:
+                if blkt.id == 50:
+                    current_network = blkt.network_code.strip()
+                    network_id = blkt.network_identifier_code
+                    if isinstance(network_id, basestring):
+                        new_id = ""
+                        for _i in network_id:
+                            if _i.isdigit():
+                                new_id += _i
+                        network_id = int(new_id)
+                    network_name = self._get_abbreviation(network_id)
+                    cur_nw = {"network_code": current_network,
+                        "network_name": network_name}
+                    if cur_nw not in info["networks"]:
+                        info["networks"].append(cur_nw)
+                    current_station = blkt.station_call_letters.strip()
+                    cur_stat = {"station_id": "%s.%s" % (current_network,
+                        current_station), "station_name": blkt.site_name}
+                    if cur_stat not in info["stations"]:
+                        info["stations"].append(cur_stat)
+                    continue
+                if blkt.id == 52:
+                    if current_network is None or current_station is None:
+                        raise Exception("Something went wrong")
+                    chan_info = {}
+                    channel = blkt.channel_identifier.strip()
+                    location = blkt.location_identifier.strip()
+                    chan_info["channel_id"] = "%s.%s.%s.%s" % (current_network,
+                        current_station, location, channel)
+                    chan_info["sampling_rate"] = blkt.sample_rate
+                    chan_info["instrument"] = \
+                        self._get_abbreviation(blkt.instrument_identifier)
+                    chan_info["start_date"] = blkt.start_date
+                    chan_info["end_date"] = blkt.end_date
+                    info["channels"].append(chan_info)
+                    continue
+        return info
+
+    def _get_abbreviation(self, identifier_code):
+        """
+        Helper function returning the abbreviation for the given identifier
+        code.
+        """
+        for blkt in self.abbreviations:
+            if blkt.id != 33:
+                continue
+            if blkt.abbreviation_lookup_code != identifier_code:
+                continue
+            return blkt.abbreviation_description
+        return ""
 
     def _parseXSEED(self, data):
         """

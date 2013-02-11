@@ -10,7 +10,7 @@ storing in into a standard SQL database.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import read
+from obspy import read
 from obspy.core.preview import createPreview
 from obspy.core.util.base import _getEntryPoints
 from obspy.db.db import WaveformFile, WaveformPath, WaveformChannel, \
@@ -293,12 +293,10 @@ class WaveformFileCrawler(object):
         out = {}
         for path in paths:
             # strip features
-            if '|' in path:
-                path, features = path.split('|', 1)
-                if ' ' in features:
-                    features = features.split(' ')
-                else:
-                    features = [features.strip()]
+            if '#' in path:
+                parts = path.split('#')
+                path = parts[0]
+                features = parts[1:]
             else:
                 features = []
             # strip patterns

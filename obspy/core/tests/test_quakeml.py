@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from __future__ import with_statement
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, readEvents
+from obspy.core.event import ResourceIdentifier, WaveformStreamID, \
+    readEvents, Event
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 from xml.etree.ElementTree import tostring, fromstring
 import os
 import unittest
@@ -241,6 +240,37 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
+    def test_stationmagnitudecontribution(self):
+        """
+        Tests the station magnitude contribution object.
+        """
+        filename = os.path.join(self.path,
+            'quakeml_1.2_stationmagnitudecontributions.xml')
+        catalog = readQuakeML(filename)
+        self.assertEquals(len(catalog), 1)
+        self.assertEquals(len(catalog[0].magnitudes), 1)
+        self.assertEquals(
+            len(catalog[0].magnitudes[0].station_magnitude_contributions), 2)
+        # Check the first stationMagnitudeContribution object.
+        stat_contrib = \
+            catalog[0].magnitudes[0].station_magnitude_contributions[0]
+        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+            "smi:ch.ethz.sed/magnitude/station/881342")
+        self.assertEqual(stat_contrib.weight, 0.77)
+        self.assertEqual(stat_contrib.residual, 0.02)
+        # Check the second stationMagnitudeContribution object.
+        stat_contrib = \
+            catalog[0].magnitudes[0].station_magnitude_contributions[1]
+        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+            "smi:ch.ethz.sed/magnitude/station/881334")
+        self.assertEqual(stat_contrib.weight, 0.55)
+        self.assertEqual(stat_contrib.residual, 0.11)
+
+        # exporting back to XML should result in the same document
+        original = open(filename, "rt").read()
+        processed = Pickler().dumps(catalog)
+        self._compareStrings(original, processed)
+
     def test_stationmagnitude(self):
         """
         Tests StationMagnitude object.
@@ -419,12 +449,9 @@ class QuakeMLTestCase(unittest.TestCase):
         processed = Pickler().dumps(catalog)
         self._compareStrings(original, processed)
 
-    @skipIfPython25
     def test_writeQuakeML(self):
         """
         Tests writing a QuakeML document.
-
-        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
         tmpfile = NamedTemporaryFile().name
@@ -440,12 +467,9 @@ class QuakeMLTestCase(unittest.TestCase):
         # clean up
         os.remove(tmpfile)
 
-    @skipIfPython25
     def test_readEvents(self):
         """
         Tests reading a QuakeML document via readEvents.
-
-        skipIfPython25 due to the use of the warnings context manager.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
         tmpfile = NamedTemporaryFile().name
@@ -530,6 +554,42 @@ class QuakeMLTestCase(unittest.TestCase):
                 msg = msg.format(enum_name=enum_name,
                     enumerations=", ".join(additional_items))
                 raise Exception(msg)
+
+    def test_read_string(self):
+        """
+        Test reading a QuakeML string/unicode object via readEvents.
+        """
+        filename = os.path.join(self.path, 'neries_events.xml')
+        data = open(filename, 'rt').read()
+        catalog = readEvents(data)
+        self.assertEquals(len(catalog), 3)
+
+    def test_preferred_tags(self):
+        """
+        Testing preferred magnitude, origin and focal mechanism tags
+        """
+        # testing empty event
+        ev = Event()
+        self.assertEquals(ev.preferred_origin(), None)
+        self.assertEquals(ev.preferred_magnitude(), None)
+        self.assertEquals(ev.preferred_focal_mechanism(), None)
+        # testing existing event
+        filename = os.path.join(self.path, 'preferred.xml')
+        catalog = readEvents(filename)
+        self.assertEquals(len(catalog), 1)
+        ev_str = "Event:\t2012-12-12T05:46:24.120000Z | +38.297, +142.373 " + \
+                 "| 2.0 MW"
+        self.assertTrue(ev_str in str(catalog.events[0]))
+        # testing ids
+        ev = catalog.events[0]
+        self.assertEquals('smi:orig2', ev.preferred_origin_id)
+        self.assertEquals('smi:mag2', ev.preferred_magnitude_id)
+        self.assertEquals('smi:fm2', ev.preferred_focal_mechanism_id)
+        # testing objects
+        self.assertEquals(ev.preferred_origin(), ev.origins[1])
+        self.assertEquals(ev.preferred_magnitude(), ev.magnitudes[1])
+        self.assertEquals(ev.preferred_focal_mechanism(),
+            ev.focal_mechanisms[1])
 
 
 def suite():

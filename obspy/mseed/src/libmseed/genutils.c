@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2012.114
+ * modified: 2012.357
  ***************************************************************************/
 
 #include <stdio.h>
@@ -103,7 +103,7 @@ ms_splitsrcname (char *srcname, char *net, char *sta, char *loc, char *chan,
   /* Duplicate srcname */
   if ( ! (id = strdup(srcname)) )
     {
-      fprintf (stderr, "ms_splitsrcname(): Error duplicating srcname string");
+      ms_log (2, "ms_splitsrcname(): Error duplicating srcname string");
       return -1;
     }
   
@@ -790,7 +790,6 @@ ms_hptime2seedtimestr (hptime_t hptime, char *seedtimestr, flag subseconds)
 		    tms.tm_year + 1900, tms.tm_yday + 1,
 		    tms.tm_hour, tms.tm_min, tms.tm_sec, ifract);
   else
-    /* Assuming ifract has at least microsecond precision */
     ret = snprintf (seedtimestr, 18, "%4d,%03d,%02d:%02d:%02d",
                     tms.tm_year + 1900, tms.tm_yday + 1,
                     tms.tm_hour, tms.tm_min, tms.tm_sec);

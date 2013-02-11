@@ -18,7 +18,7 @@ WAV bindings to ObsPy core module.
 """
 
 from __future__ import division
-from obspy.core import Trace, Stream
+from obspy import Trace, Stream
 import numpy as np
 import os
 import wave
@@ -26,7 +26,7 @@ import wave
 
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
-width2dtype = {
+WIDTH2DTYPE = {
     1: '<u1',  # unsigned char
     2: '<i2',  # signed short int
     4: '<i4',  # signed int (int32)
@@ -76,7 +76,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/3cssan.near.8.1.RNON.wav")
     >>> print(st) #doctest: +NORMALIZE_WHITESPACE
     1 Trace(s) in Stream:
@@ -90,9 +90,9 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
         return Stream([Trace(header=header)])
-    if width not in width2dtype.keys():
+    if width not in WIDTH2DTYPE.keys():
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
-    data = np.fromstring(fh.readframes(length), dtype=width2dtype[width])
+    data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
     fh.close()
     return Stream([Trace(header=header, data=data)])
 
@@ -125,7 +125,7 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in width2dtype.keys():
+    if width not in WIDTH2DTYPE.keys():
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
         # write WAV file
@@ -137,11 +137,12 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
                      'not compressed'))
         data = trace.data
+        dtype = WIDTH2DTYPE[width]
         if rescale:
             # optimal scale, account for +/- and the zero
-            data = (2 ** (width * 8 - 1) - 1) * \
-                data.astype('f8') / abs(data).max()
-        data = np.require(data, dtype=width2dtype[width])
+            maxint = 2 ** (width * 8 - 1) - 1
+            data = (data / abs(data).max() * maxint)
+        data = np.require(data, dtype=dtype)
         w.writeframes(data.tostring())
         w.close()
         i += 1

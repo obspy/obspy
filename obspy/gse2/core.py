@@ -3,7 +3,7 @@
 GSE2/GSE1 bindings to ObsPy core module.
 """
 
-from obspy.core import Trace, UTCDateTime, Stream
+from obspy import Trace, UTCDateTime, Stream
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
 
@@ -68,7 +68,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/loc_RJOB20050831023349.z")
     """
     traces = []
@@ -131,7 +131,7 @@ def writeGSE2(stream, filename, inplace=False, **kwargs):  # @UnusedVariable
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read()
     >>> st.write('filename.gse', format='GSE2') #doctest: +SKIP
     """
@@ -210,7 +210,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
 
     .. rubric:: Example
 
-    >>> from obspy.core import read
+    >>> from obspy import read
     >>> st = read("/path/to/y2000.gse")
     """
     traces = []

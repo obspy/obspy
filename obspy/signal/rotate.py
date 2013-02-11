@@ -38,12 +38,26 @@ def rotate_NE_RT(n, e, ba):
     :return: Radial and Transversal component of seismogram.
     """
     if len(n) != len(e):
-        raise TypeError("North and East component have different length!?!")
+        raise TypeError("North and East component have different length.")
     if ba < 0 or ba > 360:
-        raise ValueError("Back Azimuth should be between 0 and 360 degrees!")
+        raise ValueError("Back Azimuth should be between 0 and 360 degrees.")
     r = e * sin((ba + 180) * 2 * pi / 360) + n * cos((ba + 180) * 2 * pi / 360)
     t = e * cos((ba + 180) * 2 * pi / 360) - n * sin((ba + 180) * 2 * pi / 360)
     return r, t
+
+
+def rotate_RT_NE(n, e, ba):
+    """
+    Rotates horizontal components of a seismogram.
+
+    Rotates from radial and tranversal components to north and east
+    components.
+
+    This is the inverse transformation of the transformation described
+    in :func:`rotate_NE_RT`.
+    """
+    ba = 360.0 - ba
+    return rotate_NE_RT(n, e, ba)
 
 
 def rotate_ZNE_LQT(z, n, e, ba, inc):

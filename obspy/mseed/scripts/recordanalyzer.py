@@ -10,6 +10,8 @@
 # Copyright (C) 2010-2012 Lion Krischer
 #---------------------------------------------------------------------
 """
+USAGE: obspy-mseed-recordanalyzer filename.mseed
+
 A command-line tool to analyze Mini-SEED records.
 
 :copyright:
@@ -17,16 +19,12 @@ A command-line tool to analyze Mini-SEED records.
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
-
-.. rubric:: Usage
-
-    $ ./obspy-mseed-recordanalyzer filename.mseed
 """
 
 from copy import deepcopy
-from obspy.core import UTCDateTime
+from obspy import UTCDateTime
 from obspy.core.util.types import OrderedDict
-from obspy.mseed import __version__
+from obspy import __version__
 from optparse import OptionParser
 from struct import unpack
 

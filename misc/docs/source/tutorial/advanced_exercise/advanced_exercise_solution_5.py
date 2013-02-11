@@ -34,7 +34,7 @@ for trig in triglist:
     trig['longitude'] = tr.stats.coordinates.longitude
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
-          'poles': [-6.2832-4.7124j, -6.2832+4.7124j]}
+          'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
 
 for trig in triglist:
     t = trig['time']

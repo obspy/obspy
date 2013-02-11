@@ -24,12 +24,14 @@ from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, add_doctests, \
     add_unittests, ALL_MODULES, DEFAULT_MODULES, NATIVE_BYTEORDER, \
     c_file_p, createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
-    _getVersionString, NETWORK_MODULES, _readFromPlugin
+    NETWORK_MODULES, _readFromPlugin, getScriptDirName
 from obspy.core.util.decorator import deprecated, deprecated_keywords, \
-    skip, skipIf, skipIfPython25, uncompressFile
+    skip, skipIf, uncompressFile
+from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
-    formatScientific, scoreatpercentile, toIntOrZero, loadtxt
+    scoreatpercentile, toIntOrZero, loadtxt
 from obspy.core.util.types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
+from obspy.core.util.version import get_git_version as _getVersionString

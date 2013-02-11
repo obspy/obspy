@@ -31,6 +31,7 @@ from autosummary import import_by_name, get_documenter
 from sphinx.jinja2glue import BuiltinTemplateLoader
 from sphinx.util.osutil import ensuredir
 
+
 def main(argv=sys.argv):
     usage = """%prog [OPTIONS] SOURCEFILE ..."""
     p = optparse.OptionParser(usage.strip())
@@ -52,13 +53,16 @@ def main(argv=sys.argv):
                               "." + options.suffix,
                               template_dir=options.templates)
 
+
 def _simple_info(msg):
     print msg
+
 
 def _simple_warn(msg):
     print >> sys.stderr, 'WARNING: ' + msg
 
-# -- Generating output ---------------------------------------------------------
+# -- Generating output --------------------------------------------------------
+
 
 def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                               warn=_simple_warn, info=_simple_info,
@@ -134,14 +138,16 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                     template = template_env.get_template('autosummary/%s.rst'
                                                          % doc.objtype)
                 except TemplateNotFound:
-                    template = template_env.get_template('autosummary/base.rst')
+                    template = template_env.get_template(
+                        'autosummary/base.rst')
 
             def get_members(obj, typ, include_public=[]):
                 # XXX: whole function is a patch!
                 if typ in ('function', 'class', 'exception'):
                     # modules seem to work
                     items = [name for name in dir(obj)
-                             if get_documenter(getattr(obj, name), obj).objtype == typ
+                             if get_documenter(getattr(obj, name),
+                                                       obj).objtype == typ
                     ]
                     items = [name for name in items
                              if getattr(obj, name).__module__ == obj.__name__]
@@ -206,7 +212,7 @@ def generate_autosummary_docs(sources, output_dir=None, suffix='.rst',
                                   template_dir=template_dir)
 
 
-# -- Finding documented entries in files ---------------------------------------
+# -- Finding documented entries in files --------------------------------------
 
 def find_autosummary_in_files(filenames):
     """Find out what items are documented in source/*.rst.
@@ -220,6 +226,7 @@ def find_autosummary_in_files(filenames):
         documented.extend(find_autosummary_in_lines(lines, filename=filename))
         f.close()
     return documented
+
 
 def find_autosummary_in_docstring(name, module=None, filename=None):
     """Find out what items are documented in the given object's docstring.
@@ -235,6 +242,7 @@ def find_autosummary_in_docstring(name, module=None, filename=None):
     except ImportError, e:
         print "Failed to import '%s': %s" % (name, e)
     return []
+
 
 def find_autosummary_in_lines(lines, module=None, filename=None):
     """Find out what items appear in autosummary:: directives in the
@@ -280,7 +288,7 @@ def find_autosummary_in_lines(lines, module=None, filename=None):
                 continue
 
             if line.strip().startswith(':'):
-                continue # skip options
+                continue  # skip options
 
             m = autosummary_item_re.match(line)
             if m:

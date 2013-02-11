@@ -11,22 +11,21 @@ Base utilities and constants for ObsPy.
 
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.types import OrderedDict
-from obspy.core.util.version import get_git_version as _getVersionString
-from pkg_resources import require, iter_entry_points, load_entry_point
+from pkg_resources import iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
 import glob
+import inspect
 import numpy as np
 import os
 import sys
 import tempfile
-import warnings
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark']
+                   'realtime', 'datamark', 'css']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -34,7 +33,7 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK']
+                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -141,7 +140,7 @@ def getExampleFile(filename):
 
     The ObsPy modules are installed to a custom installation directory.
     That is the path cannot be predicted. This functions searches for all
-    installed ObsPy modules and checks weather the file is in any of
+    installed ObsPy modules and checks whether the file is in any of
     the "tests/data" subdirectories.
 
     :param filename: A test file name to which the path should be returned.
@@ -158,13 +157,10 @@ def getExampleFile(filename):
     IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        try:
-            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
-            file = os.path.join(mod.__path__[0], "data", filename)
-            if os.path.isfile(file):
-                return file
-        except ImportError:
-            pass
+        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        file = os.path.join(mod.__path__[0], "data", filename)
+        if os.path.isfile(file):
+            return file
     msg = "Could not find file %s in tests/data directory " % filename + \
           "of ObsPy modules"
     raise IOError(msg)
@@ -300,6 +296,7 @@ def _getOrderedEntryPoints(group, subgroup=None, order_list=[]):
 ENTRY_POINTS = {
     'trigger': _getEntryPoints('obspy.plugin.trigger'),
     'filter': _getEntryPoints('obspy.plugin.filter'),
+    'rotate': _getEntryPoints('obspy.plugin.rotate'),
     'detrend': _getEntryPoints('obspy.plugin.detrend'),
     'integrate': _getEntryPoints('obspy.plugin.integrate'),
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
@@ -341,8 +338,8 @@ def _getFunctionFromEntryPoint(group, type):
         # check if any entry points are available at all
         if not ep_dict:
             msg = "Your current ObsPy installation does not support " + \
-                  "any %s functions. Please make sure obspy.signal " + \
-                  "and SciPy are installed properly."
+                  "any %s functions. Please make sure " + \
+                  "SciPy is installed properly."
             raise ImportError(msg % (group.capitalize()))
         # ok we have entry points, but specified function is not supported
         msg = "%s type \"%s\" is not supported. Supported types: %s"
@@ -387,16 +384,10 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     if not format:
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
-            try:
-                # search isFormat for given entry point
-                isFormat = load_entry_point(format_ep.dist.key,
-                    'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
-                    'isFormat')
-            except ImportError, e:
-                # verbose error handling/parsing
-                msg = "Cannot load module %s:\n%s" % (format_ep.dist.key, e)
-                warnings.warn(msg, category=ImportWarning)
-                continue
+            # search isFormat for given entry point
+            isFormat = load_entry_point(format_ep.dist.key,
+                'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
+                'isFormat')
             # check format
             if isFormat(filename):
                 break
@@ -421,6 +412,15 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     # read
     list_obj = readFormat(filename, **kwargs)
     return list_obj, format_ep.name
+
+
+def getScriptDirName():
+    """
+    Get the directory of the current script file. This is more robust than
+    using __file__.
+    """
+    return os.path.abspath(os.path.dirname(inspect.getfile(
+        inspect.currentframe())))
 
 
 if __name__ == '__main__':

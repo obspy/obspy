@@ -63,17 +63,11 @@ c itar        : first triggered sample
 c amp         : maximum value of amplitude
 c ptime       : sample number of parrival
 c pamp        : maximum amplitude within trigger periode
-c pamptime    : sample number at which the amplitude was determined
 c preptime    : a possible earlier p-pick
-c prepamp     : maximum amplitude of earlier p-pick
-c prepamptime : sample number of prepamp
 c ifrst       : direction of first motion (1 or -1)
 c pfm         :     "          "     "    (U or D)
 c dtime       : counts the duration where CF dropped below thrshl1
 c noise       : maximum noise amplitude
-c noisetime   : sample number of maximum noise amplitude
-c signal      : maximum signal amplitude
-c signaltime  : sample number of signal amplitude
 c uptime      : counter of samples where ipkflg>0 but no p-pick
 c test        : variable used for debugging, i.e. printed output
 c samplespersec: no of samples per second
@@ -106,14 +100,14 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       int *trace = NULL;
       int ipkflg;
       int uptime = 0;
-      int pamp,pamptime;
-      int preptime,prepamp,prepamptime,ifrst;
-      int noise,noisetime,signal,signaltime;
+      int pamp;
+      int preptime,ifrst;
+      int noise;
 
       int ptime;
       int itar;
       int amp,dtime,num,itrm;
-      int amptime,end_dur;
+      int end_dur;
       float rawold,ssx,ssx2,sum,sdev,mean;
       float edat,rdif,rdat,rda2,rdi2,omega,y2,yt,edev=0.0;
       int i,iamp,picklength;
@@ -187,17 +181,10 @@ int ppick (float *reltrc, int npts, int *pptime, char *pfm, float samplespersec,
       ipkflg = 0;
       ptime = 0;
       pamp = 0;
-      pamptime = 0;
       preptime = 0;
-      prepamp = 0;
-      prepamptime = 0;
       ifrst = 0;
       strcpy(pfm,"");
       noise = 0;
-      noisetime = 0;
-      signal = 0;
-      signaltime = 0;
-      amptime = 0;
       i = 0;
 
 label160:
@@ -205,8 +192,6 @@ label160:
       i= i+1;
       if (i > npts)
       {
-        signal = amp;
-        signaltime = amptime;
         /*
            If a P arrival has not been recognized up to now, check whether
            it was triggered just before being forced to leave the routine
@@ -253,7 +238,7 @@ label160:
       }
 
       /*
-         once picklength is reached, only amp and amptime are updated
+         once picklength is reached, only amp is updated
          but no further trigger is evaluated
       */
       if ( i > picklength)
@@ -263,7 +248,6 @@ label160:
         if(iamp > amp)
         {
            amp= iamp;
-           amptime = i;
         }
         goto label160;
       }
@@ -291,12 +275,10 @@ label160:
       if(iamp > amp)
       {
         amp= iamp;
-        amptime= i;
       }
       if(i <= end_dur)
       {
         pamp= amp;
-        pamptime= amptime;
       }
 
       if ( (edev > thrshl1) && (i > len2)) /*
@@ -319,7 +301,6 @@ label160:
                                            */
                   {
                      noise = amp;
-                     noisetime = amptime;
                   }
                   if (rdif < 0) ifrst=  1;  /* first motion */
                   if (rdif > 0) ifrst= -1;
@@ -328,8 +309,6 @@ label160:
                                  /* even if it may not be taken at the end */
               {
                   preptime = itar;
-                  prepamp = amp;
-                  prepamptime = amptime;
               }
               uptime= 1;
           }
@@ -410,8 +389,6 @@ label160:
                       and time values
                       */
 
-                      prepamp = amp;
-                      prepamptime = amptime;
                       itar = 0;
                   }
                   /* reset trigger flag and uptime */

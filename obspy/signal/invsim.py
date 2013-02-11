@@ -103,6 +103,13 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
         idx2 += 1
         idx3 -= 1
 
+    # Very small data lengths or small decimal taper percentages can result in
+    # idx1 == idx2 and idx3 == idx4. This breaks the following calculations.
+    if idx1 == idx2:
+        idx2 += 1
+    if idx3 == idx4:
+        idx3 -= 1
+
     # the taper at idx1 and idx4 equals zero and
     # at idx2 and idx3 equals one
     cos_win = np.zeros(npts)
@@ -425,8 +432,6 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     for d in [paz_remove, paz_simulate]:
         if d is None:
             continue
-        if not isinstance(d, dict):
-            raise TypeError("Expected dictionary, got %s." % type(d))
         for key in ['poles', 'zeros', 'gain']:
             if key not in d:
                 raise KeyError("Missing key: %s" % key)

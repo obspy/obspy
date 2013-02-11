@@ -1,11 +1,62 @@
-from obspy.core import UTCDateTime
+from obspy.core import read, UTCDateTime, AttribDict
 from obspy.signal import cornFreq2Paz
 from obspy.signal.array_analysis import sonic
-import pickle
-import urllib
+import matplotlib.pyplot as plt
 
 # Load data
-st = pickle.load(urllib.urlopen("http://examples.obspy.org/agfa.dump"))
+st = read("http://examples.obspy.org/agfa.mseed")
+
+# Set PAZ and coordinates for all 5 channels
+st[0].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 205479446.68601453,
+    'gain': 1.0})
+st[0].stats.coordinates = AttribDict({
+    'latitude': 48.108589,
+    'elevation': 0.450000,
+    'longitude': 11.582967})
+
+st[1].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 205479446.68601453,
+    'gain': 1.0})
+st[1].stats.coordinates = AttribDict({
+    'latitude': 48.108192,
+    'elevation': 0.450000,
+    'longitude': 11.583120})
+
+st[2].stats.paz = AttribDict({
+    'poles': [(-0.03736 - 0.03617j), (-0.03736 + 0.03617j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 250000000.0,
+    'gain': 1.0})
+st[2].stats.coordinates = AttribDict({
+    'latitude': 48.108692,
+    'elevation': 0.450000,
+    'longitude': 11.583414})
+
+st[3].stats.paz = AttribDict({
+    'poles': [(-4.39823 + 4.48709j), (-4.39823 - 4.48709j)],
+    'zeros': [0j, 0j],
+    'sensitivity': 222222228.10910088,
+    'gain': 1.0})
+st[3].stats.coordinates = AttribDict({
+    'latitude': 48.108456,
+    'elevation': 0.450000,
+    'longitude': 11.583049})
+
+st[4].stats.paz = AttribDict({
+    'poles': [(-4.39823 + 4.48709j), (-4.39823 - 4.48709j), (-2.105 + 0j)],
+    'zeros': [0j, 0j, 0j],
+    'sensitivity': 222222228.10910088,
+    'gain': 1.0})
+st[4].stats.coordinates = AttribDict({
+    'latitude': 48.108730,
+    'elevation': 0.450000,
+    'longitude': 11.583157})
+
 
 # Instrument correction to 1Hz corner frequency
 paz1hz = cornFreq2Paz(1.0, damp=0.707)
@@ -20,14 +71,13 @@ kwargs = dict(
     # frequency properties
     frqlow=1.0, frqhigh=8.0, prewhiten=0,
     # restrict output
-    semb_thres=-1e9, vel_thres=-1e9, verbose=True, timestamp='mlabday',
+    semb_thres=-1e9, vel_thres=-1e9, timestamp='mlabday',
     stime=UTCDateTime("20080217110515"), etime=UTCDateTime("20080217110545")
 )
 out = sonic(st, **kwargs)
 
 # Plot
-import matplotlib.pyplot as plt
-labels = 'rel.power abs.power baz slow'.split()
+labels = ['rel.power', 'abs.power', 'baz', 'slow']
 
 fig = plt.figure()
 for i, lab in enumerate(labels):
@@ -35,7 +85,9 @@ for i, lab in enumerate(labels):
     ax.scatter(out[:, 0], out[:, i + 1], c=out[:, 1], alpha=0.6,
                edgecolors='none')
     ax.set_ylabel(lab)
-    ax.xaxis_date()
+    ax.set_xlim(out[0, 0], out[-1, 0])
+    ax.set_ylim(out[:, i + 1].min(), out[:, i + 1].max())
+
 
 fig.autofmt_xdate()
 fig.subplots_adjust(top=0.95, right=0.95, bottom=0.2, hspace=0)

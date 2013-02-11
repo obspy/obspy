@@ -5,12 +5,19 @@
       <xs:pattern value="(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="WhitespaceOrEmptyStringType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\s*"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ResourceReference_optional">
+    <xs:union memberTypes="bed:ResourceReference bed:WhitespaceOrEmptyStringType"/>
+  </xs:simpleType>
   <xs:simpleType name="OriginUncertaintyDescription">
     <xs:restriction base="xs:string">
       <xs:enumeration value="horizontal uncertainty"/>
       <xs:enumeration value="uncertainty ellipse"/>
       <xs:enumeration value="confidence ellipsoid"/>
-      <xs:enumeration value="probability density function"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="AmplitudeCategory">
@@ -30,6 +37,7 @@
       <xs:enumeration value="from modeling of broad-band P waveforms"/>
       <xs:enumeration value="constrained by depth phases"/>
       <xs:enumeration value="constrained by direct phases"/>
+      <xs:enumeration value="constrained by depth and direct phases"/>
       <xs:enumeration value="operator assigned"/>
       <xs:enumeration value="other"/>
     </xs:restriction>
@@ -73,6 +81,53 @@
       <xs:enumeration value="questionable"/>
     </xs:restriction>
   </xs:simpleType>
+  <xs:simpleType name="EventType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="not reported"/>
+      <xs:enumeration value="earthquake"/>
+      <xs:enumeration value="anthropogenic event"/>
+      <xs:enumeration value="collapse"/>
+      <xs:enumeration value="cavity collapse"/>
+      <xs:enumeration value="mine collapse"/>
+      <xs:enumeration value="building collapse"/>
+      <xs:enumeration value="explosion"/>
+      <xs:enumeration value="accidental explosion"/>
+      <xs:enumeration value="chemical explosion"/>
+      <xs:enumeration value="controlled explosion"/>
+      <xs:enumeration value="experimental explosion"/>
+      <xs:enumeration value="industrial explosion"/>
+      <xs:enumeration value="mining explosion"/>
+      <xs:enumeration value="quarry blast"/>
+      <xs:enumeration value="road cut"/>
+      <xs:enumeration value="blasting levee"/>
+      <xs:enumeration value="nuclear explosion"/>
+      <xs:enumeration value="induced or triggered event"/>
+      <xs:enumeration value="rock burst"/>
+      <xs:enumeration value="reservoir loading"/>
+      <xs:enumeration value="fluid injection"/>
+      <xs:enumeration value="fluid extraction"/>
+      <xs:enumeration value="crash"/>
+      <xs:enumeration value="plane crash"/>
+      <xs:enumeration value="train crash"/>
+      <xs:enumeration value="boat crash"/>
+      <xs:enumeration value="other event"/>
+      <xs:enumeration value="atmospheric event"/>
+      <xs:enumeration value="sonic boom"/>
+      <xs:enumeration value="sonic blast"/>
+      <xs:enumeration value="acoustic noise"/>
+      <xs:enumeration value="thunder"/>
+      <xs:enumeration value="avalanche"/>
+      <xs:enumeration value="snow avalanche"/>
+      <xs:enumeration value="debris avalanche"/>
+      <xs:enumeration value="hydroacoustic event"/>
+      <xs:enumeration value="ice quake"/>
+      <xs:enumeration value="slide"/>
+      <xs:enumeration value="landslide"/>
+      <xs:enumeration value="rockslide"/>
+      <xs:enumeration value="meteorite"/>
+      <xs:enumeration value="volcanic eruption"/>
+    </xs:restriction>
+  </xs:simpleType>
   <xs:simpleType name="DataUsedWaveType">
     <xs:restriction base="xs:string">
       <xs:enumeration value="P waves"/>
@@ -109,29 +164,6 @@
     <xs:restriction base="xs:string">
       <xs:enumeration value="teleseismic"/>
       <xs:enumeration value="regional"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name="EventType">
-    <xs:restriction base="xs:string">
-      <xs:enumeration value="earthquake"/>
-      <xs:enumeration value="induced earthquake"/>
-      <xs:enumeration value="quarry blast"/>
-      <xs:enumeration value="explosion"/>
-      <xs:enumeration value="chemical explosion"/>
-      <xs:enumeration value="nuclear explosion"/>
-      <xs:enumeration value="landslide"/>
-      <xs:enumeration value="rockslide"/>
-      <xs:enumeration value="snow avalanche"/>
-      <xs:enumeration value="debris avalanche"/>
-      <xs:enumeration value="mine collapse"/>
-      <xs:enumeration value="building collapse"/>
-      <xs:enumeration value="volcanic eruption"/>
-      <xs:enumeration value="meteor impact"/>
-      <xs:enumeration value="plane crash"/>
-      <xs:enumeration value="sonic boom"/>
-      <xs:enumeration value="not existing"/>
-      <xs:enumeration value="other"/>
-      <xs:enumeration value="null"/>
     </xs:restriction>
   </xs:simpleType>
   <xs:simpleType name="EventTypeCertainty">
@@ -215,7 +247,9 @@
   </xs:complexType>
   <xs:complexType name="Phase">
     <xs:simpleContent>
-      <xs:extension base="xs:string"/>
+      <xs:extension base="xs:string">
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+      </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
   <xs:complexType name="Comment">
@@ -297,7 +331,7 @@
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element name="associatedPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
         <xs:element name="usedPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
-        <xs:element name="asociatedStationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
+        <xs:element name="associatedStationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
         <xs:element name="usedStationCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
         <xs:element name="depthPhaseCount" minOccurs="0" maxOccurs="1" type="xs:integer"/>
         <xs:element name="standardError" minOccurs="0" maxOccurs="1" type="xs:double"/>
@@ -353,19 +387,9 @@
     </xs:sequence>
     <xs:anyAttribute namespace="##other" processContents="lax"/>
   </xs:complexType>
-
-  <xs:simpleType name="HelperElement_EmptyStringType">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="\s*"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name="HelperElement_ResourceReference_or_EmptyString">
-      <xs:union memberTypes="bed:ResourceReference HelperElement_EmptyStringType" />
-  </xs:simpleType>
-
   <xs:complexType name="WaveformStreamID">
     <xs:simpleContent>
-      <xs:extension base="HelperElement_ResourceReference_or_EmptyString">
+      <xs:extension base="bed:ResourceReference_optional">
         <xs:attribute name="networkCode" use="required">
           <xs:simpleType>
             <xs:restriction base="xs:string">
@@ -394,6 +418,7 @@
             </xs:restriction>
           </xs:simpleType>
         </xs:attribute>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
       </xs:extension>
     </xs:simpleContent>
   </xs:complexType>
@@ -467,8 +492,6 @@
         <xs:element name="methodID" minOccurs="0" maxOccurs="1" type="bed:ResourceReference"/>
         <xs:element name="category" minOccurs="0" maxOccurs="1" type="bed:MomentTensorCategory"/>
         <xs:element name="inversionType" minOccurs="0" maxOccurs="1" type="bed:MTInversionType"/>
-        <xs:element name="evaluationMode" minOccurs="0" maxOccurs="1" type="bed:EvaluationMode"/>
-        <xs:element name="evaluationStatus" minOccurs="0" maxOccurs="1" type="bed:EvaluationStatus"/>
         <xs:element name="creationInfo" minOccurs="0" maxOccurs="1" type="bed:CreationInfo"/>
       </xs:choice>
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
@@ -631,7 +654,6 @@
       <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute name="publicID" use="required" type="bed:ResourceReference"/>
-    <xs:attribute name="preliminary" type="xs:boolean"/>
     <xs:anyAttribute namespace="##other" processContents="lax"/>
   </xs:complexType>
   <xs:complexType name="Origin">

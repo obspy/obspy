@@ -6,7 +6,7 @@ from math import log10
 st = read("../data/LKBD.MSEED")
 
 paz_wa = {'sensitivity': 2800, 'zeros': [0j], 'gain': 1,
-          'poles': [-6.2832-4.7124j, -6.2832+4.7124j]}
+          'poles': [-6.2832 - 4.7124j, -6.2832 + 4.7124j]}
 
 client = Client(user="sed-workshop@obspy.org")
 t = st[0].stats.starttime

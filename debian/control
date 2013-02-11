@@ -2,7 +2,8 @@ Source: python-obspy
 Maintainer: ObsPy Development Team <devs@obspy.org>
 Section: python
 Priority: extra
-Build-Depends: debhelper (>= 5), python (>= 2.5), python-support (>= 0.7.1),
+X-Python-Version: >= 2.6
+Build-Depends: debhelper (>= 5), python (>= 2.6), python-support (>= 0.7.1),
  python-numpy, python-setuptools (>=0.6.21), gcc, gfortran
 Standards-Version: 3.9.3
 Vcs-Git: git://github.com/obspy/obspy.git
@@ -13,11 +14,26 @@ Package: python-obspy
 Architecture: any
 Section: python
 Priority: extra
-Depends: python (>= 2.5), python (<< 3), ${python:Depends},
+Depends: python (>= 2.6), python (<< 3), ${python:Depends},
  python-numpy (>= 1:1.1), python-setuptools (>= 0.6), python-lxml (>= 2.1),
- python (>= 2.6) | python-json (>=3.4-2) | python-simplejson (>=1.9),
  python-matplotlib (>= 0.98.1), python-scipy, python-sqlalchemy,
  python-suds (>= 0.4), ${shlibs:Depends}
+Conflicts: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-fissures,
+ python-obspy-gse2, python-obspy-imaging, python-obspy-iris,
+ python-obspy-mseed, python-obspy-neries, python-obspy-realtime,
+ python-obspy-sac, python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Replaces: python-obspy-arclink, python-obspy-core, python-obspy-datamark,
+ python-obspy-db, python-obspy-earthworm, python-obspy-gse2,
+ python-obspy-imaging, python-obspy-iris, python-obspy-mseed,
+ python-obspy-neries, python-obspy-realtime, python-obspy-sac,
+ python-obspy-seg2, python-obspy-segy, python-obspy-seisan,
+ python-obspy-seishub, python-obspy-sh, python-obspy-signal, python-obspy-taup,
+ python-obspy-wav, python-obspy-xseed
+Recommends: python-geographiclib
+Suggests: python-mpltoolkits.basemap, python-mlpy, python-pyproj, ipython
 Description: ObsPy: A Python Toolbox for seismology seismological observatories
  ObsPy is an open-source project dedicated to provide a Python framework for
  processing seismological data. It provides parsers for common file formats,

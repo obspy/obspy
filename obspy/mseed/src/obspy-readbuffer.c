@@ -32,6 +32,12 @@ typedef struct ContinuousSegment_s {
     char sampletype;                        // Sampletype
     hptime_t hpdelta;                       // High precission sample period
     int64_t samplecnt;                         // Total sample count
+    /* Timing quality is a vendor specific value from 0 to 100% of maximum
+     * accuracy, taking into account both clock quality and data flags. */
+    uint8_t timing_qual;
+    /* type of calibration available, BLK 300 = 1, BLK 310 = 2, BLK 320 = 3
+     * BLK 390 = 4, BLK 395 = -2 */
+    int8_t calibration_type;
     void *datasamples;                      // Actual data samples
     struct LinkedRecordList_s *firstRecord; // First item
     struct LinkedRecordList_s *lastRecord;  // Last item
@@ -56,7 +62,6 @@ LinkedIDList;
 
 
 // Forward declarations
-static int msr_unpack_data (MSRecord * msr, int swapflag, int verbose);
 LinkedIDList * lil_init(void);
 LinkedRecordList * lrl_init (void);
 ContinuousSegment * seg_init(void);
@@ -169,7 +174,7 @@ lil_free(LinkedIDList * lil)
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
-                 unpack_data, int reclen, flag verbose,
+                 unpack_data, int reclen, flag verbose, flag details,
                  long (*allocData) (int, char))
 {
     int retcode = 0;
@@ -182,15 +187,21 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     // Unpack without reading the data first
     flag dataflag = 0;
 
+    // the timing_qual of BLK 1001
+    uint8_t timing_qual = 0xFF;
+
+    // the calibration type, availability of BLK 300, 310, 320, 390, 395
+    int8_t calibration_type = -1;
+
     // Init all the pointers to NULL. Most compilers should do this anyway.
     LinkedIDList * idListHead = NULL;
     LinkedIDList * idListCurrent = NULL;
     LinkedIDList * idListLast = NULL;
     MSRecord *msr = NULL;
     ContinuousSegment * segmentCurrent = NULL;
-    hptime_t lastgap;
-    hptime_t hptimetol;
-    hptime_t nhptimetol;
+    hptime_t lastgap = 0;
+    hptime_t hptimetol = 0;
+    hptime_t nhptimetol = 0;
     long data_offset;
     LinkedRecordList *recordHead = NULL;
     LinkedRecordList *recordPrevious = NULL;
@@ -333,12 +344,48 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             nhptimetol = ( hptimetol ) ? -hptimetol : 0;
             lastgap = recordCurrent->record->starttime - segmentCurrent->endtime - segmentCurrent->hpdelta;
         }
+        if (details == 1) {
+            /* extract information on calibration BLKs */
+            calibration_type = -1;
+            if (recordCurrent->record->blkts) {
+                BlktLink *cur_blkt = recordCurrent->record->blkts;
+                while (cur_blkt) {
+                    switch (cur_blkt->blkt_type) {
+                    case 300:
+                        calibration_type = 1;
+                        break;
+                    case 310:
+                        calibration_type = 2;
+                        break;
+                    case 320:
+                        calibration_type = 3;
+                        break;
+                    case 390:
+                        calibration_type = 4;
+                        break;
+                    case 395:
+                        calibration_type = -2;
+                        break;
+                    default:
+                        break;
+                    }
+                    cur_blkt = cur_blkt->next;
+                }
+            }
+            /* extract information based on timing quality */
+            timing_qual = 0xFF;
+            if (recordCurrent->record->Blkt1001 != 0) {
+                timing_qual = recordCurrent->record->Blkt1001->timing_qual;
+            }
+        }
         if ( segmentCurrent != NULL &&
              segmentCurrent->sampletype == recordCurrent->record->sampletype &&
              // Test the default sample rate tolerance: abs(1-sr1/sr2) < 0.0001
              MS_ISRATETOLERABLE (segmentCurrent->samprate, recordCurrent->record->samprate) &&
              // Check if the times are within the time tolerance
-             lastgap <= hptimetol && lastgap >= nhptimetol) {
+             lastgap <= hptimetol && lastgap >= nhptimetol &&
+             segmentCurrent->timing_qual == timing_qual &&
+             segmentCurrent->calibration_type == calibration_type) {
             recordCurrent->previous = segmentCurrent->lastRecord;
             segmentCurrent->lastRecord = segmentCurrent->lastRecord->next = recordCurrent;
             segmentCurrent->samplecnt += recordCurrent->record->samplecnt;
@@ -364,6 +411,8 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             // Calculate high-precision sample period
             segmentCurrent->hpdelta = (hptime_t) (( recordCurrent->record->samprate ) ?
                            (HPTMODULUS / recordCurrent->record->samprate) : 0.0);
+            segmentCurrent->timing_qual = timing_qual;
+            segmentCurrent->calibration_type = calibration_type;
             segmentCurrent->firstRecord = segmentCurrent->lastRecord = recordCurrent;
             recordCurrent->previous = NULL;
         }
@@ -408,245 +457,3 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     }
     return idListHead;
 }
-
-
-
-// The following is a copy of msr_unpack_data from unpack.c because it
-// unfortunately is a static function.
-
-// Some declarations for the following msr_unpack_data
-flag unpackheaderbyteorder_2 = -2;
-flag unpackdatabyteorder_2   = -2;
-int unpackencodingformat_2   = -2;
-int unpackencodingfallback_2 = -2;
-char *UNPACK_SRCNAME_2 = NULL;
-
-/************************************************************************
- *  msr_unpack_data:
- *
- *  Unpack Mini-SEED data samples for a given MSRecord.  The packed
- *  data is accessed in the record indicated by MSRecord->record and
- *  the unpacked samples are placed in MSRecord->datasamples.  The
- *  resulting data samples are either 32-bit integers, 32-bit floats
- *  or 64-bit floats in host byte order.
- *
- *  Return number of samples unpacked or negative libmseed error code.
- ************************************************************************/
-static int
-msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
-{
-  int     datasize;             /* byte size of data samples in record  */
-  int     nsamples;             /* number of samples unpacked           */
-  int     unpacksize;           /* byte size of unpacked samples        */
-  int     samplesize = 0;       /* size of the data samples in bytes    */
-  const char *dbuf;
-  int32_t    *diffbuff;
-  int32_t     x0, xn;
-
-  /* Sanity record length */
-  if ( msr->reclen == -1 )
-  {
-      ms_log (2, "msr_unpack_data(%s): Record size unknown\n",
-              UNPACK_SRCNAME_2);
-      return MS_NOTSEED;
-  }
-  switch (msr->encoding)
-  {
-    case DE_ASCII:
-      samplesize = 1; break;
-    case DE_INT16:
-    case DE_INT32:
-    case DE_FLOAT32:
-    case DE_STEIM1:
-    case DE_STEIM2:
-    case DE_GEOSCOPE24:
-    case DE_GEOSCOPE163:
-    case DE_GEOSCOPE164:
-    case DE_CDSN:
-    case DE_SRO:
-    case DE_DWWSSN:
-      samplesize = 4; break;
-    case DE_FLOAT64:
-      samplesize = 8; break;
-    default:
-      samplesize = 0; break;
-  }
-
-  /* Calculate buffer size needed for unpacked samples */
-  unpacksize = msr->samplecnt * samplesize;
-
-  /* (Re)Allocate space for the unpacked data */
-  if ( unpacksize > 0 )
-    {
-      msr->datasamples = realloc (msr->datasamples, unpacksize);
-
-      if ( msr->datasamples == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot (re)allocate memory\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-    }
-  else
-    {
-      if ( msr->datasamples )
-        free (msr->datasamples);
-      msr->datasamples = 0;
-      msr->numsamples = 0;
-    }
-
-  datasize = msr->reclen - msr->fsdh->data_offset;
-  dbuf = msr->record + msr->fsdh->data_offset;
-
-  if ( verbose > 2 )
-    ms_log (1, "%s: Unpacking %d samples\n",
-            UNPACK_SRCNAME_2, msr->samplecnt);
-
-  /* Decide if this is a encoding that we can decode */
-  switch (msr->encoding)
-    {
-
-    case DE_ASCII:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Found ASCII data\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr->samplecnt;
-      memcpy (msr->datasamples, dbuf, nsamples);
-      msr->sampletype = 'a';
-      break;
-
-    case DE_INT16:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking INT-16 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_int_16 ((int16_t *)dbuf, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples,
-                                    swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_INT32:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking INT-32 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_int_32 ((int32_t *)dbuf, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples,
-                                    swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_FLOAT32:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking FLOAT-32 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_float_32 ((float *)dbuf, msr->samplecnt,
-                                      msr->samplecnt, msr->datasamples,
-                                      swapflag);
-      msr->sampletype = 'f';
-      break;
-
-    case DE_FLOAT64:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking FLOAT-64 data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_float_64 ((double *)dbuf, msr->samplecnt,
-                                      msr->samplecnt, msr->datasamples,
-                                      swapflag);
-      msr->sampletype = 'd';
-      break;
-
-    case DE_STEIM1:
-      diffbuff = (int32_t *) malloc(unpacksize);
-      if ( diffbuff == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot allocate diff buffer\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking Steim-1 data frames\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_steim1 ((FRAME *)dbuf, datasize, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples, diffbuff,
-                                    &x0, &xn, swapflag, verbose);
-      msr->sampletype = 'i';
-      free (diffbuff);
-      break;
-
-    case DE_STEIM2:
-      diffbuff = (int32_t *) malloc(unpacksize);
-      if ( diffbuff == NULL )
-        {
-          ms_log (2, "msr_unpack_data(%s): Cannot allocate diff buffer\n",
-                  UNPACK_SRCNAME_2);
-          return MS_GENERROR;
-        }
-
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking Steim-2 data frames\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_steim2 ((FRAME *)dbuf, datasize, msr->samplecnt,
-                                    msr->samplecnt, msr->datasamples, diffbuff,
-                                    &x0, &xn, swapflag, verbose);
-      msr->sampletype = 'i';
-      free (diffbuff);
-      break;
-
-    case DE_GEOSCOPE24:
-    case DE_GEOSCOPE163:
-    case DE_GEOSCOPE164:
-      if ( verbose > 1 )
-        {
-          if ( msr->encoding == DE_GEOSCOPE24 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 24bit integer data samples\n",
-                    UNPACK_SRCNAME_2);
-          if ( msr->encoding == DE_GEOSCOPE163 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 16bit gain ranged/3bit exponent data samples\n",
-                    UNPACK_SRCNAME_2);
-          if ( msr->encoding == DE_GEOSCOPE164 )
-            ms_log (1, "%s: Unpacking GEOSCOPE 16bit gain ranged/4bit exponent data samples\n",
-                    UNPACK_SRCNAME_2);
-        }
-
-      nsamples = msr_unpack_geoscope (dbuf, msr->samplecnt, msr->samplecnt,
-                                      msr->datasamples, msr->encoding, swapflag);
-      msr->sampletype = 'f';
-      break;
-
-    case DE_CDSN:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking CDSN encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_cdsn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                  msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_SRO:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking SRO encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_sro ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                 msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    case DE_DWWSSN:
-      if ( verbose > 1 )
-        ms_log (1, "%s: Unpacking DWWSSN encoded data samples\n", UNPACK_SRCNAME_2);
-
-      nsamples = msr_unpack_dwwssn ((int16_t *)dbuf, msr->samplecnt, msr->samplecnt,
-                                    msr->datasamples, swapflag);
-      msr->sampletype = 'i';
-      break;
-
-    default:
-      ms_log (2, "%s: Unsupported encoding format %d (%s)\n",
-              UNPACK_SRCNAME_2, msr->encoding, (char *) ms_encodingstr(msr->encoding));
-
-      return MS_UNKNOWNFORMAT;
-    }
-
-  return nsamples;
-} /* End of msr_unpack_data() */

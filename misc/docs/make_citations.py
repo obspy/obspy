@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from pybtex.database import BibliographyData
 from pybtex.database.input import bibtex
-from pybtex.style.formatting.unsrt import Style
 from pybtex.style.names.lastfirst import NameStyle
 from pybtex.style.template import sentence, field, optional, words, node, join
 import glob
@@ -12,10 +10,10 @@ import os
 REPLACE_TOKEN = [
   (u"<nbsp>", u" "),
   (u"\xa0", u" "),
-  (u'–','-'),
-  (u'—','-'),
-  (u'—','-'),
-  (u'--','-'),
+  (u'–', '-'),
+  (u'—', '-'),
+  (u'—', '-'),
+  (u'--', '-'),
   (u"\'{a}", u"á"),
   (u"{\\ae}", u"æ"),
   (u"**{", u"**"),
@@ -24,13 +22,13 @@ REPLACE_TOKEN = [
 ]
 
 
-
 @node
 def names(children, data, role, **kwargs):
     assert not children
     persons = data.persons[role]
-    return join(**kwargs) [[NameStyle().format(person, abbr=True)
-                            for person in persons]].format_data(data)
+    return join(**kwargs)[[NameStyle().format(person, abbr=True)
+                           for person in persons]].format_data(data)
+
 
 def brackets(data):
     return words(sep='')['(', data, ')']
@@ -45,11 +43,11 @@ def italic(data):
 
 
 def format_names(role):
-    return words()[names(role, sep=', ', sep2 = ' and ', last_sep=', and ')]
+    return words()[names(role, sep=', ', sep2=' and ', last_sep=', and ')]
 
 
 formats = {
-    'article': words(sep='') [
+    'article': words(sep='')[
         '\n   | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
@@ -58,13 +56,13 @@ formats = {
         '\n   | ',
         sentence(sep=', ')[
             italic(field('journal')),
-            optional [words(sep=' ')[
-                field('volume'), optional [brackets(field('number'))]]],
-            optional [field('pages')],
+            optional[words(sep=' ')[
+                field('volume'), optional[brackets(field('number'))]]],
+            optional[field('pages')],
         ],
-        optional ['\n   | ', field('url')]
+        optional['\n   | ', field('url')]
     ],
-    'book': words(sep='') [
+    'book': words(sep='')[
         '\n   | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
@@ -72,19 +70,19 @@ formats = {
         bold(field('title')), ',',
         '\n   | ',
         sentence(sep=', ')[
-            optional [field('edition')],
-            optional [field('series')],
-            optional [field('edition')],
-            optional [words(sep=' ')[
-                'vol.', field('volume'), optional [brackets(field('number'))]]],
-            optional [field('pages'), 'pp.'],
-            optional [field('publisher')],
-            optional [field('address')],
-            optional ['ISBN: ', field('isbn')],
+            optional[field('edition')],
+            optional[field('series')],
+            optional[field('edition')],
+            optional[words(sep=' ')[
+                'vol.', field('volume'), optional[brackets(field('number'))]]],
+            optional[field('pages'), 'pp.'],
+            optional[field('publisher')],
+            optional[field('address')],
+            optional['ISBN: ', field('isbn')],
         ],
-        optional ['\n   | ', field('url')]
+        optional['\n   | ', field('url')]
     ],
-    'incollection': words(sep='') [
+    'incollection': words(sep='')[
         '\n   | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
@@ -93,14 +91,14 @@ formats = {
         '\n   | in ',
         sentence(sep=', ')[
             italic(field('booktitle')),
-            optional [field('chapter')],
-            optional [words(sep=' ')[
-                field('volume'), optional [brackets(field('number'))]]],
-            optional [field('pages')],
+            optional[field('chapter')],
+            optional[words(sep=' ')[
+                field('volume'), optional[brackets(field('number'))]]],
+            optional[field('pages')],
         ],
-        optional ['\n   | ', field('url')]
+        optional['\n   | ', field('url')]
     ],
-    'techreport': words(sep='') [
+    'techreport': words(sep='')[
         '\n   | ',
         words(sep=' ')[
             format_names('author'), brackets(field('year'))], ',',
@@ -110,9 +108,9 @@ formats = {
         sentence(sep=', ')[
             italic(words(sep=' ')[field('type'), field('number')]),
             field('institution'),
-            optional [field('address')],
+            optional[field('address')],
         ],
-        optional ['\n   | ', field('url')]
+        optional['\n   | ', field('url')]
     ],
 }
 

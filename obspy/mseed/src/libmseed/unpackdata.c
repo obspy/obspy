@@ -14,7 +14,7 @@
  *  (previously) ORFEUS/EC-Project MEREDIAN
  *  (currently) IRIS Data Management Center
  *
- *  modified: 2010.012
+ *  modified: 2012.357
  ************************************************************************/
 
 /*
@@ -144,7 +144,7 @@ int msr_unpack_float_32
   if (req_samples < 0) return 0;
   
   for (nd=0; nd<req_samples && nd<num_samples; nd++) {
-    ftmp = fbuf[nd];
+    memcpy (&ftmp, &fbuf[nd], sizeof(float));
     if ( swapflag ) ms_gswap4a (&ftmp);
     databuff[nd] = ftmp;
   }
@@ -174,7 +174,7 @@ int msr_unpack_float_64
   if (req_samples < 0) return 0;
   
   for (nd=0; nd<req_samples && nd<num_samples; nd++) {
-    dtmp = fbuf[nd];
+    memcpy (&dtmp, &fbuf[nd], sizeof(double));
     if ( swapflag ) ms_gswap8a (&dtmp);
     databuff[nd] = dtmp;
   }

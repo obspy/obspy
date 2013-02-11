@@ -3,7 +3,6 @@
 The obspy.segy test suite.
 """
 
-from __future__ import with_statement
 from StringIO import StringIO
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
@@ -573,7 +572,7 @@ def rms(x, y):
     Normalized RMS
 
     Taken from the mtspec library:
-    http://svn.geophysik.uni-muenchen.de/trac/mtspecpy
+    https://github.com/krischer/mtspec
     """
     return np.sqrt(((x - y) ** 2).mean() / (x ** 2).mean())
 

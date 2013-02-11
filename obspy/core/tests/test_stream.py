@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
 from copy import deepcopy
-from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import skipIfPython25
 import cPickle
 import numpy as np
 import os
@@ -25,25 +23,28 @@ class StreamTestCase(unittest.TestCase):
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412),
+        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824),
+        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824),
+        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
-        trace4 = Trace(data=np.random.randint(0, 1000, 50668),
-                       header=deepcopy(header))
+        trace4 = Trace(
+            data=np.random.randint(0, 1000, 50668).astype('float64'),
+           header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
-        trace = Trace(data=np.random.randint(0, 1000, 12000), header=header)
+        trace = Trace(
+            data=np.random.randint(0, 1000, 12000).astype('float64'),
+            header=header)
         self.gse2_stream = Stream(traces=[trace])
 
     def test_setitem(self):
@@ -550,7 +551,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(stream[4] in stream2)
         # test case insensitivity
         stream2 = stream.select(channel='BhZ', npts=100, sampling_rate='20.0',
-                                network='aA', station='ZzZz', )
+                                network='aA', station='ZzZz',)
         self.assertEquals(len(stream2), 1)
         self.assertTrue(stream[2] in stream2)
         stream2 = stream.select(channel='e?z', network='aa', station='x?X*',
@@ -1466,7 +1467,6 @@ class StreamTestCase(unittest.TestCase):
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
 
-    @skipIfPython25
     def test_cleanup(self):
         """
         Test case for merging traces in the stream with method=-1. This only
@@ -1663,6 +1663,75 @@ class StreamTestCase(unittest.TestCase):
         # merge
         st.merge(fill_value='interpolate')
         self.assertEquals(len(st), 1)
+
+    def test_rotate(self):
+        """
+        Testing the rotate method.
+        """
+        st = read()
+        st += st.copy()
+        st[3:].normalize()
+        st2 = st.copy()
+        # rotate to RT and back with 6 traces
+        st.rotate(method='NE->RT', back_azimuth=30)
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZRT')
+        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                         st[5].stats.channel[-1]) == 'ZRT')
+        st.rotate(method='RT->NE', back_azimuth=30)
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'ZNE')
+        self.assertTrue((st[3].stats.channel[-1] + st[4].stats.channel[-1] +
+                         st[5].stats.channel[-1]) == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data))
+        self.assertTrue(np.allclose(st[1].data, st2[1].data))
+        self.assertTrue(np.allclose(st[2].data, st2[2].data))
+        self.assertTrue(np.allclose(st[3].data, st2[3].data))
+        self.assertTrue(np.allclose(st[4].data, st2[4].data))
+        self.assertTrue(np.allclose(st[5].data, st2[5].data))
+        # again, with angles given in stats and just 2 components
+        st = st2.copy()
+        st = st[1:3] + st[4:]
+        st[0].stats.back_azimuth = 190
+        st[2].stats.back_azimuth = 200
+        st.rotate(method='NE->RT')
+        st.rotate(method='RT->NE')
+        self.assertTrue(np.allclose(st[0].data, st2[1].data))
+        self.assertTrue(np.allclose(st[1].data, st2[2].data))
+        # rotate to LQT and back with 6 traces
+        st = st2.copy()
+        st.rotate(method='ZNE->LQT', back_azimuth=100, inclination=30)
+        self.assertTrue((st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                         st[2].stats.channel[-1]) == 'LQT')
+        st.rotate(method='LQT->ZNE', back_azimuth=100, inclination=30)
+        self.assertTrue(st[0].stats.channel[-1] + st[1].stats.channel[-1] +
+                        st[2].stats.channel[-1] == 'ZNE')
+        self.assertTrue(np.allclose(st[0].data, st2[0].data))
+        self.assertTrue(np.allclose(st[1].data, st2[1].data))
+        self.assertTrue(np.allclose(st[2].data, st2[2].data))
+        self.assertTrue(np.allclose(st[3].data, st2[3].data))
+        self.assertTrue(np.allclose(st[4].data, st2[4].data))
+        self.assertTrue(np.allclose(st[5].data, st2[5].data))
+
+    def test_plot(self):
+        """
+        Tests plot method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        self.mseed_stream.plot(show=False)
+
+    def test_spectrogram(self):
+        """
+        Tests spectrogram method if matplotlib is installed
+        """
+        try:
+            import matplotlib
+        except ImportError:
+            return
+        self.mseed_stream.spectrogram(show=False)
 
 
 def suite():

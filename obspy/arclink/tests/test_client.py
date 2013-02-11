@@ -3,15 +3,16 @@
 The obspy.arclink.client test suite.
 """
 
+from obspy import read
 from obspy.arclink import Client
 from obspy.arclink.client import ArcLinkException
-from obspy.core import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
+import operator
 import os
 import unittest
-import operator
+import warnings
 
 
 class ClientTestCase(unittest.TestCase):
@@ -23,7 +24,7 @@ class ClientTestCase(unittest.TestCase):
         Tests getWaveform method.
         """
         # example 1
-        client = Client()
+        client = Client(user='test@obspy.org')
         start = UTCDateTime(2010, 1, 1)
         end = start + 1
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end)
@@ -36,7 +37,7 @@ class ClientTestCase(unittest.TestCase):
             self.assertEquals(trace.stats.location, '')
             self.assertEquals(trace.stats.channel[0:2], 'EH')
         # example 2
-        client = Client()
+        client = Client(user='test@obspy.org')
         start = UTCDateTime("2010-12-31T23:59:50.495000Z")
         end = start + 100
         stream = client.getWaveform('GE', 'APE', '', 'BHE', start, end)
@@ -54,13 +55,14 @@ class ClientTestCase(unittest.TestCase):
         Tests routing parameter of getWaveform method.
         """
         # 1 - requesting BW data w/o routing on webdc.eu
-        client = Client()
+        client = Client(user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         self.assertRaises(ArcLinkException, client.getWaveform, 'BW', 'MANZ',
                           '', 'EH*', start, end, route=False)
         # 2 - requesting BW data w/o routing directly from BW ArcLink node
-        client = Client(host='erde.geophysik.uni-muenchen.de', port=18001)
+        client = Client(host='erde.geophysik.uni-muenchen.de', port=18001,
+                        user='test@obspy.org')
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
@@ -77,7 +79,8 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client with 0.1 delay
-        client = Client(host='webdc.eu', port=18002, command_delay=0.1)
+        client = Client(host='webdc.eu', port=18002, command_delay=0.1,
+                        user='test@obspy.org')
         start = UTCDateTime(2010, 1, 1)
         end = start + 100
         # getWaveform with 0.1 delay
@@ -93,7 +96,8 @@ class ClientTestCase(unittest.TestCase):
         """
         dt = UTCDateTime(2010, 1, 1)
         # 1 - BW network via erde.geophysik.uni-muenchen.de:18001
-        client = Client(host="erde.geophysik.uni-muenchen.de", port=18001)
+        client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
+                        user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
             {'BW...': [{'end': None,
@@ -107,7 +111,7 @@ class ClientTestCase(unittest.TestCase):
                         'priority': 1,
                         'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
         # 2 - BW network via webdc:18001
-        client = Client(host="webdc.eu", port=18001)
+        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
             {'BW...': [{'end': None,
@@ -121,7 +125,7 @@ class ClientTestCase(unittest.TestCase):
                         'priority': 1,
                         'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
         # 3 - BW network via webdc:18002
-        client = Client(host="webdc.eu", port=18002)
+        client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
         self.assertEquals(results,
             {'BW...': [{'end': None,
@@ -135,33 +139,33 @@ class ClientTestCase(unittest.TestCase):
                         'priority': 1,
                         'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
         # 4 - IV network via webdc.eu:18001
-        client = Client(host="webdc.eu", port=18001)
+        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
         self.assertEquals(results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 5 - IV network via webdc.eu:18002
-        client = Client(host="webdc.eu", port=18002)
+        client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
         self.assertEquals(results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 6 - GE.APE via webdc.eu:18001
-        client = Client(host="webdc.eu", port=18001)
+        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEquals(results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'webdc.eu', 'end': None, 'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
-        client = Client(host="webdc.eu", port=18002)
+        client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEquals(results,
             {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'webdc.eu', 'end': None, 'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
-        client = Client(host="webdc.eu", port=18002)
+        client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('00', '', dt, dt + 1)
         self.assertEquals(results, {})
 
@@ -169,7 +173,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests getInventory method on various ArcLink nodes.
         """
-        client = Client()
+        client = Client(user='test@obspy.org')
         dt = UTCDateTime(2010, 1, 1)
         # 1 - GE network
         result = client.getInventory('GE', 'APE', starttime=dt, endtime=dt + 1)
@@ -207,7 +211,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('paz' not in result['BW.MANZ..EHE'][0])
         # 7 - history of instruments
         # GE.SNAA sometimes needs a while therefore we use command_delay=0.1
-        client = Client(command_delay=0.1)
+        client = Client(user='test@obspy.org', command_delay=0.1)
         result = client.getInventory('GE', 'SNAA', '', 'BHZ', start, end,
                                      instruments=True)
         self.assertTrue('GE' in result)
@@ -232,7 +236,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Requesting inventory data twice should not fail.
         """
-        client = Client()
+        client = Client(user='test@obspy.org')
         dt = UTCDateTime(2009, 1, 1)
         # station
         client.getInventory('BW', 'MANZ', starttime=dt, endtime=dt + 1)
@@ -245,7 +249,7 @@ class ClientTestCase(unittest.TestCase):
         """
         Bugfix for location and channel codes for new inventory schema
         """
-        client = Client()
+        client = Client(user='test@obspy.org')
         # new schema
         inventory = client.getInventory('CH', 'GRYON')
         self.assertTrue('CH.GRYON..EHE' in inventory)
@@ -257,7 +261,7 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         # example 1
         t = UTCDateTime("2010-08-01T12:00:00")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 60,
@@ -294,13 +298,14 @@ class ClientTestCase(unittest.TestCase):
             'station': 'RJOB',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 12, 0),
+            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'npts': 1370,
             'calib': 1.0,
             'sampling_rate': 200.0,
             'channel': 'EHZ'}
         self.assertEquals(st[0].stats, results)
         # example 2
-        client = Client()
+        client = Client(user='test@obspy.org')
         st = client.getWaveform("CZ", "VRAC", "", "BHZ", t, t + 60,
                                 metadata=True)
         results = {
@@ -308,7 +313,7 @@ class ClientTestCase(unittest.TestCase):
             '_format': 'MSEED',
             'paz': AttribDict({
                 'normalization_factor': 60077000.0,
-                'name': 'GFZ:STS-2/N/g=20000',
+                'name': 'GFZ:CZ1980:STS-2/N/g=20000',
                 'sensitivity': 8200000000.0,
                 'normalization_frequency': 1.0,
                 'sensor_manufacturer': 'Streckeisen',
@@ -335,6 +340,7 @@ class ClientTestCase(unittest.TestCase):
             'station': 'VRAC',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 11, 59, 59, 993400),
+            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 59, 993400),
             'npts': 2401,
             'calib': 1.0,
             'sampling_rate': 40.0,
@@ -345,7 +351,7 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -361,7 +367,7 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -372,7 +378,7 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -385,7 +391,7 @@ class ClientTestCase(unittest.TestCase):
         """
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         # example 1
         start = UTCDateTime(2008, 1, 1)
         end = start + 1
@@ -407,7 +413,8 @@ class ClientTestCase(unittest.TestCase):
         fseedfile = NamedTemporaryFile().name
         try:
             # initialize client
-            client = Client("erde.geophysik.uni-muenchen.de", 18001)
+            client = Client("erde.geophysik.uni-muenchen.de", 18001,
+                            user='test@obspy.org')
             start = UTCDateTime(2008, 1, 1)
             end = start + 10
             # MiniSEED
@@ -444,7 +451,7 @@ class ClientTestCase(unittest.TestCase):
         Disabling compression during waveform request.
         """
         # initialize client
-        client = Client()
+        client = Client(user='test@obspy.org')
         start = UTCDateTime(2011, 1, 1, 0, 0)
         end = start + 10
         stream = client.getWaveform('BW', 'MANZ', '', 'EH*', start, end,
@@ -463,7 +470,7 @@ class ClientTestCase(unittest.TestCase):
         fseedfile = NamedTemporaryFile().name
         try:
             # initialize client
-            client = Client()
+            client = Client(user='test@obspy.org')
             start = UTCDateTime(2010, 1, 1, 0, 0)
             end = start + 1
             # MiniSEED
@@ -501,7 +508,7 @@ class ClientTestCase(unittest.TestCase):
         fseedfile = NamedTemporaryFile(suffix='.bz2').name
         try:
             # initialize client
-            client = Client()
+            client = Client(user='test@obspy.org')
             start = UTCDateTime(2008, 1, 1, 0, 0)
             end = start + 1
             # MiniSEED
@@ -537,7 +544,8 @@ class ClientTestCase(unittest.TestCase):
         normalization_factor = 6.0077e+07
         sensitivity = 2.5168e+09
         # initialize client
-        client = Client('erde.geophysik.uni-muenchen.de', 18001)
+        client = Client('erde.geophysik.uni-muenchen.de', 18001,
+                        user='test@obspy.org')
         # fetch poles and zeros
         dt = UTCDateTime(2009, 1, 1)
         paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
@@ -556,7 +564,8 @@ class ClientTestCase(unittest.TestCase):
         """
         poles = [-3.700400e-02 + 3.701600e-02j, -3.700400e-02 - 3.701600e-02j]
         dt = UTCDateTime(2009, 1, 1)
-        client = Client("erde.geophysik.uni-muenchen.de", 18001)
+        client = Client("erde.geophysik.uni-muenchen.de", 18001,
+                        user='test@obspy.org')
         # fetch poles and zeros
         paz = client.getPAZ('BW', 'MANZ', '', 'EHZ', dt)
         self.assertEqual(len(poles), 2)
@@ -568,7 +577,7 @@ class ClientTestCase(unittest.TestCase):
         """
         tempfile = NamedTemporaryFile().name
         try:
-            client = Client()
+            client = Client(user='test@obspy.org')
             start = UTCDateTime(2008, 1, 1)
             end = start + 1
             # Dataless SEED
@@ -594,7 +603,7 @@ class ClientTestCase(unittest.TestCase):
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
         # Retrieve data via ArcLink
-        client = Client(host="webdc.eu", port=18001)
+        client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         t = UTCDateTime("2009-08-24 00:20:03")
         st = client.getWaveform("BW", "RJOB", "", "EHZ", t, t + 30)
         poles_zeros = client.getPAZ("BW", "RJOB", "", "EHZ",
@@ -635,8 +644,8 @@ class ClientTestCase(unittest.TestCase):
         """
         Test case for issue #372.
         """
-        dt = UTCDateTime("20120529070000")
-        client = Client()
+        dt = UTCDateTime("20120729070000")
+        client = Client(user='test@obspy.org')
         st = client.getWaveform("BS", "JMB", "", "BH*", dt, dt + 7200,
                                 metadata=True)
         for tr in st:
@@ -652,7 +661,7 @@ class ClientTestCase(unittest.TestCase):
 
         Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
         """
-        client = Client()
+        client = Client(user='test@obspy.org')
         # one instrument in given time span
         dt = UTCDateTime("2003-01-09T00:00:00")
         inv = client.getInventory("GE", "SNAA", "", "BHZ", dt, dt + 10,
@@ -675,7 +684,7 @@ class ClientTestCase(unittest.TestCase):
 
         Sensitivity change for GE.SNAA..BHZ at 2003-01-10T00:00:00
         """
-        client = Client()
+        client = Client(user='test@obspy.org')
         # one instrument in given time span
         dt = UTCDateTime("2003-01-09T00:00:00")
         st = client.getWaveform("GE", "SNAA", "", "BHZ", dt, dt + 10,
@@ -698,6 +707,15 @@ class ClientTestCase(unittest.TestCase):
                                 metadata=True)
         self.assertEquals(len(st), 1)
         self.assertEquals(st[0].stats.paz.sensitivity, 588000000.0)
+
+    def test_init(self):
+        """
+        Testing client initialization.
+        """
+        # user is a required keyword - raises now a deprecation warning
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', DeprecationWarning)
+            self.assertRaises(DeprecationWarning, Client)
 
 
 def suite():

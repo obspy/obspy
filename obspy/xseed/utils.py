@@ -9,8 +9,7 @@ Various additional utilities for ObsPy xseed.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy.core import UTCDateTime
-from obspy.core.util import formatScientific
+from obspy import UTCDateTime
 import sys
 
 
@@ -147,7 +146,7 @@ def formatRESP(number, digits=4):
     Formats a number according to the RESP format.
     """
     format_string = "%%-10.%dE" % digits
-    return formatScientific(format_string % number)
+    return format_string % (number)
 
 
 def Blockette34Lookup(abbr, lookup):

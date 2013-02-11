@@ -4,7 +4,7 @@
 The obspy.datamark.core test suite.
 """
 
-from obspy.core import read
+from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.datamark.core import readDATAMARK
 import os
@@ -13,7 +13,7 @@ import unittest
 
 class CoreTestCase(unittest.TestCase):
     """
-    Test cases for libgse2 core interface
+    Test cases for datamark core interface
     """
     def setUp(self):
         # directory where the test files are located

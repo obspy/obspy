@@ -10,9 +10,9 @@ Decorator used in ObsPy.
 """
 
 from obspy.core.util.base import NamedTemporaryFile
+import numpy as np
 import functools
 import os
-import sys
 import unittest
 import warnings
 
@@ -103,20 +103,6 @@ def skipIf(condition, reason):
     return _id
 
 
-def skipIfPython25(func):
-    """
-    Decorator for skipping a unit test running under Python 2.5.x.
-    """
-    if sys.hexversion >= 0x02060000:
-        return func
-
-    def decorator(test_item):
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = "Python 2.5.x not supported"
-        return test_item
-    return decorator
-
-
 def uncompressFile(func):
     """
     Decorator used for temporary uncompressing file if .gz or .bz2 archive.
@@ -166,6 +152,35 @@ def uncompressFile(func):
             result = func(filename, *args, **kwargs)
         return result
     return wrapped_func
+
+
+def raiseIfMasked(func):
+    """
+    Raises if the first argument (self in case of methods) is a Trace with
+    masked values or a Stream containing a Trace with masked values.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        arrays = []
+        # first arg seems to be a Stream
+        if hasattr(args[0], "traces"):
+            arrays = [tr.data for tr in args[0]]
+        # first arg seems to be a Trace
+        if hasattr(args[0], "data") and isinstance(args[0].data, np.ndarray):
+            arrays = [args[0].data]
+        for arr in arrays:
+            if np.ma.is_masked(arr):
+                msg = "Trace with masked values found. This is not " + \
+                      "supported for this operation. Try the split() " + \
+                      "method on Trace/Stream to produce a Stream with " + \
+                      "unmasked Traces."
+                raise NotImplementedError(msg)
+        return func(*args, **kwargs)
+
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 
 if __name__ == '__main__':

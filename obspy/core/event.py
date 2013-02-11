@@ -30,6 +30,8 @@ import re
 import urllib2
 import warnings
 import weakref
+import cStringIO
+from lxml import etree
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -50,9 +52,9 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. Depending on your ObsPy
-        installation one of ``"QUAKEML"``. See the `Supported Formats`_ section
-        below for a full list of supported formats.
+    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
+        `Supported Formats`_ section below for a full list of supported
+        formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
@@ -105,10 +107,14 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
             cat.extend(_read(fh.name, format, **kwargs).events)
             os.remove(fh.name)
         pathname_or_url.seek(0)
+    elif pathname_or_url.strip().startswith('<'):
+        # XML string
+        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        cat.extend(catalog.events)
     elif "://" in pathname_or_url:
+        # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        # some URL
         fh = NamedTemporaryFile(suffix=suffix)
         fh.write(urllib2.urlopen(pathname_or_url).read())
         fh.close()
@@ -173,11 +179,11 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     the acceptable values.
 
         >>> from obspy.core.util.types import Enum
-        >>> ABCEnum = Enum(["a", "b", "c"])
+        >>> MyEnum = Enum(["a", "b", "c"])
         >>> class_attributes = [ \
                 ("resource_id", ResourceIdentifier), \
                 ("creation_info", CreationInfo), \
-                ("some_letters", ABCEnum), \
+                ("some_letters", MyEnum), \
                 ("some_error_quantity", float, ATTRIBUTE_HAS_ERRORS), \
                 ("description", str)]
 
@@ -268,6 +274,10 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if key.endswith("_errors") and getattr(self, key) is None:
                     setattr(self, key, QuantityError())
 
+        def clear(self):
+            super(AbstractEventType, self).clear()
+            self.__init__()
+
         def __str__(self):
             """
             Fairly extensive in an attempt to cover several use cases. It is
@@ -276,15 +286,15 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the attribute and containers that are to be printed. Only not
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
-            attributes = [_i for _i in self._property_keys if not \
+            attributes = [_i for _i in self._property_keys if not
                           _i.endswith("_errors") and getattr(self, _i)]
             containers = [_i for _i in self._containers if getattr(self, _i)]
 
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
-            max_length = max(max([len(_i) for _i in attributes]) \
+            max_length = max(max([len(_i) for _i in attributes])
                                  if attributes else 0,
-                             max([len(_i) for _i in containers]) \
+                             max([len(_i) for _i in containers])
                              if containers else 0) + 1
 
             ret_str = self.__class__.__name__
@@ -300,14 +310,14 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if hasattr(self, error_key) and getattr(self, error_key):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
-                    repr_str += " [%s]" % ', '.join([str(key) + "=" + \
+                    repr_str += " [%s]" % ', '.join([str(key) + "=" +
                                 str(value) for key, value in err_items])
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
             # single line.
             if len(attributes) <= 3 and not containers:
-                att_strs = ["%s=%s" % (_i, get_value_repr(_i)) \
+                att_strs = ["%s=%s" % (_i, get_value_repr(_i))
                             for _i in attributes if getattr(self, _i)]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
@@ -315,7 +325,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Case 3: Verbose string representation for large object.
             if attributes:
                 format_str = "%" + str(max_length) + "s: %s"
-                att_strs = [format_str % (_i, get_value_repr(_i)) \
+                att_strs = [format_str % (_i, get_value_repr(_i))
                             for _i in attributes if getattr(self, _i)]
                 ret_str += "\n\t" + "\n\t".join(att_strs)
 
@@ -326,8 +336,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                     ret_str += '\n\t---------'
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
-                    "\n\t".join([element_str % \
-                    (_i, len(getattr(self, _i))) \
+                    "\n\t".join([element_str %
+                    (_i, len(getattr(self, _i)))
                     for _i in containers])
             return ret_str
 
@@ -338,7 +348,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return self.__str__()
 
         def __nonzero__(self):
-            if any([bool(getattr(self, _i)) \
+            if any([bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
@@ -378,14 +388,15 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 # If it is a dict, and the attrib_type is no dict, than all
                 # values will be assumed to be keyword arguments.
                 if isinstance(value, dict):
-                    value = attrib_type(**value)
+                    new_value = attrib_type(**value)
                 else:
-                    value = attrib_type(value)
-                if value is None:
+                    new_value = attrib_type(value)
+                if new_value is None:
                     msg = 'Setting attribute "%s" failed. ' % (name)
-                    msg += '"%s" could not be converted to type "%s"' % \
+                    msg += 'Value "%s" could not be converted to type "%s"' % \
                         (str(value), str(attrib_type))
                     raise ValueError(msg)
+                value = new_value
             AttribDict.__setattr__(self, name, value)
             # If "name" is resource_id and value is not None, set the referred
             # object of the ResourceIdentifier to self.
@@ -618,7 +629,6 @@ class ResourceIdentifier(object):
         warnings.warn_explicit(msg, UserWarning, __file__,
                 inspect.currentframe().f_back.f_lineno)
         ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
-
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -925,7 +935,7 @@ class WaveformStreamID(__WaveformStreamID):
                 network_code, station_code, location_code, channel_code = \
                     seed_string.split('.')
             except ValueError:
-                warnings.warn("In WaveformStreamID.__init__(): " + \
+                warnings.warn("In WaveformStreamID.__init__(): " +
                               "seed_string was given but could not be parsed")
                 pass
             if not any([bool(_i) for _i in [network_code, station_code,
@@ -939,7 +949,7 @@ class WaveformStreamID(__WaveformStreamID):
                                                resource_uri=resource_uri)
 
     def getSEEDString(self):
-        return "%s.%s.%s.%s" % (\
+        return "%s.%s.%s.%s" % (
             self.network_code if self.network_code else "",
             self.station_code if self.station_code else "",
             self.location_code if self.location_code else "",
@@ -1489,7 +1499,7 @@ class Origin(__Origin):
     """
 
 
-__StationMagnitudeContribution = _eventTypeClassFactory(\
+__StationMagnitudeContribution = _eventTypeClassFactory(
     "__StationMagnitudeContribution",
     class_attributes=[("station_magnitude_id", ResourceIdentifier),
                       ("residual", float),
@@ -1524,7 +1534,7 @@ __Magnitude = _eventTypeClassFactory("__Magnitude",
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("creation_info", CreationInfo)],
-    class_contains=["comments", "station_magnitude_contribution"])
+    class_contains=["comments", "station_magnitude_contributions"])
 
 
 class Magnitude(__Magnitude):
@@ -2144,15 +2154,18 @@ class Event(__Event):
         2011-03-11T05:46:24.120000Z | +38.297, +142.373 | 9.1 MW
         """
         out = ''
+        origin = None
         if self.origins:
-            out += '%s | %+7.3f, %+8.3f' % (self.origins[0].time,
-                                            self.origins[0].latitude,
-                                            self.origins[0].longitude)
+            origin = self.preferred_origin() or self.origins[0]
+            out += '%s | %+7.3f, %+8.3f' % (origin.time,
+                                            origin.latitude,
+                                            origin.longitude)
         if self.magnitudes:
-            out += ' | %s %-2s' % (self.magnitudes[0].mag,
-                                   self.magnitudes[0].magnitude_type)
-        if self.origins and self.origins[0].evaluation_mode:
-            out += ' | %s' % (self.origins[0].evaluation_mode)
+            magnitude = self.preferred_magnitude() or self.magnitudes[0]
+            out += ' | %s %-2s' % (magnitude.mag,
+                                   magnitude.magnitude_type)
+        if origin and origin.evaluation_mode:
+            out += ' | %s' % (origin.evaluation_mode)
         return out
 
     def __str__(self):
@@ -2161,6 +2174,36 @@ class Event(__Event):
         """
         return "Event:\t%s\n\n%s" % (self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
+
+    def preferred_origin(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_origin_id).\
+                getReferredObject()
+        except KeyError:
+            return None
+
+    def preferred_magnitude(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_magnitude_id).\
+                getReferredObject()
+        except KeyError:
+            return None
+
+    def preferred_focal_mechanism(self):
+        """
+        Returns the preferred origin
+        """
+        try:
+            return ResourceIdentifier(self.preferred_focal_mechanism_id).\
+                getReferredObject()
+        except KeyError:
+            return None
 
 
 class Catalog(object):
@@ -2443,7 +2486,7 @@ class Catalog(object):
             elif key in ("longitude", "latitude", "depth", "time"):
                 temp_events = []
                 for event in events:
-                    if (event.origins and event.origins[0].has_key(key) and
+                    if (event.origins and key in event.origins[0] and
                         operator_map[operator](
                             event.origins[0].get(key),
                             UTCDateTime(value) if key == 'time' else
@@ -2455,7 +2498,7 @@ class Catalog(object):
                 temp_events = []
                 for event in events:
                     if (event.origins and event.origins[0].quality and
-                        event.origins[0].quality.has_key(key) and
+                         key in event.origins[0].quality and
                         operator_map[operator](
                             event.origins[0].quality.get(key),
                             float(value))):
@@ -2527,10 +2570,9 @@ class Catalog(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. Depending on your
-            ObsPy installation one of ``"QUAKEML"``. See the
-            `Supported Formats`_ section below for a full list of supported
-            formats.
+        :param format: The format to write must be specified. One of
+            ``"QUAKEML"``. See the `Supported Formats`_ section below for a
+            full list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -2552,14 +2594,14 @@ class Catalog(object):
         :meth:`~obspy.core.event.Catalog.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the *Linked Function Call* of each module for any extra
-        options available.
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
 
-        =======  ===================  =====================================
-        Format   Required Module      Linked Function Call
-        =======  ===================  =====================================
-        QUAKEML  :mod:`obspy.core`   :func:`obspy.core.event.writeQUAKEML`
-        =======  ===================  =====================================
+        =======  ===================  =======================================
+        Format   Required Module      _`Linked Function Call`
+        =======  ===================  =======================================
+        QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.writeQuakeML`
+        =======  ===================  =======================================
         """
         format = format.upper()
         try:
@@ -2609,7 +2651,7 @@ class Catalog(object):
             Possible values are
             * ``"magnitude"``
             * ``None``
-            Defaults to ``"magnitude"``            
+            Defaults to ``"magnitude"``
         :type color: str, optional
         :param color:The events will be color-coded based on the chosen
             proberty. Possible values are
@@ -2640,8 +2682,8 @@ class Catalog(object):
             raise ValueError('Events can be color coded by date or depth. '
                              "'%s' is not supported." % (color,))
         if label not in (None, 'magnitude', 'depth'):
-            raise ValueError('Events can be labeled by magnitude or events can '
-                             'not be labeled. '
+            raise ValueError('Events can be labeled by magnitude or events can'
+                             ' not be labeled. '
                              "'%s' is not supported." % (label,))
 
         # lat/lon coordinates, magnitudes, dates
@@ -2701,13 +2743,14 @@ class Catalog(object):
                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
                           width=width, height=height)
             # not most elegant way to calculate some round lats/lons
+
             def linspace2(val1, val2, N):
                 """
                 returns around N 'nice' values between val1 and val2
                 """
                 dval = val2 - val1
-                round_pos = int(round(-np.log10(1.*dval / N)))
-                delta = round(2.*dval / N, round_pos) / 2
+                round_pos = int(round(-np.log10(1. * dval / N)))
+                delta = round(2. * dval / N, round_pos) / 2
                 new_val1 = np.ceil(val1 / delta) * delta
                 new_val2 = np.floor(val2 / delta) * delta
                 N = (new_val2 - new_val1) / delta + 1
@@ -2757,7 +2800,7 @@ class Catalog(object):
         times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
              str(min(times).strftime("%Y-%m-%d")),
-             str(max(times).strftime("%Y-%m-%d")))) + \
+             str(max(times).strftime("%Y-%m-%d")))) +
                  " - Color codes %s, size the magnitude" % (
                      "origin time" if color == "date" else "depth"))
 
@@ -2773,6 +2816,28 @@ class Catalog(object):
 
         # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()
+
+
+def validate(xml_file):
+    """
+    Validates a QuakeML file against the QuakeML 1.2 RC4 XML Schema. Returns
+    either True or False.
+    """
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
+
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    xmldoc = etree.parse(xml_file)
+
+    valid = xmlschema.validate(xmldoc)
+
+    # Pretty error printing if the validation fails.
+    if valid is not True:
+        print "Error validating QuakeML file:"
+        for entry in xmlschema.error_log:
+            print "\t%s" % entry
+    return valid
 
 
 if __name__ == '__main__':

@@ -2,7 +2,7 @@
 
 from glob import iglob
 from lxml import etree
-from obspy.xseed.blockette import Blockette054
+from obspy.xseed.blockette import Blockette054, Blockette060
 from obspy.xseed.blockette.blockette import BlocketteLengthException
 import os
 import sys
@@ -181,6 +181,15 @@ class BlocketteTestCase(unittest.TestCase):
             # The last step is to actually test the conversions to and from
             # SEED/XSEED for every example in every direction.
             self.SEEDAndXSEEDConversion(test_examples, blkt_number)
+
+    def test_blockette60_has_blockette_id(self):
+        """
+        Blockette 60 overwrites the init method. Check that the parent class is
+        called.
+        """
+        blkt = Blockette060()
+        self.assertEqual(blkt.blockette_id, "060")
+        self.assertEqual(blkt.id, 60)
 
 
 def suite():

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core import UTCDateTime
-from obspy.core.util.decorator import skipIf, skipIfPython25
+from obspy import UTCDateTime
+from obspy.core.util.decorator import skipIf
 import copy
 import datetime
 import numpy as np
@@ -326,7 +326,6 @@ class UTCDateTimeTestCase(unittest.TestCase):
         end = UTCDateTime(-1000.5)
         self.assertAlmostEquals(end - start, -1000.5)
 
-    @skipIfPython25
     def test_smallNegativeUTCDateTime(self):
         """
         Windows OS supports only negative timestamps < -43200
@@ -798,10 +797,9 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1980, 2, 3, 12, 23, 34, 444999, precision=3)
         self.assertEquals(str(dt), '1980-02-03T12:23:34.445Z')
 
-    def test_richComparisonNumericTypes(self):
+    def test_richComparisonNumericObjects(self):
         """
-        Tests some basic rich comparison operations against non UTCDateTime
-        numeric types.
+        Tests basic rich comparison operations against numeric objects.
         """
         t1 = UTCDateTime(2005, 3, 4, 12, 33, 44)
         t2 = UTCDateTime(2005, 3, 4, 12, 33, 44, 123456)
@@ -835,6 +833,25 @@ class UTCDateTimeTestCase(unittest.TestCase):
         self.assertTrue(t2 <= t2_float)
         self.assertFalse(t2 > t2_float)
         self.assertFalse(t2 < t2_float)
+
+    def test_richComparisonNonNumericTypes(self):
+        """
+        Tests basic rich comparison operations against non-numeric objects.
+        """
+        dt = UTCDateTime()
+        for obj in [None, 'string', object()]:
+            self.assertFalse(dt == obj)
+            self.assertTrue(dt != obj)
+            self.assertFalse(dt <= obj)
+            self.assertFalse(dt < obj)
+            self.assertFalse(dt >= obj)
+            self.assertFalse(dt > obj)
+            self.assertFalse(obj == dt)
+            self.assertTrue(obj != dt)
+            self.assertFalse(obj <= dt)
+            self.assertFalse(obj < dt)
+            self.assertFalse(obj >= dt)
+            self.assertFalse(obj > dt)
 
 
 def suite():

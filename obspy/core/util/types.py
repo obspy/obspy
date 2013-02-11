@@ -189,6 +189,9 @@ class Enum(object):
         >>> units(5)
         'other'
     """
+    # marker needed for for usage within ABC classes
+    __isabstractmethod__ = False
+
     def __init__(self, enums):
         self.__enums = OrderedDict(zip([str(e).lower() for e in enums], enums))
 

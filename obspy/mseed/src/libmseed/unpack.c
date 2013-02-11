@@ -13,7 +13,7 @@
  *   ORFEUS/EC-Project MEREDIAN
  *   IRIS Data Management Center
  *
- * modified: 2012.114
+ * modified: 2012.363
  ***************************************************************************/
 #include <stdio.h>
 #include <stdlib.h>
@@ -25,7 +25,6 @@
 #include "unpackdata.h"
 
 /* Function(s) internal to this file */
-static int msr_unpack_data (MSRecord * msr, int swapflag, int verbose);
 static int check_environment (int verbose);
 
 /* Header and data byte order flags controlled by environment variables */
@@ -732,8 +731,8 @@ msr_unpack ( char *record, int reclen, MSRecord **ppmsr,
  *
  *  Return number of samples unpacked or negative libmseed error code.
  ************************************************************************/
-static int
-msr_unpack_data ( MSRecord *msr, int swapflag, int verbose )
+int
+msr_unpack_data ( MSRecord *msr, int swapflag, flag verbose )
 {
   int     datasize;             /* byte size of data samples in record 	*/
   int     nsamples;		/* number of samples unpacked		*/

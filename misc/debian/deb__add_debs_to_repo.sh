@@ -5,17 +5,16 @@
 #   Author: Moritz Beyreuther, Tobias Megies
 #    Email: tobias.megies@geophysik.uni-muenchen.de
 #
-# Copyright (C) 2011 ObsPy Development Team
+# Copyright (C) 2011-2012 ObsPy Development Team
 #---------------------------------------------------------------------
 
-# Must be executed in the misc/debian directory
-BASEDIR=`pwd`
-DEBDIR=$BASEDIR/deb
-PACKAGEDIR=$BASEDIR/packages
+BUILDDIR=/tmp/python-obspy_build
+DEBDIR=$BUILDDIR/deb
+PACKAGEDIR=$BUILDDIR/packages
 export GNUPGHOME=$HOME/.gnupg-obspy
 
 eval $(gpg-agent --daemon)
-for FILE in `ls $PACKAGEDIR/*.deb`; do
+for FILE in `ls $PACKAGEDIR/python-obspy_*.deb`; do
     CODENAME=`echo $FILE | sed -e "s#.*~##" -e "s#_.*##"`
     reprepro --component 'main' -Vb $DEBDIR includedeb $CODENAME $FILE
 done

@@ -1,0 +1,13 @@
+# We pretend to be erlang because we can't use the python support in travis-ci
+# see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
+language: erlang
+before_install:
+  - lsb_release -a  # get info on the operating system
+  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
+  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
+install:
+  - sudo python setup.py -q install
+script:
+  - sudo obspy-runtests -n travis-ci -r
+notifications:
+    email: false

@@ -25,10 +25,10 @@ A command-line program that indexes seismogram files into a database.
        ./obspy-indexer -v -i0.0 --run_once --check_duplicates -n1 -u$DB -d$DATA
 """
 
-from obspy.db import __version__
+from obspy import __version__
 from obspy.db.db import Base
-from obspy.db.util import parseMappingData
 from obspy.db.indexer import worker, WaveformFileCrawler
+from obspy.db.util import parseMappingData
 from optparse import OptionParser
 from sqlalchemy import create_engine
 from sqlalchemy.orm.session import sessionmaker
@@ -45,10 +45,39 @@ class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         """
         Respond to a GET request.
         """
-        out = "<html><body>"
-        out += "<pre>%s</pre>" % self.server.input_queue
-        out += "<pre>%s</pre>" % self.server.work_queue
-        out += "<pre>%s</pre>" % self.server.output_queue
+        out = """<html>
+  <head>
+    <title>obspy-indexer status</title>
+    <meta http-equiv="refresh" content="10" />
+    <style type="text/css">
+      th { text-align: left; font-family:monospace; width: 150px;
+           vertical-align: top; padding: 3px; }
+      td { font-family:monospace; padding: 3px;}
+      pre { margin: 0; }
+    </style>
+  </head>
+  <body>
+    <h1>obspy-indexer</h1>
+    <h2>Options</h2>
+"""
+        out += '<table>'
+        for key, value in sorted(self.server.options.__dict__.items()):
+            out += "<tr><th>%s</th><td>%s</td></tr>" % (key, value)
+        if self.server.mappings:
+            out += "<tr><th>mapping rules</th><td>%s</td></tr>" % \
+                   (self.server.mappings)
+        out += '</table>'
+        out += '<h2>Status</h2>'
+        out += '<table>'
+        out += "<tr><th>current path</th><td>%s</td></tr>" % \
+            (self.server._current_path)
+        out += "<tr><th>patterns</th><td><pre>%s</pre></td></tr>" % \
+            ('\n'.join(self.server.patterns))
+        out += "<tr><th>features</th><td><pre>%s</pre></td></tr>" % \
+            ('\n'.join(self.server.features))
+        out += "<tr><th>file queue</th><td><pre>%s</pre></td></tr>" % \
+            ('\n'.join(self.server._current_files))
+        out += '</table>'
         out += "</body></html>"
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -88,6 +117,8 @@ def _runIndexer(options):
         if options.map_file:
             data = open(options.map_file, 'r').readlines()
             mappings = parseMappingData(data)
+            logging.info("Parsed %d lines from mapping file %s" % \
+                (len(data), options.map_file))
         else:
             mappings = {}
         # create file queue and worker processes
@@ -114,6 +145,7 @@ def _runIndexer(options):
         Session = sessionmaker(bind=engine)
         service.session = Session
         service.options = options
+        service.mappings = mappings
         # set queues
         service.input_queue = in_queue
         service.work_queue = work_queue
@@ -140,9 +172,8 @@ path. Multiple paths have to be separated with a comma, e.g.
 File patterns are given as space-separated list of wildcards after a equal
 sign, e.g.
 '/path=*.gse2 *.mseed,/second/path=*.*'.
-Feature plug-ins are given as space-separated list of plug-in names after a
-vertical bar (|), e.g.
-'/path=*.mseed|feature1 feature2,/second/path|feature1'.
+Feature plug-ins may be added using the hash (#) character, e.g.
+'/path=*.mseed#feature1#feature2,/second/path#feature2'.
 Be aware that features must be provided behind file patterns (if any)! There is
 no default feature enabled.
 Default path option is 'data=*.*'.""")
@@ -165,7 +196,7 @@ Default path option is 'data=*.*'.""")
         help="Log file name. If no log file is given, stdout will be used.")
     parser.add_option("-m", "--mapping_file", type="string", dest="map_file",
         help="Correct network, station, location and channel codes using a" + \
-             "custom mapping file.", default=None)
+             " custom mapping file.", default=None)
     parser.add_option("--all_files", action="store_false", dest="skip_dots",
         default=True,
         help="The indexer will automatically skip paths or "

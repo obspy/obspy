@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2"
+  xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:www.iris.edu/ws/event/query">
+    <event publicID="smi:www.iris.edu/ws/event/query?eventId=3279407">
+      <type>earthquake</type>
+      <description xmlns:iris="http://www.iris.edu/ws/event" iris:FEcode="228">
+        <type>Flinn-Engdahl region</type>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+      </description>
+      <preferredOriginID>smi:orig2</preferredOriginID>
+      <preferredMagnitudeID>smi:mag2</preferredMagnitudeID>
+      <preferredFocalMechanismID>smi:fm2</preferredFocalMechanismID>
+      <origin xmlns:iris="http://www.iris.edu/ws/event"
+        publicID="smi:orig1"
+        iris:contributor="NEIC PDE-W" iris:catalog="NEIC PDE">
+        <time>
+          <value>2011-11-11T05:46:24.1200</value>
+        </time>
+        <creationInfo>
+          <author>1111</author>
+        </creationInfo>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <depth>
+          <value>29.0</value>
+        </depth>
+      </origin>
+      <origin xmlns:iris="http://www.iris.edu/ws/event"
+        publicID="smi:orig2"
+        iris:contributor="NEIC PDE-W" iris:catalog="NEIC PDE">
+        <time>
+          <value>2012-12-12T05:46:24.1200</value>
+        </time>
+        <creationInfo>
+          <author>2222</author>
+        </creationInfo>
+        <latitude>
+          <value>38.297</value>
+        </latitude>
+        <longitude>
+          <value>142.373</value>
+        </longitude>
+        <depth>
+          <value>29.0</value>
+        </depth>
+      </origin>
+      <magnitude
+        publicID="smi:mag1">
+        <type>MW</type>
+        <mag>
+          <value>1</value>
+        </mag>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude
+        publicID="smi:mag2">
+        <type>MW</type>
+        <mag>
+          <value>2</value>
+        </mag>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+      <focalMechanism publicID="smi:fm1">
+        <waveformID networkCode="BW" stationCode="FUR"
+          >smi:ch.ethz.sed/waveform/201754</waveformID>
+        <triggeringOriginID>smi:originId=7680412</triggeringOriginID>
+        <azimuthalGap>0.123</azimuthalGap>
+        <stationPolarityCount>987</stationPolarityCount>
+        <misfit>1</misfit>
+        <stationDistributionRatio>2.345</stationDistributionRatio>
+        <methodID>smi:ISC/methodID=Best_double_couple</methodID>
+      </focalMechanism>
+      <focalMechanism publicID="smi:fm2">
+        <waveformID networkCode="BW" stationCode="FUR"
+          >smi:ch.ethz.sed/waveform/201754</waveformID>
+        <triggeringOriginID>smi:originId=7680412</triggeringOriginID>
+        <azimuthalGap>0.123</azimuthalGap>
+        <stationPolarityCount>987</stationPolarityCount>
+        <misfit>2</misfit>
+        <stationDistributionRatio>2.345</stationDistributionRatio>
+        <methodID>smi:ISC/methodID=Best_double_couple</methodID>
+      </focalMechanism>
+    </event>
+  </eventParameters>
+</q:quakeml>

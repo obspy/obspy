@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import with_statement
-from obspy.core import UTCDateTime, Stream, Trace, read
+from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.decorator import skipIfPython25, skipIf
+from obspy.core.util.decorator import skipIf
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
 from obspy.mseed.headers import clibmseed, PyFile_FromFile
 from obspy.mseed.msstruct import _MSStruct
-from struct import unpack
 import ctypes as C
 import numpy as np
 import os
@@ -146,8 +144,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         writeMSEED(st, tempfile, format="MSEED")
         # read temp file directly without libmseed
-        bin_data = open(tempfile, "rb").read()
-        bin_data = np.array(unpack(">7f", bin_data[56:84]))
+        with open(tempfile, 'rb') as fp:
+            fp.seek(56)
+            bin_data = np.fromfile(fp, dtype='>f4', count=7)
         np.testing.assert_array_equal(data, bin_data)
         # read via ObsPy
         st2 = readMSEED(tempfile)
@@ -209,7 +208,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 encoding=10)
         os.remove(tempfile)
 
-    @skipIfPython25
     def test_writeWrongEncodingViaMseedStats(self):
         """
         Test to write a floating point mseed file with encoding STEIM1 with the
@@ -238,7 +236,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                             'float32_Float32_bigEndian.mseed')
         self.assertRaises(Exception, read, file, reclen=4096)
 
-    @skipIfPython25
     def test_readQualityInformationWarns(self):
         """
         Reading the quality information while reading the data files is no more
@@ -471,7 +468,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertEquals(len(st2), 3)
         self.assertEquals(st, st2)
 
-    @skipIfPython25
     def test_issue332(self):
         """
         Tests issue #332
@@ -515,6 +511,17 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertAlmostEquals(st[0].stats.delta, 10000000.0, 0)
         # clean up
         os.remove(tempfile)
+
+    def test_issue485(self):
+        """
+        Test reading floats and doubles, which are bytswapped nans
+        """
+        ref = [-1188.07800293, 638.16400146, 395.07809448, 1060.28112793]
+        for filename in ('nan_float32.mseed', 'nan_float64.mseed'):
+            filename = os.path.join(self.path, 'data', 'encoding', filename)
+            data = read(filename)[0].data.tolist()
+            np.testing.assert_array_almost_equal(data, ref,
+                decimal=8, err_msg='Data of file %s not equal' % filename)
 
 
 def suite():
