@@ -53,6 +53,7 @@ class WaveformPlotting(object):
         """
         Checks some variables and maps the kwargs to class variables.
         """
+        self.kwargs = kwargs
         self.stream = kwargs.get('stream')
         # Check if it is a Stream or a Trace object.
         if isinstance(self.stream, Trace):
@@ -155,6 +156,14 @@ class WaveformPlotting(object):
         self.format = kwargs.get('format')
         self.show = kwargs.get('show', True)
         self.block = kwargs.get('block', True)
+
+    def __del__(self):
+        """
+        Destructor closes the figure instance if it has been created by the
+        class.
+        """
+        if self.kwargs.get("fig", None) is None:
+            plt.close()
 
     def __getMergeId(self, tr):
         tr_id = tr.id
