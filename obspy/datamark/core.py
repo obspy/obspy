@@ -79,7 +79,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%x" % (century, np.fromstring(buff[0], dtype='b')[0])
+            yy = "%s%02x" % (century, np.fromstring(buff[0], dtype='b')[0])
             mm = "%x" % np.fromstring(buff[1], dtype='b')[0]
             dd = "%x" % np.fromstring(buff[2], dtype='b')[0]
             hh = "%x" % np.fromstring(buff[3], dtype='b')[0]
