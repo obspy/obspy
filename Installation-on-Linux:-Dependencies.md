@@ -12,7 +12,6 @@ It is recommended to install the required dependencies via the package manager o
       sudo apt-get install python-matplotlib
       sudo apt-get install python-lxml
       sudo apt-get install ipython         # strongly recommended, not necessary
-      #sudo apt-get install python-omniorb # only needed for deprecated module obspy.fissures
 ```
  * openSUSE
 ```bash
@@ -27,7 +26,19 @@ It is recommended to install the required dependencies via the package manager o
       sudo zypper install python-matplotlib-tk
       sudo zypper install python-lxml
       sudo zypper install IPython             # strongly recommended, not necessary
-      #sudo zypper install python-omniORB     # only needed for deprecated module obspy.fissures
+```
+ * Fedora (see also http://vfamilyserver.org/blog/2013/01/installing-obspy-on-fedora-18/)
+```bash
+      yum install -y python
+      yum install -y python-devel
+      yum install -y python-setuptools
+      yum install -y numpy
+      yum install -y scipy
+      yum install -y python-matplotlib
+      yum install -y python-lxml
+      yum install -y python-suds
+      yum install -y python-sqlalchemy
+      yum install -y gcc-gfortran
 ```
 
 ## Manually from Source
