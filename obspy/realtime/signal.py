@@ -530,7 +530,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
     """
     Apply recursive kurtosis calculation on data. 
     
-    Recursive kurtosis is computed using the Chassande-Mottin (2002)
+    Recursive kurtosis is computed using the [ChassandeMottin2002]_
     formulation adjusted to give the kurtosis of a gaussian distribution = 0.0.
 
     :type trace: :class:`~obspy.core.trace.Trace`
