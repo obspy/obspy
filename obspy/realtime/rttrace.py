@@ -29,7 +29,6 @@ REALTIME_PROCESS_FUNCTIONS = {
     'tauc': (signal.tauc, 2),
     'mwpintegral': (signal.mwpIntegral, 1),
     'kurtosis': (signal.kurtosis, 3),
-
 }
 
 
