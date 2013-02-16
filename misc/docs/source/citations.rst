@@ -23,6 +23,10 @@ Citations
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
    | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
+.. [ChassandeMottin2002]  
+   | Chassande-Mottin, E. (2002),
+   | **Testing the normality of the gravitational wave data with a low cost recursive estimate of the kurtosis**,
+   | *arXiv*.
 .. [Deichmann1992]  
    | Deichmann, N. and Garcia-Fernandez, M. (1992),
    | **Rupture geometry from high-precision relative hypocentre locations of microearthquake clusters**,
