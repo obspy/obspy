@@ -31,6 +31,7 @@ libraries and applications, our build tools and our web sites.
     * Thomas Lecocq
     * Philippe Lesage
     * Anthony Lomax
+    * Alessia Maggi
     * Tobias Megies
     * Alberto Michelini
     * Nathaniel C. Miller

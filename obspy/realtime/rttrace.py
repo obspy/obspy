@@ -22,11 +22,13 @@ import warnings
 # lower case - values are tuples: (function name, number of RtMemory objects)
 REALTIME_PROCESS_FUNCTIONS = {
     'scale': (signal.scale, 0),
+    'offset': (signal.offset, 0),
     'integrate': (signal.integrate, 1),
     'differentiate': (signal.differentiate, 1),
     'boxcar': (signal.boxcar, 1),
     'tauc': (signal.tauc, 2),
     'mwpintegral': (signal.mwpIntegral, 1),
+    'kurtosis': (signal.kurtosis, 3),
 }
 
 
