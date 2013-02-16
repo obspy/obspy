@@ -116,6 +116,38 @@ class RealTimeSignalTestCase(unittest.TestCase):
         np.testing.assert_almost_equal(self.filt_trace_data,
                                        self.rt_trace.data)
 
+    def test_offset(self):
+        """
+        Testing offset function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'offset': 500}
+        # filtering manual
+        self.filt_trace_data = signal.offset(trace, **options)
+        # filtering real time
+        process_list = [('offset', options)]
+        self._runRtProcess(process_list)
+        # check results
+        diff = self.rt_trace.data - self.orig_trace.data
+        self.assertEqual(np.mean(diff), 500)
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
+    def test_kurtosis(self):
+        """
+        Testing kurtosis function.
+        """
+        trace = self.orig_trace.copy()
+        options = {'win': 5}
+        # filtering manual
+        self.filt_trace_data = signal.kurtosis(trace, **options)
+        # filtering real time
+        process_list = [('kurtosis', options)]
+        self._runRtProcess(process_list)
+        # check results
+        np.testing.assert_almost_equal(self.filt_trace_data,
+                                       self.rt_trace.data)
+
     def test_abs(self):
         """
         Testing np.abs function.

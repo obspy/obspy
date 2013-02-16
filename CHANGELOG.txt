@@ -7,6 +7,8 @@ dev:
  - obspy.db:
    * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
      for features because pipe has a special meaning on most operation systems
+ - obspy.realtime:
+   * two new processing plugins (offset, kurtosis)
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
