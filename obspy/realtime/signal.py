@@ -15,7 +15,7 @@ in a previous packet, so has to be retrieved from memory see
 :func:`obspy.realtime.signal.boxcar`.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org) & Anthony Lomax
+    The ObsPy Development Team (devs@obspy.org), Anthony Lomax & Alessia Maggi
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
