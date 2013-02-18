@@ -547,10 +547,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Reading big endian works but raises a lot of warnings.
-        tr2 = read(memfile, header_byteorder=">")[0]
-        # Remove the mseed specific header fields. These are obviously not
-        # equal.
+        # Reading big endian works. Raises a lot of warnings. These are
+        # suppressed.
+        tr2 = read(memfile, header_byteorder=">", verbose=-1)[0]
         del tr2.stats.mseed
         del tr2.stats._format
         # The two files should not be equal.
@@ -569,8 +568,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Reading little endian works but raises a lot of warnings.
-        tr2 = read(memfile, header_byteorder="<")[0]
+        # Reading little endian works. Raises a lot of warnings. These are
+        # suppressed.
+        tr2 = read(memfile, header_byteorder="<", verbose=-1)[0]
         # Remove the mseed specific header fields. These are obviously not
         # equal.
         del tr2.stats.mseed

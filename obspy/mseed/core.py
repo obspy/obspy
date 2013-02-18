@@ -91,7 +91,7 @@ def isMSEED(filename):
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
               sourcename=None, reclen=None, recinfo=True, details=False,
-              **kwargs):
+              header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -134,6 +134,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
         Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
         Calibration Abort.
+    :type header_byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``],
+        optional
+    :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
+        native byteorder. Used to enforce the header byteorder. Useful in some
+        rare cases where the automatic byte order detection fails.
 
     .. rubric:: Example
 
@@ -266,8 +272,25 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
+    # Determine the byteorder.
+    if header_byteorder == "=":
+        header_byteorder = NATIVE_BYTEORDER
+
+    if header_byteorder is None:
+        header_byteorder = -1
+    elif header_byteorder in [0, "0", "<"]:
+        header_byteorder = 0
+    elif header_byteorder in [1, "1", ">"]:
+        header_byteorder = 1
+
+    try:
+        verbose = int(verbose)
+    except:
+        verbose = 0
+
     lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-                                    reclen, 0, C.c_int(details), allocData)
+        reclen, C.c_int(verbose), C.c_int(details), header_byteorder,
+        allocData)
 
     # XXX: Check if the freeing works.
     del selections
