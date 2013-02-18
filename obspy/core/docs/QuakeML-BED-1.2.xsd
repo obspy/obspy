@@ -83,6 +83,7 @@
   </xs:simpleType>
   <xs:simpleType name="EventType">
     <xs:restriction base="xs:string">
+      <xs:enumeration value="not existing"/>
       <xs:enumeration value="not reported"/>
       <xs:enumeration value="earthquake"/>
       <xs:enumeration value="anthropogenic event"/>
