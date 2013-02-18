@@ -12,7 +12,8 @@ from datetime import datetime
 from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
-from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
+from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
+    getMatplotlibVersion
 from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
@@ -29,6 +30,8 @@ Waveform plotting for obspy.Stream objects.
     GNU General Public License (GPL)
     (http://www.gnu.org/licenses/gpl.txt)
 """
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class WaveformPlotting(object):
@@ -50,6 +53,7 @@ class WaveformPlotting(object):
         """
         Checks some variables and maps the kwargs to class variables.
         """
+        self.kwargs = kwargs
         self.stream = kwargs.get('stream')
         # Check if it is a Stream or a Trace object.
         if isinstance(self.stream, Trace):
@@ -153,6 +157,14 @@ class WaveformPlotting(object):
         self.show = kwargs.get('show', True)
         self.block = kwargs.get('block', True)
 
+    def __del__(self):
+        """
+        Destructor closes the figure instance if it has been created by the
+        class.
+        """
+        if self.kwargs.get("fig", None) is None:
+            plt.close()
+
     def __getMergeId(self, tr):
         tr_id = tr.id
         # don't merge normal traces with previews
@@ -236,7 +248,10 @@ class WaveformPlotting(object):
                 return self.fig
             else:
                 if not self.fig_obj and self.show:
-                    plt.show(block=self.block)
+                    if MATPLOTLIB_VERSION >= [1, 0, 0]:
+                        plt.show(block=self.block)
+                    else:
+                        plt.show()
 
     def plot(self, *args, **kwargs):
         """

@@ -30,11 +30,11 @@ def eigval(datax, datay, dataz, fk, normf=1):
     parameter ``fk`` describes the coefficients of the used polynomial. The
     values of ``fk`` depend on the order of the derivative you want to
     calculate. If you do not want to use derivatives you can simply
-    use [1,1,1,1,1] for ``fk``.
+    use [1, 1, 1, 1, 1] for ``fk``.
 
-    The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is just
-    the numerical differentiation by central differences (carried out by the
-    routine :func:`scipy.signal.lfilter(data, 1, fk)`).
+    The algorithm is mainly based on the paper by [Jurkevics1988]_. The rest is
+    just the numerical differentiation by central differences (carried out by
+    the routine :func:`scipy.signal.lfilter(data, 1, fk)`).
 
     :type datax: :class:`~numpy.ndarray`
     :param datax: Data of x component.
