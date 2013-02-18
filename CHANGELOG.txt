@@ -1,6 +1,8 @@
 dev:
  - obspy.arclink:
    * user keyword is now required during client initialization
+ - obspy.core:
+   * Updated event classes to QuakeML 1.2 final.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data

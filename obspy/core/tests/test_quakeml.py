@@ -41,10 +41,10 @@ class QuakeMLTestCase(unittest.TestCase):
         catalog = readQuakeML(filename)
         self.assertEquals(len(catalog), 2)
         self.assertEquals(catalog[0].resource_id,
-            ResourceIdentifier(\
+            ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=3279407'))
         self.assertEquals(catalog[1].resource_id,
-            ResourceIdentifier(\
+            ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=2318174'))
         # NERIES
         filename = os.path.join(self.path, 'neries_events.xml')
@@ -114,7 +114,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(len(catalog[0].origins), 1)
         origin = catalog[0].origins[0]
         self.assertEquals(origin.resource_id,
-            ResourceIdentifier(\
+            ResourceIdentifier(
             'smi:www.iris.edu/ws/event/query?originId=7680412'))
         self.assertEquals(origin.time, UTCDateTime("2011-03-11T05:46:24.1200"))
         self.assertEquals(origin.latitude, 38.297)
@@ -214,7 +214,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEquals(mag.mag_errors.uncertainty, 0.1)
         self.assertEquals(mag.magnitude_type, 'MS')
         self.assertEquals(mag.method_id,
-            ResourceIdentifier(\
+            ResourceIdentifier(
             'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
         self.assertEquals(mag.station_count, 8)
         self.assertEquals(mag.evaluation_status, 'preliminary')
@@ -292,7 +292,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.amplitude_id,
             ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
         self.assertEqual(mag.method_id,
-            ResourceIdentifier(\
+            ResourceIdentifier(
                 "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude"))
         self.assertEqual(mag.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
@@ -490,9 +490,9 @@ class QuakeMLTestCase(unittest.TestCase):
         Parses the QuakeML xsd scheme definition and checks if all enums are
         correctly defined.
 
-        This is a very strict test against the xsd scheme file of QuakeML
-        1.2RC4. If obspy.core.event will ever be more loosely coupled to
-        QuakeML this test WILL HAVE to be changed.
+        This is a very strict test against the xsd scheme file of QuakeML 1.2.
+        If obspy.core.event will ever be more loosely coupled to QuakeML this
+        test WILL HAVE to be changed.
         """
         # Currently only works with lxml.
         try:
@@ -500,28 +500,25 @@ class QuakeMLTestCase(unittest.TestCase):
         except:
             return
         xsd_enum_definitions = {}
-        xsd_file = os.path.join(self.path, "QuakeML-BED-1.2.xsd")
+        xsd_file = os.path.join(self.path, "..", "..", "docs",
+            "QuakeML-BED-1.2.xsd")
         root = parse(xsd_file).getroot()
-        for elem in root.getchildren():
-            # All enums are simple types.
-            if not elem.tag.endswith("simpleType"):
+
+        # Get all enums from the xsd file.
+        for stype in root.findall("xs:simpleType", namespaces=root.nsmap):
+            type_name = stype.get("name")
+            restriction = stype.find("xs:restriction", namespaces=root.nsmap)
+            if restriction is None:
                 continue
-            # They only have one child, a restriction to strings.
-            children = elem.getchildren()
-            if len(children) > 1 or \
-                not children[0].tag.endswith("restriction") \
-                or (children[0].items()[0] != ('base', 'xs:string')):
+            if restriction.get("base") != "xs:string":
                 continue
-            # Furthermore all children of the restriction should be
-            # enumerations.
-            enums = children[0].getchildren()
-            all_enums = [_i.tag.endswith("enumeration") for _i in enums]
-            if not all(all_enums):
+            enums = restriction.findall("xs:enumeration",
+                namespaces=root.nsmap)
+            if not enums:
                 continue
-            enum_name = elem.get('name')
-            xsd_enum_definitions[enum_name] = []
-            for enum in enums:
-                xsd_enum_definitions[enum_name].append(enum.get('value'))
+            enums = [_i.get("value") for _i in enums]
+            xsd_enum_definitions[type_name] = enums
+
         # Now import all enums and check if they are correct.
         from obspy.core import event_header
         from obspy.core.util.types import Enum
@@ -547,7 +544,7 @@ class QuakeMLTestCase(unittest.TestCase):
                     raise Exception(msg)
             # Check if there are too many items.
             if len(available_items) != len(enum_items):
-                additional_items = [_i for _i in available_items \
+                additional_items = [_i for _i in available_items
                     if _i.lower() not in enum_items]
                 msg = "Enum {enum_name} has the following additional items" + \
                     " not defined in the xsd style sheet:\n\t{enumerations}"

@@ -95,6 +95,7 @@ MomentTensorCategory = Enum([
 ])
 
 EventType = Enum([
+    "not existing",
     "not reported",
     "earthquake",
     "anthropogenic event",
