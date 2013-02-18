@@ -9,6 +9,9 @@ dev:
      for features because pipe has a special meaning on most operation systems
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
+ - obspy.mseed:
+   * new kwarg arguments for reading mseed files: header_byteorder and
+     verbose
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to

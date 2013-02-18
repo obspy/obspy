@@ -10,6 +10,7 @@ from obspy.mseed.msstruct import _MSStruct
 import ctypes as C
 import numpy as np
 import os
+from StringIO import StringIO
 import sys
 import unittest
 import warnings
@@ -196,7 +197,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         Test to write a floating point mseed file with encoding STEIM1.
         An exception should be raised.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         tempfile = NamedTemporaryFile().name
         # Read the data and convert them to float
@@ -214,7 +215,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         encoding set in stats.mseed.encoding.
         This will just raise a warning.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         tempfile = NamedTemporaryFile().name
         # Read the data and convert them to float
@@ -522,6 +523,61 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             data = read(filename)[0].data.tolist()
             np.testing.assert_array_almost_equal(data, ref,
                 decimal=8, err_msg='Data of file %s not equal' % filename)
+
+    def test_enforcing_reading_byteorder(self):
+        """
+        Tests if setting the byteorder of the header for reading is passed to
+        the C functions.
+
+        Quite simple. It just checks if reading with the correct byteorder
+        works and reading with the wrong byteorder fails.
+        """
+        tr = Trace(data=np.arange(10, dtype="int32"))
+
+        # Test with little endian.
+        memfile = StringIO()
+        tr.write(memfile, format="mseed", byteorder="<")
+        memfile.seek(0, 0)
+        # Reading little endian should work just fine.
+        tr2 = read(memfile, header_byteorder="<")[0]
+        memfile.seek(0, 0)
+        self.assertEqual(tr2.stats.mseed.byteorder, "<")
+        # Remove the mseed specific header fields. These are obviously not
+        # equal.
+        del tr2.stats.mseed
+        del tr2.stats._format
+        self.assertEqual(tr, tr2)
+        # Reading big endian works. Raises a lot of warnings. These are
+        # suppressed.
+        tr2 = read(memfile, header_byteorder=">", verbose=-1)[0]
+        del tr2.stats.mseed
+        del tr2.stats._format
+        # The two files should not be equal.
+        self.assertNotEqual(tr, tr2)
+
+        # Same test with big endian
+        memfile = StringIO()
+        tr.write(memfile, format="mseed", byteorder=">")
+        memfile.seek(0, 0)
+        # Reading big endian should work just fine.
+        tr2 = read(memfile, header_byteorder=">")[0]
+        memfile.seek(0, 0)
+        self.assertEqual(tr2.stats.mseed.byteorder, ">")
+        # Remove the mseed specific header fields. These are obviously not
+        # equal.
+        del tr2.stats.mseed
+        del tr2.stats._format
+        self.assertEqual(tr, tr2)
+        # Reading little endian works. Raises a lot of warnings. These are
+        # suppressed.
+        tr2 = read(memfile, header_byteorder="<", verbose=-1)[0]
+        # Remove the mseed specific header fields. These are obviously not
+        # equal.
+        del tr2.stats.mseed
+        del tr2.stats._format
+        # The two files should not be equal.
+        self.assertNotEqual(tr, tr2)
+
 
 
 def suite():
