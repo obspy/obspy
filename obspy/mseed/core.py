@@ -172,6 +172,17 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     else:
         reclen = int(log(reclen, 2))
 
+    # Determine the byteorder.
+    if header_byteorder == "=":
+        header_byteorder = NATIVE_BYTEORDER
+
+    if header_byteorder is None:
+        header_byteorder = -1
+    elif header_byteorder in [0, "0", "<"]:
+        header_byteorder = 0
+    elif header_byteorder in [1, "1", ">"]:
+        header_byteorder = 1
+
     # The quality flag is no more supported. Raise a warning.
     if 'quality' in kwargs:
         msg = 'The quality flag is no more supported in this version of ' + \
@@ -181,7 +192,15 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     # Parse some information about the file.
     if recinfo:
-        info = util.getRecordInformation(mseed_object)
+        # Pass the byteorder if enforced.
+        if header_byteorder == 0:
+            bo = "<"
+        elif header_byteorder > 0:
+            bo = ">"
+        else:
+            bo = None
+
+        info = util.getRecordInformation(mseed_object, endian=bo)
         info['encoding'] = ENCODINGS[info['encoding']][0]
         # Only keep information relevant for the whole file.
         info = {'encoding': info['encoding'],
@@ -276,17 +295,6 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # Define Python callback function for use in C function. Return a long so
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
-
-    # Determine the byteorder.
-    if header_byteorder == "=":
-        header_byteorder = NATIVE_BYTEORDER
-
-    if header_byteorder is None:
-        header_byteorder = -1
-    elif header_byteorder in [0, "0", "<"]:
-        header_byteorder = 0
-    elif header_byteorder in [1, "1", ">"]:
-        header_byteorder = 1
 
     try:
         verbose = int(verbose)

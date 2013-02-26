@@ -10,6 +10,7 @@ from obspy.mseed.msstruct import _MSStruct
 import ctypes as C
 import numpy as np
 import os
+import random
 from StringIO import StringIO
 import sys
 import unittest
@@ -577,6 +578,40 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats._format
         # The two files should not be equal.
         self.assertNotEqual(tr, tr2)
+
+    def test_long_year_range(self):
+        """
+        Tests reading and writing years 1900 to 2100.
+        """
+        tr = Trace(np.arange(5, dtype="float32"))
+
+        # Year 2056 is non-deterministic for days 1, 256 and 257. These three
+        # dates are simply simply not supported right now. See the libmseed
+        # documentation for more details.
+        # Use every 5th year. Otherwise the test takes too long. Use 1901 as
+        # start to get year 2056.
+        years = range(1901, 2101, 5)
+        for year in years:
+            for byteorder in ["<", ">"]:
+                memfile = StringIO()
+                # Get some random time with the year and byteorder as the seed.
+                random.seed(year + ord(byteorder))
+                tr.stats.starttime = UTCDateTime(year,
+                    julday=random.randrange(1, 365),
+                    hour=random.randrange(0, 24),
+                    minute=random.randrange(0, 60),
+                    second=random.randrange(0, 60))
+                if year == 2056:
+                    tr.stats.starttime = UTCDateTime(2056, 2, 1)
+                tr.write(memfile, format="mseed")
+                st2 = read(memfile)
+                self.assertEqual(len(st2), 1)
+                tr2 = st2[0]
+                # Remove the mseed specific header fields. These are obviously
+                # not equal.
+                del tr2.stats.mseed
+                del tr2.stats._format
+                self.assertEqual(tr, tr2)
 
 
 def suite():
