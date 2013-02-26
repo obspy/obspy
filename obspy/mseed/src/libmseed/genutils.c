@@ -7,7 +7,7 @@
  * ORFEUS/EC-Project MEREDIAN
  * IRIS Data Management Center
  *
- * modified: 2012.357
+ * modified: 2013.053
  ***************************************************************************/
 
 #include <stdio.h>
@@ -905,10 +905,12 @@ ms_time2hptime (int year, int day, int hour, int min, int sec, int usec)
 /***************************************************************************
  * ms_seedtimestr2hptime:
  * 
- * Convert a SEED time string to a high precision epoch time.  SEED
- * time format is "YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter can be a
- * comma [,], colon [:] or period [.] except for the fractional
- * seconds which must start with a period [.].
+ * Convert a SEED time string (day-of-year style) to a high precision
+ * epoch time.  The time format expected is
+ * "YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter can be a dash [-],
+ * comma [,], colon [:] or period [.].  Additionally a [T] or space
+ * may be used to seprate the day and hour fields.  The fractional
+ * seconds ("FFFFFF") must begin with a period [.] if present.
  *
  * The time string can be "short" in which case the omitted values are
  * assumed to be zero (with the exception of DDD which is assumed to
@@ -931,7 +933,7 @@ ms_seedtimestr2hptime (char *seedtimestr)
   float fusec = 0.0;
   int usec = 0;
   
-  fields = sscanf (seedtimestr, "%d%*[,:.]%d%*[,:.]%d%*[,:.]%d%*[,:.]%d%f",
+  fields = sscanf (seedtimestr, "%d%*[-,:.]%d%*[-,:.Tt ]%d%*[-,:.]%d%*[-,:.]%d%f",
 		   &year, &day, &hour, &min, &sec, &fusec);
   
   /* Convert fractional seconds to microseconds */
@@ -989,11 +991,12 @@ ms_seedtimestr2hptime (char *seedtimestr)
 /***************************************************************************
  * ms_timestr2hptime:
  * 
- * Convert a generic time string to a high precision epoch time.
- * SEED time format is "YYYY[/MM/DD HH:MM:SS.FFFF]", the delimiter can
- * be a dash [-], slash [/], colon [:], or period [.] and between the
- * date and time a 'T' or a space may be used.  The fracttional
- * seconds must begin with a period [.].
+ * Convert a generic time string to a high precision epoch time.  The
+ * time format expected is "YYYY[/MM/DD HH:MM:SS.FFFF]", the delimiter
+ * can be a dash [-], comma[,], slash [/], colon [:], or period [.].
+ * Additionally a 'T' or space may be used between the date and time
+ * fields.  The fractional seconds ("FFFFFF") must begin with a period
+ * [.] if present.
  *
  * The time string can be "short" in which case the omitted values are
  * assumed to be zero (with the exception of month and day which are
@@ -1018,7 +1021,7 @@ ms_timestr2hptime (char *timestr)
   float fusec = 0.0;
   int usec = 0;
   
-  fields = sscanf (timestr, "%d%*[-/:.]%d%*[-/:.]%d%*[-/:.Tt ]%d%*[-/:.]%d%*[- /:.]%d%f",
+  fields = sscanf (timestr, "%d%*[-,/:.]%d%*[-,/:.]%d%*[-,/:.Tt ]%d%*[-,/:.]%d%*[-,/:.]%d%f",
 		   &year, &mon, &mday, &hour, &min, &sec, &fusec);
   
   /* Convert fractional seconds to microseconds */

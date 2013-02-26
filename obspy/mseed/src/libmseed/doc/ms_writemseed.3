@@ -1,0 +1,99 @@
+.TH MS_WRITEMSEED 3 2011/01/06 "Libmseed API"
+.SH DESCRIPTION
+Write Mini-SEED records to files.
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBmsr_writemseed\fP ( MSRecord *" msr ", char *" msfile ", flag " overwrite ","
+.BI "                      int " reclen ", flag " encoding ", flag " byteorder ","
+.BI "                      flag " verbose " );"
+
+.BI "int  \fBmst_writemseed\fP ( MSTrace *" mst ", char *" msfile ", flag " overwrite ","
+.BI "                      int " reclen ", flag " encoding ", flag " byteorder ","
+.BI "                      flag " verbose " );"
+
+.BI "int  \fBmst_writemseedgroup\fP ( MSTraceGroup *" msr ", char *" msfile ","
+.BI "                           flag " overwrite ", int " reclen ", flag " encoding ","
+.BI "                           flag " byteorder ", flag " verbose " );"
+.fi
+
+.SH DESCRIPTION
+These routines will packed the data contained in the \fBMSRecord\fP,
+\fBMSTrace\fP or \fBMSTraceGroup\fP into Mini-SEED records and write
+them to the specified file.  The \fIoverwrite\fP flag controls whether
+the output file is overwritten or appended to.
+
+Mini-SEED records are created using the specified record length
+(\fIreclen\fP), Mini-SEED \fIencoding\fP and \fIbyteorder\fP.  Default
+values will be used for any of the key characteristics of record
+length, encoding format and byte order that are specified as -1.  The
+default values are: reclen = 4096 bytes, encoding = 11 (Steim2) and
+byteorder = 1 (MSBF or big-endian).
+
+\fIreclen\fP should be set to the desired data record length in bytes
+which must be expressible as 2 raised to the power of X where X is
+between (and including) 8 to 20.
+
+\fIencoding\fP should be set to one of the following supported
+Mini-SEED data encoding formats: DE_ASCII (0), DE_INT16 (1), DE_INT32
+(3), DE_FLOAT32 (4), DE_FLOAT64 (5), DE_STEIM1 (10) and DE_STEIM2
+(11).  The encoding aliases are defined in libmseed.h.
+MSTrace.sampletype should indicated the sample type as either 'a'
+(ASCII), 'i' (32-bit integers), 'f' (32-bit floats) or 'd' (64-bit
+doubles).
+
+The encoding format must be appropriate for the sample type of the
+MSTrace samples.  For example, Steim compression and integer encoding
+formats require integer samples and float encoding formats require the
+appropriate size floats as input.  As a counter example, float samples
+cannot be packed using Steim compression or integer encoding formats.
+
+\fIbyteorder\fP must be either 0 (LSBF or little-endian) or 1 (MBF or
+big-endian).
+
+The \fIverbose\fP flag controls verbosity, a value of zero will result
+in no diagnostic output.
+
+.SH RETURN VALUES
+All of these routines return the number of records written on success
+and -1 on error.
+
+.SH EXAMPLE
+Skeleton code for writing Mini-SEED records with \fBmsr_writemseed(3)\fP:
+
+.nf
+main() {
+  MSRecord *msr;
+  int precords;
+
+  msr = msr_init (NULL);
+
+  /* Populate MSRecord values */
+  strcpy (msr->network, "XX");
+  strcpy (msr->station, "TEST");
+  strcpy (msr->channel, "BHE");
+  msr->starttime = ms_seedtimestr2hptime ("2004,350,00:00:00.00");
+  msr->samprate = 40.0;
+  msr->datasamples = dataptr; /* pointer to 32-bit integer data samples */  
+  msr->numsamples = 1234;
+  msr->sampletype = 'i';      /* declare type to be 32-bit integers */
+
+  /* Write record(s) with 4096-byte length, Steim-2 compression, big-endian */
+  precords = msr_writemseed (msr, "output.mseed", 1, 4096, DE_STEIM2, 1, 0);
+
+  ms_log (0, "Wrote %d records\n", precords);
+
+  msr_free (&msr);
+}
+.fi
+
+.SH SEE ALSO
+\fBms_intro(3)\fP, \fBmsr_pack(3)\fP and \fBmst_pack(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi

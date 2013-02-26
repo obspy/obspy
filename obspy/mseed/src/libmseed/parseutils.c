@@ -5,7 +5,7 @@
  * Written by Chad Trabant
  *   IRIS Data Management Center
  *
- * modified: 2012.363
+ * modified: 2013.050
  ***************************************************************************/
 
 #include <stdio.h>
@@ -252,9 +252,8 @@ ms_detect ( const char *record, int recbuflen )
   
   fsdh = (struct fsdh_s *) record;
   
-  /* Check to see if byte swapping is needed by checking for sane year */
-  if ( (fsdh->start_time.year < 1900) ||
-       (fsdh->start_time.year > 2050) )
+  /* Check to see if byte swapping is needed by checking for sane year and day */
+  if ( ! MS_ISVALIDYEARDAY(fsdh->start_time.year, fsdh->start_time.day) )
     swapflag = 1;
   
   blkt_offset = fsdh->blockette_offset;
@@ -382,10 +381,8 @@ ms_parse_raw ( char *record, int maxreclen, flag details, flag swapflag )
   
   fsdh = (struct fsdh_s *) record;
   
-  /* Check to see if byte swapping is needed by testing the year */
-  if ( swapflag == -1 &&
-       ((fsdh->start_time.year < 1900) ||
-	(fsdh->start_time.year > 2050)) )
+  /* Check to see if byte swapping is needed by testing the year and day */
+  if ( swapflag == -1 && ! MS_ISVALIDYEARDAY(fsdh->start_time.year, fsdh->start_time.day) )
     swapflag = 1;
   else
     swapflag = 0;
@@ -473,9 +470,9 @@ ms_parse_raw ( char *record, int maxreclen, flag details, flag swapflag )
     }
   
   /* Check start time fields */
-  if ( fsdh->start_time.year < 1920 || fsdh->start_time.year > 2050 )
+  if ( fsdh->start_time.year < 1900 || fsdh->start_time.year > 2100 )
     {
-      ms_log (2, "%s: Unlikely start year (1920-2050): '%d'\n", srcname, fsdh->start_time.year);
+      ms_log (2, "%s: Unlikely start year (1900-2100): '%d'\n", srcname, fsdh->start_time.year);
       retval++;
     }
   if ( fsdh->start_time.day < 1 || fsdh->start_time.day > 366 )
