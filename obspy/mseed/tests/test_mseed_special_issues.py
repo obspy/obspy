@@ -548,13 +548,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Reading big endian works. Raises a lot of warnings. These are
-        # suppressed.
-        tr2 = read(memfile, header_byteorder=">", verbose=-1)[0]
-        del tr2.stats.mseed
-        del tr2.stats._format
-        # The two files should not be equal.
-        self.assertNotEqual(tr, tr2)
+        # Wrong byteorder raises.
+        self.assertRaises(ValueError, read, memfile, header_byteorder=">")
 
         # Same test with big endian
         memfile = StringIO()
@@ -569,15 +564,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         del tr2.stats.mseed
         del tr2.stats._format
         self.assertEqual(tr, tr2)
-        # Reading little endian works. Raises a lot of warnings. These are
-        # suppressed.
-        tr2 = read(memfile, header_byteorder="<", verbose=-1)[0]
-        # Remove the mseed specific header fields. These are obviously not
-        # equal.
-        del tr2.stats.mseed
-        del tr2.stats._format
-        # The two files should not be equal.
-        self.assertNotEqual(tr, tr2)
+        # Wrong byteorder raises.
+        self.assertRaises(ValueError, read, memfile, header_byteorder="<")
 
     def test_long_year_range(self):
         """

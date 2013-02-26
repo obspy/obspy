@@ -334,9 +334,14 @@ def _getRecordInformation(file_object, offset=0, endian=None):
                 microsecond=values[5] * 100)
     else:
         values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
-        starttime = UTCDateTime(year=values[0], julday=values[1],
-            hour=values[2], minute=values[3], second=values[4],
-            microsecond=values[5] * 100)
+        try:
+            starttime = UTCDateTime(year=values[0], julday=values[1],
+                hour=values[2], minute=values[3], second=values[4],
+                microsecond=values[5] * 100)
+        except:
+            msg = ("Invalid starttime found. The passed byteorder is likely "
+                "wrong.")
+            raise ValueError(msg)
     npts = values[6]
     info['npts'] = npts
     samp_rate_factor = values[7]
