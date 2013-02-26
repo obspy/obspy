@@ -579,7 +579,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertNotEqual(tr, tr2)
 
 
-
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
 

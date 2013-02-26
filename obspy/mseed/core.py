@@ -264,7 +264,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # Use a callback function to allocate the memory and keep track of the
     # data.
     def allocate_data(samplecount, sampletype):
-        data = np.empty(samplecount, dtype=DATATYPES[sampletype])
+        # Enhanced sanity checking for libmseed 2.10 can result in the
+        # sampletype not being set. Just return an empty array in this case.
+        if sampletype == "\x00":
+            data = np.empty(0)
+        else:
+            data = np.empty(samplecount, dtype=DATATYPES[sampletype])
         all_data.append(data)
         return data.ctypes.data
     # XXX: Do this properly!
