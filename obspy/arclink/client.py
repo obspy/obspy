@@ -502,6 +502,11 @@ class Client(object):
         >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
+        format = format.upper()
+        if format not in ["MSEED", "FSEED"]:
+            msg = ("'%s' is not a valid format. Choose either 'MSEED' or "
+                "'FSEED'")
+            raise ArcLinkException(msg)
         # check parameters
         is_name = isinstance(filename, basestring)
         if not is_name and not isinstance(filename, file):
