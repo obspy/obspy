@@ -627,11 +627,11 @@ class Client(object):
         keys = []
         for key in routes:
             parts = key.split('.')
-            if parts[0] and net != '*'  and not fnmatch(parts[0], net):
+            if parts[0] and net != '*' and not fnmatch(parts[0], net):
                 continue
-            if parts[1] and sta != '*'  and not fnmatch(parts[1], sta):
+            if parts[1] and sta != '*' and not fnmatch(parts[1], sta):
                 continue
-            if parts[2] and loc != '*'  and not fnmatch(parts[2], loc):
+            if parts[2] and loc != '*' and not fnmatch(parts[2], loc):
                 continue
             if parts[3] and cha != '*' and not fnmatch(parts[3], cha):
                 continue
@@ -1205,7 +1205,7 @@ class Client(object):
                             # channel code is split into two attributes
                             id = '.'.join([net.code, sta.code,
                                            stream.get('loc_code', ''),
-                                           stream.get('code', '  ') + \
+                                           stream.get('code', '  ') +
                                            comp.get('code', ' ')])
                         else:
                             id = '.'.join([net.code, sta.code,
@@ -1246,8 +1246,8 @@ class Client(object):
                         if not instruments or not seismometer_id:
                             continue
                         # PAZ
-                        paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
-                                               '[@' + name_ns + '="' + \
+                        paz_id = xml_doc.xpath('ns:' + seismometer_ns +
+                                               '[@' + name_ns + '="' +
                                                seismometer_id + '"]/@response',
                                                namespaces={'ns': xml_ns})
                         if not paz_id:
@@ -1256,7 +1256,7 @@ class Client(object):
                         # hack for 0.2 schema
                         if paz_id.startswith('paz:'):
                             paz_id = paz_id[4:]
-                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' + \
+                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' +
                                                 name_ns + '="' + paz_id + '"]',
                                                 namespaces={'ns': xml_ns})
                         if not xml_paz:
@@ -1317,8 +1317,8 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in data.items() \
-                    if key.startswith(network + '.') \
+        stations = [value for key, value in data.items()
+                    if key.startswith(network + '.')
                     and "code" in value]
         return stations
 
