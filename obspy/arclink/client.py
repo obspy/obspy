@@ -12,10 +12,11 @@ ArcLink/WebDC client for ObsPy.
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy import read, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
+from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os
+import StringIO
 import time
 import warnings
 
@@ -396,19 +397,13 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        tf = NamedTemporaryFile()
-        self.saveWaveform(tf._fileobj, network, station, location, channel,
+        file_stream = StringIO.StringIO()
+        self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        stream = read(tf.name, 'MSEED')
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        file_stream.seek(0, 0)
+        stream = read(file_stream, 'MSEED')
+        file_stream.close()
         # trim stream
         stream.trim(starttime, endtime)
         # fetching PAZ and coordinates
@@ -509,7 +504,7 @@ class Client(object):
             raise ArcLinkException(msg)
         # check parameters
         is_name = isinstance(filename, basestring)
-        if not is_name and not isinstance(filename, file):
+        if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         # request type
