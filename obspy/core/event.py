@@ -983,7 +983,7 @@ class Amplitude(__Amplitude):
     the visible end of a record for duration magnitudes.
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
-    :param resource_id: Resource identifier of Pick.
+    :param resource_id: Resource identifier of Amplitude.
     :type generic_amplitude: float
     :param generic_amplitude: Amplitude value.
     :type generic_amplitude_errors: :class:`~obspy.core.util.AttribDict`
