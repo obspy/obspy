@@ -196,6 +196,22 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     // the calibration type, availability of BLK 300, 310, 320, 390, 395
     int8_t calibration_type = -1;
 
+    // Init all the pointers to NULL. Most compilers should do this anyway.
+    LinkedIDList * idListHead = NULL;
+    LinkedIDList * idListCurrent = NULL;
+    LinkedIDList * idListLast = NULL;
+    MSRecord *msr = NULL;
+    ContinuousSegment * segmentCurrent = NULL;
+    hptime_t lastgap = 0;
+    hptime_t hptimetol = 0;
+    hptime_t nhptimetol = 0;
+    long data_offset;
+    LinkedRecordList *recordHead = NULL;
+    LinkedRecordList *recordPrevious = NULL;
+    LinkedRecordList *recordCurrent = NULL;
+    int datasize;
+    int record_count = 0;
+
     // A negative verbosity suppressed as much as possible.
     if (verbose < 0) {
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
@@ -218,27 +234,9 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         MS_UNPACKHEADERBYTEORDER(-1);
     }
 
-
-    // Init all the pointers to NULL. Most compilers should do this anyway.
-    LinkedIDList * idListHead = NULL;
-    LinkedIDList * idListCurrent = NULL;
-    LinkedIDList * idListLast = NULL;
-    MSRecord *msr = NULL;
-    ContinuousSegment * segmentCurrent = NULL;
-    hptime_t lastgap = 0;
-    hptime_t hptimetol = 0;
-    hptime_t nhptimetol = 0;
-    long data_offset;
-    LinkedRecordList *recordHead = NULL;
-    LinkedRecordList *recordPrevious = NULL;
-    LinkedRecordList *recordCurrent = NULL;
-    int datasize;
-
-
     //
     // Read all records and save them in a linked list.
     //
-    int record_count = 0;
     while (offset < buflen) {
         msr = msr_init(NULL);
         retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);
