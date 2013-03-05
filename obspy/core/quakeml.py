@@ -894,6 +894,7 @@ class Pickler(object):
             # check if a namespace is given
             if isinstance(value, dict):
                 ns = value.get("_namespace")
+                xtype = value.get("_type")
                 value = value.get("value")
             # otherwise use default obspy namespace (and add it to
             if ns is None:
@@ -908,7 +909,10 @@ class Pickler(object):
                     ns_abbrev, ns = ns
                 self._addNamespace(ns, ns_abbrev)
             tag = "{%s}%s" % (ns, key)
-            self._str(value, element, tag)
+            if xtype is "attribute":
+                element.attrib[tag] = value
+            else:
+                self._str(value, element, tag)
 
     def _getNamespaceMap(self):
         nsmap = self.ns_dict.copy()
