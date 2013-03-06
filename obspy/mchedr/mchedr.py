@@ -665,7 +665,7 @@ class Unpickler(object):
         The primary phase is the first phase of the reading,
         regardless its type. 
         """
-        station = line[2:7]
+        station = line[2:7].strip()
         phase = line[7:15]
         arrival_time = line[15:24]
         residual = self._float(line[25:30])
