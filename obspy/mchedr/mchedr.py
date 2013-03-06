@@ -767,15 +767,18 @@ class Unpickler(object):
         and can be P-type or S-type.
         """
         arrivals=[]
-        phase = line[7:15]
+        phase = line[7:15].strip()
         arrival_time = line[15:24]
-        arrivals.append((phase, arrival_time))
-        phase = line[25:33]
+        if phase:
+            arrivals.append((phase, arrival_time))
+        phase = line[25:33].strip()
         arrival_time = line[33:42]
-        arrivals.append((phase, arrival_time))
-        phase = line[43:51]
+        if phase:
+            arrivals.append((phase, arrival_time))
+        phase = line[43:51].strip()
         arrival_time = line[51:60]
-        arrivals.append((phase, arrival_time))
+        if phase:
+            arrivals.append((phase, arrival_time))
 
         origin = event.origins[0]
         for phase, arrival_time in arrivals:
