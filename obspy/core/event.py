@@ -2474,6 +2474,9 @@ class Catalog(object):
                         ">": __is_greater,
                         ">=": __is_greater_or_equal}
 
+        inverse = "inverse" in args
+        args = [a for a in args if a != "inverse"]
+
         events = list(self.events)
         for arg in args:
             try:
@@ -2484,35 +2487,47 @@ class Catalog(object):
             if key == "magnitude":
                 temp_events = []
                 for event in events:
-                    if event.magnitudes and event.magnitudes[0].mag and \
-                        operator_map[operator](event.magnitudes[0].mag,
-                                               float(value)):
+                    if (
+                        event.magnitudes and event.magnitudes[0].mag and 
+                        operator_map[operator](
+                            event.magnitudes[0].mag,
+                            float(value)
+                            )
+                       ):
                         temp_events.append(event)
                 events = temp_events
             elif key in ("longitude", "latitude", "depth", "time"):
                 temp_events = []
                 for event in events:
-                    if (event.origins and key in event.origins[0] and
+                    if (
+                        event.origins and key in event.origins[0] and
                         operator_map[operator](
                             event.origins[0].get(key),
                             UTCDateTime(value) if key == 'time' else
-                            float(value))):
+                            float(value)
+                            )
+                       ):
                         temp_events.append(event)
                 events = temp_events
             elif key in ('standard_error', 'azimuthal_gap',
                          'used_station_count', 'used_phase_count'):
                 temp_events = []
                 for event in events:
-                    if (event.origins and event.origins[0].quality and
+                    if (
+                         event.origins and event.origins[0].quality and
                          key in event.origins[0].quality and
-                        operator_map[operator](
-                            event.origins[0].quality.get(key),
-                            float(value))):
+                         operator_map[operator](
+                             event.origins[0].quality.get(key),
+                             float(value)
+                             )
+                       ):
                         temp_events.append(event)
                 events = temp_events
             else:
                 msg = "%s is not a valid filter key" % key
                 raise ValueError(msg)
+        if inverse:
+            events = [ev for ev in self.events if not ev in events]
         return Catalog(events=events)
 
     def copy(self):
