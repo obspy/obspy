@@ -73,11 +73,9 @@ class WaveformPlotting(object):
         self.fig_obj = kwargs.get('fig', None)
         # If no times are given take the min/max values from the stream object.
         if not self.starttime:
-            self.starttime = min([trace.stats.starttime for
-                             trace in self.stream])
+            self.starttime = min([trace.stats.starttime for trace in self.stream])
         if not self.endtime:
-            self.endtime = max([trace.stats.endtime for
-                           trace in self.stream])
+            self.endtime = max([trace.stats.endtime for trace in self.stream])
         # Map stream object and slice just in case.
         self.stream.trim(self.starttime, self.endtime)
         # normalize times
@@ -156,6 +154,20 @@ class WaveformPlotting(object):
         self.format = kwargs.get('format')
         self.show = kwargs.get('show', True)
         self.block = kwargs.get('block', True)
+        # plot parameters options
+        self.x_labels_size = kwargs.get('x_labels_size', 8)
+        self.y_labels_size = kwargs.get('y_labels_size', 8)
+        self.title_size = kwargs.get('title_size', 10)
+        self.line_width = kwargs.get('line_width', 0.4)
+        self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
+        self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
+        self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
+        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.0)
+        self.tick_format = kwargs.get('tick_format', '%H:%M')
+        self.right_vertical_labels = kwargs.get('right_vertical_labels', False)
+        self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
+        self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
+        self.title = kwargs.get('title', self.stream[0].id)
 
     def __del__(self):
         """
@@ -361,9 +373,10 @@ class WaveformPlotting(object):
             ax = self.fig.add_subplot(1, 1, 1, axisbg=self.background_color)
         else:
             ax = self.fig.add_subplot(1, 1, 1)
-        # Adjust the subplots to be symmetrical. Also make some more room
-        # at the top.
-        self.fig.subplots_adjust(left=0.12, right=0.88, top=0.95)
+        # Adjust the subplots
+        self.fig.subplots_adjust(left=self.subplots_adjust_left,
+        right=self.subplots_adjust_right, top=self.subplots_adjust_top,
+        bottom=self.subplots_adjust_bottom)
         # Create x_value_array.
         aranged_array = np.arange(self.width)
         x_values = np.empty(2 * self.width)
@@ -380,7 +393,8 @@ class WaveformPlotting(object):
             y_values[1::2] += self.extreme_values[_i, :, 1]
             # Plot the values.
             ax.plot(x_values, y_values,
-                    color=self.color[_i % len(self.color)])
+                    color=self.color[_i % len(self.color)],
+                    linewidth=self.line_width)
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
@@ -395,6 +409,8 @@ class WaveformPlotting(object):
         # Choose to show grid but only on the x axis.
         self.fig.axes[0].grid()
         self.fig.axes[0].yaxis.grid(False)
+        # Set the title of the plot.
+        self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
         # Potentially download some events with the help of obspy.neries.
@@ -985,17 +1001,18 @@ class WaveformPlotting(object):
         ticks = np.linspace(0.0, max_value, count)
         ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
         self.axis[0].set_xticks(ticks)
-        self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation)
+        self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation, size=self.x_labels_size)
         self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
-                                           time_type))
+                                           time_type), size=self.x_labels_size)
 
     def __dayplotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
         Sets the yticks for the dayplot.
         """
         intervals = self.extreme_values.shape[0]
-        # Do not display all ticks except if it are five or less steps.
-        if intervals <= 5:
+        # Do not display all ticks except if they are five or less steps
+        # or if option is set
+        if intervals <= 5 or self.one_tick_per_line:
             tick_steps = range(0, intervals)
             ticks = np.arange(intervals, 0, -1, dtype=np.float)
             ticks -= 0.5
@@ -1004,19 +1021,29 @@ class WaveformPlotting(object):
             ticks = np.arange(intervals, 0, -1 * self.repeat, dtype=np.float)
             ticks -= 0.5
 
-        # Complicated way to calculate the label of the y-Axis showing the
-        # second time zone.
+        # Complicated way to calculate the label of
+        # the y-Axis showing the  second time zone.
         sign = '%+i' % self.time_offset
         sign = sign[0]
         label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
             abs(self.time_offset), (self.time_offset % 1 * 60))
-
-        ticklabels = [(self.starttime + _i * self.interval).strftime('%H:%M')
+        ticklabels = [(self.starttime + _i * self.interval).strftime(self.tick_format)
                       for _i in tick_steps]
-
         self.axis[0].set_yticks(ticks)
-        self.axis[0].set_yticklabels(ticklabels)
-        self.axis[0].set_ylabel(label)
+        self.axis[0].set_yticklabels(ticklabels, size=self.y_labels_size)
+        #Show time zone label if request
+        if self.show_y_UTC_label:
+            self.axis[0].set_ylabel(label)
+        #In case of right verticals labels
+        if self.right_vertical_labels:
+            yrange = self.axis[0].get_ylim()
+            self.twin_x = self.axis[0].twinx()
+            self.twin_x.set_ylim(yrange)
+            self.twin_x.set_yticks(ticks)
+            y_ticklabels_twin = [(self.starttime +
+            (_i + 1) * self.interval).strftime(self.tick_format) for _i in tick_steps]
+
+            self.twin_x.set_yticklabels(y_ticklabels_twin, size=self.y_labels_size)
 
     def __setupFigure(self):
         """
