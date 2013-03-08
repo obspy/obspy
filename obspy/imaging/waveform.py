@@ -248,9 +248,9 @@ class WaveformPlotting(object):
                 return self.fig
             else:
                 if not self.fig_obj and self.show:
-                    if MATPLOTLIB_VERSION >= [1, 0, 0]:
+                    try:
                         plt.show(block=self.block)
-                    else:
+                    except:
                         plt.show()
 
     def plot(self, *args, **kwargs):
