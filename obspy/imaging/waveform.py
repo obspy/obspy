@@ -163,7 +163,6 @@ class WaveformPlotting(object):
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
         self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.0)
-        self.tick_format = kwargs.get('tick_format', '%H:%M')
         self.right_vertical_labels = kwargs.get('right_vertical_labels', False)
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
