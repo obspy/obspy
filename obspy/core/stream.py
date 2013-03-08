@@ -913,6 +913,8 @@ class Stream(object):
         :param equal_scale: Is enabled all plots are equally scaled. Defaults
             to ``True``.
         :param block: If True (default) block call to showing plot.
+        :param line_width: Float value in points of the line width. Defaults to ``0,4``.
+
 
         **Dayplot parameters**
 
@@ -968,6 +970,33 @@ class Stream(object):
             obspy.neries. Just pass a dictionary with a "min_magnitude" key,
             e.g.
                 events={"min_magnitude": 5.5}
+        :param x_labels_size: Size of x labels in points or fontsize
+            Defaults to ``8``.
+        :param y_labels_size: Size of y labels in points or fontsize
+            Defaults to ``8``.
+        :param title_size: Size of the title in points or fontsize
+            Defaults to ``10``.
+        :param subplots_adjust_left: The left side of the subplots of the figure
+            in fraction of the figure width
+            Defaults to ``0.12``.
+        :param subplots_adjust_right: The right side of the subplots of the figure
+            in fraction of the figure width
+            Defaults to ``0.88``.
+        :param subplots_adjust_top: The top side of the subplots of the figure
+            in fraction of the figure width
+            Defaults to ``0.95``.
+        :param subplots_adjust_bottom: The bottom side of the subplots of the figure
+            in fraction of the figure width
+            Defaults to ``0.0``.
+         :param right_vertical_labels: Whether or not to display labels on the right
+            side of the dayplot.
+            Defaults to ``False``.
+         :param one_tick_per_line: Whether or not to display one tick per line
+            Defaults to ``False``.
+         :param show_y_UTC_label: Whether or not to display Y UTC vertical label
+            Defaults to ``True``.
+         :param title: The title to display on top of the plot
+            Defaults to ``self.stream[0].id``.
 
         .. rubric:: Color Options
 
