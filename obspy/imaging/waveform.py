@@ -518,7 +518,7 @@ class WaveformPlotting(object):
                 zorder=10)
         # Draw the actual point. Use a marker with a star shape.
         self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12)
+            markersize=12, linewidth=self.line_width)
 
     def _plotDayplotScale(self, unit):
         """
@@ -637,7 +637,7 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color)
+        ax.plot(trace.data, color=self.color, linewidth=self.line_width)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
