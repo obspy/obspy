@@ -18,7 +18,8 @@ def main():
     (options, args) = parser.parse_args()
     st = Stream()
     for arg in args:
-        st = read(arg, format=options.format)
+        print arg
+        st += read(arg, format=options.format)
     st.plot()
 
 
