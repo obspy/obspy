@@ -121,7 +121,7 @@ class Client(object):
         self._hello()
         self.debug = debug
         if self.debug:
-            print('\nConnected to %s:%d' % (self._client.host,
+            print('\nConnected to %s:%s' % (self._client.host,
                                             str(self._client.port)))
         # check for dcid_key_file
         if not dcid_key_file:
