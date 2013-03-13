@@ -20,6 +20,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
     ResourceIdentifier, StationMagnitudeContribution, Amplitude
 from obspy.core.utcdatetime import UTCDateTime
+from datetime import timedelta
 import StringIO
 from tempfile import mkdtemp
 from shutil import rmtree
@@ -494,6 +495,7 @@ class Unpickler(object):
             origin.resource_id = ResourceIdentifier()
             date = event.origins[0].time.strftime('%Y%m%d')
             origin.time = UTCDateTime(date+centroid_origin_time)
+            #TODO: check if centroid time is on the previous or next day
             origin.time_errors['uncertainty'] = orig_time_stderr
             origin.latitude = centroid_latitude
             origin.longitude = centroid_longitude
@@ -677,10 +679,14 @@ class Unpickler(object):
         mb_magnitude = self._float(line[56:59])
         #unused: mb_usage_flag = line[59]
 
+        origin = event.origins[0]
         pick = Pick()
         pick.resource_id = ResourceIdentifier()
-        date = event.origins[0].time.strftime('%Y%m%d')
+        date = origin.time.strftime('%Y%m%d')
         pick.time = UTCDateTime(date + arrival_time)
+        #Check if pick is on the next day:
+        if pick.time < origin.time:
+            pick.time += timedelta(days=1)
         pick.waveform_id = WaveformStreamID()
         pick.waveform_id.station = station
         #TODO: pick.backazimuth
@@ -708,7 +714,7 @@ class Unpickler(object):
             event.amplitudes.append(amplitude)
             station_magnitude = StationMagnitude()
             station_magnitude.resource_id = ResourceIdentifier()
-            station_magnitude.origin_id = event.origins[0].resource_id
+            station_magnitude.origin_id = origin.resource_id
             station_magnitude.mag = mb_magnitude
             station_magnitude.station_magnitude_type = 'mb'
             station_magnitude.amplitude_id = amplitude.resource_id
@@ -798,6 +804,9 @@ class Unpickler(object):
                 pick.resource_id = ResourceIdentifier()
                 date = origin.time.strftime('%Y%m%d')
                 pick.time = UTCDateTime(date + arrival_time)
+                #Check if pick is on the next day:
+                if pick.time < origin.time:
+                    pick.time += timedelta(days=1)
                 pick.waveform_id = WaveformStreamID()
                 pick.waveform_id.station =\
                      p_pick.waveform_id.station
