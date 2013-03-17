@@ -1826,7 +1826,7 @@ class Trace(object):
             # no gaps
             return [self]
         slices = flatnotmaskedContiguous(self.data)
-        trace_list = []
+        split_stream = Stream()
         for slice in slices:
             if slice.step:
                 raise NotImplementedError("step not supported")
@@ -1834,8 +1834,8 @@ class Trace(object):
             tr = Trace(header=stats)
             tr.stats.starttime += (stats.delta * slice.start)
             tr.data = self.data[slice.start:slice.stop]
-            trace_list.append(tr)
-        return trace_list
+            split_stream.append(tr)
+        return split_stream
 
     def times(self):
         """
