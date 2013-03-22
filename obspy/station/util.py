@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Utility functionality.
+Utility objects.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -10,6 +10,7 @@ Utility functionality.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime
+import re
 
 
 class BaseNode(object):
@@ -137,3 +138,138 @@ class Equipment(object):
                 self.__removal_date = value
                 return
             self.__removal_date = UTCDateTime(value)
+
+
+class Operator(object):
+    """
+    An operating agency and associated contact persons. If there multiple
+    operators, each one should be encapsulated within an Operator tag. Since
+    the Contact element is a generic type that represents any contact person,
+    it also has its own optional Agency element.
+    """
+    def __init__(self, *args, **kwargs):
+        """
+        :type agency: A list of strings.
+        :param agency: The agency of the operator.
+        :type contact: A list of `obspy.station.Person`
+        :param contact: One or more contact persons, optional
+        :type website: String
+        :param website: The website, optional
+        """
+        self.agency = kwargs.get("agency")
+        self.contacts = kwargs.get("contact", [])
+        self.website = kwargs.get("website", None)
+
+    @property
+    def agency(self):
+        return self.__agency
+
+    @agency.setter
+    def agency(self, value):
+        if not hasattr(value, "__iter__") or len(value) < 1:
+            msg = ("agency needs to iterable, e.g. a list and contain at "
+                "least one entry.")
+            raise ValueError(msg)
+
+
+class Person(object):
+    """
+    From the StationXML definition:
+        Representation of a person's contact information. A person can belong
+        to multiple agencies and have multiple email addresses and phone
+        numbers.
+    """
+    def __init__(self, **kwargs):
+        """
+        :type names: list of strings
+        :param names: Self-explanatory. Multiple names allowed. Optional.
+        :type agencies list of strings
+        :param agencies Self-explanatory. Multiple agencies allowed. Optional.
+        :type emails: list of strings
+        :param emails: Self-explanatory. Multiple emails allowed. Optional.
+        :type phones: list of `obspy.stations.PhoneNumber`
+        :param phones: Self-explanatory. Multiple phone numbers allowed.
+            Optional.
+        """
+        self.names = kwargs.get("name", [])
+        self.agencies = kwargs.get("agencies", [])
+        self.emails = kwargs.get("emails", [])
+        self.phones = kwargs.get("phones", [])
+
+    @property
+    def names(self):
+        return self.__names
+
+    @names.setter
+    def names(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "names needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__names = value
+
+    @property
+    def agencies(self):
+        return self.__agencies
+
+    @agencies.setter
+    def agencies(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "agencies needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__agencies = value
+
+    @property
+    def emails(self):
+        return self.__emails
+
+    @emails.setter
+    def emails(self, values):
+        if not hasattr(values, "__iter__"):
+            msg = "emails needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__emails = values
+
+    @property
+    def phones(self):
+        return self.__phones
+
+    @phones.setter
+    def phones(self, values):
+        if not hasattr(values, "__iter__"):
+            msg = "phones needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__phones = values
+
+
+class PhoneNumber(object):
+    """
+    A simple object representing a phone number.
+    """
+    phone_pattern = re.compile("^[0-9]+-[0-9]+$")
+
+    def __init__(self, **kwargs):
+        """
+        :type country_code: Integer
+        :param country_code: The country code, optional
+        :type area_code: Integer
+        :param area_code: The area code
+        :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
+        :param phone_number: The phone number minus the country and area code.
+        :type description: String
+        :param description: Any additional information, optional.
+        """
+        self.country_code = kwargs.get("country_code", None)
+        self.area_code = kwargs.get("aread_code")
+        self.phone_number = kwargs.get("phone_number")
+        self.description = kwargs.get("description", None)
+
+    @property
+    def phone_number(self):
+        return self.__phone_number
+
+    @phone_number.setter
+    def phone_number(self, value):
+        if re.match(self.phone_pattern, value) is None:
+            msg = "phone_number needs to match the pattern '[0-9]+-[0-9]+'"
+            raise ValueError(value)
+        self.__phone_number = value
