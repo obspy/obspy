@@ -273,3 +273,20 @@ class PhoneNumber(object):
             msg = "phone_number needs to match the pattern '[0-9]+-[0-9]+'"
             raise ValueError(value)
         self.__phone_number = value
+
+
+class ExternalReference(object):
+    """
+    From the StationXML definition:
+        This type contains a URI and description for external data that users
+        may want to reference in StationXML.
+    """
+    def __init__(self, uri, description):
+        """
+        :type uri: String
+        :param uri: The URI to the external data.
+        :type description: String
+        :param description: A description of the external data.
+        """
+        self.uri = uri
+        self.description = description
