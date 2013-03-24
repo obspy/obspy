@@ -83,7 +83,7 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
     class NamedTemporaryFile(object):
 
         def __init__(self, fd, fname):
-            self._fileobj = os.fdopen(fd, 'w+b')
+            self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
             self.name = fname
 
         def __getattr__(self, attr):
