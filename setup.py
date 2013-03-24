@@ -47,7 +47,7 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 # Import the version string.
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
 sys.path.append(UTIL_PATH)
-from base import _getVersionString  # @UnresolvedImport
+from version import get_git_version  # @UnresolvedImport
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 DOCSTRING = __doc__.split("\n")
@@ -69,6 +69,7 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
+    'matplotlib',
     'lxml',
     'sqlalchemy',
     'suds>=0.4.0']
@@ -89,6 +90,7 @@ ENTRY_POINTS = {
         'TSPAIR = obspy.core.ascii',
         'SLIST = obspy.core.ascii',
         'PICKLE = obspy.core.stream',
+        'CSS = obspy.css.core',
         'DATAMARK = obspy.datamark.core',
         'GSE1 = obspy.gse2.core',
         'GSE2 = obspy.gse2.core',
@@ -117,6 +119,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.core.stream:isPickle',
         'readFormat = obspy.core.stream:readPickle',
         'writeFormat = obspy.core.stream:writePickle',
+    ],
+    'obspy.plugin.waveform.CSS': [
+        'isFormat = obspy.css.core:isCSS',
+        'readFormat = obspy.css.core:readCSS',
     ],
     'obspy.plugin.waveform.DATAMARK': [
         'isFormat = obspy.datamark.core:isDATAMARK',
@@ -212,6 +218,12 @@ ENTRY_POINTS = {
         'simps = scipy.integrate:simps',
         'romb = scipy.integrate:romb',
     ],
+    'obspy.plugin.rotate': [
+        'rotate_NE_RT = obspy.signal:rotate_NE_RT',
+        'rotate_RT_NE = obspy.signal:rotate_RT_NE',
+        'rotate_ZNE_LQT = obspy.signal:rotate_ZNE_LQT',
+        'rotate_LQT_ZNE = obspy.signal:rotate_LQT_ZNE'
+    ],
     'obspy.plugin.taper': [
         'cosine = obspy.signal.invsim:cosTaper',
         'barthann = scipy.signal:barthann',
@@ -242,8 +254,8 @@ ENTRY_POINTS = {
         'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
     ],
     'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.features:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.features:BandpassPreviewFeature',
+        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
+        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
 
@@ -254,7 +266,7 @@ def find_packages():
     """
     modules = []
     for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-        "obspy")):
+            "obspy")):
         if "__init__.py" in filenames:
             modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
@@ -320,7 +332,6 @@ def configuration(parent_package="", top_path=None):
     # Add obspy.signal source code files.
     signal_src_path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
     signal_src_files = glob.glob(os.path.join(signal_src_path, "*.c"))
-    signal_src_files.append(os.path.join(signal_src_path, "fft", "fftpack.c"))
     config.add_extension(_get_lib_name("signal"), signal_src_files)
 
     # Add evalresp source files.
@@ -360,7 +371,7 @@ def setupPackage():
     # setup package
     setup(
         name='obspy',
-        version=_getVersionString(),
+        version=get_git_version(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="http://www.obspy.org",
@@ -384,7 +395,8 @@ def setupPackage():
         namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://github.com/obspy/obspy/zipball/master",
+        download_url=("https://github.com/obspy/obspy/zipball/master"
+            "#egg=obspy=dev"),  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
