@@ -21,6 +21,15 @@ from obspy.core import AttribDict
 from header import MONTHS
 
 
+WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \
+    " This might cause basic header information reflected in the single " + \
+    "traces' stats to be wrong (e.g. recording delays, first sample " + \
+    "number, station code names, ..). Please check the complete list of " + \
+    "additional unmapped header fields that gets stored in " + \
+    "Trace.stats.seg2 and/or the manual of the source of the SEG2 files " + \
+    "for fields that might influence e.g. trace starttimes."
+
+
 class SEG2BaseError(Exception):
     """
     Base class for all SEG-2 specific errors.
@@ -294,4 +303,6 @@ def isSEG2(filename):
 
 def readSEG2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
-    return seg2.readFile(filename)
+    st = seg2.readFile(filename)
+    warnings.warn(WARNING_HEADER)
+    return st
