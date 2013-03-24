@@ -44,7 +44,7 @@ class LibGSE2TestCase(unittest.TestCase):
             header['t_hour'],
             header['t_min'],
             header['t_sec']))
-        self.assertAlmostEquals(9.49e-02, header['calib'])
+        self.assertAlmostEqual(9.49e-02, header['calib'])
         self.assertEqual(1.0, header['calper'])
         self.assertEqual(-1.0, header['vang'])
         self.assertEqual(-1.0, header['hang'])

@@ -130,7 +130,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         writeMSEED(st, tempfile, format="MSEED")
         # read it again
         new_stream = readMSEED(tempfile)
-        self.assertEquals(len(new_stream), 2)
+        self.assertEqual(len(new_stream), 2)
         # clean up
         os.remove(tempfile)
 
@@ -448,27 +448,27 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'data', 'dataquality-m.mseed')
         # 1 - read all
         st = read(filename)
-        self.assertEquals(len(st), 3)
+        self.assertEqual(len(st), 3)
         t1 = st[0].stats.starttime
         t2 = st[0].stats.endtime
         # 2 - select full time window
         st2 = read(filename, starttime=t1, endtime=t2)
-        self.assertEquals(len(st2), 3)
-        self.assertEquals(st, st2)
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st, st2)
         # 3 - use selection
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*.*.*.*')
-        self.assertEquals(len(st2), 3)
-        self.assertEquals(st, st2)
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st, st2)
         st2 = read(filename, starttime=t1, endtime=t2, sourcename='*')
-        self.assertEquals(len(st2), 3)
-        self.assertEquals(st, st2)
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st, st2)
         # 4 - selection without times
         st2 = read(filename, sourcename='*.*.*.*')
-        self.assertEquals(len(st2), 3)
-        self.assertEquals(st, st2)
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st, st2)
         st2 = read(filename, sourcename='*')
-        self.assertEquals(len(st2), 3)
-        self.assertEquals(st, st2)
+        self.assertEqual(len(st2), 3)
+        self.assertEqual(st, st2)
 
     def test_issue332(self):
         """
@@ -502,7 +502,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         tr.write(tempfile, format="MSEED")
         # read again
         st = read(tempfile)
-        self.assertEquals(st[0].stats.sampling_rate, 1000000000.0)
+        self.assertEqual(st[0].stats.sampling_rate, 1000000000.0)
         # 2 - delta
         st = read()
         tr = st[0]
@@ -510,7 +510,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         tr.write(tempfile, format="MSEED")
         # read again
         st = read(tempfile)
-        self.assertAlmostEquals(st[0].stats.delta, 10000000.0, 0)
+        self.assertAlmostEqual(st[0].stats.delta, 10000000.0, 0)
         # clean up
         os.remove(tempfile)
 

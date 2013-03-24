@@ -69,64 +69,64 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         outfile += '.QHD'
                     # read in again using auto detection
                     st = read(outfile)
-                    self.assertEquals(len(st), 1)
-                    self.assertEquals(st[0].stats._format, format)
+                    self.assertEqual(len(st), 1)
+                    self.assertEqual(st[0].stats._format, format)
                     # read in using format argument
                     st = read(outfile, format=format)
-                    self.assertEquals(len(st), 1)
-                    self.assertEquals(st[0].stats._format, format)
+                    self.assertEqual(len(st), 1)
+                    self.assertEqual(st[0].stats._format, format)
                     # read in using a StringIO instances, skip Q files as it
                     # needs multiple files
                     if format not in ['Q']:
                         # file handler without format
                         temp = open(outfile, 'rb')
                         st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                         # file handler with format
                         temp = open(outfile, 'rb')
                         st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                         # StringIO without format
                         temp = StringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                         # StringIO with format
                         temp = StringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                         # cStringIO without format
                         temp = cStringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                         # cStringIO with format
                         temp = cStringIO.StringIO(open(outfile, 'rb').read())
                         st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
                     # check byte order
-                    self.assertEquals(st[0].data.dtype.byteorder, '=')
+                    self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
-                        self.assertAlmostEquals(st[0].stats.calib, 0.199999, 5)
+                        self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
                     else:
-                        self.assertEquals(st[0].stats.calib, 1.0)
+                        self.assertEqual(st[0].stats.calib, 1.0)
                     if format not in ['WAV']:
-                        self.assertEquals(st[0].stats.starttime, start)
-                        self.assertEquals(st[0].stats.endtime, start + 9.995)
-                        self.assertEquals(st[0].stats.delta, 0.005)
-                        self.assertEquals(st[0].stats.sampling_rate, 200.0)
+                        self.assertEqual(st[0].stats.starttime, start)
+                        self.assertEqual(st[0].stats.endtime, start + 9.995)
+                        self.assertEqual(st[0].stats.delta, 0.005)
+                        self.assertEqual(st[0].stats.sampling_rate, 200.0)
                     # network/station/location/channel codes
                     if format in ['Q', 'SH_ASC', 'GSE2']:
                         # no network or location code in Q, SH_ASC, GSE2
-                        self.assertEquals(st[0].id, ".MANZ1..EHE")
+                        self.assertEqual(st[0].id, ".MANZ1..EHE")
                     elif format not in ['WAV']:
-                        self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
+                        self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
                     # remove temporary files
                     os.remove(outfile)
                     # Q files consist of two files - deleting additional file

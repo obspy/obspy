@@ -15,12 +15,12 @@ class UtilTypesTestCase(unittest.TestCase):
         items = ["m", "s", "m/s", "m/(s*s)", "m*s", "dimensionless", "other"]
         units = Enum(items)
         # existing selections
-        self.assertEquals(units.other, "other")
-        self.assertEquals(units.M, "m")
-        self.assertEquals(units['m/s'], "m/s")
-        self.assertEquals(units.get('m/s'), "m/s")
-        self.assertEquals(units[0], "m")
-        self.assertEquals(units[-1], "other")
+        self.assertEqual(units.other, "other")
+        self.assertEqual(units.M, "m")
+        self.assertEqual(units['m/s'], "m/s")
+        self.assertEqual(units.get('m/s'), "m/s")
+        self.assertEqual(units[0], "m")
+        self.assertEqual(units[-1], "other")
         # not existing selections should fail
         self.assertRaises(Exception, units.__getitem__, '5')
         self.assertRaises(Exception, units.__getattr__, 'xx')
@@ -31,15 +31,15 @@ class UtilTypesTestCase(unittest.TestCase):
         self.assertTrue("other" in units)
         self.assertTrue("ot21her" not in units)
         # test typical dict methods
-        self.assertEquals(units.values(), items)
-        self.assertEquals(units.items(), zip(items, items))
-        self.assertEquals(units.keys(), items)
+        self.assertEqual(units.values(), items)
+        self.assertEqual(units.items(), zip(items, items))
+        self.assertEqual(units.keys(), items)
         # call will either return correct enum label or return None
-        self.assertEquals(units('m'), 'm')
-        self.assertEquals(units('m/(s*s)'), 'm/(s*s)')
-        self.assertEquals(units(5), 'dimensionless')
-        self.assertEquals(units(99), None)
-        self.assertEquals(units('xxx'), None)
+        self.assertEqual(units('m'), 'm')
+        self.assertEqual(units('m/(s*s)'), 'm/(s*s)')
+        self.assertEqual(units(5), 'dimensionless')
+        self.assertEqual(units(99), None)
+        self.assertEqual(units('xxx'), None)
 
 
 def suite():

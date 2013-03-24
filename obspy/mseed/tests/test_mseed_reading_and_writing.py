@@ -440,10 +440,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         files = os.path.join(self.path, 'data', 'fullseed.mseed')
         st = readMSEED(files)
-        self.assertEquals(len(st), 3)
-        self.assertEquals(len(st[0]), 602)
-        self.assertEquals(len(st[1]), 623)
-        self.assertEquals(len(st[2]), 610)
+        self.assertEqual(len(st), 3)
+        self.assertEqual(len(st[0]), 602)
+        self.assertEqual(len(st[1]), 623)
+        self.assertEqual(len(st[2]), 610)
 
     def test_readWithWildCard(self):
         """
@@ -452,9 +452,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         files = os.path.join(self.path, 'data',
                              'BW.BGLD.__.EHE.D.2008.001.*_record')
         st = read(files)
-        self.assertEquals(len(st), 3)
+        self.assertEqual(len(st), 3)
         st.merge()
-        self.assertEquals(len(st), 1)
+        self.assertEqual(len(st), 1)
 
     def test_Header(self):
         """
@@ -882,16 +882,16 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile, format="MSEED")
         st = read(tempfile)
-        self.assertEquals(len(st), 1)
-        self.assertEquals(len(st[0]), 1)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(st[0]), 1)
         os.remove(tempfile)
         # two samples
         tr = Trace(data=np.ones(2))
         tempfile = NamedTemporaryFile().name
         tr.write(tempfile, format="MSEED")
         st = read(tempfile)
-        self.assertEquals(len(st), 1)
-        self.assertEquals(len(st[0]), 2)
+        self.assertEqual(len(st), 1)
+        self.assertEqual(len(st[0]), 2)
         os.remove(tempfile)
 
     def test_emptyTrace(self):
@@ -921,10 +921,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         one_big_st = read(filename)  # do not read timing quality info
         # timing_quality splits the stream additionaly when timing quality
         # changes, sum of all points in stream must stay the same
-        self.assertEquals(one_big_st[0].stats.npts, res[:]['npts'].sum())
+        self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
-        self.assertEquals((res[:]['qual'] >= 0).sum(),  res.shape[0])
-        self.assertEquals((res[:]['qual'] <= 100).sum(),  res.shape[0])
+        self.assertEqual((res[:]['qual'] >= 0).sum(),  res.shape[0])
+        self.assertEqual((res[:]['qual'] <= 100).sum(),  res.shape[0])
 
 
 def suite():

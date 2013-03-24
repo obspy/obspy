@@ -266,12 +266,12 @@ class CoreTestCase(unittest.TestCase):
         self.assertRaises(ChksumError, read, gse1file, verify_chksum=True)
         # reading header only
         st = read(gse1file, headonly=True)
-        self.assertEquals(len(st), 2)
+        self.assertEqual(len(st), 2)
         # reading without checksum verification
         st = read(gse1file, verify_chksum=False)
         st.verify()
         # first trace
-        self.assertEquals(len(st), 2)
+        self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats['station'], 'GRA1')
         self.assertEqual(st[0].stats.npts, 6000)
         self.assertAlmostEqual(st[0].stats['sampling_rate'], 19.9999997)
@@ -280,7 +280,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.starttime,
                          UTCDateTime('2003-11-02T02:25:00.000000Z'))
         # second trace
-        self.assertEquals(len(st), 2)
+        self.assertEqual(len(st), 2)
         self.assertEqual(st[1].stats['station'], 'GRA1')
         self.assertEqual(st[1].stats.npts, 6000)
         self.assertAlmostEqual(st[1].stats['sampling_rate'], 19.9999997)

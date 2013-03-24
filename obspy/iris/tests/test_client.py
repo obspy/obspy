@@ -31,13 +31,13 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime("2010-02-27T06:30:00.019538Z")
         end = start + 20
         stream = client.getWaveform("IU", "ANMO", "00", "BHZ", start, end)
-        self.assertEquals(len(stream), 1)
-        self.assertEquals(stream[0].stats.starttime, start)
-        self.assertEquals(stream[0].stats.endtime, end)
-        self.assertEquals(stream[0].stats.network, 'IU')
-        self.assertEquals(stream[0].stats.station, 'ANMO')
-        self.assertEquals(stream[0].stats.location, '00')
-        self.assertEquals(stream[0].stats.channel, 'BHZ')
+        self.assertEqual(len(stream), 1)
+        self.assertEqual(stream[0].stats.starttime, start)
+        self.assertEqual(stream[0].stats.endtime, end)
+        self.assertEqual(stream[0].stats.network, 'IU')
+        self.assertEqual(stream[0].stats.station, 'ANMO')
+        self.assertEqual(stream[0].stats.location, '00')
+        self.assertEqual(stream[0].stats.channel, 'BHZ')
         # no data raises an exception
         self.assertRaises(Exception, client.getWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
@@ -104,14 +104,14 @@ class ClientTestCase(unittest.TestCase):
         cat = client.getEvents(mindepth=34.9, maxdepth=35.1, magtype="MB",
                                catalog="NEIC PDE", lat=-56.1, lon=-26.7,
                                maxradius=2, starttime=dt, endtime=dt + 10)
-        self.assertEquals(len(cat), 1)
+        self.assertEqual(len(cat), 1)
         ev = cat[0]
-        self.assertEquals(len(ev.origins), 1)
-        self.assertEquals(len(ev.magnitudes), 1)
-        self.assertEquals(ev.origins[0].depth, 35.0)
-        self.assertEquals(ev.origins[0].latitude, -55.404)
-        self.assertEquals(ev.origins[0].longitude, -27.895)
-        self.assertEquals(ev.magnitudes[0].magnitude_type, 'MB')
+        self.assertEqual(len(ev.origins), 1)
+        self.assertEqual(len(ev.magnitudes), 1)
+        self.assertEqual(ev.origins[0].depth, 35.0)
+        self.assertEqual(ev.origins[0].latitude, -55.404)
+        self.assertEqual(ev.origins[0].longitude, -27.895)
+        self.assertEqual(ev.magnitudes[0].magnitude_type, 'MB')
 
     def test_sacpz(self):
         """
@@ -128,7 +128,7 @@ class ClientTestCase(unittest.TestCase):
         expected = open(sacpz_file, 'rt').read().splitlines()
         result.pop(5)
         expected.pop(5)
-        self.assertEquals(result, expected)
+        self.assertEqual(result, expected)
         # 2 - empty location code
         dt = UTCDateTime("2002-11-01")
         result = client.sacpz('UW', 'LON', '', 'BHZ', dt)
@@ -146,14 +146,14 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # normal request
         result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2, evtlon=1.4)
-        self.assertAlmostEquals(result['distance'], 2.09554)
-        self.assertAlmostEquals(result['backazimuth'], 5.46946)
-        self.assertAlmostEquals(result['azimuth'], 185.47692)
+        self.assertAlmostEqual(result['distance'], 2.09554)
+        self.assertAlmostEqual(result['backazimuth'], 5.46946)
+        self.assertAlmostEqual(result['azimuth'], 185.47692)
         # w/o kwargs
         result = client.distaz(1.1, 1.2, 3.2, 1.4)
-        self.assertAlmostEquals(result['distance'], 2.09554)
-        self.assertAlmostEquals(result['backazimuth'], 5.46946)
-        self.assertAlmostEquals(result['azimuth'], 185.47692)
+        self.assertAlmostEqual(result['distance'], 2.09554)
+        self.assertAlmostEqual(result['backazimuth'], 5.46946)
+        self.assertAlmostEqual(result['azimuth'], 185.47692)
         # missing parameters
         self.assertRaises(Exception, client.distaz, stalat=1.1)
         self.assertRaises(Exception, client.distaz, 1.1)
@@ -167,25 +167,25 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # code
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="code")
-        self.assertEquals(result, 683)
+        self.assertEqual(result, 683)
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "code")
-        self.assertEquals(result, 683)
+        self.assertEqual(result, 683)
         # region
         result = client.flinnengdahl(lat=42, lon=-122.24, rtype="region")
-        self.assertEquals(result, 'OREGON')
+        self.assertEqual(result, 'OREGON')
         # w/o kwargs
         result = client.flinnengdahl(42, -122.24, "region")
-        self.assertEquals(result, 'OREGON')
+        self.assertEqual(result, 'OREGON')
         # both
         result = client.flinnengdahl(lat=-20.5, lon=-100.6, rtype="both")
-        self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
         # w/o kwargs
         result = client.flinnengdahl(-20.5, -100.6, "both")
-        self.assertEquals(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
+        self.assertEqual(result, (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN'))
         # default rtype
         result = client.flinnengdahl(lat=42, lon=-122.24)
-        self.assertEquals(result, (32, 'OREGON'))
+        self.assertEqual(result, (32, 'OREGON'))
         # w/o kwargs
         # outside boundaries
         self.assertRaises(Exception, client.flinnengdahl, lat=-90.1, lon=0)
@@ -427,10 +427,10 @@ class ClientTestCase(unittest.TestCase):
         st2 = client.timeseries("IU", "ANMO", "00", "BHZ", t1, t2,
                                 filter=["correct"])
         # compare results
-        self.assertEquals(st1[0].stats.starttime, st2[0].stats.starttime)
-        self.assertEquals(st1[0].stats.endtime, st2[0].stats.endtime)
-        self.assertEquals(st1[0].data[0], 24)
-        self.assertAlmostEquals(st2[0].data[0], -2.4910707e-06)
+        self.assertEqual(st1[0].stats.starttime, st2[0].stats.starttime)
+        self.assertEqual(st1[0].stats.endtime, st2[0].stats.endtime)
+        self.assertEqual(st1[0].data[0], 24)
+        self.assertAlmostEqual(st2[0].data[0], -2.4910707e-06)
 
     def test_issue419(self):
         """

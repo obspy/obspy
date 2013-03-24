@@ -65,38 +65,38 @@ class XMLWrapperTestCase(unittest.TestCase):
         parser = XMLParser(XML_DOC)
         # 1st level
         q = parser.xpath('notexisting')
-        self.assertEquals([e.tag for e in q], [])
+        self.assertEqual([e.tag for e in q], [])
         q = parser.xpath('request')
-        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        self.assertEqual([e.tag for e in q], ['request', 'request'])
         q = parser.xpath('/request')
-        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        self.assertEqual([e.tag for e in q], ['request', 'request'])
         q = parser.xpath('*')
-        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        self.assertEqual([e.tag for e in q], ['request', 'request'])
         q = parser.xpath('/*')
-        self.assertEquals([e.tag for e in q], ['request', 'request'])
+        self.assertEqual([e.tag for e in q], ['request', 'request'])
         # 2nd level
         q = parser.xpath('*/*')
-        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        self.assertEqual([e.tag for e in q], ['volume', 'test'])
         q = parser.xpath('/*/*')
-        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        self.assertEqual([e.tag for e in q], ['volume', 'test'])
         q = parser.xpath('*/volume')
-        self.assertEquals([e.tag for e in q], ['volume'])
+        self.assertEqual([e.tag for e in q], ['volume'])
         q = parser.xpath('request/*')
-        self.assertEquals([e.tag for e in q], ['volume', 'test'])
+        self.assertEqual([e.tag for e in q], ['volume', 'test'])
         q = parser.xpath('request/volume')
-        self.assertEquals([e.tag for e in q], ['volume'])
+        self.assertEqual([e.tag for e in q], ['volume'])
         q = parser.xpath('/request/volume')
-        self.assertEquals([e.tag for e in q], ['volume'])
+        self.assertEqual([e.tag for e in q], ['volume'])
         # 3rd level
         q = parser.xpath('*/*/*')
-        self.assertEquals([e.tag for e in q], ['line', 'line'])
+        self.assertEqual([e.tag for e in q], ['line', 'line'])
         q = parser.xpath('/request/test/doesnotexist')
-        self.assertEquals([e.tag for e in q], [])
+        self.assertEqual([e.tag for e in q], [])
         # element selector (first element starts with 1)
         q = parser.xpath('/*/*/*[2]')
-        self.assertEquals([e.tag for e in q], ['line'])
+        self.assertEqual([e.tag for e in q], ['line'])
         q = parser.xpath('/*/*/*[100]')
-        self.assertEquals([e.tag for e in q], [])
+        self.assertEqual([e.tag for e in q], [])
 
     def test_getRootNamespace(self):
         """
@@ -105,22 +105,22 @@ class XMLWrapperTestCase(unittest.TestCase):
         # xml + iris
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        self.assertEquals(p._getRootNamespace(),
+        self.assertEqual(p._getRootNamespace(),
                           "http://quakeml.org/xmlns/quakeml/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        self.assertEquals(p._getRootNamespace(),
+        self.assertEqual(p._getRootNamespace(),
                           "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        self.assertEquals(p._getRootNamespace(),
+        self.assertEqual(p._getRootNamespace(),
                           "http://quakeml.org/xmlns/quakeml/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        self.assertEquals(p._getRootNamespace(),
+        self.assertEqual(p._getRootNamespace(),
                           "http://quakeml.org/xmlns/quakeml/1.0")
 
     def test_getElementNamespace(self):
@@ -131,50 +131,50 @@ class XMLWrapperTestCase(unittest.TestCase):
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         eventParameters = p.xml_root.getchildren()[0]
-        self.assertEquals(p._getElementNamespace(eventParameters),
+        self.assertEqual(p._getElementNamespace(eventParameters),
                           "http://quakeml.org/xmlns/bed/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         eventParameters = p.xml_root.getchildren()[0]
-        self.assertEquals(p._getElementNamespace(eventParameters),
+        self.assertEqual(p._getElementNamespace(eventParameters),
                           "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         eventParameters = p.xml_root.getchildren()[0]
-        self.assertEquals(p._getElementNamespace(eventParameters),
+        self.assertEqual(p._getElementNamespace(eventParameters),
                           "http://quakeml.org/xmlns/bed/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         eventParameters = p.xml_root.getchildren()[0]
-        self.assertEquals(p._getElementNamespace(eventParameters),
+        self.assertEqual(p._getElementNamespace(eventParameters),
                           "http://quakeml.org/xmlns/quakeml/1.0")
         # checking sub elements
         # xml + iris
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         event = p.xml_root.getchildren()[0].getchildren()[0]
-        self.assertEquals(p._getElementNamespace(event),
+        self.assertEqual(p._getElementNamespace(event),
                           "http://quakeml.org/xmlns/bed/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         event = p.xml_root.getchildren()[0].getchildren()[0]
-        self.assertEquals(p._getElementNamespace(event),
+        self.assertEqual(p._getElementNamespace(event),
                           "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         event = p.xml_root.getchildren()[0].getchildren()[0]
-        self.assertEquals(p._getElementNamespace(event),
+        self.assertEqual(p._getElementNamespace(event),
                           "http://quakeml.org/xmlns/bed/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         event = p.xml_root.getchildren()[0].getchildren()[0]
-        self.assertEquals(p._getElementNamespace(event),
+        self.assertEqual(p._getElementNamespace(event),
                           "http://quakeml.org/xmlns/quakeml/1.0")
 
     def test_xpathWithNamespace(self):
@@ -186,40 +186,40 @@ class XMLWrapperTestCase(unittest.TestCase):
         p = XMLParser(xml_doc)
         ns = p._getFirstChildNamespace()
         result = p.xpath('*/event', namespace=ns)
-        self.assertEquals(len(result), 2)
-        self.assertEquals(result[0].__module__, 'xml.etree.ElementTree')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         result = p.xpath('eventParameters/event', namespace=ns)
-        self.assertEquals(len(result), 2)
-        self.assertEquals(result[0].__module__, 'xml.etree.ElementTree')
+        self.assertEqual(len(result), 2)
+        self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         ns = p._getFirstChildNamespace()
         result = p.xpath('*/event', namespace=ns)
-        self.assertEquals(len(result), 2)
+        self.assertEqual(len(result), 2)
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
         result = p.xpath('eventParameters/event', namespace=ns)
-        self.assertEquals(len(result), 2)
+        self.assertEqual(len(result), 2)
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         ns = p._getFirstChildNamespace()
         result = p.xpath('*/event', namespace=ns)
-        self.assertEquals(len(result), 3)
-        self.assertEquals(result[0].__module__, 'xml.etree.ElementTree')
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         result = p.xpath('eventParameters/event', namespace=ns)
-        self.assertEquals(len(result), 3)
-        self.assertEquals(result[0].__module__, 'xml.etree.ElementTree')
+        self.assertEqual(len(result), 3)
+        self.assertEqual(result[0].__module__, 'xml.etree.ElementTree')
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         ns = p._getFirstChildNamespace()
         result = p.xpath('*/event', namespace=ns)
-        self.assertEquals(len(result), 3)
+        self.assertEqual(len(result), 3)
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
         result = p.xpath('eventParameters/event', namespace=ns)
-        self.assertEquals(len(result), 3)
+        self.assertEqual(len(result), 3)
         self.assertTrue(isinstance(result[0], lxml_etree._Element))
 
     def test_tostring(self):

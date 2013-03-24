@@ -364,10 +364,10 @@ class ASCIITestCase(unittest.TestCase):
         writeSLIST(stream_orig, tmpfile)
         # look at the raw data
         lines = open(tmpfile, 'rt').readlines()
-        self.assertEquals(lines[0].strip(),
+        self.assertEqual(lines[0].strip(),
             'TIMESERIES XX_TEST__BHZ_R, 12 samples, 40 sps, ' + \
             '2008-01-15T00:00:00.025000, SLIST, FLOAT, Counts')
-        self.assertEquals(lines[1].strip(),
+        self.assertEqual(lines[1].strip(),
             '185.009995\t181.020004\t185.029999\t189.039993\t194.050003\t' + \
             '205.059998')
         # read again
@@ -459,8 +459,8 @@ class ASCIITestCase(unittest.TestCase):
                 tr.write(tempfile, format=format)
                 # test results
                 st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                self.assertEqual(len(st), 1)
+                self.assertEqual(len(st[0]), num)
                 os.remove(tempfile)
 
 

@@ -124,7 +124,7 @@ class CoreTestCase(unittest.TestCase):
         # read both files and compare the content
         text1 = open(origfile, 'rt').readlines()
         text2 = open(tempfile, 'rt').readlines()
-        self.assertEquals(text1, text2)
+        self.assertEqual(text1, text2)
         # read again
         stream2 = readASC(tempfile)
         stream2.verify()
@@ -254,8 +254,8 @@ class CoreTestCase(unittest.TestCase):
                 with warnings.catch_warnings() as _:
                     warnings.simplefilter("ignore")
                     st = read(tempfile, format=format)
-                self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                self.assertEqual(len(st), 1)
+                self.assertEqual(len(st[0]), num)
                 # Q files consist of two files - deleting additional file
                 if format == 'Q':
                     os.remove(tempfile[:-4] + '.QBN')
