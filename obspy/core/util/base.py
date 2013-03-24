@@ -89,6 +89,13 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
         def __getattr__(self, attr):
             return getattr(self._fileobj, attr)
 
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.close()
+            os.remove(self.name)
+
     return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
 
 
