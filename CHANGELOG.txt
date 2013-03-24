@@ -7,12 +7,16 @@ dev:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
  - obspy.db:
-   * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
-     for features because pipe has a special meaning on most operation systems
+   * obspy-indexer script uses from now on hash symbols (#) instead
+     of pipe (|) for features because pipe has a special meaning on
+     most operating systems
  - obspy.imaging:
    * more options to customize day plots
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
+ - obspy.seg2:
+   * adding read support for SEG2 data format code 1 and 2
+     (signed 16bit/32bit integer)
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
