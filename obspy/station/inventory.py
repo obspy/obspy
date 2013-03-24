@@ -12,7 +12,7 @@ Provides the Inventory class.
 import obspy
 
 
-class Inventory(object):
+class SeismicInventory(object):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.
 
