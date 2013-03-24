@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 	
+	An data availability extension for FDSN StationXML (www.fdsn.org/xml/station)
+	
+	The purpose of this schema is to extend the FDSN StationXML schema with structures
+	that document optional time series data availabilty for the BaseNodeType used
+	by the Network, Station and Channel Types.
+	
+	This exention allows time series data availability to be described in two ways:
+
+    a) Extents, where earliest and latest are specified for Network, Station and/or Channel
+    
+    b) Data spans, where a span of data is represented by a start time, end time, number
+    of segments contained in the span and maximum time tear within the span.  Typically
+    this would be used in combination with a time-windowed data request to report data
+    availabilty during the selected window.
+	
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:fsx="http://www.fdsn.org/xml/station/1" targetNamespace="http://www.fdsn.org/xml/station/1" elementFormDefault="qualified" attributeFormDefault="unqualified" version="1.0">
+
+    <!-- Using fdsn-station-#.xsd as a base, this schema adds data availability to the BaseNodeType -->
+
+    <!-- The schemaLocation should be pointed, e.g. to "http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd" -->
+    <xs:redefine schemaLocation="http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+        <xs:complexType name="BaseNodeType">
+            <xs:complexContent>
+                <xs:extension base="fsx:BaseNodeType">
+                    <xs:sequence>
+                        <xs:element name="DataAvailability" type="fsx:DataAvailabilityType" minOccurs="0">
+                            <xs:annotation>
+                                <xs:documentation>A description of time series data availability.
+                                    This information should be considered transient and is primarily
+                                    useful as a guide for generating time series data requests. The
+                                    information for a DataAvailability:Span may be specific to the
+                                    time range used in a request that resulted in the document or
+                                    limited to the availability of data withing the request range.
+                                    These details may or may not be retained when synchronizing
+                                    metadata between data centers. </xs:documentation>
+                            </xs:annotation>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:extension>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:redefine>
+
+    <xs:complexType name="DataAvailabilityExtentType">
+        <xs:annotation>
+            <xs:documentation> A type for describing data availability extents, the earliest and
+                latest data available. No information is included about the continuity of the data
+                is included or implied. </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="start" type="xs:dateTime" use="required"/>
+        <xs:attribute name="end" type="xs:dateTime" use="required"/>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+    <xs:complexType name="DataAvailabilitySpanType">
+        <xs:annotation>
+            <xs:documentation> A type for describing data availability spans, with variable
+                continuity. The time range described may be based on the request parameters that
+                generated the document and not necessarily relate to continuity outside of the
+                range. It may also be a smaller time window than the request depending on the data
+                characteristics. </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="start" type="xs:dateTime" use="required"/>
+        <xs:attribute name="end" type="xs:dateTime" use="required"/>
+        <xs:attribute name="numberSegments" type="xs:integer" use="required">
+            <xs:annotation>
+                <xs:documentation> The number of continuous time series segments contained in the
+                    specified time range. A value of 1 indicates that the time series is continuous
+                    from start to end. </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="maximumTimeTear" type="xs:decimal" use="optional">
+            <xs:annotation>
+                <xs:documentation> The maximum time tear (gap or overlap) in seconds between time
+                    series segments in the specified range. </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+    <xs:complexType name="DataAvailabilityType">
+        <xs:annotation>
+            <xs:documentation>An type for describing data availability.</xs:documentation>
+        </xs:annotation>
+        <xs:sequence>
+            <xs:element name="Extent" type="fsx:DataAvailabilityExtentType" minOccurs="0"/>
+            <xs:element name="Span" type="fsx:DataAvailabilitySpanType" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:any namespace="##other" processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:anyAttribute namespace="##other" processContents="lax"/>
+    </xs:complexType>
+
+</xs:schema>
