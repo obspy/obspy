@@ -232,6 +232,10 @@ class SEG2(object):
         # Unpack the data.
         data = np.fromstring(self.file_pointer.read(
                 number_of_samples_in_data_block * sample_size), dtype=dtype)
+        # Integrate SEG2 file header into each trace header
+        tmp = self.stream.stats.seg2.copy()
+        tmp.update(header['seg2'])
+        header['seg2'] = tmp
         return Trace(data=data, header=header)
 
     def parseFreeForm(self, free_form_str, attrib_dict):
