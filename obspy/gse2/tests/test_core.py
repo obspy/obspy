@@ -67,22 +67,22 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and Write files via L{obspy.Trace}
         """
-        tempfile = NamedTemporaryFile().name
         gse2file = os.path.join(self.path, 'data', 'loc_RNON20040609200559.z')
         # read trace
         st1 = read(gse2file)
         st1.verify()
         tr1 = st1[0]
         # write comparison trace
-        st2 = Stream()
-        st2.traces.append(Trace())
-        tr2 = st2[0]
-        tr2.data = copy.deepcopy(tr1.data)
-        tr2.stats = copy.deepcopy(tr1.stats)
-        st2.write(tempfile, format='GSE2')
-        # read comparison trace
-        st3 = read(tempfile)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            st2 = Stream()
+            st2.traces.append(Trace())
+            tr2 = st2[0]
+            tr2.data = copy.deepcopy(tr1.data)
+            tr2.stats = copy.deepcopy(tr1.stats)
+            st2.write(tempfile, format='GSE2')
+            # read comparison trace
+            st3 = read(tempfile)
         st3.verify()
         tr3 = st3[0]
         # check if equal
@@ -106,21 +106,19 @@ class CoreTestCase(unittest.TestCase):
         """
         Read and Write files containing multiple GSE2 parts via L{obspy.Trace}
         """
-        # setup test
-        tmpfile1 = NamedTemporaryFile().name
-        tmpfile2 = NamedTemporaryFile().name
         files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
                  os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        # write test file containing multiple GSE2 parts
-        f = open(tmpfile1, 'wb')
-        for i in xrange(2):
-            f1 = open(files[i], 'rb')
-            f.write(f1.read())
-            f1.close()
-        f.close()
-        # read
-        st1 = read(tmpfile1)
+        # setup test
+        with NamedTemporaryFile() as tf:
+            tmpfile1 = tf.name
+            # write test file containing multiple GSE2 parts
+            with open(tmpfile1, 'wb') as f:
+                for i in xrange(2):
+                    with open(files[i], 'rb') as f1:
+                        f.write(f1.read())
+            # read
+            st1 = read(tmpfile1)
         st1.verify()
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]
@@ -129,8 +127,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr12.stats['station'], 'RJOB')
         self.assertEqual(tr12.data[0:13].tolist(), testdata)
         # write and read
-        st1.write(tmpfile2, format='GSE2')
-        st2 = read(tmpfile2)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            st1.write(tmpfile, format='GSE2')
+            st2 = read(tmpfile)
         st2.verify()
         self.assertEqual(len(st2), 2)
         tr21 = st1[0]
@@ -140,14 +140,11 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr22.data[0:13].tolist(), testdata)
         np.testing.assert_equal(tr21.data, tr11.data)
         np.testing.assert_equal(tr22.data, tr12.data)
-        os.remove(tmpfile1)
-        os.remove(tmpfile2)
 
     def test_writeIntegersViaObsPy(self):
         """
         Write file test via L{obspy.Trace}.
         """
-        tempfile = NamedTemporaryFile().name
         npts = 1000
         # data cloud of integers - float won't work!
         np.random.seed(815)  # make test reproducable
@@ -160,10 +157,11 @@ class CoreTestCase(unittest.TestCase):
         st = Stream([tr])
         st.verify()
         # write
-        st.write(tempfile, format="GSE2")
-        # read again
-        stream = read(tempfile)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            st.write(tempfile, format="GSE2")
+            # read again
+            stream = read(tempfile)
         stream.verify()
         np.testing.assert_equal(data, stream[0].data)
         # test default attributes
@@ -191,10 +189,10 @@ class CoreTestCase(unittest.TestCase):
         Write floating point encoded data
         """
         np.random.seed(815)
-        tmpfile = NamedTemporaryFile().name
         st = Stream([Trace(data=np.random.randn(1000))])
-        self.assertRaises(Exception, st.write, tmpfile, format="GSE2")
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            self.assertRaises(Exception, st.write, tmpfile, format="GSE2")
 
     def test_readWithWrongChecksum(self):
         """

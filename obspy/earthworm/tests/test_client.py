@@ -7,7 +7,6 @@ from obspy.earthworm import Client
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-import os
 import unittest
 from numpy import array
 
@@ -80,30 +79,28 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests saveWaveform method.
         """
-        testfile = NamedTemporaryFile().name
-        try:
-            # initialize client
-            client = Client("pele.ess.washington.edu", 16017)
-            start = UTCDateTime() - 24 * 3600
-            end = start + 30
+        # initialize client
+        client = Client("pele.ess.washington.edu", 16017)
+        start = UTCDateTime() - 24 * 3600
+        end = start + 30
+        with NamedTemporaryFile() as tf:
+            testfile = tf.name
             # 1 channel, cleanup (using SLIST to avoid dependencies)
             client.saveWaveform(testfile, 'UW', 'TUCA', '', 'BHZ', start, end,
                                 format="SLIST")
             stream = read(testfile)
-            self.assertEqual(len(stream), 1)
-            delta = stream[0].stats.delta
-            trace = stream[0]
-            self.assertTrue(len(trace) == 1201)
-            self.assertTrue(trace.stats.starttime >= start - delta)
-            self.assertTrue(trace.stats.starttime <= start + delta)
-            self.assertTrue(trace.stats.endtime >= end - delta)
-            self.assertTrue(trace.stats.endtime <= end + delta)
-            self.assertEqual(trace.stats.network, 'UW')
-            self.assertEqual(trace.stats.station, 'TUCA')
-            self.assertEqual(trace.stats.location, '')
-            self.assertEqual(trace.stats.channel, 'BHZ')
-        finally:
-            os.remove(testfile)
+        self.assertEqual(len(stream), 1)
+        delta = stream[0].stats.delta
+        trace = stream[0]
+        self.assertTrue(len(trace) == 1201)
+        self.assertTrue(trace.stats.starttime >= start - delta)
+        self.assertTrue(trace.stats.starttime <= start + delta)
+        self.assertTrue(trace.stats.endtime >= end - delta)
+        self.assertTrue(trace.stats.endtime <= end + delta)
+        self.assertEqual(trace.stats.network, 'UW')
+        self.assertEqual(trace.stats.station, 'TUCA')
+        self.assertEqual(trace.stats.location, '')
+        self.assertEqual(trace.stats.channel, 'BHZ')
 
 
 def suite():

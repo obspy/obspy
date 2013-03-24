@@ -7,7 +7,6 @@ from obspy import UTCDateTime, read
 from obspy.core.event import Catalog
 from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client
-import os
 import unittest
 
 
@@ -200,17 +199,17 @@ class ClientTestCase(unittest.TestCase):
     def test_saveWaveform(self):
         """
         """
-        mseedfile = NamedTemporaryFile().name
-        fseedfile = NamedTemporaryFile().name
         # initialize client
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2012, 1, 1)
         end = start + 10
-        # MiniSEED
-        client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-        st = read(mseedfile)
-        # MiniSEED may not start with Volume Index Control Headers (V)
-        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+        with NamedTemporaryFile() as tf:
+            mseedfile = tf.name
+            # MiniSEED
+            client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            st = read(mseedfile)
+            # MiniSEED may not start with Volume Index Control Headers (V)
+            self.assertNotEqual(open(mseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -218,13 +217,14 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.station, 'MANZ')
         self.assertEqual(st[0].stats.location, '')
         self.assertEqual(st[0].stats.channel, 'EHZ')
-        os.remove(mseedfile)
         # Full SEED
-        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                            format='FSEED')
-        st = read(fseedfile)
-        # Full SEED must start with Volume Index Control Headers (V)
-        self.assertEqual(open(fseedfile).read(8)[6], "V")
+        with NamedTemporaryFile() as tf:
+            fseedfile = tf.name
+            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                                format='FSEED')
+            st = read(fseedfile)
+            # Full SEED must start with Volume Index Control Headers (V)
+            self.assertEqual(open(fseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
@@ -232,7 +232,6 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.station, 'MANZ')
         self.assertEqual(st[0].stats.location, '')
         self.assertEqual(st[0].stats.channel, 'EHZ')
-        os.remove(fseedfile)
 
     def test_getInventory(self):
         """

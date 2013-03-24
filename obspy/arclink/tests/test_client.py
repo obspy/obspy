@@ -10,7 +10,6 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
 import operator
-import os
 import StringIO
 import unittest
 import warnings
@@ -410,15 +409,14 @@ class ClientTestCase(unittest.TestCase):
         """
         Default behavior is requesting data compressed and unpack on the fly.
         """
-        mseedfile = NamedTemporaryFile().name
-        fseedfile = NamedTemporaryFile().name
-        try:
-            # initialize client
-            client = Client("erde.geophysik.uni-muenchen.de", 18001,
-                            user='test@obspy.org')
-            start = UTCDateTime(2008, 1, 1)
-            end = start + 10
-            # MiniSEED
+        # initialize client
+        client = Client("erde.geophysik.uni-muenchen.de", 18001,
+                        user='test@obspy.org')
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 10
+        # MiniSEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            mseedfile = tf.name
             client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             st = read(mseedfile)
             # MiniSEED may not start with Volume Index Control Headers (V)
@@ -430,7 +428,9 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.station, 'MANZ')
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'EHZ')
-            # Full SEED
+        # Full SEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            fseedfile = tf.name
             client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
                                 format='FSEED')
             st = read(fseedfile)
@@ -443,9 +443,6 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.station, 'MANZ')
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'EHZ')
-        finally:
-            os.remove(mseedfile)
-            os.remove(fseedfile)
 
     def test_getWaveformNoCompression(self):
         """
@@ -467,14 +464,13 @@ class ClientTestCase(unittest.TestCase):
         Explicitly disable compression during waveform request and save it
         directly to disk.
         """
-        mseedfile = NamedTemporaryFile().name
-        fseedfile = NamedTemporaryFile().name
-        try:
-            # initialize client
-            client = Client(user='test@obspy.org')
-            start = UTCDateTime(2010, 1, 1, 0, 0)
-            end = start + 1
-            # MiniSEED
+        # initialize client
+        client = Client(user='test@obspy.org')
+        start = UTCDateTime(2010, 1, 1, 0, 0)
+        end = start + 1
+        # MiniSEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            mseedfile = tf.name
             client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 compressed=False)
             st = read(mseedfile)
@@ -485,7 +481,9 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.station, 'APE')
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'BHZ')
-            # Full SEED
+        # Full SEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            fseedfile = tf.name
             client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 format='FSEED')
             st = read(fseedfile)
@@ -497,38 +495,33 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(st[0].stats.station, 'APE')
             self.assertEqual(st[0].stats.location, '')
             self.assertEqual(st[0].stats.channel, 'BHZ')
-        finally:
-            os.remove(mseedfile)
-            os.remove(fseedfile)
 
     def test_saveWaveformCompressed(self):
         """
         Tests saving compressed and not unpacked bzip2 files to disk.
         """
-        mseedfile = NamedTemporaryFile(suffix='.bz2').name
-        fseedfile = NamedTemporaryFile(suffix='.bz2').name
-        try:
-            # initialize client
-            client = Client(user='test@obspy.org')
-            start = UTCDateTime(2008, 1, 1, 0, 0)
-            end = start + 1
-            # MiniSEED
+        # initialize client
+        client = Client(user='test@obspy.org')
+        start = UTCDateTime(2008, 1, 1, 0, 0)
+        end = start + 1
+        # MiniSEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            mseedfile = tf.name
             client.saveWaveform(mseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 unpack=False)
             # check if compressed
             self.assertEqual(open(mseedfile, 'rb').read(2), 'BZ')
             # importing via read should work too
             read(mseedfile)
-            # Full SEED
+        # Full SEED
+        with NamedTemporaryFile(suffix='.bz2') as tf:
+            fseedfile = tf.name
             client.saveWaveform(fseedfile, 'GE', 'APE', '', 'BHZ', start, end,
                                 format="FSEED", unpack=False)
             # check if compressed
             self.assertEqual(open(fseedfile, 'rb').read(2), 'BZ')
             # importing via read should work too
             read(fseedfile)
-        finally:
-            os.remove(mseedfile)
-            os.remove(fseedfile)
 
     def test_getPAZ(self):
         """
@@ -576,16 +569,14 @@ class ClientTestCase(unittest.TestCase):
         """
         Fetches and stores response information as Dataless SEED volume.
         """
-        tempfile = NamedTemporaryFile().name
-        try:
-            client = Client(user='test@obspy.org')
-            start = UTCDateTime(2008, 1, 1)
-            end = start + 1
+        client = Client(user='test@obspy.org')
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
             # Dataless SEED
             client.saveResponse(tempfile, 'BW', 'MANZ', '', 'EHZ', start, end)
             self.assertEqual(open(tempfile).read(8), "000001V ")
-        finally:
-            os.remove(tempfile)
 
         # Try again but write to a StringIO instance.
         file_object = StringIO.StringIO()

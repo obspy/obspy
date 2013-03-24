@@ -20,7 +20,6 @@ from suds.xsd.sxbase import SchemaObject
 import StringIO
 import functools
 import json
-import os
 import platform
 import urllib
 import urllib2
@@ -638,21 +637,15 @@ class Client(object):
         NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         """
-        tf = NamedTemporaryFile()
-        self.saveWaveform(tf._fileobj, network, station, location, channel,
-                          starttime, endtime, format=format)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        with NamedTemporaryFile() as tf:
+            self.saveWaveform(tf._fileobj, network, station, location, channel,
+                              starttime, endtime, format=format)
+            # read stream using obspy.mseed
+            tf.seek(0)
+            try:
+                stream = read(tf.name, 'MSEED')
+            except:
+                stream = Stream()
         # trim stream
         stream.trim(starttime, endtime)
         return stream

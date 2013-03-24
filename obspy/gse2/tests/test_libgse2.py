@@ -73,14 +73,13 @@ class LibGSE2TestCase(unittest.TestCase):
         f = open(gse2file, 'rb')
         header, data = libgse2.read(f)
         f.close()
-        tmp_file = NamedTemporaryFile().name
-        f = open(tmp_file, 'wb')
-        libgse2.write(header, data, f)
-        f.close()
-        newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
+        with NamedTemporaryFile() as tf:
+            tmp_file = tf.name
+            with open(tmp_file, 'wb') as f:
+                libgse2.write(header, data, f)
+            newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
-        os.remove(tmp_file)
 
     def test_readHeaderInfo(self):
         """
@@ -130,37 +129,35 @@ class LibGSE2TestCase(unittest.TestCase):
         Test that exception is raised when data values exceed the maximum
         of 2^26
         """
-        testfile = NamedTemporaryFile().name
         data = np.array([2 ** 26 + 1], dtype='int32')
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        f = open(testfile, 'wb')
-        self.assertRaises(OverflowError, libgse2.write, header, data, f)
-        f.close()
-        os.remove(testfile)
+        with NamedTemporaryFile() as tf:
+            testfile = tf.name
+            with open(testfile, 'wb') as f:
+                self.assertRaises(OverflowError, libgse2.write, header, data,
+                                  f)
 
     def test_arrayNotNumpy(self):
         """
         Test if exception is raised when data are not of type int32 NumPy array
         """
-        testfile = NamedTemporaryFile().name
-        data = [2, 26, 1]
         header = {}
         header['samp_rate'] = 200
         header['n_samps'] = 1
         header['datatype'] = 'CM6'
-        f = open(testfile, 'wb')
-        self.assertRaises(ArgumentError, libgse2.write, header, data,
-                          testfile)
-        f.close()
-        f = open(testfile, 'wb')
-        data = np.array([2, 26, 1], dtype='f')
-        self.assertRaises(ArgumentError, libgse2.write, header, data,
-                          testfile)
-        f.close()
-        os.remove(testfile)
+        with NamedTemporaryFile() as tf:
+            testfile = tf.name
+            data = [2, 26, 1]
+            with open(testfile, 'wb') as f:
+                self.assertRaises(ArgumentError, libgse2.write, header, data,
+                                  testfile)
+            data = np.array([2, 26, 1], dtype='f')
+            with open(testfile, 'wb') as f:
+                self.assertRaises(ArgumentError, libgse2.write, header, data,
+                                  testfile)
 
     def test_CHK2InCM6(self):
         """

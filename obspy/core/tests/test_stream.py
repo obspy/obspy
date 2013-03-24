@@ -1186,26 +1186,25 @@ class StreamTestCase(unittest.TestCase):
         """
         st = read()
         # write
-        tmpfile = NamedTemporaryFile().name
-        tmpfile2 = NamedTemporaryFile().name
-        writePickle(st, tmpfile)
-        st.write(tmpfile2, format='PICKLE')
-        # check and read directly
-        self.assertTrue(isPickle(tmpfile), True)
-        st2 = readPickle(tmpfile)
-        self.assertEqual(len(st2), 3)
-        np.testing.assert_array_equal(st2[0].data, st[0].data)
-        # use read() with given format
-        st2 = read(tmpfile2, format='PICKLE')
-        self.assertEqual(len(st2), 3)
-        np.testing.assert_array_equal(st2[0].data, st[0].data)
-        # use read() and autodetect format
-        st2 = read(tmpfile2)
-        self.assertEqual(len(st2), 3)
-        np.testing.assert_array_equal(st2[0].data, st[0].data)
-        # clean up
-        os.remove(tmpfile)
-        os.remove(tmpfile2)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            with NamedTemporaryFile() as tf2:
+                tmpfile2 = tf2.name
+                writePickle(st, tmpfile)
+                st.write(tmpfile2, format='PICKLE')
+                # check and read directly
+                self.assertTrue(isPickle(tmpfile), True)
+                st2 = readPickle(tmpfile)
+                self.assertEqual(len(st2), 3)
+                np.testing.assert_array_equal(st2[0].data, st[0].data)
+                # use read() with given format
+                st2 = read(tmpfile2, format='PICKLE')
+                self.assertEqual(len(st2), 3)
+                np.testing.assert_array_equal(st2[0].data, st[0].data)
+                # use read() and autodetect format
+                st2 = read(tmpfile2)
+                self.assertEqual(len(st2), 3)
+                np.testing.assert_array_equal(st2[0].data, st[0].data)
 
     def test_getGaps2(self):
         """

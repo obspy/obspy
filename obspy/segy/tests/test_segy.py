@@ -345,12 +345,12 @@ class SEGYTestCase(unittest.TestCase):
             with open(file, 'rb') as f:
                 org_data = f.read()
             segy_file = readSEGY(file, headonly=headonly)
-            out_file = NamedTemporaryFile().name
-            segy_file.write(out_file)
-            # Read the new file again.
-            with open(out_file, 'rb') as f:
-                new_data = f.read()
-            os.remove(out_file)
+            with NamedTemporaryFile() as tf:
+                out_file = tf.name
+                segy_file.write(out_file)
+                # Read the new file again.
+                with open(out_file, 'rb') as f:
+                    new_data = f.read()
             # The two files should have the same length.
             self.assertEqual(len(org_data), len(new_data))
             # Replace the not normalized samples. The not normalized

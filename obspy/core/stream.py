@@ -227,21 +227,17 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
             # if this fails, create a temporary file which is read directly
             # from the file system
             pathname_or_url.seek(0)
-            fh = NamedTemporaryFile()
-            fh.write(pathname_or_url.read())
-            fh.close()
-            st.extend(_read(fh.name, format, headonly, **kwargs).traces)
-            os.remove(fh.name)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                st.extend(_read(fh.name, format, headonly, **kwargs).traces)
         pathname_or_url.seek(0)
     elif "://" in pathname_or_url:
         # some URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
-        fh.close()
-        st.extend(_read(fh.name, format, headonly, **kwargs).traces)
-        os.remove(fh.name)
+        with NamedTemporaryFile(suffix=suffix) as fh:
+            fh.write(urllib2.urlopen(pathname_or_url).read())
+            st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
         # some file name
         pathname = pathname_or_url

@@ -188,48 +188,43 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     """
     # evalresp needs files with correct line separators depending on OS
     data = open(filename, 'rb').read()
-    fh = NamedTemporaryFile()
-    tempfile = fh.name
-    fh.write(os.linesep.join(data.splitlines()))
-    fh.close()
+    with NamedTemporaryFile() as fh:
+        tempfile = fh.name
+        fh.write(os.linesep.join(data.splitlines()))
+        fh.close()
 
-    fy = 1 / (t_samp * 2.0)
-    # start at zero to get zero for offset/ DC of fft
-    freqs = np.linspace(0, fy, nfft // 2 + 1)
-    start_stage = C.c_int(-1)
-    stop_stage = C.c_int(0)
-    stdio_flag = C.c_int(0)
-    sta = C.create_string_buffer(station)
-    cha = C.create_string_buffer(channel)
-    net = C.create_string_buffer(network)
-    locid = C.create_string_buffer(locid)
-    unts = C.create_string_buffer(units)
-    if debug:
-        vbs = C.create_string_buffer("-v")
-    else:
-        vbs = C.create_string_buffer("")
-    rtyp = C.create_string_buffer("CS")
-    datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
-    fn = C.create_string_buffer(tempfile)
-    nfreqs = C.c_int(freqs.shape[0])
-    res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
-                            freqs, nfreqs, rtyp, vbs, start_stage,
-                            stop_stage, stdio_flag, C.c_int(0))
-    # optimizing performance, see
-    # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
-    nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
-    h = np.empty(nfreqs, dtype='complex128')
-    f = np.empty(nfreqs, dtype='float64')
-    for i in xrange(nfreqs):
-        h[i] = rvec[i].real + rvec[i].imag * 1j
-        f[i] = rfreqs[i]
-    clibevresp.free_response(res)
-    del nfreqs, rfreqs, rvec, res
-    # delete temporary file
-    try:
-        os.remove(tempfile)
-    except:
-        pass
+        fy = 1 / (t_samp * 2.0)
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1)
+        start_stage = C.c_int(-1)
+        stop_stage = C.c_int(0)
+        stdio_flag = C.c_int(0)
+        sta = C.create_string_buffer(station)
+        cha = C.create_string_buffer(channel)
+        net = C.create_string_buffer(network)
+        locid = C.create_string_buffer(locid)
+        unts = C.create_string_buffer(units)
+        if debug:
+            vbs = C.create_string_buffer("-v")
+        else:
+            vbs = C.create_string_buffer("")
+        rtyp = C.create_string_buffer("CS")
+        datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
+        fn = C.create_string_buffer(tempfile)
+        nfreqs = C.c_int(freqs.shape[0])
+        res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
+                                freqs, nfreqs, rtyp, vbs, start_stage,
+                                stop_stage, stdio_flag, C.c_int(0))
+        # optimizing performance, see
+        # http://wiki.python.org/moin/PythonSpeed/PerformanceTips
+        nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
+        h = np.empty(nfreqs, dtype='complex128')
+        f = np.empty(nfreqs, dtype='float64')
+        for i in xrange(nfreqs):
+            h[i] = rvec[i].real + rvec[i].imag * 1j
+            f[i] = rfreqs[i]
+        clibevresp.free_response(res)
+        del nfreqs, rfreqs, rvec, res
     if freq:
         return h, f
     return h

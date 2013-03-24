@@ -51,10 +51,11 @@ class ClientTestCase(unittest.TestCase):
         start = UTCDateTime("2010-02-27T06:30:00")
         end = UTCDateTime("2010-02-27T06:31:00")
         origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
-        tempfile = NamedTemporaryFile().name
-        client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
-        self.assertTrue(filecmp.cmp(origfile, tempfile))
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.saveWaveform(tempfile, "IU", "ANMO", "00", "BHZ", start,
+                                end)
+            self.assertTrue(filecmp.cmp(origfile, tempfile))
         # no data raises an exception
         self.assertRaises(Exception, client.saveWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
@@ -68,31 +69,32 @@ class ClientTestCase(unittest.TestCase):
         end = UTCDateTime("2008-001T00:00:00")
         # RESP, single channel
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
-        tempfile = NamedTemporaryFile().name
-        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end)
-        self.assertTrue(filecmp.cmp(origfile, tempfile))
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start,
+                                end)
+            self.assertTrue(filecmp.cmp(origfile, tempfile))
         # RESP, multiple channels
         origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._.BH_')
-        tempfile = NamedTemporaryFile().name
-        client.saveResponse(tempfile, "IU", "ANMO", "*", "BH?", start, end)
-        self.assertTrue(filecmp.cmp(origfile, tempfile))
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.saveResponse(tempfile, "IU", "ANMO", "*", "BH?", start, end)
+            self.assertTrue(filecmp.cmp(origfile, tempfile))
         # StationXML, single channel
-        tempfile = NamedTemporaryFile().name
-        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end,
-                            format="StationXML")
-        data = open(tempfile).read()
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start,
+                                end, format="StationXML")
+            data = open(tempfile).read()
         self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
-        os.remove(tempfile)
         # SACPZ, single channel
-        tempfile = NamedTemporaryFile().name
-        client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start, end,
-                            format="SACPZ")
-        data = open(tempfile).read()
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start,
+                                end, format="SACPZ")
+            data = open(tempfile).read()
         self.assertTrue('NETWORK   (KNETWK): IU' in data)
         self.assertTrue('STATION    (KSTNM): ANMO' in data)
-        os.remove(tempfile)
 
     def test_getEvents(self):
         """
@@ -209,74 +211,74 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         dt = UTCDateTime("2005-01-01")
         # plot as PNG file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='plot',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='plot',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
-        os.remove(tempfile)
         # plot-amp as PNG file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='plot-amp',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='plot-amp',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
-        os.remove(tempfile)
         # plot-phase as PNG file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='plot-phase',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='plot-phase',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
-        os.remove(tempfile)
         # fap as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='fap',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='fap',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05  1.202802E+04  1.792007E+02\n')
-        os.remove(tempfile)
         # cs as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='cs',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='cs',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05 -1.202685E+04 1.677835E+02\n')
-        os.remove(tempfile)
         # fap & def as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='fap', units='def',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='fap', units='def',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05  1.202802E+04  1.792007E+02\n')
-        os.remove(tempfile)
         # fap & dis as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='fap', units='dis',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='fap', units='dis',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05  7.557425E-01  2.692007E+02\n')
-        os.remove(tempfile)
         # fap & vel as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='fap', units='vel',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='fap', units='vel',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05  1.202802E+04  1.792007E+02\n')
-        os.remove(tempfile)
         # fap & acc as ASCII file
-        tempfile = NamedTemporaryFile().name
-        client.evalresp(network="IU", station="ANMO", location="00",
-                        channel="BHZ", time=dt, output='fap', units='acc',
-                        filename=tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            client.evalresp(network="IU", station="ANMO", location="00",
+                            channel="BHZ", time=dt, output='fap', units='acc',
+                            filename=tempfile)
         self.assertEqual(open(tempfile, 'rt').readline(),
                          '1.000000E-05  1.914318E+08  8.920073E+01\n')
-        os.remove(tempfile)
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')

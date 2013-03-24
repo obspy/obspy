@@ -454,36 +454,34 @@ class QuakeMLTestCase(unittest.TestCase):
         Tests writing a QuakeML document.
         """
         filename = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
-        tmpfile = NamedTemporaryFile().name
-        catalog = readQuakeML(filename)
-        self.assertTrue(len(catalog), 1)
-        writeQuakeML(catalog, tmpfile)
-        # Read file again. Avoid the (legit) warning about the already used
-        # resource identifiers.
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            catalog2 = readQuakeML(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            catalog = readQuakeML(filename)
+            self.assertTrue(len(catalog), 1)
+            writeQuakeML(catalog, tmpfile)
+            # Read file again. Avoid the (legit) warning about the already used
+            # resource identifiers.
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter("ignore")
+                catalog2 = readQuakeML(tmpfile)
         self.assertTrue(len(catalog2), 1)
-        # clean up
-        os.remove(tmpfile)
 
     def test_readEvents(self):
         """
         Tests reading a QuakeML document via readEvents.
         """
         filename = os.path.join(self.path, 'neries_events.xml')
-        tmpfile = NamedTemporaryFile().name
-        catalog = readEvents(filename)
-        self.assertTrue(len(catalog), 3)
-        catalog.write(tmpfile, format='QUAKEML')
-        # Read file again. Avoid the (legit) warning about the already used
-        # resource identifiers.
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("ignore")
-            catalog2 = readEvents(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            catalog = readEvents(filename)
+            self.assertTrue(len(catalog), 3)
+            catalog.write(tmpfile, format='QUAKEML')
+            # Read file again. Avoid the (legit) warning about the already used
+            # resource identifiers.
+            with warnings.catch_warnings(record=True):
+                warnings.simplefilter("ignore")
+                catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
-        # clean up
-        os.remove(tmpfile)
 
     def test_enums(self):
         """
