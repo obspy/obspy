@@ -139,7 +139,6 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.seg2.seg2:isSEG2',
         'readFormat = obspy.seg2.seg2:readSEG2',
-        'writeFormat = obspy.seg2.seg2:writeSEG2',
     ],
     'obspy.plugin.waveform.SEGY': [
         'isFormat = obspy.segy.core:isSEGY',

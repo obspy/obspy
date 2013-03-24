@@ -295,8 +295,3 @@ def isSEG2(filename):
 def readSEG2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
     return seg2.readFile(filename)
-
-
-def writeSEG2(filename, **kwargs):  # @UnusedVariable
-    msg = 'Writing SEG-2 files is not implemented so far.'
-    raise NotImplementedError(msg)
