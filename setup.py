@@ -36,7 +36,6 @@ import glob
 import inspect
 import os
 import platform
-import shutil
 import sys
 
 
@@ -272,28 +271,6 @@ def find_packages():
     return [_i.replace(os.sep, ".") for _i in modules]
 
 
-def convert2to3():
-    """
-    Convert source to Python 3.x syntax using lib2to3.
-    """
-    # create a new 2to3 directory for converted source files
-    dst_path = os.path.join(LOCAL_PATH, '2to3')
-    shutil.rmtree(dst_path, ignore_errors=True)
-
-    # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):  # @UnusedVariable
-        return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
-               [fn for fn in filenames if fn.startswith('distribute')] + \
-               [fn for fn in filenames if fn.endswith('.egg-info')]
-    shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
-    os.chdir(dst_path)
-    sys.path.insert(0, dst_path)
-    # run lib2to3 script on duplicated source
-    from lib2to3.main import main
-    print("Converting to Python3 via lib2to3...")
-    main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
-
-
 def _get_lib_name(lib):
     """
     Helper function to get an architecture and Python version specific library
@@ -364,10 +341,6 @@ def configuration(parent_package="", top_path=None):
 
 
 def setupPackage():
-    # use lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        convert2to3()
-
     # setup package
     setup(
         name='obspy',
@@ -400,11 +373,7 @@ def setupPackage():
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
-        use_2to3=True,
         configuration=configuration)
-    # cleanup after using lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        os.chdir(LOCAL_PATH)
 
 if __name__ == '__main__':
     setupPackage()
