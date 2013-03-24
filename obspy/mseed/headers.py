@@ -18,7 +18,7 @@ ENDIAN = {0: '<', 1: '>'}
 # create library names
 lib_names = [
      # platform specific library name
-    'libmseed-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    'libmseed_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libmseed']
