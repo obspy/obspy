@@ -3,4 +3,3 @@ global-exclude *.pyc *.pdf
 include README.md
 include CONTRIBUTING.md
 include CHANGELOG.txt
-include distribute_setup.py
