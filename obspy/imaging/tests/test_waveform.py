@@ -68,17 +68,19 @@ class WaveformTestCase(unittest.TestCase):
         # Use once with straight plotting with random calibration factor
         st = self._createStream(UTCDateTime(0), UTCDateTime(1000), 1)
         st[0].stats.calib = 0.2343
-        org_data = deepcopy(st[0].data)
+        org_st = st.copy()
         st.plot(format='png')
-        # compare with original data
-        np.testing.assert_array_equal(org_data, st[0].data)
+        self.assertEqual(st, org_st)
         # Now with min-max list creation (more than 400000 samples).
         st = self._createStream(UTCDateTime(0), UTCDateTime(600000), 1)
         st[0].stats.calib = 0.2343
-        org_data = deepcopy(st[0].data)
+        org_st = st.copy()
         st.plot(format='png')
-        # compare with original data
-        np.testing.assert_array_equal(org_data, st[0].data)
+        self.assertEqual(st, org_st)
+        # Now only plot a certain time frame.
+        st.plot(format='png', starrtime=UTCDateTime(10000),
+            endtime=UTCDateTime(20000))
+        self.assertEqual(st, org_st)
 
     def test_plotEmptyStream(self):
         """

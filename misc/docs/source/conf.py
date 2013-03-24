@@ -192,7 +192,7 @@ htmlhelp_basename = 'ObsPyDocumentation'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual])
 latex_documents = [
-  ('index', 'ObsPyDocumentation.tex', u'ObsPy Tutorial',
+  ('tutorial/index', 'ObsPyTutorial.tex', u'ObsPy Tutorial',
    u'The ObsPy Development Team (devs@obspy.org)', 'manual'),
 ]
 

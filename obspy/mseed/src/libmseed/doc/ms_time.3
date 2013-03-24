@@ -1,4 +1,4 @@
-.TH MS_TIME 3 2007/08/16 "Libmseed API"
+.TH MS_TIME 3 2013/02/22 "Libmseed API"
 .SH DESCRIPTION
 Time conversion and string generation
 
@@ -119,7 +119,7 @@ NULL terminated.
 follows:
 .sp
 .nf
-year : 1900 - 2100
+year : 1800 - 5000
 day  : 1 - 366  (366 = last day of leap year)
 hour : 0 - 23
 min  : 0 - 59
@@ -127,21 +127,31 @@ sec  : 0 - 60   (60 = leap second)
 usec : 0 - 999999
 .fi
 
-\fBms_seedtimestr2hptime\fP converts a SEED time string to a hptime.
-The time format expected is: "YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter
-can be a comma [,], colon [:] or period [.] except for the fractional
-seconds ("FFFFFF") which must begin with a period [.] if present.
+\fBNOTE:\fP miniSEED data records are only supported by limbseed with
+a year range between 1900 and 2100.  These routines allow a wider
+range to support times for metadata, etc.
 
-\fBms_timestr2hptime\fP converts a time string to a hptime.  The time
-format expected is: "YYYY[/MM/DD HH:MM:SS.FFFFFF]", the delimiter can be
-a dash [-], slash [/], colon [:], or period [.] and between the date
-and time a [T] or a space may be used.  The fractional seconds
-("FFFFFF") must begin with a period [.] if present.
+\fBms_seedtimestr2hptime\fP converts a SEED time string (day-of-year
+style) to a high precision epoch time.  The time format expected is
+"YYYY[,DDD,HH,MM,SS.FFFFFF]", the delimiter can be a comma [,], dash
+[-], colon [:] or period [.].  Additionally a 'T' or space may be used
+to seprate the day and hour fields.  The fractional seconds ("FFFFFF")
+must begin with a period [.] if present.
+
+\fBms_timestr2hptime\fP converts a generic time string to a high
+precision epoch time.  SEED time format is
+"YYYY[/MM/DD HH:MM:SS.FFFF]", the delimiter can be a dash [-],
+comma[,], slash [/], colon [:], or period [.].  Additionally a 'T' or
+space may be used between the date and time fields.  The fractional
+seconds ("FFFFFF") must begin with a period [.] if present.
 
 For both \fBms_seedtimestr2hptime\fP and \fBms_timestr2hptime\fP the
 input time string may be "short", in which case the vales omitted on
 the right hand side are assumed to be 0 (with the exception of month
 and day which are assumed to be 1).  The year is always required.
+This characteristic means that these time string parsers are very
+lenient and should not be used for validation or considered to be
+applying any strict validation.
 
 .SH RETURN VALUES
 \fBms_btime2hptime\fP, \fBms_time2hptime\fP,

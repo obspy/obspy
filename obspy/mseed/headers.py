@@ -674,6 +674,7 @@ clibmseed.readMSEEDBuffer.argtypes = [
     C.c_int,
     C.c_int,
     C.c_int,
+    C.c_int,
     C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)
     ]
 

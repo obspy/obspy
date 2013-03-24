@@ -12,10 +12,11 @@ ArcLink/WebDC client for ObsPy.
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy import read, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
+from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os
+import StringIO
 import time
 import warnings
 
@@ -120,8 +121,8 @@ class Client(object):
         self._hello()
         self.debug = debug
         if self.debug:
-            print('\nConnected to %s:%d' % (self._client.host,
-                                            self._client.port))
+            print('\nConnected to %s:%s' % (self._client.host,
+                                            str(self._client.port)))
         # check for dcid_key_file
         if not dcid_key_file:
             # check in user directory
@@ -396,19 +397,13 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        tf = NamedTemporaryFile()
-        self.saveWaveform(tf._fileobj, network, station, location, channel,
+        file_stream = StringIO.StringIO()
+        self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        stream = read(tf.name, 'MSEED')
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        file_stream.seek(0, 0)
+        stream = read(file_stream, 'MSEED')
+        file_stream.close()
         # trim stream
         stream.trim(starttime, endtime)
         # fetching PAZ and coordinates
@@ -502,9 +497,14 @@ class Client(object):
         >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
+        format = format.upper()
+        if format not in ["MSEED", "FSEED"]:
+            msg = ("'%s' is not a valid format. Choose either 'MSEED' or "
+                "'FSEED'")
+            raise ArcLinkException(msg)
         # check parameters
         is_name = isinstance(filename, basestring)
-        if not is_name and not isinstance(filename, file):
+        if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         # request type
@@ -627,11 +627,11 @@ class Client(object):
         keys = []
         for key in routes:
             parts = key.split('.')
-            if parts[0] and net != '*'  and not fnmatch(parts[0], net):
+            if parts[0] and net != '*' and not fnmatch(parts[0], net):
                 continue
-            if parts[1] and sta != '*'  and not fnmatch(parts[1], sta):
+            if parts[1] and sta != '*' and not fnmatch(parts[1], sta):
                 continue
-            if parts[2] and loc != '*'  and not fnmatch(parts[2], loc):
+            if parts[2] and loc != '*' and not fnmatch(parts[2], loc):
                 continue
             if parts[3] and cha != '*' and not fnmatch(parts[3], cha):
                 continue
@@ -938,8 +938,8 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str
-        :param filename: Name of the output file.
+        :type filename: str or file like object
+        :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
         :type station: str
@@ -978,9 +978,11 @@ class Client(object):
             data = self._fetch(rtype, rdata)
         else:
             raise ValueError("Unsupported format %s" % format)
-        fh = open(filename, "wb")
-        fh.write(data)
-        fh.close()
+        if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
+            filename.write(data)
+        else:
+            with open(filename, "wb") as open_file:
+                open_file.write(data)
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
@@ -1205,7 +1207,7 @@ class Client(object):
                             # channel code is split into two attributes
                             id = '.'.join([net.code, sta.code,
                                            stream.get('loc_code', ''),
-                                           stream.get('code', '  ') + \
+                                           stream.get('code', '  ') +
                                            comp.get('code', ' ')])
                         else:
                             id = '.'.join([net.code, sta.code,
@@ -1246,8 +1248,8 @@ class Client(object):
                         if not instruments or not seismometer_id:
                             continue
                         # PAZ
-                        paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
-                                               '[@' + name_ns + '="' + \
+                        paz_id = xml_doc.xpath('ns:' + seismometer_ns +
+                                               '[@' + name_ns + '="' +
                                                seismometer_id + '"]/@response',
                                                namespaces={'ns': xml_ns})
                         if not paz_id:
@@ -1256,7 +1258,7 @@ class Client(object):
                         # hack for 0.2 schema
                         if paz_id.startswith('paz:'):
                             paz_id = paz_id[4:]
-                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' + \
+                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' +
                                                 name_ns + '="' + paz_id + '"]',
                                                 namespaces={'ns': xml_ns})
                         if not xml_paz:
@@ -1317,8 +1319,8 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in data.items() \
-                    if key.startswith(network + '.') \
+        stations = [value for key, value in data.items()
+                    if key.startswith(network + '.')
                     and "code" in value]
         return stations
 

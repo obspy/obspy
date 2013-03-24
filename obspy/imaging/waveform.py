@@ -53,6 +53,7 @@ class WaveformPlotting(object):
         """
         Checks some variables and maps the kwargs to class variables.
         """
+        self.kwargs = kwargs
         self.stream = kwargs.get('stream')
         # Check if it is a Stream or a Trace object.
         if isinstance(self.stream, Trace):
@@ -64,6 +65,7 @@ class WaveformPlotting(object):
         if len(self.stream) < 1:
             msg = "Empty stream object"
             raise IndexError(msg)
+        self.stream = self.stream.copy()
         # Type of the plot.
         self.type = kwargs.get('type', 'normal')
         # Start- and endtimes of the plots.
@@ -156,6 +158,14 @@ class WaveformPlotting(object):
         self.show = kwargs.get('show', True)
         self.block = kwargs.get('block', True)
 
+    def __del__(self):
+        """
+        Destructor closes the figure instance if it has been created by the
+        class.
+        """
+        if self.kwargs.get("fig", None) is None:
+            plt.close()
+
     def __getMergeId(self, tr):
         tr_id = tr.id
         # don't merge normal traces with previews
@@ -239,9 +249,9 @@ class WaveformPlotting(object):
                 return self.fig
             else:
                 if not self.fig_obj and self.show:
-                    if MATPLOTLIB_VERSION >= [1, 0, 0]:
+                    try:
                         plt.show(block=self.block)
-                    else:
+                    except:
                         plt.show()
 
     def plot(self, *args, **kwargs):
@@ -318,8 +328,6 @@ class WaveformPlotting(object):
         """
         Extend the seismogram.
         """
-        # Create a copy of the stream because it might be operated on.
-        self.stream = self.stream.copy()
         # Merge and trim to pad.
         self.stream.merge()
         if len(self.stream) != 1:
@@ -550,8 +558,6 @@ class WaveformPlotting(object):
 
         Slow and high memory consumption for large datasets.
         """
-        # Copy to avoid any changes to original data.
-        trace = [tr.copy() for tr in trace]
         if len(trace) > 1:
             stream = Stream(traces=trace)
             # Merge with 'interpolation'. In case of overlaps this method will

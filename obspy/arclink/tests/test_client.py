@@ -11,6 +11,7 @@ from obspy.core.util import NamedTemporaryFile, AttribDict
 import numpy as np
 import operator
 import os
+import StringIO
 import unittest
 import warnings
 
@@ -585,6 +586,16 @@ class ClientTestCase(unittest.TestCase):
             self.assertEquals(open(tempfile).read(8), "000001V ")
         finally:
             os.remove(tempfile)
+
+        # Try again but write to a StringIO instance.
+        file_object = StringIO.StringIO()
+        client = Client(user='test@obspy.org')
+        start = UTCDateTime(2008, 1, 1)
+        end = start + 1
+        # Dataless SEED
+        client.saveResponse(file_object, 'BW', 'MANZ', '', 'EHZ', start, end)
+        file_object.seek(0, 0)
+        self.assertEquals(file_object.read(8), "000001V ")
 
     def test_SRL(self):
         """

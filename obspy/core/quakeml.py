@@ -254,6 +254,8 @@ class Unpickler(object):
         obj.azimuth_max_horizontal_uncertainty = self._xpath2obj(
             'originUncertainty/azimuthMaxHorizontalUncertainty', element,
             float)
+        obj.confidence_level = self._xpath2obj(
+            'originUncertainty/confidenceLevel', element, float)
         try:
             ce_el = self._xpath('originUncertainty/confidenceEllipsoid',
                                 element)
@@ -611,7 +613,6 @@ class Unpickler(object):
         obj.resource_id = mt_el.get('publicID')
         obj.derived_origin_id = self._xpath2obj('derivedOriginID', mt_el)
         # optional parameter
-        obj.data_used = self._data_used(mt_el)
         obj.moment_magnitude_id = self._xpath2obj('momentMagnitudeID', mt_el)
         obj.scalar_moment, obj.scalar_moment_errors = \
             self._float_value(mt_el, 'scalarMoment')
@@ -625,11 +626,10 @@ class Unpickler(object):
         obj.greens_function_id = self._xpath2obj('greensFunctionID', mt_el)
         obj.filter_id = self._xpath2obj('filterID', mt_el)
         obj.source_time_function = self._source_time_function(mt_el)
+        obj.data_used = self._data_used(mt_el)
         obj.method_id = self._xpath2obj('MethodID', mt_el)
         obj.category = self._xpath2obj('category', mt_el)
         obj.inversion_type = self._xpath2obj('inversionType', mt_el)
-        obj.evaluation_mode = self._xpath2obj('evaluationMode', mt_el)
-        obj.evaluation_status = self._xpath2obj('evaluationStatus', mt_el)
         obj.creation_info = self._creation_info(mt_el)
         obj.comments = self._comments(mt_el)
         return obj
@@ -671,6 +671,8 @@ class Unpickler(object):
         obj.moment_tensor = self._moment_tensor(element)
         obj.nodal_planes = self._nodal_planes(element)
         obj.principal_axes = self._principal_axes(element)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
+        obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
         obj.comments = self._comments(element)
         return obj
@@ -1051,6 +1053,8 @@ class Pickler(object):
                       'maxHorizontalUncertainty')
             self._str(ou.azimuth_max_horizontal_uncertainty, ou_el,
                       'azimuthMaxHorizontalUncertainty')
+            self._str(ou.confidence_level, ou_el,
+                      'confidenceLevel')
             ce = ou.confidence_ellipsoid
             if ce is not None:
                 ce_el = etree.Element('confidenceEllipsoid')
@@ -1235,8 +1239,6 @@ class Pickler(object):
         self._str(moment_tensor.method_id, mt_el, 'MethodID')
         self._str(moment_tensor.category, mt_el, 'category')
         self._str(moment_tensor.inversion_type, mt_el, 'inversionType')
-        self._str(moment_tensor.evaluation_mode, mt_el, 'evaluationMode')
-        self._str(moment_tensor.evaluation_status, mt_el, 'evaluationStatus')
         self._comments(moment_tensor.comments, mt_el)
         self._creation_info(moment_tensor.creation_info, mt_el)
         element.append(mt_el)
@@ -1265,6 +1267,9 @@ class Pickler(object):
         self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
+        self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
+        self._str(focal_mechanism.evaluation_status, element,
+            'evaluationStatus')
         self._comments(focal_mechanism.comments, element)
         self._creation_info(focal_mechanism.creation_info, element)
         return element

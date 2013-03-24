@@ -912,7 +912,8 @@ class Stream(object):
             Defaults to ``'normal'``.
         :param equal_scale: Is enabled all plots are equally scaled. Defaults
             to ``True``.
-        :param block: If True (default) block call to showing plot.
+        :param block: If True (default) block call to showing plot. Only works
+            if the active matplotlib backend supports it.
 
         **Dayplot parameters**
 
@@ -1908,7 +1909,7 @@ class Stream(object):
             :func:`scipy.signal.resample` for details.
         :type no_filter: bool, optional
         :param no_filter: Deactivates automatic filtering if set to ``True``.
-            Defaults to ``False``.
+            Defaults to ``True``.
         :type strict_length: bool, optional
         :param strict_length: Leave traces unchanged for which endtime of trace
             would change. Defaults to ``False``.
@@ -2279,8 +2280,9 @@ class Stream(object):
             input_1 = self.select(component=input_components[0])
             input_2 = self.select(component=input_components[1])
             for i_1, i_2 in zip(input_1, input_2):
+                dt = 0.5 * i_1.stats.delta
                 if (len(i_1) != len(i_2)) or \
-                    (i_1.stats.starttime != i_2.stats.starttime) or \
+                    (abs(i_1.stats.starttime - i_2.stats.starttime) > dt) or \
                     (i_1.stats.sampling_rate != i_2.stats.sampling_rate):
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
@@ -2291,7 +2293,7 @@ class Stream(object):
                 # Rename the components.
                 i_1.stats.channel = i_1.stats.channel[:-1] + \
                     output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] +\
+                i_2.stats.channel = i_2.stats.channel[:-1] + \
                     output_components[1]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2):
@@ -2302,9 +2304,10 @@ class Stream(object):
             input_2 = self.select(component=input_components[1])
             input_3 = self.select(component=input_components[2])
             for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
+                dt = 0.5 * i_1.stats.delta
                 if (len(i_1) != len(i_2)) or (len(i_1) != len(i_3)) or \
-                    (i_1.stats.starttime != i_2.stats.starttime) or \
-                    (i_1.stats.starttime != i_3.stats.starttime) or \
+                    (abs(i_1.stats.starttime - i_2.stats.starttime) > dt) or \
+                    (abs(i_1.stats.starttime - i_3.stats.starttime) > dt) or \
                     (i_1.stats.sampling_rate != i_2.stats.sampling_rate) or \
                     (i_1.stats.sampling_rate != i_3.stats.sampling_rate):
                     msg = "All components need to have the same time span."
@@ -2318,9 +2321,9 @@ class Stream(object):
                 # Rename the components.
                 i_1.stats.channel = i_1.stats.channel[:-1] + \
                     output_components[0]
-                i_2.stats.channel = i_2.stats.channel[:-1] +\
+                i_2.stats.channel = i_2.stats.channel[:-1] + \
                     output_components[1]
-                i_3.stats.channel = i_3.stats.channel[:-1] +\
+                i_3.stats.channel = i_3.stats.channel[:-1] + \
                     output_components[2]
                 # Add the azimuth and inclination to the stats object.
                 for comp in (i_1, i_2, i_3):

@@ -299,6 +299,14 @@ class _BaseRESTClient(object):
         :param xml_string: XML for a send request (PUT/POST)
         :rtype: tuple
         :return: (HTTP status code, HTTP status message)
+
+        .. rubric:: Example
+
+        >>> c = Client()
+        >>> xseed_file = "dataless.seed.BW_UH1.xml"
+        >>> xml_str = open(xseed_file).read()
+        >>> c.station.putResource(xseed_file, xml_str)
+        (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])

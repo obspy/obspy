@@ -169,13 +169,16 @@ lil_free(LinkedIDList * lil)
     lil = NULL;
 }
 
+// Print function that does nothing.
+void empty_print(char *string) {}
+
 
 // Function that reads from a MiniSEED binary file from a char buffer and
 // returns a LinkedIDList.
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 long (*allocData) (int, char))
+                 int header_byteorder, long (*allocData) (int, char))
 {
     int retcode = 0;
     int retval = 0;
@@ -207,12 +210,33 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     LinkedRecordList *recordPrevious = NULL;
     LinkedRecordList *recordCurrent = NULL;
     int datasize;
+    int record_count = 0;
 
+    // A negative verbosity suppressed as much as possible.
+    if (verbose < 0) {
+        ms_loginit(&empty_print, NULL, &empty_print, NULL);
+    }
+    else {
+        ms_loginit((void*)&printf, NULL, (void*)&printf, "error: ");
+    }
+
+    if (header_byteorder >= 0) {
+        // Enforce little endian.
+        if (header_byteorder == 0) {
+            MS_UNPACKHEADERBYTEORDER(0);
+        }
+        // Enforce big endian.
+        else {
+            MS_UNPACKHEADERBYTEORDER(1);
+        }
+    }
+    else {
+        MS_UNPACKHEADERBYTEORDER(-1);
+    }
 
     //
     // Read all records and save them in a linked list.
     //
-    int record_count = 0;
     while (offset < buflen) {
         msr = msr_init(NULL);
         retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);

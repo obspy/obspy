@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.8"
-#define LIBMSEED_RELEASE "2012.363"
+#define LIBMSEED_VERSION "2.10"
+#define LIBMSEED_RELEASE "2013.056"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -79,6 +79,17 @@ extern "C" {
 
 /* Macro to test default sample rate tolerance: abs(1-sr1/sr2) < 0.0001 */
 #define MS_ISRATETOLERABLE(A,B) (ms_dabs (1.0 - (A / B)) < 0.0001)
+
+/* Macro to test for sane year and day values, used primarily to
+ * determine if byte order swapping is needed.
+ * 
+ * Year : between 1900 and 2100
+ * Day  : between 1 and 366
+ *
+ * This test is non-unique (non-deterministic) for days 1, 256 and 257
+ * in the year 2056 because the swapped values are also within range.
+ */
+#define MS_ISVALIDYEARDAY(Y,D) (Y >= 1900 && Y <= 2100 && D >= 1 && D <= 366)
 
 /* Macro to test memory for a SEED data record signature by checking
  * SEED data record header values at known byte offsets to determine

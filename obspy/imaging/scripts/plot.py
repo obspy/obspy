@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-USAGE: obspy-plot [ -f format ] file
+USAGE: obspy-plot [ -f format ] file1 file2 ...
 
-Wiggle plot of the data in file
+Wiggle plot of the data in files
 """
-from obspy import read
+from obspy import read, Stream
 from obspy import __version__
 from optparse import OptionParser
 
@@ -16,7 +16,9 @@ def main():
                       dest="format", help="Waveform format.")
 
     (options, args) = parser.parse_args()
-    st = read(args[0], format=options.format)
+    st = Stream()
+    for arg in args:
+        st += read(arg, format=options.format)
     st.plot()
 
 
