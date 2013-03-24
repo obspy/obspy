@@ -9,6 +9,8 @@ dev:
  - obspy.db:
    * obspy-indexer script uses from now on hash symbols (#) instead of pipe (|)
      for features because pipe has a special meaning on most operation systems
+ - obspy.imaging:
+   * more options to customize day plots
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.mseed:

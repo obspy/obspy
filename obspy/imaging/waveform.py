@@ -74,7 +74,8 @@ class WaveformPlotting(object):
         self.fig_obj = kwargs.get('fig', None)
         # If no times are given take the min/max values from the stream object.
         if not self.starttime:
-            self.starttime = min([trace.stats.starttime for trace in self.stream])
+            self.starttime = min([trace.stats.starttime for trace in
+                                  self.stream])
         if not self.endtime:
             self.endtime = max([trace.stats.endtime for trace in self.stream])
         # Map stream object and slice just in case.
@@ -997,7 +998,8 @@ class WaveformPlotting(object):
         ticks = np.linspace(0.0, max_value, count)
         ticklabels = ['%i' % _i for _i in np.linspace(0.0, time_value, count)]
         self.axis[0].set_xticks(ticks)
-        self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation, size=self.x_labels_size)
+        self.axis[0].set_xticklabels(ticklabels, rotation=self.tick_rotation,
+                                     size=self.x_labels_size)
         self.axis[0].set_xlabel('%s %s' % (localization_dict['time in'],
                                            time_type), size=self.x_labels_size)
 
@@ -1023,7 +1025,8 @@ class WaveformPlotting(object):
         sign = sign[0]
         label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
             abs(self.time_offset), (self.time_offset % 1 * 60))
-        ticklabels = [(self.starttime + _i * self.interval).strftime(self.tick_format)
+        ticklabels = [(self.starttime + _i *
+                       self.interval).strftime(self.tick_format)
                       for _i in tick_steps]
         self.axis[0].set_yticks(ticks)
         self.axis[0].set_yticklabels(ticklabels, size=self.y_labels_size)
@@ -1036,10 +1039,12 @@ class WaveformPlotting(object):
             self.twin_x = self.axis[0].twinx()
             self.twin_x.set_ylim(yrange)
             self.twin_x.set_yticks(ticks)
-            y_ticklabels_twin = [(self.starttime +
-            (_i + 1) * self.interval).strftime(self.tick_format) for _i in tick_steps]
+            y_ticklabels_twin = [(self.starttime + (_i + 1) *
+                                  self.interval).strftime(self.tick_format)
+                                 for _i in tick_steps]
 
-            self.twin_x.set_yticklabels(y_ticklabels_twin, size=self.y_labels_size)
+            self.twin_x.set_yticklabels(y_ticklabels_twin,
+                                        size=self.y_labels_size)
 
     def __setupFigure(self):
         """
