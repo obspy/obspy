@@ -404,7 +404,28 @@ def configuration(parent_package="", top_path=None):
     taup_files.insert(0, new_interface_path)
     config.add_extension(libname, taup_files)
 
+    add_data_files(config)
+
     return config
+
+
+def add_data_files(config):
+    """
+    Function adding all necessary data files.
+    """
+    # Add all test data files
+    for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
+            "obspy", "*", "tests", "data")):
+        path = os.path.join(*data_folder.split(os.path.sep)[-4:])
+        config.add_data_dir(path)
+    # Add some xsd files.
+    config.add_data_dir(os.path.join("obspy", "core", "docs"))
+    config.add_data_dir(os.path.join("obspy", "xseed", "docs"))
+    # Add the taup models.
+    config.add_data_dir(os.path.join("obspy", "taup", "tables"))
+    # Adding the Flinn-Engdahl names files
+    config.add_data_dir(os.path.join("obspy", "core", "util", "geodetics",
+        "data"))
 
 
 def setupPackage():
