@@ -914,7 +914,7 @@ class Stream(object):
             to ``True``.
         :param block: If True (default) block call to showing plot. Only works
             if the active matplotlib backend supports it.
-        :param line_width: Float value in points of the line width. Defaults to
+        :param linewidth: Float value in points of the line width. Defaults to
             ``0.4``.
 
         **Dayplot parameters**

@@ -160,7 +160,7 @@ class WaveformPlotting(object):
         self.x_labels_size = kwargs.get('x_labels_size', 8)
         self.y_labels_size = kwargs.get('y_labels_size', 8)
         self.title_size = kwargs.get('title_size', 10)
-        self.line_width = kwargs.get('line_width', 0.4)
+        self.linewidth = kwargs.get('linewidth', 0.4)
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
@@ -393,7 +393,7 @@ class WaveformPlotting(object):
             # Plot the values.
             ax.plot(x_values, y_values,
                     color=self.color[_i % len(self.color)],
-                    linewidth=self.line_width)
+                    linewidth=self.linewidth)
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
@@ -518,7 +518,7 @@ class WaveformPlotting(object):
                 zorder=10)
         # Draw the actual point. Use a marker with a star shape.
         self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12, linewidth=self.line_width)
+            markersize=12, linewidth=self.linewidth)
 
     def _plotDayplotScale(self, unit):
         """
@@ -635,7 +635,7 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.line_width)
+        ax.plot(trace.data, color=self.color, linewidth=self.linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
