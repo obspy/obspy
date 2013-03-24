@@ -54,7 +54,7 @@ def call_git_describe(abbrev=4):
         path = p.stdout.readlines()[0].strip()
     except:
         return None
-    if path != OBSPY_ROOT:
+    if os.path.normpath(path) != OBSPY_ROOT:
         return None
     try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
