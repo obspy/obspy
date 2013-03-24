@@ -14,7 +14,7 @@ import platform
 # create library names
 lib_names = [
      # platform specific library name
-    'libsignal-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    'libsignal_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libsignal']
@@ -38,7 +38,7 @@ if not clibsignal:
 # create library names
 erlib_names = [
     # platform specific library name
-    'libevresp-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    'libevresp_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
      # fallback for pre-packaged libraries
     'libevresp']
