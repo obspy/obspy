@@ -305,22 +305,24 @@ class Client(object):
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
         self._writeln('DOWNLOAD %d' % req_id)
-        fd = self._client.get_socket().makefile('rb+')
-        length = int(fd.readline(100).strip())
-        data = ''
-        while len(data) < length:
-            buf = fd.read(min(4096, length - len(data)))
-            data += buf
-        buf = fd.readline(100).strip()
-        if buf != "END" or len(data) != length:
-            raise Exception('Wrong length!')
-        if self.debug:
-            if data.startswith('<?xml'):
-                print(data)
-            else:
-                print("%d bytes of data read" % len(data))
-        self._writeln('PURGE %d' % req_id)
-        self._bye()
+        try:
+            fd = self._client.get_socket().makefile('rb+')
+            length = int(fd.readline(100).strip())
+            data = ''
+            while len(data) < length:
+                buf = fd.read(min(4096, length - len(data)))
+                data += buf
+            buf = fd.readline(100).strip()
+            if buf != "END" or len(data) != length:
+                raise Exception('Wrong length!')
+            if self.debug:
+                if data.startswith('<?xml'):
+                    print(data)
+                else:
+                    print("%d bytes of data read" % len(data))
+        finally:
+            self._writeln('PURGE %d' % req_id)
+            self._bye()
         # check for encryption
         if 'encrypted="true"' in xml_doc:
             # extract dcid
