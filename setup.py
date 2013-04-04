@@ -46,8 +46,9 @@ SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
 
 # Import the version string.
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
-sys.path.append(UTIL_PATH)
+sys.path.insert(0, UTIL_PATH)
 from version import get_git_version  # @UnresolvedImport
+sys.path.pop(0)
 
 LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 DOCSTRING = __doc__.split("\n")
