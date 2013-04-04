@@ -12,7 +12,6 @@ File dealing with the StationXML format.
 import inspect
 from io import BytesIO
 from lxml import etree
-from lxml.builder import E
 import os
 
 import obspy
@@ -95,7 +94,7 @@ def read_StationXML(path_or_file_object):
     return inv
 
 
-def write_StationXML(inventory, file_or_file_object, validate=False):
+def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     """
     Writes an inventory object to a buffer.
 
@@ -114,6 +113,13 @@ def write_StationXML(inventory, file_or_file_object, validate=False):
             "schemaVersion": SCHEMA_VERSION}
     )
     etree.SubElement(root, "Source").text = inventory.source
+
+    # Undocumented flag that does not write the module flags. Useful for
+    # testing. It is undocumented because it should not be used publicly.
+    if not kwargs.get("_suppress_module_tags", False):
+        etree.SubElement(root, "Module").text = SOFTWARE_MODULE
+        etree.SubElement(root, "ModuleURI").text = SOFTWARE_URI
+
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
     for network in inventory.networks:

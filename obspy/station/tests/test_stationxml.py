@@ -9,6 +9,7 @@ Test suite for the StationXML reader and writer.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import fnmatch
 from io import BytesIO
 import inspect
 from itertools import izip
@@ -57,9 +58,11 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(len(inv.networks), 1)
         self.assertEqual(inv.networks[0].code, "PY")
 
-        # Write it again. Also validate it to get more confidence.
+        # Write it again. Also validate it to get more confidence. Suppress the
+        # writing of the ObsPy related tags to ease testing.
         file_buffer = BytesIO()
-        inv.write(file_buffer, format="StationXML", validate=True)
+        inv.write(file_buffer, format="StationXML", validate=True,
+            _suppress_module_tags=True)
         file_buffer.seek(0, 0)
         new_file = file_buffer.read().splitlines()
 
@@ -70,6 +73,26 @@ class StationXMLTestCase(unittest.TestCase):
 
         for new_line, org_line in izip(new_file, org_file):
             self.assertEqual(new_line.strip(), org_line.strip())
+
+    def test_writing_module_tags(self):
+        """
+        Tests the writing of ObsPy related tags.
+        """
+        net = obspy.station.SeismicNetwork(code="UL")
+        inv = obspy.station.SeismicInventory(networks=[net], source="BLU")
+
+        file_buffer = BytesIO()
+        inv.write(file_buffer, format="StationXML", validate=True)
+        file_buffer.seek(0, 0)
+        lines = file_buffer.read().splitlines()
+        module_line = [_i.strip() for _i in lines if _i.strip().startswith(
+            "<Module>")][0]
+        self.assertTrue(fnmatch.fnmatch(module_line,
+            "<Module>ObsPy *</Module>"))
+        module_URI_line = [_i.strip() for _i in lines if _i.strip().startswith(
+            "<ModuleURI>")][0]
+        self.assertEqual(module_URI_line,
+            "<ModuleURI>http://www.obspy.org</ModuleURI>")
 
 
 def suite():

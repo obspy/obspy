@@ -32,7 +32,7 @@ class InventoryTestCase(unittest.TestCase):
 
 
 def suite():
-    return unittest.makeSuite(InventoryTestCase,  'test')
+    return unittest.makeSuite(InventoryTestCase, 'test')
 
 
 if __name__ == '__main__':

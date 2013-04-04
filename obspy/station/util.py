@@ -38,6 +38,7 @@ class BaseNode(object):
     def code(self, value):
         if not value:
             msg = "A Code is required"
+            raise ValueError(msg)
         self.__code = str(value)
 
     @property
@@ -133,7 +134,7 @@ class Equipment(object):
             return self.__removal_date
 
         @removal_date.setter
-        def installation_date(self, value):
+        def removal_date(self, value):
             if value is None or isinstance(value, UTCDateTime):
                 self.__removal_date = value
                 return
@@ -271,7 +272,7 @@ class PhoneNumber(object):
     def phone_number(self, value):
         if re.match(self.phone_pattern, value) is None:
             msg = "phone_number needs to match the pattern '[0-9]+-[0-9]+'"
-            raise ValueError(value)
+            raise ValueError(msg)
         self.__phone_number = value
 
 
