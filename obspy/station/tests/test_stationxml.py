@@ -94,6 +94,17 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(module_URI_line,
             "<ModuleURI>http://www.obspy.org</ModuleURI>")
 
+    def test_reading_other_module_tags(self):
+        """
+        Even though the ObsPy Tags are always written, other tags should be
+        able to be read.
+        """
+        filename = os.path.join(self.data_dir,
+            "minimal_with_non_obspy_module_tags_station.xml")
+        inv = obspy.station.readInventory(filename)
+        self.assertEqual(inv.module, "Some Random Module")
+        self.assertEqual(inv.module_uri, "http://www.some-random.site")
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

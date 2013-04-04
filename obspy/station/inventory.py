@@ -54,7 +54,8 @@ class SeismicInventory(object):
 
     In essence just a container for one or more networks.
     """
-    def __init__(self, networks, source, sender=None, created=None):
+    def __init__(self, networks, source, sender=None, created=None,
+            module=None, module_uri=None):
         """
         :type networks: List of :class:`~obspy.station.network.SeismicNetwork`
         :param networks: A list of networks part of this inventory.
@@ -65,10 +66,19 @@ class SeismicInventory(object):
         :type created: :class:`~obspy.core.utcddatetime.UTCDateTime`
         :param created: The time when the document was created. Will be set to
             the current time if not given. Optional.
+        :type module: String
+        :param module: Name of the software module that generated this
+            document.
+        :type module_uri: String
+        :param module_uri: This is the address of the query that generated the
+            document, or, if applicable, the address of the software that
+            generated this document.
         """
         self.networks = networks
         self.source = source
         self.sender = sender
+        self.module = module
+        self.module_uri = module_uri
         # Set the created field to the current time if not given otherwise.
         if created is None:
             self.created = obspy.UTCDateTime()

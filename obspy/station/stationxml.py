@@ -84,13 +84,17 @@ def read_StationXML(path_or_file_object):
     source = root.find(_ns("Source")).text
     created = obspy.UTCDateTime(root.find(_ns("Created")).text)
 
+    # These are optional
+    module = _tag2obj(root, _ns("Module"), str)
+    module_uri = _tag2obj(root, _ns("ModuleURI"), str)
+
     networks = []
     for network in root.findall(_ns("Network")):
         network = obspy.station.SeismicNetwork(network.get("code"))
         networks.append(network)
 
     inv = obspy.station.SeismicInventory(networks=networks, source=source,
-        created=created)
+        created=created, module=module, module_uri=module_uri)
     return inv
 
 
@@ -146,6 +150,13 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
         return
     with open(file_or_file_object, "wt") as fh:
         fh.write(str_repr)
+
+
+def _tag2obj(element, tag, convert):
+    try:
+        return convert(element.find(tag).text)
+    except:
+        None
 
 
 def _format_time(value):
