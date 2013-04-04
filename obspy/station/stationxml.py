@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-DESCRIPTION
+File dealing with the StationXML format.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -10,6 +10,7 @@ DESCRIPTION
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import inspect
+from io import BytesIO
 from lxml import etree
 from lxml.builder import E
 import os
@@ -35,7 +36,7 @@ def is_StationXML(path_or_file_object):
     return validate_StationXML(path_or_file_object)[0]
 
 
-def validate_StationXML(path_or_file_object):
+def validate_StationXML(path_or_object):
     """
     Checks if the given path is a valid StationXML file.
 
@@ -43,7 +44,8 @@ def validate_StationXML(path_or_file_object):
     was successful or not. The second item is a list of all found validation
     errors, if existant.
 
-    :path_or_file_object: Filename of file like object.
+    :path_or_object: Filename of file like object. Can also be an etree
+        element.
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
@@ -51,7 +53,14 @@ def validate_StationXML(path_or_file_object):
         "fdsn-station-1.0.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
-    xmldoc = etree.parse(path_or_file_object)
+
+    if isinstance(path_or_object, etree._Element):
+        xmldoc = path_or_object
+    else:
+        try:
+            xmldoc = etree.parse(path_or_object)
+        except etree.XMLSyntaxError:
+            return (False, ("Not a XML file.",))
 
     valid = xmlschema.validate(xmldoc)
 
@@ -86,15 +95,59 @@ def read_StationXML(path_or_file_object):
     return inv
 
 
-def write_StationXML(inventory, buffer):
+def write_StationXML(inventory, file_or_file_object, validate=False):
     """
     Writes an inventory object to a buffer.
 
     :type inventory: :class:`~obspy.station.inventory.SeismicInventory`
     :param inventory: The inventory instance to be written.
-    :type buffer: Open file or file-like object.
-    :param buffer: The file buffer object the StationXML will be written to.
+    :param file_or_file_object: The file or file-like object to be written to.
+    :type validate: Boolean
+    :type validate: If True, the created document will be validated with the
+        StationXML schema before being written. Useful for debugging or if you
+        don't trust ObsPy. Defaults to False.
     """
-    # Use the etree factory to create the very basic structure.
-    xml_doc = E.FSDNStationXML(
-        E.Source(str(inventory.source)))
+    root = etree.Element(
+        "FDSNStationXML",
+        attrib={
+            "xmlns": "http://www.fdsn.org/xml/station/1",
+            "schemaVersion": SCHEMA_VERSION}
+    )
+    etree.SubElement(root, "Source").text = inventory.source
+    etree.SubElement(root, "Created").text = _format_time(inventory.created)
+
+    for network in inventory.networks:
+        _write_network(root, network)
+
+    str_repr = etree.tostring(root, pretty_print=True, xml_declaration=True,
+        encoding="UTF-8")
+
+    # The validation has to be done after parsing once again so that the
+    # namespaces are correctly assembled.
+    if validate is True:
+        buf = BytesIO(str_repr)
+        validates, errors = validate_StationXML(buf)
+        buf.close()
+        if validates is False:
+            msg = "The created file fails to validate.\n"
+            for err in errors:
+                msg += "\t%s\n" % err
+            raise Exception(msg)
+
+    if hasattr(file_or_file_object, "write") and \
+            hasattr(file_or_file_object.write, "__call__"):
+        file_or_file_object.write(str_repr)
+        return
+    with open(file_or_file_object, "wt") as fh:
+        fh.write(str_repr)
+
+
+def _format_time(value):
+    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+
+def _write_network(parent, network):
+    """
+    Helper function converting a SeismicNetwork instance to an etree.Element.
+    """
+    elem = etree.SubElement(parent, "Network", {"code": network.code})

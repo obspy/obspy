@@ -40,3 +40,6 @@ class SeismicNetwork(BaseNode):
             kwargs.get("selected_number_of_stations", None)
 
         super(SeismicNetwork, self).__init__(code, *args, **kwargs)
+
+    def __short_str__(self):
+        return "%s" % self.code

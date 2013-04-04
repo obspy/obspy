@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#d!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Provides the Inventory class.
@@ -13,12 +13,13 @@ import obspy
 from obspy.station import stationxml
 
 
-# Manual "plug-in" system. Likely sufficient for the limited number of possible
-# formats.
+# Manual "plug-in" system. Likely sufficient for the limited number of
+# available formats.
 FORMAT_FCTS = {
     "stationxml": {
         "is_fct": stationxml.is_StationXML,
-        "read_fct": stationxml.read_StationXML}
+        "read_fct": stationxml.read_StationXML,
+        "write_fct": stationxml.write_StationXML}
 }
 
 
@@ -62,15 +63,47 @@ class SeismicInventory(object):
         :type sender: String
         :param sender: Name of the institution sending this message. Optional.
         :type created: :class:`~obspy.core.utcddatetime.UTCDateTime`
-        :param creatd: The time when the document was created. Will be set to
+        :param created: The time when the document was created. Will be set to
             the current time if not given. Optional.
         """
         self.networks = networks
+        self.source = source
+        self.sender = sender
         # Set the created field to the current time if not given otherwise.
         if created is None:
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __str__(self):
+        ret_str = "Seismic Inventory created at %s\n" % str(self.created)
+        ret_str += "\tSending institution: %s%s\n" % (self.source,
+            "(%s)" % self.sender if self.sender else "")
+        ret_str += "\tContains %i network%s:\n" % (len(self.networks),
+            "s" if len(self.networks) > 1 else "")
+        for network in self.networks:
+            ret_str += "\t\t%s" % network.__short_str__()
+        return ret_str
+
+    def write(self, path_or_file_object, format, **kwargs):
+        """
+        Writes the seismic inventory object to a file or file-like object in
+        the specified format.
+
+        :param path_or_file_object: Filename or file-like object to be written
+            to.
+        :param format: The format of the written file.
+        """
+        available_write_formats = [key for key, value in
+            FORMAT_FCTS.iteritems() if "write_fct" in value]
+
+        fileformat = format.lower()
+        if fileformat not in available_write_formats:
+            msg = "Unsupported format '%s'.\nSupported formats: %s" % (
+                format, ", ".join(sorted(available_write_formats)))
+            raise ValueError(msg)
+        return FORMAT_FCTS[fileformat]["write_fct"](self, path_or_file_object,
+            **kwargs)
 
     @property
     def networks(self):

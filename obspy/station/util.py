@@ -20,10 +20,10 @@ class BaseNode(object):
         types.Station
     """
     def __init__(self, code, *args, **kwargs):
-        self.comments = kwargs.get("comments", [])
+        self.code = code
 
+        self.comments = kwargs.get("comments", [])
         self.description = kwargs.get("description", None)
-        self.code = kwargs.get("code")
         self.starttime = kwargs.get("starttime", None)
         self.endtime = kwargs.get("endtime", None)
         self.restricted_status = kwargs.get("restricted_status", None)
