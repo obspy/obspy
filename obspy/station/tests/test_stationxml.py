@@ -136,6 +136,26 @@ class StationXMLTestCase(unittest.TestCase):
         for line, org_line in izip(lines, org_lines):
             self.assertEqual(line, org_line)
 
+    def test_reading_and_writing_full_network_tag(self):
+        """
+        Tests the reading and writing of a file with a more or less full
+        network tag.
+        """
+        filename = os.path.join(self.data_dir,
+            "full_network_field_station.xml")
+        inv = obspy.station.readInventory(filename)
+
+        self.assertEqual(len(inv.networks), 1)
+        net = inv.networks[0]
+        self.assertEqual(net.code, "PY")
+        self.assertEqual(net.start_date, obspy.UTCDateTime(2011, 1, 1))
+        self.assertEqual(net.end_date, obspy.UTCDateTime(2012, 1, 1))
+        self.assertEqual(net.restricted_status, "open")
+        self.assertEqual(net.alternate_code, "PYY")
+        self.assertEqual(net.historical_code, "YYP")
+        self.assertEqual(net.description, "Some Description...")
+        self.assertEqual(len(net.comments), 2)
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

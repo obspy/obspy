@@ -91,12 +91,30 @@ def read_StationXML(path_or_file_object):
 
     networks = []
     for network in root.findall(_ns("Network")):
-        network = obspy.station.SeismicNetwork(network.get("code"))
-        networks.append(network)
+        networks.append(_read_network(network, _ns))
 
     inv = obspy.station.SeismicInventory(networks=networks, source=source,
         sender=sender, created=created, module=module, module_uri=module_uri)
     return inv
+
+
+def _read_network(net_element, _ns):
+    network = obspy.station.SeismicNetwork(net_element.get("code"))
+    network.start_date = _attr2obj(net_element, "startDate", obspy.UTCDateTime)
+    network.end_date = _attr2obj(net_element, "endDate", obspy.UTCDateTime)
+    network.restricted_status = \
+        _attr2obj(net_element, "restrictedStatus", str)
+    network.alternate_code = _attr2obj(net_element, "alternateCode", str)
+    network.historical_code = _attr2obj(net_element, "historicalCode", str)
+    network.description = _tag2obj(net_element, _ns("Description"), str)
+    network.comments = []
+    for comment in net_element.findall(_ns("Comment")):
+        network.comments.append(_read_comment(comment, _ns))
+    return network
+
+
+def _read_comment(comment_element, _ns):
+    return []
 
 
 def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
@@ -158,6 +176,13 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
 def _tag2obj(element, tag, convert):
     try:
         return convert(element.find(tag).text)
+    except:
+        None
+
+
+def _attr2obj(element, attr, convert):
+    try:
+        return convert(element.get(attr))
     except:
         None
 

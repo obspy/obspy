@@ -291,3 +291,24 @@ class ExternalReference(object):
         """
         self.uri = uri
         self.description = description
+
+
+class Comment(object):
+    """
+    From the StationXML definition:
+        Container for a comment or log entry. Corresponds to SEED blockettes
+        31, 51 and 59.
+    """
+    def __init__(self, value, begin_effective_time=None,
+            end_effective_time=None, authors=[]):
+        """
+        :type value: String
+        :param value: The actual comment string
+        :type begin_effective_date:
+            :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param begin_effective_date: The effective start date
+        :type end_effective_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_effective_date: The effective end date
+
+        """
+        pass
