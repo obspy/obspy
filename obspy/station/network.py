@@ -20,8 +20,10 @@ class SeismicNetwork(BaseNode):
         other descriptive information can be included in the Description
         element. The Network can contain 0 or more Stations.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, code, *args, **kwargs):
         """
+        :type code: String
+        :type code: The network code.
         :type total_number_of_stations: int
         :param  total_number_of_stations: The total number of stations
             contained in this networkork, including inactive or terminated
@@ -37,4 +39,4 @@ class SeismicNetwork(BaseNode):
         self.selected_number_of_stations = \
             kwargs.get("selected_number_of_stations", None)
 
-        super(SeismicNetwork, self).__init__(*args, **kwargs)
+        super(SeismicNetwork, self).__init__(code, *args, **kwargs)

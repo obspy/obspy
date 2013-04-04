@@ -19,7 +19,7 @@ class BaseNode(object):
         A base node type for derivation from: Network, Station and Channel
         types.Station
     """
-    def __init__(self, code):
+    def __init__(self, code, *args, **kwargs):
         self.comments = kwargs.get("comments", [])
 
         self.description = kwargs.get("description", None)
