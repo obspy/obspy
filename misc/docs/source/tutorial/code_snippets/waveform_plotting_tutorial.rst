@@ -94,6 +94,18 @@ setting the ``type`` parameter to ``'dayplot'``:
 
 .. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
 
+Event information can be included in the plot as well (experimental feature, syntax might change):
+
+    >>> from obspy import read
+    >>> st = read("/tmp/GR.BFO..LHZ.2012.108")
+    >>> st.filter("lowpass", freq=0.1, corners=2)
+    >>> st.plot(type="dayplot", interval=60, right_vertical_labels=False,
+    ...         vertical_scaling_range=5e3, one_tick_per_line=True,
+    ...         color=['k', 'r', 'b', 'g'], show_y_UTC_label=False,
+    ...         events={'min_magnitude': 6.5})
+
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_5.py
+
 --------------------
 Plot & Color Options
 --------------------
