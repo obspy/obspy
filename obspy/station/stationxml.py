@@ -85,6 +85,7 @@ def read_StationXML(path_or_file_object):
     created = obspy.UTCDateTime(root.find(_ns("Created")).text)
 
     # These are optional
+    sender = _tag2obj(root, _ns("Sender"), str)
     module = _tag2obj(root, _ns("Module"), str)
     module_uri = _tag2obj(root, _ns("ModuleURI"), str)
 
@@ -94,7 +95,7 @@ def read_StationXML(path_or_file_object):
         networks.append(network)
 
     inv = obspy.station.SeismicInventory(networks=networks, source=source,
-        created=created, module=module, module_uri=module_uri)
+        sender=sender, created=created, module=module, module_uri=module_uri)
     return inv
 
 
@@ -117,6 +118,8 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
             "schemaVersion": SCHEMA_VERSION}
     )
     etree.SubElement(root, "Source").text = inventory.source
+    if inventory.sender:
+        etree.SubElement(root, "Sender").text = inventory.sender
 
     # Undocumented flag that does not write the module flags. Useful for
     # testing. It is undocumented because it should not be used publicly.

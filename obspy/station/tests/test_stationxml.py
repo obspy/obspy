@@ -100,10 +100,41 @@ class StationXMLTestCase(unittest.TestCase):
         able to be read.
         """
         filename = os.path.join(self.data_dir,
-            "minimal_with_non_obspy_module_tags_station.xml")
+            "minimal_with_non_obspy_module_and_sender_tags_station.xml")
         inv = obspy.station.readInventory(filename)
         self.assertEqual(inv.module, "Some Random Module")
         self.assertEqual(inv.module_uri, "http://www.some-random.site")
+
+    def test_reading_and_writing_full_root_tag(self):
+        """
+        Tests reading and writing a full StationXML root tag.
+        """
+        filename = os.path.join(self.data_dir,
+            "minimal_with_non_obspy_module_and_sender_tags_station.xml")
+        inv = obspy.station.readInventory(filename)
+        self.assertEqual(inv.source, "OBS")
+        self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(inv.networks[0].code, "PY")
+        self.assertEqual(inv.module, "Some Random Module")
+        self.assertEqual(inv.module_uri, "http://www.some-random.site")
+        self.assertEqual(inv.sender, "The ObsPy Team")
+
+        # Write it again. Do not write the module tags.
+        file_buffer = BytesIO()
+        inv.write(file_buffer, format="StationXML", validate=True,
+            _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+        lines = [_i.strip() for _i in file_buffer.read().splitlines()]
+
+        with open(filename, "rb") as fh:
+            org_lines = fh.readlines()
+        # Remove the module tags.
+        org_lines = [_i.strip() for _i in org_lines
+            if not _i.strip().startswith("<Module")]
+
+        for line, org_line in izip(lines, org_lines):
+            self.assertEqual(line, org_line)
 
 
 def suite():
