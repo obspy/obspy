@@ -483,25 +483,25 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         sp1 = Parser(filename)
         # write XML-SEED
-        tempfile = NamedTemporaryFile().name
-        sp1.writeXSEED(tempfile)
-        # parse XML-SEED
-        sp2 = Parser(tempfile)
-        # create RESP files
-        _resp_list = sp2.getRESP()
-        os.remove(tempfile)
+        with NamedTemporaryFile() as fh:
+            tempfile = fh.name
+            sp1.writeXSEED(tempfile)
+            # parse XML-SEED
+            sp2 = Parser(tempfile)
+            # create RESP files
+            _resp_list = sp2.getRESP()
         ### example 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
         sp1 = Parser(filename)
         # write XML-SEED
-        tempfile = NamedTemporaryFile().name
-        sp1.writeXSEED(tempfile)
-        # parse XML-SEED
-        sp2 = Parser(tempfile)
-        # create RESP files
-        _resp_list = sp2.getRESP()
-        os.remove(tempfile)
+        with NamedTemporaryFile() as fh:
+            tempfile = fh.name
+            sp1.writeXSEED(tempfile)
+            # parse XML-SEED
+            sp2 = Parser(tempfile)
+            # create RESP files
+            _resp_list = sp2.getRESP()
 
     def test_compareBlockettes(self):
         """
@@ -642,12 +642,13 @@ class ParserTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'dataless.seed.BW_DHFO')
         parser = Parser()
         parser.read(filename)
-        tempfile = NamedTemporaryFile().name
-        # this will create two files due to two entries in dataless
-        parser.writeXSEED(tempfile, split_stations=True)
-        os.remove(tempfile)
-        # the second filename is appended with the timestamp of start period
-        os.remove(tempfile + '.1301529600.0.xml')
+        with NamedTemporaryFile() as fh:
+            tempfile = fh.name
+            # this will create two files due to two entries in dataless
+            parser.writeXSEED(tempfile, split_stations=True)
+            # the second filename is appended with the timestamp of start
+            # period
+            os.remove(tempfile + '.1301529600.0.xml')
 
 
 def suite():

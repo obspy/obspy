@@ -696,20 +696,14 @@ class Client(object):
         if filename:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
-        tf = NamedTemporaryFile()
-        tf.write(data)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        with NamedTemporaryFile() as tf:
+            tf.write(data)
+            # read stream using obspy.mseed
+            tf.seek(0)
+            try:
+                stream = read(tf.name, 'MSEED')
+            except:
+                stream = Stream()
         return stream
 
     def resp(self, network, station, location="*", channel="*",
@@ -1052,20 +1046,14 @@ class Client(object):
         if filename:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
-        tf = NamedTemporaryFile()
-        tf.write(data)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        with NamedTemporaryFile() as tf:
+            tf.write(data)
+            # read stream using obspy.mseed
+            tf.seek(0)
+            try:
+                stream = read(tf.name, 'MSEED')
+            except:
+                stream = Stream()
         return stream
 
     def bulkdataselect(self, bulk, quality=None, filename=None,
@@ -1154,20 +1142,14 @@ class Client(object):
         if filename:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
-        tf = NamedTemporaryFile()
-        tf.write(data)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        with NamedTemporaryFile() as tf:
+            tf.write(data)
+            # read stream using obspy.mseed
+            tf.seek(0)
+            try:
+                stream = read(tf.name, 'MSEED')
+            except:
+                stream = Stream()
         return stream
 
     def availability(self, network="*", station="*", location="*",
@@ -1869,21 +1851,18 @@ class Client(object):
                 # ugly way to show an image
                 from matplotlib import image
                 import matplotlib.pyplot as plt
-                # need temporary file for reading into matplotlib
-                tf = NamedTemporaryFile()
-                tf.write(data)
-                tf.close()
                 # create new figure
                 fig = plt.figure()
                 # new axes using full window
                 ax = fig.add_axes([0, 0, 1, 1])
-                # force matplotlib to use internal PNG reader. image.imread
-                # will use PIL if available
-                img = image._png.read_png(tf.name)
+                # need temporary file for reading into matplotlib
+                with NamedTemporaryFile() as tf:
+                    tf.write(data)
+                    # force matplotlib to use internal PNG reader. image.imread
+                    # will use PIL if available
+                    img = image._png.read_png(tf.name)
                 # add image to axis
                 ax.imshow(img)
-                # delete temporary file
-                os.remove(tf.name)
                 # hide axes
                 ax.axison = False
                 # show plot

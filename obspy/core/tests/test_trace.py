@@ -17,8 +17,8 @@ class TraceTestCase(unittest.TestCase):
         Tests the __len__ and count methods of the Trace class.
         """
         trace = Trace(data=np.arange(1000))
-        self.assertEquals(len(trace), 1000)
-        self.assertEquals(trace.count(), 1000)
+        self.assertEqual(len(trace), 1000)
+        self.assertEqual(trace.count(), 1000)
 
     def test_ltrim(self):
         """
@@ -38,73 +38,73 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([100, 101, 102, 103, 104]))
-        self.assertEquals(len(tr.data), 900)
-        self.assertEquals(tr.stats.npts, 900)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start + 0.5)
-        self.assertEquals(tr.stats.endtime, end)
+        self.assertEqual(len(tr.data), 900)
+        self.assertEqual(tr.stats.npts, 900)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start + 0.5)
+        self.assertEqual(tr.stats.endtime, end)
         # ltrim 202 samples
         tr = deepcopy(trace)
         tr._ltrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([202, 203, 204, 205, 206]))
-        self.assertEquals(len(tr.data), 798)
-        self.assertEquals(tr.stats.npts, 798)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start + 1.010)
-        self.assertEquals(tr.stats.endtime, end)
+        self.assertEqual(len(tr.data), 798)
+        self.assertEqual(tr.stats.npts, 798)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start + 1.010)
+        self.assertEqual(tr.stats.endtime, end)
         # ltrim to UTCDateTime
         tr = deepcopy(trace)
         tr._ltrim(UTCDateTime(2000, 1, 1, 0, 0, 1, 10000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[0:5],
                                       np.array([202, 203, 204, 205, 206]))
-        self.assertEquals(len(tr.data), 798)
-        self.assertEquals(tr.stats.npts, 798)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start + 1.010)
-        self.assertEquals(tr.stats.endtime, end)
+        self.assertEqual(len(tr.data), 798)
+        self.assertEqual(tr.stats.npts, 798)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start + 1.010)
+        self.assertEqual(tr.stats.endtime, end)
         # some sanity checks
         # negative start time as datetime
         tr = deepcopy(trace)
         tr._ltrim(start - 1, pad=True)
         tr.verify()
-        self.assertEquals(tr.stats.starttime, start - 1)
+        self.assertEqual(tr.stats.starttime, start - 1)
         np.testing.assert_array_equal(trace.data, tr.data[200:])
-        self.assertEquals(tr.stats.endtime, trace.stats.endtime)
+        self.assertEqual(tr.stats.endtime, trace.stats.endtime)
         # negative start time as integer
         tr = deepcopy(trace)
         tr._ltrim(-100, pad=True)
         tr.verify()
-        self.assertEquals(tr.stats.starttime, start - 100)
+        self.assertEqual(tr.stats.starttime, start - 100)
         delta = 100 * trace.stats.sampling_rate
         np.testing.assert_array_equal(trace.data, tr.data[delta:])
-        self.assertEquals(tr.stats.endtime, trace.stats.endtime)
+        self.assertEqual(tr.stats.endtime, trace.stats.endtime)
         # start time > end time
         tr = deepcopy(trace)
         tr._ltrim(trace.stats.endtime + 100)
         tr.verify()
-        self.assertEquals(tr.stats.starttime,
+        self.assertEqual(tr.stats.starttime,
                           trace.stats.endtime + 100)
         np.testing.assert_array_equal(tr.data, np.empty(0))
-        self.assertEquals(tr.stats.endtime, tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
         tr._ltrim(5)
         tr.verify()
-        self.assertEquals(tr.stats.starttime,
+        self.assertEqual(tr.stats.starttime,
                           trace.stats.starttime + 5)
         np.testing.assert_array_equal(tr.data, np.empty(0))
-        self.assertEquals(tr.stats.endtime, tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
         tr = deepcopy(trace)
         tr._ltrim(5.1)
         tr.verify()
-        self.assertEquals(tr.stats.starttime,
+        self.assertEqual(tr.stats.starttime,
                           trace.stats.starttime + 5.1)
         np.testing.assert_array_equal(tr.data, np.empty(0))
-        self.assertEquals(tr.stats.endtime, tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, tr.stats.starttime)
 
     def test_rtrim(self):
         """
@@ -123,56 +123,56 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([895, 896, 897, 898, 899]))
-        self.assertEquals(len(tr.data), 900)
-        self.assertEquals(tr.stats.npts, 900)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start)
-        self.assertEquals(tr.stats.endtime, end - 0.5)
+        self.assertEqual(len(tr.data), 900)
+        self.assertEqual(tr.stats.npts, 900)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start)
+        self.assertEqual(tr.stats.endtime, end - 0.5)
         # rtrim 202 samples
         tr = deepcopy(trace)
         tr._rtrim(1.010)
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([793, 794, 795, 796, 797]))
-        self.assertEquals(len(tr.data), 798)
-        self.assertEquals(tr.stats.npts, 798)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start)
-        self.assertEquals(tr.stats.endtime, end - 1.010)
+        self.assertEqual(len(tr.data), 798)
+        self.assertEqual(tr.stats.npts, 798)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start)
+        self.assertEqual(tr.stats.endtime, end - 1.010)
         # rtrim 1 minute via UTCDateTime
         tr = deepcopy(trace)
         tr._rtrim(UTCDateTime(2000, 1, 1, 0, 0, 3, 985000))
         tr.verify()
         np.testing.assert_array_equal(tr.data[-5:],
                                       np.array([793, 794, 795, 796, 797]))
-        self.assertEquals(len(tr.data), 798)
-        self.assertEquals(tr.stats.npts, 798)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start)
-        self.assertEquals(tr.stats.endtime, end - 1.010)
+        self.assertEqual(len(tr.data), 798)
+        self.assertEqual(tr.stats.npts, 798)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start)
+        self.assertEqual(tr.stats.endtime, end - 1.010)
         # some sanity checks
         # negative end time
         tr = deepcopy(trace)
         t = UTCDateTime(1999, 12, 31)
         tr._rtrim(t)
         tr.verify()
-        self.assertEquals(tr.stats.endtime, t)
+        self.assertEqual(tr.stats.endtime, t)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         # negative end time with given seconds
         tr = deepcopy(trace)
         tr._rtrim(100)
         tr.verify()
-        self.assertEquals(tr.stats.endtime, trace.stats.endtime - 100)
+        self.assertEqual(tr.stats.endtime, trace.stats.endtime - 100)
         np.testing.assert_array_equal(tr.data, np.empty(0))
-        self.assertEquals(tr.stats.endtime, tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # end time > start time
         tr = deepcopy(trace)
         t = UTCDateTime(2001)
         tr._rtrim(t)
         tr.verify()
-        self.assertEquals(tr.stats.endtime, t)
+        self.assertEqual(tr.stats.endtime, t)
         np.testing.assert_array_equal(tr.data, np.empty(0))
-        self.assertEquals(tr.stats.endtime, tr.stats.starttime)
+        self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # end time > start time given seconds
         tr = deepcopy(trace)
         tr._rtrim(5.1)
@@ -180,7 +180,7 @@ class TraceTestCase(unittest.TestCase):
         delta = int(math.floor(round(5.1 * trace.stats.sampling_rate, 7)))
         endtime = trace.stats.starttime + trace.stats.delta * \
                   (trace.stats.npts - delta - 1)
-        self.assertEquals(tr.stats.endtime, endtime)
+        self.assertEqual(tr.stats.endtime, endtime)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         # end time == start time
         # returns one sample!
@@ -189,11 +189,11 @@ class TraceTestCase(unittest.TestCase):
         #XXX I do not understand why this fails!!!
         #tr.verify()
         np.testing.assert_array_equal(tr.data, np.array([0]))
-        self.assertEquals(len(tr.data), 1)
-        self.assertEquals(tr.stats.npts, 1)
-        self.assertEquals(tr.stats.sampling_rate, 200.0)
-        self.assertEquals(tr.stats.starttime, start)
-        self.assertEquals(tr.stats.endtime, start)
+        self.assertEqual(len(tr.data), 1)
+        self.assertEqual(tr.stats.npts, 1)
+        self.assertEqual(tr.stats.sampling_rate, 200.0)
+        self.assertEqual(tr.stats.starttime, start)
+        self.assertEqual(tr.stats.endtime, start)
 
     def test_rtrim_with_padding(self):
         """
@@ -247,11 +247,11 @@ class TraceTestCase(unittest.TestCase):
                                       np.array([896, 897, 898, 899, 900]))
         np.testing.assert_array_equal(trace.data[:5],
                                       np.array([100, 101, 102, 103, 104]))
-        self.assertEquals(len(trace.data), 801)
-        self.assertEquals(trace.stats.npts, 801)
-        self.assertEquals(trace.stats.sampling_rate, 200.0)
-        self.assertEquals(trace.stats.starttime, start + 0.5)
-        self.assertEquals(trace.stats.endtime, end - 0.5)
+        self.assertEqual(len(trace.data), 801)
+        self.assertEqual(trace.stats.npts, 801)
+        self.assertEqual(trace.stats.sampling_rate, 200.0)
+        self.assertEqual(trace.stats.starttime, start + 0.5)
+        self.assertEqual(trace.stats.endtime, end - 0.5)
 
     def test_trimAllDoesNotChangeDtype(self):
         """
@@ -286,18 +286,18 @@ class TraceTestCase(unittest.TestCase):
         # add
         trace = tr1 + tr2
         # stats
-        self.assertEquals(trace.stats.starttime, start)
-        self.assertEquals(trace.stats.endtime, start + 14.995)
-        self.assertEquals(trace.stats.sampling_rate, 200)
-        self.assertEquals(trace.stats.npts, 3000)
+        self.assertEqual(trace.stats.starttime, start)
+        self.assertEqual(trace.stats.endtime, start + 14.995)
+        self.assertEqual(trace.stats.sampling_rate, 200)
+        self.assertEqual(trace.stats.npts, 3000)
         # data
-        self.assertEquals(len(trace), 3000)
-        self.assertEquals(trace[0], 0)
-        self.assertEquals(trace[999], 999)
+        self.assertEqual(len(trace), 3000)
+        self.assertEqual(trace[0], 0)
+        self.assertEqual(trace[999], 999)
         self.assertTrue(is_masked(trace[1000]))
         self.assertTrue(is_masked(trace[1999]))
-        self.assertEquals(trace[2000], 999)
-        self.assertEquals(trace[2999], 0)
+        self.assertEqual(trace[2000], 999)
+        self.assertEqual(trace[2999], 0)
         # verify
         trace.verify()
 
@@ -316,18 +316,18 @@ class TraceTestCase(unittest.TestCase):
         # add
         trace = tr1 + tr2
         # stats
-        self.assertEquals(trace.stats.starttime, start)
-        self.assertEquals(trace.stats.endtime, start + 8.995)
-        self.assertEquals(trace.stats.sampling_rate, 200)
-        self.assertEquals(trace.stats.npts, 1800)
+        self.assertEqual(trace.stats.starttime, start)
+        self.assertEqual(trace.stats.endtime, start + 8.995)
+        self.assertEqual(trace.stats.sampling_rate, 200)
+        self.assertEqual(trace.stats.npts, 1800)
         # data
-        self.assertEquals(len(trace), 1800)
-        self.assertEquals(trace[0], 0)
-        self.assertEquals(trace[799], 799)
+        self.assertEqual(len(trace), 1800)
+        self.assertEqual(trace[0], 0)
+        self.assertEqual(trace[799], 799)
         self.assertTrue(trace[800].mask)
         self.assertTrue(trace[999].mask)
-        self.assertEquals(trace[1000], 799)
-        self.assertEquals(trace[1799], 0)
+        self.assertEqual(trace[1000], 799)
+        self.assertEqual(trace[1799], 0)
         # verify
         trace.verify()
 
@@ -340,7 +340,7 @@ class TraceTestCase(unittest.TestCase):
         # add
         trace = tr1 + tr1
         # should return exact the same values
-        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEqual(trace.stats, tr1.stats)
         np.testing.assert_array_equal(trace.data, tr1.data)
         # verify
         trace.verify()
@@ -360,7 +360,7 @@ class TraceTestCase(unittest.TestCase):
         # add
         trace = tr1 + tr2
         # should return exact the same values like trace 1
-        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEqual(trace.stats, tr1.stats)
         mask = np.zeros(len(tr1)).astype("bool")
         mask[200:401] = True
         np.testing.assert_array_equal(trace.data.mask, mask)
@@ -369,7 +369,7 @@ class TraceTestCase(unittest.TestCase):
         # add the other way around
         trace = tr2 + tr1
         # should return exact the same values like trace 1
-        self.assertEquals(trace.stats, tr1.stats)
+        self.assertEqual(trace.stats, tr1.stats)
         np.testing.assert_array_equal(trace.data.mask, mask)
         np.testing.assert_array_equal(trace.data.data[:200], tr1.data[:200])
         np.testing.assert_array_equal(trace.data.data[401:], tr1.data[401:])
@@ -1009,23 +1009,23 @@ class TraceTestCase(unittest.TestCase):
                                           fill_value='latest',
                                           sanity_checks=True)
             # check npts
-            self.assertEquals(traces[i].stats.npts, npts)
-            self.assertEquals(sum_trace.stats.npts, (i + 1) * npts)
+            self.assertEqual(traces[i].stats.npts, npts)
+            self.assertEqual(sum_trace.stats.npts, (i + 1) * npts)
             # check data
             np.testing.assert_array_equal(traces[i].data,
                                           np.arange(i * npts, (i + 1) * npts))
             np.testing.assert_array_equal(sum_trace.data,
                                           np.arange(0, (i + 1) * npts))
             # check delta
-            self.assertEquals(traces[i].stats.delta, org_trace.stats.delta)
-            self.assertEquals(sum_trace.stats.delta, org_trace.stats.delta)
+            self.assertEqual(traces[i].stats.delta, org_trace.stats.delta)
+            self.assertEqual(sum_trace.stats.delta, org_trace.stats.delta)
             # check sampling rates
-            self.assertAlmostEquals(traces[i].stats.sampling_rate,
+            self.assertAlmostEqual(traces[i].stats.sampling_rate,
                                     org_trace.stats.sampling_rate)
-            self.assertAlmostEquals(sum_trace.stats.sampling_rate,
+            self.assertAlmostEqual(sum_trace.stats.sampling_rate,
                                     org_trace.stats.sampling_rate)
             # check endtimes
-            self.assertEquals(traces[i].stats.endtime, sum_trace.stats.endtime)
+            self.assertEqual(traces[i].stats.endtime, sum_trace.stats.endtime)
 
     def test_verify(self):
         """
@@ -1070,7 +1070,7 @@ class TraceTestCase(unittest.TestCase):
         start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
         tr.stats.starttime = start
         tm = tr.times()
-        self.assertAlmostEquals(tm[-1], tr.stats.endtime - tr.stats.starttime)
+        self.assertAlmostEqual(tm[-1], tr.stats.endtime - tr.stats.starttime)
         tr.data = np.ma.ones(100)
         tr.data[30:40] = np.ma.masked
         tm = tr.times()

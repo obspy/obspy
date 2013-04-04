@@ -21,6 +21,15 @@ from obspy.core import AttribDict
 from header import MONTHS
 
 
+WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \
+    " This might cause basic header information reflected in the single " + \
+    "traces' stats to be wrong (e.g. recording delays, first sample " + \
+    "number, station code names, ..). Please check the complete list of " + \
+    "additional unmapped header fields that gets stored in " + \
+    "Trace.stats.seg2 and/or the manual of the source of the SEG2 files " + \
+    "for fields that might influence e.g. trace starttimes."
+
+
 class SEG2BaseError(Exception):
     """
     Base class for all SEG-2 specific errors.
@@ -150,7 +159,7 @@ class SEG2(object):
         # a free form section.
         self.stream.stats = AttribDict()
         self.stream.stats.seg2 = AttribDict()
-        self.parseFreeForm(self.file_pointer.read(\
+        self.parseFreeForm(self.file_pointer.read(
                            self.trace_pointers[0] - self.file_pointer.tell()),
                            self.stream.stats.seg2)
 
@@ -177,8 +186,6 @@ class SEG2(object):
             raise SEG2InvalidFileError(msg)
         size_of_this_block = unpack('%sH' % self.endian,
                                     trace_descriptor_block[2:4])[0]
-        _size_of_corresponding_data_block = \
-                unpack('%sL' % self.endian, trace_descriptor_block[4:8])[0]
         number_of_samples_in_data_block = \
                 unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
         data_format_code = unpack('B', trace_descriptor_block[12])[0]
@@ -190,12 +197,16 @@ class SEG2(object):
         elif data_format_code == 5:
             dtype = 'float64'
             sample_size = 8
-        elif (data_format_code == 1) or \
-             (data_format_code == 2) or \
-             (data_format_code == 3):
-            msg = '\nData format code %i not supported yet.\n' \
-                    % data_format_code
-            msg += 'Please contact the ObsPy developers with a sample file.'
+        elif data_format_code == 1:
+            dtype = 'int16'
+            sample_size = 2
+        elif data_format_code == 2:
+            dtype = 'int32'
+            sample_size = 4
+        elif data_format_code == 3:
+            msg = ('\nData format code 3 (20-bit SEG-D floating point) not '
+                   'supported yet.\nPlease contact the ObsPy developers with '
+                   'a sample file.')
             raise NotImplementedError(msg)
         else:
             msg = 'Unrecognized data format code'
@@ -204,15 +215,27 @@ class SEG2(object):
         # The rest of the trace block is free form.
         header = {}
         header['seg2'] = AttribDict()
-        self.parseFreeForm(\
+        self.parseFreeForm(
                          self.file_pointer.read(size_of_this_block - 32),
                           header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's starttime.
         header['starttime'] = deepcopy(self.starttime)
+        if 'DELAY' in header['seg2']:
+            if float(header['seg2']['DELAY']) != 0:
+                msg = "Non-zero value found in Trace's 'DELAY' field. " + \
+                      "This is not supported/tested yet and might lead " + \
+                      "to a wrong starttime of the Trace. Please contact " + \
+                      "the ObsPy developers with a sample file."
+                warnings.warn(msg)
+        header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
         # Unpack the data.
-        data = np.fromstring(self.file_pointer.read(\
+        data = np.fromstring(self.file_pointer.read(
                 number_of_samples_in_data_block * sample_size), dtype=dtype)
+        # Integrate SEG2 file header into each trace header
+        tmp = self.stream.stats.seg2.copy()
+        tmp.update(header['seg2'])
+        header['seg2'] = tmp
         return Trace(data=data, header=header)
 
     def parseFreeForm(self, free_form_str, attrib_dict):
@@ -284,9 +307,6 @@ def isSEG2(filename):
 
 def readSEG2(filename, **kwargs):  # @UnusedVariable
     seg2 = SEG2()
-    return seg2.readFile(filename)
-
-
-def writeSEG2(filename, **kwargs):  # @UnusedVariable
-    msg = 'Writing SEG-2 files is not implemented so far.'
-    raise NotImplementedError(msg)
+    st = seg2.readFile(filename)
+    warnings.warn(WARNING_HEADER)
+    return st

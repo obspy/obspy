@@ -101,11 +101,9 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
             # if this fails, create a temporary file which is read directly
             # from the file system
             pathname_or_url.seek(0)
-            fh = NamedTemporaryFile()
-            fh.write(pathname_or_url.read())
-            fh.close()
-            cat.extend(_read(fh.name, format, **kwargs).events)
-            os.remove(fh.name)
+            with NamedTemporaryFile() as fh:
+                fh.write(pathname_or_url.read())
+                cat.extend(_read(fh.name, format, **kwargs).events)
         pathname_or_url.seek(0)
     elif pathname_or_url.strip().startswith('<'):
         # XML string
@@ -115,11 +113,9 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
-        fh = NamedTemporaryFile(suffix=suffix)
-        fh.write(urllib2.urlopen(pathname_or_url).read())
-        fh.close()
-        cat.extend(_read(fh.name, format, **kwargs).events)
-        os.remove(fh.name)
+        with NamedTemporaryFile(suffix=suffix) as fh:
+            fh.write(urllib2.urlopen(pathname_or_url).read())
+            cat.extend(_read(fh.name, format, **kwargs).events)
     else:
         # file name
         pathname = pathname_or_url

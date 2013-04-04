@@ -48,10 +48,10 @@ class CoreTestCase(unittest.TestCase):
         Write/Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC')[0]
-        tempfile = NamedTemporaryFile().name
-        tr.write(tempfile, format='SAC')
-        tr1 = read(tempfile)[0]
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SAC')
+            tr1 = read(tempfile)[0]
         np.testing.assert_array_equal(tr.data, tr1.data)
         # this tests failed because SAC calculates the seismogram's
         # mean value in single precision and python in double
@@ -66,10 +66,10 @@ class CoreTestCase(unittest.TestCase):
         Write/Read files via L{obspy.Stream}
         """
         tr = read(self.filexy, format='SACXY')[0]
-        tempfile = NamedTemporaryFile().name
-        tr.write(tempfile, format='SACXY')
-        tr1 = read(tempfile)[0]
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SACXY')
+            tr1 = read(tempfile)[0]
         self.assertTrue(tr == tr1)
 
     def test_readwriteXYViaObspy(self):
@@ -77,10 +77,10 @@ class CoreTestCase(unittest.TestCase):
         Read files via L{obspy.Stream}
         """
         tr = read(self.file, format='SAC')[0]
-        tempfile = NamedTemporaryFile().name
-        tr.write(tempfile, format='SACXY')
-        tr1 = read(tempfile)[0]
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format='SACXY')
+            tr1 = read(tempfile)[0]
         self.assertEqual(tr1.stats['station'], 'STA')
         self.assertEqual(tr1.stats.npts, 100)
         self.assertEqual(tr1.stats['sampling_rate'], 1.0)
@@ -125,22 +125,22 @@ class CoreTestCase(unittest.TestCase):
         Writing artificial files via L{obspy.Stream}
         """
         st = Stream(traces=[Trace(header={'sac':{}}, data=self.testdata)])
-        tempfile = NamedTemporaryFile().name
-        st.write(tempfile, format='SAC')
-        tr = read(tempfile)[0]
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            st.write(tempfile, format='SAC')
+            tr = read(tempfile)[0]
         np.testing.assert_array_almost_equal(self.testdata, tr.data)
 
     def test_setVersion(self):
         """
         Tests if SAC version is set when writing
         """
-        tempfile = NamedTemporaryFile().name
         np.random.seed(815)
         st = Stream([Trace(data=np.random.randn(1000))])
-        st.write(tempfile, format="SAC")
-        st2 = read(tempfile, format="SAC")
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            st.write(tempfile, format="SAC")
+            st2 = read(tempfile, format="SAC")
         self.assertEqual(st2[0].stats['sac'].nvhdr, 6)
 
     def test_readAndWriteViaObsPy(self):
@@ -155,11 +155,11 @@ class CoreTestCase(unittest.TestCase):
         tr2 = st2[0]
         tr2.data = copy.deepcopy(tr.data)
         tr2.stats = copy.deepcopy(tr.stats)
-        tempfile = NamedTemporaryFile().name
-        st2.write(tempfile, format='SAC')
-        # read comparison trace
-        tr3 = read(tempfile)[0]
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            st2.write(tempfile, format='SAC')
+            # read comparison trace
+            tr3 = read(tempfile)[0]
         # check if equal
         self.assertEqual(tr3.stats['station'], tr.stats['station'])
         self.assertEqual(tr3.stats.npts, tr.stats.npts)
@@ -187,11 +187,10 @@ class CoreTestCase(unittest.TestCase):
         data = np.random.randint(0, 5000, 11947).astype("int32")
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
-        tmpfile = NamedTemporaryFile().name
-        st.write(tmpfile, format="SAC")
-        st2 = read(tmpfile, format="SAC")
-        # file must exist, we just created it
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            st.write(tmpfile, format="SAC")
+            st2 = read(tmpfile, format="SAC")
         # check all the required entries (see url in docstring)
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertEqual(st2[0].stats.npts, st[0].stats.npts)
@@ -214,10 +213,10 @@ class CoreTestCase(unittest.TestCase):
         t2 = sac.reftime
         self.assertAlmostEqual(t1.timestamp, t2.timestamp, 5)
         # see that iztype is written corretly
-        tempfile = NamedTemporaryFile().name
-        tr.write(tempfile, format="SAC")
-        sac2 = SacIO(tempfile)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format="SAC")
+            sac2 = SacIO(tempfile)
         self.assertEqual(sac2.iztype, 11)
         self.assertAlmostEqual(tr.stats.sac.b, sac2.b)
         self.assertAlmostEqual(t2.timestamp, sac2.reftime.timestamp, 5)
@@ -243,10 +242,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.starttime,
                          UTCDateTime("1981-03-29 10:38:23.459999"))
         # check that if we rewrite the file, nothing changed
-        tmpfile = NamedTemporaryFile().name
-        tr.write(tmpfile, format="SAC")
-        filecmp.cmp(file, tmpfile, shallow=False)
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            tr.write(tmpfile, format="SAC")
+            filecmp.cmp(file, tmpfile, shallow=False)
         # test some more entries, I can see from the plot
         self.assertEqual(tr.stats.station, "CDV")
         self.assertEqual(tr.stats.channel, "Q")
@@ -267,14 +266,14 @@ class CoreTestCase(unittest.TestCase):
         # now sac reference time and reftime of seismogram must be the
         # same
         tr.stats.sac.b = -12345.0
-        tmpfile = NamedTemporaryFile().name
-        tr.write(tmpfile, format="SAC")
-        tr2 = read(tmpfile)[0]
-        self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
-        self.assertEqual(tr2.stats.sac.b, -12345.0)
-        sac_ref_time2 = SacIO(tmpfile).reftime
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            tr.write(tmpfile, format="SAC")
+            tr2 = read(tmpfile)[0]
+            self.assertEqual(tr2.stats.starttime.timestamp, 269596810.0)
+            self.assertEqual(tr2.stats.sac.b, -12345.0)
+            sac_ref_time2 = SacIO(tmpfile).reftime
         self.assertEqual(sac_ref_time2.timestamp, 269596810.0)
-        os.remove(tmpfile)
 
     def test_issue156(self):
         """
@@ -284,20 +283,20 @@ class CoreTestCase(unittest.TestCase):
         tr = Trace()
         tr.stats.delta = 0.01
         tr.data = np.arange(0, 3000)
-        sac_file = NamedTemporaryFile().name
-        tr.write(sac_file, 'SAC')
-        st = read(sac_file)
-        os.remove(sac_file)
+        with NamedTemporaryFile() as tf:
+            sac_file = tf.name
+            tr.write(sac_file, 'SAC')
+            st = read(sac_file)
         self.assertEquals(st[0].stats.delta, 0.01)
         self.assertEquals(st[0].stats.sampling_rate, 100.0)
         #2
         tr = Trace()
         tr.stats.delta = 0.005
         tr.data = np.arange(0, 2000)
-        sac_file = NamedTemporaryFile().name
-        tr.write(sac_file, 'SAC')
-        st = read(sac_file)
-        os.remove(sac_file)
+        with NamedTemporaryFile() as tf:
+            sac_file = tf.name
+            tr.write(sac_file, 'SAC')
+            st = read(sac_file)
         self.assertEquals(st[0].stats.delta, 0.005)
         self.assertEquals(st[0].stats.sampling_rate, 200.0)
 
@@ -308,10 +307,10 @@ class CoreTestCase(unittest.TestCase):
         tr = Trace()
         tr.stats.delta = 0.01
         tr.data = np.arange(0, 3000)
-        sac_file = NamedTemporaryFile().name
-        tr.write(sac_file, 'SACXY')
-        st = read(sac_file)
-        os.remove(sac_file)
+        with NamedTemporaryFile() as tf:
+            sac_file = tf.name
+            tr.write(sac_file, 'SACXY')
+            st = read(sac_file)
         self.assertEquals(st[0].stats.delta, 0.01)
         self.assertEquals(st[0].stats.sampling_rate, 100.0)
 
@@ -325,10 +324,10 @@ class CoreTestCase(unittest.TestCase):
                     'unused11', 'unused12']
         for i, header_value in enumerate(not_used):
             tr1.stats.sac[header_value] = i
-        sac_file = NamedTemporaryFile().name
-        tr1.write(sac_file, 'SAC')
-        tr2 = read(sac_file)[0]
-        os.remove(sac_file)
+        with NamedTemporaryFile() as tf:
+            sac_file = tf.name
+            tr1.write(sac_file, 'SAC')
+            tr2 = read(sac_file)[0]
         for i, header_value in enumerate(not_used):
             self.assertEquals(int(tr2.stats.sac[header_value]), i)
 
@@ -344,11 +343,10 @@ class CoreTestCase(unittest.TestCase):
         data = np.random.randint(0, 5000, 100).astype("int32")
         st = Stream([Trace(header=head, data=data)])
         # write them as SAC
-        tmpfile = NamedTemporaryFile().name
-        st.write(tmpfile, format="SAC")
-        st2 = read(tmpfile, format="SAC")
-        # file must exist, we just created it
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            st.write(tmpfile, format="SAC")
+            st2 = read(tmpfile, format="SAC")
         # check all the required entries (see url in docstring)
         self.assertEqual(st2[0].stats.starttime, st[0].stats.starttime)
         self.assertAlmostEqual(st2[0].stats.sac.b, 0.000999)
@@ -371,13 +369,13 @@ class CoreTestCase(unittest.TestCase):
         for format in ['SAC', 'SACXY']:
             for num in range(0, 4):
                 tr = Trace(data=np.arange(num))
-                tempfile = NamedTemporaryFile().name
-                tr.write(tempfile, format=format)
-                # test results
-                st = read(tempfile, format=format)
+                with NamedTemporaryFile() as tf:
+                    tempfile = tf.name
+                    tr.write(tempfile, format=format)
+                    # test results
+                    st = read(tempfile, format=format)
                 self.assertEquals(len(st), 1)
                 self.assertEquals(len(st[0]), num)
-                os.remove(tempfile)
 
     def test_issue390(self):
         """

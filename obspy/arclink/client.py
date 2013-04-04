@@ -305,22 +305,24 @@ class Client(object):
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
         self._writeln('DOWNLOAD %d' % req_id)
-        fd = self._client.get_socket().makefile('rb+')
-        length = int(fd.readline(100).strip())
-        data = ''
-        while len(data) < length:
-            buf = fd.read(min(4096, length - len(data)))
-            data += buf
-        buf = fd.readline(100).strip()
-        if buf != "END" or len(data) != length:
-            raise Exception('Wrong length!')
-        if self.debug:
-            if data.startswith('<?xml'):
-                print(data)
-            else:
-                print("%d bytes of data read" % len(data))
-        self._writeln('PURGE %d' % req_id)
-        self._bye()
+        try:
+            fd = self._client.get_socket().makefile('rb+')
+            length = int(fd.readline(100).strip())
+            data = ''
+            while len(data) < length:
+                buf = fd.read(min(4096, length - len(data)))
+                data += buf
+            buf = fd.readline(100).strip()
+            if buf != "END" or len(data) != length:
+                raise Exception('Wrong length!')
+            if self.debug:
+                if data.startswith('<?xml'):
+                    print(data)
+                else:
+                    print("%d bytes of data read" % len(data))
+        finally:
+            self._writeln('PURGE %d' % req_id)
+            self._bye()
         # check for encryption
         if 'encrypted="true"' in xml_doc:
             # extract dcid
@@ -938,8 +940,8 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str
-        :param filename: Name of the output file.
+        :type filename: str or file like object
+        :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
         :type station: str
@@ -978,9 +980,11 @@ class Client(object):
             data = self._fetch(rtype, rdata)
         else:
             raise ValueError("Unsupported format %s" % format)
-        fh = open(filename, "wb")
-        fh.write(data)
-        fh.close()
+        if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
+            filename.write(data)
+        else:
+            with open(filename, "wb") as open_file:
+                open_file.write(data)
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),

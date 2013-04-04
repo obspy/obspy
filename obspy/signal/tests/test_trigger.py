@@ -31,10 +31,10 @@ class TriggerTestCase(unittest.TestCase):
         """
         nsta, nlta = 5, 10
         c1 = recSTALTA(self.data, nsta, nlta)
-        self.assertAlmostEquals(c1[99], 0.80810165)
-        self.assertAlmostEquals(c1[100], 0.75939449)
-        self.assertAlmostEquals(c1[101], 0.91763978)
-        self.assertAlmostEquals(c1[102], 0.97465004)
+        self.assertAlmostEqual(c1[99], 0.80810165)
+        self.assertAlmostEqual(c1[100], 0.75939449)
+        self.assertAlmostEqual(c1[101], 0.91763978)
+        self.assertAlmostEqual(c1[102], 0.97465004)
 
     def test_recSTALTAPy(self):
         """
@@ -42,10 +42,10 @@ class TriggerTestCase(unittest.TestCase):
         """
         nsta, nlta = 5, 10
         c2 = recSTALTAPy(self.data, nsta, nlta)
-        self.assertAlmostEquals(c2[99], 0.80810165)
-        self.assertAlmostEquals(c2[100], 0.75939449)
-        self.assertAlmostEquals(c2[101], 0.91763978)
-        self.assertAlmostEquals(c2[102], 0.97465004)
+        self.assertAlmostEqual(c2[99], 0.80810165)
+        self.assertAlmostEqual(c2[100], 0.75939449)
+        self.assertAlmostEqual(c2[101], 0.91763978)
+        self.assertAlmostEqual(c2[102], 0.97465004)
 
     def test_recSTALTARaise(self):
         """
@@ -85,9 +85,9 @@ class TriggerTestCase(unittest.TestCase):
                 200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
         ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
-        self.assertAlmostEquals(ptime, 30.6350002289)
+        self.assertAlmostEqual(ptime, 30.6350002289)
         # seems to be strongly machine dependent, go for int for 64 bit
-        #self.assertAlmostEquals(stime, 31.2800006866)
+        #self.assertAlmostEqual(stime, 31.2800006866)
         self.assertEquals(int(stime + 0.5), 31)
 
     def test_triggerOnset(self):
@@ -313,16 +313,16 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEquals(ev['cft_peak_wmean'], 18.097582068353855)
-        self.assertAlmostEquals(ev['cft_std_wmean'], 4.7972436395074087)
-        self.assertAlmostEquals(ev['cft_peaks'][0], 18.973097608513633)
-        self.assertAlmostEquals(ev['cft_peaks'][1], 16.852175794415011)
-        self.assertAlmostEquals(ev['cft_peaks'][2], 18.64005853900883)
-        self.assertAlmostEquals(ev['cft_peaks'][3], 17.572363634564621)
-        self.assertAlmostEquals(ev['cft_stds'][0], 4.8811165222946951)
-        self.assertAlmostEquals(ev['cft_stds'][1], 4.4446373508521804)
-        self.assertAlmostEquals(ev['cft_stds'][2], 5.3499401252675964)
-        self.assertAlmostEquals(ev['cft_stds'][3], 4.2723814539487703)
+        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.097582068353855)
+        self.assertAlmostEqual(ev['cft_std_wmean'], 4.7972436395074087)
+        self.assertAlmostEqual(ev['cft_peaks'][0], 18.973097608513633)
+        self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011)
+        self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883)
+        self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621)
+        self.assertAlmostEqual(ev['cft_stds'][0], 4.8811165222946951)
+        self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804)
+        self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
+        self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
 
     def test_classicSTALTAPyC(self):
         """

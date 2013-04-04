@@ -52,40 +52,41 @@ class CoreTestCase(unittest.TestCase):
         """
         testdata = np.array([111, 111, 111, 111, 111, 109, 106, 103, 103,
                              110, 121, 132, 139])
-        testfile = NamedTemporaryFile().name
-        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
-        tr = read(self.file, format='WAV')[0]
-        self.assertEqual(tr.stats.npts, 10599)
-        self.assertEqual(tr.stats['sampling_rate'], 7000)
-        np.testing.assert_array_equal(tr.data[:13], testdata)
-        # write
-        st2 = Stream()
-        st2.traces.append(Trace())
-        st2[0].data = tr.data.copy()  # copy the data
-        st2.write(testfile, format='WAV', framerate=7000)
-        # read without giving the WAV format option
-        tr3 = read(testfile)[0]
-        self.assertEqual(tr3.stats, tr.stats)
-        np.testing.assert_array_equal(tr3.data[:13], testdata)
-        os.remove(testfile)
+        with NamedTemporaryFile() as fh:
+            testfile = fh.name
+            self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
+            tr = read(self.file, format='WAV')[0]
+            self.assertEqual(tr.stats.npts, 10599)
+            self.assertEqual(tr.stats['sampling_rate'], 7000)
+            np.testing.assert_array_equal(tr.data[:13], testdata)
+            # write
+            st2 = Stream()
+            st2.traces.append(Trace())
+            st2[0].data = tr.data.copy()  # copy the data
+            st2.write(testfile, format='WAV', framerate=7000)
+            # read without giving the WAV format option
+            tr3 = read(testfile)[0]
+            self.assertEqual(tr3.stats, tr.stats)
+            np.testing.assert_array_equal(tr3.data[:13], testdata)
 
     def test_rescaleOnWrite(self):
         """
         Read and Write files via obspy.core.Trace
         """
-        testfile = NamedTemporaryFile().name
-        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
-        tr = read(self.file, format='WAV')[0]
-        for width in (1, 2, 4):
-            tr.write(testfile, format='WAV', framerate=7000, width=width,
-                     rescale=True)
-            tr2 = read(testfile, format='WAV')[0]
-            maxint = 2 ** (8 * width - 1) - 1
-            dtype = WIDTH2DTYPE[width]
-            self.assertEqual(maxint, abs(tr2.data).max())
-            expected = (tr.data / abs(tr.data).max() * maxint).astype(dtype)
-            np.testing.assert_array_almost_equal(tr2.data, expected)
-            os.remove(testfile)
+        with NamedTemporaryFile() as fh:
+            testfile = fh.name
+            self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
+            tr = read(self.file, format='WAV')[0]
+            for width in (1, 2, 4):
+                tr.write(testfile, format='WAV', framerate=7000, width=width,
+                         rescale=True)
+                tr2 = read(testfile, format='WAV')[0]
+                maxint = 2 ** (8 * width - 1) - 1
+                dtype = WIDTH2DTYPE[width]
+                self.assertEqual(maxint, abs(tr2.data).max())
+                expected = (tr.data / abs(tr.data).max() *
+                            maxint).astype(dtype)
+                np.testing.assert_array_almost_equal(tr2.data, expected)
 
     def test_writeStreamViaObsPy(self):
         """
@@ -93,28 +94,28 @@ class CoreTestCase(unittest.TestCase):
         """
         testdata = np.array([111, 111, 111, 111, 111, 109, 106, 103, 103,
                              110, 121, 132, 139])
-        testfile = NamedTemporaryFile().name
-        self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
-        tr = read(self.file, format='WAV')[0]
-        np.testing.assert_array_equal(tr.data[:13], testdata)
-        # write
-        st2 = Stream([Trace(), Trace()])
-        st2[0].data = tr.data.copy()       # copy the data
-        st2[1].data = tr.data.copy() // 2  # be sure data are different
-        st2.write(testfile, format='WAV', framerate=7000)
-        # read without giving the WAV format option
-        base, ext = os.path.splitext(testfile)
-        testfile0 = "%s%03d%s" % (base, 0, ext)
-        testfile1 = "%s%03d%s" % (base, 1, ext)
-        tr30 = read(testfile0)[0]
-        tr31 = read(testfile1)[0]
-        self.assertEqual(tr30.stats, tr.stats)
-        self.assertEqual(tr31.stats, tr.stats)
-        np.testing.assert_array_equal(tr30.data[:13], testdata)
-        np.testing.assert_array_equal(tr31.data[:13], testdata // 2)
-        os.remove(testfile)
-        os.remove(testfile0)
-        os.remove(testfile1)
+        with NamedTemporaryFile() as fh:
+            testfile = fh.name
+            self.file = os.path.join(self.path, '3cssan.reg.8.1.RNON.wav')
+            tr = read(self.file, format='WAV')[0]
+            np.testing.assert_array_equal(tr.data[:13], testdata)
+            # write
+            st2 = Stream([Trace(), Trace()])
+            st2[0].data = tr.data.copy()       # copy the data
+            st2[1].data = tr.data.copy() // 2  # be sure data are different
+            st2.write(testfile, format='WAV', framerate=7000)
+            # read without giving the WAV format option
+            base, ext = os.path.splitext(testfile)
+            testfile0 = "%s%03d%s" % (base, 0, ext)
+            testfile1 = "%s%03d%s" % (base, 1, ext)
+            tr30 = read(testfile0)[0]
+            tr31 = read(testfile1)[0]
+            self.assertEqual(tr30.stats, tr.stats)
+            self.assertEqual(tr31.stats, tr.stats)
+            np.testing.assert_array_equal(tr30.data[:13], testdata)
+            np.testing.assert_array_equal(tr31.data[:13], testdata // 2)
+            os.remove(testfile0)
+            os.remove(testfile1)
 
 
 def suite():

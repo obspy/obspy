@@ -90,22 +90,22 @@ class BeachballTestCase(unittest.TestCase):
         fm = [115, 35, 50]
         # PDF
         data = Beachball(fm, format='pdf')
-        self.assertEquals(data[0:4], "%PDF")
+        self.assertEqual(data[0:4], "%PDF")
         # as file
         Beachball(fm, format='pdf', outfile=os.path.join(self.path, 'bb.pdf'))
         # PS
         data = Beachball(fm, format='ps')
-        self.assertEquals(data[0:4], "%!PS")
+        self.assertEqual(data[0:4], "%!PS")
         # as file
         Beachball(fm, format='ps', outfile=os.path.join(self.path, 'bb.ps'))
         # PNG
         data = Beachball(fm, format='png')
-        self.assertEquals(data[1:4], "PNG")
+        self.assertEqual(data[1:4], "PNG")
         # as file
         Beachball(fm, format='png', outfile=os.path.join(self.path, 'bb.png'))
         # SVG
         data = Beachball(fm, format='svg')
-        self.assertEquals(data[0:5], "<?xml")
+        self.assertEqual(data[0:5], "<?xml")
         # as file
         Beachball(fm, format='svg', outfile=os.path.join(self.path, 'bb.svg'))
 

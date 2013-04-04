@@ -44,17 +44,16 @@ class ClientTestCase(unittest.TestCase):
     def test_getWaveformWithDCIDKeyFile(self):
         """
         """
-        dcidfile = NamedTemporaryFile().name
-        fh = open(dcidfile, 'wt')
-        fh.write('TEST=XYZ\r\nBIA=OfH9ekhi\r\n')
-        fh.close()
-        # test server for encryption
-        client1 = Client(host="webdc.eu", port=36000, user="test@obspy.org",
-                         dcid_key_file=dcidfile)
-        # public server
-        client2 = Client(host="webdc.eu", port=18001, user="test@obspy.org")
-        # clean up dcid file
-        os.remove(dcidfile)
+        with NamedTemporaryFile() as tf:
+            dcidfile = tf.name
+            with open(dcidfile, 'wt') as fh:
+                fh.write('TEST=XYZ\r\nBIA=OfH9ekhi\r\n')
+            # test server for encryption
+            client1 = Client(host="webdc.eu", port=36000,
+                             user="test@obspy.org", dcid_key_file=dcidfile)
+            # public server
+            client2 = Client(host="webdc.eu", port=18001,
+                             user="test@obspy.org")
         # request data
         start = UTCDateTime(2010, 1, 1, 10, 0, 0)
         end = start + 100

@@ -7,7 +7,6 @@ from obspy import UTCDateTime, read
 from obspy.core.event import Catalog
 from obspy.core.util import NamedTemporaryFile
 from obspy.neries import Client
-import os
 import unittest
 
 
@@ -28,7 +27,7 @@ class ClientTestCase(unittest.TestCase):
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
                      'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
         # 2
         results = client.getEvents(format="list", min_latitude=-95,
                                    max_latitude=-1, min_longitude=20,
@@ -39,7 +38,7 @@ class ClientTestCase(unittest.TestCase):
                      'depth':-10.0, 'magnitude': 5.0, 'magnitude_type': u'm ',
                      'latitude':-46.394,
                      'flynn_region': u'PRINCE EDWARD ISLANDS REGION'}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
         # 3
         results = client.getEvents(format="list", min_depth=-11,
                                    max_depth=-22.33, min_magnitude=6.6,
@@ -55,7 +54,7 @@ class ClientTestCase(unittest.TestCase):
                      'depth':-17.0, 'magnitude': 6.6,
                      'magnitude_type': u'mb', 'latitude': 12.045,
                      'flynn_region': u'NEAR THE COAST OF YEMEN'}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
         # 4
         results = client.getEvents(format="list", author="EMSC", max_results=3,
                                    magnitude_type="mw", min_magnitude=4,
@@ -75,7 +74,7 @@ class ClientTestCase(unittest.TestCase):
                      'datetime': UTCDateTime('1998-02-13T07:18:50Z'),
                      'depth':-69.2, 'magnitude': 4.8, 'magnitude_type': u'mw',
                      'latitude': 36.284}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
 
     def test_getEventsWithUTCDateTimes(self):
         """
@@ -90,7 +89,7 @@ class ClientTestCase(unittest.TestCase):
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
                      'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
         # 2
         results = client.getEvents(format="list", min_depth=-700,
                                    min_datetime=UTCDateTime("2004-01-01"),
@@ -100,7 +99,7 @@ class ClientTestCase(unittest.TestCase):
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
                      'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
-        self.assertEquals(results, expected)
+        self.assertEqual(results, expected)
 
     def test_getEventsAsQuakeML(self):
         """
@@ -166,16 +165,16 @@ class ClientTestCase(unittest.TestCase):
         # list
         data = client.getLatestEvents(5, format='list')
         self.assertTrue(isinstance(data, list))
-        self.assertEquals(len(data), 5)
+        self.assertEqual(len(data), 5)
         # catalog
         data = client.getLatestEvents(5, format='catalog')
         self.assertTrue(isinstance(data, Catalog))
         # no given number of events should default to 10
         data = client.getLatestEvents(format='list')
-        self.assertEquals(len(data), 10)
+        self.assertEqual(len(data), 10)
         # invalid number of events should default to 10
         data = client.getLatestEvents(num='blah', format='list')
-        self.assertEquals(len(data), 10)
+        self.assertEqual(len(data), 10)
 
     def test_getTravelTimes(self):
         """
@@ -184,55 +183,55 @@ class ClientTestCase(unittest.TestCase):
         client = Client()
         # 1
         result = client.getTravelTimes(20, 20, 10, [(48, 12)], 'ak135')
-        self.assertEquals(len(result), 1)
-        self.assertAlmostEquals(result[0]['P'], 356988.24732429383)
-        self.assertAlmostEquals(result[0]['S'], 645775.5623471631)
+        self.assertEqual(len(result), 1)
+        self.assertAlmostEqual(result[0]['P'], 356988.24732429383)
+        self.assertAlmostEqual(result[0]['S'], 645775.5623471631)
         # 2
         result = client.getTravelTimes(0, 0, 10,
                                        [(120, 0), (150, 0), (180, 0)])
-        self.assertEquals(len(result), 3)
-        self.assertAlmostEquals(result[0]['P'], 605519.0321213702)
-        self.assertAlmostEquals(result[0]['S'], 1097834.6352750373)
-        self.assertAlmostEquals(result[1]['P'], 367256.0587305712)
-        self.assertAlmostEquals(result[1]['S'], 665027.0583152708)
-        self.assertEquals(result[2], {})
+        self.assertEqual(len(result), 3)
+        self.assertAlmostEqual(result[0]['P'], 605519.0321213702)
+        self.assertAlmostEqual(result[0]['S'], 1097834.6352750373)
+        self.assertAlmostEqual(result[1]['P'], 367256.0587305712)
+        self.assertAlmostEqual(result[1]['S'], 665027.0583152708)
+        self.assertEqual(result[2], {})
 
     def test_saveWaveform(self):
         """
         """
-        mseedfile = NamedTemporaryFile().name
-        fseedfile = NamedTemporaryFile().name
         # initialize client
         client = Client(user='test@obspy.org')
         start = UTCDateTime(2012, 1, 1)
         end = start + 10
-        # MiniSEED
-        client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
-        st = read(mseedfile)
-        # MiniSEED may not start with Volume Index Control Headers (V)
-        self.assertNotEquals(open(mseedfile).read(8)[6], "V")
+        with NamedTemporaryFile() as tf:
+            mseedfile = tf.name
+            # MiniSEED
+            client.saveWaveform(mseedfile, 'BW', 'MANZ', '', 'EHZ', start, end)
+            st = read(mseedfile)
+            # MiniSEED may not start with Volume Index Control Headers (V)
+            self.assertNotEqual(open(mseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
-        os.remove(mseedfile)
+        self.assertEqual(st[0].stats.network, 'BW')
+        self.assertEqual(st[0].stats.station, 'MANZ')
+        self.assertEqual(st[0].stats.location, '')
+        self.assertEqual(st[0].stats.channel, 'EHZ')
         # Full SEED
-        client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
-                            format='FSEED')
-        st = read(fseedfile)
-        # Full SEED must start with Volume Index Control Headers (V)
-        self.assertEquals(open(fseedfile).read(8)[6], "V")
+        with NamedTemporaryFile() as tf:
+            fseedfile = tf.name
+            client.saveWaveform(fseedfile, 'BW', 'MANZ', '', 'EHZ', start, end,
+                                format='FSEED')
+            st = read(fseedfile)
+            # Full SEED must start with Volume Index Control Headers (V)
+            self.assertEqual(open(fseedfile).read(8)[6], "V")
         # ArcLink cuts on record base
         self.assertTrue(st[0].stats.starttime <= start)
         self.assertTrue(st[0].stats.endtime >= end)
-        self.assertEquals(st[0].stats.network, 'BW')
-        self.assertEquals(st[0].stats.station, 'MANZ')
-        self.assertEquals(st[0].stats.location, '')
-        self.assertEquals(st[0].stats.channel, 'EHZ')
-        os.remove(fseedfile)
+        self.assertEqual(st[0].stats.network, 'BW')
+        self.assertEqual(st[0].stats.station, 'MANZ')
+        self.assertEqual(st[0].stats.location, '')
+        self.assertEqual(st[0].stats.channel, 'EHZ')
 
     def test_getInventory(self):
         """

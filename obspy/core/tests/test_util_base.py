@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-from obspy.core.util.base import getMatplotlibVersion
 import unittest
+import os
+from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 
 
 class UtilBaseTestCase(unittest.TestCase):
@@ -36,6 +37,31 @@ class UtilBaseTestCase(unittest.TestCase):
 
         # Set it to the original version str just in case.
         matplotlib.__version__ = original_version
+
+    def test_NamedTemporaryFile_ContextManager(self):
+        """
+        Tests the automatic closing/deleting of NamedTemporaryFile using the
+        context manager.
+        """
+        content = "burn after writing"
+        # write something to tempfile and check closing/deletion afterwards
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            tf.write(content)
+        self.assertFalse(os.path.exists(filename))
+        # write something to tempfile and check that it is written correctly
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            tf.write(content)
+            tf.close()
+            with open(filename) as fh:
+                tmp_content = fh.read()
+        self.assertEqual(content, tmp_content)
+        self.assertFalse(os.path.exists(filename))
+        # check that closing/deletion works even when nothing is done with file
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+        self.assertFalse(os.path.exists(filename))
 
 
 def suite():

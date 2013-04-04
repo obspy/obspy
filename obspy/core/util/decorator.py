@@ -131,22 +131,10 @@ def uncompressFile(func):
                 pass
         if unpacked_data:
             # we unpacked something without errors - create temporary file
-            tempfile = NamedTemporaryFile()
-            tempfile._fileobj.write(unpacked_data)
-            tempfile.close()
-            # call wrapped function
-            try:
+            with NamedTemporaryFile() as tempfile:
+                tempfile._fileobj.write(unpacked_data)
+                # call wrapped function
                 result = func(tempfile.name, *args, **kwargs)
-            except:
-                # clean up unpacking procedure
-                if unpacked_data:
-                    tempfile.close()
-                    os.remove(tempfile.name)
-                raise
-            # clean up unpacking procedure
-            if unpacked_data:
-                tempfile.close()
-                os.remove(tempfile.name)
         else:
             # call wrapped function with original filename
             result = func(filename, *args, **kwargs)
