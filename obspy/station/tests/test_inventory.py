@@ -24,7 +24,7 @@ class InventoryTestCase(unittest.TestCase):
         Some simple sanity tests.
         """
         dt = obspy.UTCDateTime()
-        inv = SeismicInventory(source="TEST")
+        inv = SeismicInventory(source="TEST", networks=[])
         # If no time is given, the creation time should be set to the current
         # time. Use a large offset for potentially slow computers and test
         # runs.
