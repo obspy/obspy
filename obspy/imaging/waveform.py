@@ -433,7 +433,8 @@ class WaveformPlotting(object):
         Helper function to plot an event into the dayplot.
         """
         if hasattr(event, "preferred_origin"):
-            # Get the time from the preferred origin.
+            # Get the time from the preferred origin, alternatively the first
+            # origin.
             origin = event.preferred_origin()
             if origin is None:
                 if event.origins:
@@ -441,12 +442,17 @@ class WaveformPlotting(object):
                 else:
                     return
             time = origin.time
-            # Attempt to get a magnitude string.
+
+            # Do the same for the magnitude.
             mag = event.preferred_magnitude()
-            if mag is not None:
-                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
-            else:
+            if mag is None:
+                if event.magnitudes:
+                    mag = event.magnitudes[0]
+            if mag is None:
                 mag = ""
+            else:
+                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
+
             region = FlinnEngdahl().get_region(origin.longitude,
                 origin.latitude)
             text = region
