@@ -299,16 +299,55 @@ class Comment(object):
         Container for a comment or log entry. Corresponds to SEED blockettes
         31, 51 and 59.
     """
-    def __init__(self, value, begin_effective_time=None,
-            end_effective_time=None, authors=[]):
+    def __init__(self, value, begin_effective_date=None,
+            end_effective_date=None, authors=[]):
         """
         :type value: String
         :param value: The actual comment string
         :type begin_effective_date:
             :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param begin_effective_date: The effective start date
+        :param begin_effective_date: The effective start date, Optional.
         :type end_effective_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_effective_date: The effective end date
-
+        :param end_effective_date: The effective end date. Optional.
+        :type authors: List of :class:`~obspy.station.util.Person` objects.
+        :param authors: The authors of this comment. Optional.
         """
-        pass
+        self.value = value
+        self.begin_effective_date = begin_effective_date
+        self.end_effective_date = end_effective_date
+        self.authors = authors
+
+    @property
+    def value(self):
+        return self.__value
+
+    @value.setter
+    def value(self, value):
+        self.__value = str(value)
+
+    @property
+    def begin_effective_date(self):
+        return self.__begin_effective_date
+
+    @begin_effective_date.setter
+    def begin_effective_date(self, value):
+        self.__begin_effective_date = UTCDateTime(value)
+
+    @property
+    def end_effective_date(self):
+        return self.__end_effective_date
+
+    @end_effective_date.setter
+    def end_effective_date(self, value):
+        self.__end_effective_date = UTCDateTime(value)
+
+    @property
+    def authors(self):
+        return self.__authors
+
+    @authors.setter
+    def phones(self, values):
+        if not hasattr(values, "__iter__"):
+            msg = "authors needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__authors = values
