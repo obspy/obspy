@@ -42,5 +42,16 @@ class SeismicNetwork(BaseNode):
 
         super(SeismicNetwork, self).__init__(code, *args, **kwargs)
 
+    @property
+    def stations(self):
+        return self.__stations
+
+    @stations.setter
+    def stations(self, values):
+        if not hasattr(values, "__iter__"):
+            msg = "stations needs to be iterable, e.g. a list."
+            raise ValueError(msg)
+        self.__stations = values
+
     def __short_str__(self):
         return "%s" % self.code

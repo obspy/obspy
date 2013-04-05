@@ -98,18 +98,33 @@ def read_StationXML(path_or_file_object):
     return inv
 
 
+def _read_base_node(element, object_to_write_to, _ns):
+    """
+    Reads the base node structure from element and saves it in
+    object_to_write_to.
+
+    Reads everything except the 'code' attribute.
+    """
+    object_to_write_to.start_date = \
+        _attr2obj(element, "startDate", obspy.UTCDateTime)
+    object_to_write_to.end_date = \
+        _attr2obj(element, "endDate", obspy.UTCDateTime)
+    object_to_write_to.restricted_status = \
+        _attr2obj(element, "restrictedStatus", str)
+    object_to_write_to.alternate_code = \
+        _attr2obj(element, "alternateCode", str)
+    object_to_write_to.historical_code = \
+        _attr2obj(element, "historicalCode", str)
+    object_to_write_to.description = \
+        _tag2obj(element, _ns("Description"), str)
+    object_to_write_to.comments = []
+    for comment in element.findall(_ns("Comment")):
+        object_to_write_to.comments.append(_read_comment(comment, _ns))
+
+
 def _read_network(net_element, _ns):
     network = obspy.station.SeismicNetwork(net_element.get("code"))
-    network.start_date = _attr2obj(net_element, "startDate", obspy.UTCDateTime)
-    network.end_date = _attr2obj(net_element, "endDate", obspy.UTCDateTime)
-    network.restricted_status = \
-        _attr2obj(net_element, "restrictedStatus", str)
-    network.alternate_code = _attr2obj(net_element, "alternateCode", str)
-    network.historical_code = _attr2obj(net_element, "historicalCode", str)
-    network.description = _tag2obj(net_element, _ns("Description"), str)
-    network.comments = []
-    for comment in net_element.findall(_ns("Comment")):
-        network.comments.append(_read_comment(comment, _ns))
+    _read_base_node(net_element, network, _ns)
     network.total_number_of_stations = _tag2obj(net_element,
         _ns("TotalNumberStations"), int)
     network.selected_number_of_stations = _tag2obj(net_element,
@@ -237,27 +252,36 @@ def _format_time(value):
     return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
 
 
+def _get_base_node_attributes(element):
+    attributes = {"code": element.code}
+    if element.start_date:
+        attributes["startDate"] = _format_time(element.start_date)
+    if element.end_date:
+        attributes["endDate"] = _format_time(element.end_date)
+    if element.restricted_status:
+        attributes["restrictedStatus"] = element.restricted_status
+    if element.alternate_code:
+        attributes["alternateCode"] = element.alternate_code
+    if element.historical_code:
+        attributes["historicalCode"] = element.historical_code
+    return attributes
+
+
+def _write_base_node(element, object_to_read_from):
+    if object_to_read_from.description:
+        etree.SubElement(element, "Description").text = \
+            object_to_read_from.description
+    for comment in object_to_read_from.comments:
+        _write_comment(element, comment)
+
+
 def _write_network(parent, network):
     """
     Helper function converting a SeismicNetwork instance to an etree.Element.
     """
-    attribs = {"code": network.code}
-    if network.start_date:
-        attribs["startDate"] = _format_time(network.start_date)
-    if network.end_date:
-        attribs["endDate"] = _format_time(network.end_date)
-    if network.restricted_status:
-        attribs["restrictedStatus"] = network.restricted_status
-    if network.alternate_code:
-        attribs["alternateCode"] = network.alternate_code
-    if network.historical_code:
-        attribs["historicalCode"] = network.historical_code
+    attribs = _get_base_node_attributes(network)
     network_elem = etree.SubElement(parent, "Network", attribs)
-    if network.description:
-        etree.SubElement(network_elem, "Description").text = \
-            network.description
-    for comment in network.comments:
-        _write_comment(network_elem, comment)
+    _write_base_node(network_elem, network)
 
     # Add the two, network specific fields.
     if network.total_number_of_stations is not None:
