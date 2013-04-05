@@ -110,6 +110,10 @@ def _read_network(net_element, _ns):
     network.comments = []
     for comment in net_element.findall(_ns("Comment")):
         network.comments.append(_read_comment(comment, _ns))
+    network.total_number_of_stations = _tag2obj(net_element,
+        _ns("TotalNumberStations"), int)
+    network.selected_number_of_stations = _tag2obj(net_element,
+        _ns("SelectedNumberStations"), int)
     return network
 
 
@@ -254,6 +258,14 @@ def _write_network(parent, network):
             network.description
     for comment in network.comments:
         _write_comment(network_elem, comment)
+
+    # Add the two, network specific fields.
+    if network.total_number_of_stations is not None:
+        etree.SubElement(network_elem, "TotalNumberStations").text = \
+            str(network.total_number_of_stations)
+    if network.selected_number_of_stations is not None:
+        etree.SubElement(network_elem, "SelectedNumberStations").text = \
+            str(network.selected_number_of_stations)
 
 
 def _write_comment(parent, comment):

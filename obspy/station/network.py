@@ -20,7 +20,7 @@ class SeismicNetwork(BaseNode):
         other descriptive information can be included in the Description
         element. The Network can contain 0 or more Stations.
     """
-    def __init__(self, code, *args, **kwargs):
+    def __init__(self, code, stations=[], *args, **kwargs):
         """
         :type code: String
         :type code: The network code.
@@ -34,6 +34,7 @@ class SeismicNetwork(BaseNode):
             might happen if the user only wants a document that goes contains
             only information at the Network level.)
         """
+        self.stations = []
         self.total_number_of_stations = kwargs.get("total_number_of_stations",
             None)
         self.selected_number_of_stations = \

@@ -68,5 +68,7 @@
             </Phone>
           </Author>
       </Comment>
+      <TotalNumberStations>200</TotalNumberStations>
+      <SelectedNumberStations>1</SelectedNumberStations>
   </Network>
 </FDSNStationXML>
