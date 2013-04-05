@@ -114,7 +114,39 @@ def _read_network(net_element, _ns):
 
 
 def _read_comment(comment_element, _ns):
-    return []
+    value = _tag2obj(comment_element, _ns("Value"), str)
+    begin_effective_time = _tag2obj(comment_element, _ns("BeginEffectiveTime"),
+        obspy.UTCDateTime)
+    end_effective_time = _tag2obj(comment_element, _ns("EndEffectiveTime"),
+        obspy.UTCDateTime)
+    authors = []
+    for author in comment_element.findall(_ns("Author")):
+        authors.append(_read_person(author, _ns))
+    return obspy.station.Comment(value=value,
+        begin_effective_time=begin_effective_time,
+        end_effective_time=end_effective_time,
+        authors=authors)
+
+
+def _read_person(person_element, _ns):
+    names = _tags2obj(person_element, _ns("Name"), str)
+    agencies = _tags2obj(person_element, _ns("Agency"), str)
+    emails = _tags2obj(person_element, _ns("Email"), str)
+    phones = []
+    for phone in person_element.findall(_ns("Phone")):
+        phones.append(_read_phone(phone, _ns))
+    return obspy.station.Person(names=names, agencies=agencies, emails=emails,
+        phones=phones)
+
+
+def _read_phone(phone_element, _ns):
+    country_code = _tag2obj(phone_element, _ns("CountryCode"), int)
+    area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
+    phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
+    description = phone_element.get("description")
+    return obspy.station.PhoneNumber(country_code=country_code,
+        area_code=area_code, phone_number=phone_number,
+        description=description)
 
 
 def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
@@ -180,9 +212,19 @@ def _tag2obj(element, tag, convert):
         None
 
 
+def _tags2obj(element, tag, convert):
+    values = []
+    for elem in element.findall(tag):
+        values.append(convert(elem.text))
+    return values
+
+
 def _attr2obj(element, attr, convert):
+    attribute = element.get(attr)
+    if attribute is None:
+        return None
     try:
-        return convert(element.get(attr))
+        return convert(attribute)
     except:
         None
 
@@ -195,4 +237,57 @@ def _write_network(parent, network):
     """
     Helper function converting a SeismicNetwork instance to an etree.Element.
     """
-    elem = etree.SubElement(parent, "Network", {"code": network.code})
+    attribs = {"code": network.code}
+    if network.start_date:
+        attribs["startDate"] = _format_time(network.start_date)
+    if network.end_date:
+        attribs["endDate"] = _format_time(network.end_date)
+    if network.restricted_status:
+        attribs["restrictedStatus"] = network.restricted_status
+    if network.alternate_code:
+        attribs["alternateCode"] = network.alternate_code
+    if network.historical_code:
+        attribs["historicalCode"] = network.historical_code
+    network_elem = etree.SubElement(parent, "Network", attribs)
+    if network.description:
+        etree.SubElement(network_elem, "Description").text = \
+            network.description
+    for comment in network.comments:
+        _write_comment(network_elem, comment)
+
+
+def _write_comment(parent, comment):
+    comment_elem = etree.SubElement(parent, "Comment")
+    etree.SubElement(comment_elem, "Value").text = comment.value
+    if comment.begin_effective_time:
+        etree.SubElement(comment_elem, "BeginEffectiveTime").text = \
+            _format_time(comment.begin_effective_time)
+    if comment.end_effective_time:
+        etree.SubElement(comment_elem, "EndEffectiveTime").text = \
+            _format_time(comment.end_effective_time)
+    for author in comment.authors:
+        _write_person(comment_elem, author, "Author")
+
+
+def _write_person(parent, person, tag_name):
+    person_elem = etree.SubElement(parent, tag_name)
+    for name in person.names:
+        etree.SubElement(person_elem, "Name").text = name
+    for agency in person.agencies:
+        etree.SubElement(person_elem, "Agency").text = agency
+    for email in person.emails:
+        etree.SubElement(person_elem, "Email").text = email
+    for phone in person.phones:
+        _write_phone(person_elem, phone)
+
+
+def _write_phone(parent, phone):
+    attribs = {}
+    if phone.description:
+        attribs["description"] = phone.description
+    phone_elem = etree.SubElement(parent, "Phone", attribs)
+    if phone.country_code:
+        etree.SubElement(phone_elem, "CountryCode").text = \
+            str(phone.country_code)
+    etree.SubElement(phone_elem, "AreaCode").text = str(phone.area_code)
+    etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number

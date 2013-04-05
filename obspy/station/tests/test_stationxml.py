@@ -145,6 +145,7 @@ class StationXMLTestCase(unittest.TestCase):
             "full_network_field_station.xml")
         inv = obspy.station.readInventory(filename)
 
+        # Assert all the values...
         self.assertEqual(len(inv.networks), 1)
         net = inv.networks[0]
         self.assertEqual(net.code, "PY")
@@ -155,6 +156,78 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(net.historical_code, "YYP")
         self.assertEqual(net.description, "Some Description...")
         self.assertEqual(len(net.comments), 2)
+
+        comment_1 = net.comments[0]
+        self.assertEqual(comment_1.value, "Comment number 1")
+        self.assertEqual(comment_1.begin_effective_time,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(comment_1.end_effective_time,
+            obspy.UTCDateTime(2008, 2, 3))
+        self.assertEqual(len(comment_1.authors), 1)
+        authors = comment_1.authors[0]
+        self.assertEqual(len(authors.names), 2)
+        self.assertEqual(authors.names[0], "This person")
+        self.assertEqual(authors.names[1], "has multiple names!")
+        self.assertEqual(len(authors.agencies), 3)
+        self.assertEqual(authors.agencies[0], "And also")
+        self.assertEqual(authors.agencies[1], "many")
+        self.assertEqual(authors.agencies[2], "many Agencies")
+        self.assertEqual(len(authors.emails), 4)
+        self.assertEqual(authors.emails[0], "email1@mail.com")
+        self.assertEqual(authors.emails[1], "email2@mail.com")
+        self.assertEqual(authors.emails[2], "email3@mail.com")
+        self.assertEqual(authors.emails[3], "email4@mail.com")
+        self.assertEqual(len(authors.phones), 2)
+        self.assertEqual(authors.phones[0].description, "phone number 1")
+        self.assertEqual(authors.phones[0].country_code, 49)
+        self.assertEqual(authors.phones[0].area_code, 123)
+        self.assertEqual(authors.phones[0].phone_number, "456-7890")
+        self.assertEqual(authors.phones[1].description, "phone number 2")
+        self.assertEqual(authors.phones[1].country_code, 34)
+        self.assertEqual(authors.phones[1].area_code, 321)
+        self.assertEqual(authors.phones[1].phone_number, "129-7890")
+
+        comment_2 = net.comments[1]
+        self.assertEqual(comment_2.value, "Comment number 2")
+        self.assertEqual(comment_2.begin_effective_time,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(comment_1.end_effective_time,
+            obspy.UTCDateTime(2008, 2, 3))
+        self.assertEqual(len(comment_2.authors), 3)
+        for _i, author in enumerate(comment_2.authors):
+            self.assertEqual(len(author.names), 1)
+            self.assertEqual(author.names[0], "Person %i" % (_i + 1))
+            self.assertEqual(len(author.agencies), 1)
+            self.assertEqual(author.agencies[0], "Some agency")
+            self.assertEqual(len(author.emails), 1)
+            self.assertEqual(author.emails[0], "email@mail.com")
+            self.assertEqual(len(author.phones), 1)
+            self.assertEqual(author.phones[0].description, None)
+            self.assertEqual(author.phones[0].country_code, 49)
+            self.assertEqual(author.phones[0].area_code, 123)
+            self.assertEqual(author.phones[0].phone_number, "456-7890")
+
+        # Now write it again and compare to the original file.
+        file_buffer = BytesIO()
+        inv.write(file_buffer, format="StationXML", validate=True,
+            _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+        new_lines = [_i.strip() for _i in file_buffer.read().splitlines()]
+
+        with open(filename, "rb") as open_file:
+            org_lines = open_file.read().splitlines()
+
+        # Remove the module lines from the original file.
+        org_lines = [_i.strip() for _i in org_lines
+            if not _i.strip().startswith("<Module")]
+
+        self.assertEqual(len(new_lines), len(org_lines))
+        for new_line, org_line in izip(new_lines, org_lines):
+            try:
+                self.assertEqual(new_line, org_line)
+            except:
+                self.assertEqual(sorted(new_line[1:-1].split()),
+                    sorted(org_line[1:-1].split()))
 
 
 def suite():

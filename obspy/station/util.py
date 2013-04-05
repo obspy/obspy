@@ -24,8 +24,8 @@ class BaseNode(object):
 
         self.comments = kwargs.get("comments", [])
         self.description = kwargs.get("description", None)
-        self.starttime = kwargs.get("starttime", None)
-        self.endtime = kwargs.get("endtime", None)
+        self.start_date = kwargs.get("start_date", None)
+        self.end_date = kwargs.get("end_date", None)
         self.restricted_status = kwargs.get("restricted_status", None)
         self.alternate_code = kwargs.get("alternate_code", None)
         self.historical_code = kwargs.get("historical_code", None)
@@ -192,7 +192,7 @@ class Person(object):
         :param phones: Self-explanatory. Multiple phone numbers allowed.
             Optional.
         """
-        self.names = kwargs.get("name", [])
+        self.names = kwargs.get("names", [])
         self.agencies = kwargs.get("agencies", [])
         self.emails = kwargs.get("emails", [])
         self.phones = kwargs.get("phones", [])
@@ -260,7 +260,7 @@ class PhoneNumber(object):
         :param description: Any additional information, optional.
         """
         self.country_code = kwargs.get("country_code", None)
-        self.area_code = kwargs.get("aread_code")
+        self.area_code = kwargs.get("area_code")
         self.phone_number = kwargs.get("phone_number")
         self.description = kwargs.get("description", None)
 
@@ -299,22 +299,22 @@ class Comment(object):
         Container for a comment or log entry. Corresponds to SEED blockettes
         31, 51 and 59.
     """
-    def __init__(self, value, begin_effective_date=None,
-            end_effective_date=None, authors=[]):
+    def __init__(self, value, begin_effective_time=None,
+            end_effective_time=None, authors=[]):
         """
         :type value: String
         :param value: The actual comment string
-        :type begin_effective_date:
+        :type begin_effective_time:
             :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param begin_effective_date: The effective start date, Optional.
-        :type end_effective_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param end_effective_date: The effective end date. Optional.
+        :param begin_effective_time: The effective start date, Optional.
+        :type end_effective_time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param end_effective_time: The effective end date. Optional.
         :type authors: List of :class:`~obspy.station.util.Person` objects.
         :param authors: The authors of this comment. Optional.
         """
         self.value = value
-        self.begin_effective_date = begin_effective_date
-        self.end_effective_date = end_effective_date
+        self.begin_effective_time = begin_effective_time
+        self.end_effective_time = end_effective_time
         self.authors = authors
 
     @property
@@ -326,27 +326,33 @@ class Comment(object):
         self.__value = str(value)
 
     @property
-    def begin_effective_date(self):
-        return self.__begin_effective_date
+    def begin_effective_time(self):
+        return self.__begin_effective_time
 
-    @begin_effective_date.setter
-    def begin_effective_date(self, value):
-        self.__begin_effective_date = UTCDateTime(value)
+    @begin_effective_time.setter
+    def begin_effective_time(self, value):
+        if value is None:
+            self.__begin_effective_time = None
+            return
+        self.__begin_effective_time = UTCDateTime(value)
 
     @property
-    def end_effective_date(self):
-        return self.__end_effective_date
+    def end_effective_time(self):
+        return self.__end_effective_time
 
-    @end_effective_date.setter
-    def end_effective_date(self, value):
-        self.__end_effective_date = UTCDateTime(value)
+    @end_effective_time.setter
+    def end_effective_time(self, value):
+        if value is None:
+            self.__end_effective_time = None
+            return
+        self.__end_effective_time = UTCDateTime(value)
 
     @property
     def authors(self):
         return self.__authors
 
     @authors.setter
-    def phones(self, values):
+    def authors(self, values):
         if not hasattr(values, "__iter__"):
             msg = "authors needs to be iterable, e.g. a list."
             raise ValueError(msg)

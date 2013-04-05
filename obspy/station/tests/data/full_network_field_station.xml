@@ -16,17 +16,17 @@
             <Name>has multiple names!</Name>
             <Agency>And also</Agency>
             <Agency>many</Agency>
-            <Agency>many Agency</Agency>
+            <Agency>many Agencies</Agency>
             <Email>email1@mail.com</Email>
             <Email>email2@mail.com</Email>
             <Email>email3@mail.com</Email>
             <Email>email4@mail.com</Email>
-            <Phone>
+            <Phone description="phone number 1">
               <CountryCode>49</CountryCode>
               <AreaCode>123</AreaCode>
               <PhoneNumber>456-7890</PhoneNumber>
             </Phone>
-            <Phone>
+            <Phone description="phone number 2">
               <CountryCode>34</CountryCode>
               <AreaCode>321</AreaCode>
               <PhoneNumber>129-7890</PhoneNumber>
@@ -38,67 +38,33 @@
           <BeginEffectiveTime>1990-05-05T00:00:00+00:00</BeginEffectiveTime>
           <EndEffectiveTime>2008-02-03T00:00:00+00:00</EndEffectiveTime>
           <Author>
-            <Name>This person</Name>
-            <Name>has multiple names!</Name>
-            <Agency>And also</Agency>
-            <Agency>many</Agency>
-            <Agency>many Agency</Agency>
-            <Email>email1@mail.com</Email>
-            <Email>email2@mail.com</Email>
-            <Email>email3@mail.com</Email>
-            <Email>email4@mail.com</Email>
+            <Name>Person 1</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
             <Phone>
               <CountryCode>49</CountryCode>
               <AreaCode>123</AreaCode>
               <PhoneNumber>456-7890</PhoneNumber>
-            </Phone>
-            <Phone>
-              <CountryCode>34</CountryCode>
-              <AreaCode>321</AreaCode>
-              <PhoneNumber>129-7890</PhoneNumber>
             </Phone>
           </Author>
           <Author>
-            <Name>This person</Name>
-            <Name>has multiple names!</Name>
-            <Name>And event one more!</Name>
-            <Agency>And also</Agency>
-            <Agency>many</Agency>
-            <Agency>many Agency</Agency>
-            <Email>email1@mail.com</Email>
-            <Email>email2@mail.com</Email>
-            <Email>email3@mail.com</Email>
-            <Email>email4@mail.com</Email>
+            <Name>Person 2</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
             <Phone>
               <CountryCode>49</CountryCode>
               <AreaCode>123</AreaCode>
               <PhoneNumber>456-7890</PhoneNumber>
-            </Phone>
-            <Phone>
-              <CountryCode>34</CountryCode>
-              <AreaCode>321</AreaCode>
-              <PhoneNumber>129-7890</PhoneNumber>
             </Phone>
           </Author>
           <Author>
-            <Name>This person</Name>
-            <Name>has multiple names!</Name>
-            <Agency>And also</Agency>
-            <Agency>many</Agency>
-            <Agency>many Agency</Agency>
-            <Email>email1@mail.com</Email>
-            <Email>email2@mail.com</Email>
-            <Email>email3@mail.com</Email>
-            <Email>email4@mail.com</Email>
+            <Name>Person 3</Name>
+            <Agency>Some agency</Agency>
+            <Email>email@mail.com</Email>
             <Phone>
               <CountryCode>49</CountryCode>
               <AreaCode>123</AreaCode>
               <PhoneNumber>456-7890</PhoneNumber>
-            </Phone>
-            <Phone>
-              <CountryCode>34</CountryCode>
-              <AreaCode>321</AreaCode>
-              <PhoneNumber>129-7890</PhoneNumber>
             </Phone>
           </Author>
       </Comment>
