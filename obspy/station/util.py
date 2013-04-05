@@ -357,3 +357,36 @@ class Comment(object):
             msg = "authors needs to be iterable, e.g. a list."
             raise ValueError(msg)
         self.__authors = values
+
+
+class Site(object):
+    """
+    From the StationXML definition:
+        Description of a site location using name and optional geopolitical
+        boundaries (country, city, etc.).
+    """
+    def __init__(self, name, description=None, town=None, county=None,
+            region=None, country=None):
+        """
+        :type name: String
+        :param name: The commonly used name of this station, equivalent to the
+            SEED blockette 50, field 9.
+        :type description: String, optional
+        :param description: A longer description of the location of this
+            station, e.g.  "NW corner of Yellowstone National Park" or "20
+            miles west of Highway 40."
+        :type town: String, optional
+        :param town: The town or city closest to the station.
+        :type county: String, optional
+        :param county: The county.
+        :type region: String, optional
+        :param region: The state, province, or region of this site.
+        :type country: String, optional
+        :param country: THe country.
+        """
+        self.name = name
+        self.description = description
+        self.town = town
+        self.county = county
+        self.region = region
+        self.country = country
