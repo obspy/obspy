@@ -28,6 +28,29 @@ class StationXMLTestCase(unittest.TestCase):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
+    def _assert_station_xml_equality(self, xml_file_buffer,
+            expected_xml_file_buffer):
+        """
+        Helper function comparing two BytesIO buffers contain Station XML
+        files.
+        """
+        new_lines = [_i.strip() for _i in xml_file_buffer.read().splitlines()]
+        org_lines = [_i.strip()
+            for _i in expected_xml_file_buffer.read().splitlines()]
+
+        # Remove the module lines from the original file.
+        org_lines = [_i.strip() for _i in org_lines
+            if not _i.strip().startswith("<Module")]
+
+        self.assertEqual(len(new_lines), len(org_lines))
+        for new_line, org_line in izip(new_lines, org_lines):
+            try:
+                self.assertEqual(new_line, org_line)
+            except:
+                # Attributes have no fixed order but should all exists.
+                self.assertEqual(sorted(new_line[1:-1].split()),
+                    sorted(org_line[1:-1].split()))
+
     def test_is_stationxml(self):
         """
         Tests the is_StationXML() function.
@@ -64,15 +87,13 @@ class StationXMLTestCase(unittest.TestCase):
         inv.write(file_buffer, format="StationXML", validate=True,
             _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-        new_file = file_buffer.read().splitlines()
 
-        with open(filename, "rb") as fh:
-            org_file = fh.read().splitlines()
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
 
-        self.assertEqual(len(new_file), len(org_file))
-
-        for new_line, org_line in izip(new_file, org_file):
-            self.assertEqual(new_line.strip(), org_line.strip())
+        self._assert_station_xml_equality(file_buffer,
+            expected_xml_file_buffer)
 
     def test_writing_module_tags(self):
         """
@@ -125,16 +146,13 @@ class StationXMLTestCase(unittest.TestCase):
         inv.write(file_buffer, format="StationXML", validate=True,
             _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-        lines = [_i.strip() for _i in file_buffer.read().splitlines()]
 
-        with open(filename, "rb") as fh:
-            org_lines = fh.readlines()
-        # Remove the module tags.
-        org_lines = [_i.strip() for _i in org_lines
-            if not _i.strip().startswith("<Module")]
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
 
-        for line, org_line in izip(lines, org_lines):
-            self.assertEqual(line, org_line)
+        self._assert_station_xml_equality(file_buffer,
+            expected_xml_file_buffer)
 
     def test_reading_and_writing_full_network_tag(self):
         """
@@ -212,22 +230,13 @@ class StationXMLTestCase(unittest.TestCase):
         inv.write(file_buffer, format="StationXML", validate=True,
             _suppress_module_tags=True)
         file_buffer.seek(0, 0)
-        new_lines = [_i.strip() for _i in file_buffer.read().splitlines()]
 
         with open(filename, "rb") as open_file:
-            org_lines = open_file.read().splitlines()
+            expected_xml_file_buffer = BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
 
-        # Remove the module lines from the original file.
-        org_lines = [_i.strip() for _i in org_lines
-            if not _i.strip().startswith("<Module")]
-
-        self.assertEqual(len(new_lines), len(org_lines))
-        for new_line, org_line in izip(new_lines, org_lines):
-            try:
-                self.assertEqual(new_line, org_line)
-            except:
-                self.assertEqual(sorted(new_line[1:-1].split()),
-                    sorted(org_line[1:-1].split()))
+        self._assert_station_xml_equality(file_buffer,
+            expected_xml_file_buffer)
 
     def test_reading_and_writing_full_station_tag(self):
         """
