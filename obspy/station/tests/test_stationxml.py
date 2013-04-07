@@ -229,6 +229,226 @@ class StationXMLTestCase(unittest.TestCase):
                 self.assertEqual(sorted(new_line[1:-1].split()),
                     sorted(org_line[1:-1].split()))
 
+    def test_reading_and_writing_full_station_tag(self):
+        """
+        Tests the reading and writing of a file with a more or less full
+        station tag.
+        """
+        filename = os.path.join(self.data_dir,
+            "full_station_field_station.xml")
+        inv = obspy.station.readInventory(filename)
+
+        # Assert all the values...
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(inv.source, "OBS")
+        self.assertEqual(inv.module, "Some Random Module")
+        self.assertEqual(inv.module_uri, "http://www.some-random.site")
+        self.assertEqual(inv.sender, "The ObsPy Team")
+        self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
+        self.assertEqual(len(inv.networks), 1)
+        network = inv.networks[0]
+        self.assertEqual(network.code, "PY")
+
+        # Now assert the station specific values.
+        self.assertEqual(len(network.stations), 1)
+        station = network.stations[0]
+        self.assertEqual(station.code, "PY")
+        self.assertEqual(station.start_date, obspy.UTCDateTime(2011, 1, 1))
+        self.assertEqual(station.end_date, obspy.UTCDateTime(2012, 1, 1))
+        self.assertEqual(station.restricted_status, "open")
+        self.assertEqual(station.alternate_code, "PYY")
+        self.assertEqual(station.historical_code, "YYP")
+        self.assertEqual(station.description, "Some Description...")
+        self.assertEqual(len(station.comments), 2)
+        comment_1 = station.comments[0]
+        self.assertEqual(comment_1.value, "Comment number 1")
+        self.assertEqual(comment_1.begin_effective_time,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(comment_1.end_effective_time,
+            obspy.UTCDateTime(2008, 2, 3))
+        self.assertEqual(len(comment_1.authors), 1)
+        authors = comment_1.authors[0]
+        self.assertEqual(len(authors.names), 2)
+        self.assertEqual(authors.names[0], "This person")
+        self.assertEqual(authors.names[1], "has multiple names!")
+        self.assertEqual(len(authors.agencies), 3)
+        self.assertEqual(authors.agencies[0], "And also")
+        self.assertEqual(authors.agencies[1], "many")
+        self.assertEqual(authors.agencies[2], "many Agencies")
+        self.assertEqual(len(authors.emails), 4)
+        self.assertEqual(authors.emails[0], "email1@mail.com")
+        self.assertEqual(authors.emails[1], "email2@mail.com")
+        self.assertEqual(authors.emails[2], "email3@mail.com")
+        self.assertEqual(authors.emails[3], "email4@mail.com")
+        self.assertEqual(len(authors.phones), 2)
+        self.assertEqual(authors.phones[0].description, "phone number 1")
+        self.assertEqual(authors.phones[0].country_code, 49)
+        self.assertEqual(authors.phones[0].area_code, 123)
+        self.assertEqual(authors.phones[0].phone_number, "456-7890")
+        self.assertEqual(authors.phones[1].description, "phone number 2")
+        self.assertEqual(authors.phones[1].country_code, 34)
+        self.assertEqual(authors.phones[1].area_code, 321)
+        self.assertEqual(authors.phones[1].phone_number, "129-7890")
+        comment_2 = station.comments[1]
+        self.assertEqual(comment_2.value, "Comment number 2")
+        self.assertEqual(comment_2.begin_effective_time,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(comment_1.end_effective_time,
+            obspy.UTCDateTime(2008, 2, 3))
+        self.assertEqual(len(comment_2.authors), 3)
+        for _i, author in enumerate(comment_2.authors):
+            self.assertEqual(len(author.names), 1)
+            self.assertEqual(author.names[0], "Person %i" % (_i + 1))
+            self.assertEqual(len(author.agencies), 1)
+            self.assertEqual(author.agencies[0], "Some agency")
+            self.assertEqual(len(author.emails), 1)
+            self.assertEqual(author.emails[0], "email@mail.com")
+            self.assertEqual(len(author.phones), 1)
+            self.assertEqual(author.phones[0].description, None)
+            self.assertEqual(author.phones[0].country_code, 49)
+            self.assertEqual(author.phones[0].area_code, 123)
+            self.assertEqual(author.phones[0].phone_number, "456-7890")
+
+        self.assertEqual(station.latitude, 10.0)
+        self.assertEqual(station.longitude, 20.0)
+        self.assertEqual(station.elevation, 100.0)
+
+        self.assertEqual(station.site.name, "Some site")
+        self.assertEqual(station.site.description, "Some description")
+        self.assertEqual(station.site.town, "Some town")
+        self.assertEqual(station.site.county, "Some county")
+        self.assertEqual(station.site.region, "Some region")
+        self.assertEqual(station.site.country, "Some country")
+
+        self.assertEqual(station.vault, "Some vault")
+        self.assertEqual(station.geology, "Some geology")
+
+        self.assertEqual(len(station.equipments), 2)
+        self.assertEqual(station.equipments[0].resource_id, "some_id")
+        self.assertEqual(station.equipments[0].type, "Some type")
+        self.assertEqual(station.equipments[0].description, "Some description")
+        self.assertEqual(station.equipments[0].manufacturer,
+            "Some manufacturer")
+        self.assertEqual(station.equipments[0].vendor, "Some vendor")
+        self.assertEqual(station.equipments[0].model, "Some model")
+        self.assertEqual(station.equipments[0].serial_number, "12345-ABC")
+        self.assertEqual(station.equipments[0].installation_date,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(station.equipments[0].removal_date,
+            obspy.UTCDateTime(1999, 5, 5))
+        self.assertEqual(station.equipments[0].calibration_dates[0],
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(station.equipments[0].calibration_dates[1],
+            obspy.UTCDateTime(1992, 5, 5))
+        self.assertEqual(station.equipments[1].resource_id, "something_new")
+        self.assertEqual(station.equipments[1].type, "Some type")
+        self.assertEqual(station.equipments[1].description, "Some description")
+        self.assertEqual(station.equipments[1].manufacturer,
+            "Some manufacturer")
+        self.assertEqual(station.equipments[1].vendor, "Some vendor")
+        self.assertEqual(station.equipments[1].model, "Some model")
+        self.assertEqual(station.equipments[1].serial_number, "12345-ABC")
+        self.assertEqual(station.equipments[1].installation_date,
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(station.equipments[1].removal_date,
+            obspy.UTCDateTime(1999, 5, 5))
+        self.assertEqual(station.equipments[1].calibration_dates[0],
+            obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(station.equipments[1].calibration_dates[1],
+            obspy.UTCDateTime(1992, 5, 5))
+
+        self.assertEqual(len(station.operators), 2)
+        self.assertEqual(station.operators[0].agencies[0], "Agency 1")
+        self.assertEqual(station.operators[0].agencies[1], "Agency 2")
+        self.assertEqual(station.operators[0].contacts[0].names[0],
+            "This person")
+        self.assertEqual(station.operators[0].contacts[0].names[1],
+            "has multiple names!")
+        self.assertEqual(len(station.operators[0].contacts[0].agencies), 3)
+        self.assertEqual(station.operators[0].contacts[0].agencies[0],
+            "And also")
+        self.assertEqual(station.operators[0].contacts[0].agencies[1], "many")
+        self.assertEqual(station.operators[0].contacts[0].agencies[2],
+            "many Agencies")
+        self.assertEqual(len(station.operators[0].contacts[0].emails), 4)
+        self.assertEqual(station.operators[0].contacts[0].emails[0],
+            "email1@mail.com")
+        self.assertEqual(station.operators[0].contacts[0].emails[1],
+            "email2@mail.com")
+        self.assertEqual(station.operators[0].contacts[0].emails[2],
+            "email3@mail.com")
+        self.assertEqual(station.operators[0].contacts[0].emails[3],
+            "email4@mail.com")
+        self.assertEqual(len(station.operators[0].contacts[0].phones), 2)
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[0].description,
+            "phone number 1")
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[0].country_code, 49)
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[0].area_code, 123)
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[0].phone_number,
+            "456-7890")
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[1].description,
+            "phone number 2")
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[1].country_code, 34)
+        self.assertEqual(station.operators[0].contacts[0].phones[1].area_code,
+            321)
+        self.assertEqual(
+            station.operators[0].contacts[0].phones[1].phone_number,
+            "129-7890")
+        self.assertEqual(station.operators[0].contacts[1].names[0], "Name")
+        self.assertEqual(station.operators[0].contacts[1].agencies[0],
+            "Agency")
+        self.assertEqual(station.operators[0].contacts[1].emails[0],
+            "email@mail.com")
+        self.assertEqual(
+            station.operators[0].contacts[1].phones[0].description,
+            "phone number 1")
+        self.assertEqual(
+            station.operators[0].contacts[1].phones[0].country_code, 49)
+        self.assertEqual(
+            station.operators[0].contacts[1].phones[0].area_code, 123)
+        self.assertEqual(
+            station.operators[0].contacts[1].phones[0].phone_number,
+            "456-7890")
+
+        self.assertEqual(station.operators[1].agencies[0], "Agency")
+        self.assertEqual(station.operators[1].contacts[0].names[0], "New Name")
+        self.assertEqual(station.operators[1].contacts[0].agencies[0],
+            "Agency")
+        self.assertEqual(station.operators[1].contacts[0].emails[0],
+            "email@mail.com")
+        self.assertEqual(
+            station.operators[1].contacts[0].phones[0].description,
+            "phone number 1")
+        self.assertEqual(
+            station.operators[1].contacts[0].phones[0].country_code, 49)
+        self.assertEqual(station.operators[1].contacts[0].phones[0].area_code,
+            123)
+        self.assertEqual(
+            station.operators[1].contacts[0].phones[0].phone_number,
+            "456-7890")
+
+        self.assertEqual(station.creation_date, obspy.UTCDateTime(1990, 5, 5))
+        self.assertEqual(station.termination_date,
+            obspy.UTCDateTime(2009, 5, 5))
+        self.assertEqual(station.total_number_of_channels, 100)
+        self.assertEqual(station.selected_number_of_channels, 1)
+
+        self.assertEqual(len(station.external_references), 2)
+        self.assertEqual(station.external_references[0].uri,
+            "http://path.to/something")
+        self.assertEqual(station.external_references[0].description,
+            "Some description")
+        self.assertEqual(station.external_references[1].uri,
+            "http://path.to/something/else")
+        self.assertEqual(station.external_references[1].description,
+            "Some other description")
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

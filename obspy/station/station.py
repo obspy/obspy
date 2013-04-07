@@ -20,13 +20,14 @@ class SeismicStation(BaseNode):
         single station epoch with the station's creation and termination dates
         as the epoch start and end dates.
     """
-    def __init__(self, channels=[], **kwargs):
+    def __init__(self, code, latitude, longitude, elevation, channels=[],
+            **kwargs):
         """
         :type channels: A list of 'obspy.station.SeismicChannel`
         :param channels: All channels belonging to this station.
         :param latitude: The latitude of the station
         :param longitude: The longitude of the station
-        :param elevation_in_m: The elevation of the station in meter.
+        :param elevation: The elevation of the station in meter.
         :param site: These fields describe the location of the station using
             geopolitical entities (country, city, etc.).
         :param vault: Type of vault, e.g. WWSSN, tunnel, transportable array,
@@ -57,16 +58,23 @@ class SeismicStation(BaseNode):
         :param external_references: URI of any type of external report, such as
             IRIS data reports or dataless SEED volumes. Optional.
         """
-        self.equipment = kwargs.get("equipment", None)
-        self.operator = kwargs.get("operator", [])
-        self.creation_date = kwargs.get("creation_date")
+        self.latitude = latitude
+        self.longitude = longitude
+        self.elevation = elevation
+        self.channels = channels
+        self.site = kwargs.get("site", None)
+        self.vault = kwargs.get("vault", None)
+        self.geology = kwargs.get("geology", None)
+        self.equipments = kwargs.get("equipment", [])
+        self.operators = kwargs.get("operators", [])
+        self.creation_date = kwargs.get("creation_date", None)
         self.termination_date = kwargs.get("termination_date", None)
         self.total_number_of_channels = kwargs.get("total_number_of_channels",
             None)
         self.selected_number_of_channels = \
             kwargs.get("selected_number_of_channels", None)
         self.external_references = kwargs.get("external_references", [])
-        super(SeismicStation, self).__init__(*args, **kwargs)
+        super(SeismicStation, self).__init__(code, **kwargs)
 
     @property
     def operator(self):
@@ -101,6 +109,9 @@ class SeismicStation(BaseNode):
 
     @creation_date.setter
     def creation_date(self, value):
+        if value is None:
+            self.__creation_date = None
+            return
         if not isinstance(value, UTCDateTime):
             value = UTCDateTime(value)
         self.__creation_date = value

@@ -95,8 +95,8 @@ class Equipment(object):
         :param installation_date: The installation date of the equipment
         :type removal_date: `obspy.UTCDateTime`
         :param removal_date: The removal data of the equipment
-        :type calibration_date: list of `obspy.UTCDateTime`
-        :param calibration_date: A list with all calibration dates of the
+        :type calibration_dates: list of `obspy.UTCDateTime`
+        :param calibration_dates: A list with all calibration dates of the
             equipment.
         :type resource_id: String
         :param resource_id: This field contains a string that should serve as a
@@ -114,8 +114,8 @@ class Equipment(object):
         self.model = kwargs.get("model", None)
         self.serial_number = kwargs.get("serial_number", None)
         self.installation_date = kwargs.get("installation_date", None)
-        self.removal_date = kwargs.get("removal_data", None)
-        self.calibration_date = kwargs.get("calibration_date", [])
+        self.removal_date = kwargs.get("removal_date", None)
+        self.calibration_dates = kwargs.get("calibration_dates", [])
         self.resource_id = kwargs.get("resource_id", None)
 
         @property
@@ -157,20 +157,33 @@ class Operator(object):
         :type website: String
         :param website: The website, optional
         """
-        self.agency = kwargs.get("agency")
-        self.contacts = kwargs.get("contact", [])
+        self.agencies = kwargs.get("agencies")
+        self.contacts = kwargs.get("contacts", [])
         self.website = kwargs.get("website", None)
 
     @property
-    def agency(self):
-        return self.__agency
+    def agencies(self):
+        return self.__agencies
 
-    @agency.setter
-    def agency(self, value):
+    @agencies.setter
+    def agencies(self, value):
         if not hasattr(value, "__iter__") or len(value) < 1:
-            msg = ("agency needs to iterable, e.g. a list and contain at "
+            msg = ("agencies needs to iterable, e.g. a list and contain at "
                 "least one entry.")
             raise ValueError(msg)
+        self.__agencies = value
+
+    @property
+    def contacts(self):
+        return self.__contacts
+
+    @contacts.setter
+    def contacts(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = ("contacts needs to iterable, e.g. a list.")
+            raise ValueError(msg)
+        self.__contacts = value
+
 
 
 class Person(object):

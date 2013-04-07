@@ -129,7 +129,86 @@ def _read_network(net_element, _ns):
         _ns("TotalNumberStations"), int)
     network.selected_number_of_stations = _tag2obj(net_element,
         _ns("SelectedNumberStations"), int)
+    stations = []
+    for station in net_element.findall(_ns("Station")):
+        stations.append(_read_station(station, _ns))
+    network.stations = stations
     return network
+
+
+def _read_station(sta_element, _ns):
+    latitude = _tag2obj(sta_element, _ns("Latitude"), float)
+    longitude = _tag2obj(sta_element, _ns("Longitude"), float)
+    elevation = _tag2obj(sta_element, _ns("Elevation"), float)
+    station = obspy.station.SeismicStation(code=sta_element.get("code"),
+        latitude=latitude, longitude=longitude, elevation=elevation)
+    station.site = _read_site(sta_element.find(_ns("Site")), _ns)
+    _read_base_node(sta_element, station, _ns)
+    station.vault = _tag2obj(sta_element, _ns("Vault"), str)
+    station.geology = _tag2obj(sta_element, _ns("Geology"), str)
+    for equipment in sta_element.findall(_ns("Equipment")):
+        station.equipments.append(_read_equipment(equipment, _ns))
+    for operator in sta_element.findall(_ns("Operator")):
+        station.operators.append(_read_operator(operator, _ns))
+    station.creation_date = _tag2obj(sta_element, _ns("CreationDate"),
+        obspy.UTCDateTime)
+    station.termination_date = _tag2obj(sta_element, _ns("TerminationDate"),
+        obspy.UTCDateTime)
+    station.selected_number_of_channels = _tag2obj(sta_element,
+        _ns("SelectedNumberChannels"), int)
+    station.total_number_of_channels = _tag2obj(sta_element,
+        _ns("TotalNumberChannels"), int)
+    for ref in sta_element.findall(_ns("ExternalReference")):
+        station.external_references.append(_read_external_reference(ref, _ns))
+    return station
+
+
+def _read_external_reference(ref_element, _ns):
+    uri = _tag2obj(ref_element, _ns("URI"), str)
+    description = _tag2obj(ref_element, _ns("Description"), str)
+    return obspy.station.ExternalReference(uri=uri, description=description)
+
+
+def _read_operator(operator_element, _ns):
+    agencies = [_i.text for _i in operator_element.findall(_ns("Agency"))]
+    contacts = []
+    for contact in operator_element.findall(_ns("Contact")):
+        contacts.append(_read_person(contact, _ns))
+    website = _tag2obj(operator_element, _ns("WebSite"), _ns)
+    return obspy.station.Operator(agencies=agencies, contacts=contacts,
+        website=website)
+
+
+def _read_equipment(equip_element, _ns):
+    resource_id = equip_element.get("resourceId")
+    type = _tag2obj(equip_element, _ns("Type"), str)
+    description = _tag2obj(equip_element, _ns("Description"), str)
+    manufacturer = _tag2obj(equip_element, _ns("Manufacturer"), str)
+    vendor = _tag2obj(equip_element, _ns("Vendor"), str)
+    model = _tag2obj(equip_element, _ns("Model"), str)
+    serial_number = _tag2obj(equip_element, _ns("SerialNumber"), str)
+    installation_date = _tag2obj(equip_element, _ns("InstallationDate"),
+        obspy.UTCDateTime)
+    removal_date = _tag2obj(equip_element, _ns("RemovalDate"),
+        obspy.UTCDateTime)
+    calibration_dates = [obspy.core.UTCDateTime(_i.text)
+        for _i in equip_element.findall(_ns("CalibrationDate"))]
+    return obspy.station.Equipment(resource_id=resource_id, type=type,
+        description=description, manufacturer=manufacturer, vendor=vendor,
+        model=model, serial_number=serial_number,
+        installation_date=installation_date, removal_date=removal_date,
+        calibration_dates=calibration_dates)
+
+
+def _read_site(site_element, _ns):
+    name = _tag2obj(site_element, _ns("Name"), str)
+    description = _tag2obj(site_element, _ns("Description"), str)
+    town = _tag2obj(site_element, _ns("Town"), str)
+    county = _tag2obj(site_element, _ns("County"), str)
+    region = _tag2obj(site_element, _ns("Region"), str)
+    country = _tag2obj(site_element, _ns("Country"), str)
+    return obspy.station.Site(name=name, description=description, town=town,
+        county=county, region=region, country=country)
 
 
 def _read_comment(comment_element, _ns):
