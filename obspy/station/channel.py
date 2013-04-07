@@ -9,24 +9,28 @@ Provides the SeismicChannel class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy.station import BaseNode
 
 
-class SeismicChannel(object):
+class SeismicChannel(BaseNode):
     """
     From the StationXML definition:
         Equivalent to SEED blockette 52 and parent element for the related the
         response blockettes.
     """
-    def __init__(self, location_code, latitude, longitude, elevation, depth,
-            azimuth=None, dip=None, types=[], external_references=[],
-            sample_rate=None, sample_rate_ratio=None,
+    def __init__(self, code, location_code, latitude, longitude,
+            elevation, depth, azimuth=None, dip=None, types=[],
+            external_references=[], sample_rate=None, sample_rate_ratio=None,
             clock_drift_in_seconds_per_sample=None, calibration_units=None,
             calibration_units_description=None, sensor=None,
             pre_amplifier=None, data_logger=None, equipment=None,
-            response=None, **kwargs):
+            description=None, comments=[], start_date=None, end_date=None,
+            restricted_status=None, alternate_code=None, historical_code=None):
         """
+        :type code: String
+        :param code: The SEED channel code for this channel
         :type location_code: String
-        :param location_code: The SEED location code
+        :param location_code: The SEED location code for this channel
         :type latitude: float
         :param latitude: Latitude coordinate of this channel's sensor.
         :type longitude: float
@@ -82,6 +86,23 @@ class SeismicChannel(object):
         :param equipment: Other station equipment
         :type response: :class:~`obspy.station.response.Response`, optional
         :param response: The response of the channel
+        :type description: String, optional
+        :param description: A description of the resource
+        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :param comments: An arbitrary number of comments to the resource
+        :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param start_date: The start date of the resource
+        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param end_date: The end date of the resource
+        :type restricted_status: String, optional
+        :param restricted_status: The restriction status
+        :type alternate_code: String, optional
+        :param alternate_code: A code used for display or association,
+            alternate to the SEED-compliant code.
+        :type historical_code: String, optional
+        :param historical_code: A previously used code if different from the
+            current code.
         """
         self.latitude = latitude
         self.longitude = longitude
@@ -101,3 +122,7 @@ class SeismicChannel(object):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
+        super(SeismicChannel, self).__init__(code=code,
+            description=description, comments=comments, start_date=start_date,
+            end_date=end_date, restricted_status=restricted_status,
+            alternate_code=alternate_code, historical_code=historical_code)

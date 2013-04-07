@@ -10,7 +10,7 @@ Provides the SeismicStation class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime
-from obspy.station import BaseNode, Equipment, ExternalReference
+from obspy.station import BaseNode, Equipment
 
 
 class SeismicStation(BaseNode):
@@ -21,7 +21,11 @@ class SeismicStation(BaseNode):
         as the epoch start and end dates.
     """
     def __init__(self, code, latitude, longitude, elevation, channels=[],
-            **kwargs):
+            site=None, vault=None, geology=None, equipments=[], operators=[],
+            creation_date=None, termination_date=None,
+            total_number_of_channels=None, selected_number_of_channels=None,
+            description=None, comments=[], start_date=None, end_date=None,
+            restricted_status=None, alternate_code=None, historical_code=None):
         """
         :type channels: A list of 'obspy.station.SeismicChannel`
         :param channels: All channels belonging to this station.
@@ -57,24 +61,42 @@ class SeismicStation(BaseNode):
         :type external_references: list of `obspy.station.ExternalReference`
         :param external_references: URI of any type of external report, such as
             IRIS data reports or dataless SEED volumes. Optional.
+        :type description: String, optional
+        :param description: A description of the resource
+        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :param comments: An arbitrary number of comments to the resource
+        :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param start_date: The start date of the resource
+        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param end_date: The end date of the resource
+        :type restricted_status: String, optional
+        :param restricted_status: The restriction status
+        :type alternate_code: String, optional
+        :param alternate_code: A code used for display or association,
+            alternate to the SEED-compliant code.
+        :type historical_code: String, optional
+        :param historical_code: A previously used code if different from the
+            current code.
         """
         self.latitude = latitude
         self.longitude = longitude
         self.elevation = elevation
         self.channels = channels
-        self.site = kwargs.get("site", None)
-        self.vault = kwargs.get("vault", None)
-        self.geology = kwargs.get("geology", None)
-        self.equipments = kwargs.get("equipment", [])
-        self.operators = kwargs.get("operators", [])
-        self.creation_date = kwargs.get("creation_date", None)
-        self.termination_date = kwargs.get("termination_date", None)
-        self.total_number_of_channels = kwargs.get("total_number_of_channels",
-            None)
-        self.selected_number_of_channels = \
-            kwargs.get("selected_number_of_channels", None)
-        self.external_references = kwargs.get("external_references", [])
-        super(SeismicStation, self).__init__(code, **kwargs)
+        self.site = site
+        self.vault = vault
+        self.geology = geology
+        self.equipments = equipments
+        self.operators = operators
+        self.creation_date = creation_date
+        self.termination_date = termination_date
+        self.total_number_of_channels = total_number_of_channels
+        self.selected_number_of_channels = selected_number_of_channels
+        self.external_references = []
+        super(SeismicStation, self).__init__(code=code,
+            description=description, comments=comments, start_date=start_date,
+            end_date=end_date, restricted_status=restricted_status,
+            alternate_code=alternate_code, historical_code=historical_code)
 
     @property
     def operator(self):
@@ -101,7 +123,7 @@ class SeismicStation(BaseNode):
             msg = ("equipment needs to be be of type obspy.station.Equipment "
                 "or contain a dictionary with values suitable for "
                 "initialization.")
-            raise ValueError
+            raise ValueError(msg)
 
     @property
     def creation_date(self):

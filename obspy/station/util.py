@@ -18,17 +18,41 @@ class BaseNode(object):
     From the StationXML definition:
         A base node type for derivation from: Network, Station and Channel
         types.Station
-    """
-    def __init__(self, code, *args, **kwargs):
-        self.code = code
 
-        self.comments = kwargs.get("comments", [])
-        self.description = kwargs.get("description", None)
-        self.start_date = kwargs.get("start_date", None)
-        self.end_date = kwargs.get("end_date", None)
-        self.restricted_status = kwargs.get("restricted_status", None)
-        self.alternate_code = kwargs.get("alternate_code", None)
-        self.historical_code = kwargs.get("historical_code", None)
+    The parent class for the network, station and channel classes.
+    """
+    def __init__(self, code, description=None, comments=[], start_date=None,
+            end_date=None, restricted_status=None, alternate_code=None,
+            historical_code=None):
+        """
+        :type code: String
+        :param code: The SEED network, station, or channel code
+        :type description: String, optional
+        :param description: A description of the resource
+        :type comments: List of :class:`~obspy.station.util.Comment`, optional
+        :param comments: An arbitrary number of comments to the resource
+        :type start_date: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param start_date: The start date of the resource
+        :type end_date: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param end_date: The end date of the resource
+        :type restricted_status: String, optional
+        :param restricted_status: The restriction status
+        :type alternate_code: String, optional
+        :param alternate_code: A code used for display or association,
+            alternate to the SEED-compliant code.
+        :type historical_code: String, optional
+        :param historical_code: A previously used code if different from the
+            current code.
+        """
+        self.code = code
+        self.comments = comments
+        self.description = description
+        self.start_date = start_date
+        self.end_date = end_date
+        self.restricted_status = restricted_status
+        self.alternate_code = alternate_code
+        self.historical_code = historical_code
 
     @property
     def code(self):
@@ -183,7 +207,6 @@ class Operator(object):
             msg = ("contacts needs to iterable, e.g. a list.")
             raise ValueError(msg)
         self.__contacts = value
-
 
 
 class Person(object):
