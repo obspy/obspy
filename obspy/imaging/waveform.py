@@ -164,7 +164,7 @@ class WaveformPlotting(object):
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
-        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.0)
+        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.10)
         self.right_vertical_labels = kwargs.get('right_vertical_labels', False)
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
@@ -433,7 +433,8 @@ class WaveformPlotting(object):
         Helper function to plot an event into the dayplot.
         """
         if hasattr(event, "preferred_origin"):
-            # Get the time from the preferred origin.
+            # Get the time from the preferred origin, alternatively the first
+            # origin.
             origin = event.preferred_origin()
             if origin is None:
                 if event.origins:
@@ -441,12 +442,17 @@ class WaveformPlotting(object):
                 else:
                     return
             time = origin.time
-            # Attempt to get a magnitude string.
+
+            # Do the same for the magnitude.
             mag = event.preferred_magnitude()
-            if mag is not None:
-                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
-            else:
+            if mag is None:
+                if event.magnitudes:
+                    mag = event.magnitudes[0]
+            if mag is None:
                 mag = ""
+            else:
+                mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
+
             region = FlinnEngdahl().get_region(origin.longitude,
                 origin.latitude)
             text = region
