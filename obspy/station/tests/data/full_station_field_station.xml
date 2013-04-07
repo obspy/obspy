@@ -94,11 +94,66 @@
               <CalibrationDate>1990-05-05T00:00:00+00:00</CalibrationDate>
               <CalibrationDate>1992-05-05T00:00:00+00:00</CalibrationDate>
           </Equipment>
+          <Equipment resourceId="something_new">
+              <Type>Some type</Type>
+              <Description>Some description</Description>
+              <Manufacturer>Some manufacturer</Manufacturer>
+              <Vendor>Some vendor</Vendor>
+              <Model>Some model</Model>
+              <SerialNumber>12345-ABC</SerialNumber>
+              <InstallationDate>1990-05-05T00:00:00+00:00</InstallationDate>
+              <RemovalDate>1999-05-05T00:00:00+00:00</RemovalDate>
+              <CalibrationDate>1990-05-05T00:00:00+00:00</CalibrationDate>
+              <CalibrationDate>1992-05-05T00:00:00+00:00</CalibrationDate>
+          </Equipment>
           <Operator>
               <Agency>Agency 1</Agency>
               <Agency>Agency 2</Agency>
-              <Contact></Contact>
-              <Contact></Contact>
+              <Contact>
+                  <Name>This person</Name>
+                  <Name>has multiple names!</Name>
+                  <Agency>And also</Agency>
+                  <Agency>many</Agency>
+                  <Agency>many Agencies</Agency>
+                  <Email>email1@mail.com</Email>
+                  <Email>email2@mail.com</Email>
+                  <Email>email3@mail.com</Email>
+                  <Email>email4@mail.com</Email>
+                  <Phone description="phone number 1">
+                    <CountryCode>49</CountryCode>
+                    <AreaCode>123</AreaCode>
+                    <PhoneNumber>456-7890</PhoneNumber>
+                  </Phone>
+                  <Phone description="phone number 2">
+                    <CountryCode>34</CountryCode>
+                    <AreaCode>321</AreaCode>
+                    <PhoneNumber>129-7890</PhoneNumber>
+                  </Phone>
+              </Contact>
+              <Contact>
+                  <Name>Name</Name>
+                  <Agency>Agency</Agency>
+                  <Email>email@mail.com</Email>
+                  <Phone description="phone number 1">
+                    <CountryCode>49</CountryCode>
+                    <AreaCode>123</AreaCode>
+                    <PhoneNumber>456-7890</PhoneNumber>
+                  </Phone>
+              </Contact>
+              <WebSite>http://www.web.site</WebSite>
+          </Operator>
+          <Operator>
+              <Agency>Agency</Agency>
+              <Contact>
+                  <Name>New Name</Name>
+                  <Agency>Agency</Agency>
+                  <Email>email@mail.com</Email>
+                  <Phone description="phone number 1">
+                    <CountryCode>49</CountryCode>
+                    <AreaCode>123</AreaCode>
+                    <PhoneNumber>456-7890</PhoneNumber>
+                  </Phone>
+              </Contact>
               <WebSite>http://www.web.site</WebSite>
           </Operator>
           <CreationDate>1990-05-05T00:00:00+00:00</CreationDate>
@@ -108,6 +163,10 @@
           <ExternalReference>
               <URI>http://path.to/something</URI>
               <Description>Some description</Description>
+          </ExternalReference>
+          <ExternalReference>
+              <URI>http://path.to/something/else</URI>
+              <Description>Some other description</Description>
           </ExternalReference>
       </Station>
   </Network>
