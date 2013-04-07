@@ -174,7 +174,7 @@ def _read_operator(operator_element, _ns):
     contacts = []
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
-    website = _tag2obj(operator_element, _ns("WebSite"), _ns)
+    website = _tag2obj(operator_element, _ns("WebSite"), str)
     return obspy.station.Operator(agencies=agencies, contacts=contacts,
         website=website)
 
@@ -303,34 +303,6 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
         fh.write(str_repr)
 
 
-def _tag2obj(element, tag, convert):
-    try:
-        return convert(element.find(tag).text)
-    except:
-        None
-
-
-def _tags2obj(element, tag, convert):
-    values = []
-    for elem in element.findall(tag):
-        values.append(convert(elem.text))
-    return values
-
-
-def _attr2obj(element, attr, convert):
-    attribute = element.get(attr)
-    if attribute is None:
-        return None
-    try:
-        return convert(attribute)
-    except:
-        None
-
-
-def _format_time(value):
-    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
-
-
 def _get_base_node_attributes(element):
     attributes = {"code": element.code}
     if element.start_date:
@@ -370,6 +342,93 @@ def _write_network(parent, network):
         etree.SubElement(network_elem, "SelectedNumberStations").text = \
             str(network.selected_number_of_stations)
 
+    for station in network.stations:
+        _write_station(network_elem, station)
+
+
+def _write_station(parent, station):
+    # Write the base node type fields.
+    attribs = _get_base_node_attributes(station)
+    station_elem = etree.SubElement(parent, "Station", attribs)
+    _write_base_node(station_elem, station)
+
+    etree.SubElement(station_elem, "Latitude").text = str(station.latitude)
+    etree.SubElement(station_elem, "Longitude").text = str(station.longitude)
+    etree.SubElement(station_elem, "Elevation").text = str(station.elevation)
+
+    _write_site(station_elem, station.site)
+
+    # Optional tags.
+    _obj2tag(station_elem, "Vault", station.vault)
+    _obj2tag(station_elem, "Geology", station.geology)
+
+    for equipment in station.equipments:
+        _write_equipment(station_elem, equipment)
+
+    for operator in station.operators:
+        operator_elem = etree.SubElement(station_elem, "Operator")
+        for agency in operator.agencies:
+            etree.SubElement(operator_elem, "Agency").text = agency
+        for contact in operator.contacts:
+            _write_person(operator_elem, contact, "Contact")
+        etree.SubElement(operator_elem, "WebSite").text = operator.website
+
+    etree.SubElement(station_elem, "CreationDate").text = \
+        _format_time(station.creation_date)
+    if station.termination_date:
+        etree.SubElement(station_elem, "TerminationDate").text = \
+            _format_time(station.termination_date)
+    # The next two tags are optional.
+    _obj2tag(station_elem, "TotalNumberChannels",
+        station.total_number_of_channels)
+    _obj2tag(station_elem, "SelectedNumberChannels",
+        station.selected_number_of_channels)
+
+    for ref in station.external_references:
+        _write_external_reference(station_elem, ref)
+
+
+def _write_external_reference(parent, ref):
+    ref_elem = etree.SubElement(parent, "ExternalReference")
+    etree.SubElement(ref_elem, "URI").text = ref.uri
+    etree.SubElement(ref_elem, "Description").text = ref.description
+
+
+def _write_equipment(parent, equipment):
+    if equipment.resource_id is None:
+        attr = {}
+    else:
+        attr = {"resourceId": equipment.resource_id}
+    equipment_elem = etree.SubElement(parent, "Equipment", attr)
+
+    # All tags are optional.
+    _obj2tag(equipment_elem, "Type", equipment.type)
+    _obj2tag(equipment_elem, "Description", equipment.description)
+    _obj2tag(equipment_elem, "Manufacturer", equipment.manufacturer)
+    _obj2tag(equipment_elem, "Vendor", equipment.vendor)
+    _obj2tag(equipment_elem, "Model", equipment.model)
+    _obj2tag(equipment_elem, "SerialNumber", equipment.serial_number)
+    if equipment.installation_date:
+        etree.SubElement(equipment_elem, "InstallationDate").text = \
+            _format_time(equipment.installation_date)
+    if equipment.removal_date:
+        etree.SubElement(equipment_elem, "RemovalDate").text = \
+            _format_time(equipment.removal_date)
+    for calibration_date in equipment.calibration_dates:
+        etree.SubElement(equipment_elem, "CalibrationDate").text = \
+            _format_time(calibration_date)
+
+
+def _write_site(parent, site):
+    site_elem = etree.SubElement(parent, "Site")
+    etree.SubElement(site_elem, "Name").text = site.name
+    # Optional tags
+    _obj2tag(site_elem, "Description", site.description)
+    _obj2tag(site_elem, "Town", site.town)
+    _obj2tag(site_elem, "County", site.county)
+    _obj2tag(site_elem, "Region", site.region)
+    _obj2tag(site_elem, "Country", site.country)
+
 
 def _write_comment(parent, comment):
     comment_elem = etree.SubElement(parent, "Comment")
@@ -406,3 +465,41 @@ def _write_phone(parent, phone):
             str(phone.country_code)
     etree.SubElement(phone_elem, "AreaCode").text = str(phone.area_code)
     etree.SubElement(phone_elem, "PhoneNumber").text = phone.phone_number
+
+
+def _tag2obj(element, tag, convert):
+    try:
+        return convert(element.find(tag).text)
+    except:
+        None
+
+
+def _tags2obj(element, tag, convert):
+    values = []
+    for elem in element.findall(tag):
+        values.append(convert(elem.text))
+    return values
+
+
+def _attr2obj(element, attr, convert):
+    attribute = element.get(attr)
+    if attribute is None:
+        return None
+    try:
+        return convert(attribute)
+    except:
+        None
+
+
+def _obj2tag(parent, tag_name, tag_value):
+    """
+    If tag_value is not None, append a SubElement to the parent. The text of
+    the tag will be tag_value.
+    """
+    if tag_value is None:
+        return
+    etree.SubElement(parent, tag_name).text = str(tag_value)
+
+
+def _format_time(value):
+    return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")

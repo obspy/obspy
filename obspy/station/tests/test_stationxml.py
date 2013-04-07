@@ -42,7 +42,6 @@ class StationXMLTestCase(unittest.TestCase):
         org_lines = [_i.strip() for _i in org_lines
             if not _i.strip().startswith("<Module")]
 
-        self.assertEqual(len(new_lines), len(org_lines))
         for new_line, org_line in izip(new_lines, org_lines):
             try:
                 self.assertEqual(new_line, org_line)
@@ -50,6 +49,11 @@ class StationXMLTestCase(unittest.TestCase):
                 # Attributes have no fixed order but should all exists.
                 self.assertEqual(sorted(new_line[1:-1].split()),
                     sorted(org_line[1:-1].split()))
+
+        # Assert the line length at the end to find trailing non-equal lines.
+        # If it is done before the line comparision it is oftentimes not very
+        # helpful as you do not know which line is missing.
+        self.assertEqual(len(new_lines), len(org_lines))
 
     def test_is_stationxml(self):
         """
@@ -424,6 +428,7 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(
             station.operators[0].contacts[1].phones[0].phone_number,
             "456-7890")
+        self.assertEqual(station.operators[0].website, "http://www.web.site")
 
         self.assertEqual(station.operators[1].agencies[0], "Agency")
         self.assertEqual(station.operators[1].contacts[0].names[0], "New Name")
@@ -441,6 +446,7 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(
             station.operators[1].contacts[0].phones[0].phone_number,
             "456-7890")
+        self.assertEqual(station.operators[1].website, "http://www.web.site")
 
         self.assertEqual(station.creation_date, obspy.UTCDateTime(1990, 5, 5))
         self.assertEqual(station.termination_date,
@@ -457,6 +463,19 @@ class StationXMLTestCase(unittest.TestCase):
             "http://path.to/something/else")
         self.assertEqual(station.external_references[1].description,
             "Some other description")
+
+        # Now write it again and compare to the original file.
+        file_buffer = BytesIO()
+        inv.write(file_buffer, format="StationXML", validate=True,
+            _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+            expected_xml_file_buffer)
 
 
 def suite():
