@@ -283,8 +283,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
             attributes = [_i for _i in self._property_keys if not
-                          _i.endswith("_errors") and getattr(self, _i)]
-            containers = [_i for _i in self._containers if getattr(self, _i)]
+                          _i.endswith("_errors") and getattr(self, _i) is not None]
+            containers = [_i for _i in self._containers if getattr(self, _i) is not None]
 
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
@@ -303,7 +303,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 repr_str = getattr(self, key).__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
-                if hasattr(self, error_key) and getattr(self, error_key):
+                if hasattr(self, error_key) and getattr(self, error_key) is not None:
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join([str(key) + "=" +
@@ -314,7 +314,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # single line.
             if len(attributes) <= 3 and not containers:
                 att_strs = ["%s=%s" % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if getattr(self, _i) is not None]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
 
@@ -322,7 +322,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if attributes:
                 format_str = "%" + str(max_length) + "s: %s"
                 att_strs = [format_str % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if getattr(self, _i) is not None]
                 ret_str += "\n\t" + "\n\t".join(att_strs)
 
             # For the containers just print the number of elements in each.
