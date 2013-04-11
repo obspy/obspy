@@ -25,16 +25,14 @@ lib_names = [
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
-clibmseed = None
 for lib_name in lib_names:
     try:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
+        break
     except Exception, e:
         pass
-    else:
-        break
-if not clibmseed:
+else:
     msg = 'Could not load shared library for obspy.mseed.\n\n %s' % (e)
     raise ImportError(msg)
 

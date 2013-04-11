@@ -115,12 +115,10 @@ class Unpickler(object):
         return obj
 
     def _creation_info(self, element):
-        has_creation_info = False
         for child in element:
             if 'creationInfo' in child.tag:
-                has_creation_info = True
                 break
-        if not has_creation_info:
+        else:
             return None
         obj = CreationInfo()
         obj.agency_uri = self._xpath2obj('creationInfo/agencyURI', element)

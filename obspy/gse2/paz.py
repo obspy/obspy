@@ -120,15 +120,13 @@ def attach_paz(tr, paz_file):
     671140000.0
     '''
     poles, zeros, seismometer_gain = readPaz(paz_file)
-    found_zero = False
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
         if zero == complex(0, 0j):
             zeros.pop(i)
-            found_zero = True
             break
-    if not found_zero:
+    else:
         raise Exception("Could not remove (0,0j) zero to undo GSE integration")
 
     # ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/gse2001.pdf

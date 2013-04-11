@@ -930,7 +930,6 @@ class Parser(object):
                 # same id and content.
                 cur_index = 1
                 # Helper variable.
-                blkt_done = False
                 for ex_blkt in self.abbreviations:
                     if id != ex_blkt.blockette_type:
                         continue
@@ -941,9 +940,8 @@ class Parser(object):
                     # Update the current blockette and all abbreviations.
                     self._updateTemporaryStations(id, getattr(ex_blkt,
                                                     INDEX_FIELDS[id]))
-                    blkt_done = True
                     break
-                if not blkt_done:
+                else:
                     self._updateTemporaryStations(id, cur_index)
                     # Append abbreviation.
                     setattr(blkt, INDEX_FIELDS[id], cur_index)
