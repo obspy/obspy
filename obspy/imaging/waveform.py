@@ -138,9 +138,13 @@ class WaveformPlotting(object):
         else:
             self.color = kwargs.get('color', 'k')
             self.number_of_ticks = kwargs.get('number_of_ticks', 4)
-        # Background and face color.
+        # Background, face  and grid color.
         self.background_color = kwargs.get('bgcolor', 'w')
         self.face_color = kwargs.get('face_color', 'w')
+        self.grid_color = kwargs.get('grid_color', 'black')
+        self.grid_linewidth = kwargs.get('grid_linewidth', 0.5)
+        self.grid_linestyle = kwargs.get('grid_linestyle', ':')
+        
         # Transparency. Overwrites background and facecolor settings.
         self.transparent = kwargs.get('transparent', False)
         if self.transparent:
@@ -161,6 +165,7 @@ class WaveformPlotting(object):
         self.y_labels_size = kwargs.get('y_labels_size', 8)
         self.title_size = kwargs.get('title_size', 10)
         self.linewidth = kwargs.get('linewidth', 0.4)
+        self.linestyle = kwargs.get('linestyle', '-')
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
@@ -335,6 +340,7 @@ class WaveformPlotting(object):
         self.__plotSetXTicks()
         self.__plotSetYTicks()
 
+
     @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
         """
@@ -393,7 +399,7 @@ class WaveformPlotting(object):
             # Plot the values.
             ax.plot(x_values, y_values,
                     color=self.color[_i % len(self.color)],
-                    linewidth=self.linewidth)
+                    linewidth=self.linewidth, linestyle=self.linestyle)
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
@@ -406,7 +412,7 @@ class WaveformPlotting(object):
         self.__dayplotSetYTicks(*args, **kwargs)
         self.__dayplotSetXTicks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
-        self.fig.axes[0].grid()
+        self.fig.axes[0].grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
         self.fig.suptitle(self.title, fontsize=self.title_size)
@@ -524,7 +530,7 @@ class WaveformPlotting(object):
                 zorder=10)
         # Draw the actual point. Use a marker with a star shape.
         self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12, linewidth=self.linewidth)
+            markersize=12)
 
     def _plotDayplotScale(self, unit):
         """
@@ -641,7 +647,9 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.linewidth)
+        ax.plot(trace.data, color=self.color, linewidth=self.linewidth, linestyle=self.linestyle)
+        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
