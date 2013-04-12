@@ -144,7 +144,7 @@ class WaveformPlotting(object):
         self.grid_color = kwargs.get('grid_color', 'black')
         self.grid_linewidth = kwargs.get('grid_linewidth', 0.5)
         self.grid_linestyle = kwargs.get('grid_linestyle', ':')
-        
+
         # Transparency. Overwrites background and facecolor settings.
         self.transparent = kwargs.get('transparent', False)
         if self.transparent:
@@ -169,7 +169,8 @@ class WaveformPlotting(object):
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
-        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.10)
+        self.subplots_adjust_bottom = kwargs.get(
+            'subplots_adjust_bottom', 0.10)
         self.right_vertical_labels = kwargs.get('right_vertical_labels', False)
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
@@ -340,7 +341,6 @@ class WaveformPlotting(object):
         self.__plotSetXTicks()
         self.__plotSetYTicks()
 
-
     @deprecated_keywords({'swap_time_axis': None})
     def plotDay(self, *args, **kwargs):
         """
@@ -358,7 +358,7 @@ class WaveformPlotting(object):
         self.__dayplotNormalizeValues(self, *args, **kwargs)
         # Get timezone information. If none is  given, use local time.
         self.time_offset = kwargs.get('time_offset',
-            round((UTCDateTime(datetime.now()) - UTCDateTime()) / 3600.0, 2))
+                                      round((UTCDateTime(datetime.now()) - UTCDateTime()) / 3600.0, 2))
         self.timezone = kwargs.get('timezone', 'local time')
         # Try to guess how many steps are needed to advance one full time unit.
         self.repeat = None
@@ -380,8 +380,8 @@ class WaveformPlotting(object):
             ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots
         self.fig.subplots_adjust(left=self.subplots_adjust_left,
-        right=self.subplots_adjust_right, top=self.subplots_adjust_top,
-        bottom=self.subplots_adjust_bottom)
+                                 right=self.subplots_adjust_right, top=self.subplots_adjust_top,
+                                 bottom=self.subplots_adjust_bottom)
         # Create x_value_array.
         aranged_array = np.arange(self.width)
         x_values = np.empty(2 * self.width)
@@ -412,7 +412,8 @@ class WaveformPlotting(object):
         self.__dayplotSetYTicks(*args, **kwargs)
         self.__dayplotSetXTicks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
-        self.fig.axes[0].grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        self.fig.axes[0].grid(
+            color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
         self.fig.suptitle(self.title, fontsize=self.title_size)
@@ -424,8 +425,8 @@ class WaveformPlotting(object):
                 from obspy.neries import Client
                 c = Client()
                 events = c.getEvents(min_datetime=self.starttime,
-                        max_datetime=self.endtime, format="catalog",
-                        min_magnitude=events["min_magnitude"])
+                                     max_datetime=self.endtime, format="catalog",
+                                     min_magnitude=events["min_magnitude"])
             except Exception, e:
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
@@ -460,7 +461,7 @@ class WaveformPlotting(object):
                 mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
 
             region = FlinnEngdahl().get_region(origin.longitude,
-                origin.latitude)
+                                               origin.latitude)
             text = region
             if mag:
                 text += ", %s" % mag
@@ -511,26 +512,29 @@ class WaveformPlotting(object):
 
             # Draw the annotation including box.
             self.fig.axes[0].annotate(text,
-                # The position of the event.
-                xy=(x_pos, y_pos),
-                # The position of the text, offset depending on the previously
-                # calculated variables.
-                xytext=(x_pos + text_offset_x_sign * text_offset_x,
-                    y_pos + text_offset_y_sign * text_offset_y),
-                # Everything in data coordinates.
-                xycoords="data", textcoords="data",
-                # Set the text alignment.
-                ha=ha, va=va,
-                # Text box style.
-                bbox=dict(boxstyle="round", fc="w", alpha=0.6),
-                # Arrow style
-                arrowprops=dict(arrowstyle="-",
-                    connectionstyle="arc3, rad=%s%.1f" % (arc_sign,
-                    arc_strength), relpos=relpos, shrinkB=7),
-                zorder=10)
+                                      # The position of the event.
+                                      xy=(x_pos, y_pos),
+                                      # The position of the text, offset depending on the previously
+                                      # calculated variables.
+                                      xytext=(
+                                      x_pos + text_offset_x_sign *
+                                      text_offset_x,
+                                      y_pos + text_offset_y_sign * text_offset_y),
+                                      # Everything in data coordinates.
+                                      xycoords="data", textcoords="data",
+                                      # Set the text alignment.
+                                      ha=ha, va=va,
+                                      # Text box style.
+                                      bbox=dict(
+                                      boxstyle="round", fc="w", alpha=0.6),
+                                      # Arrow style
+                                      arrowprops=dict(arrowstyle="-",
+                                                      connectionstyle="arc3, rad=%s%.1f" % (arc_sign,
+                                                                                            arc_strength), relpos=relpos, shrinkB=7),
+                                      zorder=10)
         # Draw the actual point. Use a marker with a star shape.
         self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12)
+                              markersize=12)
 
     def _plotDayplotScale(self, unit):
         """
@@ -552,7 +556,7 @@ class WaveformPlotting(object):
             (left, bottom),
             (right, middle),
             (very_right, middle)
-            ]
+        ]
 
         codes = [Path.MOVETO,
                  Path.LINETO,
@@ -575,8 +579,8 @@ class WaveformPlotting(object):
         else:
             fmt_string = "%.2f %s"
         self.fig.axes[0].text(very_right + 3, middle,
-            fmt_string % (self._normalization_factor, unit), ha="left",
-            va="center", fontsize="small")
+                              fmt_string % (self._normalization_factor, unit), ha="left",
+                              va="center", fontsize="small")
 
     def __plotStraight(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -638,7 +642,7 @@ class WaveformPlotting(object):
             concat = temp
         if self.endtime != trace.stats.endtime:
             samples = (self.endtime - trace.stats.endtime) * \
-                      trace.stats.sampling_rate
+                trace.stats.sampling_rate
             concat.append(np.ma.masked_all(int(samples)))
         if len(concat) > 1:
             # Use the masked array concatenate, otherwise it will result in a
@@ -647,9 +651,12 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.linewidth, linestyle=self.linestyle)
-        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
-        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        ax.plot(trace.data, color=self.color,
+                linewidth=self.linewidth, linestyle=self.linestyle)
+        ax.xaxis.grid(color=self.grid_color,
+                      linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        ax.yaxis.grid(color=self.grid_color,
+                      linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
@@ -676,10 +683,10 @@ class WaveformPlotting(object):
             ts = tr.stats.starttime
             if ts > self.starttime:
                 start = int(ceil(((ts - self.starttime) *
-                        sampling_rate) / pixel_length))
+                                  sampling_rate) / pixel_length))
                 # Samples before start.
                 prestart = int(((self.starttime + start * pixel_length /
-                           sampling_rate) - ts) * sampling_rate)
+                                 sampling_rate) - ts) * sampling_rate)
             else:
                 start = 0
                 prestart = 0
@@ -768,7 +775,7 @@ class WaveformPlotting(object):
             ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
             # Figure out times.
             interval = float(self.endtime - self.starttime) / \
-                       (self.number_of_ticks - 1)
+                (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
                 labels = ['%.2f' % (self.starttime + _i * interval).timestamp
@@ -871,7 +878,7 @@ class WaveformPlotting(object):
             trace.data = trace.data[:number_of_samples]
         elif delta > 0:
             trace.data = np.ma.concatenate([trace.data,
-                            createEmptyDataChunk(delta, trace.data.dtype)])
+                                            createEmptyDataChunk(delta, trace.data.dtype)])
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))
@@ -912,7 +919,7 @@ class WaveformPlotting(object):
         """
         # Convert to native floats.
         self.extreme_values = self.extreme_values.astype(np.float) * \
-                              self.stream[0].stats.calib
+            self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         self.extreme_values -= self.extreme_values.mean()
 
@@ -1038,16 +1045,16 @@ class WaveformPlotting(object):
         sign = '%+i' % self.time_offset
         sign = sign[0]
         label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
-            abs(self.time_offset), (self.time_offset % 1 * 60))
+                                                 abs(self.time_offset), (self.time_offset % 1 * 60))
         ticklabels = [(self.starttime + _i *
                        self.interval).strftime(self.tick_format)
                       for _i in tick_steps]
         self.axis[0].set_yticks(ticks)
         self.axis[0].set_yticklabels(ticklabels, size=self.y_labels_size)
-        #Show time zone label if request
+        # Show time zone label if request
         if self.show_y_UTC_label:
             self.axis[0].set_ylabel(label)
-        #In case of right verticals labels
+        # In case of right verticals labels
         if self.right_vertical_labels:
             yrange = self.axis[0].get_ylim()
             self.twin_x = self.axis[0].twinx()
