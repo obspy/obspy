@@ -48,7 +48,7 @@ class FILE(C.Structure):  # Never directly used
 c_file_p = C.POINTER(FILE)
 
 
-def NamedTemporaryFile(dir=None, suffix='.tmp'):
+def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
@@ -96,7 +96,8 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
             self.close()
             os.remove(self.name)
 
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
+    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
+                                                suffix=suffix))
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):
