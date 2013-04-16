@@ -107,11 +107,15 @@ class SeismicStation(BaseNode):
         {"stations": ["A"],
          "channels": ["A..EHE", "A..EHN", ...]}
         """
-        content_dict = {"stations": [self.code], "channels": []}
+        site_name = None
+        if self.site and self.site.name:
+            site_name = self.site.name
+        desc = "%s%s" % (self.code, " (%s)" % (site_name if site_name else ""))
+        content_dict = {"stations": [desc], "channels": []}
 
         for channel in self.channels:
-            content_dict["channels"].append("%s.%s" %
-                (channel.location_code, channel.code))
+            content_dict["channels"].append("%s.%s.%s" %
+                (self.code, channel.location_code, channel.code))
         return content_dict
 
     @property

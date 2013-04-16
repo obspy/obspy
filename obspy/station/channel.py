@@ -24,8 +24,9 @@ class SeismicChannel(BaseNode):
             clock_drift_in_seconds_per_sample=None, calibration_units=None,
             calibration_units_description=None, sensor=None,
             pre_amplifier=None, data_logger=None, equipment=None,
-            description=None, comments=[], start_date=None, end_date=None,
-            restricted_status=None, alternate_code=None, historical_code=None):
+            response=None, description=None, comments=[], start_date=None,
+            end_date=None, restricted_status=None, alternate_code=None,
+            historical_code=None):
         """
         :type code: String
         :param code: The SEED channel code for this channel
@@ -104,6 +105,7 @@ class SeismicChannel(BaseNode):
         :param historical_code: A previously used code if different from the
             current code.
         """
+        self.location_code = location_code
         self.latitude = latitude
         self.longitude = longitude
         self.elevation = elevation

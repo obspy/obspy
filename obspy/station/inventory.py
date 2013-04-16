@@ -11,6 +11,7 @@ Provides the Inventory class.
 """
 import obspy
 from obspy.station import stationxml
+import textwrap
 
 
 # Manual "plug-in" system. Likely sufficient for the limited number of
@@ -103,22 +104,31 @@ class SeismicInventory(object):
             for key, value in network.get_contents().iteritems():
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
+                content_dict[key].sort()
         return content_dict
 
     def __str__(self):
         ret_str = "Seismic Inventory created at %s\n" % str(self.created)
+        if self.module:
+            module_uri = self.module_uri
+            if module_uri and len(module_uri) > 70:
+                module_uri = textwrap.wrap(module_uri, width=67)[0] + "..."
+            ret_str += "\tCreated by: %s%s\n" % (self.module, "\n\t\t    %s"
+                % ( module_uri if module_uri else ""))
         ret_str += "\tSending institution: %s%s\n" % (self.source,
             " (%s)" % self.sender if self.sender else "")
         contents = self.get_contents()
         ret_str += "\tContains:\n"
-        ret_str += "\t\tNetworks:\n"
+        ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
         ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
         ret_str += "\n"
-        ret_str += "\t\tStations:\n"
+        ret_str += "\t\tStations (%i):\n" % len(contents["stations"])
         ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
         ret_str += "\n"
-        ret_str += "\t\tChannels:\n"
-        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["channels"]])
+        ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
+        ret_str += "\n".join(textwrap.wrap(", ".join(contents["channels"]),
+                initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+                expand_tabs=False))
         return ret_str
 
     def write(self, path_or_file_object, format, **kwargs):

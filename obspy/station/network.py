@@ -69,11 +69,13 @@ class SeismicNetwork(BaseNode):
 
         Example
         >>> network_object.get_contents()  # doctest: +SKIP
-        {"networks": ["BW"],
+        {"networks": ["BW (Bavarian Network)"],
          "stations": ["BW.A", "BW.B"],
          "channels": ["BW.A..EHE", "BW.A..EHN", ...]}
         """
-        content_dict = {"networks": [self.code], "stations": [],
+        desc = "%s%s" % (self.code, " (%s)" % (self.description if
+            self.description else ""))
+        content_dict = {"networks": [desc], "stations": [],
             "channels": []}
 
         for station in self.stations:

@@ -160,7 +160,25 @@ def _read_station(sta_element, _ns):
         _ns("TotalNumberChannels"), int)
     for ref in sta_element.findall(_ns("ExternalReference")):
         station.external_references.append(_read_external_reference(ref, _ns))
+    channels = []
+    for channel in sta_element.findall(_ns("Channel")):
+        channels.append(_read_channel(channel, _ns))
+    station.channels = channels
     return station
+
+
+def _read_channel(cha_element, _ns):
+    latitude = _tag2obj(cha_element, _ns("Latitude"), float)
+    longitude = _tag2obj(cha_element, _ns("Longitude"), float)
+    elevation = _tag2obj(cha_element, _ns("Elevation"), float)
+    depth = _tag2obj(cha_element, _ns("Depth"), float)
+    code = cha_element.get("code")
+    location_code = cha_element.get("locationCode")
+    channel = obspy.station.SeismicChannel(code=code,
+        location_code=location_code, latitude=latitude,
+        longitude=longitude, elevation=elevation, depth=depth)
+    _read_base_node(cha_element, channel, _ns)
+    return channel
 
 
 def _read_external_reference(ref_element, _ns):
