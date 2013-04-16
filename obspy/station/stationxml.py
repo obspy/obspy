@@ -76,7 +76,7 @@ def read_StationXML(path_or_file_object):
     :path_or_file_object: Filename of file like object.
     """
     root = etree.parse(path_or_file_object).getroot()
-    namespace = root.nsmap.itervalues().next()
+    namespace = root.nsmap[None]
 
     _ns = lambda tagname: "{%s}%s" % (namespace, tagname)
 
