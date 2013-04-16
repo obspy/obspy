@@ -98,6 +98,22 @@ class SeismicStation(BaseNode):
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
 
+    def get_contents(self):
+        """
+        Returns a dictionary containing the contents of the object.
+
+        Example
+        >>> station_object.get_contents()  # doctest: +SKIP
+        {"stations": ["A"],
+         "channels": ["A..EHE", "A..EHN", ...]}
+        """
+        content_dict = {"stations": [self.code], "channels": []}
+
+        for channel in self.channels:
+            content_dict["channels"].append("%s.%s" %
+                (channel.location_code, channel.code))
+        return content_dict
+
     @property
     def operator(self):
         return self.__operator

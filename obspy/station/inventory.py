@@ -85,14 +85,40 @@ class SeismicInventory(object):
         else:
             self.created = created
 
+    def get_contents(self):
+        """
+        Returns a dictionary containing the contents of the object.
+
+        Example
+        >>> inventory_object.get_contents()  # doctest: +SKIP
+        {"networks": ["BW", "WB"],
+         "stations": ["BW.A", "WB.B"],
+         "channels": ["BW.A..EHE", "BW.A..EHN", ...]}
+        """
+        content_dict = {
+            "networks": [],
+            "stations": [],
+            "channels": []}
+        for network in self.networks:
+            for key, value in network.get_contents().iteritems():
+                content_dict.setdefault(key, [])
+                content_dict[key].extend(value)
+        return content_dict
+
     def __str__(self):
         ret_str = "Seismic Inventory created at %s\n" % str(self.created)
         ret_str += "\tSending institution: %s%s\n" % (self.source,
-            "(%s)" % self.sender if self.sender else "")
-        ret_str += "\tContains %i network%s:\n" % (len(self.networks),
-            "s" if len(self.networks) > 1 else "")
-        for network in self.networks:
-            ret_str += "\t\t%s" % network.__short_str__()
+            " (%s)" % self.sender if self.sender else "")
+        contents = self.get_contents()
+        ret_str += "\tContains:\n"
+        ret_str += "\t\tNetworks:\n"
+        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["networks"]])
+        ret_str += "\n"
+        ret_str += "\t\tStations:\n"
+        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret_str += "\n"
+        ret_str += "\t\tChannels:\n"
+        ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["channels"]])
         return ret_str
 
     def write(self, path_or_file_object, format, **kwargs):

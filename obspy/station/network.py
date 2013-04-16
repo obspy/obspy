@@ -63,6 +63,27 @@ class SeismicNetwork(BaseNode):
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
 
+    def get_contents(self):
+        """
+        Returns a dictionary containing the contents of the object.
+
+        Example
+        >>> network_object.get_contents()  # doctest: +SKIP
+        {"networks": ["BW"],
+         "stations": ["BW.A", "BW.B"],
+         "channels": ["BW.A..EHE", "BW.A..EHN", ...]}
+        """
+        content_dict = {"networks": [self.code], "stations": [],
+            "channels": []}
+
+        for station in self.stations:
+            contents = station.get_contents()
+            content_dict["stations"].extend(
+                "%s.%s" % (self.code, _i) for _i in contents["stations"])
+            content_dict["channels"].extend(
+                "%s.%s" % (self.code, _i) for _i in contents["channels"])
+        return content_dict
+
     @property
     def stations(self):
         return self.__stations
