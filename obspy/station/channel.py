@@ -20,7 +20,9 @@ class SeismicChannel(BaseNode):
     """
     def __init__(self, code, location_code, latitude, longitude,
             elevation, depth, azimuth=None, dip=None, types=[],
-            external_references=[], sample_rate=None, sample_rate_ratio=None,
+            external_references=[], sample_rate=None,
+            sample_rate_ratio_number_samples=None,
+            sample_rate_ratio_number_seconds=None, storage_format=None,
             clock_drift_in_seconds_per_sample=None, calibration_units=None,
             calibration_units_description=None, sensor=None,
             pre_amplifier=None, data_logger=None, equipment=None,
@@ -65,9 +67,17 @@ class SeismicChannel(BaseNode):
             which is expressed as a ratio of number of samples in a number of
             seconds, is optional. If both are included, SampleRate should be
             considered more definitive.
-        :type sample_rate_ratio: float, optional
-        :param sample_rate_ratio: See the sample_rate argument for the
-            definition.
+        :type sample_rate_ratio_number_samples: int, optional
+        :param sample_rate_ratio_number_samples: The sample rate expressed as
+            number of samples in a number of seconds. This is the number of
+            samples.
+        :type channel.sample_rate_ratio_number_seconds: int, optional
+        :param channel.sample_rate_ratio_number_seconds: The sample rate
+            expressed as number of samples in a number of seconds. This is the
+            number of seconds.
+        :type storage_format: string, optional
+        :param storage_format: The storage format of the recorded data (e.g.
+            SEED)
         :type clock_drift_in_seconds_per_sample: float, optional
         :param clock_drift_in_seconds_per_sample: A tolerance value, measured
             in seconds per sample, used as a threshold for time error detection
@@ -115,7 +125,11 @@ class SeismicChannel(BaseNode):
         self.types = types
         self.external_references = external_references
         self.sample_rate = sample_rate
-        self.sample_rate_ratio = sample_rate_ratio
+        self.sample_rate_ratio_number_samples = \
+            sample_rate_ratio_number_samples
+        self.sample_rate_ratio_number_seconds = \
+            sample_rate_ratio_number_seconds
+        self.storage_format = storage_format
         self.clock_drift_in_seconds_per_sample = \
             clock_drift_in_seconds_per_sample
         self.calibration_units = calibration_units

@@ -178,7 +178,53 @@ def _read_channel(cha_element, _ns):
         location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
+    channel.azimuth = _tag2obj(cha_element, _ns("Azimuth"), float)
+    channel.dip = _tag2obj(cha_element, _ns("Dip"), float)
+    # Add all types.
+    for type_element in cha_element.findall(_ns("Type")):
+        channel.types.append(type_element.text)
+    # Add all external references.
+    for ext_ref in cha_element.findall(_ns("ExternalReference")):
+        channel.external_references.append(
+            _read_external_reference(ext_ref, _ns))
+    channel.sample_rate = _tag2obj(cha_element, _ns("SampleRate"), float)
+    # Parse the optional sample rate ratio.
+    sample_rate_ratio = cha_element.find(_ns("SampleRateRation"))
+    if sample_rate_ratio:
+        channel.sample_rate_ratio_number_samples = \
+            _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
+        channel.sample_rate_ratio_number_seconds = \
+            _tag2obj(sample_rate_ratio, _ns("NumberSeconds"), int)
+    channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"), str)
+    # The clock drift is one of the few examples where the attribute name is
+    # different from the tag name. This improves clarity.
+    channel.clock_drift_in_seconds_per_sample = _tag2obj(cha_element,
+        _ns("ClockDrift"), float)
+    # The sensor.
+    sensor = cha_element.find(_ns("Sensor"))
+    if sensor:
+        channel.sensor = _read_equipment(sensor, _ns)
+    # The pre-amplifier
+    pre_amplifier = cha_element.find(_ns("PreAmplifier"))
+    if pre_amplifier:
+        channel.pre_amplifier = _read_equipment(pre_amplifier, _ns)
+    # The data logger
+    data_logger = cha_element.find(_ns("DataLogger"))
+    if data_logger:
+        channel.data_logger = _read_equipment(data_logger, _ns)
+    # Other equipment
+    equipment = cha_element.find(_ns("Equipment"))
+    if equipment:
+        channel.equipment = _read_equipment(equipment, _ns)
+    # Finally parse the response.
+    response = cha_element.find(_ns("Response"))
+    if response:
+        channel.response = _read_response(response, _ns)
     return channel
+
+
+def _read_response(resp_element, _ns):
+    pass
 
 
 def _read_external_reference(ref_element, _ns):

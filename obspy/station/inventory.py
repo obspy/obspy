@@ -114,7 +114,7 @@ class SeismicInventory(object):
             if module_uri and len(module_uri) > 70:
                 module_uri = textwrap.wrap(module_uri, width=67)[0] + "..."
             ret_str += "\tCreated by: %s%s\n" % (self.module, "\n\t\t    %s"
-                % ( module_uri if module_uri else ""))
+                % (module_uri if module_uri else ""))
         ret_str += "\tSending institution: %s%s\n" % (self.source,
             " (%s)" % self.sender if self.sender else "")
         contents = self.get_contents()
