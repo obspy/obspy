@@ -17,8 +17,10 @@ class ResponseStage(object):
         This complex type represents channel response and covers SEED
         blockettes 53 to 56.
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
+    def __init__(self, stage_sequence_number, input_units, output_units,
+            resource_id=None, stage_gain=None, decimation=None, name=None,
+            description=None):
+
         """
         :type stage_sequence_number: integer greater or equal to zero
         :param stage_sequence_number: Stage sequence number. This is used in
@@ -31,18 +33,89 @@ class ResponseStage(object):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :param stage_gain: StageSensitivity is the gain at the stage of the
-            encapsulating response element and corresponds to SEED blockette
-            58. In the SEED convention, stage 0 gain represents the overall
-            sensitivity of the channel.  In this schema, stage 0 gains are
-            allowed but are considered deprecated.  Overall sensitivity should
-            be specified in the InstrumentSensitivity element.
+        :type stage_gain_value: float, optional
+        :param stage_gain_value: Complex type for sensitivity and frequency
+            ranges. This complex type can be used to represent both overall
+            sensitivities and individual stage gains.  A scalar that, when
+            applied to the data values, converts the data to different units
+            (e.g. Earth units).
+        :type stage_gain_frequency: float, optional
+        :param stage_gain_frequency: Complex type for sensitivity and frequency
+            ranges. This complex type can be used to represent both overall
+            sensitivities and individual stage gains. The frequency (in Hertz)
+            at which the Value is valid.
         :param decimation:
+        :type input_units:
+        :param input_units: The units of the data as input from the
+            perspective of data acquisition. After correcting data for this
+            response, these would be the resulting units.
+        :type output_units:
+        :param output_units: The units of the data as output from the
+            perspective of data acquisition. These would be the units of the
+            data prior to correcting for this response.
+        :type name: string, optional
+        :param name: A name given to this filter.
+        :type description: string, optional
+        :param description: A short description of of the filter.
+
+        .. note::
+            The stage gain (or stage sensitivity) is the gain at the stage of
+            the encapsulating response element and corresponds to SEED
+            blockette 58. In the SEED convention, stage 0 gain represents the
+            overall sensitivity of the channel.  In this schema, stage 0 gains
+            are allowed but are considered deprecated.  Overall sensitivity
+            should be specified in the InstrumentSensitivity element.
         """
         self.stage_sequence_number = stage_sequence_number
+        self.input_units = input_units
+        self.output_units = output_units
         self.resource_id = resource_id
         self.stage_gain = stage_gain
         self.decimation = decimation
+        self.name = name
+        self.description = description
+
+
+class PolesZerosResponseStage(ResponseStage):
+    """
+    From the StationXML Definition:
+        Response: complex poles and zeros. Corresponds to SEED blockette 53.
+    """
+    def __init__(self, stage_sequence_number, resource_id=None,
+            stage_gain=None, decimation=None):
+        super(PolesZerosResponseStage, self).__init__()
+
+
+class CoefficientsTypeResponseStage(ResponseStage):
+    """
+    """
+    def __init__(self, stage_sequence_number, resource_id=None,
+            stage_gain=None, decimation=None):
+        super(CoefficientsTypeResponseStage, self).__init__()
+
+
+class ResponseListResponseStage(ResponseStage):
+    """
+    """
+    def __init__(self, stage_sequence_number, resource_id=None,
+            stage_gain=None, decimation=None):
+        super(ResponseListResponseStage, self).__init__()
+
+
+class FIRResponseStage(ResponseStage):
+    """
+    """
+    def __init__(self, stage_sequence_number, resource_id=None,
+            stage_gain=None, decimation=None):
+        super(FIRResponseStage, self).__init__()
+
+
+class PolynomialResponseStage(ResponseStage):
+    """
+    """
+    def __init__(self, stage_sequence_number, resource_id=None,
+            stage_gain=None, decimation=None):
+        super(PolynomialResponseStage, self).__init__()
 
 
 class Response(object):
