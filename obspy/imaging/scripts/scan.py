@@ -37,6 +37,7 @@ import warnings
 from obspy import read, UTCDateTime
 from optparse import OptionParser
 import numpy as np
+from obspy.xseed import Parser
 
 
 def compressStartend(x, stop_iteration):
@@ -69,6 +70,38 @@ def compressStartend(x, stop_iteration):
         inds = np.concatenate([(diffs <= 0), [False]])
     return x
 
+
+def parse_metadata(samp_int, filename):
+    if os.path.isdir(filename):
+        filenames = [os.path.join(filename, f) for f in os.listdir(filename)]
+    else:
+        filenames = [filename]
+    for filename in filenames:
+        try:
+            p = Parser(filename)
+        except:
+            print("Can not read metadata %s" % filename)
+            continue
+        channels = p.getInventory()['channels']
+        for cha in channels:
+            id_ = cha['channel_id']
+            start = date2num(cha['start_date'])
+            end = date2num(cha['end_date'])
+            int_ = 1.0 / (24 * 3600 * cha['sampling_rate'])
+            # XXX logic to assemble lists of time bounds and sampling intervals
+            # XXX here. existing entries with a static sampling interval should be
+            # XXX left intact
+            # XXX in case of open ended channel info, the last time should be
+            # XXX the last start_date and the last samp_int the corresponding
+            # XXX interval, otherwise the last time should be the last
+            # XXX end_date and the last samp_int should be None.
+            # XXX otherwise np.choose later does not work as expected
+            pass
+        # XXX dictionary should look like:
+        # XXX all non-existing time ranges in the middle need to be correctly
+        # XXX  assigned None
+        # XXX {'BW.UH1..EHZ': ([733408.0, 733773.0, 734138.0, 734503.0],
+        # XXX                  [5.78703704e-08, None, 5.78703704e-09, None])}
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
@@ -189,6 +222,11 @@ def main():
                       type="string", dest="output",
                       help="Save plot to image file (e.g. out.pdf, " + \
                       "out.png) instead of opening a window.")
+    parser.add_option("--metadata", default=None,
+                      type="string", dest="metadata",
+                      help="Optional, filename (or directory name) with " +
+                           "station metadata that obspy.xseed.parser.Parser " +
+                           "can read (dataless SEED, XSEED).")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -240,6 +278,8 @@ def main():
     if not data:
         print("No waveform data found.")
         return
+    if options.metadata:
+        parse_metadata(samp_int, options.metadata)
     if options.write:
         write_npz(options.write, data, samp_int)
 
@@ -282,7 +322,22 @@ def main():
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
         if not options.nogaps:
-            gaps = startend[diffs > 1.8 * samp_int[_id], 1]
+            if np.iterable(samp_int[_id]):
+                time_bounds, rates = samp_int[_id]
+                time_indices = np.searchsorted(time_bounds, startend[:-1, 1]) \
+                               - 1
+                if any(time_indices <= 0):
+                    msg = "Time range out of station metadata bounds."
+                    raise Exception(msg)
+                samp_ints = np.choose(time_indices, rates).astype("float")
+                if any(np.isnan(samp_ints)):
+                    msg = "Missing sampling rate information for given " + \
+                          "time span."
+                    raise Exception(msg)
+            # only one static sampling interval
+            else:
+                samp_ints = samp_int[_id]
+            gaps = startend[diffs > 1.8 * samp_ints, 1]
             if len(gaps) > 0:
                 offset = offset[:len(gaps)]
                 ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)

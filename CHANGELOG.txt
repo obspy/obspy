@@ -12,6 +12,8 @@ dev:
      most operating systems
  - obspy.imaging:
    * more options to customize day plots
+   * obspy-scan can be provided metadata to support changing sampling
+     rates
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
