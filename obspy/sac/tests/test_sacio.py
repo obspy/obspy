@@ -5,7 +5,7 @@ The SacIO test suite.
 """
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, attach_paz, attach_resp
+from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
 import StringIO
 import numpy as np
 import os
@@ -325,6 +325,40 @@ class SacIOTestCase(unittest.TestCase):
             trace.SetHvalue('stel', 91.0)
             trace.WriteSacHeader(tempfile)
             trace = SacIO(tempfile)
+
+    def test_read_with_fsize(self):
+        """
+        Testing fsize option on SacIO.ReadSacFile()
+        """
+        # reading sac file with wrong file size should raise error
+        longer_file = os.path.join(self.path, 'seism-longer.sac')
+        shorter_file = os.path.join(self.path, 'seism-shorter.sac')
+        t = SacIO()
+        # default
+        self.assertRaises(SacError, t.ReadSacFile, longer_file)
+        self.assertRaises(SacError, t.ReadSacFile, shorter_file)
+        # fsize=True
+        self.assertRaises(SacError, t.ReadSacFile, longer_file, fsize=True)
+        self.assertRaises(SacError, t.ReadSacFile, shorter_file, fsize=True)
+        # using fsize=False should not work for shorter file
+        # (this is not supported by SAC) ...
+        self.assertRaises(SacIOError, t.ReadSacFile, shorter_file, fsize=False)
+        # ...but it should work for longer file
+        t.ReadSacFile(longer_file, fsize=False)
+        # checking trace
+        self.assertEqual(t.GetHvalue('nzyear'), 1981)
+        self.assertEqual(t.GetHvalue('nzjday'), 88)
+        self.assertEqual(t.GetHvalue('nzhour'), 10)
+        self.assertEqual(t.GetHvalue('nzmin'), 38)
+        self.assertEqual(t.GetHvalue('nzsec'), 14)
+        self.assertEqual(t.GetHvalue('nzmsec'), 0)
+        # we should never test equality for float values:
+        self.assertLessEqual(abs(t.GetHvalue('delta') - 0.01), 1e-9)
+        self.assertEqual(t.GetHvalue('scale'), -12345.0)
+        self.assertEqual(t.GetHvalue('npts'), 998)
+        self.assertEqual(t.GetHvalue('knetwk'), '-12345  ')
+        self.assertEqual(t.GetHvalue('kstnm'), 'CDV     ')
+        self.assertEqual(t.GetHvalue('kcmpnm'), 'Q       ')
 
 
 def suite():
