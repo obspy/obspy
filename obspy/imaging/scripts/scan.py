@@ -301,7 +301,7 @@ def main():
                 start_, end_ = num2date((start_, end_))
                 start_ = UTCDateTime(start_.isoformat())
                 end_ = UTCDateTime(end_.isoformat())
-                print "%s %s %s %.3f s" % (_id, start_, end_, end_ - start_)
+                print "%s %s %s %.3f" % (_id, start_, end_, end_ - start_)
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
