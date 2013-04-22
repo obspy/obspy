@@ -353,7 +353,10 @@ class UTCDateTime(object):
         :param ms: extra seconds to add to current UTCDateTime object.
         """
         # see datetime.timedelta.total_seconds
-        td = (dt - TIMESTAMP0)
+        try:
+            td = (dt - TIMESTAMP0)
+        except TypeError:
+            td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
         self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) * \
                           1000000) / 1000000.0 + ms
 
