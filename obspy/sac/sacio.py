@@ -374,6 +374,7 @@ class SacIO(object):
         self.SetHvalue('leven', 1)
         self.SetHvalue('lpspol', 1)
         self.SetHvalue('lcalda', 0)
+        self.SetHvalue('lovrok', 1)
         self.SetHvalue('nzyear', reftime.year)
         self.SetHvalue('nzjday', reftime.strftime("%j"))
         self.SetHvalue('nzhour', reftime.hour)
