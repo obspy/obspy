@@ -37,14 +37,42 @@ def isSAC(filename):
             f.seek(4 * 70 + 4 * 6)
             nvhdr_bin = f.read(4)
             nvhdr = struct.unpack('<i', nvhdr_bin)[0]
+            # read leven (70 header floats, 35 header integers, 0 position in header bool)
+            f.seek(4 * 70 + 4 * 35)
+            leven_bin = f.read(4)
+            leven = struct.unpack('<i', leven_bin)[0]
+            # read lpspol (70 header floats, 35 header integers, 1 position in header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 1)
+            lpspol_bin = f.read(4)
+            lpspol = struct.unpack('<i', lpspol_bin)[0]
+            # read lovrok (70 header floats, 35 header integers, 2 position in header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 2)
+            lovrok_bin = f.read(4)
+            lovrok = struct.unpack('<i', lovrok_bin)[0]
+            # read lcalda (70 header floats, 35 header integers, 3 position in header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 3)
+            lcalda_bin = f.read(4)
+            lcalda = struct.unpack('<i', lcalda_bin)[0]
             # check if file is big-endian
             if nvhdr < 0 or nvhdr > 20:
                 nvhdr = struct.unpack('>i', nvhdr_bin)[0]
                 delta = struct.unpack('>f', delta_bin)[0]
+                leven = struct.unpack('>i', leven_bin)[0]
+                lpspol = struct.unpack('>i', lpspol_bin)[0]
+                lovrok = struct.unpack('>i', lovrok_bin)[0]
+                lcalda = struct.unpack('>i', lcalda_bin)[0]
             # check again nvhdr
             if nvhdr < 0 or nvhdr > 20:
                 return False
             if delta <=0:
+                return False
+            if leven != 0 and leven != 1:
+                return False
+            if lpspol != 0 and lpspol != 1:
+                return False
+            if lovrok != 0 and lovrok != 1:
+                return False
+            if lcalda != 0 and lcalda != 1:
                 return False
     except:
         return False
