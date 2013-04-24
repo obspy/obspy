@@ -12,6 +12,7 @@ dev:
      most operating systems
  - obspy.imaging:
    * more options to customize day plots
+   * obspy-scan: new option --print-gaps
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
