@@ -62,17 +62,17 @@ def isSAC(filename):
                 lovrok = struct.unpack('>i', lovrok_bin)[0]
                 lcalda = struct.unpack('>i', lcalda_bin)[0]
             # check again nvhdr
-            if nvhdr < 0 or nvhdr > 20:
+            if nvhdr < 1 or nvhdr > 20:
                 return False
             if delta <=0:
                 return False
             if leven != 0 and leven != 1:
                 return False
-            if lpspol != 0 and lpspol != 1:
+            if lpspol != 0 and lpspol != 1 and lpspol != -12345:
                 return False
-            if lovrok != 0 and lovrok != 1:
+            if lovrok != 0 and lovrok != 1 and lovrok != -12345:
                 return False
-            if lcalda != 0 and lcalda != 1:
+            if lcalda != 0 and lcalda != 1 and lcalda != -12345:
                 return False
     except:
         return False
