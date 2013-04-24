@@ -2,10 +2,10 @@
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 import cPickle
 import numpy as np
-import os
 import pickle
 import unittest
 import warnings
@@ -1715,7 +1715,7 @@ class StreamTestCase(unittest.TestCase):
         Tests plot method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         self.mseed_stream.plot(show=False)
@@ -1725,10 +1725,33 @@ class StreamTestCase(unittest.TestCase):
         Tests spectrogram method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         self.mseed_stream.spectrogram(show=False)
+
+    def test_deepcopy(self):
+        """
+        Tests __deepcopy__ method.
+
+        http://lists.obspy.org/pipermail/obspy-users/2013-April/000451.html
+        """
+        # example stream
+        st = read()
+        # set a common header
+        st[0].stats.network = 'AA'
+        # set format specific header
+        st[0].stats.mseed = AttribDict(dataquality='A')
+        ct = deepcopy(st)
+        # common header
+        st[0].stats.network = 'XX'
+        self.assertEquals(st[0].stats.network, 'XX')
+        self.assertEquals(ct[0].stats.network, 'AA')
+        # format specific headers
+        st[0].stats.mseed.dataquality = 'X'
+        self.assertEquals(st[0].stats.mseed.dataquality, 'X')
+        # XXX: this fails atm
+        self.assertEquals(ct[0].stats.mseed.dataquality, 'A')
 
 
 def suite():
