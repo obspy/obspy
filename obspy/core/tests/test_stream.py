@@ -1752,7 +1752,6 @@ class StreamTestCase(unittest.TestCase):
         # format specific headers
         st[0].stats.mseed.dataquality = 'X'
         self.assertEquals(st[0].stats.mseed.dataquality, 'X')
-        # XXX: this fails atm
         self.assertEquals(ct[0].stats.mseed.dataquality, 'A')
 
 
