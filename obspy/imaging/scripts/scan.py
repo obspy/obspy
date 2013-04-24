@@ -288,20 +288,21 @@ def main():
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
         gap_indices = diffs > 1.8 * samp_int[_id]
-        # dont handle last endtime as start of gap
-        gap_indices[-1] = False
-        gaps_start = startend[gap_indices, 1]
-        gaps_end = startend[np.roll(gap_indices, 1), 0]
-        if not options.nogaps and any(gap_indices):
-            rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_, 0.8)
-                     for start_, end_ in zip(gaps_start, gaps_end)]
-            ax.add_collection(PatchCollection(rects, color="r"))
-        if options.print_gaps:
-            for start_, end_ in zip(gaps_start, gaps_end):
-                start_, end_ = num2date((start_, end_))
-                start_ = UTCDateTime(start_.isoformat())
-                end_ = UTCDateTime(end_.isoformat())
-                print "%s %s %s %.3f" % (_id, start_, end_, end_ - start_)
+        if any(gap_indices):
+            # dont handle last endtime as start of gap
+            gap_indices[-1] = False
+            gaps_start = startend[gap_indices, 1]
+            gaps_end = startend[np.roll(gap_indices, 1), 0]
+            if not options.nogaps and any(gap_indices):
+                rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_, 0.8)
+                         for start_, end_ in zip(gaps_start, gaps_end)]
+                ax.add_collection(PatchCollection(rects, color="r"))
+            if options.print_gaps:
+                for start_, end_ in zip(gaps_start, gaps_end):
+                    start_, end_ = num2date((start_, end_))
+                    start_ = UTCDateTime(start_.isoformat())
+                    end_ = UTCDateTime(end_.isoformat())
+                    print "%s %s %s %.3f" % (_id, start_, end_, end_ - start_)
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)
