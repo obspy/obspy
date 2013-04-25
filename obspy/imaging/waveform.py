@@ -138,9 +138,12 @@ class WaveformPlotting(object):
         else:
             self.color = kwargs.get('color', 'k')
             self.number_of_ticks = kwargs.get('number_of_ticks', 4)
-        # Background and face color.
+        # Background, face  and grid color.
         self.background_color = kwargs.get('bgcolor', 'w')
         self.face_color = kwargs.get('face_color', 'w')
+        self.grid_color = kwargs.get('grid_color', 'black')
+        self.grid_linewidth = kwargs.get('grid_linewidth', 0.5)
+        self.grid_linestyle = kwargs.get('grid_linestyle', ':')
         # Transparency. Overwrites background and facecolor settings.
         self.transparent = kwargs.get('transparent', False)
         if self.transparent:
@@ -161,6 +164,7 @@ class WaveformPlotting(object):
         self.y_labels_size = kwargs.get('y_labels_size', 8)
         self.title_size = kwargs.get('title_size', 10)
         self.linewidth = kwargs.get('linewidth', 0.4)
+        self.linestyle = kwargs.get('linestyle', '-')
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
@@ -374,8 +378,9 @@ class WaveformPlotting(object):
             ax = self.fig.add_subplot(1, 1, 1)
         # Adjust the subplots
         self.fig.subplots_adjust(left=self.subplots_adjust_left,
-        right=self.subplots_adjust_right, top=self.subplots_adjust_top,
-        bottom=self.subplots_adjust_bottom)
+                                 right=self.subplots_adjust_right,
+                                 top=self.subplots_adjust_top,
+                                 bottom=self.subplots_adjust_bottom)
         # Create x_value_array.
         aranged_array = np.arange(self.width)
         x_values = np.empty(2 * self.width)
@@ -393,7 +398,7 @@ class WaveformPlotting(object):
             # Plot the values.
             ax.plot(x_values, y_values,
                     color=self.color[_i % len(self.color)],
-                    linewidth=self.linewidth)
+                    linewidth=self.linewidth, linestyle=self.linestyle)
         # Plot the scale, if required.
         scale_unit = kwargs.get("data_unit", None)
         if scale_unit is not None:
@@ -406,7 +411,9 @@ class WaveformPlotting(object):
         self.__dayplotSetYTicks(*args, **kwargs)
         self.__dayplotSetXTicks(*args, **kwargs)
         # Choose to show grid but only on the x axis.
-        self.fig.axes[0].grid()
+        self.fig.axes[0].grid(color=self.grid_color,
+                              linestyle=self.grid_linestyle,
+                              linewidth=self.grid_linewidth)
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
         self.fig.suptitle(self.title, fontsize=self.title_size)
@@ -418,8 +425,9 @@ class WaveformPlotting(object):
                 from obspy.neries import Client
                 c = Client()
                 events = c.getEvents(min_datetime=self.starttime,
-                        max_datetime=self.endtime, format="catalog",
-                        min_magnitude=events["min_magnitude"])
+                                     max_datetime=self.endtime,
+                                     format="catalog",
+                                     min_magnitude=events["min_magnitude"])
             except Exception, e:
                 msg = "Could not download the events because of '%s: %s'." % \
                     (e.__class__.__name__, e.message)
@@ -454,7 +462,7 @@ class WaveformPlotting(object):
                 mag = "%.1f %s" % (mag.mag, mag.magnitude_type)
 
             region = FlinnEngdahl().get_region(origin.longitude,
-                origin.latitude)
+                                               origin.latitude)
             text = region
             if mag:
                 text += ", %s" % mag
@@ -510,7 +518,7 @@ class WaveformPlotting(object):
                 # The position of the text, offset depending on the previously
                 # calculated variables.
                 xytext=(x_pos + text_offset_x_sign * text_offset_x,
-                    y_pos + text_offset_y_sign * text_offset_y),
+                        y_pos + text_offset_y_sign * text_offset_y),
                 # Everything in data coordinates.
                 xycoords="data", textcoords="data",
                 # Set the text alignment.
@@ -524,7 +532,7 @@ class WaveformPlotting(object):
                 zorder=10)
         # Draw the actual point. Use a marker with a star shape.
         self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12, linewidth=self.linewidth)
+            markersize=12)
 
     def _plotDayplotScale(self, unit):
         """
@@ -632,7 +640,7 @@ class WaveformPlotting(object):
             concat = temp
         if self.endtime != trace.stats.endtime:
             samples = (self.endtime - trace.stats.endtime) * \
-                      trace.stats.sampling_rate
+                trace.stats.sampling_rate
             concat.append(np.ma.masked_all(int(samples)))
         if len(concat) > 1:
             # Use the masked array concatenate, otherwise it will result in a
@@ -641,7 +649,9 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.linewidth)
+        ax.plot(trace.data, color=self.color, linewidth=self.linewidth, linestyle=self.linestyle)
+        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)
@@ -904,7 +914,7 @@ class WaveformPlotting(object):
         """
         # Convert to native floats.
         self.extreme_values = self.extreme_values.astype(np.float) * \
-                              self.stream[0].stats.calib
+            self.stream[0].stats.calib
         # Make sure that the mean value is at 0
         self.extreme_values -= self.extreme_values.mean()
 
