@@ -353,7 +353,7 @@ class SacIOTestCase(unittest.TestCase):
         self.assertEqual(t.GetHvalue('nzsec'), 14)
         self.assertEqual(t.GetHvalue('nzmsec'), 0)
         # we should never test equality for float values:
-        self.assertLessEqual(abs(t.GetHvalue('delta') - 0.01), 1e-9)
+        self.assertTrue(abs(t.GetHvalue('delta') - 0.01) <= 1e-9)
         self.assertEqual(t.GetHvalue('scale'), -12345.0)
         self.assertEqual(t.GetHvalue('npts'), 998)
         self.assertEqual(t.GetHvalue('knetwk'), '-12345  ')
