@@ -472,6 +472,12 @@ def templatesMaxSimilarity(st, time, streams_templates):
         st_ = st.slice(time - (duration * 0.5),
                        time + (duration * 1.5))
         cc = None
+        for id_ in reversed(ids):
+            if not st_.select(id=id_):
+                msg = "Skipping trace %s in template correlation " + \
+                      "(not present in stream to check)."
+                warnings.warn(msg % id_)
+                ids.remove(id_)
         # determine best (combined) shift of multi-component data
         for id_ in ids:
             tr1 = st_.select(id=id_)[0]
