@@ -289,7 +289,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
             max_length = max(max([len(_i) for _i in attributes])
-                                 if attributes else 0,
+                             if attributes else 0,
                              max([len(_i) for _i in containers])
                              if containers else 0) + 1
 
@@ -306,8 +306,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if hasattr(self, error_key) and getattr(self, error_key):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
-                    repr_str += " [%s]" % ', '.join([str(key) + "=" +
-                                str(value) for key, value in err_items])
+                    repr_str += " [%s]" % ', '.join([str(k) + "=" + str(v)
+                        for k, v in err_items])
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
@@ -937,7 +937,7 @@ class WaveformStreamID(__WaveformStreamID):
             if not any([bool(_i) for _i in [network_code, station_code,
                                             location_code, channel_code]]):
                 network_code, station_code, location_code, channel_code = \
-                        4 * [None]
+                    4 * [None]
         super(WaveformStreamID, self).__init__(network_code=network_code,
                                                station_code=station_code,
                                                location_code=location_code,
@@ -2500,7 +2500,7 @@ class Catalog(object):
                 temp_events = []
                 for event in events:
                     if (event.origins and event.origins[0].quality and
-                         key in event.origins[0].quality and
+                        key in event.origins[0].quality and
                         operator_map[operator](
                             event.origins[0].quality.get(key),
                             float(value))):
@@ -2801,10 +2801,10 @@ class Catalog(object):
                     zorder=10)
         times = [event.origins[0].time for event in self.events]
         plt.title(("%i events (%s to %s)" % (len(self),
-             str(min(times).strftime("%Y-%m-%d")),
-             str(max(times).strftime("%Y-%m-%d")))) +
-                 " - Color codes %s, size the magnitude" % (
-                     "origin time" if color == "date" else "depth"))
+            str(min(times).strftime("%Y-%m-%d")),
+            str(max(times).strftime("%Y-%m-%d")))) +
+            " - Color codes %s, size the magnitude" % (
+            "origin time" if color == "date" else "depth"))
 
         cb = mpl.colorbar.ColorbarBase(ax=cm_ax, cmap=colormap,
                                        orientation='horizontal')
@@ -2822,8 +2822,8 @@ class Catalog(object):
 
 def validate(xml_file):
     """
-    Validates a QuakeML file against the QuakeML 1.2 RC4 XML Schema. Returns
-    either True or False.
+    Validates a QuakeML file against the QuakeML 1.2 XML Schema. Returns either
+    True or False.
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
