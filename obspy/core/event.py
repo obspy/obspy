@@ -31,7 +31,6 @@ import urllib2
 import warnings
 import weakref
 import cStringIO
-from lxml import etree
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -2818,28 +2817,6 @@ class Catalog(object):
 
         # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()
-
-
-def validate(xml_file):
-    """
-    Validates a QuakeML file against the QuakeML 1.2 XML Schema. Returns either
-    True or False.
-    """
-    # Get the schema location.
-    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
-
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
-    xmldoc = etree.parse(xml_file)
-
-    valid = xmlschema.validate(xmldoc)
-
-    # Pretty error printing if the validation fails.
-    if valid is not True:
-        print "Error validating QuakeML file:"
-        for entry in xmlschema.error_log:
-            print "\t%s" % entry
-    return valid
 
 
 if __name__ == '__main__':

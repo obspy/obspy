@@ -15,6 +15,8 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import inspect
+import os
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
@@ -1400,6 +1402,28 @@ def readSeisHubEventXML(filename):
     lines.append('</quakeml>\n')
     temp = StringIO.StringIO(''.join(lines))
     return readQuakeML(temp)
+
+
+def validate(xml_file):
+    """
+    Validates a QuakeML file against the QuakeML 1.2 XML Schema. Returns either
+    True or False.
+    """
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
+
+    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    xmldoc = etree.parse(xml_file)
+
+    valid = xmlschema.validate(xmldoc)
+
+    # Pretty error printing if the validation fails.
+    if valid is not True:
+        print "Error validating QuakeML file:"
+        for entry in xmlschema.error_log:
+            print "\t%s" % entry
+    return valid
 
 
 if __name__ == '__main__':
