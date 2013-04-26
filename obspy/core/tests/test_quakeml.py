@@ -458,7 +458,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = readQuakeML(filename)
             self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile)
+            writeQuakeML(catalog, tmpfile, validate=True)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):

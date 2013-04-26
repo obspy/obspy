@@ -18,6 +18,7 @@ by a distributed team in a transparent collaborative manner.
 import inspect
 import os
 
+import obspy
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -27,6 +28,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
+import warnings
 
 
 def isQuakeML(filename):
@@ -1362,7 +1364,8 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
+def writeQuakeML(catalog, filename, validate=False,
+        **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
 
@@ -1375,6 +1378,11 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
     :param catalog: The ObsPy Catalog object to write.
     :type filename: str
     :param filename: Name of file to write.
+    :type validate: Boolean, optional
+    :param validate: If True, the final QuakeML file will be validated against
+        the QuakeML XSD schame file. Be warned that this does not assure that
+        the QuakeML file is valid. Useful for testing and debugging or if you
+        don't trust ObsPy.
     """
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'write'):
@@ -1383,6 +1391,11 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
         fh = filename
 
     xml_doc = Pickler().dumps(catalog)
+
+    if validate is True and \
+        not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+        warnings.warn("The final QuakeML file did not pass validation")
+
     fh.write(xml_doc)
     fh.close()
     # Close if its a file handler.
