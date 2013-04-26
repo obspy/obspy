@@ -28,7 +28,6 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
-import warnings
 
 
 def isQuakeML(filename):
@@ -1383,7 +1382,7 @@ def writeQuakeML(catalog, filename, validate=False,
     :param validate: If True, the final QuakeML file will be validated against
         the QuakeML XSD schame file. Be warned that this does not assure that
         the QuakeML file is valid. Useful for testing and debugging or if you
-        don't trust ObsPy.
+        don't trust ObsPy. Raises an AssertionError if the validation fails.
     """
     # Open filehandler or use an existing file like object.
     if not hasattr(filename, 'write'):
@@ -1395,7 +1394,8 @@ def writeQuakeML(catalog, filename, validate=False,
 
     if validate is True and \
             not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
-        warnings.warn("The final QuakeML file did not pass validation")
+        raise AssertionError(
+            "The final QuakeML file did not pass validation.")
 
     fh.write(xml_doc)
     # Close if its a file handler.

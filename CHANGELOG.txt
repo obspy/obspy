@@ -4,6 +4,11 @@ dev:
  - obspy.core:
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
+   * The writeQuakeML() function, also accessible through
+     Catalog.write(..., format="quakeml"), now has an optional kwarg
+	 'validate'. If True, the resulting QuakeML file will be validated against
+	 the QuakeML schema before being written. An AssertionError will be raised
+	 in case the validation fails.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
