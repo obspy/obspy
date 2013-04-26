@@ -477,6 +477,73 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
             expected_xml_file_buffer)
 
+    def test_reading_and_writing_channel_with_response(self):
+        """
+        Test the reading and writing of a single channel including a
+        multi-stage response object.
+        """
+        filename = os.path.join(self.data_dir,
+            "IRIS_single_channel_with_response.xml")
+        inv = obspy.station.readInventory(filename)
+        self.assertEqual(inv.source, "IRIS-DMC")
+        self.assertEqual(inv.sender, "IRIS-DMC")
+        self.assertEqual(inv.created, obspy.UTCDateTime("2013-04-16T06:15:28"))
+        # Assert that precisely one channel object has been created.
+        self.assertEqual(len(inv.networks), 1)
+        self.assertEqual(len(inv.networks[0].stations), 1)
+        self.assertEqual(len(inv.networks[0].stations[0].channels), 1)
+        network = inv.networks[0]
+        station = network.stations[0]
+        channel = station.channels[0]
+        # Assert some fields of the network. This is extensively tested
+        # elsewhere.
+        self.assertEqual(network.code, "IU")
+        self.assertEqual(network.start_date,
+            obspy.UTCDateTime("1988-01-01T00:00:00"))
+        self.assertEqual(network.end_date,
+            obspy.UTCDateTime("2500-12-12T23:59:59"))
+        self.assertEqual(network.description,
+            "Global Seismograph Network (GSN - IRIS/USGS)")
+        # Assert a few fields of the station. This is extensively tested
+        # elsewhere.
+        self.assertEqual(station.code, "ANMO")
+        self.assertEqual(station.latitude, 34.94591)
+        self.assertEqual(station.longitude, -106.4572)
+        self.assertEqual(station.elevation, 1820.0)
+        self.assertEqual(station.site.name, "Albuquerque, New Mexico, USA")
+        # Start to assert the channel reading.
+        self.assertEqual(channel.code, "BHZ")
+        self.assertEqual(channel.location_code, "10")
+        self.assertEqual(channel.start_date,
+            obspy.UTCDateTime("2012-03-13T08:10:00"))
+        self.assertEqual(channel.end_date,
+            obspy.UTCDateTime("2599-12-31T23:59:59"))
+        self.assertEqual(channel.restricted_status, "open")
+        self.assertEqual(channel.latitude, 34.945913)
+        self.assertEqual(channel.longitude, -106.457122)
+        self.assertEqual(channel.elevation, 1759.0)
+        self.assertEqual(channel.depth, 57.0)
+        self.assertEqual(channel.azimuth, 0.0)
+        self.assertEqual(channel.dip, -90.0)
+        self.assertEqual(channel.types, ["CONTINUOUS", "GEOPHYSICAL"])
+        self.assertEqual(channel.sample_rate, 40.0)
+        self.assertEqual(channel.clock_drift_in_seconds_per_sample, 0.0)
+        self.assertEqual(channel.sensor.type,
+            "Guralp CMG3-T Seismometer (borehole)")
+        # Check the response.
+        response = channel.response
+        sensitivity = response.instrument_sensitivity
+        self.assertEqual(sensitivity.value, 3.31283E10)
+        self.assertEqual(sensitivity.frequency, 0.02)
+        self.assertEqual(sensitivity.input_units_name, "M/S")
+        self.assertEqual(sensitivity.input_units_description,
+            "Velocity in Meters Per Second")
+        self.assertEqual(sensitivity.output_units_name, "COUNTS")
+        self.assertEqual(sensitivity.output_units_description,
+            "Digital Counts")
+        # Assert that there are three stages.
+        self.assertEqual(len(response.response_stages), 3)
+
 
 def suite():
     return unittest.makeSuite(StationXMLTestCase, "test")

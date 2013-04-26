@@ -19,14 +19,14 @@ class SeismicChannel(BaseNode):
         response blockettes.
     """
     def __init__(self, code, location_code, latitude, longitude,
-            elevation, depth, azimuth=None, dip=None, types=[],
-            external_references=[], sample_rate=None,
+            elevation, depth, azimuth=None, dip=None, types=None,
+            external_references=None, sample_rate=None,
             sample_rate_ratio_number_samples=None,
             sample_rate_ratio_number_seconds=None, storage_format=None,
             clock_drift_in_seconds_per_sample=None, calibration_units=None,
             calibration_units_description=None, sensor=None,
             pre_amplifier=None, data_logger=None, equipment=None,
-            response=None, description=None, comments=[], start_date=None,
+            response=None, description=None, comments=None, start_date=None,
             end_date=None, restricted_status=None, alternate_code=None,
             historical_code=None):
         """
@@ -122,8 +122,10 @@ class SeismicChannel(BaseNode):
         self.depth = depth
         self.azimuth = azimuth
         self.dip = dip
-        self.types = types
-        self.external_references = external_references
+        if types is None:
+            self.types = []
+        if external_references is None:
+            self.external_references = external_references
         self.sample_rate = sample_rate
         self.sample_rate_ratio_number_samples = \
             sample_rate_ratio_number_samples
@@ -138,7 +140,24 @@ class SeismicChannel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
+        if comments is None:
+            comments = []
         super(SeismicChannel, self).__init__(code=code,
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
+
+    def __str__(self):
+        ret_str = "SeismicChannel '%s', Location '%s'\n" % (self.code,
+            self.location_code)
+        ret_str += "\tLatitude: %f, Longitude: %f, Elevation: %f, Depth: %f\n"\
+            % (self.latitude, self.longitude, self.elevation, self.depth)
+        if self.azimuth is not None:
+            ret_str += "\tAzimuth: %f degrees from north, clockwise\n" % \
+                self.azimuth
+        if self.dip is not None:
+            ret_str += "\tDip: %f degrees down from horizontal\n" % self.dip
+        if self.types:
+            ret_str += "\tChannel types: %s\n" % ", ".join(self.types)
+
+        return ret_str

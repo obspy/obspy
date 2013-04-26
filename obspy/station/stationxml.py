@@ -202,28 +202,77 @@ def _read_channel(cha_element, _ns):
         _ns("ClockDrift"), float)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
-    if sensor:
+    if sensor is not None:
         channel.sensor = _read_equipment(sensor, _ns)
     # The pre-amplifier
     pre_amplifier = cha_element.find(_ns("PreAmplifier"))
-    if pre_amplifier:
+    if pre_amplifier is not None:
         channel.pre_amplifier = _read_equipment(pre_amplifier, _ns)
     # The data logger
     data_logger = cha_element.find(_ns("DataLogger"))
-    if data_logger:
+    if data_logger is not None:
         channel.data_logger = _read_equipment(data_logger, _ns)
     # Other equipment
     equipment = cha_element.find(_ns("Equipment"))
-    if equipment:
+    if equipment is not None:
         channel.equipment = _read_equipment(equipment, _ns)
     # Finally parse the response.
     response = cha_element.find(_ns("Response"))
-    if response:
+    if response is not None:
         channel.response = _read_response(response, _ns)
     return channel
 
 
 def _read_response(resp_element, _ns):
+    response = obspy.station.response.Response()
+    instrument_sensitivity = resp_element.find(_ns("InstrumentSensitivity"))
+    if instrument_sensitivity is not None:
+        response.instrument_sensitivity = \
+            _read_instrument_sensitivity(instrument_sensitivity, _ns)
+    instrument_polynomial = resp_element.find(_ns("InstrumentPolynomial"))
+    if instrument_polynomial is not None:
+        response.instrument_polynomial = \
+            _read_instrument_polynomial(instrument_polynomial, _ns)
+    # Now read all the stages.
+    for stage in resp_element.findall(_ns("Stage")):
+        response.response_stages.append(_read_response_stage(stage, _ns))
+    return response
+
+
+def _read_response_stage(stage_elem, _ns):
+    """
+    This parses all ResponseStageTypes. It will return a different object
+    depending on the actual response type.
+    """
+    # The stage sequence number is required!
+    stage_sequence_number = int(stage_elem.get("number"))
+    # All stages contain a stage gain and potentially a decimation.
+
+
+
+def _read_instrument_sensitivity(sensitivity_element, _ns):
+    value = _tag2obj(sensitivity_element, _ns("Value"), float)
+    frequency = _tag2obj(sensitivity_element, _ns("Frequency"), float)
+    input_units = sensitivity_element.find(_ns("InputUnits"))
+    output_units = sensitivity_element.find(_ns("OutputUnits"))
+    sensitivity = obspy.station.response.InstrumentSensitivity(value=value,
+        frequency=frequency,
+        input_units_name=_tag2obj(input_units, _ns("Name"), str),
+        output_units_name=_tag2obj(output_units, _ns("Name"), str))
+    sensitivity.input_units_description = _tag2obj(input_units,
+        _ns("Description"), str)
+    sensitivity.output_units_description = _tag2obj(output_units,
+        _ns("Description"), str)
+    sensitivity.frequency_range_start = _tag2obj(sensitivity_element,
+        _ns("FrequencyStart"), float)
+    sensitivity.frequency_range_end = _tag2obj(sensitivity_element,
+        _ns("FrequencyEnd"), float)
+    sensitivity.frequency_range_DB_variation = _tag2obj(sensitivity_element,
+        _ns("FrequencyDBVariation"), float)
+    return sensitivity
+
+
+def _read_instrument_polynomial(polynomial_element, _ns):
     pass
 
 
