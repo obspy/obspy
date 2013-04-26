@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 
+import difflib
+import math
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, \
-    readEvents, Event
+    readEvents, Event, Origin, Magnitude, Tensor, MomentTensor, \
+    FocalMechanism, Catalog
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from xml.etree.ElementTree import tostring, fromstring
+import StringIO
 import os
 import unittest
 import warnings
@@ -24,14 +28,18 @@ class QuakeMLTestCase(unittest.TestCase):
         Simple helper function to compare two XML strings.
         """
         obj1 = fromstring(doc1)
-        str1 = ''.join([s.strip() for s in tostring(obj1).splitlines()])
         obj2 = fromstring(doc2)
-        str2 = ''.join([s.strip() for s in tostring(obj2).splitlines()])
-        if str1 != str2:
-            print
-            print str1
-            print str2
-        self.assertEqual(str1, str2)
+        str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
+        str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
+
+        unified_diff = difflib.unified_diff(str1, str2)
+        has_error = False
+        for line in unified_diff:
+            has_error = True
+            print line
+        if has_error:
+            msg = "Strings are not equal."
+            raise AssertionError(msg)
 
     def test_readQuakeML(self):
         """
@@ -115,7 +123,7 @@ class QuakeMLTestCase(unittest.TestCase):
         origin = catalog[0].origins[0]
         self.assertEqual(origin.resource_id,
             ResourceIdentifier(
-            'smi:www.iris.edu/ws/event/query?originId=7680412'))
+                'smi:www.iris.edu/ws/event/query?originId=7680412'))
         self.assertEqual(origin.time, UTCDateTime("2011-03-11T05:46:24.1200"))
         self.assertEqual(origin.latitude, 38.297)
         self.assertEqual(origin.latitude_errors.lower_uncertainty, None)
@@ -215,7 +223,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(mag.magnitude_type, 'MS')
         self.assertEqual(mag.method_id,
             ResourceIdentifier(
-            'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
+                'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
         self.assertEqual(mag.station_count, 8)
         self.assertEqual(mag.evaluation_status, 'preliminary')
         # comments
@@ -434,6 +442,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(fm.principal_axes.n_axis.length, None)
         # momentTensor
         mt = fm.moment_tensor
+        self.assertEqual(mt.resource_id,
+            ResourceIdentifier('smi:ISC/mtid=123321'))
         self.assertEqual(mt.derived_origin_id,
             ResourceIdentifier('smi:ISC/origid=13145006'))
         self.assertAlmostEqual(mt.scalar_moment, 1.100e+18)
@@ -585,6 +595,74 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(ev.preferred_magnitude(), ev.magnitudes[1])
         self.assertEqual(ev.preferred_focal_mechanism(),
             ev.focal_mechanisms[1])
+
+    def test_creating_minimal_QuakeML_with_MT(self):
+        """
+        Tests the creation of a minimal QuakeML containing origin, magnitude
+        and moment tensor.
+        """
+        # Rotate into physical domain
+        lat, lon, depth, org_time = 10.0, -20.0, 12000, UTCDateTime(2012, 1, 1)
+        mrr, mtt, mpp, mtr, mpr, mtp = 1E18, 2E18, 3E18, 3E18, 2E18, 1E18
+        scalar_moment = math.sqrt(mrr ** 2 + mtt ** 2 + mpp ** 2 + mtr ** 2 +
+            mpr ** 2 + mtp ** 2)
+        moment_magnitude = 0.667 * (math.log10(scalar_moment) - 9.1)
+
+        # Initialise event
+        ev = Event(event_type="earthquake")
+
+        ev_origin = Origin(time=org_time, latitude=lat,
+            longitude=lon, depth=depth)
+        ev.origins.append(ev_origin)
+
+        # populte event moment tensor
+        ev_tensor = Tensor(m_rr=mrr, m_tt=mtt, m_pp=mpp, m_rt=mtr, m_rp=mpr,
+            m_tp=mtp)
+
+        ev_momenttensor = MomentTensor(tensor=ev_tensor)
+        ev_momenttensor.scalar_moment = scalar_moment
+
+        ev_focalmechanism = FocalMechanism(moment_tensor=ev_momenttensor)
+        ev.focal_mechanisms.append(ev_focalmechanism)
+
+        # populate event magnitude
+        ev_magnitude = Magnitude()
+        ev_magnitude.mag = moment_magnitude
+        ev_magnitude.magnitude_type = 'Mw'
+        ev.magnitudes.append(ev_magnitude)
+
+        # write QuakeML file
+        cat = Catalog(events=[ev])
+        memfile = StringIO.StringIO()
+        cat.write(memfile, format="quakeml", validate=True)
+
+        memfile.seek(0, 0)
+        new_cat = readQuakeML(memfile)
+        self.assertEqual(len(new_cat), 1)
+        event = new_cat[0]
+        self.assertEqual(len(event.origins), 1)
+        self.assertEqual(len(event.magnitudes), 1)
+        self.assertEqual(len(event.focal_mechanisms), 1)
+        org = event.origins[0]
+        mag = event.magnitudes[0]
+        fm = event.focal_mechanisms[0]
+        self.assertEqual(org.latitude, lat)
+        self.assertEqual(org.longitude, lon)
+        self.assertEqual(org.depth, depth)
+        self.assertEqual(org.time, org_time)
+        # Moment tensor.
+        mt = fm.moment_tensor.tensor
+        self.assertLess((fm.moment_tensor.scalar_moment - scalar_moment) /
+            scalar_moment, scalar_moment * 1E-10)
+        self.assertEqual(mt.m_rr, mrr)
+        self.assertEqual(mt.m_pp, mpp)
+        self.assertEqual(mt.m_tt, mtt)
+        self.assertEqual(mt.m_rt, mtr)
+        self.assertEqual(mt.m_rp, mpr)
+        self.assertEqual(mt.m_tp, mtp)
+        # Mag
+        self.assertAlmostEqual(mag.mag, moment_magnitude)
+        self.assertEqual(mag.magnitude_type, "Mw")
 
 
 def suite():

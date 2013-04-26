@@ -60,7 +60,7 @@
           </pAxis>
         </principalAxes>
         <methodID>smi:ISC/methodID=Best_double_couple</methodID>
-        <momentTensor>
+        <momentTensor publicID="smi:ISC/mtid=123321">
           <derivedOriginID>smi:ISC/origid=13145006</derivedOriginID>
           <scalarMoment>
             <value>1.1e+18</value>
@@ -155,7 +155,7 @@
           </pAxis>
         </principalAxes>
         <methodID>smi:ISC/methodID=Best_double_couple</methodID>
-        <momentTensor>
+        <momentTensor publicID="smi:ISC/mtid=123456">
           <derivedOriginID>smi:ISC/origid=13145007</derivedOriginID>
           <scalarMoment>
             <value>1.1e+18</value>

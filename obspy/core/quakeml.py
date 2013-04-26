@@ -1191,9 +1191,8 @@ class Pickler(object):
         """
         if moment_tensor is None:
             return
-        mt_el = etree.Element('momentTensor')
-        if moment_tensor.resource_id:
-            mt_el.attrib['publicID'] = self._id(moment_tensor.resource_id)
+        mt_el = etree.Element('momentTensor',
+            attrib={'publicID': self._id(moment_tensor.resource_id)})
         # required parameters
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
@@ -1265,8 +1264,10 @@ class Pickler(object):
         self._str(focal_mechanism.misfit, element, 'misfit')
         self._str(focal_mechanism.station_distribution_ratio, element,
                   'stationDistributionRatio')
-        self._nodal_planes(focal_mechanism.nodal_planes, element)
-        self._principal_axes(focal_mechanism.principal_axes, element)
+        if focal_mechanism.nodal_planes:
+            self._nodal_planes(focal_mechanism.nodal_planes, element)
+        if focal_mechanism.principal_axes:
+            self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
@@ -1393,11 +1394,10 @@ def writeQuakeML(catalog, filename, validate=False,
     xml_doc = Pickler().dumps(catalog)
 
     if validate is True and \
-        not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
         warnings.warn("The final QuakeML file did not pass validation")
 
     fh.write(xml_doc)
-    fh.close()
     # Close if its a file handler.
     if isinstance(fh, file):
         fh.close()
