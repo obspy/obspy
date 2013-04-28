@@ -1380,7 +1380,7 @@ def writeQuakeML(catalog, filename, validate=False,
     :param filename: Name of file to write.
     :type validate: Boolean, optional
     :param validate: If True, the final QuakeML file will be validated against
-        the QuakeML XSD schame file. Be warned that this does not assure that
+        the QuakeML schema file. Be warned that this does not assure that
         the QuakeML file is valid. Useful for testing and debugging or if you
         don't trust ObsPy. Raises an AssertionError if the validation fails.
     """
@@ -1418,24 +1418,24 @@ def readSeisHubEventXML(filename):
     return readQuakeML(temp)
 
 
-def validate(xml_file):
+def validate(xml_file, verbose=False):
     """
-    Validates a QuakeML file against the QuakeML 1.2 XML Schema. Returns either
-    True or False.
+    Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
+    either True or False.
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    relaxng = etree.RelaxNG(etree.parse(schema_location))
     xmldoc = etree.parse(xml_file)
 
-    valid = xmlschema.validate(xmldoc)
+    valid = relaxng.validate(xmldoc)
 
     # Pretty error printing if the validation fails.
-    if valid is not True:
+    if verbose and valid is not True:
         print "Error validating QuakeML file:"
-        for entry in xmlschema.error_log:
+        for entry in relaxng.error_log:
             print "\t%s" % entry
     return valid
 
