@@ -788,6 +788,8 @@ class Pickler(object):
             return ResourceIdentifier().getQuakeMLURI()
 
     def _str(self, value, root, tag, always_create=False):
+        if isinstance(value, ResourceIdentifier):
+            value = value.getQuakeMLURI()
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag).text = "%s" % (value)
