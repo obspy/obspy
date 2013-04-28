@@ -1390,17 +1390,18 @@ def writeQuakeML(catalog, filename, validate=False,
     else:
         fh = filename
 
-    xml_doc = Pickler().dumps(catalog)
+    try:
+        xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and \
-            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
-        raise AssertionError(
-            "The final QuakeML file did not pass validation.")
-
-    fh.write(xml_doc)
-    # Close if its a file handler.
-    if isinstance(fh, file):
-        fh.close()
+        if validate is True and \
+                not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+            raise AssertionError(
+                "The final QuakeML file did not pass validation.")
+        fh.write(xml_doc)
+    finally:
+        # Close if its a file handler.
+        if isinstance(fh, file):
+            fh.close()
 
 
 def readSeisHubEventXML(filename):
