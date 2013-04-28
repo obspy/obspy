@@ -9,6 +9,7 @@ dev:
 	 'validate'. If True, the resulting QuakeML file will be validated against
 	 the QuakeML schema before being written. An AssertionError will be raised
 	 in case the validation fails.
+   * validation of QuakeML against offical schema working now
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
