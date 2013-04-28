@@ -652,8 +652,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(org.time, org_time)
         # Moment tensor.
         mt = fm.moment_tensor.tensor
-        self.assertLess((fm.moment_tensor.scalar_moment - scalar_moment) /
-            scalar_moment, scalar_moment * 1E-10)
+        self.assertTrue((fm.moment_tensor.scalar_moment - scalar_moment) /
+            scalar_moment < scalar_moment * 1E-10)
         self.assertEqual(mt.m_rr, mrr)
         self.assertEqual(mt.m_pp, mpp)
         self.assertEqual(mt.m_tt, mtt)
