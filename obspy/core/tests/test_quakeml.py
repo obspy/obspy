@@ -395,7 +395,7 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier(resource_id="smi:ch.ethz.sed/waveform/201754"))
         self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
         self.assertEqual(fm.triggering_origin_id,
-            ResourceIdentifier('smi:originId=7680412'))
+            ResourceIdentifier('smi:local/originId=7680412'))
         self.assertAlmostEqual(fm.azimuthal_gap, 0.123)
         self.assertEqual(fm.station_polarity_count, 987)
         self.assertAlmostEqual(fm.misfit, 1.234)
@@ -612,7 +612,7 @@ class QuakeMLTestCase(unittest.TestCase):
         ev = Event(event_type="earthquake")
 
         ev_origin = Origin(time=org_time, latitude=lat,
-            longitude=lon, depth=depth)
+            longitude=lon, depth=depth, resource_id=ResourceIdentifier())
         ev.origins.append(ev_origin)
 
         # populte event moment tensor
@@ -621,6 +621,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         ev_momenttensor = MomentTensor(tensor=ev_tensor)
         ev_momenttensor.scalar_moment = scalar_moment
+        ev_momenttensor.derived_origin_id = ev_origin.resource_id
 
         ev_focalmechanism = FocalMechanism(moment_tensor=ev_momenttensor)
         ev.focal_mechanisms.append(ev_focalmechanism)
