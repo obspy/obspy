@@ -906,9 +906,10 @@ master/seishub/plugins/seismology/event.py
             liststyle = SubElement(style, "ListStyle")
             SubElement(liststyle, "maxSnippetLines").text = "5"
             SubElement(icon_style, "scale").text = str(icon_size)
-            point = SubElement(placemark, "Point")
-            SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
-                    (event_dict['longitude'], event_dict['latitude'])
+            if event_dict['longitude'] and event_dict['latitude']:
+                point = SubElement(placemark, "Point")
+                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+                        (event_dict['longitude'], event_dict['latitude'])
 
             # detailed information on the event for the description
             descrip_str = ""
