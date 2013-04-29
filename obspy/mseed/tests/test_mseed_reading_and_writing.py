@@ -858,6 +858,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.iteritems():
             seed_dtype = value[2]
+            # Special handling for the ASCII dtype. NumPy 1.7 changes the
+            # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
+            # "|S1|" here to be consistent across NumPy versions.
+            if encoding == 0:
+                seed_dtype = "|S1"
             tempfile = NamedTemporaryFile().name
             # Write it once with the encoding key and once with the value.
             st[0].data = data.astype(seed_dtype)
