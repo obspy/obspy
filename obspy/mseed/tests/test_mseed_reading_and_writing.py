@@ -865,7 +865,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 st.write(tempfile, format="MSEED", encoding=encoding)
                 st2 = read(tempfile)
                 del st2[0].stats.mseed
-                np.testing.assert_array_equal(st[0].data, st2[0].data)
+                np.testing.assert_array_equal(st[0].data, st2[0].data,
+                    "Arrays are not equal for encoding '%s'" %
+                    ENCODINGS[encoding][0])
                 del st2
                 ms = _MSStruct(tempfile)
                 ms.read(-1, 1, 1, 0)
