@@ -569,7 +569,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing all different types. This is an test which is independent
         of the read method. Only the data part is verified.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         # Read the data and copy them
         st = read(file)
@@ -661,9 +661,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-                ('|S1', 'a', 0, np.fromstring(""" !"#$%&'()*+,-./""" + \
-                   """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" + \
-                   """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
+                ('|S1', 'a', 0, np.fromstring(""" !"#$%&'()*+,-./""" +
+                """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
+                """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
                 ('int32', 'i', 1, def_content.astype('int16')),
@@ -929,12 +929,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # changes, sum of all points in stream must stay the same
         self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
-        self.assertEqual((res[:]['qual'] >= 0).sum(),  res.shape[0])
-        self.assertEqual((res[:]['qual'] <= 100).sum(),  res.shape[0])
+        self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
+        self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
 
 
 def suite():
-    return unittest.makeSuite(MSEEDReadingAndWritingTestCase,  'test')
+    return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
 
 
 if __name__ == '__main__':

@@ -4,8 +4,8 @@ MSEED bindings to ObsPy core module.
 """
 
 from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
-    SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, \
-    blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
+    VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
+    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
 from math import log
 from obspy import Stream, Trace, UTCDateTime
@@ -706,7 +706,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         if errcode == 0:
             msg = ("Did not write any data for trace '%s' even though it "
                 "contains data values.") % trace
-            raise ValueError(ms)
+            raise ValueError(msg)
         if errcode == -1:
             clibmseed.msr_free(C.pointer(msr))
             del mst, msr
