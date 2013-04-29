@@ -1793,6 +1793,14 @@ class Stream(object):
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
         return
 
+    def correct_polynomial_response(self, dataless_file=file, **kwargs):
+        """
+        Correct for polynomial instrument response 
+        """
+        for tr in self:
+            tr.correct_polynomial_response(dataless_file=dataless_file, **kwargs)
+        return
+
     def filter(self, type, **options):
         """
         Filters the data of all traces in the Stream.
