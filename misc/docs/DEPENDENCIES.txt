@@ -4,9 +4,9 @@
 # General
 sphinx>=1.1
 ## for 'make coverage' only:
-coverage
+coverage==3.5
 ## for 'make pep8' only:
-pep8
+pep8==0.6.1
 ## for 'make citations' only:
 pybtex>=0.16
 
