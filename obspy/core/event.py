@@ -661,8 +661,9 @@ class ResourceIdentifier(object):
         resource_id = self.resource_id
         if str(resource_id).strip() == "":
             resource_id = str(uuid4())
-        regex = r"(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
-                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*"
+
+        regex = r"^(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
+                r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*$"
         result = re.match(regex, str(resource_id))
         if result is not None:
             return resource_id
@@ -672,7 +673,7 @@ class ResourceIdentifier(object):
         result = re.match(regex, resource_id)
         if result is None:
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
-            raise Exception(msg)
+            raise ValueError(msg)
         return resource_id
 
     def copy(self):
