@@ -1378,32 +1378,33 @@ def writeQuakeML(catalog, filename, validate=False,
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str
-    :param filename: Name of file to write.
+    :type filename: string or open file-like object
+    :param filename: Filename to write or open file-like object.
     :type validate: Boolean, optional
     :param validate: If True, the final QuakeML file will be validated against
-        the QuakeML schema file. Be warned that this does not assure that
-        the QuakeML file is valid. Useful for testing and debugging or if you
+        the QuakeML schema file. Useful for testing and debugging or if you
         don't trust ObsPy. Raises an AssertionError if the validation fails.
     """
+    xml_doc = Pickler().dumps(catalog)
+
+    if validate is True and \
+            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+        raise AssertionError(
+            "The final QuakeML file did not pass validation.")
+
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'write'):
-        fh = open(filename, 'wt')
+    if not hasattr(filename, "write"):
+        file_opened = True
+        fh = open(filename, "wt")
     else:
+        file_opened = False
         fh = filename
 
-    try:
-        xml_doc = Pickler().dumps(catalog)
+    fh.write(xml_doc)
 
-        if validate is True and \
-                not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
-            raise AssertionError(
-                "The final QuakeML file did not pass validation.")
-        fh.write(xml_doc)
-    finally:
-        # Close if its a file handler.
-        if isinstance(fh, file):
-            fh.close()
+    # Close if a file has been opened by this function.
+    if file_opened is True:
+        fh.close()
 
 
 def readSeisHubEventXML(filename):
