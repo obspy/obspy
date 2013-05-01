@@ -442,7 +442,7 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
         self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
         self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
-        
+
 
 def suite():
     return unittest.makeSuite(CoreTestCase, 'test')

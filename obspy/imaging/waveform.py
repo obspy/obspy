@@ -168,7 +168,7 @@ class WaveformPlotting(object):
         self.subplots_adjust_left = kwargs.get('subplots_adjust_left', 0.12)
         self.subplots_adjust_right = kwargs.get('subplots_adjust_right', 0.88)
         self.subplots_adjust_top = kwargs.get('subplots_adjust_top', 0.95)
-        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.10)
+        self.subplots_adjust_bottom = kwargs.get('subplots_adjust_bottom', 0.1)
         self.right_vertical_labels = kwargs.get('right_vertical_labels', False)
         self.one_tick_per_line = kwargs.get('one_tick_per_line', False)
         self.show_y_UTC_label = kwargs.get('show_y_UTC_label', True)
@@ -540,7 +540,6 @@ class WaveformPlotting(object):
         """
         left = self.width
         right = left + 5
-        top = self.extreme_values.shape[0] - 1
         top = 2
         bottom = top - 1
 
@@ -649,9 +648,12 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.linewidth, linestyle=self.linestyle)
-        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
-        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle, linewidth=self.grid_linewidth)
+        ax.plot(trace.data, color=self.color, linewidth=self.linewidth,
+            linestyle=self.linestyle)
+        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle,
+            linewidth=self.grid_linewidth)
+        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle,
+            linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
         ax.set_xlim(0, len(trace.data) - 1)

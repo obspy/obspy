@@ -294,7 +294,8 @@ def main():
             gaps_start = startend[gap_indices, 1]
             gaps_end = startend[np.roll(gap_indices, 1), 0]
             if not options.nogaps and any(gap_indices):
-                rects = [Rectangle((start_, offset[0] - 0.4), end_ - start_, 0.8)
+                rects = [Rectangle((start_, offset[0] - 0.4),
+                                   end_ - start_, 0.8)
                          for start_, end_ in zip(gaps_start, gaps_end)]
                 ax.add_collection(PatchCollection(rects, color="r"))
             if options.print_gaps:
