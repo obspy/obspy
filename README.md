@@ -7,3 +7,5 @@ ObsPy is an open-source project dedicated to provide a **Python framework for pr
 
 The goal of the ObsPy project is to facilitate **rapid application development for seismology**.
 
+[Read more](https://github.com/obspy/obspy/wiki)
+
