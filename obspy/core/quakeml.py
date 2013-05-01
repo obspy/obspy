@@ -1382,8 +1382,7 @@ def writeQuakeML(catalog, filename, validate=False,
     :param filename: Filename to write or open file-like object.
     :type validate: Boolean, optional
     :param validate: If True, the final QuakeML file will be validated against
-        the QuakeML schema file. Useful for testing and debugging or if you
-        don't trust ObsPy. Raises an AssertionError if the validation fails.
+        the QuakeML schema file. Raises an AssertionError if the validation fails.
     """
     xml_doc = Pickler().dumps(catalog)
 
