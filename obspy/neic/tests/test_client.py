@@ -17,8 +17,9 @@ class ClientTestCase(unittest.TestCase):
         """
         Tests getWaveform method.
         """
-        client = Client(host="137.227.224.97", port=2061, debug=True)
-        dt = UTCDateTime("2013-03-14T06:31:00.000")
+        client = Client(host="137.227.224.97", port=2061)
+        # now - 5 hours
+        dt = UTCDateTime() - 5 * 60 * 60
         print ascdate() + " " + asctime() + " start=" + str(dt)
         st = client.getWaveformNSCL("USISCO BH.00", dt, 3600.0)
         print ascdate() + " " + asctime() + " " + str(st)

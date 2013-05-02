@@ -56,7 +56,7 @@ class Client(object):
 
         See :mod:`obspy.neic` for all parameters.
         """
-        if(debug):
+        if debug:
             print "int __init__" + host + "/" + str(port) + " timeout=" + \
                 str(timeout)
         self.host = host
@@ -110,31 +110,23 @@ class Client(object):
 
         waveforms using the 12 character NNSSSSSCCCLL
         """
-        start = str(UTCDateTime(starttime))
-        start = start.replace("T", " ")
-        start = start.replace("Z", "")
-        streams = Stream()
-        line = ""
-        line += "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'" % (seedname, start,
-            duration)
+        start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
+        line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
+            (seedname, start, duration)
         if self.debug:
             print ascdate() + " " + asctime() + " line=" + line
-        line += "\t"
         success = False
         while not success:
             try:
                 tf = NamedTemporaryFile()
-                #print "create socket"
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 if self.debug:
-                    print ascdate() + " " + asctime() + \
-                        " connecting temp file=" + tf.name
+                    print ascdate(), asctime(), "connecting temp file", tf.name
                 s.connect((self.host, self.port))
                 s.setblocking(0)
                 s.send(line)
                 if self.debug:
-                    print ascdate() + " " + asctime() + \
-                        " Connected - start reads"
+                    print ascdate(), asctime(), "Connected - start reads"
                 slept = 0
                 maxslept = self.timeout / 0.05
                 totlen = 0
@@ -142,29 +134,28 @@ class Client(object):
                     try:
                         data = s.recv(102400)
                         if self.debug:
-                            print ascdate() + " " + asctime() + " read len=" \
-                                + str(len(data)) + " total=" + str(totlen)
+                            print ascdate(), asctime(), "read len", \
+                                str(len(data)), " total", str(totlen)
                         if data.find("EOR") >= 0:
                             if self.debug:
-                                print ascdate() + " " + asctime() + \
-                                    " <EOR> seen"
-                            tf.write(data[0: data.find("<EOR>")])
-                            totlen += len(data[0: data.find("<EOR>")])
+                                print ascdate(), asctime(), "<EOR> seen"
+                            tf.write(data[0:data.find("<EOR>")])
+                            totlen += len(data[0:data.find("<EOR>")])
                             tf.seek(0)
                             try:
-                                streams = read(tf.name, 'MSEED')
-                            except:
-                                streams = Stream()
-                            streams.trim(starttime, starttime + duration)
+                                st = read(tf.name, 'MSEED')
+                            except Exception, e:
+                                st = Stream()
+                            st.trim(starttime, starttime + duration)
                             s.close()
+                            tf.close()
                             try:
                                 if self.debug:
-                                    print ascdate() + " " + asctime() + \
-                                        " Delete temp file=" + tf.name
+                                    print ascdate(), asctime(), \
+                                        "Delete temp file", tf.name
                                 os.remove(tf.name)
                             except:
-                                print "Failed to remove temp file=" + tf.name
-                                pass
+                                print "Failed to remove temp file", tf.name
                             success = True
                             break
                         else:
@@ -173,13 +164,12 @@ class Client(object):
                             slept = 0
                     except socket.error as e:
                         if slept > maxslept:
-                            print ascdate() + " " + asctime() + " Timeout " + \
-                                "on connection  try to remake connection"
+                            print ascdate(), asctime(), \
+                                "Timeout on connection", "- try to reconnect"
                             slept = 0
                             s.close()
                         sleep(0.05)
                         slept += 1
-
             except socket.error as e:
                 print traceback.format_exc()
                 print "CWB QueryServer at " + self.host + "/" + str(self.port)
@@ -188,7 +178,7 @@ class Client(object):
                 print "**** exception found=" + str(e)
         if self.debug:
             print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
-        return streams
+        return st
 
 
 if __name__ == '__main__':
