@@ -3,7 +3,7 @@
 NEIC CWB Query service client for ObsPy.
 
 :copyright:
-    The ObsPy Development Team (devs@obspy.org)
+    The ObsPy Development Team (devs@obspy.org) & David Ketchum
 :license:
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
@@ -16,7 +16,8 @@ import os
 import platform
 import socket
 import traceback
-from neic.util import ascdate, asctime
+from obspy.neic.util import ascdate, asctime
+
 
 VERSION = _getVersionString("obspy.neic")
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
@@ -27,15 +28,15 @@ class Client(object):
     """
     NEIC CWB QueryServer request client for waveform data
 
-    :type ipadr: str, optional
-    :param ipadr: The IP address or DNS name of the server
+    :type host: str, optional
+    :param host: The IP address or DNS name of the server
         (def=cwbpub.cr.usgs.gov)
     :type port: int, optional
-    :param port: The port of the QueryServer (def=2061)
-    :type timeout: int, optional (def=30)
-    :param timeout: Wait this much time before timeout is raised (python >2.6)
+    :param port: The port of the QueryServer (default is ``2061``)
+    :type timeout: int, optional (default is ``30``)
+    :param timeout: Wait this much time before timeout is raised (python > 2.6)
     :type debug: bool, optional
-    :param debug: if true, more output is generated (def=False)
+    :param debug: if true, more output is generated (default is ``False``)
 
 
     .. rubric:: Example
@@ -44,13 +45,11 @@ class Client(object):
     >>> from obspy import UTCDateTime
     >>> client = Client(debug=True)
     >>> start = UTCDateTime("2013-03-14T06:31:00.000")
-    >>> st = client.getWaveForm("USISCO BH.00", start, 360.)
+    >>> st = client.getWaveform("USISCO BH.00", start, 360.)
     >>> print st
     >>> print "I do not know"
-
-
     """
-    def __init__(self, ipadr="137.227.224.97", port=2061, timeout=30,
+    def __init__(self, host="137.227.224.97", port=2061, timeout=30,
             debug=False):
         """
         Initializes access to a CWB QueryServer
@@ -58,21 +57,21 @@ class Client(object):
         See :mod:`obspy.neic` for all parameters.
         """
         if(debug):
-            print "int __init__" + ipadr + "/" + str(port) + " timeout=" + \
+            print "int __init__" + host + "/" + str(port) + " timeout=" + \
                 str(timeout)
-        self.ipadr = ipadr
+        self.host = host
         self.port = port
         self.timeout = timeout
         self.debug = debug
 
-    def getWaveForm(self, network, station, channel, location, starttime,
-            duration):
+    def getWaveform(self, network, station, channel, location, starttime,
+                    endtime):
         """
-        getWaveForm() gets a wave for for a separate net, station, channel and
-        locaatin for a duration in seconds from a start time.  The individual
-        elements can contain wildcard "." representing on space.  All field are
-        left justified and padded to the required field width if they are too
-        small.  Use getWaveFormNSCL for full regular expressions.
+        Gets a waveform for a separate net, station, channel and
+        location for a duration in seconds from a start time. The individual
+        elements can contain wildcard "." representing one space. All field
+        are left justified and padded to the required field width if they are
+        too small.  Use getWaveformNSCL for full regular expressions.
 
         :type network: str
         :param network:  The 2 character network code or regular expression
@@ -82,27 +81,27 @@ class Client(object):
             (lpadded to 5)
         :type channel: str
         :param channel:  The 3 character channel code or regular expression
-        (lpad to 3)
+            (lpadded to 3)
         :param location: The 2 character location code or regular expression
-        :type start: UTCDateTime
-        :param start: The starting date/time to get
-        :type duration: float
-        :param duration: The duration in seconds to get
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Start date and time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: End date and time.
         """
         seedname = network.ljust(2, " ") + station.ljust(5, " ") + \
             channel.ljust(3, " ") + location.ljust(2, " ")
-        return self.getWaveFormNSCL(seedname, starttime, duration)
+        return self.getWaveformNSCL(seedname, starttime, endtime - starttime)
 
-    def getWaveFormNSCL(self, seedname, starttime, duration):
+    def getWaveformNSCL(self, seedname, starttime, duration):
         """
-        getWaveForm() gets a regular expression of of channels from a start
-        time for a duration in seconds.  The regular expression must represent
-        all characters of the NNSSSSSCCCLL pattern e.g. US.....[BSHE]HZ.. is
-        o.k, but US.....[BSHE]H is not.  Complex regular expressions are
-        permitted (US.....BHZ..|CU.....[BH]HZ..)
+        Gets a regular expression of channels from a start time for a duration
+        in seconds.  The regular expression must represent all characters of
+        the NNSSSSSCCCLL pattern e.g. US.....[BSHE]HZ.. is valid, but
+        US.....[BSHE]H is not. Complex regular expressions are permitted
+        (US.....BHZ..|CU.....[BH]HZ..)
 
         :type seedname: str
-        :param seedname:  The 12 character seedname or 12 character regexp
+        :param seedname: The 12 character seedname or 12 character regexp
             matching channels
         :type start: UTCDateTime
         :param start: The starting date/time to get
@@ -118,7 +117,7 @@ class Client(object):
         line = ""
         line += "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'" % (seedname, start,
             duration)
-        if(self.debug):
+        if self.debug:
             print ascdate() + " " + asctime() + " line=" + line
         line += "\t"
         success = False
@@ -127,13 +126,13 @@ class Client(object):
                 tf = NamedTemporaryFile()
                 #print "create socket"
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if(self.debug):
+                if self.debug:
                     print ascdate() + " " + asctime() + \
                         " connecting temp file=" + tf.name
-                s.connect((self.ipadr, self.port))
+                s.connect((self.host, self.port))
                 s.setblocking(0)
                 s.send(line)
-                if(self.debug):
+                if self.debug:
                     print ascdate() + " " + asctime() + \
                         " Connected - start reads"
                 slept = 0
@@ -142,11 +141,11 @@ class Client(object):
                 while True:
                     try:
                         data = s.recv(102400)
-                        if(self.debug):
+                        if self.debug:
                             print ascdate() + " " + asctime() + " read len=" \
                                 + str(len(data)) + " total=" + str(totlen)
                         if data.find("EOR") >= 0:
-                            if(self.debug):
+                            if self.debug:
                                 print ascdate() + " " + asctime() + \
                                     " <EOR> seen"
                             tf.write(data[0: data.find("<EOR>")])
@@ -159,12 +158,13 @@ class Client(object):
                             streams.trim(starttime, starttime + duration)
                             s.close()
                             try:
-                                if(self.debug):
+                                if self.debug:
                                     print ascdate() + " " + asctime() + \
                                         " Delete temp file=" + tf.name
                                 os.remove(tf.name)
                             except:
                                 print "Failed to remove temp file=" + tf.name
+                                pass
                             success = True
                             break
                         else:
@@ -182,15 +182,15 @@ class Client(object):
 
             except socket.error as e:
                 print traceback.format_exc()
-                print "CWB QueryServer at " + self.ipadr + "/" + str(self.port)
+                print "CWB QueryServer at " + self.host + "/" + str(self.port)
             except Exception as e:
                 print traceback.format_exc()
                 print "**** exception found=" + str(e)
-        if(self.debug):
+        if self.debug:
             print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
         return streams
 
+
 if __name__ == '__main__':
     import doctest
-    print "In Main"
     doctest.testmod(exclude_empty=True)

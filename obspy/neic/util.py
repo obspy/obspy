@@ -1,10 +1,12 @@
+# -*- coding: utf-8 -*-
+
 import string
 from datetime import datetime
 
 
 def asctime():
     """
-    asctime() returns the current time as a string hh:mm:ss
+    Returns the current time as a string hh:mm:ss
     """
     a = str(datetime.utcnow())
     return a[11:19]
@@ -12,7 +14,7 @@ def asctime():
 
 def ascdate():
     """
-    ascdate() returns the current date at yy/mm/dd
+    Returns the current date at yy/mm/dd
     """
     a = str(datetime.utcnow())
     return a[2:10]
