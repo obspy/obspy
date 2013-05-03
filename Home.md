@@ -99,3 +99,4 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
  * [Notes on the performed svn to git migration](wiki/Svn-to-git-migration)
  * [[Interesting reading on git, github]]
  * [[Debian packaging]]
+ * [[How to: Add a new Submodule]]
