@@ -19,7 +19,7 @@ import traceback
 from obspy.neic.util import ascdate, asctime
 
 
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (obspy.version,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (obspy.__version__,
     platform.platform(), platform.python_version())
 
 
