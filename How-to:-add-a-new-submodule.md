@@ -1,0 +1,2 @@
+ - add it in obspy.core.util.base.DEFAULT_MODULES/NETWORK_MODULES
+ - add docs module skeleton: misc/docs/source/packages/obspy.$SUBMODULE.rst
