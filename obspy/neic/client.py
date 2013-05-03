@@ -64,14 +64,14 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
 
-    def getWaveform(self, network, station, channel, location, starttime,
+    def getWaveform(self, network, station, location, channel, starttime,
                     endtime):
         """
-        Gets a waveform for a separate net, station, channel and
-        location for a duration in seconds from a start time. The individual
+        Gets a waveform for a separate net, station, location and channel
+        from starttime to endtime. The individual
         elements can contain wildcard "." representing one space. All field
         are left justified and padded to the required field width if they are
-        too small.  Use getWaveformNSCL for full regular expressions.
+        too small. Use getWaveformNSCL for full regular expressions.
 
         :type network: str
         :param network:  The 2 character network code or regular expression
@@ -79,10 +79,11 @@ class Client(object):
         :type station: str
         :param station:  The 5 character station code or regular expression
             (lpadded to 5)
+        :type location: str
+        :param location: The 2 character location code or regular expression
         :type channel: str
         :param channel:  The 3 character channel code or regular expression
             (lpadded to 3)
-        :param location: The 2 character location code or regular expression
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
