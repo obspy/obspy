@@ -23,8 +23,10 @@ class ClientTestCase(unittest.TestCase):
         print ascdate() + " " + asctime() + " start=" + str(dt)
         st = client.getWaveformNSCL("USISCO BH.00", dt, 3600.0)
         print ascdate() + " " + asctime() + " " + str(st)
-        st = client.getWaveform("US", "DUG", "BH.", "00", dt, dt + 3600)
+        st = client.getWaveform("US", "DUG", "00", "BH.", dt, dt + 5)
         print ascdate() + " " + asctime() + " " + str(st)
+        st2 = client.getWaveformNSCL("USDUG  BH.00", dt, 5)
+        self.assertTrue(st == st2)
 
 
 def suite():
