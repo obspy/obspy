@@ -58,6 +58,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 * [obspy.arclink](http://docs.obspy.org/packages/obspy.arclink.html) - [ArcLink/WebDC](http://www.webdc.eu) request client
 * [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client
 * [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client
+* [obspy.neic](http://docs.obspy.org/packages/obspy.neic.html) - [NEIC](http://earthquake.usgs.gov/regional/neic/) CWB QueryServer request client (experimental, not present in obspy <= 0.8.3)
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](https://github.com/barsch/seishub.core) database client
 
