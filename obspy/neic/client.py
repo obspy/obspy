@@ -11,15 +11,15 @@ NEIC CWB Query service client for ObsPy.
 
 from time import sleep
 from obspy import UTCDateTime, read, Stream
-from obspy.core.util import NamedTemporaryFile, _getVersionString
+import obspy
+from obspy.core.util import NamedTemporaryFile
 import platform
 import socket
 import traceback
 from obspy.neic.util import ascdate, asctime
 
 
-VERSION = _getVersionString("obspy.neic")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (obspy.version,
     platform.platform(), platform.python_version())
 
 
