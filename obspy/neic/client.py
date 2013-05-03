@@ -12,7 +12,6 @@ NEIC CWB Query service client for ObsPy.
 from time import sleep
 from obspy import UTCDateTime, read, Stream
 from obspy.core.util import NamedTemporaryFile, _getVersionString
-import os
 import platform
 import socket
 import traceback
@@ -119,58 +118,52 @@ class Client(object):
         success = False
         while not success:
             try:
-                tf = NamedTemporaryFile()
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                if self.debug:
-                    print ascdate(), asctime(), "connecting temp file", tf.name
-                s.connect((self.host, self.port))
-                s.setblocking(0)
-                s.send(line)
-                if self.debug:
-                    print ascdate(), asctime(), "Connected - start reads"
-                slept = 0
-                maxslept = self.timeout / 0.05
-                totlen = 0
-                while True:
-                    try:
-                        data = s.recv(102400)
-                        if self.debug:
-                            print ascdate(), asctime(), "read len", \
-                                str(len(data)), " total", str(totlen)
-                        if data.find("EOR") >= 0:
+                with NamedTemporaryFile() as tf:
+                    if self.debug:
+                        print ascdate(), asctime(), "connecting temp file", \
+                              tf.name
+                    s.connect((self.host, self.port))
+                    s.setblocking(0)
+                    s.send(line)
+                    if self.debug:
+                        print ascdate(), asctime(), "Connected - start reads"
+                    slept = 0
+                    maxslept = self.timeout / 0.05
+                    totlen = 0
+                    while True:
+                        try:
+                            data = s.recv(102400)
                             if self.debug:
-                                print ascdate(), asctime(), "<EOR> seen"
-                            tf.write(data[0:data.find("<EOR>")])
-                            totlen += len(data[0:data.find("<EOR>")])
-                            tf.seek(0)
-                            try:
-                                st = read(tf.name, 'MSEED')
-                            except Exception, e:
-                                st = Stream()
-                            st.trim(starttime, starttime + duration)
-                            s.close()
-                            tf.close()
-                            try:
+                                print ascdate(), asctime(), "read len", \
+                                    str(len(data)), " total", str(totlen)
+                            if data.find("EOR") >= 0:
                                 if self.debug:
-                                    print ascdate(), asctime(), \
-                                        "Delete temp file", tf.name
-                                os.remove(tf.name)
-                            except:
-                                print "Failed to remove temp file", tf.name
-                            success = True
-                            break
-                        else:
-                            totlen += len(data)
-                            tf.write(data)
-                            slept = 0
-                    except socket.error as e:
-                        if slept > maxslept:
-                            print ascdate(), asctime(), \
-                                "Timeout on connection", "- try to reconnect"
-                            slept = 0
-                            s.close()
-                        sleep(0.05)
-                        slept += 1
+                                    print ascdate(), asctime(), "<EOR> seen"
+                                tf.write(data[0:data.find("<EOR>")])
+                                totlen += len(data[0:data.find("<EOR>")])
+                                tf.seek(0)
+                                try:
+                                    st = read(tf.name, 'MSEED')
+                                except Exception, e:
+                                    st = Stream()
+                                st.trim(starttime, starttime + duration)
+                                s.close()
+                                success = True
+                                break
+                            else:
+                                totlen += len(data)
+                                tf.write(data)
+                                slept = 0
+                        except socket.error as e:
+                            if slept > maxslept:
+                                print ascdate(), asctime(), \
+                                    "Timeout on connection", \
+                                    "- try to reconnect"
+                                slept = 0
+                                s.close()
+                            sleep(0.05)
+                            slept += 1
             except socket.error as e:
                 print traceback.format_exc()
                 print "CWB QueryServer at " + self.host + "/" + str(self.port)
