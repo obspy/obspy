@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import string
 from datetime import datetime
 
 
@@ -30,15 +29,15 @@ def dsecs(dt):
     return d
 
 
-def getProperty(file, key):
+def getProperty(filename, key):
     """
     Given a property filename get the value of the given key
     """
-    file = open(file, 'r')
-    lines = file.readlines()
-    for i in range(len(lines)):
-        lines[i] = string.strip(lines[i])
-        if lines[i][0:len(key)] == key:
-            ans = lines[i][len(key) + 1:]
+    with open(filename, 'r') as fh:
+        lines = fh.readlines()
+    for line in lines:
+        line = line.strip()
+        if line.startswith(key):
+            ans = line[len(key) + 1:]
             return ans
     return ""
