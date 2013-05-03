@@ -172,6 +172,7 @@ class Client(object):
                 print "**** exception found=" + str(e)
         if self.debug:
             print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
+        st.merge(-1)
         return st
 
 
