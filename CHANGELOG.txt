@@ -31,6 +31,9 @@ dev:
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
+ - obspy.neic:
+   * new module to access data from CWB QueryServer run at the National
+     Earthquake Information Center (NEIC) in Golden, CO USA.
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
