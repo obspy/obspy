@@ -76,7 +76,6 @@ class Client(object):
             (will be padded with spaces to the right to length 2)
         :type channel: str
         :param channel:  The 3 character channel code or regular expression
-            (lpadded to 3)
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
@@ -84,8 +83,15 @@ class Client(object):
         :rtype: :class:`~obspy.core.stream.Stream`
         :returns: Stream object with requested data
         """
-        seedname = network.ljust(2, " ") + station.ljust(5, " ") + \
-            channel.ljust(3, " ") + location.ljust(2, " ")
+        # padding channel with spaces does not make sense
+        if len(channel) < 3 and channel != ".*":
+            msg = "channel expression matches less than 3 characters " + \
+                  "(use e.g. 'BHZ', 'BH?', 'BH[Z12]', 'B??')"
+            raise Exception(msg)
+        seedname = network.ljust(2, " ") + station.ljust(5, " ") + channel + \
+                   location.ljust(2, " ")
+        # allow UNIX style "?" wildcard
+        seedname = seedname.replace("?", ".")
         return self.getWaveformNSCL(seedname, starttime, endtime - starttime)
 
     def getWaveformNSCL(self, seedname, starttime, duration):
