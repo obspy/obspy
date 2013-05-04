@@ -34,13 +34,22 @@ class Client(object):
 
     .. rubric:: Example
 
-    >>> from neic import Client
+    >>> from obspy.neic import Client
     >>> from obspy import UTCDateTime
-    >>> client = Client(debug=True)
-    >>> start = UTCDateTime("2013-03-14T06:31:00.000")
-    >>> st = client.getWaveform("USISCO BH.00", start, 360.)
-    >>> print st
-    >>> print "I do not know"
+    >>> client = Client()
+    >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+    >>> st = client.getWaveform("US", "ISCO", "00", "BH?", t, t + 10)
+    >>> print st  # doctest: +ELLIPSIS
+    3 Trace(s) in Stream:
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
+    >>> print st  # doctest: +ELLIPSIS
+    3 Trace(s) in Stream:
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    US.ISCO.00.BH... | 40.0 Hz, 401 samples
     """
     def __init__(self, host="137.227.224.97", port=2061, timeout=30,
             debug=False):
@@ -82,6 +91,19 @@ class Client(object):
         :param endtime: End date and time.
         :rtype: :class:`~obspy.core.stream.Stream`
         :returns: Stream object with requested data
+
+        .. rubric:: Example
+
+        >>> from obspy.neic import Client
+        >>> from obspy import UTCDateTime
+        >>> client = Client()
+        >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+        >>> st = client.getWaveform("US", "ISCO", "??", "BH?", t, t + 10)
+        >>> print st  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
         """
         # padding channel with spaces does not make sense
         if len(channel) < 3 and channel != ".*":
@@ -117,6 +139,25 @@ class Client(object):
         :param duration: The duration in seconds to get
         :rtype: :class:`~obspy.core.stream.Stream`
         :returns: Stream object with requested data
+
+        .. rubric:: Example
+
+        >>> from obspy.neic import Client
+        >>> from obspy import UTCDateTime
+        >>> client = Client()
+        >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
+        >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
+        >>> print st  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        >>> st = client.getWaveformNSCL("USISCO B.*", t, 10)
+        >>> print st  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        US.ISCO.00.BH... | 40.0 Hz, 401 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
         line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
