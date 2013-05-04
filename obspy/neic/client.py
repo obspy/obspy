@@ -11,16 +11,10 @@ NEIC CWB Query service client for ObsPy.
 
 from time import sleep
 from obspy import UTCDateTime, read, Stream
-import obspy
 from obspy.core.util import NamedTemporaryFile
-import platform
 import socket
 import traceback
 from obspy.neic.util import ascdate, asctime
-
-
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (obspy.__version__,
-    platform.platform(), platform.python_version())
 
 
 class Client(object):
@@ -29,14 +23,14 @@ class Client(object):
 
     :type host: str, optional
     :param host: The IP address or DNS name of the server
-        (def=cwbpub.cr.usgs.gov)
+        (default is "137.227.224.97" for cwbpub.cr.usgs.gov)
     :type port: int, optional
     :param port: The port of the QueryServer (default is ``2061``)
-    :type timeout: int, optional (default is ``30``)
-    :param timeout: Wait this much time before timeout is raised (python > 2.6)
+    :type timeout: int, optional
+    :param timeout: Wait this much time before timeout is raised (python > 2.6,
+        default is ``30``)
     :type debug: bool, optional
-    :param debug: if true, more output is generated (default is ``False``)
-
+    :param debug: if ``True``, print debug information (default is ``False``)
 
     .. rubric:: Example
 
@@ -52,8 +46,6 @@ class Client(object):
             debug=False):
         """
         Initializes access to a CWB QueryServer
-
-        See :mod:`obspy.neic` for all parameters.
         """
         if debug:
             print "int __init__" + host + "/" + str(port) + " timeout=" + \
@@ -66,20 +58,22 @@ class Client(object):
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime):
         """
-        Gets a waveform for a separate net, station, location and channel
-        from starttime to endtime. The individual
-        elements can contain wildcard "." representing one space. All field
-        are left justified and padded to the required field width if they are
-        too small. Use getWaveformNSCL for full regular expressions.
+        Gets a waveform for a specified net, station, location and channel
+        from starttime to endtime. The individual elements can contain wildcard
+        "?" representing one character, matches of character ranges (e.g.
+        channel="BH[Z12]"). All fields are left justified and padded with
+        spaces to the required field width if they are too short.  Use
+        getWaveformNSCL for seednames specified with regular expressions.
 
         :type network: str
-        :param network:  The 2 character network code or regular expression
-            (lpadded to 3)
+        :param network: The 2 character network code or regular expression
+            (will be padded with spaces to the right to length 2)
         :type station: str
         :param station:  The 5 character station code or regular expression
-            (lpadded to 5)
+            (will be padded with spaces to the right to length 5)
         :type location: str
         :param location: The 2 character location code or regular expression
+            (will be padded with spaces to the right to length 2)
         :type channel: str
         :param channel:  The 3 character channel code or regular expression
             (lpadded to 3)
@@ -87,6 +81,8 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Stream object with requested data
         """
         seedname = network.ljust(2, " ") + station.ljust(5, " ") + \
             channel.ljust(3, " ") + location.ljust(2, " ")
@@ -95,20 +91,26 @@ class Client(object):
     def getWaveformNSCL(self, seedname, starttime, duration):
         """
         Gets a regular expression of channels from a start time for a duration
-        in seconds.  The regular expression must represent all characters of
-        the NNSSSSSCCCLL pattern e.g. US.....[BSHE]HZ.. is valid, but
-        US.....[BSHE]H is not. Complex regular expressions are permitted
-        (US.....BHZ..|CU.....[BH]HZ..)
+        in seconds. The regular expression must represent all characters of
+        the 12-character NNSSSSSCCCLL pattern e.g. "US.....[BSHE]HZ.." is
+        valid, but "US.....[BSHE]H" is not. Complex regular expressions are
+        permitted "US.....BHZ..|CU.....[BH]HZ.."
+
+        .. rubric:: Notes
+
+        For detailed information regarding the usage of regular expressions in
+        the query, see also the documentation for CWBQuery ("CWBQuery.doc")
+        available at ftp://hazards.cr.usgs.gov/CWBQuery/
 
         :type seedname: str
         :param seedname: The 12 character seedname or 12 character regexp
             matching channels
-        :type start: UTCDateTime
+        :type start: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param start: The starting date/time to get
         :type duration: float
         :param duration: The duration in seconds to get
-
-        waveforms using the 12 character NNSSSSSCCCLL
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Stream object with requested data
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
         line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
