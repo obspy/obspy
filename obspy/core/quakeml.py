@@ -788,6 +788,8 @@ class Pickler(object):
             return ResourceIdentifier().getQuakeMLURI()
 
     def _str(self, value, root, tag, always_create=False):
+        if isinstance(value, ResourceIdentifier):
+            value = value.getQuakeMLURI()
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag).text = "%s" % (value)
@@ -1376,32 +1378,32 @@ def writeQuakeML(catalog, filename, validate=False,
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str
-    :param filename: Name of file to write.
+    :type filename: string or open file-like object
+    :param filename: Filename to write or open file-like object.
     :type validate: Boolean, optional
     :param validate: If True, the final QuakeML file will be validated against
-        the QuakeML XSD schame file. Be warned that this does not assure that
-        the QuakeML file is valid. Useful for testing and debugging or if you
-        don't trust ObsPy. Raises an AssertionError if the validation fails.
+        the QuakeML schema file. Raises an AssertionError if the validation fails.
     """
+    xml_doc = Pickler().dumps(catalog)
+
+    if validate is True and \
+            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+        raise AssertionError(
+            "The final QuakeML file did not pass validation.")
+
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'write'):
-        fh = open(filename, 'wt')
+    if not hasattr(filename, "write"):
+        file_opened = True
+        fh = open(filename, "wt")
     else:
+        file_opened = False
         fh = filename
 
-    try:
-        xml_doc = Pickler().dumps(catalog)
+    fh.write(xml_doc)
 
-        if validate is True and \
-                not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
-            raise AssertionError(
-                "The final QuakeML file did not pass validation.")
-        fh.write(xml_doc)
-    finally:
-        # Close if its a file handler.
-        if isinstance(fh, file):
-            fh.close()
+    # Close if a file has been opened by this function.
+    if file_opened is True:
+        fh.close()
 
 
 def readSeisHubEventXML(filename):
@@ -1418,24 +1420,24 @@ def readSeisHubEventXML(filename):
     return readQuakeML(temp)
 
 
-def validate(xml_file):
+def validate(xml_file, verbose=False):
     """
-    Validates a QuakeML file against the QuakeML 1.2 XML Schema. Returns either
-    True or False.
+    Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
+    either True or False.
     """
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
-    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.xsd")
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    xmlschema = etree.XMLSchema(etree.parse(schema_location))
+    relaxng = etree.RelaxNG(etree.parse(schema_location))
     xmldoc = etree.parse(xml_file)
 
-    valid = xmlschema.validate(xmldoc)
+    valid = relaxng.validate(xmldoc)
 
     # Pretty error printing if the validation fails.
-    if valid is not True:
+    if verbose and valid is not True:
         print "Error validating QuakeML file:"
-        for entry in xmlschema.error_log:
+        for entry in relaxng.error_log:
             print "\t%s" % entry
     return valid
 

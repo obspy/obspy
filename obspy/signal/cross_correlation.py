@@ -495,6 +495,14 @@ def templatesMaxSimilarity(st, time, streams_templates):
                 cc += tmp
             except TypeError:
                 cc = tmp
+            except ValueError:
+                cc = None
+                break
+        if cc is None:
+            msg = "Skipping template(s) for station %s due to problems in " + \
+                  "three component correlation (gappy traces?)"
+            warnings.warn(msg % st_tmpl[0].stats.station)
+            break
         ind = cc.argmax()
         ind2 = ind + len(data_short)
         coef = 0.0
@@ -512,7 +520,10 @@ def templatesMaxSimilarity(st, time, streams_templates):
             coef += np.corrcoef(data_short, data_long[ind:ind2])[0, 1]
         coef /= len(ids)
         values.append(coef)
-    return max(values)
+    if values:
+        return max(values)
+    else:
+        return 0
 
 
 if __name__ == '__main__':

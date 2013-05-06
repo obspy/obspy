@@ -216,69 +216,69 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # plot-amp as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-amp',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # plot-phase as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-phase',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # fap as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='cs',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05 -1.202685E+04 1.677835E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05 -1.202685E+04 1.677835E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='def',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='dis',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  7.557425E-01  2.692007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  7.557425E-01  2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='vel',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='acc',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.914318E+08  8.920073E+01\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.914318E+08  8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')

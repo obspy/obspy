@@ -94,11 +94,11 @@ class ParserTestCase(unittest.TestCase):
             "BW.MANZ (Manzenberg,Bavaria, BW-Net)",
             "Channels:",
             ("BW.MANZ..EHE | 200.00 Hz | Streckeisen STS-2/N seismometer | "
-                "2005-12-06 -"),
+                "2005-12-06 -  | Lat: 50.0, Lng: 12.1"),
             ("BW.MANZ..EHN | 200.00 Hz | Streckeisen STS-2/N seismometer | "
-                "2005-12-06 -"),
+                "2005-12-06 -  | Lat: 50.0, Lng: 12.1"),
             ("BW.MANZ..EHZ | 200.00 Hz | Streckeisen STS-2/N seismometer | "
-                "2005-12-06 -")])
+                "2005-12-06 -  | Lat: 50.0, Lng: 12.1")])
 
     def test_get_inventory(self):
         """
@@ -115,15 +115,27 @@ class ParserTestCase(unittest.TestCase):
                 {'channel_id': 'BW.FURT..EHZ',
                     'start_date': UTCDateTime(2001, 1, 1, 0, 0),
                     'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'elevation_in_m': 565.0,
+                    'latitude': 48.162899,
+                    'local_depth_in_m': 0.0,
+                    'longitude': 11.2752,
                     'end_date': '', 'sampling_rate': 200.0},
                 {'channel_id': 'BW.FURT..EHN',
                     'start_date': UTCDateTime(2001, 1, 1, 0, 0),
                     'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'elevation_in_m': 565.0,
+                    'latitude': 48.162899,
+                    'local_depth_in_m': 0.0,
+                    'longitude': 11.2752,
                     'end_date': '',
                     'sampling_rate': 200.0},
                 {'channel_id': 'BW.FURT..EHE',
                     'start_date': UTCDateTime(2001, 1, 1, 0, 0),
                     'instrument': 'Lennartz LE-3D/1 seismometer',
+                    'elevation_in_m': 565.0,
+                    'latitude': 48.162899,
+                    'local_depth_in_m': 0.0,
+                    'longitude': 11.2752,
                     'end_date': '',
                     'sampling_rate': 200.0}]})
 

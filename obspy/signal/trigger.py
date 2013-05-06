@@ -631,7 +631,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     while triggers != []:
         # remove first trigger from list and look for overlaps
         on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
-        net, sta, loc, cha = tr_id.split(".")
+        sta = tr_id.split(".")[1]
         event = {}
         event['time'] = UTCDateTime(on)
         event['stations'] = [tr_id.split(".")[1]]
@@ -645,12 +645,13 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         # provided
         templates = event_templates.get(sta)
         if templates:
-            event['similarity'][sta] = templatesMaxSimilarity(stream, event['time'],
+            event['similarity'][sta] = \
+                templatesMaxSimilarity(stream, event['time'],
                                                               templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
-            tmp_net, tmp_sta, tmp_loc, tmp_cha = tmp_tr_id.split(".")
+            tmp_sta = tmp_tr_id.split(".")[1]
             # skip retriggering of already present station in current
             # coincidence trigger
             if tmp_tr_id in event['trace_ids']:

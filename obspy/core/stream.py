@@ -917,7 +917,7 @@ class Stream(object):
         :param grid_linewidth: Float value in points of the grid line width.
             Defaults to ``0.5``.
         :param grid_linestyle: Grid line style. Default to ``':'``
-        
+
         **Dayplot parameters**
 
         The following parameters are only available if ``type='dayplot'`` is
