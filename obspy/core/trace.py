@@ -1156,7 +1156,7 @@ class Trace(object):
     def correct_polynomial_response(self, dataless_file=None, **kwargs):
         """
         Correct polynomial response using blockette 62 stage 1
-        AND blockette 58 stage 2
+        and blockette 58 stage 2 of the input Dataless SEED file
         :param dataless_file:  Dataless SEED file.
         """
         # Checking the types
@@ -1169,17 +1169,13 @@ class Trace(object):
         dataless_parser = Parser()
         dataless_parser.read(data=dataless_file)
 
-        seed_id = ".".join((self.stats.network, self.stats.station, self.stats.location, self.stats.channel))
-
-        polynomial_coef = None
+        seed_id = ".".join((self.stats.network, self.stats.station,
+                            self.stats.location, self.stats.channel))
 
         blockettes = dataless_parser._select(seed_id, self.stats.starttime)
 
-        #to_do: find the different time periods and apply corresponding correction
+        b62_s1, b58_s2 = False, False, False
 
-        b62_s1, b52_s0, b58_s2 = False, False, False
-
-        #we first get the polynomial reponse
         for blockette in blockettes:
             if blockette.id == 62:
                 if blockette.stage_sequence_number == 1:
@@ -1198,7 +1194,7 @@ class Trace(object):
             self.data = poly_response(self.data)
         else:
             print 'correct_polynomial_response needs blockette 62 stage 1'
-            'AND blockette 58 stage 2'
+            'and blockette 58 stage 2'
 
     def filter(self, type, **options):
         """
