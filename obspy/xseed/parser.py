@@ -119,12 +119,14 @@ class Parser(object):
         ret_str += "Channels:\n"
         for channel in channels:
             start_date = channel["start_date"].strftime("%Y-%m-%d") if \
-                    channel["start_date"] else ""
+                channel["start_date"] else ""
             end_date = channel["end_date"].strftime("%Y-%m-%d") if \
-                    channel["end_date"] else ""
-            ret_str += "\t%s | %.2f Hz | %s | %s - %s\n" % \
+                channel["end_date"] else ""
+            ret_str += ("\t%s | %.2f Hz | %s | %s - %s | Lat: %.1f, "
+               "Lng: %.1f\n") % \
                (channel["channel_id"], channel["sampling_rate"],
-               channel["instrument"], start_date, end_date)
+               channel["instrument"], start_date, end_date,
+               channel["latitude"], channel["longitude"])
         return ret_str.strip()
 
     def read(self, data):
@@ -687,6 +689,10 @@ class Parser(object):
                         self._get_abbreviation(blkt.instrument_identifier)
                     chan_info["start_date"] = blkt.start_date
                     chan_info["end_date"] = blkt.end_date
+                    chan_info["latitude"] = blkt.latitude
+                    chan_info["longitude"] = blkt.longitude
+                    chan_info["elevation_in_m"] = blkt.elevation
+                    chan_info["local_depth_in_m"] = blkt.local_depth
                     info["channels"].append(chan_info)
                     continue
         return info
