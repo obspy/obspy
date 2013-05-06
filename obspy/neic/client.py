@@ -74,6 +74,12 @@ class Client(object):
         spaces to the required field width if they are too short.  Use
         getWaveformNSCL for seednames specified with regular expressions.
 
+        .. rubric:: Notes
+
+        Using ".*" regular expression might or might not work. If the 12
+        character seed name regular expression is less than 12 characters it
+        might get padded with spaces on the server side.
+
         :type network: str
         :param network: The 2 character network code or regular expression
             (will be padded with spaces to the right to length 2)
@@ -126,9 +132,12 @@ class Client(object):
 
         .. rubric:: Notes
 
-        For detailed information regarding the usage of regular expressions in
-        the query, see also the documentation for CWBQuery ("CWBQuery.doc")
-        available at ftp://hazards.cr.usgs.gov/CWBQuery/
+         - For detailed information regarding the usage of regular expressions
+           in the query, see also the documentation for CWBQuery
+           ("CWBQuery.doc") available at ftp://hazards.cr.usgs.gov/CWBQuery/
+         - Using ".*" regular expression might or might not work. If the 12
+           character seed name regular expression is less than 12 characters it
+           might get padded with spaces on the server side.
 
         :type seedname: str
         :param seedname: The 12 character seedname or 12 character regexp
