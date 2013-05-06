@@ -1795,7 +1795,7 @@ class Stream(object):
 
     def correct_polynomial_response(self, dataless_file=file, **kwargs):
         """
-        Correct for polynomial instrument response usinf the input dataless'
+        Correct for polynomial instrument response using the input dataless'
         ' file'
         :param dataless_file:  Dataless SEED file.
         """
