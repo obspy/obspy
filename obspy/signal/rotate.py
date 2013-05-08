@@ -190,6 +190,10 @@ def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
     defined as the number of degrees, down from horizontal. Both definitions
     are according to the SEED standard.
 
+    The three components need not be orthogonal to each other but the
+    components have to be linearly independent. The function performs a full
+    base change to orthogonal vertical, north, and east orientations.
+
     :param data_1: Data component 1.
     :param azimuth_1: The azimuth of component 1.
     :param dip_1: The dip of component 1.

@@ -1109,11 +1109,16 @@ class Parser(object):
 
     def rotateToZNE(self, stream):
         """
-        Rotates the three components in stream to ZNE.
+        Rotates the three components of a Stream to ZNE.
+
+        Currently limited to rotating exactly three components covering exactly
+        the same time span. The components can have arbitrary orientation and
+        need not be orthogonal to each other. The output will be a new Stream
+        object containing vertical, north, and east channels.
 
         :param stream: The stream object to rotate. Needs to have exactly three
             components, all the same length and timespan. Furthermore all
-            components need to be described in the SEED file.
+            components need to be described in the Parser object.
         """
         from obspy.signal.rotate import rotate2ZNE
         import numpy as np
