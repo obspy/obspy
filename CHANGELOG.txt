@@ -28,10 +28,16 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * new function for rotating arbitrarily oriented components to vertical,
+     north, and east.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
-
+ - obspy.xseed:
+   * The parser has a new rotateToZNE() method that is able to read the
+	 orientation of all components from a SEED file and use it to rotate the
+	 components of a Stream object to Z, N, and E. Very useful for borehole
+	 and other sensors.
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
    some float values being read in wrongly
