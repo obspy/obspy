@@ -24,6 +24,7 @@ libraries and applications, our build tools and our web sites.
     * Seyed Kasra Hosseini Zad
     * Heiner Igel
     * Adolfo Inza
+    * David Ketchum
     * Simon Kremers
     * Victor Kress
     * Lars Krieger
