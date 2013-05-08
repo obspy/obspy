@@ -11,6 +11,7 @@ Main module containing XML-SEED parser.
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+import obspy
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
 from obspy.core.util import getExampleFile, deprecated_keywords
@@ -1105,3 +1106,82 @@ class Parser(object):
         Deletes blockette 11 and 12.
         """
         self.volume = [i for i in self.volume if i.id not in [11, 12]]
+
+    def rotateToZNE(self, stream):
+        """
+        Rotates the three components in stream to ZNE.
+
+        :param stream: The stream object to rotate. Needs to have exactly three
+            components, all the same length and timespan. Furthermore all
+            components need to be described in the SEED file.
+        """
+        from obspy.signal.rotate import rotate2ZNE
+        import numpy as np
+
+        if len(stream) != 3:
+            msg = "Stream needs to have three components."
+            raise ValueError(msg)
+        # Network, station and location need to be identical for all three.
+        seed_ids = [".".join(tr.id.split(".")[:-1]) for tr in stream]
+        # XXX: Replace with proper set() construct once UTCDateTime supports
+        # hashing.
+        times = [tr.stats.starttime for tr in stream]
+        starttimes = []
+        for t in times:
+            if t in starttimes:
+                continue
+            starttimes.append(t)
+        # XXX: Replace with proper set() construct once UTCDateTime supports
+        # hashing.
+        times = [tr.stats.endtime for tr in stream]
+        endtimes = []
+        for t in times:
+            if t in endtimes:
+                continue
+            endtimes.append(t)
+        npts = [tr.stats.npts for tr in stream]
+
+        if (len(set(starttimes)) != 1) or (len(set(endtimes)) != 1) or \
+                (len(set(npts)) != 1) or (len(set(seed_ids)) != 1):
+            msg = ("All the Traces need to cover the same time span and have "
+                "the same network, station, and location.")
+            raise ValueError(msg)
+        all_arguments = []
+
+        for tr in stream:
+            dip = None
+            azimuth = None
+            blockettes = self._select(tr.id, tr.stats.starttime)
+            for blockette in blockettes:
+                if blockette.id != 52:
+                    continue
+                dip = blockette.dip
+                azimuth = blockette.azimuth
+                break
+            if dip is None or azimuth is None:
+                msg = "Dip and azimuth need to be available for every trace."
+                raise ValueError(msg)
+            all_arguments.extend([np.asarray(tr.data, dtype=np.float), azimuth,
+                dip])
+        # Now rotate all three traces.
+        z, n, e = rotate2ZNE(*all_arguments)
+
+        # Assemble a new Stream object.
+        common_header = {
+            "network": stream[0].stats.network,
+            "station": stream[0].stats.station,
+            "location": stream[0].stats.location,
+            "channel": stream[0].stats.channel[0:2],
+            "starttime": stream[0].stats.starttime,
+            "sampling_rate": stream[0].stats.sampling_rate}
+
+        tr_z = obspy.Trace(data=z, header=common_header)
+        tr_n = obspy.Trace(data=n, header=common_header)
+        tr_e = obspy.Trace(data=e, header=common_header)
+
+        # Fix the channel_codes
+        tr_z.stats.channel += "Z"
+        tr_n.stats.channel += "N"
+        tr_e.stats.channel += "E"
+
+        return obspy.Stream(traces=[tr_z, tr_n, tr_e])
