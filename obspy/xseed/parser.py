@@ -1161,8 +1161,8 @@ class Parser(object):
             if dip is None or azimuth is None:
                 msg = "Dip and azimuth need to be available for every trace."
                 raise ValueError(msg)
-            all_arguments.extend([np.asarray(tr.data, dtype=np.float), azimuth,
-                dip])
+            all_arguments.extend([np.asarray(tr.data, dtype=np.float64),
+                azimuth, dip])
         # Now rotate all three traces.
         z, n, e = rotate2ZNE(*all_arguments)
 
