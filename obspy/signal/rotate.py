@@ -176,8 +176,70 @@ def _dip_azimuth2ZSE_base_vector(dip, azimuth):
         np.sin(azimuth) * np.matrix(((0, -c3, c2), (c3, 0, -c1), (-c2, c1, 0)))
 
     # Now simply rotate a north pointing unit vector with both matrixes.
-    temp = np.array([azimuth_rotation_matrix.dot([0.0, -1.0, 0.0])])[0][0]
-    return np.array(dip_rotation_matrix.dot(temp))[0]
+    temp = np.array([azimuth_rotation_matrix.dot([0.0, -1.0, 0.0])]).ravel()
+    return np.array(dip_rotation_matrix.dot(temp)).ravel()
+
+
+def rotate2ZNE(data_1, azimuth_1, dip_1, data_2, azimuth_2, dip_2, data_3,
+        azimuth_3, dip_3):
+    """
+    Rotates an arbitrarily oriented three-component vector to ZNE.
+
+    Each components orientation is described with a azimuth and a dip. The
+    azimuth is defined as the degrees from north, clockwise and the dip is the
+    defined as the number of degrees, down from horizontal. Both definitions
+    are according to the SEED standard.
+
+    :param data_1: Data component 1.
+    :param azimuth_1: The azimuth of component 1.
+    :param dip_1: The dip of component 1.
+    :param data_2: Data component 2.
+    :param azimuth_2: The azimuth of component 2.
+    :param dip_2: The dip of component 2.
+    :param data_3: Data component 3.
+    :param azimuth_3: The azimuth of component 3.
+    :param dip_3: The dip of component 3.
+
+    :rtype: Tuple of three numpy arrays.
+    :returns: The three rotated components, oriented in Z, N, and E.
+
+    >>> # An input of ZNE yields an output of ZNE
+    >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 0, 0, \
+            np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
+    (array([ 0., 1., 2.]), array([ 0., 2., 4.]), array([ 0., 3., 6.]))
+    >>> # An input of ZSE yields an output of ZNE
+    >>> rotate2ZNE(np.arange(3), 0, -90, np.arange(3) * 2, 180, 0, \
+            np.arange(3) * 3, 90, 0) # doctest: +NORMALIZE_WHITESPACE
+    (array([ 0., 1., 2.]), array([ 0., -2., -4.]), array([ 0., 3., 6.]))
+    >>> # Mixed up components should get rotated to ZNE.
+    >>> rotate2ZNE(np.arange(3), 0, 0, np.arange(3) * 2, 90, 0, \
+            np.arange(3) * 3, 0, -90) # doctest: +NORMALIZE_WHITESPACE
+    (array([ 0., 3., 6.]), array([ 0., 1., 2.]), array([ 0., 2., 4.]))
+    """
+    # Internally works in vertical, south, and east components; a right handed
+    # coordinate system.
+
+    # Define the base vectors of the old base in terms of the new base vectors.
+    base_vector_1 = _dip_azimuth2ZSE_base_vector(dip_1, azimuth_1)
+    base_vector_2 = _dip_azimuth2ZSE_base_vector(dip_2, azimuth_2)
+    base_vector_3 = _dip_azimuth2ZSE_base_vector(dip_3, azimuth_3)
+
+    # Build transformation matrix.
+    T = np.matrix([base_vector_1, base_vector_2, base_vector_3]).transpose()
+
+    # Apply it.
+    z, s, e = T.dot([data_1, data_2, data_3])
+    # Replace all negative zeros. These might confuse some futher processing
+    # programs.
+    z = np.array(z).ravel()
+    z[z == -0.0] = 0
+    # Return a north pointing array.
+    n = -1.0 * np.array(s).ravel()
+    n[n == -0.0] = 0
+    e = np.array(e).ravel()
+    e[e == -0.0] = 0
+
+    return z, n, e
 
 
 if __name__ == '__main__':
