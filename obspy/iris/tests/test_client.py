@@ -9,6 +9,7 @@ from obspy.iris import Client
 import filecmp
 import numpy as np
 import os
+import StringIO
 import unittest
 import urllib
 import warnings
@@ -60,6 +61,23 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.saveWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
 
+    def test_saveWaveformToStringIO(self):
+        """
+        Same as test_saveWaveform but saves to a StringIO.
+        """
+        # file identical to file retrieved via web interface
+        client = Client()
+        start = UTCDateTime("2010-02-27T06:30:00")
+        end = UTCDateTime("2010-02-27T06:31:00")
+        memfile = StringIO.StringIO()
+        client.saveWaveform(memfile, "IU", "ANMO", "00", "BHZ", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        self.assertEqual(new_data, org_data)
+
     def test_saveResponse(self):
         """
         Fetches and stores response information as SEED RESP file.
@@ -93,6 +111,47 @@ class ClientTestCase(unittest.TestCase):
             client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start,
                                 end, format="SACPZ")
             data = open(tempfile).read()
+        self.assertTrue('NETWORK   (KNETWK): IU' in data)
+        self.assertTrue('STATION    (KSTNM): ANMO' in data)
+
+    def test_saveResponseToStringIO(self):
+        """
+        Same as test_saveResponse but saves to a StringIO.
+        """
+        client = Client()
+        start = UTCDateTime("2005-001T00:00:00")
+        end = UTCDateTime("2008-001T00:00:00")
+        # RESP, single channel
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        self.assertEqual(new_data, org_data)
+        # RESP, multiple channels
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._.BH_')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "*", "BH?", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        self.assertEqual(new_data, org_data)
+        # StationXML, single channel
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
+                format="StationXML")
+        memfile.seek(0, 0)
+        data = memfile.read()
+        self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
+        # SACPZ, single channel
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
+                format="SACPZ")
+        memfile.seek(0, 0)
+        data = memfile.read()
         self.assertTrue('NETWORK   (KNETWK): IU' in data)
         self.assertTrue('STATION    (KSTNM): ANMO' in data)
 
