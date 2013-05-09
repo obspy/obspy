@@ -145,10 +145,12 @@ class Client(object):
             msg = ("Parameter 'filename' must be either a string or an open "
                 "file-like object.")
             raise TypeError(msg)
-        fh.write(data)
-        # Only close if also opened.
-        if file_opened is True:
-            fh.close()
+        try:
+            fh.write(data)
+        finally:
+            # Only close if also opened.
+            if file_opened is True:
+                fh.close()
 
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, quality='B'):
