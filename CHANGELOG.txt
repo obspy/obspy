@@ -38,6 +38,10 @@ dev:
 	 orientation of all components from a SEED file and use it to rotate the
 	 components of a Stream object to Z, N, and E. Very useful for borehole
 	 and other sensors.
+ - obspy.neic:
+   * new module to access data from CWB QueryServer run at the National
+     Earthquake Information Center (NEIC) in Golden, CO USA.
+
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
    some float values being read in wrongly
