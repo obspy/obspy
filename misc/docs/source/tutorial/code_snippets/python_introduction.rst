@@ -87,7 +87,7 @@ type ``help(glob.glob)`` or ``glob.glob?`` to see the help of the
    place which allows you to go shopping for all kind of figures. The source
    code for each figure is linked. Note matplotlib has even its own latex
    renderer.
-* http://matplotlib.sourceforge.net/basemap/doc/html/index.html
+* http://matplotlib.org/basemap/
    Package plotting 2D data on maps in Python. Similar to GMT.
 * http://trac.osgeo.org/gdal/wiki/GdalOgrInPython
    Package which allows to directly read a GeoTiff which then can be plotted
