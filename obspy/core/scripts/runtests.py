@@ -474,7 +474,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         print
         print
     if interactive and not report:
-        msg = "Do you want to report this to tests.obspy.org? [n]: "
+        msg = "Do you want to report this to %s? [n]: " % (server)
         var = raw_input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
