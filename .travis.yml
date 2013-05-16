@@ -4,6 +4,9 @@ language: erlang
 before_install:
   - lsb_release -a  # get info on the operating system
   - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
+  - git remote add obspy git://github.com/obspy/obspy.git
+  - git fetch obspy --tags
+  - git fetch origin --tags
   - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
 install:
   - sudo python setup.py -q install
