@@ -1174,7 +1174,7 @@ class Trace(object):
 
         blockettes = dataless_parser._select(seed_id, self.stats.starttime)
 
-        b62_s1, b58_s2 = False, False, False
+        b62_s1, b58_s2 = False, False
 
         for blockette in blockettes:
             if blockette.id == 62:
