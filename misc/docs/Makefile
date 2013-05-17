@@ -50,10 +50,12 @@ clean:
 coverage:
 	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
+	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 coverager:
 	@coverage run --rcfile=.coveragerc -m obspy.core.scripts.runtests -r -q --all
 	@coverage html --rcfile=.coveragerc -d $(BUILDDIR)/html/coverage
+	@coverage xml --rcfile=.coveragerc -o $(BUILDDIR)/html/coverage.xml
 
 c_coverage:
 	@python make_c_coverage.py $(BUILDDIR)/html/c_coverage

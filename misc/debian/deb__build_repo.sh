@@ -107,4 +107,14 @@ Components: main
 Description: ObsPy Apt Repository
 SignWith: 34811F05
 Contents: . .gz
+
+Origin: ObsPy Development Team
+Label: ObsPy Apt Repository
+Codename: raring
+Version: 13.04
+Architectures: amd64 i386
+Components: main
+Description: ObsPy Apt Repository
+SignWith: 34811F05
+Contents: . .gz
 EOF

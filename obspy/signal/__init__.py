@@ -173,12 +173,12 @@ But it also means that the trace's built-in methods can be used.
     tr.trigger("recstalta", sta=0.5, lta=4)
     tr.plot()
 
-For more examples check out the `triggering page`_ in the `Tutorial`_. For
+For more examples check out the `trigger`_ in the `Tutorial`_. For
 network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
-.. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
+.. _`trigger`: http://tutorial.obspy.org/code_snippets/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """

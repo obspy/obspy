@@ -514,7 +514,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     .. note::
         An example can be found in the
-        `Tutorial <http://docs.obspy.org/tutorial/trigger_tutorial.html>`_
+        `Trigger/Picker Tutorial
+        <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     .. note::
         Setting `trigger_type=None` precomputed characteristic functions can

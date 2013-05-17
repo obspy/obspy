@@ -43,7 +43,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
 
         Algorithm from Geocentric Datum of Australia Technical Manual.
 
-        * http://www.icsm.gov.au/gda/gdatm/index.html
+        * http://www.icsm.gov.au/gda/
         * http://www.icsm.gov.au/gda/gdatm/gdav2.3.pdf, pp. 15
 
         It states::
