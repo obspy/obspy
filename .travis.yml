@@ -6,8 +6,10 @@ before_install:
   - lsb_release -a  # get info on the operating system
   - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
 install:
+  - easy_install coveralls
+  - easy_install suds
+  - easy_install sqlalchemy
   - python setup.py install
-  - pip install coveralls --use-mirrors
 script:
   - sudo coverage run --source=obspy -m obspy.core.scripts.runtests -n travis-ci -r
 notifications:
