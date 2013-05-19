@@ -12,7 +12,8 @@ install:
   - sudo python setup.py -q install
   - sudo pip install coveralls --use-mirrors
 script:
-  - sudo coverage run obspy-runtests -n travis-ci -r
+  - sudo obspy-runtests -n travis-ci -r
+  - sudo coverage run --source=obspy setup.py test
 notifications:
     email: false
 after_success:
