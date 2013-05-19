@@ -14,7 +14,7 @@ install:
   - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
   - pip install --use-mirrors .
 script:
-  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES; print 'obspy.' + ',obspy.'.join(ALL_MODULES)"`
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
 after_success:
   - coveralls
