@@ -13,7 +13,8 @@ install:
 script:
   - pwd
   - ls
-  - coverage run --source=/home/travis/build/obspy/obspy -m obspy.core.scripts.runtests -n travis-ci -r
+#  - coverage run --source=/home/travis/build/obspy/obspy -m obspy.core.scripts.runtests -n travis-ci -r
+  - nosetests --cover-branches --with-coverage --cover-erase --cover-package=obspy
 after_success:
   - coveralls
 notifications:
