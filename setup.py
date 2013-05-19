@@ -426,6 +426,8 @@ def add_data_files(config):
     # Adding the Flinn-Engdahl names files
     config.add_data_dir(os.path.join("obspy", "core", "util", "geodetics",
         "data"))
+    # Adding the version information file
+    config.add_data_files(os.path.join("obspy", "RELEASE-VERSION"))
 
 
 def setupPackage():
