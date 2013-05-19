@@ -9,7 +9,7 @@ before_install:
   - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
 install:
   - pip install --use-mirrors coveralls
-  - pip install --no-deps .
+  - pip install --use-mirrors .
 script:
   - coverage run --source=obspy -m obspy.core.scripts.runtests -n travis-ci -r
 notifications:
