@@ -11,8 +11,8 @@ install:
   - pip install --use-mirrors coveralls
   - pip install --use-mirrors .
 script:
-  - coverage run --source=obspy -m obspy.core.scripts.runtests -n travis-ci -r
-notifications:
-    email: false
+  - coverage run -m obspy.core.scripts.runtests -n travis-ci -r
 after_success:
   - coveralls
+notifications:
+    email: false
