@@ -5,7 +5,7 @@ Coordinate Conversions
 Coordinate conversions can be done conveniently using `pyproj`_. After looking
 up the `EPSG`_ codes of source and target coordinate system, the conversion can
 be done in just a few lines of code. The following example converts the station
-coordinates of two German stations to the regionally used Gauß-Krüger system:
+coordinates of two German stations to the regionally used Gauss-Krüger system:
 
 .. doctest::
 
