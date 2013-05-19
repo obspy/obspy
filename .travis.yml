@@ -11,7 +11,8 @@ install:
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install --use-mirrors .
 script:
-  - coverage run --omit=/usr/share/pyshared/dateutil/*,/usr/share/*, -m obspy.core.scripts.runtests -n travis-ci -r
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES; print 'obspy.' + ',obspy.'.join(ALL_MODULES)"`
+  - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
 after_success:
   - coveralls
 notifications:
