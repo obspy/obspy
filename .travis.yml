@@ -1,6 +1,5 @@
 language: python
 python:
-  - "2.6"
   - "2.7"
 virtualenv:
   system_site_packages: true
@@ -8,7 +7,8 @@ before_install:
   - lsb_release -a  # get info on the operating system
   - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
 install:
-  - pip install --use-mirrors coveralls
+#  - pip install --use-mirrors coveralls
+  - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install --use-mirrors .
 script:
   - coverage run -m obspy.core.scripts.runtests -n travis-ci -r
