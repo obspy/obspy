@@ -17,7 +17,7 @@ class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
-    @skipIf(not HAS_MATPLOTLIB)
+    @skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
         Tests for the getMatplotlibVersion() function as it continues to cause
