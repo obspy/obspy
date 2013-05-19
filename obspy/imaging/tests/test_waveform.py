@@ -3,7 +3,6 @@
 The obspy.imaging.waveform test suite.
 """
 
-from copy import deepcopy
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util.decorator import skipIf
@@ -240,7 +239,7 @@ class WaveformTestCase(unittest.TestCase):
         st = read()
         st.label = u"Title #1 üöä?"
         st[0].label = 'Hello World!'
-        st[1].label = u'Hällö Wörld & Marß'
+        st[1].label = u'Hällö Wörld & Mars'
         st[2].label = '*' * 80
         outfile = os.path.join(self.path, 'waveform_labels.png')
         st.plot(outfile=outfile)
