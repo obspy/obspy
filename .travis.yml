@@ -11,7 +11,7 @@ install:
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install --use-mirrors .
 script:
-  - coverage run --source=obspy -m obspy.core.scripts.runtests -n travis-ci -r
+  - coverage run --omit=dateutil -m obspy.core.scripts.runtests -n travis-ci -r
 after_success:
   - coveralls
 notifications:
