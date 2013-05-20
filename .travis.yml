@@ -1,19 +1,22 @@
-# We pretend to be erlang because we can't use the python support in travis-ci
-# see also: https://groups.google.com/forum/#!msg/travis-ci/uJgu35XKdmI/CctnUkYnEJEJ
-language: erlang
+language: python
+python:
+  - "2.7"
+virtualenv:
+  system_site_packages: true
 before_install:
-  - lsb_release -a  # get info on the operating system
-  - sudo apt-get install -qq gfortran python python-dev python-setuptools python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy 1> /dev/null  # install dependencies
+  - lsb_release -a # get info on the operating system
+  - sudo apt-get install -qq gfortran python-dev python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
+  - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
+install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
   - git fetch origin --tags
-  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done  # continue fetching more older commits until git describe is able to reach the last tagged version
-install:
-  - sudo python setup.py -q install
-  - sudo pip install coveralls --use-mirrors
+  - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done # continue fetching more older commits until git describe is able to reach the last tagged version
+  - pip install --use-mirrors .
 script:
-  - sudo coverage run --source=obspy -m obspy.core.scripts.runtests -n travis-ci -r
+  - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
+  - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r
+after_success:
+  - coveralls
 notifications:
     email: false
-after_success:
-  - sudo coveralls
