@@ -66,9 +66,9 @@ VERSION=`python -c "\
 import sys
 import os
 UTIL_PATH = os.path.abspath(os.path.join('$GITDIR', 'obspy', 'core', 'util'))
-sys.path.append(UTIL_PATH)
-from base import _getVersionString
-print _getVersionString()"`
+sys.path.insert(0, UTIL_PATH)
+from version import get_git_version
+print get_git_version()"`
 # our package is not really dirty, just minor changes for packaging applied
 VERSION=${VERSION//-dirty/}
 # the commented code shows how to update the changelog
