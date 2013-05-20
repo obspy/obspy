@@ -12,7 +12,7 @@ BUILDDIR=/tmp/python-obspy_build
 DEBDIR=$BUILDDIR/deb
 
 rm -rf $DEBDIR
-mkdir -p $DEBDIR/conf $DEBDIR/dists
+mkdir -p $DEBDIR/conf $DEBDIR/dists $DEBDIR/incoming
 
 cat > $DEBDIR/conf/distributions << EOF
 Origin: ObsPy Development Team
