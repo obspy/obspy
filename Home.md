@@ -1,4 +1,9 @@
-[![Build Status](https://secure.travis-ci.org/obspy/obspy.png?branch=master)](http://travis-ci.org/obspy/obspy) [![PEP8 Status](https://www.seismic-handler.org/obspy/pep8.png)](http://docs.obspy.org/master/pep8/)
+[![Build Status](https://secure.travis-ci.org/obspy/obspy.png?branch=master)](https://travis-ci.org/obspy/obspy)
+[![PEP8 Status](https://www.seismic-handler.org/obspy/pep8.png)](http://docs.obspy.org/master/pep8/)
+[![Coverage Status](https://coveralls.io/repos/obspy/obspy/badge.png?branch=master)](https://coveralls.io/r/obspy/obspy?branch=master)
+[![PyPI Version](https://pypip.in/v/obspy/badge.png)](https://crate.io/packages/obspy/)
+[![Downloads](https://pypip.in/d/obspy/badge.png)](https://crate.io/packages/obspy/)
+
 
 <img class="right" src="https://raw.github.com/obspy/obspy/master/misc/docs/source/_static/obspy-logo.png" />
 ## ObsPy: A Python Toolbox<br /> for seismology/seismological observatories
