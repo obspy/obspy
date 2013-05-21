@@ -402,7 +402,12 @@ def configuration(parent_package="", top_path=None):
     # Proceed normally.
     taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
     taup_files.insert(0, new_interface_path)
-    config.add_extension(libname, taup_files)
+    libraries = []
+    # we do not need this when linking with gcc, only when linking with
+    # gfortran the option -lgcov is required
+    if os.environ.get('OBSPY_C_COVERAGE', ""):
+        libraries.append('gcov')
+    config.add_extension(libname, taup_files, libraries=libraries)
 
     add_data_files(config)
 
