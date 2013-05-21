@@ -3,6 +3,7 @@
 USAGE: make_c_coverage.py output_dir
 """
 
+import os
 from os import walk, rename, makedirs
 import sys
 from os.path import join, exists, dirname, abspath, pardir, sep
@@ -16,17 +17,28 @@ try:
     target_dir = sys.argv[1]
 except IndexError:
     raise SystemExit(__doc__)
-shutil.rmtree(target_dir, ignore_errors=True)
 obspy_dir = abspath(join(dirname(__file__), pardir, pardir))
 build_dir = join(obspy_dir, 'build')
 kwargs = {'shell': True, 'cwd': obspy_dir}
 
+def cleanup(wildcard='*.o'):
+    for root, dirs, files in walk(obspy_dir):
+        for f in files:
+            if fnmatch(f, wildcard):
+                os.unlink(join(root, f))
+
+# cleanup to force rebuild, python setup.py clean --all develop does not
+# force a rebuild of all files, therefore manually cleaning up here
+shutil.rmtree(target_dir, ignore_errors=True)
+shutil.rmtree(build_dir, ignore_errors=True)
+cleanup('*.o')
+cleanup('*.so')
 
 # GENERATE COVERAGE
-shutil.rmtree(build_dir, ignore_errors=True)
-cflags = 'CFLAGS="-O0 -fprofile-arcs -ftest-coverage -coverage"'
-cmd = cflags + ' python setup.py develop'
-call(cmd, **kwargs)
+os.environ['CFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage"
+os.environ['FFLAGS'] = "-O0 -fprofile-arcs -ftest-coverage -fPIC" 
+os.environ['OBSPY_C_COVERAGE'] = "True"
+call('python setup.py -v develop', **kwargs)
 call('obspy-runtests -d', **kwargs)
 
 
@@ -64,7 +76,7 @@ page = fromstring("<html><table></table></html>")
 table = page.xpath('.//table')[0]
 for name, gcov, perc in cov:
     td1, td2 = Element('td'), Element('td')
-    gcov = gcov.replace(target_dir, '.')
+    gcov = gcov.replace(target_dir, './')
     a = Element('a', attrib={'href': gcov})
     a.text = name
     td1.append(a)
@@ -74,3 +86,5 @@ for name, gcov, perc in cov:
     table.append(tr)
 with open(join(target_dir, 'index.html'), 'wb') as fp:
     fp.write(tostring(page))
+
+cleanup('*.o')
