@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
-import unittest
-import os
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
+import os
+import unittest
+
+
+# checking for matplotlib
+try:
+    import matplotlib  # @UnusedImport
+    HAS_MATPLOTLIB = True
+except ImportError:
+    HAS_MATPLOTLIB = False
 
 
 class UtilBaseTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.util.base
     """
+    @skipIf(not HAS_MATPLOTLIB, 'matplotlib is not installed')
     def test_getMatplotlibVersion(self):
         """
         Tests for the getMatplotlibVersion() function as it continues to cause
         problems.
         """
-        import matplotlib
         original_version = matplotlib.__version__
 
         matplotlib.__version__ = "1.2.3"

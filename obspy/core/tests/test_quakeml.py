@@ -630,6 +630,7 @@ class QuakeMLTestCase(unittest.TestCase):
         ev_magnitude = Magnitude()
         ev_magnitude.mag = moment_magnitude
         ev_magnitude.magnitude_type = 'Mw'
+        ev_magnitude.evaluation_mode = 'automatic'
         ev.magnitudes.append(ev_magnitude)
 
         # write QuakeML file
@@ -664,6 +665,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # Mag
         self.assertAlmostEqual(mag.mag, moment_magnitude)
         self.assertEqual(mag.magnitude_type, "Mw")
+        self.assertEqual(mag.evaluation_mode, "automatic")
 
 
 def suite():

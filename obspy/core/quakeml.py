@@ -416,6 +416,7 @@ class Unpickler(object):
         obj.method_id = self._xpath2obj('methodID', element)
         obj.station_count = self._xpath2obj('stationCount', element, int)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
         obj.station_magnitude_contributions = \
@@ -934,6 +935,7 @@ class Pickler(object):
         self._str(magnitude.method_id, element, 'methodID')
         self._str(magnitude.station_count, element, 'stationCount')
         self._str(magnitude.azimuthal_gap, element, 'azimuthalGap')
+        self._str(magnitude.evaluation_mode, element, 'evaluationMode')
         self._str(magnitude.evaluation_status, element, 'evaluationStatus')
         self._station_magnitude_contributions(
             magnitude.station_magnitude_contributions, element)
