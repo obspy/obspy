@@ -289,6 +289,9 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
+    if head.n_samps == 0:
+        raise ValueError('Corrupt GSE2 Header in %s: npts = 0' % f.name)
+    # aborts with segmentation fault when n_samps == 0
     data = uncompress_CM6(f, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
