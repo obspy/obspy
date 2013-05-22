@@ -176,7 +176,7 @@ class LibGSE2TestCase(unittest.TestCase):
         segmentation fault
         """
         f = open(os.path.join(self.path, 'corrupt_head.gse2'), 'rb')
-        self.assertRaises(ValueError, libgse2.read, f)
+        self.assertRaises(ChksumError, libgse2.read, f)
 
 
 def suite():
