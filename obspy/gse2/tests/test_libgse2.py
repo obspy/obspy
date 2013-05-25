@@ -170,6 +170,14 @@ class LibGSE2TestCase(unittest.TestCase):
         np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
 
+    def test_brokenHead(self):
+        """
+        Tests that gse2 files with n_samps=0 will not end up with a
+        segmentation fault
+        """
+        f = open(os.path.join(self.path, 'broken_head.gse2'), 'rb')
+        self.assertRaises(ChksumError, libgse2.read, f)
+
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')
