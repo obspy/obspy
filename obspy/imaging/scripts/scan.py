@@ -93,8 +93,8 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         data_dict.setdefault(_id, [])
         data_dict[_id].append([date2num(tr.stats.starttime),
                                date2num(tr.stats.endtime)])
-        samp_int_dict.setdefault(_id,
-                                 1.0 / (24 * 3600 * tr.stats.sampling_rate))
+        samp_int_dict.setdefault(_id, [])
+        samp_int_dict[_id].append(1.0 / (24 * 3600 * tr.stats.sampling_rate))
     return (counter + 1)
 
 
@@ -287,7 +287,7 @@ def main():
         timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * samp_int[_id]
+        gap_indices = diffs > 1.8 * np.array(samp_int[_id][1:])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
             # dont handle last endtime as start of gap
