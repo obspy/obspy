@@ -509,7 +509,7 @@ class WaveformPlotting(object):
             (left, bottom),
             (right, middle),
             (very_right, middle)
-            ]
+        ]
 
         codes = [Path.MOVETO,
                  Path.LINETO,
@@ -622,9 +622,10 @@ class WaveformPlotting(object):
         endtime = self.endtime.timestamp
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel.
-        pixel_length = int((endtime - starttime) / self.width *
-                           sampling_rate)
+        # The samples per resulting pixel. The endtime is defined as the time
+        # of the last sample.
+        pixel_length = int(((endtime - starttime) * sampling_rate + 1) /
+            self.width)
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
         for _i, tr in enumerate(trace):
@@ -725,7 +726,7 @@ class WaveformPlotting(object):
             ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
             # Figure out times.
             interval = float(self.endtime - self.starttime) / \
-                       (self.number_of_ticks - 1)
+                (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
                 labels = ['%.2f' % (self.starttime + _i * interval).timestamp
