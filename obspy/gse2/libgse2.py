@@ -117,6 +117,12 @@ clibgse2.decomp_6b.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS')]
 clibgse2.decomp_6b.restype = C.c_int
 
+clibgse2.decomp_6b_buffer.argtypes = [
+    C.c_int,
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
+clibgse2.decomp_6b_buffer.restype = C.c_int
+
 # gse_functions rem_2nd_diff
 clibgse2.rem_2nd_diff.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
@@ -289,11 +295,27 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
+
+    def read83(cbuf, vptr):
+        line = f.readline()
+        if line == '':
+            return None
+        # avoid buffer overflow through clipping to 82
+        sb = C.create_string_buffer(line[:82])
+        # copy also null termination "\0", that is max 83 bytes
+        C.memmove(C.addressof(cbuf.contents), C.addressof(sb), len(line) + 1)
+        return C.addressof(sb)
+
+    cread83 = C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p)(read83)
     if head.n_samps == 0:
         data = np.empty(0, dtype='int32')
     else:
         # aborts with segmentation fault when n_samps == 0
-        data = uncompress_CM6(f, head.n_samps)
+        data = np.empty(head.n_samps, dtype='int32')
+        n = clibgse2.decomp_6b_buffer(head.n_samps, data, cread83, None)
+        if n != head.n_samps:
+            raise GSEUtiError("Mismatching length in lib.decomp_6b")
+        clibgse2.rem_2nd_diff(data, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
         verifyChecksum(f, data, version=2)

@@ -7,10 +7,12 @@ from ctypes import ArgumentError
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
 from obspy.gse2 import libgse2
-from obspy.gse2.libgse2 import ChksumError
+from obspy.gse2.libgse2 import ChksumError, GSEUtiError
+from cStringIO import StringIO
 import numpy as np
 import os
 import unittest
+import sys
 
 
 class LibGSE2TestCase(unittest.TestCase):
@@ -178,6 +180,21 @@ class LibGSE2TestCase(unittest.TestCase):
         f = open(os.path.join(self.path, 'broken_head.gse2'), 'rb')
         self.assertRaises(ChksumError, libgse2.read, f)
 
+    def test_noDAT2NullPointer(self):
+        """
+        Checks that null pointers are returned correctly by read83 function
+        of read. Error "decomp_6b: Neither DAT2 or DAT1 found!" is on
+        purpose
+        """
+        filename = os.path.join(self.path,
+            'loc_RJOB20050831023349_first100_dos.z')
+        with NamedTemporaryFile() as tf:
+            with open(tf.name, 'wb+') as fout:
+                with open(filename, 'rb') as fin:
+                    lines = (l for l in fin if not l.startswith('DAT2'))
+                    fout.write("\n".join(lines))
+                fout.seek(0)
+                self.assertRaises(GSEUtiError, libgse2.read, fout)
 
 def suite():
     return unittest.makeSuite(LibGSE2TestCase, 'test')
