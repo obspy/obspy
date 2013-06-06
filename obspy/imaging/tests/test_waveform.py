@@ -251,6 +251,10 @@ class WaveformTestCase(unittest.TestCase):
         outfile = os.path.join(self.path, 'binning_error.png')
         tr.plot(outfile=outfile)
 
+        tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
+        outfile = os.path.join(self.path, 'binning_error_2.png')
+        tr.plot(outfile=outfile)
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
