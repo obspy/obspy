@@ -24,7 +24,7 @@ For more information visit http://www.obspy.org.
 from distutils.ccompiler import get_default_compiler
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsExecError, CompileError
-from distutils.unixccompiler import UnixCCompiler, _darwin_compiler_fixup
+from distutils.unixccompiler import UnixCCompiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
