@@ -9,6 +9,7 @@ import numpy as np
 import pickle
 import unittest
 import warnings
+import os
 
 
 class StreamTestCase(unittest.TestCase):
