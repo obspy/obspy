@@ -8,6 +8,7 @@ from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import unittest
+from copy import deepcopy
 
 
 class WaveformTestCase(unittest.TestCase):
