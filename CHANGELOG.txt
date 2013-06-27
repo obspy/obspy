@@ -35,6 +35,13 @@ dev:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
 
+0.8.4
+ - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
+ - critical bugfixes for the waveform plotting and the xml wrapper
+ - bugfix so that copy.deepcopy() works with the obspy.core.stream.Stream
+   class
+ - fixing some imports
+
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to
    some float values being read in wrongly
