@@ -10,7 +10,7 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
@@ -45,8 +45,7 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
-VERSION = _getVersionString("obspy.neries")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 MAX_REQUESTS = 50

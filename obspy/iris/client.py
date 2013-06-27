@@ -8,7 +8,7 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
     loadtxt
@@ -22,8 +22,7 @@ import urllib2
 import warnings
 
 
-VERSION = _getVersionString("obspy.iris")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
