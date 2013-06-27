@@ -17,6 +17,8 @@ dev:
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
+ - obspy.station:
+   * adding support for FDSN StationXML
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
