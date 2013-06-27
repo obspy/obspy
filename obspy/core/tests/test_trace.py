@@ -1099,7 +1099,7 @@ class TraceTestCase(unittest.TestCase):
         Tests plot method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         tr = Trace(data=np.arange(25))
@@ -1110,7 +1110,7 @@ class TraceTestCase(unittest.TestCase):
         Tests spectrogram method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         tr = Trace(data=np.arange(25))

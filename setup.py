@@ -24,7 +24,7 @@ For more information visit http://www.obspy.org.
 from distutils.ccompiler import get_default_compiler
 from distutils.ccompiler import CCompiler
 from distutils.errors import DistutilsExecError, CompileError
-from distutils.unixccompiler import UnixCCompiler, _darwin_compiler_fixup
+from distutils.unixccompiler import UnixCCompiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
 import distribute_setup
@@ -232,8 +232,8 @@ ENTRY_POINTS = {
         'classicstaltapy = obspy.signal.trigger:classicSTALTAPy',
     ],
     'obspy.db.feature': [
-        'minmax_amplitude = obspy.db.features:MinMaxAmplitudeFeature',
-        'bandpass_preview = obspy.db.features:BandpassPreviewFeature',
+        'minmax_amplitude = obspy.db.feature:MinMaxAmplitudeFeature',
+        'bandpass_preview = obspy.db.feature:BandpassPreviewFeature',
     ],
 }
 
@@ -365,11 +365,7 @@ else:
         UnixCCompiler.linker_so = ["gfortran"]
         self.compiler_so = ["gfortran"]
         cc_args = ['-c', '-fno-underscoring']
-        if sys.platform == 'darwin':
-            self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                      cc_args)
-        else:
-            cc_args.append('-fPIC')
+        cc_args.append('-fPIC')
         try:
             self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
         except DistutilsExecError:
@@ -597,6 +593,14 @@ def setupLibTauP():
     """
     Prepare building of Fortran extensions.
     """
+    # The clang version shipping with OSX does not honor the $LIBRARY_PATH
+    # environment variable so it cannot find libgfortran. Simple add all
+    # paths in there to the linker. Only on darwin.
+    if sys.platform == "darwin" and "LIBRARY_PATH" in os.environ:
+        extra_link_args = ["-L%s" % _i.strip() for _i in
+            os.environ["LIBRARY_PATH"].split(":")]
+    else:
+        extra_link_args = []
     # create library name
     if IS_DEVELOP:
         lib_name = 'libtaup-%s-%s-py%s' % (
@@ -608,6 +612,7 @@ def setupLibTauP():
     src = os.path.join('obspy', 'taup', 'src') + os.sep
     lib = MyExtension(lib_name,
                       libraries=['gfortran'],
+                      extra_link_args=extra_link_args,
                       sources=[src + 'emdlv.f', src + 'libtau.f',
                                src + 'ttimes_subrout.f'])
     return lib
@@ -675,7 +680,8 @@ def setupPackage(gfortran=True, ccompiler=True):
         namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://github.com/obspy/obspy/zipball/master",
+        download_url="https://github.com/obspy/obspy/zipball/master" + \
+            "#egg=obspy=dev",  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         use_2to3=True,
