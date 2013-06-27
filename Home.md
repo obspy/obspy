@@ -40,7 +40,7 @@ There also is a [feed for commits](https://github.com/obspy/obspy/commits/master
 _Note: Documentation for current master snapshot can be found [here](http://docs.obspy.org/master)_
 
 ### General packages:
-* [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together
+* [obspy.core](http://docs.obspy.org/packages/obspy.core.html) - ObsPy core package, glues the single obspy packages together. Includes support for event data and QuakeML.
 * [obspy.imaging](http://docs.obspy.org/packages/obspy.imaging.html) - Imaging spectograms, beachballs and waveforms
 * [obspy.realtime](http://docs.obspy.org/packages/obspy.realtime.html) - Extends the ObsPy core classes with real time functionalities (''experimental'')
 * [obspy.signal](http://docs.obspy.org/packages/obspy.signal.html) - Filters, triggers, instrument correction, rotation, array analysis, beamforming
@@ -62,8 +62,9 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 ### Database or Web service access clients:
 * [obspy.arclink](http://docs.obspy.org/packages/obspy.arclink.html) - [ArcLink/WebDC](http://www.webdc.eu) request client
 * [obspy.earthworm](http://docs.obspy.org/packages/obspy.earthworm.html) - [Earthworm](http://folkworm.ceri.memphis.edu/ew-doc/) request client
-* [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client
-* [obspy.neic](http://docs.obspy.org/packages/obspy.neic.html) - [NEIC](http://earthquake.usgs.gov/regional/neic/) CWB QueryServer request client (experimental, not present in obspy <= 0.8.3)
+* [obspy.fdsn](http://docs.obspy.org/packages/obspy.fdsn.html) - [FDSN Web services](http://www.fdsn.org/webservices/) request client (experimental, not present in obspy <= 0.9)
+* [obspy.iris](http://docs.obspy.org/packages/obspy.iris.html) - [IRIS DMC Core Web services](http://www.iris.edu/ws) request client (service will be retired by IRIS in december 2013. use obspy.fdsn in the future.)
+* [obspy.neic](http://docs.obspy.org/packages/obspy.neic.html) - [NEIC](http://earthquake.usgs.gov/regional/neic/) CWB QueryServer request client (experimental, not present in obspy <= 0.9)
 * [obspy.neries](http://docs.obspy.org/packages/obspy.neries.html) - [NERIES Seismic Data Portal](http://www.seismicportal.eu/jetspeed/portal/) request client
 * [obspy.seishub](http://docs.obspy.org/packages/obspy.seishub.html) - [SeisHub](https://github.com/barsch/seishub.core) database client
 
