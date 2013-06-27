@@ -44,6 +44,7 @@ _Note: Documentation for current master snapshot can be found [here](http://docs
 * [obspy.imaging](http://docs.obspy.org/packages/obspy.imaging.html) - Imaging spectograms, beachballs and waveforms
 * [obspy.realtime](http://docs.obspy.org/packages/obspy.realtime.html) - Extends the ObsPy core classes with real time functionalities (''experimental'')
 * [obspy.signal](http://docs.obspy.org/packages/obspy.signal.html) - Filters, triggers, instrument correction, rotation, array analysis, beamforming
+* [obspy.station](http://docs.obspy.org/packages/obspy.station.html) - Support for [FDSN StationXML](http://www.fdsn.org/xml/station/) (experimental, not present in obspy <= 0.9)
 * [obspy.taup](http://docs.obspy.org/packages/obspy.taup.html) - Calculates and visualizes travel times
 * [obspy.xseed](http://docs.obspy.org/packages/obspy.xseed.html) - Converter for Dataless SEED, [XML-SEED](http://adsabs.harvard.edu/abs/2004AGUFMSF31B..03T) and SEED RESP files
 
