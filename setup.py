@@ -619,19 +619,12 @@ def setupLibTauP():
     # setup Fortran extension
     src = os.path.join('obspy', 'taup', 'src') + os.sep
     taupargs = []
-    if IS_WINDOWS:
-        if '32' in platform.architecture()[0]:
-            taupargs = ["-m32"]
-        else:
-            taupargs = ["-m64"]
 
     lib = MyExtension(lib_name,
                       libraries=['gfortran'],
                       extra_link_args=extra_link_args,
                       sources=[src + 'emdlv.f', src + 'libtau.f',
-                               src + 'ttimes_subrout.f'],
-                      extra_compile_args=taupargs,
-                      extra_link_args=taupargs)
+                               src + 'ttimes_subrout.f'])
     return lib
 
 
