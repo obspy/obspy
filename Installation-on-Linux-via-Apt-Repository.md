@@ -10,7 +10,7 @@ Currently supported releases are:
 
  * Debian:
    - squeeze *(i386, amd64)*
-   - wheezy *(i386, amd64)*
+   - wheezy *(i386, amd64, armv6l)*
  * Ubuntu:
    - lucid *(i386, amd64)*
    - natty *(i386, amd64)*
