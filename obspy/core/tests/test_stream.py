@@ -2,13 +2,14 @@
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
+from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile
 import cPickle
 import numpy as np
-import os
 import pickle
 import unittest
 import warnings
+import os
 
 
 class StreamTestCase(unittest.TestCase):
@@ -23,25 +24,28 @@ class StreamTestCase(unittest.TestCase):
                   'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
                   'npts': 412, 'sampling_rate': 200.0,
                   'channel': 'EHE'}
-        trace1 = Trace(data=np.random.randint(0, 1000, 412),
+        trace1 = Trace(data=np.random.randint(0, 1000, 412).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 4, 35000)
         header['npts'] = 824
-        trace2 = Trace(data=np.random.randint(0, 1000, 824),
+        trace2 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 10, 215000)
-        trace3 = Trace(data=np.random.randint(0, 1000, 824),
+        trace3 = Trace(data=np.random.randint(0, 1000, 824).astype('float64'),
                        header=deepcopy(header))
         header['starttime'] = UTCDateTime(2008, 1, 1, 0, 0, 18, 455000)
         header['npts'] = 50668
-        trace4 = Trace(data=np.random.randint(0, 1000, 50668),
-                       header=deepcopy(header))
+        trace4 = Trace(
+            data=np.random.randint(0, 1000, 50668).astype('float64'),
+           header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
                   'sampling_rate': 200.0, 'npts': 12000,
                   'channel': '  Z'}
-        trace = Trace(data=np.random.randint(0, 1000, 12000), header=header)
+        trace = Trace(
+            data=np.random.randint(0, 1000, 12000).astype('float64'),
+            header=header)
         self.gse2_stream = Stream(traces=[trace])
 
     def test_setitem(self):
@@ -1715,7 +1719,7 @@ class StreamTestCase(unittest.TestCase):
         Tests plot method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         self.mseed_stream.plot(show=False)
@@ -1725,10 +1729,33 @@ class StreamTestCase(unittest.TestCase):
         Tests spectrogram method if matplotlib is installed
         """
         try:
-            import matplotlib
+            import matplotlib  # @UnusedImport
         except ImportError:
             return
         self.mseed_stream.spectrogram(show=False)
+
+    def test_deepcopy(self):
+        """
+        Tests __deepcopy__ method.
+
+        http://lists.obspy.org/pipermail/obspy-users/2013-April/000451.html
+        """
+        # example stream
+        st = read()
+        # set a common header
+        st[0].stats.network = 'AA'
+        # set format specific header
+        st[0].stats.mseed = AttribDict(dataquality='A')
+        ct = deepcopy(st)
+        # common header
+        st[0].stats.network = 'XX'
+        self.assertEquals(st[0].stats.network, 'XX')
+        self.assertEquals(ct[0].stats.network, 'AA')
+        # format specific headers
+        st[0].stats.mseed.dataquality = 'X'
+        self.assertEquals(st[0].stats.mseed.dataquality, 'X')
+        # XXX: this fails atm
+        self.assertEquals(ct[0].stats.mseed.dataquality, 'A')
 
 
 def suite():

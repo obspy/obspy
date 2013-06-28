@@ -9,7 +9,6 @@
 #---------------------------------------------------------------------
 from copy import copy
 from datetime import datetime
-from math import ceil
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl
@@ -509,7 +508,7 @@ class WaveformPlotting(object):
             (left, bottom),
             (right, middle),
             (very_right, middle)
-            ]
+        ]
 
         codes = [Path.MOVETO,
                  Path.LINETO,
@@ -622,53 +621,49 @@ class WaveformPlotting(object):
         endtime = self.endtime.timestamp
         # The same trace will always have the same sampling_rate.
         sampling_rate = trace[0].stats.sampling_rate
-        # The samples per resulting pixel.
-        pixel_length = int((endtime - starttime) / self.width *
-                           sampling_rate)
+        # The samples per resulting pixel. The endtime is defined as the time
+        # of the last sample.
+        pixel_length = int(np.ceil(((endtime - starttime)
+            * sampling_rate + 1) / self.width))
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
         for _i, tr in enumerate(trace):
             # Get the start of the next pixel in case the starttime of the
             # trace does not match the starttime of the plot.
-            ts = tr.stats.starttime
-            if ts > self.starttime:
-                start = int(ceil(((ts - self.starttime) *
+            if tr.stats.starttime > self.starttime:
+                offset = int(np.ceil(((tr.stats.starttime - self.starttime) *
                         sampling_rate) / pixel_length))
-                # Samples before start.
-                prestart = int(((self.starttime + start * pixel_length /
-                           sampling_rate) - ts) * sampling_rate)
             else:
-                start = 0
-                prestart = 0
+                offset = 0
             # Figure out the number of pixels in the current trace.
-            length = len(tr.data) - prestart
-            pixel_count = int(length // pixel_length)
-            rest = int(length % pixel_length)
-            # Reference to new data array which does not copy data but is
-            # reshapeable.
-            data = tr.data[prestart: prestart + pixel_count * pixel_length]
+            trace_length = len(tr.data) - offset
+            pixel_count = int(trace_length // pixel_length)
+            remaining_samples = int(trace_length % pixel_length)
+            # Reference to new data array which does not copy data but can be
+            # reshaped.
+            data = tr.data[offset: offset + pixel_count * pixel_length]
             data = data.reshape(pixel_count, pixel_length)
             # Calculate extreme_values and put them into new array.
             extreme_values = np.ma.masked_all((self.width, 2), dtype=np.float)
             min = data.min(axis=1) * tr.stats.calib
             max = data.max(axis=1) * tr.stats.calib
-            extreme_values[start: start + pixel_count, 0] = min
-            extreme_values[start: start + pixel_count, 1] = max
+            extreme_values[offset: offset + pixel_count, 0] = min
+            extreme_values[offset: offset + pixel_count, 1] = max
             # First and last and last pixel need separate treatment.
-            if start and prestart:
-                extreme_values[start - 1, 0] = \
-                    tr.data[:prestart].min() * tr.stats.calib
-                extreme_values[start - 1, 1] = \
-                    tr.data[:prestart].max() * tr.stats.calib
-            if rest:
-                if start + pixel_count == self.width:
+            if offset:
+                extreme_values[offset - 1, 0] = \
+                    tr.data[:offset].min() * tr.stats.calib
+                extreme_values[offset - 1, 1] = \
+                    tr.data[:offset].max() * tr.stats.calib
+            if remaining_samples:
+                if offset + pixel_count == self.width:
                     index = self.width - 1
                 else:
-                    index = start + pixel_count
+                    index = offset + pixel_count
                 extreme_values[index, 0] = \
-                    tr.data[-rest:].min() * tr.stats.calib
+                    tr.data[-remaining_samples:].min() * tr.stats.calib
                 extreme_values[index, 1] = \
-                    tr.data[-rest:].max() * tr.stats.calib
+                    tr.data[-remaining_samples:].max() * tr.stats.calib
             # Use the first array as a reference and merge all following
             # extreme_values into it.
             if _i == 0:
@@ -725,7 +720,7 @@ class WaveformPlotting(object):
             ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
             # Figure out times.
             interval = float(self.endtime - self.starttime) / \
-                       (self.number_of_ticks - 1)
+                (self.number_of_ticks - 1)
             # Set the actual labels.
             if self.type == 'relative':
                 labels = ['%.2f' % (self.starttime + _i * interval).timestamp

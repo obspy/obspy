@@ -14,6 +14,7 @@ class Blockette060(Blockette):
         """
         """
         self.stages = []
+        super(Blockette060, self).__init__()
     """
     Blockette 060: Response Reference Blockette.
 

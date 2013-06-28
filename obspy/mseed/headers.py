@@ -690,6 +690,10 @@ clibmseed.lil_free.argtypes = [C.POINTER(LinkedIDList)]
 clibmseed.lil_free.restype = C.c_void_p
 
 
+clibmseed.allocate_bytes.argtypes = (C.c_int, )
+clibmseed.allocate_bytes.restype = C.c_void_p
+
+
 # Python callback functions for C
 def __PyFile_callback(_f):
     return 1
