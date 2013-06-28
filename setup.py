@@ -373,11 +373,7 @@ else:
         UnixCCompiler.linker_so = ["gfortran"]
         self.compiler_so = ["gfortran"]
         cc_args = ['-c', '-fno-underscoring']
-        if sys.platform == 'darwin':
-            self.compiler_so = _darwin_compiler_fixup(self.compiler_so,
-                                                      cc_args)
-        else:
-            cc_args.append('-fPIC')
+        cc_args.append('-fPIC')
         try:
             self.spawn(self.compiler_so + [src, '-o', obj] + cc_args)
         except DistutilsExecError:
@@ -605,6 +601,14 @@ def setupLibTauP():
     """
     Prepare building of Fortran extensions.
     """
+    # The clang version shipping with OSX does not honor the $LIBRARY_PATH
+    # environment variable so it cannot find libgfortran. Simple add all
+    # paths in there to the linker. Only on darwin.
+    if sys.platform == "darwin" and "LIBRARY_PATH" in os.environ:
+        extra_link_args = ["-L%s" % _i.strip() for _i in
+            os.environ["LIBRARY_PATH"].split(":")]
+    else:
+        extra_link_args = []
     # create library name
     if IS_DEVELOP:
         lib_name = 'libtaup-%s-%s-py%s' % (
@@ -621,6 +625,7 @@ def setupLibTauP():
 
     lib = MyExtension(lib_name,
                       libraries=['gfortran'],
+                      extra_link_args=extra_link_args,
                       sources=[src + 'emdlv.f', src + 'libtau.f',
                                src + 'ttimes_subrout.f'],
                       extra_compile_args=taupargs,
