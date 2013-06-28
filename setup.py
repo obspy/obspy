@@ -303,10 +303,10 @@ if IS_WINDOWS:
                 pass
         if '32' in platform.architecture()[0]:
             # 32 bit gfortran compiler
-            self.compiler_so = ["mingw32-gfortran.exe"]
+            self.compiler_so = ["gfortran.exe"]
         else:
             # 64 bit gfortran compiler
-            self.compiler_so = ["x86_64-w64-mingw32-gfortran.exe"]
+            self.compiler_so = ["gfortran.exe"]
         objects = []
         for src in sources:
             file = os.path.splitext(src)[0]
@@ -314,9 +314,13 @@ if IS_WINDOWS:
                 obj = os.path.join(output_dir, os.path.basename(file) + ".o")
             else:
                 obj = file + ".o"
+            if '32' in platform.architecture()[0]:
+                taupargs = ["-m32"]
+            else:
+                taupargs = ["-m64"]
             try:
                 self.spawn(self.compiler_so + \
-                           ["-fno-underscoring", "-c"] + [src, '-o', obj])
+                           ["-fno-underscoring", "-c"] + taupargs + [src, '-o', obj])
             except DistutilsExecError:
                 _, msg, _ = sys.exc_info()
                 raise CompileError(msg)
@@ -334,8 +338,12 @@ if IS_WINDOWS:
             os.makedirs(os.path.dirname(output_filename))
         except OSError:
             pass
+        if '32' in platform.architecture()[0]:
+            taupargs = ["-m32"]
+        else:
+            taupargs = ["-m64"]
         self.spawn(self.compiler_so + \
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
+                   ["-static-libgcc", "-static-libgfortran", "-shared"] + taupargs + \
                    objects + ["-o", output_filename])
 
     MSVCCompiler.original_compile = MSVCCompiler.compile
@@ -610,11 +618,18 @@ def setupLibTauP():
         lib_name = 'libtaup'
     # setup Fortran extension
     src = os.path.join('obspy', 'taup', 'src') + os.sep
+    if '32' in platform.architecture()[0]:
+        taupargs = ["-m32"]
+    else:
+        taupargs = ["-m64"]
+
     lib = MyExtension(lib_name,
                       libraries=['gfortran'],
                       extra_link_args=extra_link_args,
                       sources=[src + 'emdlv.f', src + 'libtau.f',
-                               src + 'ttimes_subrout.f'])
+                               src + 'ttimes_subrout.f'],
+                      extra_compile_args=taupargs,
+                      extra_link_args=taupargs)
     return lib
 
 
