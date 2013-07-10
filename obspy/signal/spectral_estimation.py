@@ -22,6 +22,7 @@ import warnings
 import pickle
 import math
 import bisect
+import bz2
 import numpy as np
 from obspy import Trace, Stream
 from obspy.core.util import getMatplotlibVersion
@@ -260,15 +261,26 @@ class PPSD():
 
     ... but the example stream is too short and does not contain enough data.
 
-    And/or we could save the ppsd data in a pickled file ...
+    .. rubric:: Saving and Loading
 
-    >>> ppsd.save("myfile.pkl") # doctest: +SKIP
+    The PPSD object supports saving to a pickled file with optional
+    compression:
 
-    ... that later can be loaded again using the `pickle` module in the Python
-    Standard Library, e.g. to add more data or plot it again.
+    >>> ppsd.save("myfile.pkl.bz2", compress=True) # doctest: +SKIP
 
-    >>> import pickle
-    >>> ppsd = pickle.load("myfile.pkl")  # doctest: +SKIP
+    The saved PPSD can then be loaded again using the static method
+    :func:`~obspy.signal.spectral_estimation.PPSD.load`, e.g. to add more data
+    or plot it again:
+
+    >>> ppsd = PPSD.load("myfile.pkl.bz2")  # doctest: +SKIP
+
+    The :func:`~obspy.signal.spectral_estimation.PPSD.load` method detects
+    compression automatically.
+
+    .. note::
+
+        While saving the PPSD with compression enabled takes significantly
+        longer, it can reduce the resulting file size by more than 80%.
 
     For a real world example see the `ObsPy Tutorial`_.
 
@@ -693,16 +705,54 @@ class PPSD():
         hist_cum = (hist_cum.T / norm).T
         return hist_cum
 
-    def save(self, filename):
+    def save(self, filename, compress=False):
         """
-        Saves PPSD instance as a pickled file that can be loaded again using
-        pickle.load(filename).
+        Saves the PPSD as a pickled file with optional compression.
+
+        The resulting file can be restored using PPSD.load(filename).
 
         :type filename: str
         :param filename: Name of output file with pickled PPSD object
+        :type compress: bool (optional)
+        :param compress: Enable/disable file compression.
         """
-        with open(filename, "w") as file:
-            pickle.dump(self, file)
+        if compress:
+            with bz2.BZ2File(filename, 'w') as file_:
+                pickle.dump(self, file_)
+        else:
+            with open(filename, 'w') as file_:
+                pickle.dump(self, file_)
+
+    @staticmethod
+    def load(filename):
+        """
+        Restores a PPSD instance from a file.
+
+        Automatically determines whether the file was saved with compression
+        enabled or disabled.
+
+        :type filename: str
+        :param filename: Name of file containing the pickled PPSD object
+        """
+        # identify bzip2 compressed file using bzip2's magic number
+        bz2_magic = '\x42\x5a\x68'
+        with open(filename, 'rb') as file_:
+            file_start = file_.read(len(bz2_magic))
+
+        if file_start == bz2_magic:
+            # In theory a file containing random data could also start with the
+            # bzip2 magic number. However, since save() (implicitly) uses
+            # version "0" of the pickle protocol, the pickled data is
+            # guaranteed to be ASCII encoded and hence cannot start with this
+            # magic number.
+            # cf. http://docs.python.org/2/library/pickle.html
+            with bz2.BZ2File(filename, 'r') as file_:
+                ppsd = pickle.load(file_)
+        else:
+            with open(filename, 'r') as file_:
+                ppsd = pickle.load(file_)
+
+        return ppsd
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
