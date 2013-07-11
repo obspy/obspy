@@ -34,6 +34,9 @@ dev:
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
+ - scripts:
+   * obspy-plot: new option "-o" to output plot to file instead of opening
+     a window
 
 0.8.4
  - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
