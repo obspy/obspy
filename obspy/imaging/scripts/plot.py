@@ -15,7 +15,7 @@ def main():
     parser.add_option("-f", default=None, type="string",
                       dest="format", help="Waveform format.")
     parser.add_option("-o", "--outfile", default=None, type="string",
-                      dest="outfile", help="Waveform format.")
+                      dest="outfile", help="Output filename.")
 
     (options, args) = parser.parse_args()
     st = Stream()
