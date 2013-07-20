@@ -12,7 +12,9 @@ import urllib2
 
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USGS": "http://comcat.cr.usgs.gov",
-                "RESIF": "http://ws.resif.fr"}
+                "RESIF": "http://ws.resif.fr",
+                "NCEDC": "http://service.ncedc.org",
+                }
 SERVICES = ("dataselect", "station", "event")
 
 
