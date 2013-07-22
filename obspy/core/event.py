@@ -2717,10 +2717,10 @@ class Catalog(object):
 
     @deprecated_keywords({'date_colormap': 'colormap'})
     def plot(self, projection='cyl', resolution='l',
-             continent_fill_color='0.8',
+             continent_fill_color='0.9',
              water_fill_color='white',
              label='magnitude',
-             color='date',
+             color='depth',
              colormap=None, **kwargs):  # @UnusedVariable
         """
         Creates preview map of all events in current Catalog object.
@@ -2742,7 +2742,7 @@ class Catalog(object):
             Defaults to ``"l"``
         :type continent_fill_color: Valid matplotlib color, optional
         :param continent_fill_color:  Color of the continents. Defaults to
-            ``"0.8"`` which is a light gray.
+            ``"0.9"`` which is a light gray.
         :type water_fill_color: Valid matplotlib color, optional
         :param water_fill_color: Color of all water bodies.
             Defaults to ``"white"``.
@@ -2757,14 +2757,16 @@ class Catalog(object):
             proberty. Possible values are
             * ``"date"``
             * ``"depth"``
-            Defaults to ``"date"``
+            Defaults to ``"depth"``
         :type colormap: str, optional, any matplotlib colormap
         :param colormap: The colormap for color-coding the events.
             The event with the smallest property will have the
             color of one end of the colormap and the event with the biggest
             property the color of the other end with all other events in
             between.
-            Defaults to None which will use the default colormap.
+            Defaults to None which will use the default colormap for the date
+            encoding and a colormap going from green over yellow to red for the
+            depth encoding.
 
         .. rubric:: Example
 
@@ -2786,6 +2788,7 @@ class Catalog(object):
                              ' not be labeled. '
                              "'%s' is not supported." % (label,))
 
+
         # lat/lon coordinates, magnitudes, dates
         lats = []
         lons = []
@@ -2793,27 +2796,40 @@ class Catalog(object):
         mags = []
         colors = []
         for event in self:
-            lats.append(event.origins[0].latitude)
-            lons.append(event.origins[0].longitude)
-            mag = event.magnitudes[0].mag
+            origin = event.preferred_origin() or event.origins[0]
+            lats.append(origin.latitude)
+            lons.append(origin.longitude)
+            magnitude = event.preferred_magnitude() or event.magnitudes[0]
+            mag = magnitude.mag
             mags.append(mag)
             labels.append(('    %.1f' % mag) if mag and label == 'magnitude'
                           else '')
             colors.append(event.origins[0].get('time' if color == 'date' else
-                                               color))
+                                               'depth'))
         min_color = min(colors)
         max_color = max(colors)
 
         # Create the colormap for date based plotting.
-        colormap = plt.get_cmap(colormap)
+        if colormap is None:
+            if color == "date":
+                colormap = plt.get_cmap()
+            else:
+                # Choose green->yellow->red for the depth encoding.
+                colormap = plt.get_cmap("RdYlGn_r")
+
         scal_map = ScalarMappable(norm=Normalize(min_color, max_color),
                                   cmap=colormap)
         scal_map.set_array(np.linspace(0, 1, 1))
 
         fig = plt.figure()
-        map_ax = fig.add_axes([0.03, 0.13, 0.94, 0.82])
-        cm_ax = fig.add_axes([0.03, 0.05, 0.94, 0.05])
-        plt.sca(map_ax)
+        # The colorbar should only be plotted if more then one event is
+        # present.
+        if len(self.events) > 1:
+            map_ax = fig.add_axes([0.03, 0.13, 0.94, 0.82])
+            cm_ax = fig.add_axes([0.03, 0.05, 0.94, 0.05])
+            plt.sca(map_ax)
+        else:
+            map_ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
 
         if projection == 'cyl':
             map = Basemap(resolution=resolution)
@@ -2834,11 +2850,16 @@ class Catalog(object):
                 lon_0 -= 360
             deg2m_lat = 2 * np.pi * 6371 * 1000 / 360
             deg2m_lon = deg2m_lat * np.cos(lat_0 / 180 * np.pi)
-            height = (max(lats) - min(lats)) * deg2m_lat
-            width = (max_lons - min_lons) * deg2m_lon
-            margin = 0.2 * (width + height)
-            height += margin
-            width += margin
+            if len(lats) > 1:
+                height = (max(lats) - min(lats)) * deg2m_lat
+                width = (max_lons - min_lons) * deg2m_lon
+                margin = 0.2 * (width + height)
+                height += margin
+                width += margin
+            else:
+                height = 2.0 * deg2m_lat
+                width = 5.0 * deg2m_lon
+
             map = Basemap(projection='aeqd', resolution=resolution,
                           area_thresh=1000.0, lat_0=lat_0, lon_0=lon_0,
                           width=width, height=height)
@@ -2871,8 +2892,8 @@ class Catalog(object):
             raise ValueError(msg)
 
         # draw coast lines, country boundaries, fill continents.
-        map.drawcoastlines()
-        map.drawcountries()
+        map.drawcoastlines(color="0.4")
+        map.drawcountries(color="0.75")
         map.fillcontinents(color=continent_fill_color,
                            lake_color=water_fill_color)
         # draw the edge of the map projection region (the projection limb)
@@ -2884,37 +2905,54 @@ class Catalog(object):
         # compute the native map projection coordinates for events.
         x, y = map(lons, lats)
         # plot labels
-        for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
-            plt.text(xpt, ypt, name, weight="heavy",
-                     color=scal_map.to_rgba(colorpt))
-        min_size = 5
-        max_size = 18
+        if 100 > len(self.events) > 1:
+            for name, xpt, ypt, colorpt in zip(labels, x, y, colors):
+                # Check if the point can actually be seen with the current map
+                # projection. The map object will set the coordinates to very
+                # large values if it cannot project a point.
+                if xpt > 1e25:
+                    continue
+                plt.text(xpt, ypt, name, weight="heavy",
+                         color=scal_map.to_rgba(colorpt))
+        elif len(self.events) == 1:
+            plt.text(x[0], y[0], labels[0], weight="heavy", color="red")
+        min_size = 2
+        max_size = 30
         min_mag = min(mags)
         max_mag = max(mags)
-        # plot filled circles at the locations of the events.
-        frac = np.array([(m - min_mag) / (max_mag - min_mag) for m in mags])
-        mags_plot = min_size + frac * (max_size - min_size)
-        colors_plot = [scal_map.to_rgba(c) for c in colors]
-        map.scatter(x, y, marker='o', s=(mags_plot ** 2), c=colors_plot,
+        if len(self.events) > 1:
+            frac = [(_i - min_mag) / (max_mag - min_mag) for _i in mags]
+            magnitude_size = [(_i * (max_size - min_size)) ** 2 for _i in frac]
+            colors_plot = [scal_map.to_rgba(c) for c in colors]
+        else:
+            magnitude_size = 15.0 ** 2
+            colors_plot = "red"
+        map.scatter(x, y, marker='o', s=magnitude_size, c=colors_plot,
                     zorder=10)
         times = [event.origins[0].time for event in self.events]
-        plt.title(("%i events (%s to %s)" % (len(self),
-            str(min(times).strftime("%Y-%m-%d")),
-            str(max(times).strftime("%Y-%m-%d")))) +
-            " - Color codes %s, size the magnitude" % (
-            "origin time" if color == "date" else "depth"))
+        if len(self.events) > 1:
+            plt.title("{event_count} events ({start} to {end}) "
+                "- Color codes {colorcode}, size the magnitude".format(
+                    event_count=len(self.events),
+                    start=min(times).strftime("%Y-%m-%d"),
+                    end=max(times).strftime("%Y-%m-%d"),
+                    colorcode="origin time" if color == "date" else "depth"))
+        else:
+            plt.title("Event at %s" % times[0].strftime("%Y-%m-%d"))
 
-        cb = mpl.colorbar.ColorbarBase(ax=cm_ax, cmap=colormap,
-                                       orientation='horizontal')
-        cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
-        color_range = max_color - min_color
-        cb.set_ticklabels([
-            _i.strftime('%Y-%b-%d') if color == 'date' else '%.1fkm' % _i
-            for _i in [min_color, min_color + color_range * 0.25,
-                       min_color + color_range * 0.50,
-                       min_color + color_range * 0.75, max_color]])
+        # Only show the colorbar for more than one event.
+        if len(self.events) > 1:
+            cb = mpl.colorbar.ColorbarBase(ax=cm_ax, cmap=colormap,
+                                           orientation='horizontal')
+            cb.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
+            color_range = max_color - min_color
+            cb.set_ticklabels([
+                _i.strftime('%Y-%b-%d') if color == "date" else '%.1fkm' %
+                (_i / 1000.0)
+                for _i in [min_color, min_color + color_range * 0.25,
+                           min_color + color_range * 0.50,
+                           min_color + color_range * 0.75, max_color]])
 
-        # map.colorbar(scal_map, location="bottom", ax=cm_ax)
         plt.show()
 
 
