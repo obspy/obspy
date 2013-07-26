@@ -13,6 +13,8 @@ Currently supported releases are:
    - wheezy *(i386, amd64, [armv6l](http://www.raspbian.org/))*
  * Ubuntu:
    - lucid *(i386, amd64)*
+   - natty *(i386, amd64)*
+   - oneiric *(i386, amd64)*
    - precise *(i386, amd64)*
    - quantal *(i386, amd64)*
    - raring *(i386, amd64)*
