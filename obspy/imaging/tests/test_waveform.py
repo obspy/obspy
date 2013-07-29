@@ -2,8 +2,6 @@
 """
 The obspy.imaging.waveform test suite.
 """
-
-from copy import deepcopy
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util.decorator import skipIf
@@ -244,6 +242,20 @@ class WaveformTestCase(unittest.TestCase):
         st[2].label = '*' * 80
         outfile = os.path.join(self.path, 'waveform_labels.png')
         st.plot(outfile=outfile)
+
+    @skipIf(__name__ != '__main__', 'test must be started manually')
+    def test_plotBinningError(self):
+        """
+        Tests the plotting of a trace with a certain amount of sampling that
+        had a binning problem.
+        """
+        tr = Trace(data=np.sin(np.linspace(0, 200, 432000)))
+        outfile = os.path.join(self.path, 'binning_error.png')
+        tr.plot(outfile=outfile)
+
+        tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
+        outfile = os.path.join(self.path, 'binning_error_2.png')
+        tr.plot(outfile=outfile)
 
 
 def suite():

@@ -8,7 +8,7 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
     loadtxt
@@ -22,8 +22,7 @@ import urllib2
 import warnings
 
 
-VERSION = _getVersionString("obspy.iris")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
@@ -116,7 +115,17 @@ class Client(object):
 
     def _toFileOrData(self, filename, data, binary=False):
         """
-        Either writes data into a file if filename is given or returns it.
+        Either writes data into a file if filename is given or directly returns
+        it.
+
+        :type filename: String or open file-like object.
+        :param filename: File or object being written to. If None, a string
+            will be returned.
+        :type data: String or Bytes
+        :param data: The data being written or returned.
+        :type binary: Boolean, optional
+        :param binary: Whether to write the data as binary or text. Defaults to
+            binary.
         """
         if filename is None:
             return data
@@ -124,16 +133,23 @@ class Client(object):
             method = 'wb'
         else:
             method = 'wt'
+        file_opened = False
         # filename is given, create fh, write to file and return nothing
-        if isinstance(filename, basestring):
-            fh = open(filename, method)
-        elif isinstance(filename, file):
+        if hasattr(filename, "write") and callable(filename.write):
             fh = filename
+        elif isinstance(filename, basestring):
+            fh = open(filename, method)
+            file_opened = True
         else:
-            msg = "Parameter filename must be either string or file handler."
+            msg = ("Parameter 'filename' must be either a string or an open "
+                "file-like object.")
             raise TypeError(msg)
-        fh.write(data)
-        fh.close()
+        try:
+            fh.write(data)
+        finally:
+            # Only close if also opened.
+            if file_opened is True:
+                fh.close()
 
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, quality='B'):
@@ -277,7 +293,7 @@ class Client(object):
         else:
             kwargs['location'] = '--'
         kwargs['channel'] = str(channel)[0:3]
-        kwargs['filename'] = str(filename)
+        kwargs['filename'] = filename
         # try to be intelligent in starttime/endtime extension for fetching
         # data
         try:
@@ -340,9 +356,7 @@ class Client(object):
             data = self.resp(**kwargs)
         else:
             raise ValueError("Unsupported format %s" % format)
-        fh = open(filename, "wb")
-        fh.write(data)
-        fh.close()
+        return self._toFileOrData(filename, data)
 
     def getEvents(self, format='catalog', **kwargs):
         """
@@ -1043,7 +1057,7 @@ class Client(object):
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         # write directly if filename is given
-        if filename:
+        if filename is not None:
             return self._toFileOrData(filename, data, True)
         # create temporary file for writing data
         with NamedTemporaryFile() as tf:
@@ -1294,10 +1308,10 @@ class Client(object):
         rectangular = (minlat, minlon, maxlat, maxlon)
         circular = (lon, lat, minradius, maxradius)
         # helper variables to check the user's selection
-        any_rectangular = any([value != None for value in rectangular])
-        any_circular = any([value != None for value in circular])
-        all_rectangular = all([value != None for value in rectangular])
-        all_circular = all([value != None for value in circular])
+        any_rectangular = any([value is not None for value in rectangular])
+        any_circular = any([value is not None for value in circular])
+        all_rectangular = all([value is not None for value in rectangular])
+        all_circular = all([value is not None for value in circular])
         # not both can be specified at the same time
         if any_rectangular and any_circular:
             msg = "Rectangular and circular bounding areas can not be combined"

@@ -48,12 +48,12 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Today.
         now = UTCDateTime()
         self.assertEqual(now, util._convertMSTimeToDatetime(
-                              util._convertDatetimeToMSTime(now)))
+            util._convertDatetimeToMSTime(now)))
         # Some random date.
         random.seed(815)  # make test reproducable
         timestring = random.randint(0, 2000000) * 1e6
         self.assertEqual(timestring, util._convertDatetimeToMSTime(
-                        util._convertMSTimeToDatetime(timestring)))
+            util._convertMSTimeToDatetime(timestring)))
 
     def test_getRecordInformation(self):
         """
@@ -180,7 +180,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # 64 Bytes header.
         data_string = open(steim1_file, 'rb').read()[64:]
         data = util._unpackSteim1(data_string, 412, swapflag=self.swap,
-                                   verbose=0)
+            verbose=0)
         data_record = readMSEED(steim1_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 
@@ -193,7 +193,7 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # 128 Bytes header.
         data_string = open(steim2_file, 'rb').read()[128:]
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
-                                   verbose=0)
+           verbose=0)
         data_record = readMSEED(steim2_file)[0].data
         np.testing.assert_array_equal(data, data_record)
 

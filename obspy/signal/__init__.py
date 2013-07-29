@@ -173,12 +173,12 @@ But it also means that the trace's built-in methods can be used.
     tr.trigger("recstalta", sta=0.5, lta=4)
     tr.plot()
 
-For more examples check out the `triggering page`_ in the `Tutorial`_. For
+For more examples check out the `trigger`_ in the `Tutorial`_. For
 network coincidence refer to :func:`obspy.signal.trigger.coincidenceTrigger`
 and the same page in the `Tutorial`_. For automated use see the following
 `stalta`_ example scripts.
 
-.. _`triggering page`: http://docs.obspy.org/tutorial/trigger_tutorial.html
+.. _`trigger`: http://tutorial.obspy.org/code_snippets/trigger_tutorial.html
 .. _`Tutorial`: http://tutorial.obspy.org
 .. _`stalta`: https://github.com/obspy/branches/tree/master/sandbox/stalta
 """
@@ -186,9 +186,6 @@ and the same page in the `Tutorial`_. For automated use see the following
 from filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
     lowpassFIR, envelope, integerDecimation
 from rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, rotate_LQT_ZNE
-from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
-    delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
-    coincidenceTrigger, classicSTALTAPy
 from invsim import cosTaper, cornFreq2Paz, pazToFreqResp, seisSim, specInv, \
     estimateMagnitude
 from cpxtrace import normEnvelope, centroid, instFreq, instBwith
@@ -199,6 +196,9 @@ from hoctavbands import sonogram
 from polarization import eigval
 from spectral_estimation import psd, PPSD
 from konnoohmachismoothing import konnoOhmachiSmoothing
+from trigger import recSTALTA, recSTALTAPy, carlSTATrig, classicSTALTA, \
+    delayedSTALTA, zDetect, triggerOnset, pkBaer, arPick, \
+    coincidenceTrigger, classicSTALTAPy
 
 
 if __name__ == '__main__':

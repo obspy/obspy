@@ -44,5 +44,6 @@ The functionality is provided through the following packages:
    obspy.db
    obspy.earthworm
    obspy.iris
+   obspy.neic
    obspy.neries
    obspy.seishub

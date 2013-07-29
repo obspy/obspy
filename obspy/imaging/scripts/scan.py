@@ -189,6 +189,9 @@ def main():
                       type="string", dest="output",
                       help="Save plot to image file (e.g. out.pdf, " + \
                       "out.png) instead of opening a window.")
+    parser.add_option("--print-gaps", default=False,
+                      action="store_true", dest="print_gaps",
+                      help="Optional, prints a list of gaps at the end.")
     (options, largs) = parser.parse_args()
 
     # Print help and exit if no arguments are given
@@ -206,7 +209,9 @@ def main():
         import matplotlib
         matplotlib.use("agg")
     global date2num
-    from matplotlib.dates import date2num
+    from matplotlib.dates import date2num, num2date
+    from matplotlib.patches import Rectangle
+    from matplotlib.collections import PatchCollection
     import matplotlib.pyplot as plt
 
     fig = plt.figure()
@@ -251,6 +256,7 @@ def main():
         ids = filter(lambda x: x in options.ids, ids)
     ids = sorted(ids)[::-1]
     labels = [""] * len(ids)
+    print
     for _i, _id in enumerate(ids):
         labels[_i] = ids[_i]
         data[_id].sort()
@@ -281,11 +287,23 @@ def main():
         timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        if not options.nogaps:
-            gaps = startend[diffs > 1.8 * samp_int[_id], 1]
-            if len(gaps) > 0:
-                offset = offset[:len(gaps)]
-                ax.vlines(gaps, offset - 0.4, offset + 0.4, 'r', linewidth=1)
+        gap_indices = diffs > 1.8 * samp_int[_id]
+        gap_indices = np.concatenate((gap_indices, [False]))
+        if any(gap_indices):
+            # dont handle last endtime as start of gap
+            gaps_start = startend[gap_indices, 1]
+            gaps_end = startend[np.roll(gap_indices, 1), 0]
+            if not options.nogaps and any(gap_indices):
+                rects = [Rectangle((start_, offset[0] - 0.4),
+                                   end_ - start_, 0.8)
+                         for start_, end_ in zip(gaps_start, gaps_end)]
+                ax.add_collection(PatchCollection(rects, color="r"))
+            if options.print_gaps:
+                for start_, end_ in zip(gaps_start, gaps_end):
+                    start_, end_ = num2date((start_, end_))
+                    start_ = UTCDateTime(start_.isoformat())
+                    end_ = UTCDateTime(end_.isoformat())
+                    print "%s %s %s %.3f" % (_id, start_, end_, end_ - start_)
 
     # Pretty format the plot
     ax.set_ylim(0 - 0.5, _i + 0.5)

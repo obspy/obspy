@@ -15,7 +15,10 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import inspect
+import os
 
+import obspy
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -115,12 +118,10 @@ class Unpickler(object):
         return obj
 
     def _creation_info(self, element):
-        has_creation_info = False
         for child in element:
             if 'creationInfo' in child.tag:
-                has_creation_info = True
                 break
-        if not has_creation_info:
+        else:
             return None
         obj = CreationInfo()
         obj.agency_uri = self._xpath2obj('creationInfo/agencyURI', element)
@@ -415,6 +416,7 @@ class Unpickler(object):
         obj.method_id = self._xpath2obj('methodID', element)
         obj.station_count = self._xpath2obj('stationCount', element, int)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
+        obj.evaluation_mode = self._xpath2obj('evaluationMode', element)
         obj.evaluation_status = self._xpath2obj('evaluationStatus', element)
         obj.creation_info = self._creation_info(element)
         obj.station_magnitude_contributions = \
@@ -787,6 +789,8 @@ class Pickler(object):
             return ResourceIdentifier().getQuakeMLURI()
 
     def _str(self, value, root, tag, always_create=False):
+        if isinstance(value, ResourceIdentifier):
+            value = value.getQuakeMLURI()
         if always_create is False and value is None:
             return
         etree.SubElement(root, tag).text = "%s" % (value)
@@ -931,6 +935,7 @@ class Pickler(object):
         self._str(magnitude.method_id, element, 'methodID')
         self._str(magnitude.station_count, element, 'stationCount')
         self._str(magnitude.azimuthal_gap, element, 'azimuthalGap')
+        self._str(magnitude.evaluation_mode, element, 'evaluationMode')
         self._str(magnitude.evaluation_status, element, 'evaluationStatus')
         self._station_magnitude_contributions(
             magnitude.station_magnitude_contributions, element)
@@ -1189,9 +1194,8 @@ class Pickler(object):
         """
         if moment_tensor is None:
             return
-        mt_el = etree.Element('momentTensor')
-        if moment_tensor.resource_id:
-            mt_el.attrib['publicID'] = self._id(moment_tensor.resource_id)
+        mt_el = etree.Element('momentTensor',
+            attrib={'publicID': self._id(moment_tensor.resource_id)})
         # required parameters
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
         # optional parameter
@@ -1263,8 +1267,10 @@ class Pickler(object):
         self._str(focal_mechanism.misfit, element, 'misfit')
         self._str(focal_mechanism.station_distribution_ratio, element,
                   'stationDistributionRatio')
-        self._nodal_planes(focal_mechanism.nodal_planes, element)
-        self._principal_axes(focal_mechanism.principal_axes, element)
+        if focal_mechanism.nodal_planes:
+            self._nodal_planes(focal_mechanism.nodal_planes, element)
+        if focal_mechanism.principal_axes:
+            self._principal_axes(focal_mechanism.principal_axes, element)
         self._str(focal_mechanism.method_id, element, 'methodID')
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
@@ -1362,7 +1368,8 @@ def readQuakeML(filename):
     return Unpickler().load(filename)
 
 
-def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
+def writeQuakeML(catalog, filename, validate=False,
+        **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
 
@@ -1373,20 +1380,32 @@ def writeQuakeML(catalog, filename, **kwargs):  # @UnusedVariable
 
     :type catalog: :class:`~obspy.core.stream.Catalog`
     :param catalog: The ObsPy Catalog object to write.
-    :type filename: str
-    :param filename: Name of file to write.
+    :type filename: string or open file-like object
+    :param filename: Filename to write or open file-like object.
+    :type validate: Boolean, optional
+    :param validate: If True, the final QuakeML file will be validated against
+        the QuakeML schema file. Raises an AssertionError if the validation
+        fails.
     """
+    xml_doc = Pickler().dumps(catalog)
+
+    if validate is True and \
+            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+        raise AssertionError(
+            "The final QuakeML file did not pass validation.")
+
     # Open filehandler or use an existing file like object.
-    if not hasattr(filename, 'write'):
-        fh = open(filename, 'wt')
+    if not hasattr(filename, "write"):
+        file_opened = True
+        fh = open(filename, "wt")
     else:
+        file_opened = False
         fh = filename
 
-    xml_doc = Pickler().dumps(catalog)
     fh.write(xml_doc)
-    fh.close()
-    # Close if its a file handler.
-    if isinstance(fh, file):
+
+    # Close if a file has been opened by this function.
+    if file_opened is True:
         fh.close()
 
 
@@ -1402,6 +1421,28 @@ def readSeisHubEventXML(filename):
     lines.append('</quakeml>\n')
     temp = StringIO.StringIO(''.join(lines))
     return readQuakeML(temp)
+
+
+def validate(xml_file, verbose=False):
+    """
+    Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
+    either True or False.
+    """
+    # Get the schema location.
+    schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
+    schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
+
+    relaxng = etree.RelaxNG(etree.parse(schema_location))
+    xmldoc = etree.parse(xml_file)
+
+    valid = relaxng.validate(xmldoc)
+
+    # Pretty error printing if the validation fails.
+    if verbose and valid is not True:
+        print "Error validating QuakeML file:"
+        for entry in relaxng.error_log:
+            print "\t%s" % entry
+    return valid
 
 
 if __name__ == '__main__':

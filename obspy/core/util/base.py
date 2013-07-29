@@ -27,7 +27,7 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'station']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink']
+                   'seedlink', 'neic']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -48,7 +48,7 @@ class FILE(C.Structure):  # Never directly used
 c_file_p = C.POINTER(FILE)
 
 
-def NamedTemporaryFile(dir=None, suffix='.tmp'):
+def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
@@ -96,7 +96,8 @@ def NamedTemporaryFile(dir=None, suffix='.tmp'):
             self.close()
             os.remove(self.name)
 
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, suffix=suffix))
+    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
+                                                suffix=suffix))
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):

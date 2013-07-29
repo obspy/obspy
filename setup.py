@@ -402,7 +402,12 @@ def configuration(parent_package="", top_path=None):
     # Proceed normally.
     taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
     taup_files.insert(0, new_interface_path)
-    config.add_extension(libname, taup_files)
+    libraries = []
+    # we do not need this when linking with gcc, only when linking with
+    # gfortran the option -lgcov is required
+    if os.environ.get('OBSPY_C_COVERAGE', ""):
+        libraries.append('gcov')
+    config.add_extension(libname, taup_files, libraries=libraries)
 
     add_data_files(config)
 
@@ -426,6 +431,8 @@ def add_data_files(config):
     # Adding the Flinn-Engdahl names files
     config.add_data_dir(os.path.join("obspy", "core", "util", "geodetics",
         "data"))
+    # Adding the version information file
+    config.add_data_files(os.path.join("obspy", "RELEASE-VERSION"))
 
 
 def setupPackage():

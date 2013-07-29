@@ -170,16 +170,16 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         if not HAS_GEOGRAPHICLIB:
             return
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
         self.assertEqual(round(azim, 0), 32)
         self.assertEqual(round(bazim, 0), 213)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
         self.assertEqual(round(azim, 0), 328)
         self.assertEqual(round(bazim, 0), 147)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
         self.assertEqual(round(azim, 0), 147)
         self.assertEqual(round(bazim, 0), 327)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
 

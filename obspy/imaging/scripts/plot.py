@@ -14,12 +14,14 @@ def main():
     parser = OptionParser(__doc__.strip(), version="%prog " + __version__)
     parser.add_option("-f", default=None, type="string",
                       dest="format", help="Waveform format.")
+    parser.add_option("-o", "--outfile", default=None, type="string",
+                      dest="outfile", help="Output filename.")
 
     (options, args) = parser.parse_args()
     st = Stream()
     for arg in args:
         st += read(arg, format=options.format)
-    st.plot()
+    st.plot(outfile=options.outfile)
 
 
 if __name__ == "__main__":

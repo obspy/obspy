@@ -5,7 +5,7 @@ The sac.core test suite.
 
 from obspy import Stream, Trace, read, UTCDateTime
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO
+from obspy.sac import SacIO, SacError, SacIOError
 import copy
 import numpy as np
 import os
@@ -408,6 +408,39 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(tr.stats.sac.npts, 100)
         self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
         self.assertEqual(tr.stats.sac.kstnm, 'sta     ')
+        self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
+
+    def test_read_with_fsize(self):
+        """
+        Testing fsize option on read()
+        """
+        # reading sac file with wrong file size should raise error
+        longer_file = os.path.join(self.path, 'data', 'seism-longer.sac')
+        shorter_file = os.path.join(self.path, 'data', 'seism-shorter.sac')
+        # default
+        self.assertRaises(SacError, read, longer_file)
+        self.assertRaises(SacError, read, shorter_file)
+        # fsize=True
+        self.assertRaises(SacError, read, longer_file, fsize=True)
+        self.assertRaises(SacError, read, shorter_file, fsize=True)
+        # using fsize=False should not work for shorter file
+        # (this is not supported by SAC) ...
+        self.assertRaises(SacIOError, read, shorter_file, fsize=False)
+        # ...but it should work for longer file
+        tr = read(longer_file, fsize=False, debug_headers=True)[0]
+        # checking trace
+        self.assertEqual(tr.stats.sac.nzyear, 1981)
+        self.assertEqual(tr.stats.sac.nzjday, 88)
+        self.assertEqual(tr.stats.sac.nzhour, 10)
+        self.assertEqual(tr.stats.sac.nzmin, 38)
+        self.assertEqual(tr.stats.sac.nzsec, 14)
+        self.assertEqual(tr.stats.sac.nzmsec, 0)
+        # we should never test equality for float values:
+        self.assertTrue(abs(tr.stats.sac.delta - 0.01) <= 1e-9)
+        self.assertEqual(tr.stats.sac.scale, -12345.0)
+        self.assertEqual(tr.stats.sac.npts, 998)
+        self.assertEqual(tr.stats.sac.knetwk, '-12345  ')
+        self.assertEqual(tr.stats.sac.kstnm, 'CDV     ')
         self.assertEqual(tr.stats.sac.kcmpnm, 'Q       ')
 
 

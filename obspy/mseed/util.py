@@ -484,9 +484,9 @@ def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim1(
-            C.cast(dbuf, C.POINTER(FRAME)), datasize,
-            samplecnt, samplecnt, datasamples, diffbuff,
-            C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(FRAME)), datasize,
+        samplecnt, samplecnt, datasamples, diffbuff,
+        C.byref(x0), C.byref(xn), swapflag, verbose)
     if nsamples != npts:
         raise Exception("Error in unpack_steim1")
     return datasamples
@@ -509,9 +509,9 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim2(
-            C.cast(dbuf, C.POINTER(FRAME)), datasize,
-            samplecnt, samplecnt, datasamples, diffbuff,
-            C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(FRAME)), datasize,
+        samplecnt, samplecnt, datasamples, diffbuff,
+        C.byref(x0), C.byref(xn), swapflag, verbose)
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples

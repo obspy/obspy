@@ -3,6 +3,13 @@ dev:
    * user keyword is now required during client initialization
  - obspy.core:
    * Updated event classes to QuakeML 1.2 final.
+   * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
+   * The writeQuakeML() function, also accessible through
+     Catalog.write(..., format="quakeml"), now has an optional kwarg
+	 'validate'. If True, the resulting QuakeML file will be validated against
+	 the QuakeML schema before being written. An AssertionError will be raised
+	 in case the validation fails.
+   * validation of QuakeML against offical schema working now
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -12,16 +19,33 @@ dev:
      most operating systems
  - obspy.imaging:
    * more options to customize day plots
+   * obspy-scan: new option --print-gaps
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
- - obspy.station:
-   * adding support for FDSN StationXML
+ - obspy.signal:
+   * adding cross correlation single-station similarity checking with
+     master event templates to coincidence trigger
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
+ - obspy.neic:
+   * new module to access data from CWB QueryServer run at the National
+     Earthquake Information Center (NEIC) in Golden, CO USA.
+ - scripts:
+   * obspy-plot: new option "-o" to output plot to file instead of opening
+     a window
+ - obspy.station:
+   * adding support for FDSN StationXML
+
+0.8.4
+ - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
+ - critical bugfixes for the waveform plotting and the xml wrapper
+ - bugfix so that copy.deepcopy() works with the obspy.core.stream.Stream
+   class
+ - fixing some imports
 
 0.8.3:
  - circumventing an issue in the current libmseed release that can lead to

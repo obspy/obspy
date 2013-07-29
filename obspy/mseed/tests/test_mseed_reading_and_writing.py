@@ -569,7 +569,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing all different types. This is an test which is independent
         of the read method. Only the data part is verified.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         # Read the data and copy them
         st = read(file)
@@ -661,9 +661,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-                ('|S1', 'a', 0, np.fromstring(""" !"#$%&'()*+,-./""" + \
-                   """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" + \
-                   """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
+                ('|S1', 'a', 0, np.fromstring(""" !"#$%&'()*+,-./""" +
+                """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
+                """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
                 ('int32', 'i', 1, def_content.astype('int16')),
@@ -857,6 +857,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.iteritems():
             seed_dtype = value[2]
+            # Special handling for the ASCII dtype. NumPy 1.7 changes the
+            # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
+            # "|S1|" here to be consistent across NumPy versions.
+            if encoding == 0:
+                seed_dtype = "|S1"
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name
                 # Write it once with the encoding key and once with the value.
@@ -865,7 +870,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 st.write(tempfile, format="MSEED", encoding=encoding)
                 st2 = read(tempfile)
                 del st2[0].stats.mseed
-                np.testing.assert_array_equal(st[0].data, st2[0].data)
+                np.testing.assert_array_equal(st[0].data, st2[0].data,
+                    "Arrays are not equal for encoding '%s'" %
+                    ENCODINGS[encoding][0])
                 del st2
                 ms = _MSStruct(tempfile)
                 ms.read(-1, 1, 1, 0)
@@ -922,12 +929,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # changes, sum of all points in stream must stay the same
         self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
-        self.assertEqual((res[:]['qual'] >= 0).sum(),  res.shape[0])
-        self.assertEqual((res[:]['qual'] <= 100).sum(),  res.shape[0])
+        self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
+        self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
 
 
 def suite():
-    return unittest.makeSuite(MSEEDReadingAndWritingTestCase,  'test')
+    return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
 
 
 if __name__ == '__main__':

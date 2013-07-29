@@ -8,6 +8,15 @@ import numpy as np
 import unittest
 
 
+# some tests need matplotlib
+NO_MATPLOTLIB = False
+try:
+    import matplotlib
+    from matplotlib.dates import date2num, num2date
+except ImportError:
+    NO_MATPLOTLIB = True
+
+
 # some Python version don't support negative timestamps
 NO_NEGATIVE_TIMESTAMPS = False
 try:  # pragma: no cover
@@ -852,6 +861,18 @@ class UTCDateTimeTestCase(unittest.TestCase):
             self.assertFalse(obj < dt)
             self.assertFalse(obj >= dt)
             self.assertFalse(obj > dt)
+
+    @skipIf(NO_MATPLOTLIB, 'needs matplotlib')
+    def test_timezone_aware_datetime(self):
+        """
+        UTCDateTime from timezone-aware datetime.datetime
+
+        .. seealso:: https://github.com/obspy/obspy/issues/553
+        """
+        matplotlib.rcParams['timezone'] = "US/Eastern"
+        x = date2num(UTCDateTime())
+        dt = num2date(x)
+        self.assertEquals(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
 
 
 def suite():

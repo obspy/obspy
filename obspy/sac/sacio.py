@@ -374,6 +374,7 @@ class SacIO(object):
         self.SetHvalue('leven', 1)
         self.SetHvalue('lpspol', 1)
         self.SetHvalue('lcalda', 0)
+        self.SetHvalue('lovrok', 1)
         self.SetHvalue('nzyear', reftime.year)
         self.SetHvalue('nzjday', reftime.strftime("%j"))
         self.SetHvalue('nzhour', reftime.hour)
@@ -604,7 +605,7 @@ class SacIO(object):
                 raise SacError("Cannot write header to file: " + fname, e)
         f.close()
 
-    def ReadSacFile(self, fname):
+    def ReadSacFile(self, fname, fsize=True):
         """
         Read read in the header and data in a SAC file
 
@@ -643,7 +644,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         ##### only continue if it is a SAC file
         try:
-            self.IsSACfile(fname)
+            self.IsSACfile(fname, fsize)
         except SacError:
             try:
                 # if it is not a valid SAC-file try with big endian
@@ -653,7 +654,7 @@ class SacIO(object):
                 self.hi = np.fromfile(f, dtype='>i4', count=40)
                 # read in the char values
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
-                self.IsSACfile(fname)
+                self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
             except SacError, e:
                 f.close()
@@ -671,7 +672,7 @@ class SacIO(object):
         if len(self.seis) != npts:
             self.hf = self.hi = self.hs = self.seis = None
             f.close()
-            raise SacIOError("Cannot read any or only some data points")
+            raise SacIOError("Cannot read all data points")
         try:
             self._get_date()
         except SacError:
@@ -1338,7 +1339,6 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
     poles = []
     zeros = []
-    found_zero = False
 
     if isinstance(paz_file, str):
         paz_file = open(paz_file, 'r')
@@ -1397,9 +1397,8 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         for i, zero in enumerate(list(zeros)):
             if zero == complex(0, 0j):
                 zeros.pop(i)
-                found_zero = True
                 break
-        if not found_zero:
+        else:
             raise Exception("Could not remove (0,0j) zero to change \
             displacement response to velocity response")
 
@@ -1529,9 +1528,8 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         for i, zero in enumerate(list(zeros)):
             if zero == complex(0, 0j):
                 zeros.pop(i)
-                found_zero = True
                 break
-        if not found_zero:
+        else:
             raise Exception("Could not remove (0,0j) zero to change \
             displacement response to velocity response")
 

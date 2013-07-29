@@ -16,6 +16,13 @@
 #include "libmseed/libmseed.h"
 #include "libmseed/unpackdata.h"
 
+
+// Dummy wrapper around malloc.
+void * allocate_bytes(int count) {
+    return malloc(count);
+}
+
+
 // Linkable container of MSRecords
 typedef struct LinkedRecordList_s {
     struct MSRecord_s      *record;       // This record

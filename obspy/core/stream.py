@@ -912,6 +912,11 @@ class Stream(object):
             if the active matplotlib backend supports it.
         :param linewidth: Float value in points of the line width. Defaults to
             ``0.4``.
+        :param linestyle: Line style. Default to ``'-'``
+        :param grid_color: Color of the grid. Default to ``'black'``.
+        :param grid_linewidth: Float value in points of the grid line width.
+            Defaults to ``0.5``.
+        :param grid_linestyle: Grid line style. Default to ``':'``
 
         **Dayplot parameters**
 
@@ -950,7 +955,7 @@ class Stream(object):
             to be a string containing the actual unit of the data. Can be a
             LaTeX expression if matplotlib has been built with LaTeX support,
             e.g. "$\\frac{m}{s}$". Be careful to escape the backslashes, or
-            use r-prepended strings, e.g. r"$\frac{m}{s}$".
+            use r-prepended strings, e.g. r"$\\frac{m}{s}$".
         :param events: An optional list of events can be drawn on the plot if
             given.  They will be displayed as yellow stars with optional
             annotations.  They are given as a list of dictionaries. Each

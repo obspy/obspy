@@ -731,6 +731,11 @@ class PPSD():
         :type show: bool (optional)
         :param show: Enable/disable immediately showing the plot.
         """
+        # check if any data has been added yet
+        if self.hist_stack is None:
+            msg = 'No data to plot'
+            raise Exception(msg)
+
         X, Y = np.meshgrid(self.xedges, self.yedges)
         hist_stack = self.hist_stack * 100.0 / len(self.times_used)
 

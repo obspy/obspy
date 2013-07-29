@@ -46,16 +46,14 @@ lib_names = [
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
-clibgse2 = None
 for lib_name in lib_names:
     try:
         clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                        'lib', lib_name + lib_extension))
+        break
     except Exception, e:
         pass
-    else:
-        break
-if not clibgse2:
+else:
     msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (e)
     raise ImportError(msg)
 
@@ -291,7 +289,11 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
-    data = uncompress_CM6(f, head.n_samps)
+    if head.n_samps == 0:
+        data = np.empty(0, dtype='int32')
+    else:
+        # aborts with segmentation fault when n_samps == 0
+        data = uncompress_CM6(f, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
         verifyChecksum(f, data, version=2)

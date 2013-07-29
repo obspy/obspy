@@ -419,6 +419,114 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     return (pick2_corr, coeff)
 
 
+def templatesMaxSimilarity(st, time, streams_templates):
+    """
+    Compares all event templates in the streams_templates list of streams
+    against the given stream around the time of the suspected event. The stream
+    that is being checked has to include all trace ids that are included in
+    template events. One component streams can be checked as well as multiple
+    components simultaneously. In case of multiple components it is made sure,
+    that all three components are shifted together.  The traces in any stream
+    need to have a reasonable common starting time.  The stream to check should
+    have some additional data to left/right of suspected event, the event
+    template streams should be cut to the portion of the event that should be
+    compared. Also see :func:`obspy.signal.trigger.coincidenceTrigger` and the
+    corresponding example in the
+    `Trigger/Picker Tutorial
+    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+
+    - computes cross correlation on each component (one stream serves as
+      template, one as a longer search stream)
+    - stack all three and determine best shift in stack
+    - normalization is a bit problematic so compute the correlation coefficient
+      afterwards for the best shift to make sure the result is between 0 and 1.
+
+    >>> from obspy import read, UTCDateTime
+    >>> import numpy as np
+    >>> np.random.seed(123)  # make test reproducable
+    >>> st = read()
+    >>> t = UTCDateTime(2009, 8, 24, 0, 20, 7, 700000)
+    >>> templ = st.copy().slice(t, t+5)
+    >>> for tr in templ:
+    ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
+    >>> print templatesMaxSimilarity(st, t, [templ])
+    0.922536411468
+
+    :param time: Time around which is checked for a similarity. Cross
+        correlation shifts of around template event length are checked.
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param st: One or multi-component Stream to check against event templates.
+        Should have additional data left/right of suspected event (around half
+        the length of template events).
+    :type st: :class:`~obspy.core.stream.Stream`
+    :param streams_templates: List of streams with template events to check for
+        waveform similarity. Each template has to include data for all
+        channels present in stream to check.
+    :type streams_templates: list of :class:`~obspy.core.stream.Stream`s
+    :returns: Best correlation coefficient obtained by the comparison against
+        all template events (0 to 1).
+    """
+    values = []
+    for st_tmpl in streams_templates:
+        ids = [tr.id for tr in st_tmpl]
+        duration = st_tmpl[0].stats.endtime - st_tmpl[0].stats.starttime
+        st_ = st.slice(time - (duration * 0.5),
+                       time + (duration * 1.5))
+        cc = None
+        for id_ in reversed(ids):
+            if not st_.select(id=id_):
+                msg = "Skipping trace %s in template correlation " + \
+                      "(not present in stream to check)."
+                warnings.warn(msg % id_)
+                ids.remove(id_)
+        # determine best (combined) shift of multi-component data
+        for id_ in ids:
+            tr1 = st_.select(id=id_)[0]
+            tr2 = st_tmpl.select(id=id_)[0]
+            if len(tr1) > len(tr2):
+                data_short = tr2.data
+                data_long = tr1.data
+            else:
+                data_short = tr1.data
+                data_long = tr2.data
+            data_short = (data_short - data_short.mean()) / data_short.std()
+            data_long = (data_long - data_long.mean()) / data_long.std()
+            tmp = np.correlate(data_long, data_short, "valid")
+            try:
+                cc += tmp
+            except TypeError:
+                cc = tmp
+            except ValueError:
+                cc = None
+                break
+        if cc is None:
+            msg = "Skipping template(s) for station %s due to problems in " + \
+                  "three component correlation (gappy traces?)"
+            warnings.warn(msg % st_tmpl[0].stats.station)
+            break
+        ind = cc.argmax()
+        ind2 = ind + len(data_short)
+        coef = 0.0
+        # determine correlation coefficient of best shift as the mean of all
+        # components
+        for id_ in ids:
+            tr1 = st_.select(id=id_)[0]
+            tr2 = st_tmpl.select(id=id_)[0]
+            if len(tr1) > len(tr2):
+                data_short = tr2.data
+                data_long = tr1.data
+            else:
+                data_short = tr1.data
+                data_long = tr2.data
+            coef += np.corrcoef(data_short, data_long[ind:ind2])[0, 1]
+        coef /= len(ids)
+        values.append(coef)
+    if values:
+        return max(values)
+    else:
+        return 0
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

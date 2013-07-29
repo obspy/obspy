@@ -1494,8 +1494,6 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
 
         ntr = st.shape[0]
 
-    print W.shape
-
     if mode == 'absolute':
         TFR = np.abs(W)
         spec = np.abs(spec)
