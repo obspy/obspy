@@ -3,4 +3,4 @@ from obspy.station.util import BaseNode, Equipment, Operator, Person, \
 from obspy.station.channel import SeismicChannel
 from obspy.station.station import SeismicStation
 from obspy.station.network import SeismicNetwork
-from obspy.station.inventory import SeismicInventory, readInventory
+from obspy.station.inventory import SeismicInventory, read_inventory

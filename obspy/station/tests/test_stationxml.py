@@ -77,7 +77,7 @@ class StationXMLTestCase(unittest.TestCase):
         Test that writing the most basic StationXML document possible works.
         """
         filename = os.path.join(self.data_dir, "minimal_station.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
 
         # Assert the few values that are set directly.
         self.assertEqual(inv.source, "OBS")
@@ -126,7 +126,7 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir,
             "minimal_with_non_obspy_module_and_sender_tags_station.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
         self.assertEqual(inv.module, "Some Random Module")
         self.assertEqual(inv.module_uri, "http://www.some-random.site")
 
@@ -136,7 +136,7 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir,
             "minimal_with_non_obspy_module_and_sender_tags_station.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
         self.assertEqual(inv.source, "OBS")
         self.assertEqual(inv.created, obspy.UTCDateTime(2013, 1, 1))
         self.assertEqual(len(inv.networks), 1)
@@ -165,7 +165,7 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir,
             "full_network_field_station.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
 
         # Assert all the values...
         self.assertEqual(len(inv.networks), 1)
@@ -249,7 +249,7 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir,
             "full_station_field_station.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
 
         # Assert all the values...
         self.assertEqual(len(inv.networks), 1)
@@ -484,7 +484,7 @@ class StationXMLTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.data_dir,
             "IRIS_single_channel_with_response.xml")
-        inv = obspy.station.readInventory(filename)
+        inv = obspy.station.read_inventory(filename)
         self.assertEqual(inv.source, "IRIS-DMC")
         self.assertEqual(inv.sender, "IRIS-DMC")
         self.assertEqual(inv.created, obspy.UTCDateTime("2013-04-16T06:15:28"))

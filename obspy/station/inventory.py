@@ -24,7 +24,7 @@ FORMAT_FCTS = {
 }
 
 
-def readInventory(path_or_file_object, format=None):
+def read_inventory(path_or_file_object, format=None):
     """
     Function to read inventory files.
 
