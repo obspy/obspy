@@ -68,12 +68,12 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
     'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
-    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP', 'response
-    file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y', 'SEISAN',
-    'SeisHub', 'Seismic Handler', 'seismology', 'seismogram', 'seismograms',
-    'signal', 'slink', 'spectrogram', 'StationXML', 'taper', 'taup', 'travel
-    time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer', 'WaveServerV',
-    'WebDC', 'Winston', 'XML-SEED', 'XSEED']
+    'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
+    'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
+    'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
+    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
+    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
+    'WaveServerV', 'WebDC', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
