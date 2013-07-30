@@ -249,7 +249,6 @@ def _read_response_stage(stage_elem, _ns):
     # All stages contain a stage gain and potentially a decimation.
 
 
-
 def _read_instrument_sensitivity(sensitivity_element, _ns):
     value = _tag2obj(sensitivity_element, _ns("Value"), float)
     frequency = _tag2obj(sensitivity_element, _ns("Frequency"), float)

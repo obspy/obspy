@@ -137,13 +137,10 @@ class PolynomialResponseStage(ResponseStage):
 
 class Response(object):
     """
-    From the StationXML Definition:
-        Instrument sensitivities, or the complete system sensitivity, can be
-        expressed using either a sensitivity value or a polynomial. The
-        information can be used to convert raw data to Earth at a specified
-        frequency or within a range of frequencies.
+    The root response object.
     """
-    def __init__(self, resource_id=None, response_stages=None):
+    def __init__(self, resource_id=None, instrument_sensitivity=None,
+            response_stages=None):
         """
         :type resource_id: string
         :param resource_id: This field contains a string that should serve as a
@@ -153,14 +150,24 @@ class Response(object):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
+        :type instrument_sensitivity:
+            :class:`~obspy.station.response.InstrumentSensitivity`
+        :param instrument_sensitivity: The total sensitivity for the given
+            channel.
         :type response_stages: List of
             :class:`~obspy.station.response.ResponseStage` objects
-        :param response_stages:
+        :param response_stages: A list of the response stages. Covers SEED
+            blockettes 53 to 56.
         """
         self.resource_id = resource_id
+        self.instrument_sensitivity = instrument_sensitivity
         if response_stages is None:
-            response_stages = []
-        self.response_stages = response_stages
+            self.response_stages = []
+        elif hasattr(response_stages, "__iter__"):
+            self.response_stages = response_stages
+        else:
+            msg = "response_stages must be an iterable."
+            raise ValueError(msg)
 
 
 class InstrumentSensitivity(Response):
