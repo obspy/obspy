@@ -10,6 +10,7 @@ Provides the SeismicNetwork class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.station.util import BaseNode
+import textwrap
 
 
 class SeismicNetwork(BaseNode):
@@ -62,6 +63,34 @@ class SeismicNetwork(BaseNode):
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
+
+    def __str__(self):
+        ret = ("Seismic Network {id} {description}\n"
+            "\tStation Count: {selected}/{total} (Selected/Total)\n"
+            "\t{start_date} - {end_date}\n"
+            "\tAccess: {restricted} {alternate_code}{historical_code}\n")\
+            .format(
+            id=self.code,
+            description="(%s)" % self.description if self.description else "",
+            selected=self.selected_number_of_stations,
+            total=self.total_number_of_stations,
+            start_date=str(self.start_date),
+            end_date=str(self.end_date) if self.end_date else "",
+            restricted=self.restricted_status,
+            alternate_code="Alternate Code: %s " % self.alternate_code if
+                self.alternate_code else "",
+            historical_code="historical Code: %s " % self.historical_code if
+                self.historical_code else "")
+        contents = self.get_contents()
+        ret += "\tContains:\n"
+        ret += "\t\tStations (%i):\n" % len(contents["stations"])
+        ret += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
+        ret += "\n"
+        ret += "\t\tChannels (%i):\n" % len(contents["channels"])
+        ret += "\n".join(textwrap.wrap(", ".join(contents["channels"]),
+                initial_indent="\t\t\t", subsequent_indent="\t\t\t",
+                expand_tabs=False))
+        return ret
 
     def get_contents(self):
         """

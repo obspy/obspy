@@ -86,6 +86,9 @@ class SeismicInventory(object):
         else:
             self.created = created
 
+    def __getitem__(self, index):
+        return self.networks[index]
+
     def get_contents(self):
         """
         Returns a dictionary containing the contents of the object.
