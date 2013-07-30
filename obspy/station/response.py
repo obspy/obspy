@@ -20,7 +20,10 @@ class ResponseStage(object):
     def __init__(self, stage_sequence_number, stage_gain_value,
             stage_gain_frequency, input_units_name, output_units_name,
             input_units_description=None, output_units_description=None,
-            resource_id=None, decimation=None, name=None, description=None):
+            resource_id=None, name=None, description=None,
+            decimation_input_sample_rate=None, decimation_factor=None,
+            decimation_offset=None, decimation_delay=None,
+            decimation_correction=None):
         """
         :type stage_sequence_number: integer greater or equal to zero
         :param stage_sequence_number: Stage sequence number. This is used in
@@ -36,7 +39,6 @@ class ResponseStage(object):
             ranges. This complex type can be used to represent both overall
             sensitivities and individual stage gains. The frequency (in Hertz)
             at which the Value is valid.
-        :param decimation:
         :param input_units_name: string
         :param input_units_name: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
@@ -68,9 +70,22 @@ class ResponseStage(object):
             same ID should contains the same information/be derived from the
             same base instruments.
         :type name: string, optional
-        :param name: A name given to this filter.
+        :param name: A name given to the filter stage.
         :type description: string, optional
         :param description: A short description of of the filter.
+        :type decimation_input_sample_rate:  float, optional
+        :param decimation_input_sample_rate: The sampling rate before the
+            decimation in samples per second.
+        :type decimation_factor: integer, optional
+        :param decimation_factor: The applied decimation factor.
+        :type decimation_offset: integer, optional
+        :param decimation_offset: The sample chosen for use. 0 denotes the
+            first sample, 1 the second, and so forth.
+        :type decimation_delay: float, optional
+        :param decimation_delay: The estimated pure delay from the decimation.
+        :type decimation_correction: float, optional
+        :param decimation_correction: The time shift applied to correct for the
+            delay at this stage.
 
         .. note::
             The stage gain (or stage sensitivity) is the gain at the stage of
@@ -88,9 +103,13 @@ class ResponseStage(object):
         self.resource_id = resource_id
         self.stage_gain_value = stage_gain_value
         self.stage_gain_frequency = stage_gain_frequency
-        self.decimation = decimation
         self.name = name
         self.description = description
+        self.decimation_input_sample_rate = decimation_input_sample_rate
+        self.decimation_factor = decimation_factor
+        self.decimation_offset = decimation_offset
+        self.decimation_delay = decimation_delay
+        self.decimation_correction = decimation_correction
 
 
 class PolesZerosResponseStage(ResponseStage):

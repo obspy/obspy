@@ -247,6 +247,74 @@ def _read_response_stage(stage_elem, _ns):
     # The stage sequence number is required!
     stage_sequence_number = int(stage_elem.get("number"))
     # All stages contain a stage gain and potentially a decimation.
+    gain_elem = stage_elem.find(_ns("StageGain"))
+    stage_gain_value = _tag2obj(gain_elem, _ns("Value"), float)
+    stage_gain_frequency = _tag2obj(gain_elem, _ns("Frequency"), float)
+    # Parse the decimation.
+    decim_elem = stage_elem.find(_ns("Decimation"))
+    if decim_elem is not None:
+        decimation_input_sample_rate = _tag2obj(decim_elem,
+            _ns("InputSampleRate"), float)
+        decimation_factor = _tag2obj(decim_elem, _ns("Factor"), int)
+        decimation_offset = _tag2obj(decim_elem, _ns("Offset"), int)
+        decimation_delay = _tag2obj(decim_elem, _ns("Delay"), float)
+        decimation_correction = _tag2obj(decim_elem, _ns("Correction"), float)
+    else:
+        decimation_input_sample_rate = None
+        decimation_factor = None
+        decimation_offset = None
+        decimation_delay = None
+        decimation_correction = None
+    # They also all have to contain input and output units.
+    input_units = stage_elem.find(_ns("InputUnits"))
+    input_units_name = _tag2obj(input_units, _ns("Name"), str)
+    input_units_description = _tag2obj(input_units, _ns("Description"), str)
+    output_units = stage_elem.find(_ns("OutputUnits"))
+    output_units_name = _tag2obj(output_units, _ns("Name"), str)
+    output_units_description = _tag2obj(output_units, _ns("Description"), str)
+    # They furthermore share descriptions, resource ids and names.
+    description = _tag2obj(stage_elem, _ns("Description"), str)
+    resource_id = _tag2obj(stage_elem, _ns("resourceId"), str)
+    name = _tag2obj(stage_elem, _ns("name"), str)
+    # Now collect all shared kwargs to be able to pass them to the different
+    # constructors..
+    kwargs = {"stage_sequence_number": stage_sequence_number,
+        "input_units_name": input_units_name,
+        "output_units_name": output_units_name,
+        "input_units_description": input_units_description,
+        "output_units_description": output_units_description,
+        "resource_id": resource_id, "stage_gain_value": stage_gain_value,
+        "stage_gain_frequency": stage_gain_frequency, "name": name,
+        "description": description,
+        "decimation_input_sample_rate": decimation_input_sample_rate,
+        "decimation_factor": decimation_factor,
+        "decimation_offset": decimation_offset,
+        "decimation_delay": decimation_delay,
+        "decimation_correction": decimation_correction}
+
+    # Now determine which response type it actually is and return the
+    # corresponding object.
+    poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
+    if poles_zeros_elem is not None:
+        pz_transfer_function_type = _tag2obj(poles_zeros_elem,
+            _ns("PzTransferFunctionType"), str)
+        normalization_factor = _tag2obj(poles_zeros_elem,
+            _ns("NormalizationFactor"), float)
+        normalization_frequency = _tag2obj(poles_zeros_elem,
+            _ns("NormalizationFrequency"), float)
+    coefficients_elem = stage_elem.find(_ns("Coefficients"))
+    if coefficients_elem is not None:
+        raise NotImplementedError
+    response_list_elem = stage_elem.find(_ns("ResponseList"))
+    if response_list_elem is not None:
+        raise NotImplementedError
+    FIR_elem = stage_elem.find(_ns("FIR"))
+    if FIR_elem is not None:
+        raise NotImplementedError
+    polynomial_elem = stage_elem.find(_ns("Polynomial"))
+    if polynomial_elem is not None:
+        raise NotImplementedError
+    raise NotImplementedError
 
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):
