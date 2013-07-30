@@ -148,15 +148,43 @@ class SeismicChannel(BaseNode):
             alternate_code=alternate_code, historical_code=historical_code)
 
     def __str__(self):
-        ret_str = "SeismicChannel '%s', Location '%s'\n" % (self.code,
+        ret = (
+            "Seismic Channel '{id}', Location '{location}' {description}\n"
+            "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
+            "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
+            "{azimuth}"
+            "{dip}"
+            "{channel_types}"
+            "\tSampling Rate: {sampling_rate:.2f} Hz\n"
+            "\tSensor: {sensor}\n"
+            "{response}")\
+            .format(
+                id=self.code, location=self.location_code,
+                description="(%s)" % self.description
+                if self.description else "",
+                latitude=self.latitude, longitude=self.longitude,
+                elevation=self.elevation, depth=self.depth,
+                azimuth="\tAzimuth: %.2f degrees from north, clockwise\n" %
+                self.azimuth if self.azimuth is not None else "",
+                dip="\tDip: %.2f degrees down from horizontal\n" %
+                self.dip if self.dip is not None else "",
+                channel_types="\tChannel types: %s\n" % ", ".join(self.types)
+                    if self.types else "",
+                sampling_rate=self.sample_rate, sensor=self.sensor.type,
+                response="\tResponse information available"
+                    if self.response else "")
+        return ret
+
+        ret_str = "Seismic Channel '%s', Location '%s'\n" % (self.code,
             self.location_code)
-        ret_str += "\tLatitude: %f, Longitude: %f, Elevation: %f, Depth: %f\n"\
-            % (self.latitude, self.longitude, self.elevation, self.depth)
+        ret_str += ("\tLatitude: %.2f, Longitude: %.2f, Elevation: %.1f m, "
+            "Local Depth: %.1f\n") % (self.latitude, self.longitude,
+            self.elevation, self.depth)
         if self.azimuth is not None:
-            ret_str += "\tAzimuth: %f degrees from north, clockwise\n" % \
+            ret_str += "\tAzimuth: %.2f degrees from north, clockwise\n" % \
                 self.azimuth
         if self.dip is not None:
-            ret_str += "\tDip: %f degrees down from horizontal\n" % self.dip
+            ret_str += "\tDip: %.2f degrees down from horizontal\n" % self.dip
         if self.types:
             ret_str += "\tChannel types: %s\n" % ", ".join(self.types)
 

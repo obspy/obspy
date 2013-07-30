@@ -169,8 +169,26 @@ class Response(object):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
+    def __str__(self):
+        ret = (
+            "Channel Response\n"
+            "\tFrom {input_units} ({input_units_description}) to "
+            "{output_units} ({output_units_description})\n"
+            "\tOverall Sensitivity: {sensitivity:g} defined at {freq:.3f} Hz\n"
+            "\t{stages} stages\n").format(
+                input_units=self.instrument_sensitivity.input_units_name,
+                input_units_description=self.instrument_sensitivity.
+                input_units_description,
+                output_units=self.instrument_sensitivity.output_units_name,
+                output_units_description=self.instrument_sensitivity.
+                output_units_description,
+                sensitivity=self.instrument_sensitivity.value,
+                freq=self.instrument_sensitivity.frequency,
+                stages=len(self.response_stages))
+        return ret
 
-class InstrumentSensitivity(Response):
+
+class InstrumentSensitivity(object):
     """
     From the StationXML Definition:
         The total sensitivity for a channel, representing the complete
@@ -244,7 +262,6 @@ class InstrumentSensitivity(Response):
         self.frequency_range_start = frequency_range_start
         self.frequency_range_end = frequency_range_end
         self.frequency_range_DB_variation = frequency_range_DB_variation
-        super(InstrumentSensitivity, self).__init__()
 
 
 class InstrumentPolynomial(Response):

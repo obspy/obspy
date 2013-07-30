@@ -105,8 +105,8 @@ class SeismicStation(BaseNode):
             "\tChannel Count: {selected}/{total} (Selected/Total)\n"
             "\t{start_date} - {end_date}\n"
             "\tAccess: {restricted} {alternate_code}{historical_code}\n"
-            "\tCoordinates: Latitude: {lat:.2f}, Longitude: {lng:.2f}, "
-            "Elevation: {elevation:.1f}m\n")\
+            "\tLatitude: {lat:.2f}, Longitude: {lng:.2f}, "
+            "Elevation: {elevation:.1f} m\n")\
             .format(
             station_name=contents["stations"][0],
             selected=self.selected_number_of_channels,
