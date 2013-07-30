@@ -64,6 +64,9 @@ class SeismicNetwork(BaseNode):
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
 
+    def __getitem__(self, index):
+        return self.stations[index]
+
     def __str__(self):
         ret = ("Seismic Network {id} {description}\n"
             "\tStation Count: {selected}/{total} (Selected/Total)\n"

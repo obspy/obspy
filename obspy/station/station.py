@@ -11,6 +11,7 @@ Provides the SeismicStation class.
 """
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment
+import textwrap
 
 
 class SeismicStation(BaseNode):
@@ -97,6 +98,35 @@ class SeismicStation(BaseNode):
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
+
+    def __str__(self):
+        contents = self.get_contents()
+        ret = ("Seismic Station {station_name}\n"
+            "\tChannel Count: {selected}/{total} (Selected/Total)\n"
+            "\t{start_date} - {end_date}\n"
+            "\tAccess: {restricted} {alternate_code}{historical_code}\n"
+            "\tCoordinates: Latitude: {lat:.2f}, Longitude: {lng:.2f}, "
+            "Elevation: {elevation:.1f}m\n")\
+            .format(
+            station_name=contents["stations"][0],
+            selected=self.selected_number_of_channels,
+            total=self.total_number_of_channels,
+            start_date=str(self.start_date),
+            end_date=str(self.end_date) if self.end_date else "",
+            restricted=self.restricted_status,
+            lat=self.latitude, lng=self.longitude, elevation=self.elevation,
+            alternate_code="Alternate Code: %s " % self.alternate_code if
+                self.alternate_code else "",
+            historical_code="historical Code: %s " % self.historical_code if
+                self.historical_code else "")
+        ret += "\tAvailable Channels:\n"
+        ret += "\n".join(textwrap.wrap(", ".join(contents["channels"]),
+                initial_indent="\t\t", subsequent_indent="\t\t",
+                expand_tabs=False))
+        return ret
+
+    def __getitem__(self, index):
+        return self.channels[index]
 
     def get_contents(self):
         """
