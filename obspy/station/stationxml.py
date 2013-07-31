@@ -294,6 +294,7 @@ def _read_response_stage(stage_elem, _ns):
 
     # Now determine which response type it actually is and return the
     # corresponding object.
+    # Handle Poles and Zeros Response Stage Type.
     poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
     if poles_zeros_elem is not None:
         pz_transfer_function_type = _tag2obj(poles_zeros_elem,
@@ -309,21 +310,46 @@ def _read_response_stage(stage_elem, _ns):
         poles = [_tag2obj(i, _ns("Real"), float) +
             _tag2obj(i, _ns("Imaginary"), float) * 1j
             for i in poles_zeros_elem.findall(_ns("Pole"))]
-        return PolesZerosResponseStage(
+        return obspy.station.PolesZerosResponseStage(
+            pz_transfer_function_type=pz_transfer_function_type,
+            normalization_frequency=normalization_frequency,
+            normalization_factor=normalization_factor, zeros=zeros,
+            poles=poles, **kwargs)
 
+    # Handle the coefficients Response Stage Type.
     coefficients_elem = stage_elem.find(_ns("Coefficients"))
     if coefficients_elem is not None:
-        raise NotImplementedError
+        cf_transfer_function_type = _tag2obj(coefficients_elem,
+            _ns("CfTransferFunctionType"), str)
+        numerator = [float(_i.text) for _i in
+            coefficients_elem.findall(_ns("Numerator"))]
+        denominator = [float(_i.text) for _i in
+            coefficients_elem.findall(_ns("Denominator"))]
+        return obspy.station.CoefficientsTypeResponseStage(
+            cf_transfer_function_type=cf_transfer_function_type,
+            numerator=numerator, denominator=denominator, **kwargs)
+
+    # Handle the response list response stage type.
     response_list_elem = stage_elem.find(_ns("ResponseList"))
     if response_list_elem is not None:
-        raise NotImplementedError
+        msg = "Coefficients Response Type not yet implemented."
+        raise NotImplementedError(msg)
+
+    # Handle the FIR response stage type.
     FIR_elem = stage_elem.find(_ns("FIR"))
     if FIR_elem is not None:
-        raise NotImplementedError
+        msg = "Coefficients Response Type not yet implemented."
+        raise NotImplementedError(msg)
+
+    # Handle polynomial instrument responses.
     polynomial_elem = stage_elem.find(_ns("Polynomial"))
     if polynomial_elem is not None:
-        raise NotImplementedError
-    raise NotImplementedError
+        msg = "Coefficients Response Type not yet implemented."
+        raise NotImplementedError(msg)
+
+    # Raise if none of the previous ones has been found.
+    msg = "Could not find a valid Response Stage Type."
+    raise ValueError(msg)
 
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):

@@ -218,14 +218,34 @@ class PolesZerosResponseStage(ResponseStage):
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
+    Has all the arguments of the parent class
+    :class:`~obspy.station.response.ResponseStage` and the following:
+
+    :type cf_transfer_function_type: String
+    :param cf_transfer_function_type: A string describing the type of transfer
+        function. Can be one of:
+            * ``ANALOG (RADIANS/SECOND)``
+            * ``ANALOG (HERTZ)``
+            * ``DIGITAL``
+        The function tries to match inputs to one of three types if it can.
+    :type numerator: list of float
+    :param numerator:
+    :type denominator: list of float
+    :param denominator:
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
             stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, input_units_description=None,
+            resource_id, name, cf_transfer_function_type, numerator=None,
+            denominator=None, input_units_description=None,
             output_units_description=None, description=None,
             decimation_input_sample_rate=None, decimation_factor=None,
             decimation_offset=None, decimation_delay=None,
             decimation_correction=None):
+        # Set the Coefficients type specific attributes. Special cases are
+        # handled by properties.
+        self.cf_transfer_function_type = cf_transfer_function_type
+        self.numerator = numerator
+        self.denominator = denominator
         super(CoefficientsTypeResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -240,6 +260,57 @@ class CoefficientsTypeResponseStage(ResponseStage):
             decimation_offset=decimation_offset,
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
+
+    @property
+    def numerator(self):
+        return self.__numerator
+
+    @numerator.setter
+    def numerator(self, value):
+        if value is None:
+            self.__numerator = []
+            return
+        self.__numerator = map(float, value)
+
+    @property
+    def denominator(self):
+        return self.__denominator
+
+    @denominator.setter
+    def denominator(self, value):
+        if value is None:
+            self.__denominator = []
+            return
+        self.__denominator = map(float, value)
+
+    @property
+    def cf_transfer_function_type(self):
+        return self.__cf_transfer_function_type
+
+    @cf_transfer_function_type.setter
+    def cf_transfer_function_type(self, value):
+        """
+        Setter for the transfer function type.
+
+        Rather permissive but should make it less awkward to use.
+        """
+        msg = ("'%s' is not a valid value for 'cf_transfer_function_type'. "
+            "Valid one are:\n"
+            "\tANALOG (RADIANS/SECOND)\n"
+            "\tANALOG (HERTZ)\n"
+            "\tDIGITAL") % value
+        value = value.lower()
+        if "analog" in value:
+            if "radian" in value:
+                self.__cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
+            elif "hertz" in value or "hz" in value:
+                self.__cf_transfer_function_type = "ANALOG (HERTZ)"
+            else:
+                raise ValueError(msg)
+        elif "digital" in value:
+            self.__cf_transfer_function_type = "DIGITAL"
+        else:
+            raise ValueError(msg)
 
 
 class ResponseListResponseStage(ResponseStage):
