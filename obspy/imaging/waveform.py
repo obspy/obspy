@@ -1154,7 +1154,6 @@ class WaveformPlotting(object):
         self._tr_offsets = np.empty(len(self.stream))
         if not self.sect_azim_dist:
             # Define offset in km from tr.stats.distance
-            # TODO: Add distance calculation from epicenter!
             try:
                 for _tr in range(len(self.stream)):
                     self._tr_offsets[_tr] = self.stream[_tr].stats.distance
@@ -1170,24 +1169,26 @@ class WaveformPlotting(object):
                                 self.stream[_tr].stats.coordinates.longitude,
                                 self.ev_lat, self.ev_lon)
             except:
-                msg = 'Define latitude/longitude in trace.stats.coordinates'+\
-                        ' and ev_lat/ev_lon. See documentation.'
+                msg = 'Define latitude/longitude in trace.stats.coordinates' +\
+                    ' and ev_lat/ev_lon. See documentation.'
                 raise ValueError(msg)
         # Define minimum and maximum offsets
         if self.sect_offset_min is None:
             self._offset_min = self._tr_offsets.min()
-        else: self._offset_min = self.sect_offset_min
+        else:
+            self._offset_min = self.sect_offset_min
 
         if self.sect_offset_max is None:
             self._offset_max = self._tr_offsets.max()
-        else: self._offset_max = self.sect_offset_max
+        else:
+            self._offset_max = self.sect_offset_max
         # Reduce data to indexes within offset_min/max
-        self._tr_selected = np.where(\
-                (self._tr_offsets>=self._offset_min) &
-                (self._tr_offsets<=self._offset_max))[0]
+        self._tr_selected = np.where(
+                (self._tr_offsets >= self._offset_min) &
+                (self._tr_offsets <= self._offset_max))[0]
         self._tr_offsets = self._tr_offsets[
-                (self._tr_offsets>=self._offset_min) & 
-                (self._tr_offsets<=self._offset_max)]
+                (self._tr_offsets >= self._offset_min) &
+                (self._tr_offsets <= self._offset_max)]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets/self._tr_offsets.max()
         # Number of traces
@@ -1199,12 +1200,11 @@ class WaveformPlotting(object):
         self._tr_max_count = np.empty(self._tr_num)
         self._tr_npts = np.empty(self._tr_num)
         self._tr_delta = np.empty(self._tr_num)
-        _i = 0
         # TODO dynamic DATA_MAXLENGTH according to dpi
-        for _tr in self._tr_selected:
+        for _i, _tr in enumerate(self._tr_selected):
                 if len(self.stream[_tr].data) >= self.max_npts:
-                    tmp_data = signal.resample \
-                        (self.stream[_tr].data, self.max_npts)
+                    tmp_data = signal.resample(
+                        self.stream[_tr].data, self.max_npts)
                 else:
                     tmp_data = self.stream[_tr].data
                 # Initialising trace stats
@@ -1212,10 +1212,8 @@ class WaveformPlotting(object):
                 self._tr_starttimes.append(self.stream[_tr].stats.starttime)
                 self._tr_max_count[_i] = tmp_data.max()
                 self._tr_npts[_i] = tmp_data.size
-                self._tr_delta[_i] = (self.stream[_tr].stats.endtime-
+                self._tr_delta[_i] = (self.stream[_tr].stats.endtime -
                         self.stream[_tr].stats.starttime) / self._tr_npts[_i]
-                _i += 1
-        del tmp_data
         # Maximum global count of the traces
         self._tr_max_count_glob = np.abs(self._tr_max_count).max()
         # Init time vectors
@@ -1223,31 +1221,29 @@ class WaveformPlotting(object):
         # Traces initiated!
         self._traces_init = True
 
-
     def __sectScaleTraces(self, scale=None):
         """
         The traces have to be scaled to fit between 0-1., each trace
         gets 1./num_traces space. adjustable by scale=1.0.
         """
-        if scale: self.sect_user_scale = scale
+        if scale:
+            self.sect_user_scale = scale
         self._sect_scale = self._tr_num * 1.5 * (1./self.sect_user_scale)
 
     def __sectInitTime(self):
         """
         Define the time vector for each trace
-
-        TODO Velocity reduction
         """
         self._tr_times = []
         for _tr in range(self._tr_num):
             self._tr_times.append(np.arange(self._tr_npts[_tr])
-                                *self._tr_delta[_tr])
+                                * self._tr_delta[_tr])
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr]/self.sect_vred
             if self.sect_timeshift:
                 self._tr_times[-1] += \
-                    (self._tr_starttimes[_tr]-min(self._tr_starttimes))\
-                    *self._tr_delta[_tr]
+                    (self._tr_starttimes[_tr] - min(self._tr_starttimes))\
+                    * self._tr_delta[_tr]
 
         self._time_min = np.concatenate(self._tr_times).min()
         self._time_max = np.concatenate(self._tr_times).max()
@@ -1267,7 +1263,7 @@ class WaveformPlotting(object):
     def __sectInitPlot(self):
         """
         Function initialises plot all the illustration is done by
-            self.plot()
+        self.plotSection()
         """
         ax = self.fig.gca()
         # Calculate normalizing factor
@@ -1278,8 +1274,8 @@ class WaveformPlotting(object):
         for _tr in range(self._tr_num):
             # Scale, normalize and shift traces by offset
             # for plotting
-            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] 
-                    * (1./self._sect_scale) 
+            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr]
+                    * (1./self._sect_scale)
                     + self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         self._sect_plot_init = True
@@ -1297,8 +1293,8 @@ class WaveformPlotting(object):
             # Normalize the whole stream
             self._tr_normfac.fill(self._tr_max_count_glob)
         else:
-            msg='Define a valid normalisation method. Valid normalisations are'+\
-                 ' \'trace\', \'stream\'. See documentation.'
+            msg = 'Define a normalisation method. Valid normalisations' +\
+                    'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 
         self._plot_init = False
@@ -1331,7 +1327,7 @@ class WaveformPlotting(object):
             x = self.fig.subplotpars.left
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
-                                    (self.stream[-1].stats.network, 
+                                    (self.stream[-1].stats.network,
                                     self.stream[-1].stats.channel,
                                     len(self.stream),
                                     self.starttime.strftime(pattern))

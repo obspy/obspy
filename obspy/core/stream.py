@@ -998,10 +998,10 @@ class Stream(object):
 
         ** Section Parameters **
 
-        These parameters are only available if ``type='section'``. To plot 
+        These parameters are only available if ``type='section'``. To plot
         a record section the ObsPy header ``trace.stats.distance`` must be
-        defined in meters if (Default). Or 
-        ``trace.stats.coordinates.latitude`` & 
+        defined in meters if (Default). Or
+        ``trace.stats.coordinates.latitude`` &
         ``trace.stats.coordinates.longitude`` must be set if plotted in
         azimuthal distances (``azim_dist=True``), along with ``ev_lat``
         and ``ev_lon``.
@@ -1412,11 +1412,11 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = round((starttime - tr.stats.starttime) * \
+                delta = round((starttime - tr.stats.starttime) *
                                tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = round((endtime - tr.stats.endtime) * \
+                delta = round((endtime - tr.stats.endtime) *
                                tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
