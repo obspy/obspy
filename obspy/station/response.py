@@ -111,6 +111,39 @@ class ResponseStage(object):
         self.decimation_delay = decimation_delay
         self.decimation_correction = decimation_correction
 
+    def __str__(self):
+        ret = (
+            "Response type: {response_type}, Stage Sequence Number: "
+            "{response_stage}\n"
+            "{name_desc}"
+            "{resource_id}"
+            "\tFrom {input_units}{input_desc} to {output_units}{output_desc}\n"
+            "\tStage gain: {gain_value}, defined at {gain_freq:.2f} Hz\n"
+            "{decimation}").format(
+                response_type=self.__class__.__name__,
+                response_stage=self.stage_sequence_number,
+                name_desc="\t%s %s\n" % (self.name, "(%s)" % self.description
+                if self.description else "") if self.name else "",
+                resource_id="\tResource Id: %s" % self.resource_id
+                if self.resource_id else "",
+                input_units=self.input_units_name,
+                input_desc=" (%s)" % self.input_units_description
+                if self.input_units_description else "",
+                output_units=self.output_units_name,
+                output_desc=" (%s)" % self.output_units_description
+                if self.output_units_description else "",
+                gain_value=self.stage_gain_value,
+                gain_freq=self.stage_gain_frequency,
+                decimation=
+                "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
+                "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
+                "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
+                self.decimation_input_sample_rate, self.decimation_factor,
+                self.decimation_offset, self.decimation_delay,
+                self.decimation_correction)
+                if self.decimation_input_sample_rate is not None else "")
+        return ret.strip()
+
 
 class PolesZerosResponseStage(ResponseStage):
     """
@@ -170,6 +203,23 @@ class PolesZerosResponseStage(ResponseStage):
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
 
+    def __str__(self):
+        ret = super(PolesZerosResponseStage, self).__str__()
+        ret += (
+            "\n"
+            "\tTransfer function type: {transfer_fct_type}\n"
+            "\tNormalization factor: {norm_fact:g}, "
+            "Normalization frequency: {norm_freq:.2f} Hz\n"
+            "\tPoles: {poles}\n"
+            "\tZeros: {zeros}").format(
+                transfer_fct_type=self.pz_transfer_function_type,
+                norm_fact=self.normalization_factor,
+                norm_freq=self.normalization_frequency,
+                poles=", ".join(map(str, self.poles)),
+                zeros=", ".join(map(str, self.zeros)),
+            )
+        return ret
+
     @property
     def zeros(self):
         return self.__zeros
@@ -218,6 +268,11 @@ class PolesZerosResponseStage(ResponseStage):
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
+    This response type can describe coefficients for FIR filters. Laplace
+    transforms and IIR filters can also be expressed using this type but should
+    rather be described using the PolesZerosResponseStage class. Effectively
+    corresponds to SEED blockette 54.
+
     Has all the arguments of the parent class
     :class:`~obspy.station.response.ResponseStage` and the following:
 
@@ -260,6 +315,17 @@ class CoefficientsTypeResponseStage(ResponseStage):
             decimation_offset=decimation_offset,
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
+
+    def __str__(self):
+        ret = super(CoefficientsTypeResponseStage, self).__str__()
+        ret += (
+            "\n"
+            "\tTransfer function type: {transfer_fct_type}\n"
+            "\tContains {num_count} numerators and {den_count} denominators")\
+            .format(
+                transfer_fct_type=self.cf_transfer_function_type,
+                num_count=len(self.numerator), den_count=len(self.denominator))
+        return ret
 
     @property
     def numerator(self):
@@ -431,7 +497,7 @@ class Response(object):
             "\tFrom {input_units} ({input_units_description}) to "
             "{output_units} ({output_units_description})\n"
             "\tOverall Sensitivity: {sensitivity:g} defined at {freq:.3f} Hz\n"
-            "\t{stages} stages\n").format(
+            "\t{stages} stages:\n{stage_desc}").format(
                 input_units=self.instrument_sensitivity.input_units_name,
                 input_units_description=self.instrument_sensitivity.
                 input_units_description,
@@ -440,7 +506,11 @@ class Response(object):
                 output_units_description,
                 sensitivity=self.instrument_sensitivity.value,
                 freq=self.instrument_sensitivity.frequency,
-                stages=len(self.response_stages))
+                stages=len(self.response_stages),
+                stage_desc="\n".join(["\t\tStage %i: %s from %s to %s,"
+                " gain: %.2f" % (i.stage_sequence_number, i.__class__.__name__,
+                i.input_units_name, i.output_units_name, i.stage_gain_value)
+                for i in self.response_stages]))
         return ret
 
 

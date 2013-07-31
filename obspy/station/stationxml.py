@@ -265,17 +265,37 @@ def _read_response_stage(stage_elem, _ns):
         decimation_offset = None
         decimation_delay = None
         decimation_correction = None
-    # They also all have to contain input and output units.
-    input_units = stage_elem.find(_ns("InputUnits"))
+
+    # Now determine which response type it actually is and return the
+    # corresponding object.
+    poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
+    coefficients_elem = stage_elem.find(_ns("Coefficients"))
+    response_list_elem = stage_elem.find(_ns("ResponseList"))
+    FIR_elem = stage_elem.find(_ns("FIR"))
+    polynomial_elem = stage_elem.find(_ns("Polynomial"))
+
+    type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
+        FIR_elem, polynomial_elem]
+    type_elem = None
+    for i in type_elems:
+        if i is not None:
+            type_elem = i
+    if type_elem is None:
+        # Raise if none of the previous ones has been found.
+        msg = "Could not find a valid Response Stage Type."
+        raise ValueError(msg)
+
+    # Now parse all elements the different stages share.
+    input_units = type_elem.find(_ns("InputUnits"))
     input_units_name = _tag2obj(input_units, _ns("Name"), str)
     input_units_description = _tag2obj(input_units, _ns("Description"), str)
-    output_units = stage_elem.find(_ns("OutputUnits"))
+    output_units = type_elem.find(_ns("OutputUnits"))
     output_units_name = _tag2obj(output_units, _ns("Name"), str)
     output_units_description = _tag2obj(output_units, _ns("Description"), str)
-    # They furthermore share descriptions, resource ids and names.
-    description = _tag2obj(stage_elem, _ns("Description"), str)
-    resource_id = _tag2obj(stage_elem, _ns("resourceId"), str)
-    name = _tag2obj(stage_elem, _ns("name"), str)
+    description = _tag2obj(type_elem, _ns("Description"), str)
+    resource_id = _tag2obj(type_elem, _ns("resourceId"), str)
+    name = _tag2obj(type_elem, _ns("name"), str)
+
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
     kwargs = {"stage_sequence_number": stage_sequence_number,
@@ -292,10 +312,8 @@ def _read_response_stage(stage_elem, _ns):
         "decimation_delay": decimation_delay,
         "decimation_correction": decimation_correction}
 
-    # Now determine which response type it actually is and return the
-    # corresponding object.
+
     # Handle Poles and Zeros Response Stage Type.
-    poles_zeros_elem = stage_elem.find(_ns("PolesZeros"))
     if poles_zeros_elem is not None:
         pz_transfer_function_type = _tag2obj(poles_zeros_elem,
             _ns("PzTransferFunctionType"), str)
@@ -317,7 +335,6 @@ def _read_response_stage(stage_elem, _ns):
             poles=poles, **kwargs)
 
     # Handle the coefficients Response Stage Type.
-    coefficients_elem = stage_elem.find(_ns("Coefficients"))
     if coefficients_elem is not None:
         cf_transfer_function_type = _tag2obj(coefficients_elem,
             _ns("CfTransferFunctionType"), str)
@@ -330,26 +347,19 @@ def _read_response_stage(stage_elem, _ns):
             numerator=numerator, denominator=denominator, **kwargs)
 
     # Handle the response list response stage type.
-    response_list_elem = stage_elem.find(_ns("ResponseList"))
     if response_list_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle the FIR response stage type.
-    FIR_elem = stage_elem.find(_ns("FIR"))
     if FIR_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle polynomial instrument responses.
-    polynomial_elem = stage_elem.find(_ns("Polynomial"))
     if polynomial_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
-
-    # Raise if none of the previous ones has been found.
-    msg = "Could not find a valid Response Stage Type."
-    raise ValueError(msg)
 
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):
