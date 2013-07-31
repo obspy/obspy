@@ -19,8 +19,8 @@ class ResponseStage(object):
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
             stage_gain_frequency, input_units_name, output_units_name,
-            input_units_description=None, output_units_description=None,
-            resource_id=None, name=None, description=None,
+            resource_id, name, input_units_description=None,
+            output_units_description=None, description=None,
             decimation_input_sample_rate=None, decimation_factor=None,
             decimation_offset=None, decimation_delay=None,
             decimation_correction=None):
@@ -28,13 +28,13 @@ class ResponseStage(object):
         :type stage_sequence_number: integer greater or equal to zero
         :param stage_sequence_number: Stage sequence number. This is used in
             all the response SEED blockettes.
-        :type stage_gain_value: float, optional
+        :type stage_gain_value: float
         :param stage_gain_value: Complex type for sensitivity and frequency
             ranges. This complex type can be used to represent both overall
             sensitivities and individual stage gains.  A scalar that, when
             applied to the data values, converts the data to different units
             (e.g. Earth units).
-        :type stage_gain_frequency: float, optional
+        :type stage_gain_frequency: float
         :param stage_gain_frequency: Complex type for sensitivity and frequency
             ranges. This complex type can be used to represent both overall
             sensitivities and individual stage gains. The frequency (in Hertz)
@@ -44,24 +44,12 @@ class ResponseStage(object):
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param input_units_description: string, optional
-        :param input_units_description: The units of the data as input from the
-            perspective of data acquisition. After correcting data for this
-            response, these would be the resulting units.
-            Description of units, e.g. "Velocity in meters per second",
-            "Volts", "Pascals".
         :param output_units_name: string
         :param output_units_name: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
-        :type output_units_description: string, optional
-        :param output_units_description: The units of the data as output from
-            the perspective of data acquisition. These would be the units of
-            the data prior to correcting for this response.
-            Description of units, e.g. "Velocity in meters per second",
-            "Volts", "Pascals".
-        :type resource_id: string, optional
+        :type resource_id: string
         :param resource_id: This field contains a string that should serve as a
             unique resource identifier. This identifier can be interpreted
             differently depending on the datacenter/software that generated the
@@ -69,8 +57,20 @@ class ResponseStage(object):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
-        :type name: string, optional
+        :type name: string
         :param name: A name given to the filter stage.
+        :param input_units_description: string, optional
+        :param input_units_description: The units of the data as input from the
+            perspective of data acquisition. After correcting data for this
+            response, these would be the resulting units.
+            Description of units, e.g. "Velocity in meters per second",
+            "Volts", "Pascals".
+        :type output_units_description: string, optional
+        :param output_units_description: The units of the data as output from
+            the perspective of data acquisition. These would be the units of
+            the data prior to correcting for this response.
+            Description of units, e.g. "Velocity in meters per second",
+            "Volts", "Pascals".
         :type description: string, optional
         :param description: A short description of of the filter.
         :type decimation_input_sample_rate:  float, optional
@@ -116,42 +116,208 @@ class PolesZerosResponseStage(ResponseStage):
     """
     From the StationXML Definition:
         Response: complex poles and zeros. Corresponds to SEED blockette 53.
+
+    The response stage is used for the analog stages of the filter system and
+    the description of infinite impulse response (IIR) digital filters.
+
+    Has all the arguments of the parent class
+    :class:`~obspy.station.response.ResponseStage` and the following:
+
+    :type pz_transfer_function_type: String
+    :param pz_transfer_function_type: A string describing the type of transfer
+        function. Can be one of:
+            * ``LAPLACE (RADIANS/SECOND)``
+            * ``LAPLACE (HERTZ)``
+            * ``DIGITAL (Z-TRANSFORM)``
+        The function tries to match inputs to one of three types if it can.
+    :type normalization_frequency: float
+    :param normalization_frequency: The frequency at which the normalization
+        factor is normalized.
+    :type zeros: A list of complex numbers.
+    :param zeros: All zeros of the stage.
+    :type poles: A list of complex numbers.
+    :param poles: All poles of the stage.
+    :type normalization_factor: float, optional
+    :param normalization_factor:
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
-        super(PolesZerosResponseStage, self).__init__()
+    def __init__(self, stage_sequence_number, stage_gain_value,
+            stage_gain_frequency, input_units_name, output_units_name,
+            resource_id, name, pz_transfer_function_type,
+            normalization_frequency, zeros, poles, normalization_factor=1.0,
+            input_units_description=None, output_units_description=None,
+            description=None, decimation_input_sample_rate=None,
+            decimation_factor=None, decimation_offset=None,
+            decimation_delay=None, decimation_correction=None):
+        # Set the Poles and Zeros specific attributes. Special cases are
+        # handled by properties.
+        self.pz_transfer_function_type = pz_transfer_function_type
+        self.normalization_frequency = float(normalization_frequency)
+        self.normalization_factor = float(normalization_factor)
+        self.zeros = zeros
+        self.poles = poles
+        super(PolesZerosResponseStage, self).__init__(
+            stage_sequence_number=stage_sequence_number,
+            input_units_name=input_units_name,
+            output_units_name=output_units_name,
+            input_units_description=input_units_description,
+            output_units_description=output_units_description,
+            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            stage_gain_frequency=stage_gain_frequency, name=name,
+            description=description,
+            decimation_input_sample_rate=decimation_input_sample_rate,
+            decimation_factor=decimation_factor,
+            decimation_offset=decimation_offset,
+            decimation_delay=decimation_delay,
+            decimation_correction=decimation_correction)
+
+    @property
+    def zeros(self):
+        return self.__zeros
+
+    @zeros.setter
+    def zeros(self, value):
+        self.__zeros = map(complex, value)
+
+    @property
+    def poles(self):
+        return self.__poles
+
+    @poles.setter
+    def poles(self, value):
+        self.__poles = map(complex, value)
+
+    @property
+    def pz_transfer_function_type(self):
+        return self.__pz_transfer_function_type
+
+    @pz_transfer_function_type.setter
+    def pz_transfer_function_type(self, value):
+        """
+        Setter for the transfer function type.
+
+        Rather permissive but should make it less awkward to use.
+        """
+        msg = ("'%s' is not a valid value for 'pz_transfer_function_type'. "
+            "Valid one are:\n"
+            "\tLAPLACE (RADIANS/SECOND)\n"
+            "\tLAPLACE (HERTZ)\n"
+            "\tDIGITAL (Z-TRANSFORM)") % value
+        value = value.lower()
+        if "laplace" in value:
+            if "radian" in value:
+                self.__pz_transfer_function_type = "LAPLACE (RADIANS/SECOND)"
+            elif "hertz" in value or "hz" in value:
+                self.__pz_transfer_function_type = "LAPLACE (HERTZ)"
+            else:
+                raise ValueError(msg)
+        elif "digital" in value:
+            self.__pz_transfer_function_type = "DIGITAL (Z-TRANSFORM)"
+        else:
+            raise ValueError(msg)
 
 
 class CoefficientsTypeResponseStage(ResponseStage):
     """
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
-        super(CoefficientsTypeResponseStage, self).__init__()
+    def __init__(self, stage_sequence_number, stage_gain_value,
+            stage_gain_frequency, input_units_name, output_units_name,
+            resource_id, name, input_units_description=None,
+            output_units_description=None, description=None,
+            decimation_input_sample_rate=None, decimation_factor=None,
+            decimation_offset=None, decimation_delay=None,
+            decimation_correction=None):
+        super(CoefficientsTypeResponseStage, self).__init__(
+            stage_sequence_number=stage_sequence_number,
+            input_units_name=input_units_name,
+            output_units_name=output_units_name,
+            input_units_description=input_units_description,
+            output_units_description=output_units_description,
+            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            stage_gain_frequency=stage_gain_frequency, name=name,
+            description=description,
+            decimation_input_sample_rate=decimation_input_sample_rate,
+            decimation_factor=decimation_factor,
+            decimation_offset=decimation_offset,
+            decimation_delay=decimation_delay,
+            decimation_correction=decimation_correction)
 
 
 class ResponseListResponseStage(ResponseStage):
     """
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
-        super(ResponseListResponseStage, self).__init__()
+    def __init__(self, stage_sequence_number, stage_gain_value,
+            stage_gain_frequency, input_units_name, output_units_name,
+            resource_id, name, input_units_description=None,
+            output_units_description=None, description=None,
+            decimation_input_sample_rate=None, decimation_factor=None,
+            decimation_offset=None, decimation_delay=None,
+            decimation_correction=None):
+        super(ResponseListResponseStage, self).__init__(
+            stage_sequence_number=stage_sequence_number,
+            input_units_name=input_units_name,
+            output_units_name=output_units_name,
+            input_units_description=input_units_description,
+            output_units_description=output_units_description,
+            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            stage_gain_frequency=stage_gain_frequency, name=name,
+            description=description,
+            decimation_input_sample_rate=decimation_input_sample_rate,
+            decimation_factor=decimation_factor,
+            decimation_offset=decimation_offset,
+            decimation_delay=decimation_delay,
+            decimation_correction=decimation_correction)
 
 
 class FIRResponseStage(ResponseStage):
     """
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
-        super(FIRResponseStage, self).__init__()
+    def __init__(self, stage_sequence_number, stage_gain_value,
+            stage_gain_frequency, input_units_name, output_units_name,
+            resource_id, name, input_units_description=None,
+            output_units_description=None, description=None,
+            decimation_input_sample_rate=None, decimation_factor=None,
+            decimation_offset=None, decimation_delay=None,
+            decimation_correction=None):
+        super(FIRResponseStage, self).__init__(
+            stage_sequence_number=stage_sequence_number,
+            input_units_name=input_units_name,
+            output_units_name=output_units_name,
+            input_units_description=input_units_description,
+            output_units_description=output_units_description,
+            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            stage_gain_frequency=stage_gain_frequency, name=name,
+            description=description,
+            decimation_input_sample_rate=decimation_input_sample_rate,
+            decimation_factor=decimation_factor,
+            decimation_offset=decimation_offset,
+            decimation_delay=decimation_delay,
+            decimation_correction=decimation_correction)
 
 
 class PolynomialResponseStage(ResponseStage):
     """
     """
-    def __init__(self, stage_sequence_number, resource_id=None,
-            stage_gain=None, decimation=None):
-        super(PolynomialResponseStage, self).__init__()
+    def __init__(self, stage_sequence_number, stage_gain_value,
+            stage_gain_frequency, input_units_name, output_units_name,
+            resource_id, name, input_units_description=None,
+            output_units_description=None, description=None,
+            decimation_input_sample_rate=None, decimation_factor=None,
+            decimation_offset=None, decimation_delay=None,
+            decimation_correction=None):
+        super(PolynomialResponseStage, self).__init__(
+            stage_sequence_number=stage_sequence_number,
+            input_units_name=input_units_name,
+            output_units_name=output_units_name,
+            input_units_description=input_units_description,
+            output_units_description=output_units_description,
+            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            stage_gain_frequency=stage_gain_frequency, name=name,
+            description=description,
+            decimation_input_sample_rate=decimation_input_sample_rate,
+            decimation_factor=decimation_factor,
+            decimation_offset=decimation_offset,
+            decimation_delay=decimation_delay,
+            decimation_correction=decimation_correction)
 
 
 class Response(object):

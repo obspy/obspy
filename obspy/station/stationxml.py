@@ -302,6 +302,15 @@ def _read_response_stage(stage_elem, _ns):
             _ns("NormalizationFactor"), float)
         normalization_frequency = _tag2obj(poles_zeros_elem,
             _ns("NormalizationFrequency"), float)
+        # Read poles and zeros to list of imaginary numbers.
+        zeros = [_tag2obj(i, _ns("Real"), float) +
+            _tag2obj(i, _ns("Imaginary"), float) * 1j
+            for i in poles_zeros_elem.findall(_ns("Zero"))]
+        poles = [_tag2obj(i, _ns("Real"), float) +
+            _tag2obj(i, _ns("Imaginary"), float) * 1j
+            for i in poles_zeros_elem.findall(_ns("Pole"))]
+        return PolesZerosResponseStage(
+
     coefficients_elem = stage_elem.find(_ns("Coefficients"))
     if coefficients_elem is not None:
         raise NotImplementedError
