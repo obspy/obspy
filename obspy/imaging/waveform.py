@@ -12,13 +12,14 @@ from datetime import datetime
 from obspy import UTCDateTime, Stream, Trace
 from obspy.core.preview import mergePreviews
 from obspy.core.util import createEmptyDataChunk, FlinnEngdahl, \
-    getMatplotlibVersion
+    getMatplotlibVersion, locations2degrees
 from obspy.core.util.decorator import deprecated_keywords
 import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
 import numpy as np
+import scipy.signal as signal
 import warnings
 """
 Waveform plotting for obspy.Stream objects.
@@ -79,6 +80,22 @@ class WaveformPlotting(object):
             self.endtime = max([trace.stats.endtime for trace in self.stream])
         # Map stream object and slice just in case.
         self.stream.trim(self.starttime, self.endtime)
+        # Assigning values for type 'section'
+        self.sect_offset_min = kwargs.get('offset_min', None)
+        self.sect_offset_max = kwargs.get('offset_max', None)
+        self.sect_azim_dist = kwargs.get('azim_dist', False)
+        # TODO Event data from class Event()
+        self.ev_lat = kwargs.get('ev_lat', None)
+        self.ev_lon = kwargs.get('ev_lon', None)
+        self.alpha = kwargs.get('alpha', 0.4)
+        self.sect_plot_dx = kwargs.get('plot_dx', None)
+        self.sect_timedown = kwargs.get('time_down', False)
+        self.sect_recordstart = kwargs.get('recordstart', None)
+        self.sect_recordlength = kwargs.get('recordlength', None)
+        self.sect_norm_method = kwargs.get('norm_method', 'trace')
+        self.sect_timeshift = kwargs.get('timeshift', False)
+        self.sect_user_scale = kwargs.get('scale', 1.0)
+        self.sect_vred = kwargs.get('vred', None)
         # normalize times
         if self.type == 'relative':
             dt = self.starttime
@@ -93,7 +110,11 @@ class WaveformPlotting(object):
         # Below that value the data points will be plotted normally. Above it
         # the data will be plotted using a different approach (details see
         # below). Can be overwritten by the above self.plotting_method kwarg.
-        self.max_npts = 400000
+        if self.type == 'section':
+            # section may consists of hundret seismograms
+            self.max_npts = 10000
+        else:
+            self.max_npts = 400000
         # If automerge is enabled. Merge traces with the same id for the plot.
         self.automerge = kwargs.get('automerge', True)
         # If equal_scale is enabled all plots are equally scaled.
@@ -109,6 +130,9 @@ class WaveformPlotting(object):
             self.width = 800
             # Check the kind of plot.
             if self.type == 'dayplot':
+                self.height = 600
+            elif self.type == 'section':
+                self.width = 1000
                 self.height = 600
             else:
                 # One plot for each trace.
@@ -225,6 +249,8 @@ class WaveformPlotting(object):
         # Determine kind of plot and do the actual plotting.
         if self.type == 'dayplot':
             self.plotDay(*args, **kwargs)
+        elif self.type == 'section':
+            self.plotSection(*args, **kwargs)
         else:
             self.plot(*args, **kwargs)
         # Adjust the subplot so there is always a fixed margin on every side
@@ -1055,9 +1081,227 @@ class WaveformPlotting(object):
             y_ticklabels_twin = [(self.starttime + (_i + 1) *
                                   self.interval).strftime(self.tick_format)
                                  for _i in tick_steps]
-
             self.twin_x.set_yticklabels(y_ticklabels_twin,
                                         size=self.y_labels_size)
+
+    def plotSection(self, *args, **kwargs):
+        """
+        Plots multiple waveforms as a record section on a single plot.
+        """
+        # Initialise data and plot
+        self.__sectInitTraces()
+        self.__sectInitPlot()
+        ax = self.fig.gca()
+        # Setting up line properties
+        for line in ax.lines:
+            line.set_linewidth(.5)
+            line.set_alpha(self.alpha)
+            line.set_linewidth(self.linewidth)
+            line.set_color(self.color)
+        # Setting up plot axes
+        if self.sect_offset_min is not None:
+            ax.set_xlim(left=self.__sectOffsetToFraction(self._offset_min))
+        if self.sect_offset_max is not None:
+            ax.set_xlim(right=self.__sectOffsetToFraction(self._offset_max))
+        # Set up offset ticks
+        tick_min, tick_max = \
+            self.__sectFractionToOffset(np.array(ax.get_xlim()))
+        if tick_min != 0.0 and self.sect_plot_dx is not None:
+            tick_min += self.sect_plot_dx - (tick_min % self.sect_plot_dx)
+        # Define tick vector for offset axis
+        if self.sect_plot_dx is None:
+            ticks = np.int_(np.linspace(tick_min, tick_max, 10))
+        else:
+            ticks = np.arange(tick_min, tick_max, self.sect_plot_dx)
+            if len(ticks) > 100:
+                self.fig.clf()
+                msg = 'Too many ticks! Try changing plot_dx.'
+                raise ValueError(msg)
+        ax.set_xticks(self.__sectOffsetToFraction(ticks))
+        # Setting up tick labels
+        ax.set_ylabel('Seconds / s')
+        if not self.sect_azim_dist:
+            ax.set_xlabel('Offset / km')
+            ax.set_xticklabels(ticks/1e3)
+        else:
+            ax.set_xlabel('Offset / degree')
+            ax.set_xticklabels(ticks)
+        ax.minorticks_on()
+        # Limit time axis
+        ax.set_ylim([0, self._time_max])
+        if self.sect_recordstart is not None:
+            ax.set_ylim(bottom=self.sect_recordstart)
+        if self.sect_recordlength is not None:
+            ax.set_ylim(top=self.sect_recordlength+ax.get_ylim()[0])
+        # Invert time axis if requested
+        if self.sect_timedown:
+            ax.invert_yaxis()
+        # Draw grid on xaxis only
+        ax.grid(color=self.grid_color,
+                    linestyle=self.grid_linestyle,
+                    linewidth=self.grid_linewidth)
+        ax.xaxis.grid(False)
+
+    def __sectInitTraces(self):
+        """
+        Arrange the trace data used for plotting.
+
+        If necessary the data is resampled before
+        beeing collected in a continuous list.
+        """
+        # Extract distances from st[].stats.distance
+        # or from st.[].stats.coordinates.latitude...
+        self._tr_offsets = np.empty(len(self.stream))
+        if not self.sect_azim_dist:
+            # Define offset in km from tr.stats.distance
+            # TODO: Add distance calculation from epicenter!
+            try:
+                for _tr in range(len(self.stream)):
+                    self._tr_offsets[_tr] = self.stream[_tr].stats.distance
+            except:
+                msg = 'Define trace.stats.distance in meters to epicenter'
+                raise ValueError(msg)
+        else:
+            # Define offset as degree from epicenter
+            try:
+                for _tr in range(len(self.stream)):
+                        self._tr_offsets[_tr] = locations2degrees(
+                                self.stream[_tr].stats.coordinates.latitude,
+                                self.stream[_tr].stats.coordinates.longitude,
+                                self.ev_lat, self.ev_lon)
+            except:
+                msg = 'Define latitude/longitude in trace.stats.coordinates'+\
+                        ' and ev_lat/ev_lon. See documentation.'
+                raise ValueError(msg)
+        # Define minimum and maximum offsets
+        if self.sect_offset_min is None:
+            self._offset_min = self._tr_offsets.min()
+        else: self._offset_min = self.sect_offset_min
+
+        if self.sect_offset_max is None:
+            self._offset_max = self._tr_offsets.max()
+        else: self._offset_max = self.sect_offset_max
+        # Reduce data to indexes within offset_min/max
+        self._tr_selected = np.where(\
+                (self._tr_offsets>=self._offset_min) &
+                (self._tr_offsets<=self._offset_max))[0]
+        self._tr_offsets = self._tr_offsets[
+                (self._tr_offsets>=self._offset_min) & 
+                (self._tr_offsets<=self._offset_max)]
+        # Normalized offsets for plotting
+        self._tr_offsets_norm = self._tr_offsets/self._tr_offsets.max()
+        # Number of traces
+        self._tr_num = len(self._tr_offsets)
+        # Arranging trace data in single list
+        self._tr_data = []
+        # Maximum counts, npts, starttime and delta of each selected trace
+        self._tr_starttimes = []
+        self._tr_max_count = np.empty(self._tr_num)
+        self._tr_npts = np.empty(self._tr_num)
+        self._tr_delta = np.empty(self._tr_num)
+        _i = 0
+        # TODO dynamic DATA_MAXLENGTH according to dpi
+        for _tr in self._tr_selected:
+                if len(self.stream[_tr].data) >= self.max_npts:
+                    tmp_data = signal.resample \
+                        (self.stream[_tr].data, self.max_npts)
+                else:
+                    tmp_data = self.stream[_tr].data
+                # Initialising trace stats
+                self._tr_data.append(tmp_data)
+                self._tr_starttimes.append(self.stream[_tr].stats.starttime)
+                self._tr_max_count[_i] = tmp_data.max()
+                self._tr_npts[_i] = tmp_data.size
+                self._tr_delta[_i] = (self.stream[_tr].stats.endtime-
+                        self.stream[_tr].stats.starttime) / self._tr_npts[_i]
+                _i += 1
+        del tmp_data
+        # Maximum global count of the traces
+        self._tr_max_count_glob = np.abs(self._tr_max_count).max()
+        # Init time vectors
+        self.__sectInitTime()
+        # Traces initiated!
+        self._traces_init = True
+
+
+    def __sectScaleTraces(self, scale=None):
+        """
+        The traces have to be scaled to fit between 0-1., each trace
+        gets 1./num_traces space. adjustable by scale=1.0.
+        """
+        if scale: self.sect_user_scale = scale
+        self._sect_scale = self._tr_num * 1.5 * (1./self.sect_user_scale)
+
+    def __sectInitTime(self):
+        """
+        Define the time vector for each trace
+
+        TODO Velocity reduction
+        """
+        self._tr_times = []
+        for _tr in range(self._tr_num):
+            self._tr_times.append(np.arange(self._tr_npts[_tr])
+                                *self._tr_delta[_tr])
+            if self.sect_vred:
+                self._tr_times[-1] -= self._tr_offsets[_tr]/self.sect_vred
+            if self.sect_timeshift:
+                self._tr_times[-1] += \
+                    (self._tr_starttimes[_tr]-min(self._tr_starttimes))\
+                    *self._tr_delta[_tr]
+
+        self._time_min = np.concatenate(self._tr_times).min()
+        self._time_max = np.concatenate(self._tr_times).max()
+
+    def __sectOffsetToFraction(self, offset):
+        """
+        Helper function to return offsets from fractions
+        """
+        return offset / self._tr_offsets.max()
+
+    def __sectFractionToOffset(self, fraction):
+        """
+        Helper function to return fractions from offsets
+        """
+        return fraction * self._tr_offsets.max()
+
+    def __sectInitPlot(self):
+        """
+        Function initialises plot all the illustration is done by
+            self.plot()
+        """
+        ax = self.fig.gca()
+        # Calculate normalizing factor
+        self.__sectNormalizeTraces()
+        # Calculate scaling factor
+        self.__sectScaleTraces()
+        # ax.plot() prefered over containers
+        for _tr in range(self._tr_num):
+            # Scale, normalize and shift traces by offset
+            # for plotting
+            ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr] 
+                    * (1./self._sect_scale) 
+                    + self._tr_offsets_norm[_tr],
+                    self._tr_times[_tr])
+        self._sect_plot_init = True
+
+    def __sectNormalizeTraces(self):
+        """
+        This helper function normalizes the traces
+        """
+        self._tr_normfac = np.ones(self._tr_num)
+        if self.sect_norm_method == 'trace':
+            # Normalize against each traces' maximum
+            for tr in range(self._tr_num):
+                self._tr_normfac[tr] = np.abs(self._tr_data[tr]).max()
+        elif self.sect_norm_method == 'stream':
+            # Normalize the whole stream
+            self._tr_normfac.fill(self._tr_max_count_glob)
+        else:
+            msg='Define a valid normalisation method. Valid normalisations are'+\
+                 ' \'trace\', \'stream\'. See documentation.'
+            raise ValueError(msg)
+
+        self._plot_init = False
 
     def __setupFigure(self):
         """
@@ -1074,6 +1318,8 @@ class WaveformPlotting(object):
         self.fig.set_figheight(float(self.height) / self.dpi)
         x = self.__getX(10)
         y = self.__getY(15)
+        # Default timestamp pattern
+        pattern = '%Y-%m-%dT%H:%M:%SZ'
         if hasattr(self.stream, 'label'):
             suptitle = self.stream.label
         elif self.type == 'relative':
@@ -1083,8 +1329,13 @@ class WaveformPlotting(object):
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
             x = self.fig.subplotpars.left
+        elif self.type == 'section':
+            suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
+                                    (self.stream[-1].stats.network, 
+                                    self.stream[-1].stats.channel,
+                                    len(self.stream),
+                                    self.starttime.strftime(pattern))
         else:
-            pattern = '%Y-%m-%dT%H:%M:%SZ'
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
         # add suptitle
