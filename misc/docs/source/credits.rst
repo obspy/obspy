@@ -17,6 +17,7 @@ libraries and applications, our build tools and our web sites.
     * Felix Bernauer
     * Moritz Beyreuther
     * Sébastien Bonaimé
+    * Peter Danecek
     * Martin van Driel
     * Fabian Engels
     * Sven Egdorf
