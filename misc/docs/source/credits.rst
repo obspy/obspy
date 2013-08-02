@@ -41,7 +41,7 @@ libraries and applications, our build tools and our web sites.
     * Alberto Michelini
     * Bernhard Morgenstern
     * Nathaniel C. Miller
-    * Menlo Park
+    * Marius Isken
     * Tom Richter
     * Emiliano Russo
     * Claudio Satriano
