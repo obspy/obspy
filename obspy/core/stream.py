@@ -996,6 +996,51 @@ class Stream(object):
          :param title: The title to display on top of the plot
             Defaults to ``self.stream[0].id``.
 
+        ** Section Parameters **
+
+        These parameters are only available if ``type='section'``. To plot
+        a record section the ObsPy header ``trace.stats.distance`` must be
+        defined in meters (Default). Or 
+        ``trace.stats.coordinates.latitude`` &
+        ``trace.stats.coordinates.longitude`` must be set if plotted in
+        azimuthal distances (``azim_dist=True``) along with ``ev_lat``
+        and ``ev_lon``.
+
+        :type scale: Scalar, optional
+        :param scale: Scale the traces width with this factor.
+            Default is ``1.0``
+        :type vred: Scalar, optional
+        :param vred: Perform velocity reduction, in m/s.
+        :type norm: string, optional
+        :param norm: Defines how the traces are normalized,
+            either against each ``trace`` or against the global
+            maximum ``stream``. Default is ``trace``
+        :type offset_min: Scalar or None, optional
+        :param offset_min: Minimum offset in meters to plot.
+            Default is minimum offset.
+        :type offset_max: Scalar or None, optional
+        :param offset_min: Maximum offset in meters to plot.
+            Default is maximum offset.
+        :type azim_dist: bool, optional
+        :param azim_dist: Plot in azimuthal distance from event.
+        :type ev_lat: float or None, optional
+        :param ev_lat: Events' latitude in degree.
+        :type ev_lon: float or None, optional
+        :param ev_lon: Events' longitude in degree.
+        :type plot_dx: integer, optional
+        :param plot_dx: Spacing of ticks on the spatial x-axis.
+            Either km or degree, depending on ``azim_dist``
+        :type recordstart: integer, optional
+        :param recordstart: Seconds to crop from the beginning.
+        :type recordlength: integer, optional
+        :param recordlength: Length of the record section in seconds.
+        :type alpha: float, optional
+        :param alpha: Transparancy of the traces between 0.0 - 1.0.
+            Default is ``0.5``
+        :type time_down: bool, optional
+        :param time_down: Flip the plot horizontaly, time goes down.
+            Default is ``False``, time goes up.
+
         .. rubric:: Color Options
 
         Colors can be specified as defined in the :mod:`matplotlib.colors`
@@ -1368,11 +1413,11 @@ class Stream(object):
         if nearest_sample:
             tr = self.traces[0]
             if starttime:
-                delta = round((starttime - tr.stats.starttime) * \
+                delta = round((starttime - tr.stats.starttime) *
                                tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
-                delta = round((endtime - tr.stats.endtime) * \
+                delta = round((endtime - tr.stats.endtime) *
                                tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta

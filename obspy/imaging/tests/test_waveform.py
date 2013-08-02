@@ -5,6 +5,7 @@ The obspy.imaging.waveform test suite.
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util.decorator import skipIf
+from obspy.core.util import AttribDict
 import numpy as np
 import os
 import unittest
@@ -257,10 +258,38 @@ class WaveformTestCase(unittest.TestCase):
         outfile = os.path.join(self.path, 'binning_error_2.png')
         tr.plot(outfile=outfile)
 
+    @skipIf(__name__ != '__main__', 'test must be started manually')
+    def test_plotDefaultSection(self):
+        """
+        Tests plotting 10 in a section
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            st += self._createStream(start, start + 3600, 100)
+            st[-1].stats.distance = _i*10e3
+        outfile = os.path.join(self.path, 'default_section')
+        st.plot(type='section', outfile=outfile)
+
+    @skipIf(__name__ != '__main__', 'test must be started manually')
+    def test_plotAzimSection(self):
+        """
+        Tests plotting 10 in a azimuthal distant section
+        """
+        start = UTCDateTime(0)
+        st = Stream()
+        for _i in range(10):
+            st += self._createStream(start, start + 3600, 100)
+            st[-1].stats.coordinates = AttribDict({
+                        'latitude': _i,
+                        'longitude': _i})
+        outfile = os.path.join(self.path, 'azim_section')
+        st.plot(type='section', azim_dist=True, ev_lat=0.0,
+                ev_lon=0.0, outfile=outfile)
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
-
 
 if __name__ == '__main__':
     unittest.main(defaultTest='suite')
