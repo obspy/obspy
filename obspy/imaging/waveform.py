@@ -87,7 +87,7 @@ class WaveformPlotting(object):
         # TODO Event data from class Event()
         self.ev_lat = kwargs.get('ev_lat', None)
         self.ev_lon = kwargs.get('ev_lon', None)
-        self.alpha = kwargs.get('alpha', 0.4)
+        self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
         self.sect_timedown = kwargs.get('time_down', False)
         self.sect_recordstart = kwargs.get('recordstart', None)
@@ -1094,7 +1094,6 @@ class WaveformPlotting(object):
         ax = self.fig.gca()
         # Setting up line properties
         for line in ax.lines:
-            line.set_linewidth(.5)
             line.set_alpha(self.alpha)
             line.set_linewidth(self.linewidth)
             line.set_color(self.color)
@@ -1119,12 +1118,12 @@ class WaveformPlotting(object):
                 raise ValueError(msg)
         ax.set_xticks(self.__sectOffsetToFraction(ticks))
         # Setting up tick labels
-        ax.set_ylabel('Seconds / s')
+        ax.set_ylabel('Seconds [s]')
         if not self.sect_azim_dist:
-            ax.set_xlabel('Offset / km')
+            ax.set_xlabel('Offset [km]')
             ax.set_xticklabels(ticks/1e3)
         else:
-            ax.set_xlabel('Offset / degree')
+            ax.set_xlabel(u'Offset [°]')
             ax.set_xticklabels(ticks)
         ax.minorticks_on()
         # Limit time axis
