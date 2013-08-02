@@ -1036,10 +1036,10 @@ class Stream(object):
         :param recordlength: Length of the record section in seconds.
         :type alpha: float, optional
         :param alpha: Transparancy of the traces between 0.0 - 1.0.
-            Default is ``0.3``
+            Default is ``0.5``
         :type time_down: bool, optional
         :param time_down: Flip the plot horizontaly, time goes down.
-            Default is ``False`` time goes up.
+            Default is ``False``, time goes up.
 
         .. rubric:: Color Options
 
