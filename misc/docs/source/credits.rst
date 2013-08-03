@@ -27,6 +27,7 @@ libraries and applications, our build tools and our web sites.
     * Seyed Kasra Hosseini Zad
     * Heiner Igel
     * Adolfo Inza
+    * Marius Isken
     * David Ketchum
     * Andreas Köhler
     * Simon Kremers
@@ -41,7 +42,6 @@ libraries and applications, our build tools and our web sites.
     * Alberto Michelini
     * Bernhard Morgenstern
     * Nathaniel C. Miller
-    * Marius Isken
     * Tom Richter
     * Emiliano Russo
     * Claudio Satriano
