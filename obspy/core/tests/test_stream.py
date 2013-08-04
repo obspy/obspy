@@ -1259,7 +1259,7 @@ class StreamTestCase(unittest.TestCase):
             self.assertEqual(len(st2), 3)
             np.testing.assert_array_equal(st2[0].data, st[0].data)
 
-    def test_getGaps(self):
+    def test_getGaps2(self):
         """
         Test case for issue #73.
         """
