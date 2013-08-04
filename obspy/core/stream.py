@@ -1162,6 +1162,22 @@ class Stream(object):
         Source            Last Sample                 ...
         BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
         Total: 1 gap(s) and 0 overlap(s)
+
+
+        And finally let us create some overlapping traces:
+
+        >>> st = read()
+        >>> tr = st[0].copy()
+        >>> t = UTCDateTime("2009-08-24T00:20:13.0")
+        >>> st[0].trim(endtime=t)
+        >>> tr.trim(starttime=t-1)
+        >>> st.append(tr)
+        >>> st.getGaps()  # doctest: +ELLIPSIS
+        [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
+        >>> st.printGaps()  # doctest: +ELLIPSIS
+        Source            Last Sample                 ...
+        BW.RJOB..EHZ      2009-08-24T00:20:13.000000Z ...
+        Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.getGaps(min_gap, max_gap)
         print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
@@ -1477,8 +1493,6 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 2200 samples
         BW.RJOB..EHE | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 2200 samples
         """
-        if not self:
-            return
         tmp = self.slice(endtime=starttime, keep_empty_traces=False)
         tmp += self.slice(starttime=endtime, keep_empty_traces=False)
         self.traces = tmp.traces
