@@ -529,7 +529,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # Now import all enums and check if they are correct.
         from obspy.core import event_header
-        from obspy.core.util.types import Enum
+        from obspy.core.util import Enum
         available_enums = {}
         for module_item_name in dir(event_header):
             module_item = getattr(event_header, module_item_name)

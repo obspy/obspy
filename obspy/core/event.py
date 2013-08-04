@@ -173,7 +173,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     has already been created. A useful type are Enums if you want to restrict
     the acceptable values.
 
-        >>> from obspy.core.util.types import Enum
+        >>> from obspy.core.util import Enum
         >>> MyEnum = Enum(["a", "b", "c"])
         >>> class_attributes = [ \
                 ("resource_id", ResourceIdentifier), \

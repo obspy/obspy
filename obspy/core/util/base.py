@@ -10,7 +10,7 @@ Base utilities and constants for ObsPy.
 """
 
 from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.types import OrderedDict
+from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
@@ -92,7 +92,7 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
         def __enter__(self):
             return self
 
-        def __exit__(self, exc_type, exc_val, exc_tb):
+        def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
             self.close()
             os.remove(self.name)
 
