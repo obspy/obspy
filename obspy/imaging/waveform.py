@@ -1118,10 +1118,10 @@ class WaveformPlotting(object):
                 raise ValueError(msg)
         ax.set_xticks(self.__sectOffsetToFraction(ticks))
         # Setting up tick labels
-        ax.set_ylabel('Seconds [s]')
+        ax.set_ylabel('Time [s]')
         if not self.sect_azim_dist:
             ax.set_xlabel('Offset [km]')
-            ax.set_xticklabels(ticks/1e3)
+            ax.set_xticklabels(ticks / 1e3)
         else:
             ax.set_xlabel(u'Offset [°]')
             ax.set_xticklabels(ticks)
@@ -1131,7 +1131,7 @@ class WaveformPlotting(object):
         if self.sect_recordstart is not None:
             ax.set_ylim(bottom=self.sect_recordstart)
         if self.sect_recordlength is not None:
-            ax.set_ylim(top=self.sect_recordlength+ax.get_ylim()[0])
+            ax.set_ylim(top=self.sect_recordlength + ax.get_ylim()[0])
         # Invert time axis if requested
         if self.sect_timedown:
             ax.invert_yaxis()
@@ -1189,7 +1189,7 @@ class WaveformPlotting(object):
                 (self._tr_offsets >= self._offset_min) &
                 (self._tr_offsets <= self._offset_max)]
         # Normalized offsets for plotting
-        self._tr_offsets_norm = self._tr_offsets/self._tr_offsets.max()
+        self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
         self._tr_num = len(self._tr_offsets)
         # Arranging trace data in single list
@@ -1227,7 +1227,7 @@ class WaveformPlotting(object):
         """
         if scale:
             self.sect_user_scale = scale
-        self._sect_scale = self._tr_num * 1.5 * (1./self.sect_user_scale)
+        self._sect_scale = self._tr_num * 1.5 * (1. / self.sect_user_scale)
 
     def __sectInitTime(self):
         """
@@ -1238,7 +1238,7 @@ class WaveformPlotting(object):
             self._tr_times.append(np.arange(self._tr_npts[_tr])
                                 * self._tr_delta[_tr])
             if self.sect_vred:
-                self._tr_times[-1] -= self._tr_offsets[_tr]/self.sect_vred
+                self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
             if self.sect_timeshift:
                 self._tr_times[-1] += \
                     (self._tr_starttimes[_tr] - min(self._tr_starttimes))\
@@ -1274,7 +1274,7 @@ class WaveformPlotting(object):
             # Scale, normalize and shift traces by offset
             # for plotting
             ax.plot(self._tr_data[_tr] / self._tr_normfac[_tr]
-                    * (1./self._sect_scale)
+                    * (1. / self._sect_scale)
                     + self._tr_offsets_norm[_tr],
                     self._tr_times[_tr])
         self._sect_plot_init = True

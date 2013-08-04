@@ -1000,7 +1000,7 @@ class Stream(object):
 
         These parameters are only available if ``type='section'``. To plot
         a record section the ObsPy header ``trace.stats.distance`` must be
-        defined in meters (Default). Or 
+        defined in meters (Default). Or
         ``trace.stats.coordinates.latitude`` &
         ``trace.stats.coordinates.longitude`` must be set if plotted in
         azimuthal distances (``azim_dist=True``) along with ``ev_lat``

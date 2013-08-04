@@ -2788,7 +2788,6 @@ class Catalog(object):
                              ' not be labeled. '
                              "'%s' is not supported." % (label,))
 
-
         # lat/lon coordinates, magnitudes, dates
         lats = []
         lons = []

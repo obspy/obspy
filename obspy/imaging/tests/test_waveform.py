@@ -267,7 +267,7 @@ class WaveformTestCase(unittest.TestCase):
         st = Stream()
         for _i in range(10):
             st += self._createStream(start, start + 3600, 100)
-            st[-1].stats.distance = _i*10e3
+            st[-1].stats.distance = _i * 10e3
         outfile = os.path.join(self.path, 'default_section')
         st.plot(type='section', outfile=outfile)
 
