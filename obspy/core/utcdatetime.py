@@ -1092,6 +1092,15 @@ class UTCDateTime(object):
         # needed for unittest.assertAlmostEqual tests on linux
         return abs(self.timestamp)
 
+    def __hash__(self):
+        """
+        An object is hashable if it has a hash value which never changes
+        during its lifetime. AS UTCDateTime objects may change of time its not
+        hashable.
+        """
+        # explicitly flag it as unhashable
+        return None
+
     def strftime(self, format):
         """
         Return a string representing the date and time, controlled by an

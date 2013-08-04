@@ -874,6 +874,12 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = num2date(x)
         self.assertEquals(UTCDateTime(dt.isoformat()), UTCDateTime(dt))
 
+    def test_hash(self):
+        """
+        Test __hash__ method of UTCDateTime class.
+        """
+        self.assertEquals(UTCDateTime().__hash__(), None)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
