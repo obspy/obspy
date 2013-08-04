@@ -165,7 +165,10 @@ def getExampleFile(filename):
     IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        try:
+            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        except ImportError:
+            continue
         file = os.path.join(mod.__path__[0], "data", filename)
         if os.path.isfile(file):
             return file
