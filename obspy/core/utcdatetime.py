@@ -289,6 +289,7 @@ class UTCDateTime(object):
                 # UTCDateTime which contains the class specifications. If
                 # argument is not a digit by now, it must be a binary string
                 # and we pass it to datetime.datetime,
+                # XXX: can't reproduce: not sure this is still needed
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
                     self._fromDateTime(dt)

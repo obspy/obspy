@@ -880,6 +880,33 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         self.assertEquals(UTCDateTime().__hash__(), None)
 
+    def test_now(self):
+        """
+        Test now class method of UTCDateTime class.
+        """
+        self.assertEquals(UTCDateTime.now(), UTCDateTime())
+
+    def test_utcnow(self):
+        """
+        Test utcnow class method of UTCDateTime class.
+        """
+        self.assertEquals(UTCDateTime.utcnow(), UTCDateTime())
+
+    def test_abs(self):
+        """
+        Test __abs__ method of UTCDateTime class.
+        """
+        dt = UTCDateTime(1970, 1, 1, 0, 0, 1)
+        self.assertEquals(abs(dt), 1)
+        dt = UTCDateTime(1970, 1, 1, 0, 0, 1, 500000)
+        self.assertEquals(abs(dt), 1.5)
+        dt = UTCDateTime(1970, 1, 1)
+        self.assertEquals(abs(dt), 0)
+        dt = UTCDateTime(1969, 12, 31, 23, 59, 59)
+        self.assertEquals(abs(dt), 1)
+        dt = UTCDateTime(1969, 12, 31, 23, 59, 59, 500000)
+        self.assertEquals(abs(dt), 0.5)
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
