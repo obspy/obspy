@@ -918,7 +918,7 @@ class Stream(object):
             Defaults to ``0.5``.
         :param grid_linestyle: Grid line style. Default to ``':'``
 
-        **Dayplot parameters**
+        **Dayplot Parameters**
 
         The following parameters are only available if ``type='dayplot'`` is
         set.
@@ -996,7 +996,7 @@ class Stream(object):
          :param title: The title to display on top of the plot
             Defaults to ``self.stream[0].id``.
 
-        ** Section Parameters **
+        **Section Parameters**
 
         These parameters are only available if ``type='section'``. To plot
         a record section the ObsPy header ``trace.stats.distance`` must be
