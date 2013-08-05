@@ -380,7 +380,8 @@ class WaveformPlotting(object):
         # Normalize array
         self.__dayplotNormalizeValues(self, *args, **kwargs)
         # Get timezone information. If none is  given, use local time.
-        self.time_offset = kwargs.get('time_offset',
+        self.time_offset = kwargs.get(
+            'time_offset',
             round((UTCDateTime(datetime.now()) - UTCDateTime()) / 3600.0, 2))
         self.timezone = kwargs.get('timezone', 'local time')
         # Try to guess how many steps are needed to advance one full time unit.
@@ -537,7 +538,8 @@ class WaveformPlotting(object):
                     arc_sign = "-"
 
             # Draw the annotation including box.
-            self.fig.axes[0].annotate(text,
+            self.fig.axes[0].annotate(
+                text,
                 # The position of the event.
                 xy=(x_pos, y_pos),
                 # The position of the text, offset depending on the previously
@@ -551,13 +553,14 @@ class WaveformPlotting(object):
                 # Text box style.
                 bbox=dict(boxstyle="round", fc="w", alpha=0.6),
                 # Arrow style
-                arrowprops=dict(arrowstyle="-",
-                    connectionstyle="arc3, rad=%s%.1f" % (arc_sign,
-                    arc_strength), relpos=relpos, shrinkB=7),
+                arrowprops=dict(
+                    arrowstyle="-",
+                    connectionstyle="arc3, rad=%s%.1f" % (
+                        arc_sign, arc_strength),
+                    relpos=relpos, shrinkB=7),
                 zorder=10)
         # Draw the actual point. Use a marker with a star shape.
-        self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow",
-            markersize=12)
+        self.fig.axes[0].plot(x_pos, y_pos, "*", color="yellow", markersize=12)
 
     def _plotDayplotScale(self, unit):
         """
@@ -600,7 +603,8 @@ class WaveformPlotting(object):
             fmt_string = "%.1f %s"
         else:
             fmt_string = "%.2f %s"
-        self.fig.axes[0].text(very_right + 3, middle,
+        self.fig.axes[0].text(
+            very_right + 3, middle,
             fmt_string % (self._normalization_factor, unit), ha="left",
             va="center", fontsize="small")
 
@@ -673,11 +677,14 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
-        ax.plot(trace.data, color=self.color, linewidth=self.linewidth,
+        ax.plot(
+            trace.data, color=self.color, linewidth=self.linewidth,
             linestyle=self.linestyle)
-        ax.xaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle,
+        ax.xaxis.grid(
+            color=self.grid_color, linestyle=self.grid_linestyle,
             linewidth=self.grid_linewidth)
-        ax.yaxis.grid(color=self.grid_color, linestyle=self.grid_linestyle,
+        ax.yaxis.grid(
+            color=self.grid_color, linestyle=self.grid_linestyle,
             linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
@@ -696,16 +703,17 @@ class WaveformPlotting(object):
         sampling_rate = trace[0].stats.sampling_rate
         # The samples per resulting pixel. The endtime is defined as the time
         # of the last sample.
-        pixel_length = int(np.ceil(((endtime - starttime)
-            * sampling_rate + 1) / self.width))
+        pixel_length = int(
+            np.ceil(((endtime - starttime) * sampling_rate + 1) / self.width))
         # Loop over all the traces. Do not merge them as there are many samples
         # and therefore merging would be slow.
         for _i, tr in enumerate(trace):
             # Get the start of the next pixel in case the starttime of the
             # trace does not match the starttime of the plot.
             if tr.stats.starttime > self.starttime:
-                offset = int(np.ceil(((tr.stats.starttime - self.starttime) *
-                        sampling_rate) / pixel_length))
+                offset = int(
+                    np.ceil(((tr.stats.starttime - self.starttime) *
+                             sampling_rate) / pixel_length))
             else:
                 offset = 0
             # Figure out the number of pixels in the current trace.
@@ -895,8 +903,8 @@ class WaveformPlotting(object):
         if delta < 0:
             trace.data = trace.data[:number_of_samples]
         elif delta > 0:
-            trace.data = np.ma.concatenate([trace.data,
-                            createEmptyDataChunk(delta, trace.data.dtype)])
+            trace.data = np.ma.concatenate(
+                [trace.data, createEmptyDataChunk(delta, trace.data.dtype)])
 
         # Create array for min/max values. Use masked arrays to handle gaps.
         extreme_values = np.ma.empty((noi, self.width, 2))
@@ -1062,8 +1070,9 @@ class WaveformPlotting(object):
         # the y-Axis showing the  second time zone.
         sign = '%+i' % self.time_offset
         sign = sign[0]
-        label = "UTC (%s = UTC %s %02i:%02i)" % (self.timezone.strip(), sign,
-            abs(self.time_offset), (self.time_offset % 1 * 60))
+        label = "UTC (%s = UTC %s %02i:%02i)" % (
+            self.timezone.strip(), sign, abs(self.time_offset),
+            (self.time_offset % 1 * 60))
         ticklabels = [(self.starttime + _i *
                        self.interval).strftime(self.tick_format)
                       for _i in tick_steps]
@@ -1136,7 +1145,8 @@ class WaveformPlotting(object):
         if self.sect_timedown:
             ax.invert_yaxis()
         # Draw grid on xaxis only
-        ax.grid(color=self.grid_color,
+        ax.grid(
+            color=self.grid_color,
             linestyle=self.grid_linestyle,
             linewidth=self.grid_linewidth)
         ax.xaxis.grid(False)
@@ -1211,8 +1221,9 @@ class WaveformPlotting(object):
                 self._tr_starttimes.append(self.stream[_tr].stats.starttime)
                 self._tr_max_count[_i] = tmp_data.max()
                 self._tr_npts[_i] = tmp_data.size
-                self._tr_delta[_i] = (self.stream[_tr].stats.endtime -
-                        self.stream[_tr].stats.starttime) / self._tr_npts[_i]
+                self._tr_delta[_i] = (
+                    self.stream[_tr].stats.endtime -
+                    self.stream[_tr].stats.starttime) / self._tr_npts[_i]
         # Maximum global count of the traces
         self._tr_max_count_glob = np.abs(self._tr_max_count).max()
         # Init time vectors
@@ -1235,8 +1246,8 @@ class WaveformPlotting(object):
         """
         self._tr_times = []
         for _tr in range(self._tr_num):
-            self._tr_times.append(np.arange(self._tr_npts[_tr])
-                                * self._tr_delta[_tr])
+            self._tr_times.append(
+                np.arange(self._tr_npts[_tr]) * self._tr_delta[_tr])
             if self.sect_vred:
                 self._tr_times[-1] -= self._tr_offsets[_tr] / self.sect_vred
             if self.sect_timeshift:
@@ -1326,10 +1337,9 @@ class WaveformPlotting(object):
             x = self.fig.subplotpars.left
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
-                (self.stream[-1].stats.network,
-                self.stream[-1].stats.channel,
-                len(self.stream),
-                self.starttime.strftime(pattern))
+                (self.stream[-1].stats.network, self.stream[-1].stats.channel,
+                 len(self.stream),
+                 self.starttime.strftime(pattern))
         else:
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
