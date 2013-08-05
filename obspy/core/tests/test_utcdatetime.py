@@ -884,13 +884,15 @@ class UTCDateTimeTestCase(unittest.TestCase):
         """
         Test now class method of UTCDateTime class.
         """
-        self.assertEquals(UTCDateTime.now(), UTCDateTime())
+        dt = UTCDateTime()
+        self.assertTrue(UTCDateTime.now() >= dt)
 
     def test_utcnow(self):
         """
         Test utcnow class method of UTCDateTime class.
         """
-        self.assertEquals(UTCDateTime.utcnow(), UTCDateTime())
+        dt = UTCDateTime()
+        self.assertTrue(UTCDateTime.utcnow() >= dt)
 
     def test_abs(self):
         """
