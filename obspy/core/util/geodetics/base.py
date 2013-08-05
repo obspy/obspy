@@ -248,8 +248,8 @@ def kilometer2degrees(kilometer, radius=6371):
 
 def locations2degrees(lat1, long1, lat2, long2):
     """
-    Convenience function to calculate the great circle distance between two points on
-    a spherical Earth.
+    Convenience function to calculate the great circle distance between two
+    points on a spherical Earth.
 
     This method uses the Vincenty formula in the special case of a spherical
     Earth. For more accurate values use the geodesic distance calculations of
