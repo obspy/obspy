@@ -1137,8 +1137,8 @@ class WaveformPlotting(object):
             ax.invert_yaxis()
         # Draw grid on xaxis only
         ax.grid(color=self.grid_color,
-                    linestyle=self.grid_linestyle,
-                    linewidth=self.grid_linewidth)
+            linestyle=self.grid_linestyle,
+            linewidth=self.grid_linewidth)
         ax.xaxis.grid(False)
 
     def __sectInitTraces(self):
@@ -1163,10 +1163,10 @@ class WaveformPlotting(object):
             # Define offset as degree from epicenter
             try:
                 for _tr in range(len(self.stream)):
-                        self._tr_offsets[_tr] = locations2degrees(
-                                self.stream[_tr].stats.coordinates.latitude,
-                                self.stream[_tr].stats.coordinates.longitude,
-                                self.ev_lat, self.ev_lon)
+                    self._tr_offsets[_tr] = locations2degrees(
+                        self.stream[_tr].stats.coordinates.latitude,
+                        self.stream[_tr].stats.coordinates.longitude,
+                        self.ev_lat, self.ev_lon)
             except:
                 msg = 'Define latitude/longitude in trace.stats.coordinates' +\
                     ' and ev_lat/ev_lon. See documentation.'
@@ -1183,11 +1183,11 @@ class WaveformPlotting(object):
             self._offset_max = self.sect_offset_max
         # Reduce data to indexes within offset_min/max
         self._tr_selected = np.where(
-                (self._tr_offsets >= self._offset_min) &
-                (self._tr_offsets <= self._offset_max))[0]
+            (self._tr_offsets >= self._offset_min) &
+            (self._tr_offsets <= self._offset_max))[0]
         self._tr_offsets = self._tr_offsets[
-                (self._tr_offsets >= self._offset_min) &
-                (self._tr_offsets <= self._offset_max)]
+            (self._tr_offsets >= self._offset_min) &
+            (self._tr_offsets <= self._offset_max)]
         # Normalized offsets for plotting
         self._tr_offsets_norm = self._tr_offsets / self._tr_offsets.max()
         # Number of traces
@@ -1293,7 +1293,7 @@ class WaveformPlotting(object):
             self._tr_normfac.fill(self._tr_max_count_glob)
         else:
             msg = 'Define a normalisation method. Valid normalisations' +\
-                    'are \'trace\', \'stream\'. See documentation.'
+                'are \'trace\', \'stream\'. See documentation.'
             raise ValueError(msg)
 
         self._plot_init = False
@@ -1326,10 +1326,10 @@ class WaveformPlotting(object):
             x = self.fig.subplotpars.left
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
-                                    (self.stream[-1].stats.network,
-                                    self.stream[-1].stats.channel,
-                                    len(self.stream),
-                                    self.starttime.strftime(pattern))
+                (self.stream[-1].stats.network,
+                self.stream[-1].stats.channel,
+                len(self.stream),
+                self.starttime.strftime(pattern))
         else:
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
