@@ -11,15 +11,17 @@ Main module containing XML-SEED parser.
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import getExampleFile, deprecated_keywords
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
-from obspy.core.util import getExampleFile, deprecated_keywords
+import copy
+import datetime
 import math
 import os
+import urllib2
 import warnings
 import zipfile
-import copy
-import urllib2
 
 
 CONTINUE_FROM_LAST_RECORD = '*'
@@ -243,7 +245,10 @@ class Parser(object):
                     SubElement(doc, utils.toTag('Timespan Control Header'))
                     # Also no data is present in all supported SEED files.
                     SubElement(doc, utils.toTag('Data Records'))
-                id = station[0].end_effective_date
+                try:
+                    id = station[0].end_effective_date.datetime
+                except AttributeError:
+                    id = ''
                 result[id] = tostring(cdoc, pretty_print=True,
                                       xml_declaration=True, encoding='UTF-8')
             return result
@@ -258,10 +263,10 @@ class Parser(object):
             return
         elif isinstance(result, dict):
             for key, value in result.iteritems():
-                if key is not '':
+                if isinstance(key, datetime.datetime):
                     # past meta data - append timestamp
                     fn = filename.split('.xml')[0]
-                    fn = "%s.%s.xml" % (filename, key.timestamp)
+                    fn = "%s.%s.xml" % (filename, UTCDateTime(key).timestamp)
                 else:
                     # current meta data - leave original filename
                     fn = filename

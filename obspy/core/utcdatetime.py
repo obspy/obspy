@@ -1096,8 +1096,10 @@ class UTCDateTime(object):
     def __hash__(self):
         """
         An object is hashable if it has a hash value which never changes
-        during its lifetime. AS UTCDateTime objects may change of time its not
-        hashable.
+        during its lifetime. As UTCDateTime objects may change over time its
+        not hashable. Use the :meth:`~UTCDateTime.datetime()` method to
+        generate a :class:`datetime.datetime` object for hashing but be aware
+        once the UTCDateTime object changes the hash is not valid anymore.
         """
         # explicitly flag it as unhashable
         return None
