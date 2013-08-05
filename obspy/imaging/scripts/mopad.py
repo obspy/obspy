@@ -329,13 +329,13 @@ class MomentTensor:
             pass
         elif self._input_basis == 'USE':
             self._M = np.dot(rotmat_USE_2_NED,
-                            np.dot(self._M, rotmat_USE_2_NED.T))
+                             np.dot(self._M, rotmat_USE_2_NED.T))
         elif self._input_basis == 'XYZ':
             self._M = np.dot(rotmat_XYZ_2_NED,
-                            np.dot(self._M, rotmat_XYZ_2_NED.T))
+                             np.dot(self._M, rotmat_XYZ_2_NED.T))
         elif self._input_basis == 'NWU':
             self._M = np.dot(rotmat_NWU_2_NED,
-                            np.dot(self._M, rotmat_NWU_2_NED.T))
+                             np.dot(self._M, rotmat_NWU_2_NED.T))
 
     def _decompose_M(self):
         """
@@ -370,8 +370,8 @@ class MomentTensor:
 
         # isotropic part
         M_iso = np.diag(np.array([1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M)]))
+                                 1. / 3 * np.trace(M),
+                                 1. / 3 * np.trace(M)]))
         M0_iso = abs(1. / 3 * np.trace(M))
 
         # deviatoric part
@@ -444,8 +444,8 @@ class MomentTensor:
 
         # isotropic part
         M_iso = np.diag(np.array([1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M)]))
+                                 1. / 3 * np.trace(M),
+                                 1. / 3 * np.trace(M)]))
         M0_iso = abs(1. / 3 * np.trace(M))
 
         # deviatoric part
@@ -509,8 +509,8 @@ class MomentTensor:
 
         # isotropic part
         M_iso = np.diag(np.array([1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M),
-                                1. / 3 * np.trace(M)]))
+                                 1. / 3 * np.trace(M),
+                                 1. / 3 * np.trace(M)]))
         M0_iso = abs(1. / 3 * np.trace(M))
 
         # deviatoric part
@@ -811,12 +811,12 @@ class MomentTensor:
         # reference Double Couple (in NED basis)
         # it has strike, dip, slip-rake = 0,0,0
         refDC = np.matrix([[0., 0., -1.], [0., 0., 0.], [-1., 0., 0.]],
-                         dtype=np.float)
+                          dtype=np.float)
         refDC_evals, refDC_evecs = np.linalg.eigh(refDC)
 
         # matrix which is turning from one fault plane to the other
         flip_dc = np.matrix([[0., 0., -1.], [0., -1., 0.], [-1., 0., 0.]],
-                           dtype=np.float)
+                            dtype=np.float)
 
         # euler-tools need matrices of EV sorted in PNT:
         pnt_sorted_EV_matrix = self._rotation_matrix.copy()
@@ -1112,20 +1112,20 @@ class MomentTensor:
         -24 - faultplanes       (list of two 3-arrays)
         """
         return [in_system, out_system, self.get_decomp_type(),
-            self.get_M(system=out_system),
-            self.get_iso(system=out_system), self.get_iso_percentage(),
-            self.get_devi(system=out_system), self.get_devi_percentage(),
-            self.get_DC(system=out_system), self.get_DC_percentage(),
-            self.get_DC2(system=out_system), self.get_DC2_percentage(),
-            self.get_DC3(system=out_system), self.get_DC3_percentage(),
-            self.get_CLVD(system=out_system), self.get_CLVD_percentage(),
-            self.get_moment(), self.get_mag(),
-            self.get_eigvecs(system=out_system),
-            self.get_eigvals(system=out_system),
-            self.get_p_axis(system=out_system),
-            self.get_null_axis(system=out_system),
-            self.get_t_axis(system=out_system),
-            self.get_fps()]
+                self.get_M(system=out_system),
+                self.get_iso(system=out_system), self.get_iso_percentage(),
+                self.get_devi(system=out_system), self.get_devi_percentage(),
+                self.get_DC(system=out_system), self.get_DC_percentage(),
+                self.get_DC2(system=out_system), self.get_DC2_percentage(),
+                self.get_DC3(system=out_system), self.get_DC3_percentage(),
+                self.get_CLVD(system=out_system), self.get_CLVD_percentage(),
+                self.get_moment(), self.get_mag(),
+                self.get_eigvecs(system=out_system),
+                self.get_eigvals(system=out_system),
+                self.get_p_axis(system=out_system),
+                self.get_null_axis(system=out_system),
+                self.get_t_axis(system=out_system),
+                self.get_fps()]
 
     def get_full_decomposition(self):
         """
@@ -1436,7 +1436,7 @@ class MomentTensor:
         if style == 'f':
             print '\n rotation matrix in %s -coordinates: ' % (system)
         return self._matrix_w_style_and_system(self._rotation_matrix, system,
-            style)
+                                               style)
 
     def get_fps(self, **kwargs):
         """
@@ -1539,7 +1539,7 @@ def _return_matrix_vector_array(ma_ve_ar, basis_change_matrix):
                                 [m_in[3], m_in[1], m_in[5]],
                                 [m_in[4], m_in[5], m_in[2]]], dtype=np.float)
         m_out_mat = np.dot(basis_change_matrix,
-                          np.dot(orig_matrix, basis_change_matrix.T))
+                           np.dot(orig_matrix, basis_change_matrix.T))
 
         return m_out_mat[0, 0], m_out_mat[1, 1], m_out_mat[2, 2], \
             m_out_mat[0, 1], m_out_mat[0, 2], m_out_mat[1, 2]
@@ -2341,10 +2341,10 @@ class BeachBall:
                     np.sin(rot_angle)
                 marker_y = (original_rho - (3 * symsize / points_per_unit)) * \
                     np.cos(rot_angle)
-                annot_x = (original_rho -
-                    (8.5 * fontsize / points_per_unit)) * np.sin(rot_angle)
-                annot_y = (original_rho -
-                    (8.5 * fontsize / points_per_unit)) * np.cos(rot_angle)
+                annot_x = (original_rho - (8.5 * fontsize / points_per_unit)) \
+                    * np.sin(rot_angle)
+                annot_y = (original_rho - (8.5 * fontsize / points_per_unit)) \
+                    * np.cos(rot_angle)
 
                 ax.text(annot_x, annot_y, np_letter,
                         horizontalalignment='center', size=fontsize,
@@ -2593,9 +2593,9 @@ class BeachBall:
             # logger.debug( 'curve: ', str(obj))
             # check, if curve closed !!!!!!
             start_r = np.sqrt(obj2cor_in_right_order[0, 0] ** 2 +
-                             obj2cor_in_right_order[1, 0] ** 2)
+                              obj2cor_in_right_order[1, 0] ** 2)
             r_last_point = np.sqrt(obj2cor_in_right_order[0, -1] ** 2 +
-                                  obj2cor_in_right_order[1, -1] ** 2)
+                                   obj2cor_in_right_order[1, -1] ** 2)
             dist_last_first_point = \
                 np.sqrt((obj2cor_in_right_order[0, -1] -
                         obj2cor_in_right_order[0, 0]) ** 2 +
@@ -2608,10 +2608,10 @@ class BeachBall:
                 # add points on edge to polygon, if it is an open curve
                 # logger.debug( str(obj)+' not closed - closing over edge... ')
                 phi_end = np.arctan2(obj2cor_in_right_order[0, -1],
-                                    obj2cor_in_right_order[1, -1]) % (2 * pi)
+                                     obj2cor_in_right_order[1, -1]) % (2 * pi)
                 R_end = r_last_point
                 phi_start = np.arctan2(obj2cor_in_right_order[0, 0],
-                                      obj2cor_in_right_order[1, 0]) % (2 * pi)
+                                       obj2cor_in_right_order[1, 0]) % (2 * pi)
                 R_start = start_r
 
                 # add one point on the edge every fraction of degree given by
@@ -2721,7 +2721,7 @@ class BeachBall:
                 if (self._plot_clr_order > 0 and EWn_tmp >= 0 and
                         abs(EWs_tmp) > abs(EWh_tmp)) or \
                         (self._plot_clr_order < 0 and
-                        EWn_tmp <= 0 and abs(EWs_tmp) > abs(EWh_tmp)):
+                         EWn_tmp <= 0 and abs(EWs_tmp) > abs(EWh_tmp)):
 
                     EWs = EWh_tmp.copy()
                     EWh = EWs_tmp.copy()
@@ -2922,7 +2922,7 @@ class BeachBall:
 
         len_north_prime_not_normalised = \
             np.sqrt(np.dot(north_prime_not_normalised,
-                         north_prime_not_normalised))
+                           north_prime_not_normalised))
         # check for poles:
         if np.abs(len_north_prime_not_normalised) < epsilon:
             # case: north pole
@@ -2994,7 +2994,7 @@ class BeachBall:
             rotated_thing = object2rotate.copy()
             for i in xrange(len(object2rotate)):
                 rotated_thing[i] = np.dot(self._plot_basis_change,
-                                         object2rotate[i])
+                                          object2rotate[i])
 
             rotated_object = rotated_thing.copy()
             setattr(self, '_' + obj + '_rotated', rotated_object.transpose())
@@ -3431,11 +3431,11 @@ class BeachBall:
         # take angle with same difference as point 2 to point 3
 
         angle_point_1 = (math.atan2(sorted_curve[0, 0],
-                                 sorted_curve[1, 0]) % (2 * pi))
+                                    sorted_curve[1, 0]) % (2 * pi))
         angle_point_2 = (math.atan2(sorted_curve[0, 1],
-                                 sorted_curve[1, 1]) % (2 * pi))
+                                    sorted_curve[1, 1]) % (2 * pi))
         angle_point_3 = (math.atan2(sorted_curve[0, 2],
-                                 sorted_curve[1, 2]) % (2 * pi))
+                                    sorted_curve[1, 2]) % (2 * pi))
 
         angle_diff_23 = (angle_point_3 - angle_point_2)
         if angle_diff_23 > pi:
@@ -3877,14 +3877,14 @@ class BeachBall:
                 rot_angle = -np.arctan2(y_coord, x_coord) + pi / 2.
                 original_rho = np.sqrt(x_coord ** 2 + y_coord ** 2)
 
-                marker_x = (original_rho -
-                    (1.5 * symsize / points_per_unit)) * np.sin(rot_angle)
-                marker_y = (original_rho -
-                    (1.5 * symsize / points_per_unit)) * np.cos(rot_angle)
-                annot_x = (original_rho -
-                    (4.5 * fontsize / points_per_unit)) * np.sin(rot_angle)
-                annot_y = (original_rho -
-                    (4.5 * fontsize / points_per_unit)) * np.cos(rot_angle)
+                marker_x = (original_rho - (1.5 * symsize / points_per_unit)) \
+                    * np.sin(rot_angle)
+                marker_y = (original_rho - (1.5 * symsize / points_per_unit)) \
+                    * np.cos(rot_angle)
+                annot_x = (original_rho - (4.5 * fontsize / points_per_unit)) \
+                    * np.sin(rot_angle)
+                annot_y = (original_rho - (4.5 * fontsize / points_per_unit)) \
+                    * np.cos(rot_angle)
 
                 ax.text(annot_x, annot_y, np_letter,
                         horizontalalignment='center', size=fontsize,
@@ -4011,7 +4011,8 @@ def main():
         if kwargs_dict['basis_conversion']:
             if len(MT._original_M) in [6, 7]:
                 if len(MT._original_M) == 6:
-                    M_converted = _puzzle_basis_transformation(MT.get_M(),
+                    M_converted = _puzzle_basis_transformation(
+                        MT.get_M(),
                         'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
                         print '\n  Moment tensor in basis  %s:\n ' % \
@@ -4027,8 +4028,8 @@ def main():
                             M_converted[2, 2], M_converted[0, 1], \
                             M_converted[0, 2], M_converted[1, 2]
                 else:
-                    M_converted = _puzzle_basis_transformation(MT.get_M(),
-                        'NED', kwargs_dict['out_system'])
+                    M_converted = _puzzle_basis_transformation(
+                        MT.get_M(), 'NED', kwargs_dict['out_system'])
                     if kwargs_dict['fancy_conversion']:
                         print '\n  Moment tensor in basis  %s:\n ' % \
                             (kwargs_dict['in_system'].upper())
@@ -4046,14 +4047,16 @@ def main():
             elif len(MT._original_M) == 9:
                 new_M = np.asarray(MT._original_M).reshape(3, 3).copy()
                 if kwargs_dict['fancy_conversion']:
-                    return fancy_matrix(_puzzle_basis_transformation(new_M,
-                        kwargs_dict['in_system'], kwargs_dict['out_system']))
+                    return fancy_matrix(_puzzle_basis_transformation(
+                        new_M, kwargs_dict['in_system'],
+                        kwargs_dict['out_system']))
                 else:
-                    return _puzzle_basis_transformation(new_M,
-                        kwargs_dict['in_system'], kwargs_dict['out_system'])
+                    return _puzzle_basis_transformation(
+                        new_M, kwargs_dict['in_system'],
+                        kwargs_dict['out_system'])
             elif len(MT._original_M) == 3:
-                M_converted = _puzzle_basis_transformation(MT.get_M(), 'NED',
-                    kwargs_dict['out_system'])
+                M_converted = _puzzle_basis_transformation(
+                    MT.get_M(), 'NED', kwargs_dict['out_system'])
                 if kwargs_dict['fancy_conversion']:
                     print '\n  Moment tensor in basis  %s: ' % \
                         (kwargs_dict['out_system'].upper())
@@ -4094,7 +4097,8 @@ def main():
                     MT._original_M, kwargs_dict['vector_in_system'],
                     kwargs_dict['vector_out_system']))
             else:
-                return _puzzle_basis_transformation(MT._original_M,
+                return _puzzle_basis_transformation(
+                    MT._original_M,
                     kwargs_dict['vector_in_system'],
                     kwargs_dict['vector_out_system'])
         else:
@@ -4176,22 +4180,22 @@ def main():
             # for single element output:
             if len(lo_args) == 1:
                 if kwargs_dict['decomp_out_fancy']:
-                    print getattr(MT, 'get_' +
-                        do_calls[lo_args[0]])(style='f', system=out_system)
+                    print getattr(MT, 'get_' + do_calls[lo_args[0]])(
+                        style='f', system=out_system)
                     return
                 else:
-                    return getattr(MT, 'get_' +
-                        do_calls[lo_args[0]])(style='n', system=out_system)
+                    return getattr(MT, 'get_' + do_calls[lo_args[0]])(
+                        style='n', system=out_system)
             # for list of elements:
             else:
                 outlist = []
                 for arg in lo_args:
                     if kwargs_dict['decomp_out_fancy']:
-                        print getattr(MT, 'get_' +
-                            do_calls[arg])(style='f', system=out_system)
+                        print getattr(MT, 'get_' + do_calls[arg])(
+                            style='f', system=out_system)
                     else:
-                        outlist.append(getattr(MT, 'get_' +
-                            do_calls[arg])(style='n', system=out_system))
+                        outlist.append(getattr(MT, 'get_' + do_calls[arg])(
+                            style='n', system=out_system))
                 if kwargs_dict['decomp_out_fancy']:
                     return
                 else:
@@ -4899,42 +4903,51 @@ def main():
         group_show = OptionGroup(parser_gmt, 'Appearance')
         group_geo = OptionGroup(parser_gmt, 'Geometry')
 
-        group_type.add_option('-t', '--type', type='string',
+        group_type.add_option(
+            '-t', '--type', type='string',
             dest='GMT_string_type', action='store', default='fill',
             help="choice of psxy data: area to fill (fill)), nodal lines " +
-                "(lines), or eigenvector positions (ev)", metavar='<type>')
-        group_show.add_option('-s', '--scaling', dest='GMT_scaling',
+            "(lines), or eigenvector positions (ev)", metavar='<type>')
+        group_show.add_option(
+            '-s', '--scaling', dest='GMT_scaling',
             action='store', default='1', type='float',
             metavar='<scaling factor>',
             help='spatial scaling of the beachball')
-        group_show.add_option('-r', '--colour1', dest='GMT_tension_colour',
+        group_show.add_option(
+            '-r', '--colour1', dest='GMT_tension_colour',
             type='int', action='store', metavar='<tension colour>',
             default='1',
             help="-Z option's key for the tension colour of the " +
-                "beachball - type: integer ")
-        group_show.add_option('-w', '--colour2', dest='GMT_pressure_colour',
+            "beachball - type: integer ")
+        group_show.add_option(
+            '-w', '--colour2', dest='GMT_pressure_colour',
             type='int', action='store', metavar='<pressure colour>',
             default='0',
             help="-Z option's key for the pressure colour of the " +
-                "beachball - type: integer")
-        group_show.add_option('-D', '--faultplanes', dest='GMT_show_2FP2',
+            "beachball - type: integer")
+        group_show.add_option(
+            '-D', '--faultplanes', dest='GMT_show_2FP2',
             action='store_true', default=False,
             help='boolean key, if 2 faultplanes shall be shown')
-        group_show.add_option('-d', '--show_1fp', type='choice',
+        group_show.add_option(
+            '-d', '--show_1fp', type='choice',
             dest='GMT_show_1FP', choices=['1', '2'], metavar='<FP index>',
             action='store', default=False,
             help="integer key (1,2), what faultplane shall be " +
-                "shown [%default]")
-        group_geo.add_option('-V', '--viewpoint', action="store",
+            "shown [%default]")
+        group_geo.add_option(
+            '-V', '--viewpoint', action="store",
             dest='plot_viewpoint', metavar='<lat,lon,azi>', default=None,
             help='coordinates of  the viewpoint - 3-tuple of angles in degree')
-        group_geo.add_option('-p', '--projection', action="store",
+        group_geo.add_option(
+            '-p', '--projection', action="store",
             dest='GMT_projection', metavar='<projection>', default=None,
             help='projection  of  the sphere')
-        group_show.add_option('-I', '--show_isotropic_part',
+        group_show.add_option(
+            '-I', '--show_isotropic_part',
             dest='GMT_plot_isotropic_part', action='store_true', default=False,
             help="key, if isotropic part shall be considered for " +
-                "plotting [%default]")
+            "plotting [%default]")
 
         parser_gmt.add_option_group(group_type)
         parser_gmt.add_option_group(group_show)
@@ -4958,23 +4971,27 @@ def main():
         group_vector = OptionGroup(parser_convert, 'Vector conversion')
 #        group_show               =  OptionGroup(parser_convert,'Appearance')
 
-        group_type.add_option('-t', '--type', action="store",
+        group_type.add_option(
+            '-t', '--type', action="store",
             dest='type_conversion', default=False, type='string',
             metavar='<output type>', nargs=1,
             help="type conversion - convert to: strike,dip,rake (sdr) or " +
-                "Tensor (T) ")
-        group_basis.add_option('-b', '--basis', action="store",
+            "Tensor (T) ")
+        group_basis.add_option(
+            '-b', '--basis', action="store",
             dest='basis_conversion', default=False,
             metavar='<input system> <output system>', type='string', nargs=2,
             help="basis conversion for M - provide 2 arguments: input- " +
-                "and output basis (NED,USE,XYZ,NWU)")
-        group_vector.add_option('-v', '--vector', action="store",
+            "and output basis (NED,USE,XYZ,NWU)")
+        group_vector.add_option(
+            '-v', '--vector', action="store",
             dest='vector_conversion', metavar='<input system> <output system>',
             type='string', default=False, nargs=2,
             help="basis conversion for a vector - provide M as a 3Dvector " +
-                "and 2 option-arguments of -v: input- and output basis " +
-                "(NED,USE,XYZ,NWU)")
-        parser_convert.add_option('-y', '--fancy', action="store_true",
+            "and 2 option-arguments of -v: input- and output basis " +
+            "(NED,USE,XYZ,NWU)")
+        parser_convert.add_option(
+            '-y', '--fancy', action="store_true",
             dest='fancy_conversion', default=False,
             help='output in a stylish way  ')
 
@@ -5004,87 +5021,108 @@ def main():
         group_geo = OptionGroup(parser_plot, 'Geometry')
         group_app = OptionGroup(parser_plot, 'Appearance')
 
-        group_save.add_option('-f', '--output_file', action="store",
+        group_save.add_option(
+            '-f', '--output_file', action="store",
             dest='plot_outfile', metavar='<filename>', default=None, nargs=1,
             help='filename for saving ')
-        group_type.add_option('-P', '--pa_system', action="store_true",
+        group_type.add_option(
+            '-P', '--pa_system', action="store_true",
             dest='plot_pa_plot', default=False,
             help='key, if principal axis system shall be plotted instead ')
-        group_type.add_option('-O', '--full_sphere', action="store_true",
+        group_type.add_option(
+            '-O', '--full_sphere', action="store_true",
             dest='plot_full_sphere', default=False,
             help='key, if full sphere shall be plotted instead ')
-        group_geo.add_option('-V', '--viewpoint', action="store",
+        group_geo.add_option(
+            '-V', '--viewpoint', action="store",
             dest='plot_viewpoint', metavar='<lat,lon,azi>', default=None,
             help='coordinates of  the viewpoint - 3-tuple ')
-        group_geo.add_option('-p', '--projection', action="store",
+        group_geo.add_option(
+            '-p', '--projection', action="store",
             dest='plot_projection', metavar='<projection>', default=None,
             help='projection  of  the sphere ')
-        group_type.add_option('-U', '--upper', action="store_true",
+        group_type.add_option(
+            '-U', '--upper', action="store_true",
             dest='plot_show_upper_hemis', default=False,
             help='key, if upper hemisphere shall be shown ')
-        group_quality.add_option('-N', '--points', action="store",
+        group_quality.add_option(
+            '-N', '--points', action="store",
             metavar='<no. of points>', dest='plot_n_points', type="int",
             default=None,
             help='minimum number of points, used for nodallines ')
-        group_app.add_option('-s', '--size', action="store", dest='plot_size',
+        group_app.add_option(
+            '-s', '--size', action="store", dest='plot_size',
             metavar='<size in cm>', type="float", default=None,
             help='size of plot in cm')
-        group_colours.add_option('-w', '--pressure_colour', action="store",
+        group_colours.add_option(
+            '-w', '--pressure_colour', action="store",
             dest='plot_pressure_colour', metavar='<colour>', default=None,
             help='colour of the tension area ')
-        group_colours.add_option('-r', '--tension_colour', action="store",
+        group_colours.add_option(
+            '-r', '--tension_colour', action="store",
             dest='plot_tension_colour', metavar='<colour>', default=None,
             help='colour of the pressure area ')
-        group_app.add_option('-a', '--alpha', action="store",
+        group_app.add_option(
+            '-a', '--alpha', action="store",
             dest='plot_total_alpha', metavar='<alpha>', type='float',
             default=None,
             help="alpha value for the plot - float from 1=opaque to " +
-                "0=transparent ")
-        group_dc.add_option('-D', '--dc', action="store_true",
+            "0=transparent ")
+        group_dc.add_option(
+            '-D', '--dc', action="store_true",
             dest='plot_show_faultplanes', default=False,
             help='key, if double couple faultplanes shall be plotted ')
-        group_dc.add_option('-d', '--show1fp', action="store",
+        group_dc.add_option(
+            '-d', '--show1fp', action="store",
             metavar='<index> <linewidth> <colour> <alpha>',
             dest='plot_show_1faultplane', default=None, nargs=4,
             help="plot 1 faultplane - arguments are: index [1,2] of the " +
-                "resp. FP, linewidth(float), line colour(string or " +
-                "rgb-tuple), and alpha value (float between 0 and 1)  ")
-        group_misc.add_option('-e', '--eigenvectors', action="store",
+            "resp. FP, linewidth(float), line colour(string or " +
+            "rgb-tuple), and alpha value (float between 0 and 1)  ")
+        group_misc.add_option(
+            '-e', '--eigenvectors', action="store",
             dest='plot_show_princ_axes', metavar='<size> <linewidth> <alpha>',
             default=None, nargs=3,
             help="show eigenvectors - if used, provide 3 arguments: " +
-                "symbol size, symbol linewidth, and symbol alpha value ")
-        group_misc.add_option('-b', '--basis_vectors', action="store_true",
+            "symbol size, symbol linewidth, and symbol alpha value ")
+        group_misc.add_option(
+            '-b', '--basis_vectors', action="store_true",
             dest='plot_show_basis_axes', default=False,
             help='show NED basis in plot')
-        group_app.add_option('-l', '--lines', action="store",
+        group_app.add_option(
+            '-l', '--lines', action="store",
             dest='plot_outerline', metavar='<linewidth> <colour> <alpha>',
             nargs=3, default=None,
             help="gives the style of the outer line - 3 arguments " +
-                "needed: linewidth(float),line colour(string or " +
-                "rgb-tuple), and alpha value (float between 0 and 1)   ")
-        group_app.add_option('-n', '--nodals', action="store",
+            "needed: linewidth(float),line colour(string or " +
+            "rgb-tuple), and alpha value (float between 0 and 1)   ")
+        group_app.add_option(
+            '-n', '--nodals', action="store",
             dest='plot_nodalline', metavar='<linewidth> <colour> <alpha>',
             default=None, nargs=3,
             help="gives the style of the nodal lines - 3 arguments " +
-                "needed: linewidth(float),line colour(string or " +
-                "rgb-tuple), and alpha value (float between 0 and 1)   ")
-        group_quality.add_option('-q', '--quality', action="store",
+            "needed: linewidth(float),line colour(string or " +
+            "rgb-tuple), and alpha value (float between 0 and 1)   ")
+        group_quality.add_option(
+            '-q', '--quality', action="store",
             dest='plot_dpi', metavar='<dpi>', type="int", default=None,
             help="changes the quality for the plot in terms of dpi " +
-                "(minimum=200) ")
-        group_type.add_option('-L', '--lines_only', action="store_true",
+            "(minimum=200) ")
+        group_type.add_option(
+            '-L', '--lines_only', action="store_true",
             dest='plot_only_lines', default=False,
             help='key, if only lines are shown (no fill - so ' +
-                'overwrites "fill"-related options) ')
-        group_misc.add_option('-i', '--input_system', action="store",
+            'overwrites "fill"-related options) ')
+        group_misc.add_option(
+            '-i', '--input_system', action="store",
             dest='plot_input_system', metavar='<basis>', default=False,
             help='if source mechanism is given as tensor in another ' +
-                'system than NED (USE, XYZ,NWU) ')
-        group_type.add_option('-I', '--show_isotropic_part',
+            'system than NED (USE, XYZ,NWU) ')
+        group_type.add_option(
+            '-I', '--show_isotropic_part',
             dest='plot_isotropic_part', action='store_true', default=False,
             help='key, if isotropic part shall be considered for ' +
-                'plotting [%default]')
+            'plotting [%default]')
 
         parser_plot.add_option_group(group_save)
         parser_plot.add_option_group(group_type)
@@ -5153,32 +5191,38 @@ def main():
         If option 'fancy' is set, only a small overview about geometry and
         strength is provided instead.
         """
-        group_part.add_option('-c', '--complete', action="store_true",
+        group_part.add_option(
+            '-c', '--complete', action="store_true",
             dest='decomp_out_complete', default=False, help=helpstring11)
-        parser_decompose.add_option('-y', '--fancy', action="store_true",
+        parser_decompose.add_option(
+            '-y', '--fancy', action="store_true",
             dest='decomp_out_fancy', default=False,
             help='key for a stylish output')
-        group_part.add_option('-p', '--partial', action="store",
+        group_part.add_option(
+            '-p', '--partial', action="store",
             dest='decomp_out_part', default=False,
             metavar='<part1,part2,... >',
             help='provide an argument, what part(s) shall be displayed ' +
-                '(if multiple, separate by commas): in, out, type, full, ' +
-                'iso, iso_perc, devi, devi_perc, dc, dc_perc, dc2, ' +
-                'dc2_perc, dc3, dc3_perc, clvd, clvd_perc, mom, mag, ' +
-                'eigvals, eigvecs, t, n, p, faultplanes')
-        group_system.add_option('-i', '--input_system', action="store",
+            '(if multiple, separate by commas): in, out, type, full, ' +
+            'iso, iso_perc, devi, devi_perc, dc, dc_perc, dc2, ' +
+            'dc2_perc, dc3, dc3_perc, clvd, clvd_perc, mom, mag, ' +
+            'eigvals, eigvecs, t, n, p, faultplanes')
+        group_system.add_option(
+            '-i', '--input_system', action="store",
             dest='decomp_in_system', metavar='<basis>', default=False,
             help='set to provide input in another system than NED ' +
-                '(XYZ,USE,NWU)  ')
-        group_system.add_option('-o', '--output_system', action="store",
+            '(XYZ,USE,NWU)  ')
+        group_system.add_option(
+            '-o', '--output_system', action="store",
             dest='decomp_out_system', metavar='<basis>', default=False,
             help='set to return output in anaother system than NED ' +
-                '(XYZ,USE,NWU) ')
-        group_type.add_option('-t', '--type', action="store",
+            '(XYZ,USE,NWU) ')
+        group_type.add_option(
+            '-t', '--type', action="store",
             dest='decomp_key', metavar='<decomposition key>', default=False,
             type='int',
             help='integer key to choose the type of decomposition - 20: ' +
-                'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs  ')
+            'ISO+DC+CLVD ; 21: ISO+major DC+ minor DC ; 31: ISO + 3 DCs  ')
 
         parser_decompose.add_option_group(group_type)
         parser_decompose.add_option_group(group_part)
