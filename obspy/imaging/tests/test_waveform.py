@@ -284,9 +284,8 @@ class WaveformTestCase(unittest.TestCase):
                         'latitude': _i,
                         'longitude': _i})
         outfile = os.path.join(self.path, 'azim_section')
-        st.plot(type='section', azim_dist=True, ev_lat=0.0,
-                ev_lon=0.0, outfile=outfile)
-
+        st.plot(type='section', dist_degree=True, ev_coord=(0.0, 0.0),
+            outfile=outfile)
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')

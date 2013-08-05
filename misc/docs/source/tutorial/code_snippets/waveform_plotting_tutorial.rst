@@ -118,8 +118,8 @@ by setting parameter ``type`` to ``'section'``:
 To plot a record section the ObsPy header ``trace.stats.distance`` (Offset) must be 
 defined in meters. Or a geographical location ``trace.stats.coordinates.latitude`` & 
 ``trace.stats.coordinates.longitude`` must be defined if the section is plotted in 
-azimuthal distances (``azim_dist=True``) along with parameters ``ev_lat`` 
-and ``ev_lon``. For further information please see :meth:`~obspy.core.stream.Stream.plot`
+great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
+For further information please see :meth:`~obspy.core.stream.Stream.plot`
 
 .. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
 

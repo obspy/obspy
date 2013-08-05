@@ -83,10 +83,9 @@ class WaveformPlotting(object):
         # Assigning values for type 'section'
         self.sect_offset_min = kwargs.get('offset_min', None)
         self.sect_offset_max = kwargs.get('offset_max', None)
-        self.sect_azim_dist = kwargs.get('azim_dist', False)
+        self.sect_dist_degree = kwargs.get('dist_degree', False)
         # TODO Event data from class Event()
-        self.ev_lat = kwargs.get('ev_lat', None)
-        self.ev_lon = kwargs.get('ev_lon', None)
+        self.ev_coord = kwargs.get('ev_coord', None)
         self.alpha = kwargs.get('alpha', 0.5)
         self.sect_plot_dx = kwargs.get('plot_dx', None)
         self.sect_timedown = kwargs.get('time_down', False)
@@ -1128,7 +1127,7 @@ class WaveformPlotting(object):
         ax.set_xticks(self.__sectOffsetToFraction(ticks))
         # Setting up tick labels
         ax.set_ylabel('Time [s]')
-        if not self.sect_azim_dist:
+        if not self.sect_dist_degree:
             ax.set_xlabel('Offset [km]')
             ax.set_xticklabels(ticks / 1e3)
         else:
@@ -1161,7 +1160,7 @@ class WaveformPlotting(object):
         # Extract distances from st[].stats.distance
         # or from st.[].stats.coordinates.latitude...
         self._tr_offsets = np.empty(len(self.stream))
-        if not self.sect_azim_dist:
+        if not self.sect_dist_degree:
             # Define offset in km from tr.stats.distance
             try:
                 for _tr in range(len(self.stream)):
@@ -1176,7 +1175,7 @@ class WaveformPlotting(object):
                     self._tr_offsets[_tr] = locations2degrees(
                         self.stream[_tr].stats.coordinates.latitude,
                         self.stream[_tr].stats.coordinates.longitude,
-                        self.ev_lat, self.ev_lon)
+                        self.ev_coord[0], self.ev_coord[1])
             except:
                 msg = 'Define latitude/longitude in trace.stats.coordinates' +\
                     ' and ev_lat/ev_lon. See documentation.'

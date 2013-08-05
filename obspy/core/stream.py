@@ -1021,12 +1021,12 @@ class Stream(object):
         :type offset_max: Scalar or None, optional
         :param offset_min: Maximum offset in meters to plot.
             Default is maximum offset.
-        :type azim_dist: bool, optional
-        :param azim_dist: Plot in azimuthal distance from event.
-        :type ev_lat: float or None, optional
-        :param ev_lat: Events' latitude in degree.
-        :type ev_lon: float or None, optional
-        :param ev_lon: Events' longitude in degree.
+        :param dist_degree: Plot trace distance in degree from epicenter,
+            default is ``False``. If ``True`` parameter ``ev_coord`` has to be
+            defined.
+        :type ev_coord: tuple or None, optional
+        :param ev_coord: Events' coordinates as tuple
+            ``(latitude, longitude)``.
         :type plot_dx: integer, optional
         :param plot_dx: Spacing of ticks on the spatial x-axis.
             Either km or degree, depending on ``azim_dist``
