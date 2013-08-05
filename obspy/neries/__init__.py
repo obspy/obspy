@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 """
 obspy.neries - NERIES Web service client for ObsPy
 ==================================================

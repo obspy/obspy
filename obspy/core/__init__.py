@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 #------------------------------------------------------------------------------
 #  Purpose: Core classes of ObsPy: Python for Seismological Observatories
 #   Author: Robert Barsch

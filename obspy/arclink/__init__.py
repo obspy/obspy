@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 """
 obspy.arclink - ArcLink/WebDC request client for ObsPy
 ======================================================

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 """
 obspy.xseed - Dataless SEED, RESP and XML-SEED read and write support for ObsPy
 ===============================================================================

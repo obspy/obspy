@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# flake8: noqa
 """
 obspy.core.util.geodetics - Various geodetic utilities for ObsPy.
 =================================================================
