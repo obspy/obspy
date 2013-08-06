@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa
 """
 obspy.seishub - SeisHub database client for ObsPy
 =================================================

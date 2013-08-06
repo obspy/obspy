@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa
 #------------------------------------------------------------------------------
 #  Purpose: Convenience imports for obspy
 #   Author: Robert Barsch

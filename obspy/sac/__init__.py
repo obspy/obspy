@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa
 """
 obspy.sac - SAC read and write support for ObsPy
 ================================================

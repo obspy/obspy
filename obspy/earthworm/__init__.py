@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa
 """
 obspy.earthworm - Earthworm Wave Server client for ObsPy.
 =========================================================

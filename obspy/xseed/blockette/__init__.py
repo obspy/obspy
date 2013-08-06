@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-# flake8: noqa
 
 from obspy.xseed.blockette.blockette import Blockette
 
