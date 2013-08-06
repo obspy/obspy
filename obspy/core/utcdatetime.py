@@ -209,7 +209,7 @@ class UTCDateTime(object):
         # set default precision
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # iso8601 flag
-        iso8601 = kwargs.pop('iso8601', False) == True
+        iso8601 = kwargs.pop('iso8601', False) is True
         # check parameter
         if len(args) == 0 and len(kwargs) == 0:
             # use current time if no time is given
@@ -259,7 +259,7 @@ class UTCDateTime(object):
                     # looks like an compact ordinal date string
                     pattern = "%Y%j"
                 elif len(parts) > 1 and len(parts[1]) == 3 and \
-                   parts[1].isdigit():
+                        parts[1].isdigit():
                     # looks like an ordinal date string
                     value = ''.join(parts)
                     if len(parts) > 2:
@@ -358,7 +358,7 @@ class UTCDateTime(object):
             td = (dt - TIMESTAMP0)
         except TypeError:
             td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
-        self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) * \
+        self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) *
                           1000000) / 1000000.0 + ms
 
     @staticmethod
@@ -840,8 +840,8 @@ class UTCDateTime(object):
         """
         if isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
-            value = (value.microseconds + (value.seconds + value.days * \
-                86400) * 1000000) / 1000000.0
+            value = (value.microseconds + (value.seconds + value.days *
+                     86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp + value)
 
     def __sub__(self, value):
@@ -870,8 +870,8 @@ class UTCDateTime(object):
             return round(self.timestamp - value.timestamp, self.__precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
-            value = (value.microseconds + (value.seconds + value.days * \
-                86400) * 1000000) / 1000000.0
+            value = (value.microseconds + (value.seconds + value.days *
+                     86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp - value)
 
     def __str__(self):
@@ -1258,8 +1258,8 @@ class UTCDateTime(object):
         '2008275T123035.0450Z'
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
-                (self.year, self.julday, self.hour, self.minute, self.second,
-                 self.microsecond // 100)
+            (self.year, self.julday, self.hour, self.minute, self.second,
+             self.microsecond // 100)
 
     def formatArcLink(self):
         """
@@ -1347,8 +1347,8 @@ class UTCDateTime(object):
         '2008-05-27T12:30:35.045'
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
-                (self.year, self.month, self.day, self.hour, self.minute,
-                 self.second, self.microsecond // 1000)
+            (self.year, self.month, self.day, self.hour, self.minute,
+             self.second, self.microsecond // 1000)
 
     def _getPrecision(self):
         """

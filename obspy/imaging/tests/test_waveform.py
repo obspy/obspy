@@ -77,7 +77,8 @@ class WaveformTestCase(unittest.TestCase):
         st.plot(format='png')
         self.assertEqual(st, org_st)
         # Now only plot a certain time frame.
-        st.plot(format='png', starrtime=UTCDateTime(10000),
+        st.plot(
+            format='png', starrtime=UTCDateTime(10000),
             endtime=UTCDateTime(20000))
         self.assertEqual(st, org_st)
 
@@ -281,11 +282,12 @@ class WaveformTestCase(unittest.TestCase):
         for _i in range(10):
             st += self._createStream(start, start + 3600, 100)
             st[-1].stats.coordinates = AttribDict({
-                        'latitude': _i,
-                        'longitude': _i})
+                'latitude': _i,
+                'longitude': _i})
         outfile = os.path.join(self.path, 'azim_section')
         st.plot(type='section', dist_degree=True, ev_coord=(0.0, 0.0),
-            outfile=outfile)
+                outfile=outfile)
+
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')

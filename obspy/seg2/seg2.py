@@ -98,7 +98,7 @@ class SEG2(object):
            (unpack('B', file_descriptor_block[1])[0] == 0x3a):
             self.endian = '<'
         elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
-            (unpack('B', file_descriptor_block[1])[0] == 0x55):
+                (unpack('B', file_descriptor_block[1])[0] == 0x55):
             self.endian = '>'
         else:
             msg = 'Wrong File Descriptor Block ID'
@@ -106,16 +106,16 @@ class SEG2(object):
 
         # Check the revision number.
         revision_number = unpack('%sH' % self.endian,
-                                file_descriptor_block[2:4])[0]
+                                 file_descriptor_block[2:4])[0]
         if revision_number != 1:
             msg = '\nOnly SEG 2 revision 1 is officially supported. This file '
             msg += 'has revision %i. Reading it might fail.' % revision_number
             msg += '\nPlease contact the ObsPy developers with a sample file.'
             warnings.warn(msg)
-        size_of_trace_pointer_sub_block = unpack('%sH' % self.endian,
-                                       file_descriptor_block[4:6])[0]
-        number_of_traces = unpack('%sH' % self.endian,
-                                  file_descriptor_block[6:8])[0]
+        size_of_trace_pointer_sub_block = unpack(
+            '%sH' % self.endian, file_descriptor_block[4:6])[0]
+        number_of_traces = unpack(
+            '%sH' % self.endian, file_descriptor_block[6:8])[0]
 
         # Define the string and line terminators.
         size_of_string_terminator = unpack('B', file_descriptor_block[8])[0]
@@ -131,7 +131,7 @@ class SEG2(object):
             self.string_terminator = first_string_terminator_char
         elif size_of_string_terminator == 2:
             self.string_terminator = first_string_terminator_char + \
-                                     second_string_terminator_char
+                second_string_terminator_char
         else:
             msg = 'Wrong size of string terminator.'
             raise SEG2InvalidFileError(msg)
@@ -140,14 +140,14 @@ class SEG2(object):
             self.line_terminator = first_line_terminator_char
         elif size_of_line_terminator == 2:
             self.line_terminator = first_line_terminator_char + \
-                                     second_line_terminator_char
+                second_line_terminator_char
         else:
             msg = 'Wrong size of line terminator.'
             raise SEG2InvalidFileError(msg)
 
         # Read the trace pointer sub-block and retrieve all the pointers.
         trace_pointer_sub_block = \
-                self.file_pointer.read(size_of_trace_pointer_sub_block)
+            self.file_pointer.read(size_of_trace_pointer_sub_block)
         self.trace_pointers = []
         for _i in xrange(number_of_traces):
             index = _i * 4
@@ -187,7 +187,7 @@ class SEG2(object):
         size_of_this_block = unpack('%sH' % self.endian,
                                     trace_descriptor_block[2:4])[0]
         number_of_samples_in_data_block = \
-                unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
+            unpack('%sL' % self.endian, trace_descriptor_block[8:12])[0]
         data_format_code = unpack('B', trace_descriptor_block[12])[0]
 
         # Parse the data format code.
@@ -215,9 +215,8 @@ class SEG2(object):
         # The rest of the trace block is free form.
         header = {}
         header['seg2'] = AttribDict()
-        self.parseFreeForm(
-                         self.file_pointer.read(size_of_this_block - 32),
-                          header['seg2'])
+        self.parseFreeForm(self.file_pointer.read(size_of_this_block - 32),
+                           header['seg2'])
         header['delta'] = float(header['seg2']['SAMPLE_INTERVAL'])
         # Set to the file's starttime.
         header['starttime'] = deepcopy(self.starttime)
@@ -230,8 +229,10 @@ class SEG2(object):
                 warnings.warn(msg)
         header['calib'] = float(header['seg2']['DESCALING_FACTOR'])
         # Unpack the data.
-        data = np.fromstring(self.file_pointer.read(
-                number_of_samples_in_data_block * sample_size), dtype=dtype)
+        data = np.fromstring(
+            self.file_pointer.read(number_of_samples_in_data_block *
+                                   sample_size),
+            dtype=dtype)
         # Integrate SEG2 file header into each trace header
         tmp = self.stream.stats.seg2.copy()
         tmp.update(header['seg2'])
@@ -291,7 +292,7 @@ def isSEG2(filename):
            (unpack('B', file_descriptor_block[1])[0] == 0x3a):
             endian = '<'
         elif (unpack('B', file_descriptor_block[0])[0] == 0x3a) and \
-            (unpack('B', file_descriptor_block[1])[0] == 0x55):
+                (unpack('B', file_descriptor_block[1])[0] == 0x55):
             endian = '>'
         else:
             return False
@@ -299,7 +300,7 @@ def isSEG2(filename):
         return False
     # Check the revision number.
     revision_number = unpack('%sH' % endian,
-                            file_descriptor_block[2:4])[0]
+                             file_descriptor_block[2:4])[0]
     if revision_number != 1:
         return False
     return True

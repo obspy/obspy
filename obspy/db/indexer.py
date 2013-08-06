@@ -47,7 +47,7 @@ class WaveformFileCrawler(object):
             query = query.filter(WaveformChannel.station == data['station'])
             query = query.filter(WaveformChannel.location == data['location'])
             query = query.filter(WaveformChannel.channel == data['channel'])
-            query = query.filter(WaveformChannel.starttime == \
+            query = query.filter(WaveformChannel.starttime ==
                                  data['starttime'])
             query = query.filter(WaveformChannel.endtime == data['endtime'])
             if query.count() > 0:
@@ -108,7 +108,7 @@ class WaveformFileCrawler(object):
             query = session.query(WaveformFile)
             query = query.filter(WaveformPath.path == path)
             query = query.filter(WaveformFile.file == file)
-            query = query.filter(WaveformPath.archived == False)
+            query = query.filter(WaveformPath.archived is False)
             for file_obj in query:
                 session.delete(file_obj)
             try:
@@ -122,7 +122,7 @@ class WaveformFileCrawler(object):
         else:
             query = session.query(WaveformPath)
             query = query.filter(WaveformPath.path == path)
-            query = query.filter(WaveformPath.archived == False)
+            query = query.filter(WaveformPath.archived is False)
             for path_obj in query:
                 session.delete(path_obj)
             try:
@@ -467,7 +467,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                 result['file'] = file
                 result['filepath'] = filepath
                 # trace information
-                result['format'] = format = trace.stats._format
+                result['format'] = trace.stats._format
                 result['station'] = trace.stats.station
                 result['location'] = trace.stats.location
                 result['channel'] = trace.stats.channel
@@ -493,7 +493,7 @@ def worker(_i, input_queue, work_queue, output_queue, log_queue, mappings={}):
                         result['channel'] = mapping['channel']
                         msg = "Mapping '%s' to '%s.%s.%s.%s'" % \
                             (old_id, mapping['network'], mapping['station'],
-                            mapping['location'], mapping['channel'])
+                             mapping['location'], mapping['channel'])
                         log_queue.append(msg)
                 # gaps/overlaps for current trace
                 result['gaps'] = gap_dict.get(trace.id, [])

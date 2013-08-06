@@ -12,7 +12,7 @@ NERIES Web service client for ObsPy.
 """
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
-from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
+from obspy.core.util import NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
@@ -582,7 +582,7 @@ class Client(object):
                 _AttributePlugin({'ModifiedAfter': dt}))
         # add version attribute needed for instruments
         client.options.plugins.append(
-                _AttributePlugin({'Version': '1.0'}))
+            _AttributePlugin({'Version': '1.0'}))
         # request data
         response = client.service.getInventory(usertoken, stationid,
                                                spatialbounds)
@@ -722,7 +722,8 @@ class Client(object):
             (UTCDateTime(endtime) + delta).strftime("%Y-%m-%dT%H:%M:%S")
         # request data
         if format == 'MSEED':
-            client.options.plugins = [_AttributePlugin({'DataFormat':'MSEED'})]
+            client.options.plugins = \
+                [_AttributePlugin({'DataFormat': 'MSEED'})]
         # start data request
         response = client.service.dataRequest(usertoken, stationid)
         client.options.plugins = []

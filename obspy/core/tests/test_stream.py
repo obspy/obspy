@@ -37,7 +37,7 @@ class StreamTestCase(unittest.TestCase):
         header['npts'] = 50668
         trace4 = Trace(
             data=np.random.randint(0, 1000, 50668).astype('float64'),
-           header=deepcopy(header))
+            header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
@@ -884,9 +884,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st2[2]), 824)
         self.assertEqual(len(st2[3]), 50668)
         self.assertEqual(st2[0].stats.starttime,
-                          UTCDateTime("2007-12-31T23:59:59.915000"))
+                         UTCDateTime("2007-12-31T23:59:59.915000"))
         self.assertEqual(st2[3].stats.endtime,
-                          UTCDateTime("2008-01-01T00:04:31.790000"))
+                         UTCDateTime("2008-01-01T00:04:31.790000"))
         for i in xrange(4):
             self.assertEqual(st2[i].stats.sampling_rate, 200)
             self.assertEqual(st2[i].getId(), 'BW.BGLD..EHE')
@@ -1031,7 +1031,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
         # endtime of last trace
         endtime = trace1.stats.starttime + \
-                  (4 * 1440 - 1) * trace1.stats.delta
+            (4 * 1440 - 1) * trace1.stats.delta
         self.assertEqual(st[0].stats.endtime, endtime)
 
     def test_mergeOverlapsMethod1(self):
@@ -1089,8 +1089,8 @@ class StreamTestCase(unittest.TestCase):
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=(-1))
-        np.testing.assert_array_equal(st[0].data,
-                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
+        np.testing.assert_array_equal(
+            st[0].data, np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
         # Interpolate all samples (``interpolation_samples=5``)::
         # Given number of samples is bigger than the actual overlap - should
         # interpolate all samples
@@ -1103,8 +1103,8 @@ class StreamTestCase(unittest.TestCase):
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=5)
-        np.testing.assert_array_equal(st[0].data,
-                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
+        np.testing.assert_array_equal(
+            st[0].data, np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
 
     def test_trimRemovingEmptyTraces(self):
         """
@@ -1622,8 +1622,8 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate()
         st2.differentiate()
 
-        np.testing.assert_array_almost_equal(st1[0].data[:-1],
-                st2[0].data[:-1], decimal=5)
+        np.testing.assert_array_almost_equal(
+            st1[0].data[:-1], st2[0].data[:-1], decimal=5)
 
     def test_cleanupNonDefaultPrecisionUTCDateTime(self):
         """
@@ -1709,7 +1709,7 @@ class StreamTestCase(unittest.TestCase):
             # will usually warn only but here we force to raise an exception
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
-                 headonly=True, starttime=0, endtime=1)
+                              headonly=True, starttime=0, endtime=1)
 
     def test_copy(self):
         """

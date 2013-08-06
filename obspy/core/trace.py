@@ -318,21 +318,21 @@ class Trace(object):
         if self.stats.sampling_rate < 0.1:
             if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples"
         else:
             if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples"
         # check for masked array
         if np.ma.count_masked(self.data):
             out += ' (masked)'
@@ -835,14 +835,14 @@ class Trace(object):
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
-                        float(self.stats.sampling_rate)
+                    float(self.stats.sampling_rate)
                 newdelta = round((starttime - newstarttime) *
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
             delta = int(math.floor(round((self.stats.starttime - starttime) *
-                                          self.stats.sampling_rate, 7))) * -1
+                                   self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -889,7 +889,7 @@ class Trace(object):
         # check if in boundary
         if nearest_sample:
             delta = round((endtime - self.stats.starttime) *
-                           self.stats.sampling_rate) - self.stats.npts + 1
+                          self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
@@ -911,7 +911,7 @@ class Trace(object):
             return
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
-                                   delta * self.stats.delta
+                delta * self.stats.delta
             self.data = np.empty(0, dtype=org_dtype)
             return
         # cut from right
@@ -1031,7 +1031,7 @@ class Trace(object):
                 raise Exception(msg % (sr, delta, len(self.data)))
             # Check if the endtime fits the starttime, npts and sampling_rate.
             if self.stats.endtime != self.stats.starttime + \
-                (self.stats.npts - 1) / float(self.stats.sampling_rate):
+                    (self.stats.npts - 1) / float(self.stats.sampling_rate):
                 msg = "Endtime is not the time of the last sample."
                 raise Exception(msg)
         elif self.stats.npts not in [0, 1]:
@@ -1138,19 +1138,19 @@ class Trace(object):
             paz_remove = self.stats.paz
 
         from obspy.signal import seisSim
-        self.data = seisSim(self.data, self.stats.sampling_rate,
-                paz_remove=paz_remove, paz_simulate=paz_simulate,
-                remove_sensitivity=remove_sensitivity,
-                simulate_sensitivity=simulate_sensitivity, **kwargs)
+        self.data = seisSim(
+            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
+            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
+            simulate_sensitivity=simulate_sensitivity, **kwargs)
 
         # add processing information to the stats dictionary
         if paz_remove:
             proc_info = "simulate:inverse:%s:sensitivity=%s" % \
-                    (paz_remove, remove_sensitivity)
+                (paz_remove, remove_sensitivity)
             self._addProcessingInfo(proc_info)
         if paz_simulate:
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
-                    (paz_simulate, simulate_sensitivity)
+                (paz_simulate, simulate_sensitivity)
             self._addProcessingInfo(proc_info)
 
     def filter(self, type, **options):

@@ -134,9 +134,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         # Inline method to avoid messy code.
         def assertLoc(lat1, long1, lat2, long2, approx_distance):
-            self.assertTrue( \
-            abs(math.radians(locations2degrees(lat1, long1, lat2, long2)) \
-                * 6371 - approx_distance) <= 20)
+            self.assertTrue(abs(math.radians(locations2degrees(
+                lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
 
         # Approximate values from the Great Circle Calculator:
         #   http://williams.best.vwh.net/gccalc.htm

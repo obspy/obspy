@@ -52,7 +52,7 @@ class Client(object):
     US.ISCO.00.BH... | 40.0 Hz, 401 samples
     """
     def __init__(self, host="137.227.224.97", port=2061, timeout=30,
-            debug=False):
+                 debug=False):
         """
         Initializes access to a CWB QueryServer
         """
@@ -117,7 +117,7 @@ class Client(object):
                   "(use e.g. 'BHZ', 'BH?', 'BH[Z12]', 'B??')"
             raise Exception(msg)
         seedname = network.ljust(2, " ") + station.ljust(5, " ") + channel + \
-                   location.ljust(2, " ")
+            location.ljust(2, " ")
         # allow UNIX style "?" wildcard
         seedname = seedname.replace("?", ".")
         return self.getWaveformNSCL(seedname, starttime, endtime - starttime)
@@ -180,7 +180,7 @@ class Client(object):
                 with NamedTemporaryFile() as tf:
                     if self.debug:
                         print ascdate(), asctime(), "connecting temp file", \
-                              tf.name
+                            tf.name
                     s.connect((self.host, self.port))
                     s.setblocking(0)
                     s.send(line)

@@ -107,7 +107,7 @@ def compareSEED(seed1, seed2):
         # added a '~' and remove a space before the next record
         # record length for now 4096
         seed1 = seed1[0:11] + '%04i' % (l + 1) + seed1[15:(l + 8)] + '~' + \
-                seed1[(l + 8):4095] + seed1[4096:]
+            seed1[(l + 8):4095] + seed1[4096:]
     # check each byte
     for i in xrange(0, len(seed1)):
         if seed1[i] == seed2[i]:

@@ -137,7 +137,7 @@ def enframe(x, win, inc):
     #f = np.zeros((nf, length))
     indf = inc * np.arange(nf)
     inds = np.arange(length) + 1
-    f = x[(np.transpose(np.vstack([indf] * length)) + \
+    f = x[(np.transpose(np.vstack([indf] * length)) +
            np.vstack([inds] * nf)) - 1]
     if (nwin > 1):
         w = np.transpose(win)
@@ -165,8 +165,9 @@ def smooth(x, smoothie):
                                  [x[(len(x) - 1), :]] * int(smoothie)))
             help = np.transpose(out_add)
             #out = signal.lfilter(np.ones(smoothie) / smoothie, 1, help)
-            out = signal.lfilter(np.hstack((np.ones(smoothie) / (2 * smoothie),
-                0, np.ones(smoothie) / (2 * smoothie))), 1, help)
+            out = signal.lfilter(
+                np.hstack((np.ones(smoothie) / (2 * smoothie), 0,
+                          np.ones(smoothie) / (2 * smoothie))), 1, help)
             out = np.transpose(out)
             #out = out[smoothie:len(out), :]
             out = out[2 * smoothie:len(out), :]
@@ -177,8 +178,9 @@ def smooth(x, smoothie):
             #                   [x[size_x - 1]] * smoothie)
             out_add = np.hstack(([x[0]] * int(smoothie), x,
                                  [x[(len(x) - 1)]] * int(smoothie)))
-            out = signal.lfilter(np.hstack((np.ones(smoothie) / (2 * smoothie),
-                0, np.ones(smoothie) / (2 * smoothie))), 1, out_add)
+            out = signal.lfilter(np.hstack((
+                np.ones(smoothie) / (2 * smoothie), 0,
+                np.ones(smoothie) / (2 * smoothie))), 1, out_add)
             out = out[2 * smoothie:len(out)]
             out[0:smoothie] = out[smoothie]
             out[len(out) - smoothie:len(out)] = out[len(out) - smoothie - 1]
@@ -212,9 +214,9 @@ def rdct(x, n=0):
         x = np.append([x[0:n:2, :]], [x[2 * np.fix(n / 2):0:-2, :]], axis=1)
         x = x[0, :, :]
         z = np.append(np.sqrt(2.), 2. * np.exp((-0.5j * float(np.pi / n)) *
-                                   np.arange(1, n)))
+                      np.arange(1, n)))
         y = np.real(np.multiply(np.transpose(fftpack.fft(np.transpose(x))),
-                          np.transpose(np.array([z])) * np.ones(k))) / float(a)
+                    np.transpose(np.array([z])) * np.ones(k))) / float(a)
         return y
 
 

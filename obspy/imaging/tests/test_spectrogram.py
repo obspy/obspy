@@ -28,7 +28,8 @@ class SpectrogramTestCase(unittest.TestCase):
         # Create dynamic test_files to avoid dependencies of other modules.
         # set specific seed value such that random numbers are reproduceable
         np.random.seed(815)
-        head = {'network': 'BW', 'station': 'BGLD',
+        head = {
+            'network': 'BW', 'station': 'BGLD',
             'starttime': UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
             'sampling_rate': 200.0, 'channel': 'EHE'}
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)

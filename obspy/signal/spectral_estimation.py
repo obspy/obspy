@@ -39,9 +39,9 @@ if MATPLOTLIB_VERSION is None:
     # ImportError if matplotlib actually is used (currently in psd() and
     # PPSD())
     msg_matplotlib_ImportError = "Failed to import matplotlib. While this " \
-            "is no dependency of obspy.signal it is however necessary for a " \
-            "few routines. Please install matplotlib in order to be able " \
-            "to use e.g. psd() or PPSD()."
+        "is no dependency of obspy.signal it is however necessary for a " \
+        "few routines. Please install matplotlib in order to be able " \
+        "to use e.g. psd() or PPSD()."
     # set up two dummy functions. this makes it possible to make the docstring
     # of psd() look like it should with two functions as default values for
     # kwargs although matplotlib might not be present and the routines
@@ -464,7 +464,7 @@ class PPSD():
         :type stream: :class:`~obspy.core.stream.Stream`
         """
         self.times_data += \
-                [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
+            [[tr.stats.starttime, tr.stats.endtime] for tr in stream]
 
     def __check_time_present(self, utcdatetime):
         """
@@ -634,8 +634,9 @@ class PPSD():
             spec_octaves.append(spec_center)
         spec_octaves = np.array(spec_octaves)
 
-        hist, self.xedges, self.yedges = np.histogram2d(self.per_octaves,
-                spec_octaves, bins=(self.period_bins, self.spec_bins))
+        hist, self.xedges, self.yedges = np.histogram2d(
+            self.per_octaves,
+            spec_octaves, bins=(self.period_bins, self.spec_bins))
 
         try:
             # we have to make sure manually that the bins are always the same!
@@ -670,7 +671,7 @@ class PPSD():
             side = "right"
         else:
             side = "left"
-        percentile_values = [col.searchsorted(percentile, side=side) \
+        percentile_values = [col.searchsorted(percentile, side=side)
                              for col in hist_cum]
         # map to power db values
         percentile_values = self.spec_bins[percentile_values]
@@ -763,8 +764,8 @@ class PPSD():
             # for every period look up the approximate place of the percentiles
             for percentile in percentiles:
                 periods, percentile_values = \
-                        self.get_percentile(percentile=percentile,
-                                            hist_cum=hist_cum)
+                    self.get_percentile(percentile=percentile,
+                                        hist_cum=hist_cum)
                 ax.plot(periods, percentile_values, color="black")
 
         if show_noise_models:

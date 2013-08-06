@@ -46,7 +46,7 @@ def xseed2dataless(filename, options):
         f.close()
         if outdir:
             output = os.path.join(outdir,
-                                  os.path.basename(file) + os.extsep + \
+                                  os.path.basename(file) + os.extsep +
                                   'dataless')
         elif outfile:
             output = outfile

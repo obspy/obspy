@@ -500,8 +500,9 @@ def run(interactive=True):
                       action="store_true", dest="quiet",
                       help="quiet mode")
     # filter options
-    filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
-        "will test all ObsPy modules which don't require a " + \
+    filter = OptionGroup(
+        parser, "Module Filter", "Providing no modules " +
+        "will test all ObsPy modules which don't require a " +
         "active network connection.")
     filter.add_option("--all", default=False,
                       action="store_true", dest="all",
@@ -523,7 +524,7 @@ def run(interactive=True):
                       help="lists n slowest test cases")
     timing.add_option("-p", "--profile", default=False,
                       action="store_true", dest="profile",
-                      help="uses cProfile, saves the results to file " + \
+                      help="uses cProfile, saves the results to file " +
                            "obspy.pstats and prints some profiling numbers")
     parser.add_option_group(timing)
     # reporting options
@@ -575,7 +576,8 @@ def run(interactive=True):
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
-    return runTests(verbosity, parser.largs, report, options.log,
+    return runTests(
+        verbosity, parser.largs, report, options.log,
         options.server, options.all, options.timeit, interactive, options.n,
         exclude=options.module, tutorial=options.tutorial,
         hostname=options.hostname)

@@ -313,8 +313,8 @@ ENTRY_POINTS = {
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
-    'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                      'writeFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _getOrderedEntryPoints(
+        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
 }
@@ -358,8 +358,8 @@ def _getFunctionFromEntryPoint(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key,
-            'obspy.plugin.%s' % (group), entry_point.name)
+    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
+                            entry_point.name)
     return func
 
 
@@ -396,7 +396,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
             # search isFormat for given entry point
-            isFormat = load_entry_point(format_ep.dist.key,
+            isFormat = load_entry_point(
+                format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # check format
@@ -415,7 +416,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        readFormat = load_entry_point(format_ep.dist.key,
+        readFormat = load_entry_point(
+            format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"

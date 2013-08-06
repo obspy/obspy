@@ -86,7 +86,7 @@ class TraceTestCase(unittest.TestCase):
         tr._ltrim(trace.stats.endtime + 100)
         tr.verify()
         self.assertEqual(tr.stats.starttime,
-                          trace.stats.endtime + 100)
+                         trace.stats.endtime + 100)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
@@ -94,7 +94,7 @@ class TraceTestCase(unittest.TestCase):
         tr._ltrim(5)
         tr.verify()
         self.assertEqual(tr.stats.starttime,
-                          trace.stats.starttime + 5)
+                         trace.stats.starttime + 5)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEqual(tr.stats.endtime, tr.stats.starttime)
         # start time == end time
@@ -102,7 +102,7 @@ class TraceTestCase(unittest.TestCase):
         tr._ltrim(5.1)
         tr.verify()
         self.assertEqual(tr.stats.starttime,
-                          trace.stats.starttime + 5.1)
+                         trace.stats.starttime + 5.1)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         self.assertEqual(tr.stats.endtime, tr.stats.starttime)
 
@@ -179,7 +179,7 @@ class TraceTestCase(unittest.TestCase):
         tr.verify()
         delta = int(math.floor(round(5.1 * trace.stats.sampling_rate, 7)))
         endtime = trace.stats.starttime + trace.stats.delta * \
-                  (trace.stats.npts - delta - 1)
+            (trace.stats.npts - delta - 1)
         self.assertEqual(tr.stats.endtime, endtime)
         np.testing.assert_array_equal(tr.data, np.empty(0))
         # end time == start time
@@ -1021,9 +1021,9 @@ class TraceTestCase(unittest.TestCase):
             self.assertEqual(sum_trace.stats.delta, org_trace.stats.delta)
             # check sampling rates
             self.assertAlmostEqual(traces[i].stats.sampling_rate,
-                                    org_trace.stats.sampling_rate)
+                                   org_trace.stats.sampling_rate)
             self.assertAlmostEqual(sum_trace.stats.sampling_rate,
-                                    org_trace.stats.sampling_rate)
+                                   org_trace.stats.sampling_rate)
             # check endtimes
             self.assertEqual(traces[i].stats.endtime, sum_trace.stats.endtime)
 

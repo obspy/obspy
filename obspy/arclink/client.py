@@ -502,7 +502,7 @@ class Client(object):
         format = format.upper()
         if format not in ["MSEED", "FSEED"]:
             msg = ("'%s' is not a valid format. Choose either 'MSEED' or "
-                "'FSEED'")
+                   "'FSEED'")
             raise ArcLinkException(msg)
         # check parameters
         is_name = isinstance(filename, basestring)
@@ -1138,8 +1138,8 @@ class Client(object):
                 net.end = None
             # remark
             try:
-                net.remark = network.xpath('ns:remark',
-                    namespaces={'ns': xml_ns})[0].text or ''
+                net.remark = network.xpath(
+                    'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
             except:
                 net.remark = ''
             # write network entries
@@ -1174,8 +1174,8 @@ class Client(object):
                     sta.end = None
                 # remark
                 try:
-                    sta.remark = station.xpath('ns:remark',
-                        namespaces={'ns': xml_ns})[0].text or ''
+                    sta.remark = station.xpath(
+                        'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
                 except:
                     sta.remark = ''
                 # write station entry

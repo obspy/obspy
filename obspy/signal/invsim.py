@@ -116,17 +116,19 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     if halfcosine:
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
-        cos_win[idx1:idx2 + 1] = 0.5 * (1.0 - np.cos((np.pi * \
-            (np.arange(idx1, idx2 + 1) - idx1) / (idx2 - idx1))))
+        cos_win[idx1:idx2 + 1] = 0.5 * (
+            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - idx1) /
+                          (idx2 - idx1))))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = 0.5 * (1.0 + np.cos((np.pi * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3))))
+        cos_win[idx3:idx4 + 1] = 0.5 * (
+            1.0 + np.cos((np.pi * (idx3 - np.arange(idx3, idx4 + 1)) /
+                          (idx4 - idx3))))
     else:
-        cos_win[idx1:idx2 + 1] = np.cos(-(np.pi / 2.0 * \
-               (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+        cos_win[idx1:idx2 + 1] = np.cos(-(
+            np.pi / 2.0 * (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = np.cos((np.pi / 2.0 * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+        cos_win[idx3:idx4 + 1] = np.cos((
+            np.pi / 2.0 * (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -488,8 +490,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= pazToFreqResp(paz_simulate['poles'],
-                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft)
+        data *= pazToFreqResp(paz_simulate['poles'], paz_simulate['zeros'],
+                              paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
@@ -583,7 +585,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     # mean of input amplitudes (if more than one) should be used in final
     # magnitude estimation (usually N and E components)
     magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
-                0.00301 * (h_dist - 100.0) + 3.0
+        0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
 
@@ -605,7 +607,7 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
-            WOODANDERSON['sensitivity']
+        WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl
 

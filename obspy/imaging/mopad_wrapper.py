@@ -281,7 +281,7 @@ def Beachball(fm, linewidth=2, facecolor='b', bgcolor='w', edgecolor='k',
                 mopad_kwargs['plot_outfile'].split(".")[-1]
         else:
             # append file format if not already at end of outfile
-            if not mopad_kwargs['plot_outfile'].endswith(\
+            if not mopad_kwargs['plot_outfile'].endswith(
                mopad_kwargs['plot_outfile_format']):
                 mopad_kwargs['plot_outfile'] += "." + \
                     mopad_kwargs['plot_outfile_format']

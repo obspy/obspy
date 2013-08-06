@@ -153,11 +153,13 @@ class WaveformPluginsTestCase(unittest.TestCase):
             isFormat = load_entry_point(format.dist.key,
                                         'obspy.plugin.waveform.' + format.name,
                                         'isFormat')
-            module_path = os.path.join(os.path.join(format.dist.location,
-                    *format.dist.key.split('.')), 'tests', 'data')
+            module_path = os.path.join(
+                os.path.join(format.dist.location,
+                             *format.dist.key.split('.')),
+                'tests', 'data')
             # Get all the test directories.
             paths = [os.path.join(os.path.join(f.dist.location,
-                    *f.dist.key.split('.')), 'tests', 'data') for f
+                     *f.dist.key.split('.')), 'tests', 'data') for f
                      in formats]
             # Remove the paths from the current module.
             paths = [path for path in paths if path != module_path]
@@ -183,7 +185,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             self.assertEqual(len(false_positives), 0)
         except:
             msg = 'False positives for isFormat:\n'
-            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in \
+            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in
                               false_positives])
             raise Exception(msg)
 

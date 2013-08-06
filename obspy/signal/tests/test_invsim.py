@@ -93,7 +93,7 @@ class InvSimTestCase(unittest.TestCase):
             data_pitsa = np.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+            rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
             self.assertTrue(rms < 1.1e-05)
 
@@ -127,8 +127,8 @@ class InvSimTestCase(unittest.TestCase):
             data_pitsa = np.loadtxt(f)
             f.close()
             # calculate normalized rms
-            rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
-                         np.sum(data_pitsa ** 2))
+            rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
+                          np.sum(data_pitsa ** 2))
             self.assertTrue(rms < 1e-04)
 
     def test_estimateMagnitude(self):
@@ -143,9 +143,9 @@ class InvSimTestCase(unittest.TestCase):
             RTBE PITSA 1.325 ObsPy 1.363
             RMOA PITSA 1.629 ObsPy 1.675
         """
-        paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j], \
-               'zeros': [0 + 0j, 0 + 0j, 0 + 0j], \
-               'gain': 1.0, \
+        paz = {'poles': [-4.444 + 4.444j, -4.444 - 4.444j, -1.083 + 0j],
+               'zeros': [0 + 0j, 0 + 0j, 0 + 0j],
+               'gain': 1.0,
                'sensitivity': 671140000.0}
         mag_RTSH = estimateMagnitude(paz, 3.34e6, 0.065, 0.255)
         self.assertAlmostEqual(mag_RTSH, 2.1328727151723488)
@@ -219,7 +219,7 @@ class InvSimTestCase(unittest.TestCase):
         # plt.plot(tr.data)
         # plt.plot(data)
         # plt.show()
-        rms = np.sqrt(np.sum((tr.data - data) ** 2) / \
+        rms = np.sqrt(np.sum((tr.data - data) ** 2) /
                       np.sum(tr.data ** 2))
         self.assertTrue(rms < 0.0421)
 
@@ -263,11 +263,10 @@ class InvSimTestCase(unittest.TestCase):
                           seedresp=seedresp, taper_fraction=0.1,
                           pitsasim=False, sacsim=True)
         tr.data *= 1e9
-        rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) / \
+        rms = np.sqrt(np.sum((tr.data - trtest.data) ** 2) /
                       np.sum(trtest.data ** 2))
         self.assertTrue(rms < 0.0094)
-        #import matplotlib.pyplot as plt
-        #plt.plot(tr.data-trtest.data,'b')
+        #import matplotlib.pyplot as plt #plt.plot(tr.data-trtest.data,'b')
         #plt.plot(trtest.data,'g')
         #plt.figure()
         #plt.psd(tr.data,Fs=100.,NFFT=32768)

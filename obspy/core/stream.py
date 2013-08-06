@@ -543,12 +543,12 @@ class Stream(object):
         id_length = self and max(len(tr.id) for tr in self) or 0
         out = str(len(self.traces)) + ' Trace(s) in Stream:\n'
         if len(self.traces) <= 20 or extended is True:
-            out = out + "\n".join([tr.__str__(id_length) for tr in self])
+            out = out + "\n".join([_i.__str__(id_length) for _i in self])
         else:
             out = out + "\n" + self.traces[0].__str__() + "\n" + \
-                    '...\n(%i other traces)\n...\n' % (len(self.traces) - \
-                    2) + self.traces[-1].__str__() + '\n\n[Use "print(' + \
-                    'Stream.__str__(extended=True))" to print all Traces]'
+                '...\n(%i other traces)\n...\n' % (len(self.traces) - 2) + \
+                self.traces[-1].__str__() + '\n\n[Use "print(' + \
+                'Stream.__str__(extended=True))" to print all Traces]'
         return out
 
     def __eq__(self, other):
@@ -791,7 +791,7 @@ class Stream(object):
             # Check that any overlap is not larger than the trace coverage
             if delta < 0:
                 temp = self.traces[_i + 1].stats['endtime'].timestamp - \
-                       etime.timestamp
+                    etime.timestamp
                 if (delta * -1) > temp:
                     delta = -1 * temp
             # Check gap/overlap criteria
@@ -1361,7 +1361,8 @@ class Stream(object):
             # get format specific entry point
             format_ep = ENTRY_POINTS['waveform_write'][format]
             # search writeFormat method for given entry point
-            writeFormat = load_entry_point(format_ep.dist.key,
+            writeFormat = load_entry_point(
+                format_ep.dist.key,
                 'obspy.plugin.waveform.%s' % (format_ep.name), 'writeFormat')
         except (IndexError, ImportError, KeyError):
             msg = "Writing format \"%s\" is not supported. Supported types: %s"
@@ -1430,18 +1431,18 @@ class Stream(object):
             tr = self.traces[0]
             if starttime:
                 delta = round((starttime - tr.stats.starttime) *
-                               tr.stats.sampling_rate)
+                              tr.stats.sampling_rate)
                 starttime = tr.stats.starttime + delta * tr.stats.delta
             if endtime:
                 delta = round((endtime - tr.stats.endtime) *
-                               tr.stats.sampling_rate)
+                              tr.stats.sampling_rate)
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
             trace.trim(starttime, endtime, pad,
                        nearest_sample=nearest_sample, fill_value=fill_value)
         # remove empty traces after trimming
-        self.traces = [tr for tr in self.traces if tr.stats.npts]
+        self.traces = [_i for _i in self.traces if _i.stats.npts]
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
@@ -1750,8 +1751,8 @@ class Stream(object):
             for _i in xrange(len(traces_dict[_id])):
                 trace = traces_dict[_id].pop(0)
                 # disable sanity checks because there are already done
-                cur_trace = cur_trace.__add__(trace, method,
-                    fill_value=fill_value, sanity_checks=False,
+                cur_trace = cur_trace.__add__(
+                    trace, method, fill_value=fill_value, sanity_checks=False,
                     interpolation_samples=interpolation_samples)
             self.traces.append(cur_trace)
 
@@ -2341,7 +2342,7 @@ class Stream(object):
             func = "rotate_LQT_ZNE"
         else:
             raise ValueError("Method has to be one of ('NE->RT', 'RT->NE', "
-                "'ZNE->LQT', or 'LQT->ZNE').")
+                             "'ZNE->LQT', or 'LQT->ZNE').")
         # Retrieve function call from entry points
         func = _getFunctionFromEntryPoint("rotate", func)
         # Split to get the components. No need for further checks for the
@@ -2367,8 +2368,9 @@ class Stream(object):
             for i_1, i_2 in zip(input_1, input_2):
                 dt = 0.5 * i_1.stats.delta
                 if (len(i_1) != len(i_2)) or \
-                    (abs(i_1.stats.starttime - i_2.stats.starttime) > dt) or \
-                    (i_1.stats.sampling_rate != i_2.stats.sampling_rate):
+                        (abs(i_1.stats.starttime - i_2.stats.starttime) > dt) \
+                        or (i_1.stats.sampling_rate !=
+                            i_2.stats.sampling_rate):
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
             for i_1, i_2 in zip(input_1, input_2):
@@ -2391,15 +2393,18 @@ class Stream(object):
             for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
                 dt = 0.5 * i_1.stats.delta
                 if (len(i_1) != len(i_2)) or (len(i_1) != len(i_3)) or \
-                    (abs(i_1.stats.starttime - i_2.stats.starttime) > dt) or \
-                    (abs(i_1.stats.starttime - i_3.stats.starttime) > dt) or \
-                    (i_1.stats.sampling_rate != i_2.stats.sampling_rate) or \
-                    (i_1.stats.sampling_rate != i_3.stats.sampling_rate):
+                        (abs(i_1.stats.starttime -
+                             i_2.stats.starttime) > dt) or \
+                        (abs(i_1.stats.starttime -
+                             i_3.stats.starttime) > dt) or \
+                        (i_1.stats.sampling_rate !=
+                            i_2.stats.sampling_rate) or \
+                        (i_1.stats.sampling_rate != i_3.stats.sampling_rate):
                     msg = "All components need to have the same time span."
                     raise ValueError(msg)
             for i_1, i_2, i_3 in zip(input_1, input_2, input_3):
-                output_1, output_2, output_3 = func(i_1.data, i_2.data,
-                    i_3.data, back_azimuth, inclination)
+                output_1, output_2, output_3 = func(
+                    i_1.data, i_2.data, i_3.data, back_azimuth, inclination)
                 i_1.data = output_1
                 i_2.data = output_2
                 i_3.data = output_3
@@ -2580,7 +2585,7 @@ class Stream(object):
                         cur_trace = trace
                 # traces are perfectly adjacent: add them together
                 elif trace.stats.starttime == cur_trace.stats.endtime + \
-                     cur_trace.stats.delta:
+                        cur_trace.stats.delta:
                     cur_trace += trace
                 # no common parts (gap):
                 # leave traces alone and add current to list

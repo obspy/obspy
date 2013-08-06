@@ -38,10 +38,11 @@ import warnings
 # Import shared libgse2
 # create library names
 lib_names = [
-     # platform specific library name
-    'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
+    # platform specific library name
+    'libgse2_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libgse2']
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')

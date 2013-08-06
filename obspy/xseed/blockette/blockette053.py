@@ -100,17 +100,19 @@ class Blockette053(Blockette):
             if self.number_of_complex_zeros != 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_complex_zeros):
-                    out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (_i,
-                            formatRESP(self.real_zero[_i], 6),
-                            formatRESP(self.imaginary_zero[_i], 6),
-                            formatRESP(self.real_zero_error[_i], 6),
-                            formatRESP(self.imaginary_zero_error[_i], 6))
+                    out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
+                        _i,
+                        formatRESP(self.real_zero[_i], 6),
+                        formatRESP(self.imaginary_zero[_i], 6),
+                        formatRESP(self.real_zero_error[_i], 6),
+                        formatRESP(self.imaginary_zero_error[_i], 6))
             else:
-                out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (0,
-                            formatRESP(self.real_zero, 6),
-                            formatRESP(self.imaginary_zero, 6),
-                            formatRESP(self.real_zero_error, 6),
-                            formatRESP(self.imaginary_zero_error, 6))
+                out += 'B053F10-13 %4s %13s %13s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.real_zero, 6),
+                    formatRESP(self.imaginary_zero, 6),
+                    formatRESP(self.real_zero_error, 6),
+                    formatRESP(self.imaginary_zero_error, 6))
         out += '#\t\tComplex poles:\n'
         out += '#\t\t  i  real          imag          real_error    '
         out += 'imag_error\n'
@@ -118,16 +120,18 @@ class Blockette053(Blockette):
             if self.number_of_complex_poles != 1:
                 # Loop over all poles.
                 for _i in range(self.number_of_complex_poles):
-                    out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (_i,
-                            formatRESP(self.real_pole[_i], 6),
-                            formatRESP(self.imaginary_pole[_i], 6),
-                            formatRESP(self.real_pole_error[_i], 6),
-                            formatRESP(self.imaginary_pole_error[_i], 6))
+                    out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
+                        _i,
+                        formatRESP(self.real_pole[_i], 6),
+                        formatRESP(self.imaginary_pole[_i], 6),
+                        formatRESP(self.real_pole_error[_i], 6),
+                        formatRESP(self.imaginary_pole_error[_i], 6))
             else:
-                out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (0,
-                            formatRESP(self.real_pole, 6),
-                            formatRESP(self.imaginary_pole, 6),
-                            formatRESP(self.real_pole_error, 6),
-                            formatRESP(self.imaginary_pole_error, 6))
+                out += 'B053F15-18 %4s %13s %13s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.real_pole, 6),
+                    formatRESP(self.imaginary_pole, 6),
+                    formatRESP(self.real_pole_error, 6),
+                    formatRESP(self.imaginary_pole_error, 6))
         out += '#\t\t\n'
         return out

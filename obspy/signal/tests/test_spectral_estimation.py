@@ -85,12 +85,13 @@ class PsdTestCase(unittest.TestCase):
         of testing.
         """
         # load test file
-        file_data = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
-        file_histogram = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
-        file_binning = os.path.join(self.path,
-                'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
+        file_data = os.path.join(
+            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled.asc.gz')
+        file_histogram = os.path.join(
+            self.path,
+            'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_hist_stack.npy')
+        file_binning = os.path.join(
+            self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
         data = np.loadtxt(file_data)
         stats = {'_format': 'MSEED',

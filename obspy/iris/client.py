@@ -10,8 +10,7 @@ IRIS Web service client for ObsPy.
 """
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
-from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
-    loadtxt
+from obspy.core.util import NamedTemporaryFile, BAND_CODE, loadtxt
 from urllib2 import HTTPError
 import StringIO
 import json
@@ -142,7 +141,7 @@ class Client(object):
             file_opened = True
         else:
             msg = ("Parameter 'filename' must be either a string or an open "
-                "file-like object.")
+                   "file-like object.")
             raise TypeError(msg)
         try:
             fh.write(data)

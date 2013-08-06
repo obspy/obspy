@@ -48,7 +48,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
-        summed_length = array([len(trace) for trace in stream]).sum()
+        summed_length = array([len(tr) for tr in stream]).sum()
         self.assertTrue(summed_length == 1201)
         self.assertTrue(stream[0].stats.starttime >= start - delta)
         self.assertTrue(stream[0].stats.starttime <= start + delta)

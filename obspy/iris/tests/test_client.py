@@ -142,14 +142,14 @@ class ClientTestCase(unittest.TestCase):
         # StationXML, single channel
         memfile = StringIO.StringIO()
         client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
-                format="StationXML")
+                            format="StationXML")
         memfile.seek(0, 0)
         data = memfile.read()
         self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
         # SACPZ, single channel
         memfile = StringIO.StringIO()
         client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
-                format="SACPZ")
+                            format="SACPZ")
         memfile.seek(0, 0)
         data = memfile.read()
         self.assertTrue('NETWORK   (KNETWK): IU' in data)
@@ -259,7 +259,8 @@ class ClientTestCase(unittest.TestCase):
         Tests calculation of travel-times for seismic phases.
         """
         client = Client()
-        result = client.traveltime(evloc=(-36.122, -72.898), evdepth=22.9,
+        result = client.traveltime(
+            evloc=(-36.122, -72.898), evdepth=22.9,
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
         self.assertTrue(result.startswith('Model: iasp91'))
 
@@ -341,13 +342,13 @@ class ClientTestCase(unittest.TestCase):
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
-        np.testing.assert_array_equal(data[0],
-            [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
+        np.testing.assert_array_equal(
+            data[0], [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
         # cs as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='cs')
-        np.testing.assert_array_equal(data[0],
-            [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
+        np.testing.assert_array_equal(
+            data[0], [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
 
     def test_event(self):
         """
