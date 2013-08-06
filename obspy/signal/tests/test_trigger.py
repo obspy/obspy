@@ -108,7 +108,7 @@ class TriggerTestCase(unittest.TestCase):
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests
-        if False:
+        if False:  # pragma: no cover
             import matplotlib.pyplot as plt
             plt.plot(cft)
             plt.hlines([1.5, 1.0], 0, len(cft))

@@ -25,7 +25,7 @@ For more information visit http://www.obspy.org.
 # dependency. Inplace installation with pip works also without importing
 # setuptools.
 try:
-    import setuptools
+    import setuptools  # @UnusedImport
 except:
     pass
 
@@ -423,6 +423,7 @@ def add_data_files(config):
             "obspy", "*", "tests", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-4:])
         config.add_data_dir(path)
+    config.add_data_dir(os.path.join("obspy", "segy", "tests", "images"))
     # Add some xsd files.
     config.add_data_dir(os.path.join("obspy", "core", "docs"))
     config.add_data_dir(os.path.join("obspy", "xseed", "docs"))

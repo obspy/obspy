@@ -34,10 +34,10 @@ class QuakeMLTestCase(unittest.TestCase):
 
         unified_diff = difflib.unified_diff(str1, str2)
         has_error = False
-        for line in unified_diff:
+        for line in unified_diff:  # pragma: no cover
             has_error = True
             print line
-        if has_error:
+        if has_error:  # pragma: no cover
             msg = "Strings are not equal."
             raise AssertionError(msg)
 
@@ -546,7 +546,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # Currently only works with lxml.
         try:
             from lxml.etree import parse
-        except:
+        except ImportError:
             return
         xsd_enum_definitions = {}
         xsd_file = os.path.join(
@@ -571,7 +571,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # Now import all enums and check if they are correct.
         from obspy.core import event_header
         from obspy.core.util import Enum
-        available_enums = {}
+        all_enums = {}
         for module_item_name in dir(event_header):
             module_item = getattr(event_header, module_item_name)
             if type(module_item) != Enum:
@@ -579,21 +579,21 @@ class QuakeMLTestCase(unittest.TestCase):
             # Assign clearer names.
             enum_name = module_item_name
             enum_values = [_i.lower() for _i in module_item.keys()]
-            available_enums[enum_name] = enum_values
+            all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.iteritems():
-            self.assertTrue(enum_name in available_enums.keys())
+            self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
-            available_items = available_enums[enum_name]
-            available_items = [_i.lower() for _i in available_items]
+            all_items = all_enums[enum_name]
+            all_items = [_i.lower() for _i in all_items]
             for enum_item in enum_items:
-                if enum_item.lower() not in available_items:
+                if enum_item.lower() not in all_items:  # pragma: no cover
                     msg = "Value '%s' not in Enum '%s'" % \
                         (enum_item, enum_name)
                     raise Exception(msg)
             # Check if there are too many items.
-            if len(available_items) != len(enum_items):
-                additional_items = [_i for _i in available_items
+            if len(all_items) != len(enum_items):  # pragma: no cover
+                additional_items = [_i for _i in all_items
                                     if _i.lower() not in enum_items]
                 msg = "Enum {enum_name} has the following additional items" + \
                     " not defined in the xsd style sheet:\n\t{enumerations}"

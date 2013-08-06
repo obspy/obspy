@@ -5,8 +5,9 @@ virtualenv:
   system_site_packages: true
 before_install:
   - lsb_release -a # get info on the operating system
-  - sudo apt-get install -qq gfortran python-dev python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy
+  - sudo apt-get install -qq gfortran python-dev python-numpy python-scipy python-matplotlib python-suds python-lxml python-sqlalchemy python-m2crypto
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
+  - pip install geographiclib
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
