@@ -171,7 +171,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if isFormat(file) is True:
+                    if isFormat(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
