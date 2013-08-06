@@ -287,6 +287,7 @@ class WaveformTestCase(unittest.TestCase):
         st.plot(type='section', dist_degree=True, ev_coord=(0.0, 0.0),
             outfile=outfile)
 
+
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
 
