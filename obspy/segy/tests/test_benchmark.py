@@ -3,18 +3,26 @@
 The obspy.segy benchmark test suite.
 """
 
-from matplotlib.testing.compare import compare_images
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from obspy.segy.benchmark import plotBenchmark
 import glob
 import os
 import unittest
+
+# checking for newer matplotlib version and if nose is installed
+try:
+    from matplotlib.testing.compare import compare_images
+    HAS_COMPARE_IMAGE = True
+except ImportError:
+    HAS_COMPARE_IMAGE = False
 
 
 class BenchmarkTestCase(unittest.TestCase):
     """
     Test cases for benchmark plots.
     """
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotBenchmark(self):
         """
         Test benchmark plot.
