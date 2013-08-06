@@ -22,6 +22,8 @@ mining".
 from obspy.realtime.rtmemory import RtMemory
 from obspy.realtime.rttrace import RtTrace
 
+__all__ = [RtMemory, RtTrace]
+
 
 if __name__ == '__main__':
     import doctest

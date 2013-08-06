@@ -14,6 +14,7 @@ public server is at 137.227.224.97 (cwbpub.cr.usgs.gov) on port 2061.
 
 from client import Client
 
+__all__ = [Client]
 
 if __name__ == '__main__':
     import doctest

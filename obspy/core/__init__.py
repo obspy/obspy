@@ -88,6 +88,8 @@ from obspy.core.trace import Stats, Trace
 from obspy.core.stream import Stream, read
 from obspy.core.scripts.runtests import runTests
 
+__all__ = [UTCDateTime, AttribDict, Stats, Trace, Stream, read, runTests]
+
 
 if __name__ == '__main__':
     import doctest

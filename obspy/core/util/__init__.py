@@ -35,3 +35,13 @@ from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
 from obspy.core.util.obspy_types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
 from obspy.core.util.version import get_git_version as _getVersionString
+
+__all__ = [AttribDict, NamedTemporaryFile, add_doctests, add_unittests,
+           ALL_MODULES, DEFAULT_MODULES, NATIVE_BYTEORDER, c_file_p,
+           createEmptyDataChunk, getExampleFile, getMatplotlibVersion,
+           NETWORK_MODULES, _readFromPlugin, getScriptDirName, deprecated,
+           deprecated_keywords, skip, skipIf, uncompressFile, FlinnEngdahl,
+           calcVincentyInverse, gps2DistAzimuth, kilometer2degrees,
+           locations2degrees, BAND_CODE, complexifyString, guessDelta,
+           scoreatpercentile, toIntOrZero, loadtxt, OrderedDict, Enum,
+           XMLParser, tostring, register_namespace, _getVersionString]

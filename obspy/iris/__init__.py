@@ -134,6 +134,7 @@ examples to retrieve various data from the IRIS DMC.
 
 from client import Client
 
+__all__ = [Client]
 
 if __name__ == '__main__':
     import doctest
