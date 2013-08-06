@@ -613,4 +613,6 @@ if __name__ == "__main__":
     # This script is automatically installed with name obspy-runtests by
     # setup.py to the Scripts or bin directory of your Python distribution
     # setup.py needs a function to which it's scripts can be linked.
-    run(interactive=False)
+    errors = run(interactive=False)
+    if errors:
+        sys.exit(1)
