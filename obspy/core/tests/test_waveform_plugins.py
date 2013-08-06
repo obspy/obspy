@@ -153,14 +153,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
             isFormat = load_entry_point(format.dist.key,
                                         'obspy.plugin.waveform.' + format.name,
                                         'isFormat')
-            module_path = os.path.join(os.path.join(format.dist.location,
-                    *format.dist.key.split('.')), 'tests', 'data')
-            # Get all the test directories.
-            paths = [os.path.join(os.path.join(f.dist.location,
-                    *f.dist.key.split('.')), 'tests', 'data') for f
-                     in formats]
-            # Remove the paths from the current module.
-            paths = [path for path in paths if path != module_path]
+            # get all the test directories.
+            paths = [os.path.join(f.dist.location, 'obspy',
+                                  f.module_name.split('.')[1], 'tests', 'data')
+                     for f in formats
+                     if f.module_name.split('.')[1] != \
+                        format.module_name.split('.')[1]]
             # Remove double paths because some modules can have two file
             # formats.
             paths = set(paths)
@@ -170,18 +168,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 filelist = []
                 # Walk every path.
                 for directory, _, files in os.walk(path):
-                    # Remove double entries from the .svn directories.
-                    if '.svn' in directory:
-                        continue
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if isFormat(file) is False:
+                    if isFormat(file) is True:
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
             self.assertEqual(len(false_positives), 0)
-        except:
+        except:  # pragma: no cover
             msg = 'False positives for isFormat:\n'
             msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in \
                               false_positives])
@@ -238,12 +233,9 @@ class WaveformPluginsTestCase(unittest.TestCase):
                         break
                     # Avoid infinite loop and leave after 120 seconds
                     # such a long time is needed for debugging with valgrind
-                    elif time.time() - start >= 120:
+                    elif time.time() - start >= 120:  # pragma: no cover
                         msg = 'Not all threads finished!'
                         raise Warning(msg)
-                        break
-                    else:
-                        continue
                 # Compare all values which should be identical and clean up
                 # files
                 #for data in :

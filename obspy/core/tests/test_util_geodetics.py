@@ -164,12 +164,11 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assertLoc(0, 0, 0, 180, 20004)
         assertLoc(11, 55, 11, 55, 0)
 
+    @skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
     def test_issue_375(self):
         """
         Test for #375.
         """
-        if not HAS_GEOGRAPHICLIB:
-            return
         _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
         self.assertEqual(round(azim, 0), 32)
         self.assertEqual(round(bazim, 0), 213)
