@@ -76,8 +76,6 @@ DEFAULT_XSEED_VERSION = '1.1'
 
 from obspy.xseed.parser import Parser
 
-__all__ = [Parser]
-
 
 if __name__ == '__main__':
     import doctest

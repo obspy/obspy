@@ -61,8 +61,6 @@ stats and stats['sac'] are written with the following command to a file:
 
 from sacio import SacIO, SacError, SacIOError, attach_paz, attach_resp
 
-__all__ = [SacIO, SacError, SacIOError, attach_paz, attach_resp]
-
 
 if __name__ == '__main__':
     import doctest

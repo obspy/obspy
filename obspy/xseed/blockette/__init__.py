@@ -32,12 +32,3 @@ from obspy.xseed.blockette.blockette059 import Blockette059
 from obspy.xseed.blockette.blockette060 import Blockette060
 from obspy.xseed.blockette.blockette061 import Blockette061
 from obspy.xseed.blockette.blockette062 import Blockette062
-
-
-__all__ = [Blockette, Blockette010, Blockette011, Blockette012, Blockette030,
-           Blockette031, Blockette032, Blockette033, Blockette034,
-           Blockette041, Blockette043, Blockette044, Blockette047,
-           Blockette048, Blockette050, Blockette051, Blockette052,
-           Blockette053, Blockette054, Blockette055, Blockette057,
-           Blockette058, Blockette059, Blockette060, Blockette061,
-           Blockette062]

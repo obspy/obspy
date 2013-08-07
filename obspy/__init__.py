@@ -38,8 +38,6 @@ from obspy.core.event import readEvents
 
 __version__ = _getVersionString()
 
-__all__ = [UTCDateTime, _getVersionString, Trace, Stream, read, readEvents]
-
 
 if __name__ == '__main__':
     import doctest
