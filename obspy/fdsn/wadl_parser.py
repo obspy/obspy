@@ -1,7 +1,7 @@
 from obspy import UTCDateTime
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED
+    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
 
 from lxml import etree
 import warnings
@@ -63,7 +63,14 @@ class WADLParser(object):
             required = False
 
         param_type = param_doc.get("type")
-        if param_type == "xs:date":
+        if param_type is None:
+            # If not given, choose one from the DEFAULT_TYPES dictionary.
+            # Otherwise assign a string.
+            if name in DEFAULT_TYPES:
+                param_type = DEFAULT_TYPES[name]
+            else:
+                param_type = str
+        elif param_type == "xs:date":
             param_type = UTCDateTime
         elif param_type == "xs:string":
             param_type = str

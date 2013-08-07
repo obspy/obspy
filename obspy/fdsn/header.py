@@ -9,14 +9,14 @@ Header files for the FDSN webservice.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import __version__
+from obspy import __version__, UTCDateTime
 
 import platform
 
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USGS": "http://comcat.cr.usgs.gov",
                 "RESIF": "http://ws.resif.fr",
-                "NCEDC": "http://service.ncedc.org",
+                "NCEDC": "http://service.ncedc.org"
                 }
 
 # The default User Agent that will be sent with every request.
@@ -53,6 +53,50 @@ DEFAULT_EVENT_PARAMETERS = [
     ("includeallmagnitudes", ), ("includearrivals", ), ("eventid", ),
     ("limit",), ("offset", ), ("orderby", ), ("catalog", ), ("contributor", ),
     ("updatedafter", )]
+
+
+# The default types if none are given. If the parameter can not be found in
+# here and has no specified type, the type will be assumed to be a string.
+DEFAULT_TYPES = {
+    "starttime": UTCDateTime,
+    "endtime": UTCDateTime,
+    "network": str,
+    "station": str,
+    "location": str,
+    "channel": str,
+    "quality": str,
+    "minimumlength": float,
+    "longestonly": bool,
+    "startbefore": UTCDateTime,
+    "startafter": UTCDateTime,
+    "endbefore": UTCDateTime,
+    "endafter": UTCDateTime,
+    "maxlongitude": float,
+    "minlongitude": float,
+    "longitude": float,
+    "maxlatitude": float,
+    "minlatitude": float,
+    "latitude": float,
+    "maxdepth": float,
+    "mindepth": float,
+    "maxmagnitude": float,
+    "minmagnitude": float,
+    "magnitudetype": str,
+    "maxradius": float,
+    "minradius": float,
+    "level": str,
+    "includerestricted": bool,
+    "includeavailability": bool,
+    "includeallorigins": bool,
+    "includeallmagnitudes": bool,
+    "includearrivals": bool,
+    "eventid": int,
+    "limit": int,
+    "offset": int,
+    "orderby": str,
+    "catalog": str,
+    "contributor": str,
+    "updatedafter": UTCDateTime}
 
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client. The only example right now is the nodata

@@ -151,6 +151,58 @@ class WADLParserTestCase(unittest.TestCase):
             "Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or "
             "2012-11-29T00:00:00.000")
 
+    def test_reading_wadls_without_type(self):
+        """
+        Tests the reading of WADL files that have no type.
+        """
+        filename = os.path.join(self.data_path, "station_no_types.wadl")
+        with open(filename, "rt") as fh:
+            wadl_string = fh.read()
+        parser = WADLParser(wadl_string)
+        params = parser.parameters
+
+        # Assert that types have been assigned.
+        self.assertEqual(params["starttime"]["type"], UTCDateTime)
+        self.assertEqual(params["endtime"]["type"], UTCDateTime)
+        self.assertEqual(params["startbefore"]["type"], UTCDateTime)
+        self.assertEqual(params["startafter"]["type"], UTCDateTime)
+        self.assertEqual(params["endbefore"]["type"], UTCDateTime)
+        self.assertEqual(params["endafter"]["type"], UTCDateTime)
+        self.assertEqual(params["network"]["type"], str)
+        self.assertEqual(params["station"]["type"], str)
+        self.assertEqual(params["location"]["type"], str)
+        self.assertEqual(params["channel"]["type"], str)
+        self.assertEqual(params["minlatitude"]["type"], float)
+        self.assertEqual(params["maxlatitude"]["type"], float)
+        self.assertEqual(params["latitude"]["type"], float)
+        self.assertEqual(params["minlongitude"]["type"], float)
+        self.assertEqual(params["maxlongitude"]["type"], float)
+        self.assertEqual(params["longitude"]["type"], float)
+        self.assertEqual(params["minradius"]["type"], float)
+        self.assertEqual(params["maxradius"]["type"], float)
+        self.assertEqual(params["level"]["type"], str)
+        self.assertEqual(params["includerestricted"]["type"], bool)
+        self.assertEqual(params["includeavailability"]["type"], bool)
+        self.assertEqual(params["updatedafter"]["type"], UTCDateTime)
+
+        # Now read a dataselect file with no types.
+        filename = os.path.join(self.data_path, "dataselect_no_types.wadl")
+        with open(filename, "rt") as fh:
+            wadl_string = fh.read()
+        parser = WADLParser(wadl_string)
+        params = parser.parameters
+
+        # Assert that types have been assigned.
+        self.assertEqual(params["starttime"]["type"], UTCDateTime)
+        self.assertEqual(params["endtime"]["type"], UTCDateTime)
+        self.assertEqual(params["network"]["type"], str)
+        self.assertEqual(params["station"]["type"], str)
+        self.assertEqual(params["location"]["type"], str)
+        self.assertEqual(params["channel"]["type"], str)
+        self.assertEqual(params["quality"]["type"], str)
+        self.assertEqual(params["minimumlength"]["type"], float)
+        self.assertEqual(params["longestonly"]["type"], bool)
+
 
 def suite():
     return unittest.makeSuite(WADLParserTestCase, 'test')
