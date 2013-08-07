@@ -62,6 +62,8 @@ class WADLParserTestCase(unittest.TestCase):
         parser = WADLParser(wadl_string)
         params = parser.parameters
 
+        # The WADL contains some short forms. In the parameters dictionary
+        # these should be converted to the long forms.
         self.assertTrue("starttime" in params)
         self.assertTrue("endtime" in params)
         self.assertTrue("minlatitude" in params)
@@ -70,7 +72,7 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("maxlongitude" in params)
         self.assertTrue("minmagnitude" in params)
         self.assertTrue("maxmagnitude" in params)
-        self.assertTrue("magtype" in params)
+        self.assertTrue("magnitudetype" in params)
         self.assertTrue("catalog" in params)
 
         self.assertTrue("contributor" in params)
@@ -92,12 +94,16 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("limit" in params)
         self.assertTrue("offset" in params)
         self.assertTrue("format" in params)
-        self.assertTrue("nodata" in params)
+
+        # The nodata attribute should not be parsed.
+        self.assertFalse("nodata" in params)
 
         self.assertEqual(
-            params["magtype"]["doc"],
+            params["magnitudetype"]["doc_title"],
             "type of Magnitude used to test minimum and maximum limits "
-            "(case insensitive) -- Examples: Ml,Ms,mb,Mw\"")
+            "(case insensitive)")
+        self.assertEqual(params["magnitudetype"]["doc"],
+                         "Examples: Ml,Ms,mb,Mw\"")
 
     def test_station_wadl_parsing(self):
         """
@@ -133,11 +139,15 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("updatedafter" in params)
         self.assertTrue("matchtimeseries" in params)
         self.assertTrue("format" in params)
-        self.assertTrue("nodata" in params)
+
+        # The nodata attribute should not be parsed.
+        self.assertFalse("nodata" in params)
 
         self.assertEqual(
+            params["endbefore"]["doc_title"],
+            "limit to stations ending before the specified time")
+        self.assertEqual(
             params["endbefore"]["doc"],
-            "limit to stations ending before the specified time -- "
             "Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or "
             "2012-11-29T00:00:00.000")
 

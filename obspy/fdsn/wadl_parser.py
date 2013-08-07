@@ -1,4 +1,7 @@
 from obspy import UTCDateTime
+from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
+    DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
+    WADL_PARAMETERS_NOT_TO_BE_PARSED
 
 from lxml import etree
 import warnings
@@ -9,6 +12,24 @@ class WADLParser(object):
         doc = etree.fromstring(wadl_string)
         self._ns = doc.nsmap.values()[0]
         self.parameters = {}
+
+        # Get the url.
+        url = self._xpath(doc, "/application/resources")[0].get("base")
+        if "dataselect" in url:
+            self._default_parameters = DEFAULT_DATASELECT_PARAMETERS
+        elif "station" in url:
+            self._default_parameters = DEFAULT_STATION_PARAMETERS
+        elif "event" in url:
+            self._default_parameters = DEFAULT_EVENT_PARAMETERS
+        else:
+            raise NotImplementedError
+
+        # Map short names to long names.
+        self._short_to_long_mapping = {}
+        for item in self._default_parameters:
+            if len(item) == 1:
+                continue
+            self._short_to_long_mapping[item[1]] = item[0]
 
         # Retrieve all the parameters.
         parameters = self._xpath(
@@ -23,6 +44,15 @@ class WADLParser(object):
 
     def add_parameter(self, param_doc):
         name = param_doc.get("name")
+
+        # Map the short to the long names.
+        if name in self._short_to_long_mapping:
+            name = self._short_to_long_mapping[name]
+
+        # Skip the parameter if should be ignored.
+        if name in WADL_PARAMETERS_NOT_TO_BE_PARSED:
+            return
+
         style = param_doc.get("style")
         if style != "query":
             msg = "Unknown parameter style '%s' in WADL" % style
@@ -58,19 +88,21 @@ class WADLParser(object):
             options.append(param_type(option.get("value")))
 
         doc = ""
+        doc_title = ""
         for doc_elem in self._xpath(param_doc, "doc"):
             title = doc_elem.get("title")
             body = doc_elem.text
-            doc += "\n%s" % title.strip()
+            doc_title = title
             if body:
-                doc += " -- %s" % body.strip()
-        doc = doc.strip()
+                doc = body
+            break
 
         self.parameters[name] = {
             "required": required,
             "type": param_type,
             "options": options,
-            "doc": doc,
+            "doc_title": doc_title.strip(),
+            "doc": doc.strip(),
             "default_value": default_value}
 
     @staticmethod

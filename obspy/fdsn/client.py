@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 FDSN Web service client for ObsPy.
@@ -8,24 +9,15 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import __version__
+from obspy.fdsn.wadl_parser import WADLParser
+from obspy.fdsn.header import DEFAULT_USER_AGENT, \
+    DEFAULT_DATASELECT_PARAMETERS, DEFAULT_STATION_PARAMETERS, \
+    DEFAULT_EVENT_PARAMETERS, URL_MAPPINGS
 
-import platform
 import Queue
 import threading
 import urllib
 import urllib2
-
-URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
-                "USGS": "http://comcat.cr.usgs.gov",
-                "RESIF": "http://ws.resif.fr",
-                "NCEDC": "http://service.ncedc.org",
-                }
-SERVICES = ("dataselect", "station", "event")
-
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
-                                                   platform.platform(),
-                                                   platform.python_version())
 
 
 class Client(object):
@@ -54,7 +46,7 @@ class Client(object):
         :type debug: bool
         :param debug: Debug flag.
         """
-        self.debug = True
+        self.debug = debug
         #if user and password:
             ## Create an OpenerDirector for HTTP Digest Authentication
             #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -79,6 +71,58 @@ class Client(object):
             print "Request Headers: %s" % str(self.request_headers)
 
         self._discover_services()
+
+    def __str__(self):
+        ret = (
+            "FDSN Webservice Client (base url: {url})\n"
+            "Available Services: {services}".format(
+            url=self.base_url,
+            services=", ".join(self.services.keys())))
+        return ret
+
+    def help(self, service):
+        """
+        Print a more extensive help for a given service.
+
+        This will use the already parsed WADL files and be specific for each
+        data center and always up-to-date.
+        """
+        if service not in self.services:
+            msg = "Service '%s' not available for current client." % service
+            raise ValueError(msg)
+
+        if service == "dataselect":
+            SERVICE_DEFAULT = DEFAULT_DATASELECT_PARAMETERS
+        elif service == "event":
+            SERVICE_DEFAULT = DEFAULT_EVENT_PARAMETERS
+        elif service == "station":
+            SERVICE_DEFAULT = DEFAULT_STATION_PARAMETERS
+        else:
+            raise NotImplementedError
+
+        print "Parameters for the '%s' service:" % service
+
+        for name in SERVICE_DEFAULT:
+            name = name[0]
+            param = self.services[service][name]
+            name = "%s (%s)" % (name, param["type"].__name__)
+            req_def = ""
+            if param["required"]:
+                req_def = "Required Parameter"
+            elif param["default_value"]:
+                req_def = "Default value: %s" % str(param["default_value"])
+            if param["options"]:
+                req_def += "Choices: %s" % \
+                    ", ".join(map(str, param["options"]))
+            if req_def:
+                req_def = ", %s" % req_def
+            if param["doc_title"]:
+                doc_title = "\n\t\t%s" % param["doc_title"]
+            else:
+                doc_title = ""
+
+            print "\t{name}{req_def}{doc_title}".format(
+                name=name, req_def=req_def, doc_title=doc_title)
 
     def _build_url(self, resource_type, service, parameters={}):
         """
@@ -108,7 +152,7 @@ class Client(object):
         def get_download_thread(url):
             class ThreadURL(threading.Thread):
                 def run(self):
-                    code, data = download_url(dataselect_url, headers=headers,
+                    code, data = download_url(url, headers=headers,
                                               debug=debug)
                     if code == 200:
                         wadl_queue.put((url, data))
@@ -122,22 +166,22 @@ class Client(object):
         for thread in threads:
             thread.join(15)
 
-        services = {}
+        self.services = {}
         for _ in range(wadl_queue.qsize()):
             item = wadl_queue.get()
             url, wadl = item
             if wadl is None:
                 continue
             if "dataselect" in url:
-                services["dataselect"] = wadl
+                self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered dataselect service"
             elif "event" in url:
-                services["event"] = wadl
+                self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered event service"
             elif "station" in url:
-                services["station"] = wadl
+                self.services["station"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered station service"
 
