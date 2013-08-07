@@ -159,8 +159,6 @@ Further Resources
 
 from client import Client
 
-__all__ = [Client]
-
 
 if __name__ == '__main__':
     import doctest

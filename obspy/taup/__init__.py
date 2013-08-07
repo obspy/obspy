@@ -17,8 +17,6 @@ The library iaspei-tau is written in Fortran and interfaced via Python ctypes.
 # Convenience imports.
 from obspy.taup.taup import getTravelTimes, travelTimePlot
 
-__all__ = [getTravelTimes, travelTimePlot]
-
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
