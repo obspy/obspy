@@ -203,6 +203,47 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(params["minimumlength"]["type"], float)
         self.assertEqual(params["longestonly"]["type"], bool)
 
+    def test_usgs_event_wadl_parsing(self):
+        """
+        Tests the parsing of an event wadl.
+        """
+        filename = os.path.join(self.data_path, "usgs_event.wadl")
+        with open(filename, "rt") as fh:
+            wadl_string = fh.read()
+        parser = WADLParser(wadl_string)
+        params = parser.parameters
+
+        # The WADL contains some short forms. In the parameters dictionary
+        # these should be converted to the long forms.
+        self.assertTrue("starttime" in params)
+        self.assertTrue("endtime" in params)
+        self.assertTrue("minlatitude" in params)
+        self.assertTrue("maxlatitude" in params)
+        self.assertTrue("minlongitude" in params)
+        self.assertTrue("maxlongitude" in params)
+        self.assertTrue("minmagnitude" in params)
+        self.assertTrue("maxmagnitude" in params)
+        self.assertTrue("magnitudetype" in params)
+        self.assertTrue("catalog" in params)
+
+        self.assertTrue("contributor" in params)
+        self.assertTrue("maxdepth" in params)
+        self.assertTrue("mindepth" in params)
+        self.assertTrue("latitude" in params)
+        self.assertTrue("longitude" in params)
+
+        self.assertTrue("maxradius" in params)
+        self.assertTrue("minradius" in params)
+        self.assertTrue("orderby" in params)
+        self.assertTrue("updatedafter" in params)
+
+        self.assertTrue("eventid" in params)
+        self.assertTrue("includearrivals" in params)
+        self.assertTrue("includeallmagnitudes" in params)
+        self.assertTrue("includeallorigins" in params)
+        self.assertTrue("limit" in params)
+        self.assertTrue("offset" in params)
+
 
 def suite():
     return unittest.makeSuite(WADLParserTestCase, 'test')

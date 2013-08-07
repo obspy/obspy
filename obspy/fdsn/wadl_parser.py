@@ -35,6 +35,12 @@ class WADLParser(object):
         parameters = self._xpath(
             doc, "/application/resources/resource/resource/"
             "method[@id='query'][@name='GET']/request/param")
+        # XXX: USGS is special right now. They have to make it one layer
+        # deeper. Remove once they fix it.
+        if not parameters and "usgs" in url.lower():
+            parameters = self._xpath(
+                doc, "/application/resources/resource/"
+                "method[@id='query'][@name='GET']/request/param")
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
@@ -53,6 +59,11 @@ class WADLParser(object):
         if name in WADL_PARAMETERS_NOT_TO_BE_PARSED:
             return
 
+        # XXX: Special handling for the USGS event WADL. minlongitude is preset
+        # twice... Remove once they fix it.
+        if name == "minlongitude" and "minlongitude" in self.parameters:
+            name = "maxlongitude"
+
         style = param_doc.get("style")
         if style != "query":
             msg = "Unknown parameter style '%s' in WADL" % style
@@ -70,13 +81,13 @@ class WADLParser(object):
                 param_type = DEFAULT_TYPES[name]
             else:
                 param_type = str
-        elif param_type == "xs:date":
+        elif param_type in ["xs:date", "xs:dateTime"]:
             param_type = UTCDateTime
         elif param_type == "xs:string":
             param_type = str
         elif param_type == "xs:double":
             param_type = float
-        elif param_type in ["xs:long", "xs:int"]:
+        elif param_type in ["xs:long", "xs:int", "xs:integer"]:
             param_type = int
         # XXX: Remove sboolean once iris fixes it!
         elif param_type in ["xs:boolean", "xs:sboolean"]:
