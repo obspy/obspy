@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+    <doc title="FDSN station web service 1.0"/>
+    <grammars/>
+    <resources base="http://service.iris.edu/fdsnws/station/1/">
+        <resource path="/">
+            <method name="GET" id="root">
+                <response>
+                    <representation mediaType="text/html"/>
+                </response>
+            </method>
+            <resource path="query">
+                <method name="GET" id="query">
+         		    <request>
+         		      <param name="starttime" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to channels that are active on or after the specified start time">
+                           Examples: starttime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="endtime" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to channels that are active on or before the specified end time">
+                           Examples: endtime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="startbefore" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to stations starting before the specified time">
+                           Examples: startbefore=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="startafter" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to stations starting after the specified time">
+                           Examples: startafter=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="endbefore" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to stations ending before the specified time">
+                           Examples: endbefore=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="endafter" style="query" type="xs:date">
+                         <doc xml:lang="english" title="limit to stations ending after the specified time">
+                           Examples: endafter=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000
+                        </doc>
+                     </param>
+         		      <param name="network" style="query" type="xs:string">
+                        <doc xml:lang="english" title="Select one or more network or virtual network codes. Lists and wildcards are accepted">
+                           Examples:network=IU or network=IU,II or network=I? or network=_ARCTIC
+                        </doc>
+                     </param>
+         		      <param name="station" style="query" type="xs:string">
+                        <doc xml:lang="english" title="Select one or more SEED station codes. Lists and wildcards are accepted">
+                           Examples: station=ANMO or station=ANMO,ANTO or station=A* or station=?NM?
+                           Note: May not use wildcards when level=response
+                        </doc>
+                     </param>
+         		      <param name="location" style="query" type="xs:string">
+                        <doc xml:lang="english" title="Select one or more SEED location codes. Use -- for spaces. Lists and wildcards are accepted">
+                           Examples: location=-- or location=?0 or location=--,10
+                        </doc>
+                     </param>
+         		      <param name="channel" style="query" type="xs:string">
+                        <doc xml:lang="english" title="Select one or more SEED channel codes. Lists and wildcards are accepted">
+                           Example:channel=BHZ or channel=BH1,BH2 or channel=*Z or channel=BH?
+                        </doc>
+                     </param>
+         		      <param name="minlatitude" style="query" type="xs:double" default="-90.0">
+                        <doc xml:lang="english" title="Specify southern boundary for search"/>
+                     </param>
+         		      <param name="maxlatitude" style="query" type="xs:double" default="90.0">
+                         <doc xml:lang="english" title="Specify northern boundary for search"/>
+                      </param>
+         		      <param name="minlongitude" style="query" type="xs:double" default="-180.0">
+                        <doc xml:lang="english" title="Specify western boundary for search"/>
+                      </param>
+         		      <param name="maxlongitude" style="query" type="xs:double" default="180.0">
+                        <doc xml:lang="english" title="Specify eastern boundary for search"/>
+                     </param>
+         		      <param name="latitude" style="query" type="xs:double" default="0.0">
+                        <doc xml:lang="english" title="Specify the central latitude point for a radial search"/>
+                     </param>
+         		      <param name="longitude" style="query" type="xs:double" default="0.0">
+                        <doc xml:lang="english" title="Specify the central longitude point for a radial search"/>
+                     </param>
+         		      <param name="minradius" style="query" type="xs:double" default="0.0">
+                        <doc xml:lang="english" title="Specify maximum distance from the geographic point defined by latitude and longitude"/>
+                     </param>
+         		      <param name="maxradius" style="query" type="xs:double" default="180.0">
+                        <doc xml:lang="english" title="Specify minimum distance from the geographic point defined by latitude and longitude"/>
+                     </param>
+         		      <param name="level" style="query" type="xs:string" default="station">
+                        <doc xml:lang="english" title="Specify the level of detail that is returned"/>
+                           <option value="network"/>
+                           <option value="station"/>
+                           <option value="channel"/>
+                           <option value="response"/>
+                     </param>
+         
+         		      <param name="includerestricted" style="query" type="xs:boolean" default="true">
+                        <doc xml:lang="english" title=""/>
+                     </param>
+         		      <param name="includeavailability" style="query" type="xs:boolean" default="false">
+                        <doc xml:lang="english" title="Specify if results should include information about time series data availability."/>
+                     </param>
+         		      <param name="updatedafter" style="query" type="xs:date">
+                        <doc xml:lang="english" title="Limit to metadata updated after specified date; updates are data center specific"/>
+                     </param>
+                     
+                     <!--
+                       Format, MatchTimeSeries, and Nodata are all Iris extensions to the formal FDSN specification
+                     -->
+                     
+                     <param name="matchtimeseries" style="query" type="xs:boolean" default="false">
+                        <doc xml:lang="english" title="Specify that the availabilities line up with available data. This is an IRIS extension to the FDSN specification"/>
+                     </param>
+                     <param name="format" style="query" type="xs:string" default="xml">
+                        <doc xml:lang="english" title="Specify output format. This is an IRIS extension to the FDSN specification"/>
+                        <option value="xml" mediaType="application/xml"/>
+                        <option value="text" mediaType="text/plain"/>
+                     </param>
+                     <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="nodata" style="query" type="xs:int" default="204">
+                        <doc xml:lang="english" title="Specify which HTML Status code is returned when no data is found. This is an IRIS extension to the FDSN specification"/>
+                        <option value="204"/>
+                        <option value="404"/>
+                     </param>
+         		    </request>
+                   <response>
+                     <representation mediaType="text/plain"/>
+                     <representation mediaType="application/xml"/>
+                  </response>
+               </method>
+            </resource>
+            <resource path="version">
+                <method name="GET" id="version">
+                    <response>
+                      <representation mediaType="text/plain"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="application.wadl">
+                <method name="GET" id="application.wadl">
+                    <response>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+        </resource>
+    </resources>
+</application>

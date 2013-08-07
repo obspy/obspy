@@ -50,6 +50,7 @@ class ClientTestCase(unittest.TestCase):
         Tests the automatic discovery of services with the IRIS endpoint.
         """
         c = Client(base_url="IRIS")
+        print "Done"
 
 
 
