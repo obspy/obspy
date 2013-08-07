@@ -43,7 +43,14 @@ class ClientTestCase(unittest.TestCase):
 
         # A wrong resource_type raises a ValueError
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
-            "obspy", "query")
+                          "obspy", "query")
+
+    def test_service_discovery_iris(self):
+        """
+        Tests the automatic discovery of services with the IRIS endpoint.
+        """
+        c = Client(base_url="IRIS")
+
 
 
 
