@@ -1834,7 +1834,8 @@ class Trace(object):
             stats = self.stats.copy()
             tr = Trace(header=stats)
             tr.stats.starttime += (stats.delta * slice.start)
-            tr.data = self.data[slice.start:slice.stop]
+            # return the underlying data not the masked array
+            tr.data = self.data.data[slice.start:slice.stop]
             trace_list.append(tr)
         return Stream(trace_list)
 

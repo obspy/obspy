@@ -13,6 +13,8 @@ dev:
    * renamed obspy.core.util.types into obspy.core.util.obspy_types (#595)
    * new parameter replace for Enums which allows definition of replaceable
      keywords (fixes #531)
+   * Trace.split() will return a stream object containing traces with unmasked
+     arrays
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data

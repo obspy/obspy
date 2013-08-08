@@ -1138,14 +1138,18 @@ class TraceTestCase(unittest.TestCase):
         tr2 = Trace(data=np.arange(0, 1000)[::-1])
         tr2.stats.sampling_rate = 200
         tr2.stats.starttime = start + 10
-        # add
+        # add will create new trace with masked array
         trace = tr1 + tr2
+        self.assertTrue(isinstance(trace.data, np.ma.masked_array))
         # split
         self.assertTrue(isinstance(trace, Trace))
         st = trace.split()
         self.assertTrue(isinstance(st, Stream))
         self.assertEquals(len(st[0]), 1000)
         self.assertEquals(len(st[1]), 1000)
+        # check if have no masked arrays
+        self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
+        self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
 
 
 def suite():
