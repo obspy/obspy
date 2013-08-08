@@ -106,10 +106,11 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("includeallorigins" in params)
         self.assertTrue("limit" in params)
         self.assertTrue("offset" in params)
-        self.assertTrue("format" in params)
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
+        # Same for the format attribute.
+        self.assertFalse("format" in params)
 
         self.assertEqual(
             params["magnitudetype"]["doc_title"],
@@ -151,10 +152,11 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("includeavailability" in params)
         self.assertTrue("updatedafter" in params)
         self.assertTrue("matchtimeseries" in params)
-        self.assertTrue("format" in params)
 
         # The nodata attribute should not be parsed.
         self.assertFalse("nodata" in params)
+        # Same for the format attribute.
+        self.assertFalse("format" in params)
 
         self.assertEqual(
             params["endbefore"]["doc_title"],
