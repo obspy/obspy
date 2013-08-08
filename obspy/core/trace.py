@@ -1818,13 +1818,14 @@ class Trace(object):
         Splits Trace object containing gaps using a NumPy masked array into
         several traces.
 
-        :rtype: list
-        :returns: List of split traces. A gapless trace will still be
-            returned as list with only one entry.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Stream containing all split traces. A gapless trace will
+            still be returned as Stream with only one entry.
         """
+        from obspy import Stream
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
-            return [self]
+            return Stream([self])
         slices = flatnotmaskedContiguous(self.data)
         trace_list = []
         for slice in slices:
@@ -1835,7 +1836,7 @@ class Trace(object):
             tr.stats.starttime += (stats.delta * slice.start)
             tr.data = self.data[slice.start:slice.stop]
             trace_list.append(tr)
-        return trace_list
+        return Stream(trace_list)
 
     def times(self):
         """

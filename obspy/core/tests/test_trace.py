@@ -3,7 +3,7 @@
 from copy import deepcopy
 import numpy as np
 from numpy.ma import is_masked
-from obspy import UTCDateTime, Trace, read
+from obspy import UTCDateTime, Trace, read, Stream
 import unittest
 import math
 
@@ -1125,6 +1125,27 @@ class TraceTestCase(unittest.TestCase):
         x = np.ma.masked_inside(x, 3, 4)
         tr = Trace(x)
         self.assertRaises(NotImplementedError, tr.detrend)
+
+    def test_split(self):
+        """
+        Tests split method of the Trace class.
+        """
+        # set up
+        tr1 = Trace(data=np.arange(1000))
+        tr1.stats.sampling_rate = 200
+        start = UTCDateTime(2000, 1, 1, 0, 0, 0, 0)
+        tr1.stats.starttime = start
+        tr2 = Trace(data=np.arange(0, 1000)[::-1])
+        tr2.stats.sampling_rate = 200
+        tr2.stats.starttime = start + 10
+        # add
+        trace = tr1 + tr2
+        # split
+        self.assertTrue(isinstance(trace, Trace))
+        st = trace.split()
+        self.assertTrue(isinstance(st, Stream))
+        self.assertEquals(len(st[0]), 1000)
+        self.assertEquals(len(st[1]), 1000)
 
 
 def suite():
