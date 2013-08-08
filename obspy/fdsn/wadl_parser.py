@@ -17,10 +17,13 @@ class WADLParser(object):
         url = self._xpath(doc, "/application/resources")[0].get("base")
         if "dataselect" in url:
             self._default_parameters = DEFAULT_DATASELECT_PARAMETERS
+            self._wadl_type = "dataselect"
         elif "station" in url:
             self._default_parameters = DEFAULT_STATION_PARAMETERS
+            self._wadl_type = "station"
         elif "event" in url:
             self._default_parameters = DEFAULT_EVENT_PARAMETERS
+            self._wadl_type = "event"
         else:
             raise NotImplementedError
 
@@ -47,6 +50,20 @@ class WADLParser(object):
 
         for param in parameters:
             self.add_parameter(param)
+
+        # Raise a warning if some default parameters are not specified.
+        missing_params = []
+        for item in self._default_parameters:
+            param = item[0]
+            if param not in self.parameters:
+                missing_params.append(param)
+        if missing_params:
+            msg = ("The '%s' service at '%s' cannot deal with the following "
+                   "required parameters: %s\nThey will not be available "
+                   "for any requests. Any attempt to use them will result "
+                   "in an error.") % (self._wadl_type, url,
+                                      ", ".join(missing_params))
+            warnings.warn(msg)
 
     def add_parameter(self, param_doc):
         name = param_doc.get("name")

@@ -7,6 +7,7 @@ from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
 import os
 import unittest
+import warnings
 
 
 class WADLParserTestCase(unittest.TestCase):
@@ -243,6 +244,67 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertTrue("includeallorigins" in params)
         self.assertTrue("limit" in params)
         self.assertTrue("offset" in params)
+
+    def test_parsing_dataselect_wadls_with_missing_attributes(self):
+        """
+        Some WADL file miss required attributes. In this case a warning will be
+        raised.
+        """
+        # This dataselect WADL misses the quality, minimumlength, and
+        # longestonly parameters.
+        filename = os.path.join(self.data_path,
+                                "dataselect_missing_attributes.wadl")
+        with open(filename, "rt") as fh:
+            wadl_string = fh.read()
+        with warnings.catch_warnings(record=True) as w:
+            parser = WADLParser(wadl_string)
+            # Assert that the warning raised is correct.
+            self.assertEqual(len(w), 1)
+            msg = w[0].message.message
+            self.assertTrue("quality" in msg)
+            self.assertTrue("minimumlength" in msg)
+            self.assertTrue("longestonly" in msg)
+
+        # Assert that some other parameters are still existant.
+        params = parser.parameters
+        self.assertTrue("starttime" in params)
+        self.assertTrue("endtime" in params)
+        self.assertTrue("network" in params)
+        self.assertTrue("station" in params)
+        self.assertTrue("location" in params)
+        self.assertTrue("channel" in params)
+
+    def test_parsing_event_wadls_with_missing_attributes(self):
+        """
+        Some WADL file miss required attributes. In this case a warning will be
+        raised.
+        """
+        # This event WADL misses the includeallorigins and the updatedafter
+        # parameters.
+        filename = os.path.join(self.data_path,
+                                "event_missing_attributes.wadl")
+        with open(filename, "rt") as fh:
+            wadl_string = fh.read()
+        with warnings.catch_warnings(record=True) as w:
+            parser = WADLParser(wadl_string)
+            # Assert that the warning raised is correct.
+            self.assertEqual(len(w), 1)
+            msg = w[0].message.message
+            self.assertTrue("includeallorigins" in msg)
+            self.assertTrue("updatedafter" in msg)
+
+        # Assert that some other parameters are still existant.
+        params = parser.parameters
+        self.assertTrue("starttime" in params)
+        self.assertTrue("endtime" in params)
+        self.assertTrue("minlatitude" in params)
+        self.assertTrue("maxlatitude" in params)
+        self.assertTrue("minlongitude" in params)
+        self.assertTrue("maxlongitude" in params)
+        self.assertTrue("minmagnitude" in params)
+        self.assertTrue("maxmagnitude" in params)
+        self.assertTrue("magnitudetype" in params)
+        self.assertTrue("catalog" in params)
 
 
 def suite():
