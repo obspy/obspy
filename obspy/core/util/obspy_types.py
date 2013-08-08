@@ -149,6 +149,8 @@ class Enum(object):
     Enumerated type (enum) implementation for Python.
 
     :type enums: list of str
+    :type replace: dict, optional
+    :param replace: Dictionary of keys which are replaced by values.
 
     .. rubric:: Example
 
@@ -188,6 +190,15 @@ class Enum(object):
         >>> units('xxx')
         >>> units(5)
         'other'
+
+    The following enum allows replacing certain entries:
+
+        >>> units2 = Enum(["m", "s", "m/s", "m/(s*s)", "m*s", "other"],
+        ...               replace={'meter': 'm'})
+        >>> units2('m')
+        'm'
+        >>> units2('meter')
+        'm'
     """
     # marker needed for for usage within ABC classes
     __isabstractmethod__ = False
