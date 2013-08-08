@@ -127,9 +127,12 @@ class WADLParser(object):
             msg = "Unknown parameter type '%s' in WADL." % param_type
             raise ValueError(msg)
 
-        default_value = self._convert_boolean(param_doc.get("default"))
-        if default_value is None:
-            default_value = False
+        default_value = param_doc.get("default")
+        if default_value is not None:
+            if param_type == bool:
+                default_value = self._convert_boolean(default_value)
+            else:
+                default_value = param_type(default_value)
 
         # Parse any possible options.
         options = []

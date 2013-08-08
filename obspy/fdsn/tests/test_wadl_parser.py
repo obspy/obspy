@@ -60,6 +60,11 @@ class WADLParserTestCase(unittest.TestCase):
         self.assertEqual(sorted(params["quality"]["options"]),
                          sorted(["D", "R", "Q", "M", "B"]))
 
+        # Check that the default values did get read correctly.
+        self.assertEqual(params["quality"]["default_value"], "B")
+        self.assertEqual(params["minimumlength"]["default_value"], 0.0)
+        self.assertEqual(params["longestonly"]["default_value"], False)
+
     def test_event_wadl_parsing(self):
         """
         Tests the parsing of an event wadl.

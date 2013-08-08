@@ -9,6 +9,7 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     DEFAULT_DATASELECT_PARAMETERS, DEFAULT_STATION_PARAMETERS, \
@@ -18,6 +19,7 @@ import Queue
 import threading
 import urllib
 import urllib2
+import warnings
 
 
 class FDSNException(Exception):
@@ -75,6 +77,134 @@ class Client(object):
             print "Request Headers: %s" % str(self.request_headers)
 
         self._discover_services()
+
+    def get_waveform(self, starttime, endtime, network, station, location,
+                     channel, quality=None, minimumlength=None,
+                     longestonly=None, filename=None, **kwargs):
+        """
+        Query the dataselect service of the client.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit results to time series samples on or after the
+            specified start time
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit results to time series samples on or before the
+            specified end time
+        :type network: str
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated. Wildcards are allowed.
+        :type station: str
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated. Wildcards are allowed.
+        :type location: str
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated. Wildcards are allowed.
+        :type channel: str
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated.
+        :type quality: str, optional
+        :param quality: Select a specific SEED quality indicator, handling is
+            data center dependent.
+        :type minimumlength: float, optional
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds.
+        :type longestonly: bool, optional
+        :param longestonly: Limit results to the longest continuous segment per
+            channel.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error
+        """
+        if "event" not in self.services:
+            msg = "The current client does not have an event service."
+            raise ValueError(msg)
+
+        # Combine all parameters in the kwargs dictionary.
+        kwargs["starttime"] = starttime
+        kwargs["endtime"] = endtime
+        kwargs["network"] = network
+        kwargs["station"] = station
+        kwargs["location"] = location
+        kwargs["channel"] = channel
+        if quality is not None:
+            kwargs["quality"] = quality
+        if minimumlength is not None:
+            kwargs["minimumlength"] = minimumlength
+        if longestonly is not None:
+            kwargs["longestonly"] = longestonly
+        url = self._create_url_from_parameters(
+            "dataselect", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+        print url
+        from obspy import read
+        return read(url)
+
+    def _create_url_from_parameters(self, service, default_params, parameters):
+        """
+        """
+        service_params = self.services[service]
+        # Get all required parameters and make sure they are available!
+        required_parameters = [
+            key for key, value in service_params.iteritems()
+            if value["required"] is True]
+        for req_param in required_parameters:
+            if req_param not in parameters:
+                msg = "Parameter '%s' is required." % req_param
+                raise TypeError(msg)
+
+        # Find all default values.
+        parameters_with_default_values = [
+            key for key, value in service_params.iteritems()
+            if value["default_value"] is not None]
+
+        final_parameter_set = {}
+
+        # Now loop over all parameters, convert them and make sure they are
+        # accepted by the service.
+        for key, value in parameters.iteritems():
+            if key not in service_params:
+                # If it is not in the service but in the default parameters
+                # raise a warning.
+                if key in default_params:
+                    msg = ("The standard parameter '%s' is not supporte by "
+                           "the webservice. It will be silently ignored." %
+                           key)
+                    warnings.warn(msg)
+                    continue
+                # Otherwise raise an error.
+                else:
+                    msg = \
+                        "The parameter '%s' is not supported by the service." \
+                        % key
+                    raise TypeError(msg)
+            # Now attempt to convert the parameter to the correct type.
+            this_type = service_params[key]["type"]
+            try:
+                value = this_type(value)
+            except:
+                msg = "'%s' could not be converted to type '%s'." % (
+                    str(value), this_type.__name__)
+                raise TypeError(msg)
+            # Now convert to a string that is accepted by the webservice.
+            final_parameter_set[key] = convert_to_string(value)
+
+        # Last but not least, loop over the default parameters to set any so
+        # far not set parameters.
+        for param in parameters_with_default_values:
+            if param in final_parameter_set:
+                continue
+            else:
+                final_parameter_set[param] = \
+                    service_params[param]["default_value"]
+        return self._build_url(service, "query",
+                               parameters=final_parameter_set)
 
     def __str__(self):
         ret = (
@@ -223,6 +353,39 @@ class Client(object):
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
             raise FDSNException(msg)
+
+
+def convert_to_string(value):
+    """
+    Takes any value and converts it to a string compliant with the FDSN
+    webservices.
+
+    Will raise a ValueError if the value could not be converted.
+
+    >>> convert_to_string("abcd")
+    'abcd'
+    >>> convert_to_string(1)
+    '1'
+    >>> convert_to_string(1.2)
+    '1.2'
+    >>> convert_to_string(UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
+    '2012-01-02T03:04:05.666666'
+    >>> convert_to_string(True)
+    'true'
+    >>> convert_to_string(False)
+    'false'
+    """
+    if isinstance(value, basestring):
+        return value
+    # Boolean test must come before integer check!
+    elif isinstance(value, bool):
+        return str(value).lower()
+    elif isinstance(value, int):
+        return str(value)
+    elif isinstance(value, float):
+        return str(value)
+    elif isinstance(value, UTCDateTime):
+        return str(value).replace("Z", "")
 
 
 def build_url(base_url, major_version, resource_type, service, parameters={}):
