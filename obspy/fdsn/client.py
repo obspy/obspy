@@ -9,7 +9,8 @@ FDSN Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime
+from io import BytesIO
+import obspy
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     DEFAULT_DATASELECT_PARAMETERS, DEFAULT_STATION_PARAMETERS, \
@@ -142,9 +143,23 @@ class Client(object):
             kwargs["longestonly"] = longestonly
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_DATASELECT_PARAMETERS, kwargs)
-        print url
-        from obspy import read
-        return read(url)
+
+        data_stream = self._download(url)
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            st = obspy.read(data_stream, format="MSEED")
+            data_stream.close()
+            return st
+
+    def _write_to_file_object(filename_or_object, data_stream):
+        if hasattr(filename_or_object, "write"):
+            filename_or_object.write(data_stream.read())
+            return
+        with open(filename_or_object, "wb") as fh:
+            fh.write(data_stream.read())
 
     def _create_url_from_parameters(self, service, default_params, parameters):
         """
@@ -288,6 +303,35 @@ class Client(object):
                   "standard parameters: %s" %
                   ", ".join(missing_default_parameters))
 
+    def _download(self, url):
+        code, data = download_url(url, headers=self.request_headers,
+                                  debug=self.debug, return_string=False)
+        # No data.
+        if code == 204:
+            raise FDSNException("No data available for request.")
+        elif code == 400:
+            msg = "Bad request. Please contact the developers."
+            raise NotImplementedError(msg)
+        elif code == 401:
+            raise FDSNException("Unauthorized, authentication required.")
+        elif code == 403:
+            raise FDSNException("Authentication failed.")
+        elif code == 413:
+            raise FDSNException("Request would result in too much data. "
+                                "Denied by the datacenter. Split the request "
+                                "in smaller parts")
+        # Request URI too large.
+        elif code == 414:
+            msg = ("The request URI is too large. Please contact the ObsPy "
+                   "developers.")
+            raise NotImplementedError(msg)
+        elif code == 500:
+            raise FDSNException("Service responds: Internal server error")
+        elif code == 503:
+            raise FDSNException("Service temporarily unavailable")
+
+        return data
+
     def _build_url(self, resource_type, service, parameters={}):
         """
         Builds a correct URL.
@@ -384,7 +428,7 @@ def convert_to_string(value):
         return str(value)
     elif isinstance(value, float):
         return str(value)
-    elif isinstance(value, UTCDateTime):
+    elif isinstance(value, obspy.UTCDateTime):
         return str(value).replace("Z", "")
 
 
@@ -415,7 +459,7 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False):
+def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
     """
     Returns a pair of tuples.
 
@@ -435,7 +479,11 @@ def download_url(url, timeout=10, headers={}, debug=False):
             print "Error while downloading: %s" % url
         return None, None
 
-    code, data = url_obj.getcode(), url_obj.read()
+    code = url_obj.getcode()
+    if return_string is False:
+        data = BytesIO(url_obj.read())
+    else:
+        data = url_obj.read()
 
     if debug is True:
         print "Downloaded %s with HTTP code: %i" % (url, code)
