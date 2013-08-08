@@ -1,3 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+A class parsing WADL files describing FDSN web services.
+
+There are couple of datacenter specific fixes in here. They are marked by XXX
+and should be removed once the datacenters are fully standard compliant.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
+"""
 from obspy import UTCDateTime
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \

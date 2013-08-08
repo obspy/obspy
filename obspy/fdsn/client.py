@@ -19,6 +19,7 @@ import threading
 import urllib
 import urllib2
 
+
 class FDSNException(Exception):
     pass
 

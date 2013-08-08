@@ -1,6 +1,13 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The obspy.fdsn.client test suite.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU Lesser General Public License, Version 3
+    (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url
