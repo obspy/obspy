@@ -57,9 +57,6 @@ class ClientTestCase(unittest.TestCase):
         Tests the automatic discovery of services with the IRIS endpoint.
         """
         client = Client(base_url="IRIS")
-        from obspy import UTCDateTime
-        st = client.get_waveform(UTCDateTime(2012, 1, 1), UTCDateTime(2012, 1, 1, 0, 10), "IU", "ANMO", "10", "BH1")
-        print st
 
 
 def suite():

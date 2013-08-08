@@ -209,6 +209,126 @@ class Client(object):
             data_stream.close()
             return cat
 
+    def get_station(self, starttime=None, endtime=None, startbefore=None,
+                    startafter=None, endbefore=None, endafter=None,
+                    network=None, station=None, location=None, channel=None,
+                    minlatitude=None, maxlatitude=None, minlongitude=None,
+                    maxlongitude=None, latitude=None, longitude=None,
+                    minradius=None, maxradius=None, level=None,
+                    includerestricted=None, includeavailability=None,
+                    updatedafter=None, filename=None, **kwargs):
+        """
+        Query the station service of the client.
+
+
+        :type starttime:
+        :param starttime: Limit to metadata epochs starting on or after the
+            specified start time.
+        :type endtime:
+        :param endtime: Limit to metadata epochs ending on or before the
+            specified end time.
+        :type startbefore:
+        :param startbefore: Limit to metadata epochs starting before specified
+            time.
+        :type startafter:
+        :param startafter: Limit to metadata epochs starting after specified
+            time.
+        :type endbefore:
+        :param endbefore: Limit to metadata epochs ending before specified
+            time.
+        :type endafter:
+        :param endafter: Limit to metadata epochs ending after specified time.
+        :type network:
+        :param network: Select one or more network codes. Can be SEED network
+            codes or data center defined codes. Multiple codes are
+            comma-separated.
+        :type station:
+        :param station: Select one or more SEED station codes. Multiple codes
+            are comma-separated.
+        :type location:
+        :param location: Select one or more SEED location identifiers. Multiple
+            identifiers are comma-separated. As a special case “--“ (two
+            dashes) will be translated to a string of two space characters to
+            match blank location IDs.
+        :type channel:
+        :param channel: Select one or more SEED channel codes. Multiple codes
+            are comma-separated.
+        :type minlatitude:
+        :param minlatitude: Limit to stations with a latitude larger than the
+            specified minimum.
+        :type maxlatitude:
+        :param maxlatitude: Limit to stations with a latitude smaller than the
+            specified maximum.
+        :type minlongitude:
+        :param minlongitude: Limit to stations with a longitude larger than the
+            specified minimum.
+        :type maxlongitude:
+        :param maxlongitude: Limit to stations with a longitude smaller than
+            the specified maximum.
+        :type latitude:
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude:
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius:
+        :param minradius: Limit results to stations within the specified
+            minimum number of degrees from the geographic point defined by the
+                    latitude and longitude parameters.
+        :type maxradius:
+        :param maxradius: Limit results to stations within the specified
+            maximum number of degrees from the geographic point defined by the
+            latitude and longitude parameters.
+        :type level:
+        :param level: Specify the level of detail for the results.
+        :type includerestricted:
+        :param includerestricted: Specify if results should include information
+            for restricted stations.
+        :type includeavailability:
+        :param includeavailability: Specify if results should include
+            information about time series data availability.
+        :type updatedafter:
+        :param updatedafter: Limit to metadata updated after specified date;
+            updates are data center specific.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "station" not in self.services:
+            msg = "The current client does not have a station service."
+            raise ValueError(msg)
+
+        locs = locals()
+        for param in ("starttime", "endtime", "startbefore", "startafter",
+                      "endbefore", "endafter", "network", "station",
+                      "location", "channel", "minlatitude", "maxlatitude",
+                      "minlongitude", "maxlongitude", "latitude", "longitude",
+                      "minradius", "maxradius", "level", "includerestricted",
+                      "includeavailability", "updatedafter"):
+            value = locs[param]
+            if value is not None:
+                kwargs[param] = value
+
+        url = self._create_url_from_parameters(
+            "station", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+
+        data_stream = self._download(url)
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            # XXX: Replace with StationXML reader once ready!
+            station = data_stream.read()
+            data_stream.close()
+            return station
+
     def get_waveform(self, starttime, endtime, network, station, location,
                      channel, quality=None, minimumlength=None,
                      longestonly=None, filename=None, **kwargs):
