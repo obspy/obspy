@@ -5,13 +5,13 @@ The psd test suite.
 """
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np
 import os
 import unittest
 import warnings
-import tempfile
 
 
 class PsdTestCase(unittest.TestCase):
@@ -136,33 +136,30 @@ class PsdTestCase(unittest.TestCase):
         np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
 
         # test saving and loading of the PPSD (using a temporary file)
-        file_ = tempfile.NamedTemporaryFile(delete=False)
-        file_.close()
-        filename = file_.name
-        # test saving and loading an uncompressed file
-        ppsd.save(filename, compress=False)
-        ppsd_loaded = PPSD.load(filename)
-        self.assertEqual(len(ppsd_loaded.times), 4)
-        self.assertEqual(ppsd_loaded.nfft, 65536)
-        self.assertEqual(ppsd_loaded.nlap, 49152)
-        np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
-        np.testing.assert_array_equal(ppsd_loaded.spec_bins,
-                                      binning['spec_bins'])
-        np.testing.assert_array_equal(ppsd_loaded.period_bins,
-                                      binning['period_bins'])
-        # test saving and loading a compressed file
-        ppsd.save(filename, compress=True)
-        ppsd_loaded = PPSD.load(filename)
-        self.assertEqual(len(ppsd_loaded.times), 4)
-        self.assertEqual(ppsd_loaded.nfft, 65536)
-        self.assertEqual(ppsd_loaded.nlap, 49152)
-        np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
-        np.testing.assert_array_equal(ppsd_loaded.spec_bins,
-                                      binning['spec_bins'])
-        np.testing.assert_array_equal(ppsd_loaded.period_bins,
-                                      binning['period_bins'])
-        # remove the temporary file
-        os.unlink(filename)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            # test saving and loading an uncompressed file
+            ppsd.save(filename, compress=False)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
+            # test saving and loading a compressed file
+            ppsd.save(filename, compress=True)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
 
 
 def suite():
