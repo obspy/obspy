@@ -104,10 +104,27 @@ class Client(object):
         else:
             raise NotImplementedError
 
-        print "Parameters for the '%s' service:" % service
+        print "Parameter description for the '%s' service of '%s':" % (
+            service, self.base_url)
 
-        for name in SERVICE_DEFAULT:
-            name = name[0]
+        # Loop over all parameters and group them in three list: available
+        # default parameters, missing default parameters and additional
+        # parameters
+        available_default_parameters = []
+        missing_default_parameters = []
+        additional_parameters = []
+        long_default_names = [_i[0] for _i in SERVICE_DEFAULT]
+        for name in long_default_names:
+            if name in self.services[service]:
+                available_default_parameters.append(name)
+            else:
+                missing_default_parameters.append(name)
+
+        for name in self.services[service].iterkeys():
+            if name not in long_default_names:
+                additional_parameters.append(name)
+
+        def _print_param(name):
             param = self.services[service][name]
             name = "%s (%s)" % (name, param["type"].__name__)
             req_def = ""
@@ -121,12 +138,25 @@ class Client(object):
             if req_def:
                 req_def = ", %s" % req_def
             if param["doc_title"]:
-                doc_title = "\n\t\t%s" % param["doc_title"]
+                doc_title = "\n        %s" % param["doc_title"]
             else:
                 doc_title = ""
 
-            print "\t{name}{req_def}{doc_title}".format(
+            print "    {name}{req_def}{doc_title}".format(
                 name=name, req_def=req_def, doc_title=doc_title)
+
+        for name in available_default_parameters:
+            _print_param(name)
+
+        if additional_parameters:
+            print "The service offers the following non-standard parameters:"
+            for name in additional_parameters:
+                _print_param(name)
+
+        if missing_default_parameters:
+            print("WARNING: The service does not offer the following "
+                  "standard parameters: %s" %
+                  ", ".join(missing_default_parameters))
 
     def _build_url(self, resource_type, service, parameters={}):
         """
