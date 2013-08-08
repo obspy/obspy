@@ -19,6 +19,9 @@ import threading
 import urllib
 import urllib2
 
+class FDSNException(Exception):
+    pass
+
 
 class Client(object):
     """
@@ -184,6 +187,11 @@ class Client(object):
                 self.services["station"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered station service"
+        if not self.services:
+            msg = ("No FDSN services could be discoverd at '%s'. This could "
+                   "be due to a temporary service outage or an invalid FDSN "
+                   "service address." % self.base_url)
+            raise FDSNException(msg)
 
 
 def build_url(base_url, major_version, resource_type, service, parameters={}):
