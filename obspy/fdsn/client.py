@@ -53,7 +53,7 @@ class Client(object):
         :type debug: bool
         :param debug: Debug flag.
         """
-        self.debug = True
+        self.debug = debug
         #if user and password:
             ## Create an OpenerDirector for HTTP Digest Authentication
             #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
