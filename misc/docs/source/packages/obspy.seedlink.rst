@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.seishub
-.. automodule:: obspy.seishub
+.. currentmodule:: obspy.seedlink
+.. automodule:: obspy.seedlink
 
     .. comment to end block
 
@@ -9,10 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       client.Client
-       client._EventMapperClient
-       client._StationMapperClient
-       client._WaveformMapperClient
+       ~slclient.SLClient
 
     .. comment to end block
 
@@ -22,6 +19,8 @@
        :toctree: autogen
        :nosignatures:
 
+       slclient
+       slpacket
        client
 
     .. comment to end block
