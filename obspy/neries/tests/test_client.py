@@ -275,6 +275,19 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
 
+    def test_issue531(self):
+        """
+        Event_type "other" has been replaced by "other event" in recent
+        QuakeML version
+        """
+        client = Client(user='test@obspy.org')
+        events = client.getEvents(minlon=-30, maxlon=40, minlat=30, maxlat=90,
+            min_datetime=UTCDateTime(2000, 4, 11, 11, 24, 31),
+            max_datetime=UTCDateTime(2000, 4, 11, 11, 24, 32),
+            minmag=5.5, format='catalog')
+        self.assertEquals(len(events), 1)
+        self.assertEquals(events[0].event_type, 'other event')
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

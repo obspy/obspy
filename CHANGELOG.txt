@@ -11,6 +11,8 @@ dev:
      in case the validation fails.
    * validation of QuakeML against official schema working now
    * renamed obspy.core.util.types into obspy.core.util.obspy_types (#595)
+   * new parameter replace for Enums which allows definition of replaceable
+     keywords (fixes #531)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
