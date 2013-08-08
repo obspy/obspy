@@ -53,7 +53,7 @@ class Client(object):
         :type debug: bool
         :param debug: Debug flag.
         """
-        self.debug = debug
+        self.debug = True
         #if user and password:
             ## Create an OpenerDirector for HTTP Digest Authentication
             #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
@@ -78,6 +78,136 @@ class Client(object):
             print "Request Headers: %s" % str(self.request_headers)
 
         self._discover_services()
+
+    def get_event(self, starttime=None, endtime=None, minlatitude=None,
+                  maxlatitude=None, minlongitude=None, maxlongitude=None,
+                  latitude=None, longitude=None, minradius=None,
+                  maxradius=None, mindepth=None, maxdepth=None,
+                  minmagnitude=None, maxmagnitude=None, magnitudetype=None,
+                  includeallorigins=None, includeallmagnitudes=None,
+                  includearrivals=None, eventid=None, limit=None, offset=None,
+                  orderby=None, catalog=None, contributor=None,
+                  updatedafter=None, filename=None, **kwargs):
+        """
+        Query the event service of the client.
+
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param starttime: Limit to events on or after the specified start time.
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
+        :param endtime: Limit to events on or before the specified end time.
+        :type minlatitude: float, optional
+        :param minlatitude: Limit to events with a latitude larger than the
+            specified minimum.
+        :type maxlatitude: float, optional
+        :param maxlatitude: Limit to events with a latitude smaller than the
+            specified maximum.
+        :type minlongitude: float, optional
+        :param minlongitude: Limit to events with a longitude larger than the
+            specified minimum.
+        :type maxlongitude: float, optional
+        :param maxlongitude: Limit to events with a longitude smaller than the
+            specified maximum.
+        :type latitude: float, optional
+        :param latitude: Specify the latitude to be used for a radius search.
+        :type longitude: float, optional
+        :param longitude: Specify the longitude to the used for a radius
+            search.
+        :type minradius: float, optional
+        :param minradius: Limit to events within the specified minimum number
+            of degrees from the geographic point defined by the latitude and
+            longitude parameters.
+        :type maxradius: float, optional
+        :param maxradius: Limit to events within the specified maximum number
+            of degrees from the geographic point defined by the latitude and
+            longitude parameters.
+        :type mindepth: float, optional
+        :param mindepth: Limit to events with depth more than the specified
+            minimum.
+        :type maxdepth: float, optional
+        :param maxdepth: Limit to events with depth less than the specified
+            maximum.
+        :type minmagnitude: float, optional
+        :param minmagnitude: Limit to events with a magnitude larger than the
+            specified minimum.
+        :type maxmagnitude: float, optional
+        :param maxmagnitude: Limit to events with a magnitude smaller than the
+            specified maximum.
+        :type magnitudetype: str, optional
+        :param magnitudetype: Specify a magnitude type to use for testing the
+            minimum and maximum limits.
+        :type includeallorigins: bool, optional
+        :param includeallorigins: Specify if all origins for the event should
+            be included, default is data center dependent but is suggested to
+            be the preferred origin only.
+        :type includeallmagnitudes: bool, optional
+        :param includeallmagnitudes: Specify if all magnitudes for the event
+            should be included, default is data center dependent but is
+            suggested to be the preferred magnitude only.
+        :type includearrivals: bool, optional
+        :param includearrivals: Specify if phase arrivals should be included.
+        :type eventid: str or int (dependent on data center), optional
+        :param eventid: Select a specific event by ID; event identifiers are
+            data center specific.
+        :type limit: int, optional
+        :param limit: Limit the results to the specified number of events.
+        :type offset: int, optional
+        :param offset: Return results starting at the event count specified,
+            starting at 1.
+        :type orderby: str, optional
+        :param orderby: Order the result by time or magnitude with the
+            following possibilities:
+                * time: order by origin descending time
+                * time-asc: order by origin ascending time
+                * magnitude: order by descending magnitude
+                * magnitude-asc: order by ascending magnitude
+        :type catalog: str, optional
+        :param catalog: Limit to events from a specified catalog
+        :type contributor: str, optional
+        :param contributor: Limit to events contributed by a specified
+            contributor.
+        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
+            optional
+        :param updatedafter: Limit to events updated after the specified time.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "event" not in self.services:
+            msg = "The current client does not have an event service."
+            raise ValueError(msg)
+
+        locs = locals()
+        for param in ("starttime", "endtime", "minlatitude", "maxlatitude",
+                      "minlongitude", "maxlongitude", "latitude", "longitude",
+                      "minradius", "maxradius", "mindepth", "maxdepth",
+                      "minmagnitude", "maxmagnitude", "magnitudetype",
+                      "includeallorigins", "includeallmagnitudes",
+                      "includearrivals", "eventid", "limit", "offset",
+                      "orderby", "catalog", "contributor", "updatedafter"):
+            value = locs[param]
+            if value is not None:
+                kwargs[param] = value
+
+        url = self._create_url_from_parameters(
+            "event", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+
+        data_stream = self._download(url)
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            cat = obspy.readEvents(data_stream, format="quakeml")
+            data_stream.close()
+            return cat
 
     def get_waveform(self, starttime, endtime, network, station, location,
                      channel, quality=None, minimumlength=None,
@@ -122,10 +252,10 @@ class Client(object):
         additional arguments. If you pass one of the default parameters and the
         webservice does not support it, a warning will be issued. Passing any
         non-default parameters that the webservice does not support will raise
-        an error
+        an error.
         """
-        if "event" not in self.services:
-            msg = "The current client does not have an event service."
+        if "dataselect" not in self.services:
+            msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
         # Combine all parameters in the kwargs dictionary.
@@ -174,11 +304,6 @@ class Client(object):
                 msg = "Parameter '%s' is required." % req_param
                 raise TypeError(msg)
 
-        # Find all default values.
-        parameters_with_default_values = [
-            key for key, value in service_params.iteritems()
-            if value["default_value"] is not None]
-
         final_parameter_set = {}
 
         # Now loop over all parameters, convert them and make sure they are
@@ -210,14 +335,6 @@ class Client(object):
             # Now convert to a string that is accepted by the webservice.
             final_parameter_set[key] = convert_to_string(value)
 
-        # Last but not least, loop over the default parameters to set any so
-        # far not set parameters.
-        for param in parameters_with_default_values:
-            if param in final_parameter_set:
-                continue
-            else:
-                final_parameter_set[param] = \
-                    service_params[param]["default_value"]
         return self._build_url(service, "query",
                                parameters=final_parameter_set)
 
