@@ -1976,7 +1976,7 @@ class Stream(object):
             st = read()
             st.filter("highpass", freq=1.0)
             st.plot()
-            st.trigger('recstalta', sta=3, lta=10)
+            st.trigger('recstalta', sta=1, lta=4)
             st.plot()
         """
         for tr in self:
