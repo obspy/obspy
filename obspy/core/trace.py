@@ -1279,7 +1279,7 @@ class Trace(object):
         >>> tr = st[0]
         >>> tr.filter("highpass", freq=1.0)
         >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger("recstalta", sta=3, lta=10)
+        >>> tr.trigger("recstalta", sta=1, lta=4)
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
