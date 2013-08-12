@@ -423,6 +423,8 @@ def add_data_files(config):
             "obspy", "*", "tests", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-4:])
         config.add_data_dir(path)
+    # image directories
+    config.add_data_dir(os.path.join("obspy", "imaging", "tests", "images"))
     config.add_data_dir(os.path.join("obspy", "segy", "tests", "images"))
     # Add some xsd files.
     config.add_data_dir(os.path.join("obspy", "core", "docs"))
