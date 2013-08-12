@@ -4,12 +4,19 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
-import time
 import unittest
+
+# checking for newer matplotlib version and if nose is installed
+try:
+    from matplotlib.testing.compare import compare_images
+    HAS_COMPARE_IMAGE = True
+except ImportError:
+    HAS_COMPARE_IMAGE = False
 
 
 class SpectrogramTestCase(unittest.TestCase):
@@ -18,9 +25,9 @@ class SpectrogramTestCase(unittest.TestCase):
     """
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'output')
+        self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(__name__ != '__main__', 'test must be started manually')
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_spectogram(self):
         """
         Create spectogram plotting examples in tests/output directory.
@@ -35,21 +42,21 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        outfile = os.path.join(self.path, 'spectogram_log.png')
-        spectrogram.spectrogram(st[0].data, log=True, outfile=outfile,
-                                samp_rate=st[0].stats.sampling_rate,
-                                show=False)
-        # check that outfile was modified
-        stat = os.stat(outfile)
-        self.assertTrue(abs(stat.st_mtime - time.time()) < 3)
+        with NamedTemporaryFile(suffix='.png') as tf:
+            spectrogram.spectrogram(st[0].data, log=True, outfile=tf.name,
+                                    samp_rate=st[0].stats.sampling_rate,
+                                    show=False)
+            # compare images
+            expected_image = os.path.join(self.path, 'spectogram_log.png')
+            compare_images(tf.name, expected_image, 0.001)
         # 2 - using log=False
-        outfile = os.path.join(self.path, 'spectogram.png')
-        spectrogram.spectrogram(st[0].data, log=False, outfile=outfile,
-                                samp_rate=st[0].stats.sampling_rate,
-                                show=False)
-        # check that outfile was modified
-        stat = os.stat(outfile)
-        self.assertTrue(abs(stat.st_mtime - time.time()) < 3)
+        with NamedTemporaryFile(suffix='.png') as tf:
+            spectrogram.spectrogram(st[0].data, log=False, outfile=tf.name,
+                                    samp_rate=st[0].stats.sampling_rate,
+                                    show=False)
+            # compare images
+            expected_image = os.path.join(self.path, 'spectogram.png')
+            compare_images(tf.name, expected_image, 0.001)
 
 
 def suite():
