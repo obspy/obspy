@@ -987,38 +987,37 @@ class Stream(object):
             Defaults to ``0.95``.
         :param subplots_adjust_bottom: The bottom side of the subplots of the
             figure in fraction of the figure width Defaults to ``0.0``.
-         :param right_vertical_labels: Whether or not to display labels on the
+        :param right_vertical_labels: Whether or not to display labels on the
             right side of the dayplot.  Defaults to ``False``.
-         :param one_tick_per_line: Whether or not to display one tick per line
+        :param one_tick_per_line: Whether or not to display one tick per line
             Defaults to ``False``.
-         :param show_y_UTC_label: Whether or not to display Y UTC vertical
+        :param show_y_UTC_label: Whether or not to display Y UTC vertical
             label Defaults to ``True``.
-         :param title: The title to display on top of the plot
+        :param title: The title to display on top of the plot
             Defaults to ``self.stream[0].id``.
 
         **Section Parameters**
 
-        These parameters are only available if ``type='section'``. To plot
-        a record section the ObsPy header ``trace.stats.distance`` must be
-        defined in meters (Default). Or
-        ``trace.stats.coordinates.latitude`` &
+        These parameters are only available if ``type='section'`` is set. To
+        plot a record section the ObsPy header ``trace.stats.distance`` must be
+        defined in meters (Default). Or ``trace.stats.coordinates.latitude`` &
         ``trace.stats.coordinates.longitude`` must be set if plotted in
         azimuthal distances (``azim_dist=True``) along with ``ev_lat``
         and ``ev_lon``.
 
-        :type scale: Scalar, optional
+        :type scale: float, optional
         :param scale: Scale the traces width with this factor.
             Default is ``1.0``
-        :type vred: Scalar, optional
+        :type vred: float, optional
         :param vred: Perform velocity reduction, in m/s.
         :type norm: string, optional
         :param norm: Defines how the traces are normalized,
             either against each ``trace`` or against the global
             maximum ``stream``. Default is ``trace``
-        :type offset_min: Scalar or None, optional
+        :type offset_min: float or None, optional
         :param offset_min: Minimum offset in meters to plot.
             Default is minimum offset.
-        :type offset_max: Scalar or None, optional
+        :type offset_max: float or None, optional
         :param offset_min: Maximum offset in meters to plot.
             Default is maximum offset.
         :param dist_degree: Plot trace distance in degree from epicenter,
