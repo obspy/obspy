@@ -315,6 +315,10 @@ class Client(object):
             if value is not None:
                 kwargs[param] = value
 
+        # Special location handling. Convert empty strings to "--".
+        if "location" in kwargs and not kwargs["location"]:
+            kwargs["location"] = "--"
+
         url = self._create_url_from_parameters(
             "station", DEFAULT_DATASELECT_PARAMETERS, kwargs)
 
@@ -394,6 +398,10 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_DATASELECT_PARAMETERS, kwargs)
 
+        # Special location handling. Convert empty strings to "--".
+        if "location" in kwargs and not kwargs["location"]:
+            kwargs["location"] = "--"
+
         data_stream = self._download(url)
         data_stream.seek(0, 0)
         if filename:
@@ -404,7 +412,7 @@ class Client(object):
             data_stream.close()
             return st
 
-    def _write_to_file_object(filename_or_object, data_stream):
+    def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
             filename_or_object.write(data_stream.read())
             return
@@ -453,7 +461,11 @@ class Client(object):
                     str(value), this_type.__name__)
                 raise TypeError(msg)
             # Now convert to a string that is accepted by the webservice.
-            final_parameter_set[key] = convert_to_string(value)
+            value = convert_to_string(value)
+            if isinstance(value, basestring):
+                if not value:
+                    continue
+            final_parameter_set[key] = value
 
         return self._build_url(service, "query",
                                parameters=final_parameter_set)
@@ -649,7 +661,7 @@ def convert_to_string(value):
     '1'
     >>> convert_to_string(1.2)
     '1.2'
-    >>> convert_to_string(UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
+    >>> convert_to_string(obspy.UTCDateTime(2012, 1, 2, 3, 4, 5, 666666))
     '2012-01-02T03:04:05.666666'
     >>> convert_to_string(True)
     'true'
@@ -711,7 +723,13 @@ def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
     try:
         url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
                                   timeout=timeout)
-    except urllib2.URLError:
+    # Catch HTTP errors.
+    except urllib2.HTTPError as e:
+        if debug is True:
+            print("HTTP error %i while downloading '%s': %s" %
+                  (e.code, url, e.read()))
+        return e.code, None
+    except Exception as e:
         if debug is True:
             print "Error while downloading: %s" % url
         return None, None
