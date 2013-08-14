@@ -718,8 +718,11 @@ class PPSD():
         :param compress: Enable/disable file compression.
         """
         if compress:
-            with bz2.BZ2File(filename, 'w') as file_:
-                pickle.dump(self, file_)
+            # due to an bug in older python version we can't use with
+            # http://bugs.python.org/issue8601
+            file_ = bz2.BZ2File(filename, 'w')
+            pickle.dump(self, file_)
+            file_.close()
         else:
             with open(filename, 'w') as file_:
                 pickle.dump(self, file_)
