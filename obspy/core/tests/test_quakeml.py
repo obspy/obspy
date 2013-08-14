@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
 
-import difflib
-import math
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, \
-    readEvents, Event, Origin, Magnitude, Tensor, MomentTensor, \
-    FocalMechanism, Catalog
+from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
+    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from xml.etree.ElementTree import tostring, fromstring
 import StringIO
+import difflib
+import math
 import os
 import unittest
 import warnings
 
 
-# lxml < 2.3 seems not ship with RelaxNG schema parser
+# lxml < 2.3 seems not ship with RelaxNG schema parser and namespace support
 try:
     from lxml.etree import RelaxNG  # @UnusedImport
-    HAS_RELAXNG = True
+    IS_RECENT_LXML = True
 except ImportError:
-    HAS_RELAXNG = False
+    IS_RECENT_LXML = False
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -517,7 +517,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = readQuakeML(filename)
             self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile, validate=HAS_RELAXNG)
+            writeQuakeML(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
@@ -542,6 +542,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
 
+    @skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
     def test_enums(self):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are
@@ -685,7 +686,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # write QuakeML file
         cat = Catalog(events=[ev])
         memfile = StringIO.StringIO()
-        cat.write(memfile, format="quakeml", validate=HAS_RELAXNG)
+        cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
         new_cat = readQuakeML(memfile)
