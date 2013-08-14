@@ -18,7 +18,6 @@ by a distributed team in a transparent collaborative manner.
 import inspect
 import os
 
-import obspy
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -1393,8 +1392,7 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and \
-            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1427,16 +1425,17 @@ def readSeisHubEventXML(filename):
     return readQuakeML(temp)
 
 
-def validate(xml_file, verbose=False):
+def _validate(xml_file, verbose=False):
     """
     Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
     either True or False.
     """
+    from lxml.etree import RelaxNG
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    relaxng = etree.RelaxNG(etree.parse(schema_location))
+    relaxng = RelaxNG(etree.parse(schema_location))
     xmldoc = etree.parse(xml_file)
 
     valid = relaxng.validate(xmldoc)

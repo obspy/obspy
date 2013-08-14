@@ -15,6 +15,14 @@ import unittest
 import warnings
 
 
+# lxml < 2.3 seems not ship with RelaxNG schema parser
+try:
+    from lxml.etree import RelaxNG  # @UnusedImport
+    HAS_RELAXNG = True
+except ImportError:
+    HAS_RELAXNG = False
+
+
 class QuakeMLTestCase(unittest.TestCase):
     """
     Test suite for obspy.core.quakeml
@@ -509,7 +517,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = readQuakeML(filename)
             self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile, validate=True)
+            writeQuakeML(catalog, tmpfile, validate=HAS_RELAXNG)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
@@ -677,7 +685,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # write QuakeML file
         cat = Catalog(events=[ev])
         memfile = StringIO.StringIO()
-        cat.write(memfile, format="quakeml", validate=True)
+        cat.write(memfile, format="quakeml", validate=HAS_RELAXNG)
 
         memfile.seek(0, 0)
         new_cat = readQuakeML(memfile)
