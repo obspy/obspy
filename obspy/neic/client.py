@@ -219,9 +219,11 @@ class Client(object):
             except socket.error as e:
                 print traceback.format_exc()
                 print "CWB QueryServer at " + self.host + "/" + str(self.port)
+                raise
             except Exception as e:
                 print traceback.format_exc()
                 print "**** exception found=" + str(e)
+                raise
         if self.debug:
             print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
         st.merge(-1)
