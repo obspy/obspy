@@ -15,12 +15,15 @@ import unittest
 import warnings
 
 
-# lxml < 2.3 seems not ship with RelaxNG schema parser and namespace support
+# lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
+IS_RECENT_LXML = False
 try:
-    from lxml.etree import RelaxNG  # @UnusedImport
-    IS_RECENT_LXML = True
-except ImportError:
-    IS_RECENT_LXML = False
+    from lxml.etree import __version__
+    version = float(__version__.rsplit('.', 1)[0])
+    if version >= 2.3:
+        IS_RECENT_LXML = True
+except:
+    pass
 
 
 class QuakeMLTestCase(unittest.TestCase):

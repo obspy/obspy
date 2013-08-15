@@ -15,9 +15,6 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import inspect
-import os
-
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -27,6 +24,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
+import inspect
+import os
+import warnings
 
 
 def isQuakeML(filename):
@@ -1430,12 +1430,22 @@ def _validate(xml_file, verbose=False):
     Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
     either True or False.
     """
-    from lxml.etree import RelaxNG
+    try:
+        from lxml.etree import RelaxNG
+    except ImportError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    relaxng = RelaxNG(etree.parse(schema_location))
+    try:
+        relaxng = RelaxNG(etree.parse(schema_location))
+    except TypeError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     xmldoc = etree.parse(xml_file)
 
     valid = relaxng.validate(xmldoc)
