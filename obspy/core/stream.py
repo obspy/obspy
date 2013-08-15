@@ -1508,8 +1508,14 @@ class Stream(object):
         :type keep_empty_traces: bool, optional
         :param keep_empty_traces: Empty traces will be kept if set to ``True``.
             Defaults to ``False``.
-        :return: New :class:`~obspy.core.stream.Stream` object. Does not copy
-            data but just passes a reference to it.
+        :return: :class:`~obspy.core.stream.Stream`
+
+        .. note::
+
+            The basic idea of :meth:`~obspy.core.stream.Stream.slice`
+            is to avoid copying the sample data in memory. So sample data in
+            the resulting :class:`~obspy.core.stream.Stream` object contains
+            only a reference to the original traces.
 
         .. rubric:: Example
 
