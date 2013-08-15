@@ -750,8 +750,12 @@ class PPSD():
             # guaranteed to be ASCII encoded and hence cannot start with this
             # magic number.
             # cf. http://docs.python.org/2/library/pickle.html
-            with bz2.BZ2File(filename, 'r') as file_:
-                ppsd = pickle.load(file_)
+            #
+            # due to an bug in older python version we can't use with
+            # http://bugs.python.org/issue8601
+            file_ = bz2.BZ2File(filename, 'r')
+            ppsd = pickle.load(file_)
+            file_.close()
         else:
             with open(filename, 'r') as file_:
                 ppsd = pickle.load(file_)
