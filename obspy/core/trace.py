@@ -365,7 +365,7 @@ class Trace(object):
         if key == 'data':
             if not isinstance(value, np.ndarray):
                 msg = "Trace.data must be a NumPy array."
-                ValueError(msg)
+                raise ValueError(msg)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
