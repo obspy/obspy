@@ -136,7 +136,17 @@ class Client(object):
             pass
         else:
             for line in lines:
-                key, value = line.split('=', 1)
+                line = line.strip()
+                # skip empty lines
+                if not line:
+                    continue
+                # skip comments
+                if line.startswith('#'):
+                    continue
+                if ' ' in line:
+                    key, value = line.split(' ', 1)
+                else:
+                    key, value = line.split('=', 1)
                 key = key.strip()
                 # ensure that dcid_keys set via parameters are not overwritten
                 if key not in self.dcid_keys:
