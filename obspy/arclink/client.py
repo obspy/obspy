@@ -83,13 +83,18 @@ class Client(object):
 
     .. rubric:: Notes
 
-    The following ArcLink servers may be accessed via ObsPy (partly restricted
-    access only):
+    The following ArcLink servers may be accessed (also see
+    http://www.orfeus-eu.org/eida/eida_advanced_users.html;
+    maybe partly restricted access only):
 
-    * WebDC servers: webdc.eu:18001, webdc.eu:18002
-    * ODC Server:  bhlsa03.knmi.nl:18001
-    * INGV Server: eida.rm.ingv.it:18001
-    * IPGP Server: geosrt2.ipgp.fr:18001
+    * WebDC: webdc.eu:18001, webdc.eu:18002
+    * ODC:   eida.knmi.nl:18002
+    * GFZ:   eida.gfz-potsdam.de:18001
+    * RESIF: eida.resif.fr:18001
+    * INGV:  --
+    * ETHZ:  eida.ethz.ch:18001
+    * BGR:   eida.bgr.de:18001
+    * IPGP:  eida.ipgp.fr:18001
     """
     #: Delay in seconds between each status request
     status_delay = 0.5
@@ -215,7 +220,12 @@ class Client(object):
                     print('\nRequesting %s:%d' % (self._client.host,
                                                   self._client.port))
                 return self._fetch(request_type, request_data, route)
-            msg = 'Could not find route to %s.%s'
+            msg = 'Could not find route to %s.%s. If you think the data ' + \
+                  'should be there, you might want to retry ' + \
+                  'with manually connecting to a different ArcLink node ' + \
+                  '(see docstring of Client) to see if there is a problem ' + \
+                  'with a routing table at a specific ArcLink node (and ' + \
+                  'contact the ArcLink node operators).'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
         # we got a routing table
         for item in table:
