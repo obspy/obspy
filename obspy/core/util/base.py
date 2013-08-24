@@ -33,7 +33,7 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS', 'Y']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
