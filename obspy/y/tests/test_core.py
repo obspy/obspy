@@ -25,8 +25,15 @@ class CoreTestCase(unittest.TestCase):
         Testing reading Y file format.
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
-        stream = readY(testfile)
-        print stream
+        st = readY(testfile)
+        self.assertEquals(len(st), 1)
+        tr = st[0]
+        self.assertEquals(len(tr), 18000)
+        self.assertEquals(tr.stats.sampling_rate, 100.0)
+        self.assertEquals(tr.stats.station, 'AYT')
+        self.assertEquals(tr.stats.channel, 'BHZ')
+        self.assertEquals(tr.stats.location, '')
+        self.assertEquals(tr.stats.network, '')
 
 
 def suite():
