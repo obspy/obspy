@@ -105,6 +105,7 @@ ENTRY_POINTS = {
         'MSEED = obspy.mseed.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
+        'Y = obspy.y.core',
         'SEG2 = obspy.seg2.seg2',
         'SEGY = obspy.segy.core',
         'SU = obspy.segy.core',
@@ -192,6 +193,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.wav.core:isWAV',
         'readFormat = obspy.wav.core:readWAV',
         'writeFormat = obspy.wav.core:writeWAV',
+    ],
+    'obspy.plugin.waveform.Y': [
+        'isFormat = obspy.y.core:isY',
+        'readFormat = obspy.y.core:readY',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
