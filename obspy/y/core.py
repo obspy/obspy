@@ -159,7 +159,6 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
             params.sensor_type = parts[6].rstrip('\x00')
             params.data_format = parts[7].rstrip('\x00')
             trace.stats.y.tag_station_info = params
-            print params
         elif tag_type == 2:
             # TAG_STATION_LOCATION
             # UCHAR Update[8]
