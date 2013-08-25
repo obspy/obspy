@@ -159,6 +159,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
             params.sensor_type = parts[6].rstrip('\x00')
             params.data_format = parts[7].rstrip('\x00')
             trace.stats.y.tag_station_info = params
+            print params
         elif tag_type == 2:
             # TAG_STATION_LOCATION
             # UCHAR Update[8]
@@ -318,8 +319,7 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
             trace.stats.y.tag_station_response = params
         elif tag_type == 7:
             # TAG_DATA_INT32
-            data = fh.read(next_tag)
-            trace.data = np.fromstring(data, dtype=np.int32, count=count)
+            trace.data = np.fromfile(fh, dtype=np.int32, count=count)
             # break loop as TAG_DATA_INT32 should be the last tag in file
             break
         else:

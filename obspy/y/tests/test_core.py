@@ -34,6 +34,10 @@ class CoreTestCase(unittest.TestCase):
         self.assertEquals(tr.stats.channel, 'BHZ')
         self.assertEquals(tr.stats.location, '')
         self.assertEquals(tr.stats.network, '')
+        self.assertEquals(max(tr.data),
+                          tr.stats.y.tag_series_info.max_amplitude)
+        self.assertEquals(min(tr.data),
+                          tr.stats.y.tag_series_info.min_amplitude)
 
 
 def suite():
