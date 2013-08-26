@@ -978,6 +978,13 @@ class Trace(object):
         if endtime:
             self._rtrim(endtime, pad, nearest_sample=nearest_sample,
                         fill_value=fill_value)
+        # if pad=True and fill_value is given convert to NumPy ndarray
+        if pad == True and fill_value is not None:
+            try:
+                self.data = self.data.filled()
+            except AttributeError:
+                # numpy.ndarray object has no attribute 'filled' - ignoring
+                pass
 
     def slice(self, starttime=None, endtime=None):
         """

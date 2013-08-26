@@ -1909,6 +1909,39 @@ class StreamTestCase(unittest.TestCase):
             self.assertTrue(st[1].data[i] <= 1.)
             self.assertTrue(st[1].data[i] >= 0.)
 
+    def test_issue540(self):
+        """
+        Trim with pad=True and given fill value should not return a masked
+        NumPy array.
+        """
+        # fill_value = None
+        st = read()
+        self.assertEquals(len(st[0]), 3000)
+        st.trim(starttime=st[0].stats.starttime - 0.01,
+                endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
+        self.assertEquals(len(st[0]), 3002)
+        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        self.assertTrue(st[0].data[0] is np.ma.masked)
+        self.assertTrue(st[0].data[1] is not np.ma.masked)
+        self.assertTrue(st[0].data[-2] is not np.ma.masked)
+        self.assertTrue(st[0].data[-1] is np.ma.masked)
+        # fill_value = 999
+        st = read()
+        self.assertEquals(len(st[1]), 3000)
+        st.trim(starttime=st[1].stats.starttime - 0.01,
+                endtime=st[1].stats.endtime + 0.01, pad=True, fill_value=999)
+        self.assertEquals(len(st[1]), 3002)
+        self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
+        self.assertEquals(st[1].data[0], 999)
+        self.assertEquals(st[1].data[-1], 999)
+        # given fill_value but actually no padding at all
+        st = read()
+        self.assertEquals(len(st[2]), 3000)
+        st.trim(starttime=st[2].stats.starttime, endtime=st[2].stats.endtime,
+                pad=True, fill_value=-999)
+        self.assertEquals(len(st[2]), 3000)
+        self.assertFalse(isinstance(st[2].data, np.ma.masked_array))
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
