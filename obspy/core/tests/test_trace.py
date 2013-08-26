@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-import numpy as np
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
-import unittest
 import math
+import numpy as np
+import unittest
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1244,6 +1244,39 @@ class TraceTestCase(unittest.TestCase):
         # check if have no masked arrays
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
+
+    def test_issue540(self):
+        """
+        Trim with pad=True and given fill value should not return a masked
+        NumPy array.
+        """
+        # fill_value = None
+        tr = read()[0]
+        self.assertEquals(len(tr), 3000)
+        tr.trim(starttime=tr.stats.starttime - 0.01,
+                endtime=tr.stats.endtime + 0.01, pad=True, fill_value=None)
+        self.assertEquals(len(tr), 3002)
+        self.assertTrue(isinstance(tr.data, np.ma.masked_array))
+        self.assertTrue(tr.data[0] is np.ma.masked)
+        self.assertTrue(tr.data[1] is not np.ma.masked)
+        self.assertTrue(tr.data[-2] is not np.ma.masked)
+        self.assertTrue(tr.data[-1] is np.ma.masked)
+        # fill_value = 999
+        tr = read()[0]
+        self.assertEquals(len(tr), 3000)
+        tr.trim(starttime=tr.stats.starttime - 0.01,
+                endtime=tr.stats.endtime + 0.01, pad=True, fill_value=999)
+        self.assertEquals(len(tr), 3002)
+        self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+        self.assertEquals(tr.data[0], 999)
+        self.assertEquals(tr.data[-1], 999)
+        # given fill_value but actually no padding at all
+        tr = read()[0]
+        self.assertEquals(len(tr), 3000)
+        tr.trim(starttime=tr.stats.starttime,
+                endtime=tr.stats.endtime, pad=True, fill_value=-999)
+        self.assertEquals(len(tr), 3000)
+        self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
 
 def suite():

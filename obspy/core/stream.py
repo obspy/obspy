@@ -1438,7 +1438,7 @@ class Stream(object):
                 # delta is negative!
                 endtime = tr.stats.endtime + delta * tr.stats.delta
         for trace in self.traces:
-            trace.trim(starttime, endtime, pad,
+            trace.trim(starttime, endtime, pad=pad,
                        nearest_sample=nearest_sample, fill_value=fill_value)
         # remove empty traces after trimming
         self.traces = [_i for _i in self.traces if _i.stats.npts]
