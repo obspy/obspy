@@ -42,6 +42,8 @@ dev:
  - obspy.neic:
    * new module to access data from CWB QueryServer run at the National
      Earthquake Information Center (NEIC) in Golden, CO USA.
+ - obspy.y:
+   * adding read support for Nanometrics Y file format
  - scripts:
    * obspy-plot: new option "-o" to output plot to file instead of opening
      a window
