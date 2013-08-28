@@ -120,7 +120,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     SU        :mod:`obspy.segy`      :func:`obspy.segy.core.readSU`
     SEG2      :mod:`obspy.seg2`      :func:`obspy.seg2.seg2.readSEG2`
     WAV       :mod:`obspy.wav`       :func:`obspy.wav.core.readWAV`
-    PICKLE    :mod:`obspy.core`      :func:`obspy.wav.stream.readPICKLE`
+    PICKLE    :mod:`obspy.core`      :func:`obspy.core.stream.readPICKLE`
     DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK`
     CSS       :mod:`obspy.css`       :func:`obspy.css.core.readCSS`
     ========  =====================  ========================================
@@ -1346,7 +1346,7 @@ class Stream(object):
         SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
         TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
         WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.readPickle`
+        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.writePickle`
         =======  ===================  ====================================
         """
         # Check all traces for masked arrays and raise exception.
