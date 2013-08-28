@@ -26,18 +26,18 @@ class CoreTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
         st = readY(testfile)
-        self.assertEquals(len(st), 1)
+        self.assertEqual(len(st), 1)
         tr = st[0]
-        self.assertEquals(len(tr), 18000)
-        self.assertEquals(tr.stats.sampling_rate, 100.0)
-        self.assertEquals(tr.stats.station, 'AYT')
-        self.assertEquals(tr.stats.channel, 'BHZ')
-        self.assertEquals(tr.stats.location, '')
-        self.assertEquals(tr.stats.network, '')
-        self.assertEquals(max(tr.data),
-                          tr.stats.y.tag_series_info.max_amplitude)
-        self.assertEquals(min(tr.data),
-                          tr.stats.y.tag_series_info.min_amplitude)
+        self.assertEqual(len(tr), 18000)
+        self.assertEqual(tr.stats.sampling_rate, 100.0)
+        self.assertEqual(tr.stats.station, 'AYT')
+        self.assertEqual(tr.stats.channel, 'BHZ')
+        self.assertEqual(tr.stats.location, '')
+        self.assertEqual(tr.stats.network, '')
+        self.assertEqual(max(tr.data),
+                         tr.stats.y.tag_series_info.max_amplitude)
+        self.assertEqual(min(tr.data),
+                         tr.stats.y.tag_series_info.min_amplitude)
 
 
 def suite():
