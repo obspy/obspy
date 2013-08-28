@@ -122,6 +122,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     PICKLE    :mod:`obspy.core`      :func:`obspy.wav.stream.readPICKLE`
     DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK'
     CSS       :mod:`obspy.css`       :func:`obspy.datamark.core.readCSS'
+    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY'
     ========  =====================  ========================================
 
     Next to the :func:`~obspy.core.stream.read` function the
