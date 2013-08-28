@@ -115,14 +115,14 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     SH_ASC    :mod:`obspy.sh`        :func:`obspy.sh.core.readASC`
     SLIST     :mod:`obspy.core`      :func:`obspy.core.ascii.readSLIST`
     TSPAIR    :mod:`obspy.core`      :func:`obspy.core.ascii.readTSPAIR`
+    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY`
     SEGY      :mod:`obspy.segy`      :func:`obspy.segy.core.readSEGY`
     SU        :mod:`obspy.segy`      :func:`obspy.segy.core.readSU`
     SEG2      :mod:`obspy.seg2`      :func:`obspy.seg2.seg2.readSEG2`
     WAV       :mod:`obspy.wav`       :func:`obspy.wav.core.readWAV`
     PICKLE    :mod:`obspy.core`      :func:`obspy.wav.stream.readPICKLE`
-    DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK'
-    CSS       :mod:`obspy.css`       :func:`obspy.datamark.core.readCSS'
-    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY'
+    DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK`
+    CSS       :mod:`obspy.css`       :func:`obspy.datamark.core.readCSS`
     ========  =====================  ========================================
 
     Next to the :func:`~obspy.core.stream.read` function the
