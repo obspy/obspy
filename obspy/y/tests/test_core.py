@@ -19,6 +19,8 @@ class CoreTestCase(unittest.TestCase):
         """
         testfile = os.path.join(self.path, 'data', 'YAYT_BHZ_20021223.124800')
         self.assertEqual(isY(testfile), True)
+        self.assertEqual(isY("/path/to/slist.ascii"), False)
+        self.assertEqual(isY("/path/to/tspair.ascii"), False)
 
     def test_readYFile(self):
         """
