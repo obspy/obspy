@@ -61,7 +61,7 @@ def isY(filename):
 
     .. rubric:: Example
 
-    >>> isASC("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
+    >>> isY("/path/to/YAYT_BHZ_20021223.124800")  #doctest: +SKIP
     True
     """
     try:
