@@ -33,6 +33,7 @@ The functionality is provided through the following packages:
    obspy.segy
    obspy.sh
    obspy.wav
+   obspy.y
 
 .. rubric:: Database or Web Service Access Clients
 

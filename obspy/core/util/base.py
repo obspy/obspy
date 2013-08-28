@@ -25,15 +25,15 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css']
+                   'realtime', 'datamark', 'css', 'y']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
+                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
