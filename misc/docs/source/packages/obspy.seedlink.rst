@@ -10,6 +10,10 @@
        :nosignatures:
 
        ~slclient.SLClient
+       ~slpacket.SLPacket
+       ~client.slnetstation.SLNetStation
+       ~client.seedlinkconnection.SeedLinkConnection
+       ~client.slstate.SLState
 
     .. comment to end block
 
@@ -21,6 +25,9 @@
 
        slclient
        slpacket
-       client
+       seedlinkexception
+       client.seedlinkconnection
+       client.slnetstation
+       client.slstate
 
     .. comment to end block
