@@ -17,6 +17,7 @@ dev:
      arrays
    * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
      the API documentation (#540)
+   * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
