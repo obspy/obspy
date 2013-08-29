@@ -2599,6 +2599,7 @@ class Stream(object):
                     self.traces.append(cur_trace)
                     cur_trace = trace
             self.traces.append(cur_trace)
+        self.traces = [tr for tr in self.traces if tr.stats.npts]
 
     def split(self):
         """
