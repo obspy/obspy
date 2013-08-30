@@ -120,28 +120,29 @@ def uncompressFile(func):
             # tarfile module
             try:
                 import tarfile
-            except ImportError:
+                if not tarfile.is_tarfile(filename):
+                    raise
+                # reading with transparent compression
+                tar = tarfile.open(filename, 'r|*')
+                for tarinfo in tar:
+                    # only handle regular files
+                    if not tarinfo.isfile():
+                        continue
+                    data = tar.extractfile(tarinfo).read()
+                    obj_list.append(data)
+                tar.close()
+            except:
                 pass
-            else:
-                if tarfile.is_tarfile(filename):
-                    # reading with transparent compression
-                    with tarfile.open(filename, 'r|*') as tar:
-                        for tarinfo in tar:
-                            # only handle regular files
-                            if not tarinfo.isfile():
-                                continue
-                            data = tar.extractfile(tarinfo).read()
-                            obj_list.append(data)
         elif filename.endswith('.zip'):
             # zipfile module
             try:
                 import zipfile
-            except ImportError:
+                if not zipfile.is_zipfile(filename):
+                    raise
+                zip = zipfile.ZipFile(filename)
+                obj_list = [zip.read(name) for name in zip.namelist()]
+            except:
                 pass
-            else:
-                if zipfile.is_zipfile(filename):
-                    zip = zipfile.ZipFile(filename)
-                    obj_list = [zip.read(name) for name in zip.namelist()]
         elif filename.endswith('.bz2'):
             # bz2 module
             try:
