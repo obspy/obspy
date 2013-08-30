@@ -1942,6 +1942,27 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(st[2]), 3000)
         self.assertFalse(isinstance(st[2].data, np.ma.masked_array))
 
+    def test_issue617(self):
+        """
+        Tests a problem with Stream.merge(-1) after a read(.., headonly=True)
+
+        The test Stream has four traces, the first two align perfectly, so
+        after merging the total amount of data samples should be the same.
+        """
+        sample_sums = []
+
+        def sample_sum(st):
+            return sum([tr.stats.npts for tr in st])
+
+        for headonly in [True, False]:
+            st = read("/path/to/issue617.slist", headonly=headonly)
+            sample_sums.append(sample_sum(st))
+            st.merge(-1)
+            sample_sums.append(sample_sum(st))
+
+        for value in sample_sums[1:]:
+            self.assertEqual(value, sample_sums[0])
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
