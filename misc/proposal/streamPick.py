@@ -32,14 +32,14 @@ class streamPick(QtGui.QMainWindow):
             self.bpfilter = []
         # Internal variables
         # Gui vars
-        self._shortcuts = { 'st_next': 'c',
-                            'st_previous': 'x',
-                            'filter_apply': 'f',
-                            'pick_p': 'q',
-                            'pick_s': 'w',
-                            'pick_custom': 't',
-                            'pick_remove': 'r',
-                        }
+        self._shortcuts = {'st_next': 'c',
+                           'st_previous': 'x',
+                           'filter_apply': 'f',
+                           'pick_p': 'q',
+                           'pick_s': 'w',
+                           'pick_custom': 't',
+                           'pick_remove': 'r',
+                           }
         self._plt_drag = None
         self._current_filter = None
         # Init stations
@@ -69,7 +69,7 @@ class streamPick(QtGui.QMainWindow):
 
         self.setCentralWidget(self.main_widget)
         self.setGeometry(300, 300, 1200, 800)
-        self.setWindowTitle('PickMe')
+        self.setWindowTitle('obspy.core.Stream-Picker')
         self.show()
 
     def _initPlots(self):
@@ -114,6 +114,9 @@ class streamPick(QtGui.QMainWindow):
                                     shortcut=self._shortcuts['filter_apply'])
         self.fltrbtn.setToolTip('shortcut <b>f</b>')
         self.fltrbtn.setCheckable(True)
+        #self.fltrbtn.setAutoFillBackground(True)
+        self.fltrbtn.setStyleSheet(QtCore.QString(
+                    'QPushButton:checked {background-color: lightgreen;}'))
         self.fltrbtn.clicked.connect(self._appFilter)
 
         self.fltrcb = QtGui.QComboBox(self)
@@ -174,7 +177,7 @@ class streamPick(QtGui.QMainWindow):
         # Menubar
         menubar = self.menuBar()
         fileMenu = menubar.addMenu('&File')
-        saveQML = fileMenu.addAction(QtGui.QIcon().fromTheme('document-save'),
+        fileMenu.addAction(QtGui.QIcon().fromTheme('document-save'),
                             'Save', self._saveCatalog)
         fileMenu.addAction(QtGui.QIcon().fromTheme('document-save'),
                             'Save as QuakeML File', self._saveCatalogDlg)
@@ -206,7 +209,7 @@ class streamPick(QtGui.QMainWindow):
             ax.channel = tr.stats.channel
             if _i == 0:
                 ax.set_xlabel('Seconds')
-            
+
         # plot picks
         self._drawPicks(draw=False)
         self.fig.suptitle('%s - %s - %s' % (self._current_st[-1].stats.network,
@@ -283,9 +286,9 @@ class streamPick(QtGui.QMainWindow):
         this_pick.onset = self.onset_types[self.onsetGrp.checkedId()]
         this_pick.evaluation_status = 'preliminary'
         this_pick.polarity = polarity
-        if self._current_filter is not None:
-            this_pick.comments.append(event.Comment(
-                        text=str(self.bpfilter[self.fltrcb.currentIndex()])))
+        #if self._current_filter is not None:
+        #    this_pick.comments.append(event.Comment(
+        #                text=str(self.bpfilter[self.fltrcb.currentIndex()])))
         if overwrite:
             self.picks.append(this_pick)
 
@@ -374,7 +377,7 @@ class streamPick(QtGui.QMainWindow):
             left = _ax.get_xlim()[0]
             right = _ax.get_xlim()[1]
             extent = right - left
-            dzoom = .15 * extent
+            dzoom = .2 * extent
             aspect_left = (event.xdata - _ax.get_xlim()[0]) / extent
             aspect_right = (_ax.get_xlim()[1] - event.xdata) / extent
 
@@ -421,9 +424,7 @@ class streamPick(QtGui.QMainWindow):
             event.key = event.key.lower()
         if event.inaxes is None:
             return
-
-        channel =  event.inaxes.channel
-
+        channel = event.inaxes.channel
         tr_amp = event.inaxes.lines[0].get_ydata()[int(event.xdata)]
         if tr_amp < 0:
             polarity = 'negative'
@@ -597,7 +598,6 @@ class streamPick(QtGui.QMainWindow):
             self._openCatalog(str(filename))
             self.savefile = str(filename)
 
-
     def _openCatalog(self, filename):
         try:
             cat = event.readEvents(filename)
@@ -623,10 +623,13 @@ class streamPick(QtGui.QMainWindow):
         if self.savefile is None and filename is None:
             return self._saveCatalogDlg()
         if filename is not None:
-            self.savefile = filename
+            savefile = filename
+        else:
+            savefile = self.savefile
         cat = event.Catalog()
         cat.events.append(event.Event(picks=self.picks))
-        cat.write(self.savefile, format='QUAKEML')
+        cat.write(savefile, format='QUAKEML')
+        print 'Picks saved as %s' % savefile
 
     def _savePlotDlg(self):
         filename = QtGui.QFileDialog.getSaveFileName(self, 'Save Plot',
@@ -636,7 +639,7 @@ class streamPick(QtGui.QMainWindow):
             return
         filename = str(filename)
         format = os.path.splitext(filename)[1][1:].lower()
-        if format not in ['png', 'pdf', 'ps' , 'svg',  'eps']:
+        if format not in ['png', 'pdf', 'ps', 'svg', 'eps']:
             format = 'png'
             filename += '.' + format
         self.fig.savefig(filename=filename, format=format, dpi=72)
@@ -680,14 +683,14 @@ class streamPick(QtGui.QMainWindow):
                 <blockquote>
                 Use mouse wheel to zoom in- and out. Middle mouse button moves
                 plot along x-axis.<br>
-                Hit <b>Ctrl</b> to manipulate single trace.
+                Hit <b>Ctrl</b> to manipulate a single plot.
                 <br></blockquote>
                 Programm stores filter parameters in <code>.pick_filter</code>
                 and a backup of recent picks in
                 <code>.picks-obspy.xml.bak</code>.
                 <br>
-                <blockquote>written by Marius P Isken<br>
-                marius.isken@gmail.com
+                <blockquote>written by Marius P Isken
+                \<marius.isken@gmail.com\>
                 </blockquote>
                 """ % (
                     self._shortcuts['st_next'],
@@ -713,7 +716,19 @@ class streamPick(QtGui.QMainWindow):
         # Save Picks
         pickle.dump(self.bpfilter, open('.pick_filters', 'w'))
         # Save Catalog
-        self._saveCatalog('.picks-obspy.xml.bak')
+        if len(self.picks) > 0:
+            self._saveCatalog('.picks-obspy.xml.bak')
+        if self.savefile is None and len(self.picks) > 0:
+            ask = QtGui.QMessageBox.question(self, 'Save Picks?',
+                'Do you want to save your picks?',
+                QtGui.QMessageBox.Save |
+                QtGui.QMessageBox.Discard |
+                QtGui.QMessageBox.Cancel, QtGui.QMessageBox.Save)
+            if ask == QtGui.QMessageBox.Save:
+                self._saveCatalog()
+            elif ask == QtGui.QMessageBox.Cancel:
+                evnt.ignore()
+
 
     # Filter Dialog
     class defFilter(QtGui.QDialog):
