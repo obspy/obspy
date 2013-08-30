@@ -12,23 +12,34 @@ from matplotlib.figure import Figure
 
 
 class streamPick(QtGui.QMainWindow):
-    def __init__(self, parent=None, stream=None, picks=[]):
+    def __init__(self, stream=None, picks=[], parent=None):
+        # Initialising QtGui
         qApp = QtGui.QApplication(sys.argv)
 
-        # TMP STUFF
+        # Init vars
         if stream is None:
             msg = 'Define stream = obspy.core.Stream()'
             raise ValueError(msg)
-        # Init vars
-        self.st = stream
+        self.st = stream.copy()
         self.picks = picks
         self.savefile = None
+        self.onset_types = ['emergent', 'impulsive', 'questionable']
+
         # Load filters from pickle
         try:
             self.bpfilter = pickle.load(open('.pick_filters', 'r'))
         except:
             self.bpfilter = []
+        # Internal variables
         # Gui vars
+        self._shortcuts = { 'st_next': 'c',
+                            'st_previous': 'x',
+                            'filter_apply': 'f',
+                            'pick_p': 'q',
+                            'pick_s': 'w',
+                            'pick_custom': 't',
+                            'pick_remove': 'r',
+                        }
         self._plt_drag = None
         self._current_filter = None
         # Init stations
@@ -57,7 +68,7 @@ class streamPick(QtGui.QMainWindow):
         l.addWidget(self.canvas)
 
         self.setCentralWidget(self.main_widget)
-        self.setGeometry(300, 300, 700, 500)
+        self.setGeometry(300, 300, 1200, 800)
         self.setWindowTitle('PickMe')
         self.show()
 
@@ -79,13 +90,15 @@ class streamPick(QtGui.QMainWindow):
 
     def _initMenu(self):
         # Next and Prev Button
-        nxt = QtGui.QPushButton('Next Station >>', shortcut="d")
+        nxt = QtGui.QPushButton('Next >>',
+                                shortcut=self._shortcuts['st_next'])
         nxt.clicked.connect(self._pltNextStation)
-        nxt.setToolTip('shortcut <b>d</d>')
+        nxt.setToolTip('shortcut <b>c</d>')
         nxt.setMaximumWidth(150)
-        prv = QtGui.QPushButton('<< Prev Station', shortcut="s")
+        prv = QtGui.QPushButton('<< Prev',
+                                shortcut=self._shortcuts['st_previous'])
         prv.clicked.connect(self._pltPrevStation)
-        prv.setToolTip('shortcut <b>s</d>')
+        prv.setToolTip('shortcut <b>x</d>')
         prv.setMaximumWidth(150)
 
         # Stations drop-down
@@ -97,7 +110,8 @@ class streamPick(QtGui.QMainWindow):
         self.stcb.setMinimumWidth(80)
 
         # Filter buttons
-        self.fltrbtn = QtGui.QPushButton('Filter Trace', shortcut="f")
+        self.fltrbtn = QtGui.QPushButton('Filter Trace',
+                                    shortcut=self._shortcuts['filter_apply'])
         self.fltrbtn.setToolTip('shortcut <b>f</b>')
         self.fltrbtn.setCheckable(True)
         self.fltrbtn.clicked.connect(self._appFilter)
@@ -122,19 +136,39 @@ class streamPick(QtGui.QMainWindow):
         btnstyle = QtGui.QFrame(fltrdel)
         btnstyle.setFrameStyle(QtGui.QFrame.Box | QtGui.QFrame.Plain)
 
+        # onset type
+        _radbtn = []
+        for _o in self.onset_types:
+                _radbtn.append(QtGui.QRadioButton(str(_o[0].upper())))
+                _radbtn[-1].setToolTip('Onset ' + _o)
+                _radbtn[-1].clicked.connect(self._drawPicks)
+                if _o == 'impulsive':
+                    _radbtn[-1].setChecked(True)
+        self.onsetGrp = QtGui.QButtonGroup()
+        self.onsetGrp.setExclusive(True)
+        onsetbtns = QtGui.QHBoxLayout()
+        for _i, _btn in enumerate(_radbtn):
+            self.onsetGrp.addButton(_btn, _i)
+            onsetbtns.addWidget(_btn)
+
         # Arrange buttons
         vline = QtGui.QFrame()
         vline.setFrameStyle(QtGui.QFrame.VLine | QtGui.QFrame.Raised)
         self.btnbar = QtGui.QHBoxLayout()
         self.btnbar.addWidget(prv)
         self.btnbar.addWidget(nxt)
-        self.btnbar.addWidget(QtGui.QLabel('Select station', self))
+        self.btnbar.addWidget(QtGui.QLabel('Station'))
         self.btnbar.addWidget(self.stcb)
+        ##
         self.btnbar.addWidget(vline)
         self.btnbar.addWidget(self.fltrbtn)
         self.btnbar.addWidget(self.fltrcb)
         self.btnbar.addWidget(fltredit)
         self.btnbar.addWidget(fltrdel)
+        ##
+        self.btnbar.addWidget(vline)
+        self.btnbar.addWidget(QtGui.QLabel('Pick Onset: '))
+        self.btnbar.addLayout(onsetbtns)
         self.btnbar.addStretch(3)
 
         # Menubar
@@ -163,12 +197,16 @@ class streamPick(QtGui.QMainWindow):
         self.fig.clear()
         self._appFilter(draw=False)
         for _i, tr in enumerate(self._current_st):
-            self.ax = self.fig.add_subplot(num_plots, 1, _i, yticklabels=[])
-            self.ax.plot(tr.data, 'k')
-            self.ax.set_xlim([0, tr.data.size])
-            self.ax.text(.925, .9, self._current_st[_i].stats.channel,
-                            transform=self.ax.transAxes, va='top', ma='left')
-            self.ax.channel = tr.stats.channel
+            ax = self.fig.add_subplot(num_plots, 1, _i)
+            ax.plot(tr.data, 'k')
+            ax.axhline(0, color='k', alpha=.05)
+            ax.set_xlim([0, tr.data.size])
+            ax.text(.925, .9, self._current_st[_i].stats.channel,
+                        transform=ax.transAxes, va='top', ma='left')
+            ax.channel = tr.stats.channel
+            if _i == 0:
+                ax.set_xlabel('Seconds')
+            
         # plot picks
         self._drawPicks(draw=False)
         self.fig.suptitle('%s - %s - %s' % (self._current_st[-1].stats.network,
@@ -176,8 +214,7 @@ class streamPick(QtGui.QMainWindow):
                             self._current_st[-1].stats.starttime.isoformat()),
                             x=.2)
         self._updateSB()
-        self.fig.canvas.draw()
-        self.canvas.setFocus()
+        self._canvasDraw()
 
     def _initStations(self):
         '''
@@ -187,6 +224,7 @@ class streamPick(QtGui.QMainWindow):
         for _tr in self.st:
             if _tr.stats.station not in self._stations:
                 self._stations.append(_tr.stats.station)
+        self._stations.sort()
 
     def _getPhases(self):
         '''
@@ -205,29 +243,34 @@ class streamPick(QtGui.QMainWindow):
         '''
         if station not in self._stations:
             return
-        self._current_stname = station
         self._current_st = self.st.select(station=station).copy()
+        self._current_stname = station
+        self._current_network = self._current_st[0].stats.network
         # Sort and detrend streams
         self._current_st.sort(['channel'])
         self._current_st.detrend('linear')
 
-    def _setPick(self, xdata, phase, channel, onset=None):
+    def _setPick(self, xdata, phase, channel, polarity='undecideable'):
         '''
         Write obspy.core.event.Pick into self.picks list
         '''
         picktime = self._current_st[0].stats.starttime +\
                 (xdata * self._current_st[0].stats.delta)
+
+        this_pick = event.Pick()
+        overwrite = True
         # Overwrite existing phase's picktime
         for _pick in self._getPicks():
-            if _pick.phase_hint == phase:
-                _pick.time = picktime
-                return
+            if _pick.phase_hint == phase and\
+                    _pick.waveform_id.channel_code == channel:
+                this_pick = _pick
+                overwrite = False
+                break
 
         creation_info = event.CreationInfo(
             author='ObsPy.Stream.pick()',
             creation_time=UTCDateTime())
         # Create new event.Pick()
-        this_pick = event.Pick()
         this_pick.time = picktime
         this_pick.phase_hint = phase
         this_pick.waveform_id = event.WaveformStreamID(
@@ -237,12 +280,21 @@ class streamPick(QtGui.QMainWindow):
             channel_code=channel)
         this_pick.evaluation_mode = 'manual'
         this_pick.creation_info = creation_info
-        if onset is not None:
-            this_pick.onset = onset
+        this_pick.onset = self.onset_types[self.onsetGrp.checkedId()]
+        this_pick.evaluation_status = 'preliminary'
+        this_pick.polarity = polarity
         if self._current_filter is not None:
             this_pick.comments.append(event.Comment(
                         text=str(self.bpfilter[self.fltrcb.currentIndex()])))
-        self.picks.append(this_pick)
+        if overwrite:
+            self.picks.append(this_pick)
+
+    def _delPicks(self, network, station, channel):
+        for _i, _pick in enumerate(self.picks):
+            if _pick.waveform_id.network_code == network\
+                    and _pick.waveform_id.station_code == station\
+                    and _pick.waveform_id.channel_code == channel:
+                self.picks.remove(_pick)
 
     def _getPicks(self):
         '''
@@ -283,12 +335,19 @@ class streamPick(QtGui.QMainWindow):
                     color = 'g'
                 else:
                     color = 'b'
+                if _ax.channel != picks[_i].waveform_id.channel_code:
+                    alpha = .1
+                else:
+                    alpha = .8
+
                 lines.append(matplotlib.lines.Line2D([_xpick, _xpick],
                             [_ax.get_ylim()[0]*.9, _ax.get_ylim()[1]*.8],
-                            color=color))
+                            color=color, alpha=alpha))
+                lines[-1].obspy_pick = picks[_i]
+
                 labels.append(matplotlib.text.Text(_xpick+20,
                             _ax.get_ylim()[0]*.8, text=picks[_i].phase_hint,
-                            color=color, size=10))
+                            color=color, size=10, alpha=alpha))
 
             # delete all artists
             del _ax.artists[0:]
@@ -299,8 +358,7 @@ class streamPick(QtGui.QMainWindow):
                 _ax.add_artist(label)
 
         if draw:
-            self.fig.canvas.draw()
-            self.fig.canvas.setFocus()
+            self._canvasDraw()
 
     # Plot Controls
     def _pltOnScroll(self, event):
@@ -308,9 +366,9 @@ class streamPick(QtGui.QMainWindow):
             return
 
         if event.key == 'control':
-            axes = self.fig.get_axes()
-        else:
             axes = [event.inaxes]
+        else:
+            axes = self.fig.get_axes()
 
         for _ax in axes:
             left = _ax.get_xlim()[0]
@@ -329,7 +387,7 @@ class streamPick(QtGui.QMainWindow):
             else:
                 return
             _ax.set_xlim([left, right])
-        self.fig.canvas.draw()
+        self._canvasDraw()
 
     def _pltOnDrag(self, event):
         '''
@@ -339,9 +397,9 @@ class streamPick(QtGui.QMainWindow):
             return
 
         if event.key == 'control':
-            axes = self.fig.get_axes()
-        else:
             axes = [event.inaxes]
+        else:
+            axes = self.fig.get_axes()
 
         if event.button == 2:
             if self._plt_drag is None:
@@ -353,7 +411,7 @@ class streamPick(QtGui.QMainWindow):
                         _ax.get_xlim()[1] + (self._plt_drag - event.xdata)])
         else:
             return
-        self.fig.canvas.draw()
+        self._canvasDraw()
 
     def _pltOnButtonRelease(self, event):
         self._plt_drag = None
@@ -365,15 +423,31 @@ class streamPick(QtGui.QMainWindow):
             return
 
         channel =  event.inaxes.channel
-        if event.key == 'q' and event.button == 1:
-            self._setPick(event.xdata, 'P', channel)
-        elif event.key == 'w' and event.button == 1:
-            self._setPick(event.xdata, 'S', channel)
-        elif event.key == 'e' and event.button == 1:
+
+        tr_amp = event.inaxes.lines[0].get_ydata()[int(event.xdata)]
+        if tr_amp < 0:
+            polarity = 'negative'
+        elif tr_amp > 0:
+            polarity = 'positive'
+        else:
+            polarity = 'undecideable'
+
+        if event.key == self._shortcuts['pick_p'] and event.button == 1:
+            self._setPick(event.xdata, phase='P', channel=channel,
+                            polarity=polarity)
+        elif event.key == self._shortcuts['pick_s'] and event.button == 1:
+            self._setPick(event.xdata, phase='S', channel=channel,
+                            polarity=polarity)
+        elif event.key == self._shortcuts['pick_custom'] and event.button == 1:
             text, ok = QtGui.QInputDialog.getItem(self, 'Custom Phase',
                 'Enter phase name:', self._getPhases())
             if ok:
-                self._setPick(event.xdata, text, channel)
+                self._setPick(event.xdata, phase=text, channel=channel,
+                                polarity=polarity)
+        elif event.key == self._shortcuts['pick_remove']:
+            self._delPicks(network=self._current_network,
+                            station=self._current_stname,
+                            channel=channel)
         else:
             return
         self._updateSB()
@@ -399,7 +473,10 @@ class streamPick(QtGui.QMainWindow):
         '''
         Plot station from DropDown Menu
         '''
-        self._streamStation(self._stations[self.stcb.currentIndex()])
+        _i = self.stcb.currentIndex()
+        while self._stationCycle.next() != self._stations[_i]:
+            pass
+        self._streamStation(self._stations[_i])
         self._drawFig()
 
     # Filter functions
@@ -426,8 +503,7 @@ class streamPick(QtGui.QMainWindow):
             _ax.autoscale_view()
         if draw is True:
             self._drawPicks(draw=False)
-            self.fig.canvas.draw()
-            self.canvas.setFocus()
+            self._canvasDraw()
         self._updateSB()
 
     def _newFilter(self):
@@ -519,6 +595,8 @@ class streamPick(QtGui.QMainWindow):
                         os.getcwd(), 'QuakeML Format (*.xml)', '20')
         if filename:
             self._openCatalog(str(filename))
+            self.savefile = str(filename)
+
 
     def _openCatalog(self, filename):
         try:
@@ -561,7 +639,7 @@ class streamPick(QtGui.QMainWindow):
         if format not in ['png', 'pdf', 'ps' , 'svg',  'eps']:
             format = 'png'
             filename += '.' + format
-        self.fig.savefig(filename=filename, format=format)
+        self.fig.savefig(filename=filename, format=format, dpi=72)
 
     def _infoDlg(self):
         msg = """
@@ -575,37 +653,58 @@ class streamPick(QtGui.QMainWindow):
                 <blockquote>
                 <table>
                     <tr>
-                        <td width=20><b>s</b></td><td>Previous stream</td>
+                        <td width=20><b>%s</b></td><td>Next stream</td>
                     </tr>
                     <tr>
-                        <td width=20><b>d</b></td><td>Next stream</td>
+                        <td width=20><b>%s</b></td><td>Previous stream</td>
                     </tr>
                     <tr>
-                        <td width=20><b>q</b></td>
-                        <td>Set S-Phase pick at mouse position</td>
-                    </tr>
-                    <tr>
-                        <td width=20><b>w</b></td>
+                        <td width=20><b>%s</b></td>
                         <td>Set P-Phase pick at mouse position</td>
                     </tr>
                     <tr>
-                        <td width=20><b>e</b></td>
+                        <td width=20><b>%s</b></td>
+                        <td>Set S-Phase pick at mouse position</td>
+                    </tr>
+                    <tr>
+                        <td width=20><b>%s</b></td>
                         <td>Set custom phase pick at mouse position</td>
+                    </tr>
+                    <tr>
+                        <td width=20><b>%s</b></td>
+                        <td>Remove last pick in trace</td>
                     </tr>
                 </table>
                 </blockquote>
                 <h4>Plot Controls:</h4>
                 <blockquote>
                 Use mouse wheel to zoom in- and out. Middle mouse button moves
-                plot on x-axis.<br>
-                Hit <b>Ctrl</b> to manipulate all streams simultaniously.
-                </blockquote>
-                <br><br>
+                plot along x-axis.<br>
+                Hit <b>Ctrl</b> to manipulate single trace.
+                <br></blockquote>
                 Programm stores filter parameters in <code>.pick_filter</code>
                 and a backup of recent picks in
                 <code>.picks-obspy.xml.bak</code>.
-                """
+                <br>
+                <blockquote>written by Marius P Isken<br>
+                marius.isken@gmail.com
+                </blockquote>
+                """ % (
+                    self._shortcuts['st_next'],
+                    self._shortcuts['st_previous'],
+                    self._shortcuts['pick_p'],
+                    self._shortcuts['pick_s'],
+                    self._shortcuts['pick_custom'],
+                    self._shortcuts['pick_remove'],
+                    )
         QtGui.QMessageBox.about(self, 'About', msg)
+
+    def _canvasDraw(self):
+        for _i, _ax in enumerate(self.fig.get_axes()):
+            _ax.set_xticklabels(_ax.get_xticks() *
+                                self._current_st[_i].stats.delta)
+        self.fig.canvas.draw()
+        self.canvas.setFocus()
 
     def closeEvent(self, evnt):
         '''
@@ -692,8 +791,8 @@ class streamPick(QtGui.QMainWindow):
 
 
 
-st = read('../OKAS01/*.mseed')
-for tr in st:
-    tr.trim(starttime=tr.stats.starttime, endtime=tr.stats.starttime+60)
-new_pick = streamPick(stream=st)
-print new_pick.picks
+#st = read('../OKAS01/*.mseed')
+#for tr in st:
+#    tr.trim(starttime=tr.stats.starttime, endtime=tr.stats.starttime+60)
+#new_pick = streamPick(stream=st)
+#print new_pick.picks
