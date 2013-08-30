@@ -1278,6 +1278,20 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
+    def test_issue617(self):
+        """
+        Tests an issue with .trim() after a read() with headonly=True.
+        """
+        for filename in ["slist.ascii", "tspair.ascii"]:
+            result_traces = []
+            for headonly in [True, False]:
+                tr = read("/path/to/%s" % filename, headonly=headonly)[0]
+                t0 = tr.stats.starttime
+                delta = tr.stats.delta
+                tr.trim(endtime=t0 + 3 * delta)
+                result_traces.append(tr)
+            self.assertEqual(result_traces[0].stats, result_traces[1].stats)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
