@@ -1963,6 +1963,18 @@ class StreamTestCase(unittest.TestCase):
         for value in sample_sums[1:]:
             self.assertEqual(value, sample_sums[0])
 
+        # another test, probably already covered by the above but not sure
+        results = []
+        for headonly in [True, False]:
+            st = read("/path/to/issue617.slist", headonly=headonly)
+            t = st[0].stats.starttime
+            st.cutout(t + 0.02, t + 0.04)
+            results.append(st)
+
+        self.assertEqual(len(results[0]), len(results[1]))
+        for tr1, tr2 in zip(results[0], results[1]):
+            self.assertEqual(tr1.stats, tr2.stats)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
