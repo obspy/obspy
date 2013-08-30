@@ -1697,7 +1697,7 @@ class StreamTestCase(unittest.TestCase):
 
         # 4 - file patterns
         path = os.path.dirname(__file__)
-        filename = path + os.sep + 'data' + os.sep + 'slist.*'
+        filename = os.path.join(path, 'data', 'slist.*')
         st = read(filename)
         self.assertEquals(len(st), 2)
         # exception if no file matches file pattern
