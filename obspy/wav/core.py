@@ -48,9 +48,9 @@ def isWAV(filename):
     True
     """
     try:
-        fh = wave.open(filename, 'rb')
-        (_nchannel, width, _rate, _len, _comptype, _compname) = fh.getparams()
-        fh.close()
+        with wave.open(filename, 'rb') as fh:
+            (_nchannel, width, _rate, _len, _comptype, _compname) = \
+                fh.getparams()
     except:
         return False
     if width == 1 or width == 2 or width == 4:
@@ -84,16 +84,15 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     | 7000.0 Hz, 2599 samples
     """
     # read WAV file
-    fh = wave.open(filename, 'rb')
-    # header information
-    (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
-    header = {'sampling_rate': rate, 'npts': length}
-    if headonly:
-        return Stream([Trace(header=header)])
-    if width not in WIDTH2DTYPE.keys():
-        raise TypeError("Unsupported Format Type, word width %dbytes" % width)
-    data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
-    fh.close()
+    with wave.open(filename, 'rb') as fh:
+        # header information
+        (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
+        header = {'sampling_rate': rate, 'npts': length}
+        if headonly:
+            return Stream([Trace(header=header)])
+        if width not in WIDTH2DTYPE.keys():
+            raise TypeError("Unsupported Format Type, word width %dbytes" % width)
+        data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
     return Stream([Trace(header=header, data=data)])
 
 
@@ -131,21 +130,20 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
         # write WAV file
         if len(stream) >= 2:
             filename = "%s%03d%s" % (base, i, ext)
-        w = wave.open(filename, 'wb')
-        trace.stats.npts = len(trace.data)
-        # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-        w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
-                     'not compressed'))
-        data = trace.data
-        dtype = WIDTH2DTYPE[width]
-        if rescale:
-            # optimal scale, account for +/- and the zero
-            maxint = 2 ** (width * 8 - 1) - 1
-            data = data.astype('f8')  # upcast for following rescaling
-            data = data / abs(data).max() * maxint
-        data = np.require(data, dtype=dtype)
-        w.writeframes(data.tostring())
-        w.close()
+        with wave.open(filename, 'wb') as w:
+            trace.stats.npts = len(trace.data)
+            # (nchannels, sampwidth, framerate, nframes, comptype, compname)
+            w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
+                         'not compressed'))
+            data = trace.data
+            dtype = WIDTH2DTYPE[width]
+            if rescale:
+                # optimal scale, account for +/- and the zero
+                maxint = 2 ** (width * 8 - 1) - 1
+                data = data.astype('f8')  # upcast for following rescaling
+                data = data / abs(data).max() * maxint
+            data = np.require(data, dtype=dtype)
+            w.writeframes(data.tostring())
         i += 1
 
 
