@@ -10,6 +10,7 @@ SAC bindings to ObsPy core module.
 """
 
 from obspy import Trace, Stream
+from obspy.core.trace import DatalessTrace
 from obspy.sac.sacio import SacIO, _isText
 import os
 import struct
@@ -157,7 +158,7 @@ def readSACXY(filename, headonly=False, debug_headers=False,
     header = t.get_obspy_header()
 
     if headonly:
-        tr = Trace(header=header)
+        tr = DatalessTrace(header=header)
     else:
         tr = Trace(header=header, data=t.seis)
     return Stream([tr])
@@ -235,7 +236,7 @@ def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
     header = t.get_obspy_header()
 
     if headonly:
-        tr = Trace(header=header)
+        tr = DatalessTrace(header=header)
     else:
         tr = Trace(header=header, data=t.seis)
     return Stream([tr])

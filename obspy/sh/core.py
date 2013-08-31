@@ -12,6 +12,7 @@ SH bindings to ObsPy core module.
 from StringIO import StringIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.trace import DatalessTrace
 from obspy.core.util import loadtxt
 import numpy as np
 import os
@@ -200,7 +201,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
         header['channel'] = ''.join(channel)
         if headonly:
             # skip data
-            stream.append(Trace(header=header))
+            stream.append(DatalessTrace(header=header))
         else:
             # read data
             data = loadtxt(data, dtype='float32', ndlim=1)
@@ -446,7 +447,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
         header['sh']['RECNO'] = len(stream) + 1
         if headonly:
             # skip data
-            stream.append(Trace(header=header))
+            stream.append(DatalessTrace(header=header))
         else:
             if not npts:
                 stream.append(Trace(header=header))

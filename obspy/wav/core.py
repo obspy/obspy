@@ -19,6 +19,7 @@ WAV bindings to ObsPy core module.
 
 from __future__ import division
 from obspy import Trace, Stream
+from obspy.core.trace import DatalessTrace
 import numpy as np
 import os
 import wave
@@ -89,7 +90,7 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
     header = {'sampling_rate': rate, 'npts': length}
     if headonly:
-        return Stream([Trace(header=header)])
+        return Stream([DatalessTrace(header=header)])
     if width not in WIDTH2DTYPE.keys():
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])

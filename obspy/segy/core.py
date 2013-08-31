@@ -10,6 +10,7 @@ SEG Y bindings to ObsPy core module.
 """
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
+from obspy.core.trace import DatalessTrace
 from obspy.segy.segy import readSEGY as readSEGYrev1
 from obspy.segy.segy import readSU as readSUFile
 from obspy.segy.segy import SEGYError, SEGYFile, SEGYBinaryFileHeader
@@ -184,15 +185,14 @@ def readSEGY(filename, headonly=False, byteorder=None,
         textual_file_header_encoding
     # Loop over all traces.
     for tr in segy_object.traces:
-        # Create new Trace object for every segy trace and append to the Stream
-        # object.
-        trace = Trace()
-        stream.append(trace)
+        # Create new Trace object for every segy trace
         # skip data if headonly is set
         if headonly:
-            trace.stats.npts = tr.npts
+            trace = DatalessTrace(header={'npts': tr.npts})
         else:
-            trace.data = tr.data
+            trace = Trace(tr.data)
+        # Append to the Stream object
+        stream.append(trace)
         trace.stats.segy = AttribDict()
         # If all values will be unpacked create a normal dictionary.
         if unpack_trace_headers:
@@ -494,15 +494,14 @@ def readSU(filename, headonly=False, byteorder=None,
     endian = su_object.traces[0].endian
     # Loop over all traces.
     for tr in su_object.traces:
-        # Create new Trace object for every segy trace and append to the Stream
-        # object.
-        trace = Trace()
-        stream.append(trace)
+        # Create new Trace object for every segy trace
         # skip data if headonly is set
         if headonly:
-            trace.stats.npts = tr.npts
+            trace = DatalessTrace(header={'npts': tr.npts})
         else:
-            trace.data = tr.data
+            trace = Trace(tr.data)
+        # Append to the Stream object
+        stream.append(trace)
         trace.stats.su = AttribDict()
         # If all values will be unpacked create a normal dictionary.
         if unpack_trace_headers:
