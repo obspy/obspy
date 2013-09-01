@@ -410,13 +410,19 @@ class UTCDateTime(object):
         # check for time zone information
         # note that the zone designator is the actual offset from UTC and
         # does not include any information on daylight saving time
-        delta = 0
-        if time.count('+') == 1:
-            (time, tz) = time.split('+')
-            delta = -1 * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
-        elif time.count('-') == 1:
-            (time, tz) = time.split('-')
-            delta = int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60
+        if time.count('+') == 1 and '+' in time[-6:]:
+            (time, tz) = time.rsplit('+')
+            delta = -1
+        elif time.count('-') == 1 and '-' in time[-6:]:
+            (time, tz) = time.rsplit('-')
+            delta = 1
+        else:
+            delta = 0
+        if delta:
+            tz = tz.replace(':', '')
+            while len(tz) < 3:
+                tz += '0'
+            delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
         # split microseconds
         ms = 0
         if '.' in time:
