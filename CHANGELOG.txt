@@ -12,6 +12,8 @@ dev:
      most operating systems
  - obspy.imaging:
    * more options to customize day plots
+   * dayplot now plots matching picks (station, network, location) if a list
+     of event objects is provided using the `events` kwarg.
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
