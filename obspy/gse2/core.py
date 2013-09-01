@@ -86,8 +86,8 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
                     header = libgse2.readHead(f)
                 else:
                     header, data = libgse2.read(f, verify_chksum=verify_chksum)
-                # assign all header entries to a new dictionary compatible with an
-                # ObsPy Trace object.
+                # assign all header entries to a new dictionary compatible with
+                # an ObsPy Trace object.
                 new_header = {}
                 for i, j in convert_dict.iteritems():
                     value = header[i]
@@ -218,7 +218,8 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
                     header = libgse1.readHeader(fh)
                     traces.append(Trace(header=header))
                 else:
-                    header, data = libgse1.read(fh, verify_chksum=verify_chksum)
+                    header, data = \
+                        libgse1.read(fh, verify_chksum=verify_chksum)
                     traces.append(Trace(header=header, data=data))
             except EOFError:
                 break

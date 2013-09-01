@@ -320,7 +320,8 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
             data = data.reshape((-1, 6))
             np.savetxt(fh, data, fmt=fmt, delimiter='\t')
             if rest:
-                fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) + '\n')
+                fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) +
+                         '\n')
 
 
 def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
@@ -421,8 +422,8 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
                                dtype, unit)
             fh.write(header)
             # write data
-            times = np.linspace(stats.starttime.timestamp, stats.endtime.timestamp,
-                                stats.npts)
+            times = np.linspace(stats.starttime.timestamp,
+                                stats.endtime.timestamp, stats.npts)
             times = [UTCDateTime(t) for t in times]
             data = np.vstack((times, trace.data)).T
             # .26s cuts the Z from the time string
