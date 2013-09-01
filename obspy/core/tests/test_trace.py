@@ -1154,6 +1154,22 @@ class TraceTestCase(unittest.TestCase):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
 
+    def test_taper_onesided(self):
+        """
+        Test onesided taper method of trace
+        """
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(side="left")
+        self.assertTrue(tr.data[:5].sum() < 5.)
+        self.assertTrue(tr.data[6:].sum() == 5.)
+
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(side="right")
+        self.assertTrue(tr.data[:5].sum() == 5.)
+        self.assertTrue(tr.data[6:].sum() < 5.)
+
     def test_times(self):
         """
         Test if the correct times array is returned for normal traces and

@@ -1641,7 +1641,7 @@ class Trace(object):
         proc_info = "detrend:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
 
-    def taper(self, type='cosine', *args, **kwargs):
+    def taper(self, type='cosine', side='both', *args, **kwargs):
         """
         Method to taper the trace.
 
@@ -1653,6 +1653,10 @@ class Trace(object):
         :param type: Type of taper to use for detrending. Defaults to
             ``'cosine'``.  See the `Supported Methods`_ section below for
             further details.
+        :type side: str
+        :param side: Specify if both sides should be tapered (default, "both")
+            or if only the left half ("left") or right half ("right") should be
+            tapered.
 
         .. note::
 
@@ -1710,12 +1714,22 @@ class Trace(object):
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
         type = type.lower()
+        side = side.lower()
+        side_valid = ['both', 'left', 'right']
+        if side not in side_valid:
+            raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        self.data = self.data * func(self.stats.npts, *args, **kwargs)
+        taper = func(self.stats.npts, *args, **kwargs)
+        half_length = int(len(taper) / 2)
+        if side == "left":
+            taper[half_length:] = 1.0
+        elif side == "right":
+            taper[:half_length] = 1.0
+        self.data = self.data * taper
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
         self._addProcessingInfo(proc_info)

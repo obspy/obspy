@@ -2201,7 +2201,7 @@ class Stream(object):
         for tr in self:
             tr.detrend(type=type)
 
-    def taper(self, type='cosine', *args, **kwargs):
+    def taper(self, type='cosine', side='both', *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2216,7 +2216,7 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, *args, **kwargs)
+            tr.taper(type=type, side=side, *args, **kwargs)
 
     def std(self):
         """
