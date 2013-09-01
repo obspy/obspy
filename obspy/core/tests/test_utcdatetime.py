@@ -907,7 +907,7 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59, 500000)
         self.assertEquals(abs(dt), 0.5)
 
-    def test_issueXXX_timezone_parsing(self):
+    def test_issue620_timezone_parsing(self):
         """
         Test that all valid ISO time zone specifications are parsed properly
         http://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC
