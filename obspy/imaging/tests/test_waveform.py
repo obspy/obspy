@@ -237,7 +237,7 @@ class WaveformTestCase(unittest.TestCase):
         Plots multiple traces underneath.
         """
         # 1 trace
-        st = read()[0]
+        st = read()[1]
         with NamedTemporaryFile(suffix='.png') as tf:
             st.plot(outfile=tf.name, automerge=False)
             expected_image = os.path.join(self.path,
