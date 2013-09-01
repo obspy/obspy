@@ -907,6 +907,20 @@ class UTCDateTimeTestCase(unittest.TestCase):
         dt = UTCDateTime(1969, 12, 31, 23, 59, 59, 500000)
         self.assertEquals(abs(dt), 0.5)
 
+    def test_issueXXX_timezone_parsing(self):
+        """
+        Test that all valid ISO time zone specifications are parsed properly
+        http://en.wikipedia.org/wiki/ISO_8601#Time_offsets_from_UTC
+        """
+        t = UTCDateTime("2013-09-01T12:34:56Z")
+        time_strings = \
+            ["2013-09-01T14:34:56+02", "2013-09-01T14:34:56+02:00",
+             "2013-09-01T14:34:56+0200", "2013-09-01T14:49:56+02:15",
+             "2013-09-01T12:34:56+00:00", "2013-09-01T12:34:56+00",
+             "2013-09-01T12:34:56+0000"]
+        for time_string in time_strings:
+            self.assertEqual(t, UTCDateTime(time_string))
+
 
 def suite():
     return unittest.makeSuite(UTCDateTimeTestCase, 'test')
