@@ -359,6 +359,8 @@ class WaveformPlotting(object):
                 ((self.endtime - self.starttime) * sampling_rate >
                  self.max_npts):
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+            elif self.plotting_method.lower() == 'fast':
+                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
         # Set ticks.
