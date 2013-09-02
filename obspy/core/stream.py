@@ -1658,6 +1658,7 @@ class Stream(object):
         """
         for trace in self:
             trace.verify()
+        return self
 
     def _mergeChecks(self):
         """

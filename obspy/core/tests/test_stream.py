@@ -1994,6 +1994,8 @@ class StreamTestCase(unittest.TestCase):
             .detrend()\
             .taper()\
             .normalize()\
+            .verify()\
+            .trigger(type="zdetect", nsta=20)\
             .rotate(method="NE->RT", back_azimuth=40)
         self.assertTrue(temp is st)
         # Cutout duplicates the number of traces.
