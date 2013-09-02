@@ -483,7 +483,8 @@ class Stream(object):
         >>> for component in ["1", "Z", "2", "3", "Z", "N", "E", "4", "5"]:
         ...     channel = "EH" + component
         ...     tr = Trace(header={'station': 'TEST', 'channel': channel})
-        ...     st.append(tr)
+        ...     st.append(tr) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         9 Trace(s) in Stream:
         .TEST..EH1 | 1970-01-01T00:00:00.000000Z - ... | 1.0 Hz, 0 samples
@@ -498,7 +499,8 @@ class Stream(object):
 
         >>> for tr in st:
         ...     if tr.stats.channel[-1] not in ["Z", "N", "E"]:
-        ...         st.remove(tr)
+        ...         st.remove(tr) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         .TEST..EHZ | 1970-01-01T00:00:00.000000Z - ... | 1.0 Hz, 0 samples
@@ -677,7 +679,8 @@ class Stream(object):
         >>> st = read()
         >>> tr = Trace()
         >>> tr.stats.station = 'TEST'
-        >>> st.append(tr)
+        >>> st.append(tr) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -707,7 +710,8 @@ class Stream(object):
         >>> tr1.stats.station = 'TEST1'
         >>> tr2 = Trace()
         >>> tr2.stats.station = 'TEST2'
-        >>> st.extend([tr1, tr2])
+        >>> st.extend([tr1, tr2]) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -764,9 +768,12 @@ class Stream(object):
 
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t+1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t) # doctest: +ELLIPSIS
+        <...>
+        >>> tr.trim(starttime=t+1) # doctest: +ELLIPSIS
+        <...>
+        >>> st.append(tr) # doctest: +ELLIPSIS
+        <...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -1156,9 +1163,12 @@ class Stream(object):
 
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t+1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t) # doctest: +ELLIPSIS
+        <...>
+        >>> tr.trim(starttime=t+1) # doctest: +ELLIPSIS
+        <...>
+        >>> st.append(tr) # doctest: +ELLIPSIS
+        <...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -1172,9 +1182,12 @@ class Stream(object):
         >>> st = read()
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t-1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t) # doctest: +ELLIPSIS
+        <...>
+        >>> tr.trim(starttime=t-1) # doctest: +ELLIPSIS
+        <...>
+        >>> st.append(tr) # doctest: +ELLIPSIS
+        <...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -1216,7 +1229,8 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> for tr in st.select(component="E"):
-        ...     st.remove(tr)
+        ...     st.remove(tr) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         2 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -1238,7 +1252,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.reverse()
+        >>> st.reverse() # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -1277,7 +1292,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.sort()
+        >>> st.sort() # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -1423,7 +1439,8 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> dt = UTCDateTime("2009-08-24T00:20:20")
-        >>> st.trim(dt, dt + 5)
+        >>> st.trim(dt, dt + 5) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
@@ -1493,7 +1510,8 @@ class Stream(object):
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> t1 = UTCDateTime("2009-08-24T00:20:06")
         >>> t2 = UTCDateTime("2009-08-24T00:20:11")
-        >>> st.cutout(t1, t2)
+        >>> st.cutout(t1, t2) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         6 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 301 samples
@@ -1846,6 +1864,8 @@ class Stream(object):
         ...             'sensitivity': 2516778400.0}
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+        ... # doctest: +ELLIPSIS
+        <...>
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1920,7 +1940,8 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st.filter("highpass", freq=1.0)
+        >>> st.filter("highpass", freq=1.0) # doctest: +ELLIPSIS
+        <...>
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1984,9 +2005,11 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st.filter("highpass", freq=1.0)
+        >>> st.filter("highpass", freq=1.0) # doctest: +ELLIPSIS
+        <...>
         >>> st.plot() # doctest: +SKIP
-        >>> st.trigger('recstalta', sta=1, lta=4)
+        >>> st.trigger('recstalta', sta=1, lta=4) # doctest: +ELLIPSIS
+        <...>
         >>> st.plot() # doctest: +SKIP
 
         .. plot::
@@ -2040,7 +2063,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.resample(10.0)
+        >>> st.resample(10.0) # doctest: +ELLIPSIS
+        <...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
@@ -2099,6 +2123,8 @@ class Stream(object):
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         >>> st.decimate(4, strict_length=False, no_filter=True)
+        ... # doctest: +ELLIPSIS
+        <...>
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
@@ -2296,7 +2322,8 @@ class Stream(object):
         All traces are normalized to their absolute maximum and processing
         information is added:
 
-        >>> st.normalize()
+        >>> st.normalize() # doctest: +ELLIPSIS
+        <...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
         >>> st[0].stats.processing
@@ -2313,7 +2340,8 @@ class Stream(object):
         >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])
 
-        >>> st.normalize(global_max=True)
+        >>> st.normalize(global_max=True) # doctest: +ELLIPSIS
+        <...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
         >>> st[0].stats.processing
@@ -2499,7 +2527,8 @@ class Stream(object):
         >>> st = read()
         >>> len(st)
         3
-        >>> st.clear()
+        >>> st.clear() # doctest: +ELLIPSIS
+        <...>
         >>> st.traces
         []
         """

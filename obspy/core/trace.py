@@ -815,7 +815,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._ltrim(tr.stats.starttime + 8)
+        >>> tr._ltrim(tr.stats.starttime + 8) # doctest: +ELLIPSIS
+        <...>
         >>> tr.data
         array([8, 9])
         >>> tr.stats.starttime
@@ -876,7 +877,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._rtrim(tr.stats.starttime + 2)
+        >>> tr._rtrim(tr.stats.starttime + 2) # doctest: +ELLIPSIS
+        <...>
         >>> tr.data
         array([0, 1, 2])
         >>> tr.stats.endtime
@@ -966,7 +968,8 @@ class Trace(object):
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
-        >>> tr.trim(t + 2.000001, t + 7.999999)
+        >>> tr.trim(t + 2.000001, t + 7.999999) # doctest: +ELLIPSIS
+        <...>
         >>> tr.data
         array([2, 3, 4, 5, 6, 7, 8])
         """
@@ -1124,6 +1127,8 @@ class Trace(object):
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> paz_1hz['sensitivity'] = 1.0
         >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+        ... # doctest: +ELLIPSIS
+        <...>
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1215,7 +1220,8 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
+        >>> tr.filter("highpass", freq=1.0) # doctest: +ELLIPSIS
+        <...>
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1290,9 +1296,11 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
+        >>> tr.filter("highpass", freq=1.0) # doctest: +ELLIPSIS
+        <...>
         >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger("recstalta", sta=1, lta=4)
+        >>> tr.trigger("recstalta", sta=1, lta=4) # doctest: +ELLIPSIS
+        <...>
         >>> tr.plot() # doctest: +SKIP
 
         .. plot::
@@ -1361,7 +1369,8 @@ class Trace(object):
         8
         >>> tr.stats.sampling_rate
         1.0
-        >>> tr.resample(4.0)
+        >>> tr.resample(4.0) # doctest: +ELLIPSIS
+        <...>
         >>> len(tr)
         32
         >>> tr.stats.sampling_rate
@@ -1438,7 +1447,9 @@ class Trace(object):
         1.0
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr.decimate(4, strict_length=False, no_filter=True)
+        >>> tr.decimate(4, strict_length=False,
+        ...    no_filter=True) # doctest: +ELLIPSIS
+        <...>
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
@@ -1771,13 +1782,15 @@ class Trace(object):
         .. rubric:: Example
 
         >>> tr = Trace(data=np.array([0, -3, 9, 6]))
-        >>> tr.normalize()
+        >>> tr.normalize() # doctest: +ELLIPSIS
+        <...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
         >>> tr.stats.processing
         ['normalize:9']
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
-        >>> tr.normalize()
+        >>> tr.normalize() # doctest: +ELLIPSIS
+        <...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
         >>> tr.stats.processing
