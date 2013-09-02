@@ -135,7 +135,7 @@ The following example demonstrates a recursive STA/LTA triggering:
 >>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
->>> tr.filter("bandpass", freqmin=1, freqmax=20) # doctest: +ELLIPSIS
+>>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
 <...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
@@ -166,7 +166,7 @@ It works on and overwrites the traces waveform data and is intended for batch
 processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
->>> tr.trigger("recstalta", sta=0.5, lta=4) # doctest: +ELLIPSIS
+>>> tr.trigger("recstalta", sta=0.5, lta=4)  # doctest: +ELLIPSIS
 <...Trace object at 0x...>
 >>> tr.plot()  # doctest: +SKIP
 
