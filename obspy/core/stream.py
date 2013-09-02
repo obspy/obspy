@@ -690,6 +690,7 @@ class Stream(object):
         else:
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
+        return self
 
     def extend(self, trace_list):
         """
@@ -727,6 +728,7 @@ class Stream(object):
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
+        return self
 
     def getGaps(self, min_gap=None, max_gap=None):
         """
@@ -839,6 +841,7 @@ class Stream(object):
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)
+        return self
 
     def plot(self, *args, **kwargs):
         """
@@ -1219,7 +1222,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
-        return self.traces.remove(trace)
+        self.traces.remove(trace)
+        return self
 
     def reverse(self):
         """
@@ -1242,6 +1246,7 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         self.traces.reverse()
+        return self
 
     def sort(self, keys=['network', 'station', 'location', 'channel',
                          'starttime', 'endtime'], reverse=False):
@@ -1295,6 +1300,7 @@ class Stream(object):
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
+        return self
 
     def write(self, filename, format, **kwargs):
         """
@@ -1443,6 +1449,7 @@ class Stream(object):
                        nearest_sample=nearest_sample, fill_value=fill_value)
         # remove empty traces after trimming
         self.traces = [_i for _i in self.traces if _i.stats.npts]
+        return self
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
@@ -1454,6 +1461,7 @@ class Stream(object):
                        nearest_sample=nearest_sample)
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
@@ -1464,6 +1472,7 @@ class Stream(object):
             trace.trim(endtime=endtime, pad=pad, nearest_sample=nearest_sample)
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def cutout(self, starttime, endtime):
         """
@@ -1497,6 +1506,7 @@ class Stream(object):
         tmp = self.slice(endtime=starttime, keep_empty_traces=False)
         tmp += self.slice(starttime=endtime, keep_empty_traces=False)
         self.traces = tmp.traces
+        return self
 
     def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
@@ -1765,6 +1775,7 @@ class Stream(object):
         # trying to restore order, newly created traces are placed at
         # start
         self.traces.sort(key=lambda x: listsort(order, id(x)))
+        return self
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
@@ -1857,7 +1868,7 @@ class Stream(object):
             tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
                         remove_sensitivity=remove_sensitivity,
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
-        return
+        return self
 
     def filter(self, type, **options):
         """
@@ -1920,6 +1931,7 @@ class Stream(object):
         """
         for tr in self:
             tr.filter(type, **options)
+        return self
 
     def trigger(self, type, **options):
         """
@@ -1987,6 +1999,7 @@ class Stream(object):
         """
         for tr in self:
             tr.trigger(type, **options)
+        return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -2036,6 +2049,7 @@ class Stream(object):
         for tr in self:
             tr.resample(sampling_rate, window=window, no_filter=no_filter,
                         strict_length=strict_length)
+        return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
@@ -2092,6 +2106,7 @@ class Stream(object):
         for tr in self:
             tr.decimate(factor, no_filter=no_filter,
                         strict_length=strict_length)
+        return self
 
     def max(self):
         """
@@ -2140,6 +2155,7 @@ class Stream(object):
         """
         for tr in self:
             tr.differentiate(type=type)
+        return self
 
     def integrate(self, type='cumtrapz'):
         """
@@ -2165,6 +2181,7 @@ class Stream(object):
         """
         for tr in self:
             tr.integrate(type=type)
+        return self
 
     @raiseIfMasked
     def detrend(self, type='simple'):
@@ -2200,6 +2217,7 @@ class Stream(object):
         """
         for tr in self:
             tr.detrend(type=type)
+        return self
 
     def taper(self, type='cosine', side='both', *args, **kwargs):
         """
@@ -2217,6 +2235,7 @@ class Stream(object):
         """
         for tr in self:
             tr.taper(type=type, side=side, *args, **kwargs)
+        return self
 
     def std(self):
         """
@@ -2311,7 +2330,7 @@ class Stream(object):
         # normalize all traces
         for tr in self:
             tr.normalize(norm=norm)
-        return
+        return self
 
     def rotate(self, method, back_azimuth=None, inclination=None):
         """
@@ -2425,6 +2444,7 @@ class Stream(object):
                 for comp in (i_1, i_2, i_3):
                     comp.stats.back_azimuth = back_azimuth
                     comp.stats.inclination = inclination
+        return self
 
     def copy(self):
         """
@@ -2483,6 +2503,7 @@ class Stream(object):
         []
         """
         self.traces = []
+        return self
 
     def _cleanup(self):
         """
