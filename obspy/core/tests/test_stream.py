@@ -1997,6 +1997,22 @@ class StreamTestCase(unittest.TestCase):
             .verify()\
             .trigger(type="zdetect", nsta=20)\
             .rotate(method="NE->RT", back_azimuth=40)
+
+        # Use the processing chain to check the results. The trim(), merge(),
+        # cutout(), verify(), and rotate() methods do not have an entry in the
+        # processing chain.
+        pr = st[0].stats.processing
+        self.assertTrue(pr[0].startswith("downsample"))
+        self.assertTrue(pr[1].startswith("resample"))
+        self.assertTrue(pr[2].startswith("simulate"))
+        self.assertTrue(pr[3].startswith("filter:lowpass"))
+        self.assertTrue(pr[4].startswith("differentiate"))
+        self.assertTrue(pr[5].startswith("integrate"))
+        self.assertTrue(pr[6].startswith("detrend"))
+        self.assertTrue(pr[7].startswith("taper"))
+        self.assertTrue(pr[8].startswith("normalize"))
+        self.assertTrue(pr[9].startswith("trigger"))
+
         self.assertTrue(temp is st)
         # Cutout duplicates the number of traces.
         self.assertTrue(len(st), 6)

@@ -1324,6 +1324,20 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(isinstance(tr, Trace))
         self.assertTrue(tr.stats.npts > 0)
 
+        # Use the processing chain to check the results. The trim() methods
+        # does not have an entry in the processing chain.
+        pr = tr.stats.processing
+        self.assertTrue(pr[0].startswith("filter:lowpass"))
+        self.assertTrue(pr[1].startswith("simulate"))
+        self.assertTrue(pr[2].startswith("trigger"))
+        self.assertTrue(pr[3].startswith("downsample"))
+        self.assertTrue(pr[4].startswith("resample"))
+        self.assertTrue(pr[5].startswith("differentiate"))
+        self.assertTrue(pr[6].startswith("integrate"))
+        self.assertTrue(pr[7].startswith("detrend"))
+        self.assertTrue(pr[8].startswith("taper"))
+        self.assertTrue(pr[9].startswith("normalize"))
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
