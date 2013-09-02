@@ -19,6 +19,7 @@ dev:
      the API documentation (#540)
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
    * new option "side" for Stream/Trace.taper() to perform one-sided tapering
+   * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
