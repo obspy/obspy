@@ -170,15 +170,15 @@ class Unpickler(object):
         and translates 'f' code to 'p'
         """
         #FIXME: is that correct?
-        if code == 'xx': return 'tt', 1 
-        if code == 'yy': return 'pp', 1 
-        if code == 'zz': return 'rr', 1 
-        if code == 'xy': return 'tp', -1 
-        if code == 'xz': return 'rt', 1 
-        if code == 'yz': return 'rp', -1 
-        if code == 'ff': return 'pp', 1 
-        if code == 'rf': return 'rp', 1 
-        if code == 'tf': return 'tp', 1 
+        if code == 'xx': return 'tt', 1
+        if code == 'yy': return 'pp', 1
+        if code == 'zz': return 'rr', 1
+        if code == 'xy': return 'tp', -1
+        if code == 'xz': return 'rt', 1
+        if code == 'yz': return 'rp', -1
+        if code == 'ff': return 'pp', 1
+        if code == 'rf': return 'rp', 1
+        if code == 'tf': return 'tp', 1
         return code, 1
 
     def _tensorStore(self, tensor, code, value, error):
@@ -490,7 +490,7 @@ class Unpickler(object):
             moment *= 10**moment_exponent
         if moment_stderr and moment_exponent:
             moment_stderr *= 10**moment_exponent
-    
+
         #Create a new origin only if centroid time is defined:
         origin = None
         if centroid_origin_time.strip() != '.':
@@ -619,17 +619,17 @@ class Unpickler(object):
 
         t_axis = Axis()
         t_axis.length = t_axis_len
-        t_axis.length_errors['uncertainity'] = t_axis_stderr 
+        t_axis.length_errors['uncertainity'] = t_axis_stderr
         t_axis.plunge = t_axis_plunge
         t_axis.azimuth = t_axis_azimuth
         n_axis = Axis()
         n_axis.length = n_axis_len
-        n_axis.length_errors['uncertainity'] = n_axis_stderr 
+        n_axis.length_errors['uncertainity'] = n_axis_stderr
         n_axis.plunge = n_axis_plunge
         n_axis.azimuth = n_axis_azimuth
         p_axis = Axis()
         p_axis.length = p_axis_len
-        p_axis.length_errors['uncertainity'] = p_axis_stderr 
+        p_axis.length_errors['uncertainity'] = p_axis_stderr
         p_axis.plunge = p_axis_plunge
         p_axis.azimuth = p_axis_azimuth
         principal_axes = PrincipalAxes()
@@ -668,7 +668,7 @@ class Unpickler(object):
         Parses the 'primary phase record' P
 
         The primary phase is the first phase of the reading,
-        regardless its type. 
+        regardless its type.
         """
         station = line[2:7].strip()
         phase = line[7:15]
