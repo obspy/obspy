@@ -1294,6 +1294,50 @@ class TraceTestCase(unittest.TestCase):
         self.assertEquals(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
+    def test_method_chaining(self):
+        """
+        Tests that method chaining works for all methods on the Trace object
+        where it is sensible.
+        """
+        # This essentially just checks that the methods are chainable. The
+        # methods are tested elsewhere and a full test would be a lot of work
+        # with questionable return.
+        tr = read()[0]
+        temp_tr = tr.trim(tr.stats.starttime + 1)\
+            .verify()\
+            .filter("lowpass", freq=2.0)\
+            .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
+                                  'zeros': [0j, 0j],
+                                  'gain': 60077000.0,
+                                  'sensitivity': 2516778400.0})\
+            .trigger(type="zdetect", nsta=20)\
+            .decimate(factor=2, no_filter=True)\
+            .resample(tr.stats.sampling_rate / 2.0)\
+            .differentiate()\
+            .integrate()\
+            .detrend()\
+            .taper()\
+            .normalize()
+        self.assertTrue(temp_tr is tr)
+        self.assertTrue(isinstance(tr, Trace))
+        self.assertTrue(tr.stats.npts > 0)
+
+        # Use the processing chain to check the results. The trim() methods
+        # does not have an entry in the processing chain.
+        pr = tr.stats.processing
+        self.assertTrue(pr[0].startswith("filter:lowpass"))
+        self.assertTrue(pr[1].startswith("simulate"))
+        self.assertTrue(pr[2].startswith("trigger"))
+        self.assertTrue(pr[3].startswith("downsample"))
+        self.assertTrue(pr[4].startswith("resample"))
+        self.assertTrue(pr[5].startswith("differentiate"))
+        self.assertTrue(pr[6].startswith("integrate"))
+        self.assertTrue(pr[7].startswith("detrend"))
+        self.assertTrue(pr[8].startswith("taper"))
+        self.assertTrue(pr[9].startswith("normalize"))
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')

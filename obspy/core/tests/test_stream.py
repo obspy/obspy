@@ -1942,6 +1942,83 @@ class StreamTestCase(unittest.TestCase):
         self.assertEquals(len(st[2]), 3000)
         self.assertFalse(isinstance(st[2].data, np.ma.masked_array))
 
+    def test_method_chaining(self):
+        """
+        Tests that method chaining works for all methods on the Stream object
+        where it is sensible.
+        """
+        st1 = read()[0:1]
+        st2 = read()
+
+        self.assertEqual(len(st1), 1)
+        self.assertEqual(len(st2), 3)
+
+        # Test some list like methods.
+        temp_st = st1.append(st1[0].copy())\
+            .extend(st2)\
+            .insert(0, st1[0].copy())\
+            .remove(st1[0])
+        self.assertTrue(temp_st is st1)
+        self.assertEqual(len(st1), 5)
+        self.assertEqual(st1[0], st1[1])
+        self.assertEqual(st1[2], st2[0])
+        self.assertEqual(st1[3], st2[1])
+        self.assertEqual(st1[4], st2[2])
+
+        # Sort and reverse methods.
+        st = st2.copy()
+        st[0].stats.channel = "B"
+        st[1].stats.channel = "C"
+        st[2].stats.channel = "A"
+        temp_st = st.sort(keys=["channel"]).reverse()
+        self.assertTrue(temp_st is st)
+        self.assertTrue([tr.stats.channel for tr in st], ["C", "B", "A"])
+
+        # The others are pretty hard to properly test and probably not worth
+        # the effort. A simple demonstrating that they can be chained should be
+        # enough.
+        temp = st.trim(st[0].stats.starttime + 1, st[0].stats.starttime + 10)\
+            .decimate(factor=2, no_filter=True)\
+            .resample(st[0].stats.sampling_rate / 2)\
+            .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
+                                  'zeros': [0j, 0j],
+                                  'gain': 60077000.0,
+                                  'sensitivity': 2516778400.0})\
+            .filter("lowpass", freq=2.0)\
+            .differentiate()\
+            .integrate()\
+            .merge()\
+            .cutout(st[0].stats.starttime + 2, st[0].stats.starttime + 2)\
+            .detrend()\
+            .taper()\
+            .normalize()\
+            .verify()\
+            .trigger(type="zdetect", nsta=20)\
+            .rotate(method="NE->RT", back_azimuth=40)
+
+        # Use the processing chain to check the results. The trim(), merge(),
+        # cutout(), verify(), and rotate() methods do not have an entry in the
+        # processing chain.
+        pr = st[0].stats.processing
+        self.assertTrue(pr[0].startswith("downsample"))
+        self.assertTrue(pr[1].startswith("resample"))
+        self.assertTrue(pr[2].startswith("simulate"))
+        self.assertTrue(pr[3].startswith("filter:lowpass"))
+        self.assertTrue(pr[4].startswith("differentiate"))
+        self.assertTrue(pr[5].startswith("integrate"))
+        self.assertTrue(pr[6].startswith("detrend"))
+        self.assertTrue(pr[7].startswith("taper"))
+        self.assertTrue(pr[8].startswith("normalize"))
+        self.assertTrue(pr[9].startswith("trigger"))
+
+        self.assertTrue(temp is st)
+        # Cutout duplicates the number of traces.
+        self.assertTrue(len(st), 6)
+        # Clearing also works for method chaining.
+        self.assertEqual(len(st.clear()), 0)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
