@@ -865,6 +865,7 @@ class Trace(object):
             return
         elif delta > 0:
             self.data = self.data[delta:]
+        return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
         """
@@ -920,6 +921,7 @@ class Trace(object):
         if endtime == self.stats.starttime:
             total = 1
         self.data = self.data[:total]
+        return self
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
@@ -979,12 +981,13 @@ class Trace(object):
             self._rtrim(endtime, pad, nearest_sample=nearest_sample,
                         fill_value=fill_value)
         # if pad=True and fill_value is given convert to NumPy ndarray
-        if pad == True and fill_value is not None:
+        if pad is True and fill_value is not None:
             try:
                 self.data = self.data.filled()
             except AttributeError:
                 # numpy.ndarray object has no attribute 'filled' - ignoring
                 pass
+        return self
 
     def slice(self, starttime=None, endtime=None):
         """
@@ -1052,6 +1055,7 @@ class Trace(object):
             msg = "Trace data should be stored as numpy.ndarray in the " + \
                   "system specific byte order."
             raise Exception(msg)
+        return self
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
@@ -1159,6 +1163,7 @@ class Trace(object):
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
                 (paz_simulate, simulate_sensitivity)
             self._addProcessingInfo(proc_info)
+        return self
 
     def filter(self, type, **options):
         """
@@ -1231,6 +1236,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "filter:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
     def trigger(self, type, **options):
         """
@@ -1316,6 +1322,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "trigger:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -1385,6 +1392,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
         self._addProcessingInfo(proc_info)
+        return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
@@ -1460,6 +1468,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "downsample:integerDecimation:%s" % factor
         self._addProcessingInfo(proc_info)
+        return self
 
     def max(self):
         """
@@ -1539,6 +1548,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "differentiate:%s" % type
         self._addProcessingInfo(proc_info)
+        return self
 
     def integrate(self, type='cumtrapz', **options):
         """
@@ -1593,6 +1603,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "integrate:%s" % (type)
         self._addProcessingInfo(proc_info)
+        return self
 
     @raiseIfMasked
     def detrend(self, type='simple', **options):
@@ -1640,6 +1651,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "detrend:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
     def taper(self, type='cosine', side='both', *args, **kwargs):
         """
@@ -1733,6 +1745,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
         self._addProcessingInfo(proc_info)
+        return self
 
     def normalize(self, norm=None):
         """
@@ -1786,6 +1799,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "normalize:%s" % norm
         self._addProcessingInfo(proc_info)
+        return self
 
     def copy(self):
         """
