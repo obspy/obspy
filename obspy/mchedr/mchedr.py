@@ -59,12 +59,13 @@ def isMchedr(filename):
     >>> isMchedr('/path/to/mchedrXXXXXX.dat')  # doctest: +SKIP
     True
     """
+    if not isinstance(filename, basestring):
+        return False
     tmpdir = None
     if can_uncompress and filename.endswith('.Z'):
         tmpdir = mkdtemp()
         patoolib.extract_archive(filename, verbosity=-1, outdir=tmpdir)
         filename = tmpdir + '/' + filename.rstrip('.Z')
-
     fh = open(filename, 'r')
     for line in fh.readlines():
         # skip blanck lines at beginnning, if any
@@ -99,6 +100,8 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
+        if not isinstance(filename, basestring):
+            raise TypeError('File name must be a string.')
         self.filename = filename
         if can_uncompress and filename.endswith('.Z'):
             self.tmpdir = mkdtemp()
