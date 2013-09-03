@@ -21,7 +21,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution, Amplitude
 from obspy.core.utcdatetime import UTCDateTime
 from datetime import timedelta
+import os
 import StringIO
+import csv
 from tempfile import mkdtemp
 from shutil import rmtree
 # Monthly mchedr files from ftp://hazards.cr.usgs.gov/edr/mchedr/
@@ -90,6 +92,7 @@ class Unpickler(object):
     """
     def __init__(self):
         self.tmpdir = None
+        self.FE_regions = None
 
     def load(self, filename):
         """
@@ -202,6 +205,23 @@ class Unpickler(object):
             tensor.m_tp = value * sign
             tensor.m_tp_errors['uncertainty'] = error
 
+    def _decode_FE_region_number(self, number):
+        """
+        Converts Flinn-Engdahl region number to string.
+        """
+        #FIXME: this should be checked against #451 for redundancy
+        if not isinstance(number, int):
+            number = int(number)
+        if self.FE_regions is None:
+            FE_filename = os.path.join(os.path.dirname(__file__),
+                                       'Flinn-Engdahl.csv')
+            with open(FE_filename, 'rb') as csvfile:
+                FE_csv = csv.reader(csvfile, delimiter=';',
+                                    quotechar='#', skipinitialspace=True)
+                self.FE_regions =\
+                        {int(row[0]): row[1] for row in FE_csv if len(row)>1}
+        return self.FE_regions[number]
+
     def _parseRecordHY(self, line):
         """
         Parses the 'hypocenter' record HY
@@ -219,13 +239,17 @@ class Unpickler(object):
         station_number = self._int(line[48:51])
         #unused: version_flag = line[51]
         FE_region_number = line[52:55]
+        FE_region_name = self._decode_FE_region_number(FE_region_number)
         #unused: source_code = line[55:60]
 
         event = Event()
         event.resource_id = ResourceIdentifier(date+time)
-        #TODO: convert FE_region_number to full region string (see #451)
         description = EventDescription(
-            event_description_type='Flinn-Engdahl region',
+            type='region name',
+            text=FE_region_name)
+        event.event_descriptions.append(description)
+        description = EventDescription(
+            type='Flinn-Engdahl region',
             text=FE_region_number)
         event.event_descriptions.append(description)
         origin = Origin()
@@ -242,8 +266,7 @@ class Unpickler(object):
         #depth_phase_count can be incremented in record 'S '
         origin.quality.depth_phase_count = 0
         origin.type = 'hypocenter'
-        #TODO: convert FE_region_number to full region string (see #451)
-        origin.region = FE_region_number
+        origin.region = FE_region_name
         event.origins.append(origin)
         return event
 
