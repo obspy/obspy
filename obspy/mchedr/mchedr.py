@@ -139,7 +139,7 @@ class Unpickler(object):
 
     def _intZero(self, string):
         val = self._int(string)
-        if val == None: val = 0
+        if val is None: val = 0
         return val
 
     def _float(self, string):
@@ -157,7 +157,7 @@ class Unpickler(object):
         ndigits, ndec = map(int, format_string.split('.'))
         nint = ndigits-ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint+ndec])
-        if val != None:
+        if val is not None:
                 val *= scale
         return val
 
@@ -294,7 +294,7 @@ class Unpickler(object):
         origin.latitude_errors['uncertainty'] = latitude_stderr
         origin.longitude_errors['uncertainty'] = longitude_stderr
         origin.depth_errors['uncertainty'] = depth_stderr
-        if mb_mag:
+        if mb_mag is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo()
@@ -303,7 +303,7 @@ class Unpickler(object):
             mag.station_count = mb_nsta
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if Ms_mag:
+        if Ms_mag is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo()
@@ -312,7 +312,7 @@ class Unpickler(object):
             mag.station_count = Ms_nsta
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if mag1:
+        if mag1 is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo(agency_id=mag1_source_code)
@@ -320,7 +320,7 @@ class Unpickler(object):
             mag.magnitude_type = mag1_type
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if mag2:
+        if mag2 is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo(agency_id=mag2_source_code)
@@ -442,7 +442,7 @@ class Unpickler(object):
         origin.longitude_errors['uncertainty'] = longitude_stderr
         origin.depth_errors['uncertainty'] = depth_stderr
         origin.quality.azimuthal_gap = gap
-        if mag1:
+        if mag1 is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo()
@@ -450,7 +450,7 @@ class Unpickler(object):
             mag.magnitude_type = mag1_type
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if mag2:
+        if mag2 is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo()
@@ -476,7 +476,7 @@ class Unpickler(object):
                  self._floatWithFormat(orig_time_stderr, '2.1', scale)
         centroid_latitude = self._floatWithFormat(line[17:21], '4.2')
         lat_type = line[21]
-        if centroid_latitude:
+        if centroid_latitude is not None:
             centroid_latitude *= self._coordinateSign(lat_type)
         lat_stderr = line[22:25]
         if lat_stderr == 'FX':
@@ -486,7 +486,7 @@ class Unpickler(object):
                        self._floatWithFormat(lat_stderr, '3.2', scale)
         centroid_longitude = self._floatWithFormat(line[25:30], '5.2')
         lon_type = line[30]
-        if centroid_longitude:
+        if centroid_longitude is not None:
             centroid_longitude *= self._coordinateSign(lon_type)
         lon_stderr = line[31:34]
         if lon_stderr == 'FX':
@@ -509,9 +509,9 @@ class Unpickler(object):
         moment = self._floatWithFormat(line[54:56], '2.1')
         moment_stderr = self._floatWithFormat(line[56:58], '2.1')
         moment_exponent = self._int(line[58:60])
-        if moment and moment_exponent:
+        if (moment is not None) and (moment_exponent is not None):
             moment *= 10**moment_exponent
-        if moment_stderr and moment_exponent:
+        if (moment_stderr is not None) and (moment_exponent is not None):
             moment_stderr *= 10**moment_exponent
 
         #Create a new origin only if centroid time is defined:
@@ -549,7 +549,7 @@ class Unpickler(object):
         focal_mechanism.creation_info =\
                         CreationInfo(agency_id=source_contributor)
         moment_tensor = MomentTensor()
-        if origin != None:
+        if origin is not None:
             moment_tensor.derived_origin_id = origin.resource_id
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
@@ -728,7 +728,7 @@ class Unpickler(object):
             phase = phase[1:]
         pick.phase_hint = phase.strip()
         event.picks.append(pick)
-        if mb_amplitude:
+        if mb_amplitude is not None:
             amplitude = Amplitude()
             amplitude.resource_id = ResourceIdentifier()
             amplitude.generic_amplitude = mb_amplitude * 1E-9
@@ -771,7 +771,7 @@ class Unpickler(object):
         #unused: Ms_usage_flag = line[56]
 
         amplitude = None
-        if Z_amplitude:
+        if Z_amplitude is not None:
             amplitude = Amplitude()
             amplitude.resource_id = ResourceIdentifier()
             amplitude.generic_amplitude = Z_amplitude * 1E-6
@@ -781,13 +781,13 @@ class Unpickler(object):
             amplitude.magnitude_hint = 'Ms'
             amplitude.pick_id = pick.resource_id
             event.amplitudes.append(amplitude)
-        if MSZ_mag:
+        if MSZ_mag is not None:
             station_magnitude = StationMagnitude()
             station_magnitude.resource_id = ResourceIdentifier()
             station_magnitude.origin_id = event.origins[0].resource_id
             station_magnitude.mag = Ms_mag
             station_magnitude.station_magnitude_type = 'Ms'
-            if amplitude:
+            if amplitude is not None:
                 station_magnitude.amplitude_id = amplitude.resource_id
             event.station_magnitudes.append(station_magnitude)
 
@@ -889,7 +889,7 @@ class Unpickler(object):
             if record_id == 'S ':
                 self._parseRecordS(line, event, pick)
         self.fh.close()
-        if self.tmpdir:
+        if self.tmpdir is not None:
             rmtree(self.tmpdir)
         return catalog
 
