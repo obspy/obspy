@@ -24,6 +24,7 @@ from datetime import timedelta
 import os
 import StringIO
 import csv
+import numpy as np
 from tempfile import mkdtemp
 from shutil import rmtree
 # Monthly mchedr files from ftp://hazards.cr.usgs.gov/edr/mchedr/
@@ -222,6 +223,35 @@ class Unpickler(object):
                         {int(row[0]): row[1] for row in FE_csv if len(row)>1}
         return self.FE_regions[number]
 
+    def _to_rad(self, degrees):
+        radians = np.pi * degrees / 180
+        return radians
+
+    def _to_deg(self, radians):
+        degrees = 180 * radians / np.pi
+        return degrees
+
+    def _spherical_to_cartesian(self, (lenght, azimuth, plunge)):
+        plunge_rad = self._to_rad(plunge)
+        azimuth_rad = self._to_rad(azimuth)
+        x = lenght * np.sin(plunge_rad) * np.cos(azimuth_rad)
+        y = lenght * np.sin(plunge_rad) * np.sin(azimuth_rad)
+        z = lenght * np.cos(plunge_rad)
+        return (x, y, z)
+
+    def _angle_between(self, u1, u2):
+        """
+        Returns the angle in degrees between unit vectors 'u1' and 'u2':
+        Source: http://stackoverflow.com/questions/2827393/angles-between-two-n-dimensional-vectors-in-python
+        """
+        angle = np.arccos(np.dot(u1, u2))
+        if np.isnan(angle):
+            if (u1 == u2).all():
+                angle = 0.0
+            else:
+                angle = np.pi
+        return self._to_deg(angle)
+
     def _parseRecordHY(self, line):
         """
         Parses the 'hypocenter' record HY
@@ -335,14 +365,21 @@ class Unpickler(object):
         """
         origin = event.origins[0]
         semi_major_axis_azimuth = self._float(line[2:8])
+        if semi_major_axis_azimuth is None:
+            return
         semi_major_axis_plunge = self._float(line[8:13])
         semi_major_axis_length = self._float(line[13:21])
         intermediate_axis_azimuth = self._float(line[21:27])
         intermediate_axis_plunge = self._float(line[27:32])
+        # This is called "intermediate_axis_length",
+        # but it is definitively a "semi_intermediate_axis_length",
+        # since in most cases:
+        #   (intermediate_axis_length / 2) < semi_minor_axis_lenght
         intermediate_axis_length = self._float(line[32:40])
         semi_minor_axis_azimuth = self._float(line[40:46])
         semi_minor_axis_plunge = self._float(line[46:51])
         semi_minor_axis_length = self._float(line[51:59])
+
         if semi_minor_axis_azimuth ==\
            semi_minor_axis_plunge ==\
            semi_minor_axis_length == 0:
@@ -350,7 +387,38 @@ class Unpickler(object):
             semi_minor_axis_plunge = intermediate_axis_plunge
             semi_minor_axis_length = intermediate_axis_length
             origin.depth_type = 'operator assigned'
-        #TODO: compute ellipsoid and store it in ConfidenceEllipsoid()
+
+        #FIXME: The following code needs to be double-checked!
+        semi_major_axis_unit_vect =\
+                self._spherical_to_cartesian((
+                    1,
+                    semi_major_axis_azimuth,
+                    semi_major_axis_plunge
+                    ))
+        semi_minor_axis_unit_vect =\
+                self._spherical_to_cartesian((
+                    1,
+                    semi_minor_axis_azimuth,
+                    semi_minor_axis_plunge
+                    ))
+        major_axis_rotation = self._angle_between(
+                    semi_major_axis_unit_vect,
+                    semi_minor_axis_unit_vect
+                    )
+
+        origin.origin_uncertainty = OriginUncertainty()
+        origin.origin_uncertainty.preferred_description =\
+                'confidence ellipsoid'
+        origin.origin_uncertainty.confidence_level = 90
+        confidence_ellipsoid = ConfidenceEllipsoid()
+        confidence_ellipsoid.semi_major_axis_length = semi_major_axis_length
+        confidence_ellipsoid.semi_minor_axis_length = semi_minor_axis_length
+        confidence_ellipsoid.semi_intermediate_axis_length =\
+                intermediate_axis_length
+        confidence_ellipsoid.major_axis_plunge = semi_major_axis_plunge
+        confidence_ellipsoid.major_axis_azimuth = semi_major_axis_azimuth
+        confidence_ellipsoid.major_axis_rotation = major_axis_rotation
+        origin.origin_uncertainty.confidence_ellipsoid = confidence_ellipsoid
 
     def _parseRecordA(self, line, event):
         """
