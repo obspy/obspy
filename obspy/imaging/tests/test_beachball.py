@@ -37,121 +37,121 @@ class BeachballTestCase(unittest.TestCase):
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_sumatra_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np1 = [274, 13, 55]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_sumatra_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np2 = [130, 79, 98]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np2, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_sumatra_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         #
         np1 = [264.98, 45.00, -159.99]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_19950128_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np2 = [160.55, 76.00, -46.78]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np2, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_19950128_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         #
         mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_20090102_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np1 = [235, 80, 35]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_20090102_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np2 = [138, 56, 168]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np2, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb-20090102-np2.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # Explosion
         mt = [1, 1, 1, 0, 0, 0]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_explosion.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # Implosion
         mt = [-1, -1, -1, 0, 0, 0]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_implosion.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # CLVD - Compensate Linear Vector Dipole
         mt = [1, -2, 1, 0, 0, 0]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_clvd.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # Double Couple
         mt = [1, -1, 0, 0, 0, 0]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_double_couple.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # Lars
         mt = [1, -1, 0, 0, 0, -1]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_lars.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
         np1 = [179, 55, -78]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_geiyo_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         #
         np1 = [10, 42.5, 90]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_honshu_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         np2 = [10, 42.5, 92]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np2, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_honshu_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
         np1 = [150, 87, 1]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(np1, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_tottori_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
         mt = [0.99, -2.00, 1.01, 0.92, 0.48, 0.15]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_20040905_1_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
         mt = [5.24, -6.77, 1.53, 0.81, 1.49, -0.05]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_20040905_0_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://iisee.kenken.go.jp/staff/thara/miyagi.htm
         mt = [16.578, -7.987, -8.592, -5.515, -29.732, 7.517]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_miyagi_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
         mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
         with NamedTemporaryFile(suffix='.png') as tf:
             Beachball(mt, outfile=tf.name)
             expected_image = os.path.join(self.path, 'bb_chile_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
     def test_BeachBallOutputFormats(self):
         """
@@ -309,7 +309,7 @@ class BeachballTestCase(unittest.TestCase):
             fig.savefig(tf.name)
             # compare images
             expected_image = os.path.join(self.path, 'bb_collection.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
 
 def suite():

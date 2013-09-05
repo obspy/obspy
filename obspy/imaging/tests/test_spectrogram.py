@@ -48,7 +48,7 @@ class SpectrogramTestCase(unittest.TestCase):
                                     show=False)
             # compare images
             expected_image = os.path.join(self.path, 'spectogram_log.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
         # 2 - using log=False
         with NamedTemporaryFile(suffix='.png') as tf:
             spectrogram.spectrogram(st[0].data, log=False, outfile=tf.name,
@@ -56,7 +56,7 @@ class SpectrogramTestCase(unittest.TestCase):
                                     show=False)
             # compare images
             expected_image = os.path.join(self.path, 'spectogram.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
 
 def suite():

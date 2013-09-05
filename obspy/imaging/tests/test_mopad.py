@@ -81,7 +81,7 @@ class MopadTestCase(unittest.TestCase):
             fig.savefig(tf.name)
             # compare images
             expected_image = os.path.join(self.path, 'mopad_collection.png')
-            compare_images(tf.name, expected_image, 0.001)
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
 
 def suite():
