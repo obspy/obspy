@@ -595,7 +595,7 @@ class Client(object):
         if modified_after:
             rtype += 'modified_after=%s ' % modified_after.formatArcLink()
         # request data
-        rdata = [starttime, endtime, network, station]
+        rdata = [starttime, endtime, network, station, "*", "*"]
         # fetch plain XML document
         result = self._fetch(rtype, rdata, route=False)
         # parse XML document
