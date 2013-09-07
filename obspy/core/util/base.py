@@ -441,6 +441,8 @@ def compare_images(*args, **kwargs):
     from matplotlib.pyplot import rcdefaults
     # set matplotlib builtin default settings for testing
     rcdefaults()
+    import locale
+    locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
     return mpl_compare_images(*args, **kwargs)
 
 
