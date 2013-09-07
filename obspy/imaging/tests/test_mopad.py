@@ -3,19 +3,13 @@
 The obspy.imaging.mopad test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+    compare_images
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
 import os
 import unittest
-
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
 
 
 class MopadTestCase(unittest.TestCase):

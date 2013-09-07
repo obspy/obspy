@@ -5,18 +5,12 @@ The obspy.imaging.waveform test suite.
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+    compare_images
 from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
 import unittest
-
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
 
 
 class WaveformTestCase(unittest.TestCase):

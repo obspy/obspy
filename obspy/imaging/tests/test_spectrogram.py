@@ -4,19 +4,13 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+    compare_images
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
 import unittest
-
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
 
 
 class SpectrogramTestCase(unittest.TestCase):

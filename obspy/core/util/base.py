@@ -436,5 +436,24 @@ def getScriptDirName():
         inspect.currentframe())))
 
 
+def compare_images(*args, **kwargs):
+    from matplotlib.testing.compare import compare_images as mpl_compare_images
+    from matplotlib.pyplot import rcdefaults
+    # set matplotlib builtin default settings for testing
+    rcdefaults()
+    return mpl_compare_images(*args, **kwargs)
+
+
+def checkForMatplotlibCompareImages():
+    try:
+        from matplotlib.testing.compare import compare_images
+    except:
+        return False
+    return True
+
+
+HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
