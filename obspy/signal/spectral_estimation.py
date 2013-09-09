@@ -290,7 +290,7 @@ class PPSD():
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
-                 is_rotational_data=False, db_bins=[-200, -50, 1.],
+                 is_rotational_data=False, db_bins=(-200, -50, 1.),
                  ppsd_length=3600., overlap=0.5):
         """
         Initialize the PPSD object setting all fixed information on the station
@@ -335,7 +335,7 @@ class PPSD():
         :type is_rotational_data: Boolean (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
-        :type db_bins: List of three ints/floats
+        :type db_bins: Tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.
