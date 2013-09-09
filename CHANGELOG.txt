@@ -39,6 +39,7 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * add PPSD support for segments of arbitary length
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
