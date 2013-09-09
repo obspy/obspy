@@ -293,7 +293,7 @@ class PPSD():
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
-                 is_rotational_data=False, db_bins=[-200, -50, 0.5]):
+                 is_rotational_data=False, db_bins=[-200, -50, 1.]):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
