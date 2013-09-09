@@ -39,6 +39,9 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * add PPSD support for segments of arbitary length
+   * default bin width of PPSD is changed to 1dB. This is the value used by
+     McNamara and Buland 2004.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
