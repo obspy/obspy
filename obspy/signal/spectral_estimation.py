@@ -764,7 +764,8 @@ class PPSD():
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
-             show_noise_models=True, grid=True, show=True):
+             show_noise_models=True, grid=True, show=True,
+             max_percentage=30):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -788,6 +789,8 @@ class PPSD():
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool (optional)
         :param show: Enable/disable immediately showing the plot.
+        :type max_percentage: float (optional)
+        :param max_percentage: Maximum percentage to adjust the colormap. 
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -809,7 +812,7 @@ class PPSD():
             ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
-            color_limits = (0, 30)
+            color_limits = (0, max_percentage)
             ppsd.set_clim(*color_limits)
             cb.set_clim(*color_limits)
             if grid:
