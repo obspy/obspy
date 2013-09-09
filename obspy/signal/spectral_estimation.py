@@ -341,9 +341,9 @@ class PPSD():
                 of equally spaced bins in between the given boundaries.
         :type ppsd_length: float (optional)
         :param ppsd_length: Length of data segments passed to psd in seconds.
-                In the paper by McNamara a value of 3600 (1 hour) was chosen.
-                Longer segments increase the upper limit of analyzed periods
-                but decrease the number of analyzed segments.
+                In the paper by McNamara & Buland a value of 3600 (1 hour) was
+                chosen. Longer segments increase the upper limit of analyzed
+                periods but decrease the number of analyzed segments.
         :type overlap: float (optional)
         :param overlap: Overlap of segments passed to psd. Overlap may take
                 values between 0 and 1 and is given as fraction of the length
