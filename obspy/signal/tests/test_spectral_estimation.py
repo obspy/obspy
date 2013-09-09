@@ -116,7 +116,7 @@ class PsdTestCase(unittest.TestCase):
                          (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
-        ppsd = PPSD(tr.stats, paz)
+        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
         ppsd.add(st)
         # read results and compare
         result_hist = np.load(file_histogram)
