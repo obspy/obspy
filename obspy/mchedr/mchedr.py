@@ -589,7 +589,9 @@ class Unpickler(object):
             origin.resource_id = ResourceIdentifier()
             date = event.origins[0].time.strftime('%Y%m%d')
             origin.time = UTCDateTime(date+centroid_origin_time)
-            #TODO: check if centroid time is on the previous or next day
+            #Check if centroid time is on the next day:
+            if origin.time < event.origins[0].time:
+                origin.time += timedelta(days=1)
             origin.time_errors['uncertainty'] = orig_time_stderr
             origin.latitude = centroid_latitude
             origin.longitude = centroid_longitude
