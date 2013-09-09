@@ -340,12 +340,15 @@ class PPSD():
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.
         :type ppsd_length: float (optional)
-        :param ppsd_length: Length of data segments passed to psd. In the
-                paper by McNamara a value of 3600 was chosen. Longer segments
-                increase the upper limit of analyzed periods but decrease
-                the number of analyzed segments.
+        :param ppsd_length: Length of data segments passed to psd in seconds.
+                In the paper by McNamara a value of 3600 (1 hour) was chosen.
+                Longer segments increase the upper limit of analyzed periods
+                but decrease the number of analyzed segments.
         :type overlap: float (optional)
-        :param overlap: Overlap of segments passed to psd.  
+        :param overlap: Overlap of segments passed to psd. Overlap may take
+                values between 0 and 1 and is given as fraction of the length
+                of one segment, e.g. `ppsd_length=3600` and `overlap=0.5` result
+                in an overlap of 1800s of the segments.    
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
