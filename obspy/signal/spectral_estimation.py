@@ -326,7 +326,7 @@ class PPSD():
                 from a Dataless SEED volume)
         :type skip_on_gaps: Boolean (optional)
         :param skip_on_gaps: Determines whether time segments with gaps should
-                be skipped entirely. McNamara & Buland merge gappy
+                be skipped entirely. [McNamara2004]_ merge gappy
                 traces by filling with zeros. This results in a clearly
                 identifiable outlier psd line in the PPSD visualization. Select
                 `skip_on_gaps=True` for not filling gaps with zeros which might
@@ -341,7 +341,7 @@ class PPSD():
                 of equally spaced bins in between the given boundaries.
         :type ppsd_length: float (optional)
         :param ppsd_length: Length of data segments passed to psd in seconds.
-                In the paper by McNamara & Buland a value of 3600 (1 hour) was
+                In the paper by [McNamara2004]_ a value of 3600 (1 hour) was
                 chosen. Longer segments increase the upper limit of analyzed
                 periods but decrease the number of analyzed segments.
         :type overlap: float (optional)
