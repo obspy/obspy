@@ -631,7 +631,6 @@ class Unpickler(object):
         data_used = DataUsed()
         data_used.station_count = station_number + station_number2
         data_used.component_count = component_number + component_number2
-        #TODO: set DataUsed based on computation type
         if computation_type == 'C':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=CMT')
@@ -788,7 +787,8 @@ class Unpickler(object):
         residual = self._float(line[25:30])
         #unused: residual_flag = line[30]
         distance = self._float(line[32:38]) #degrees
-        azimuth = self._float(line[39:44]) #TODO: compute backazimuth
+        azimuth = self._float(line[39:44])
+        backazimuth = azimuth % -360 + 180
         mb_period = self._float(line[44:48])
         mb_amplitude = self._float(line[48:55]) #nanometers
         mb_magnitude = self._float(line[56:59])
@@ -803,8 +803,8 @@ class Unpickler(object):
         if pick.time < origin.time:
             pick.time += timedelta(days=1)
         pick.waveform_id = WaveformStreamID()
-        pick.waveform_id.station = station
-        #TODO: pick.backazimuth
+        pick.waveform_id.station_code = station
+        pick.backazimuth = backazimuth
         onset = phase[0]
         if onset == 'e':
             pick.onset = 'emergent'
@@ -841,7 +841,7 @@ class Unpickler(object):
         arrival.azimuth = azimuth
         arrival.distance = distance
         arrival.time_residual = residual
-        #FIXME: how do we attach an arrival to event???
+        origin.arrivals.append(arrival)
         return pick
 
     def _parseRecordM(self, line, event, pick):
@@ -923,8 +923,8 @@ class Unpickler(object):
                 if pick.time < origin.time:
                     pick.time += timedelta(days=1)
                 pick.waveform_id = WaveformStreamID()
-                pick.waveform_id.station =\
-                     p_pick.waveform_id.station
+                pick.waveform_id.station_code =\
+                     p_pick.waveform_id.station_code
                 pick.backazimuth = p_pick.backazimuth
                 onset = phase[0]
                 if onset == 'e':
@@ -938,7 +938,11 @@ class Unpickler(object):
                     phase = phase[1:]
                 pick.phase_hint = phase.strip()
                 event.picks.append(pick)
-                #TODO: Arrival()
+                arrival = Arrival()
+                arrival.resource_id = ResourceIdentifier()
+                arrival.pick_id = pick.resource_id
+                arrival.phase = pick.phase_hint
+                origin.arrivals.append(arrival)
 
     def _deserialize(self):
         catalog = Catalog()
