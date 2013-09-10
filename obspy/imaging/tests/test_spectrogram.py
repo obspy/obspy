@@ -4,8 +4,7 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
-    compare_images
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
@@ -36,21 +35,17 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        with NamedTemporaryFile(suffix='.png') as tf:
-            spectrogram.spectrogram(st[0].data, log=True, outfile=tf.name,
+        with ImageComparison(self.path, 'spectogram_log.png') as ic:
+            spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            # compare images
-            expected_image = os.path.join(self.path, 'spectogram_log.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+            self.assertFalse(ic.compare())
         # 2 - using log=False
-        with NamedTemporaryFile(suffix='.png') as tf:
-            spectrogram.spectrogram(st[0].data, log=False, outfile=tf.name,
+        with ImageComparison(self.path, 'spectogram.png') as ic:
+            spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            # compare images
-            expected_image = os.path.join(self.path, 'spectogram.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+            self.assertFalse(ic.compare())
 
 
 def suite():

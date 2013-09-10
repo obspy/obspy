@@ -20,6 +20,8 @@ import numpy as np
 import os
 import sys
 import tempfile
+import shutil
+import warnings
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -48,11 +50,11 @@ class FILE(C.Structure):  # Never directly used
 c_file_p = C.POINTER(FILE)
 
 
-def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
+class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This function is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -62,42 +64,43 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     :param suffix: The temporary file name will end with that suffix. Defaults
         to ``'.tmp'``.
 
-    .. warning::
-        Caller is responsible for deleting the file when done with it.
-
     .. rubric:: Example
 
-    >>> ntf = NamedTemporaryFile()
-    >>> ntf._fileobj  # doctest: +ELLIPSIS
+    >>> with NamedTemporaryFile() as tf:
+    ...     tf._fileobj  # doctest: +ELLIPSIS
+    ...     tf.write("test")
+    ...     os.path.exists(tf.name)
     <open file '<fdopen>', mode 'w+b' at 0x...>
-    >>> ntf._fileobj.close()
-    >>> os.remove(ntf.name)
+    True
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
 
-    >>> filename = NamedTemporaryFile().name
-    >>> fh = open(filename, 'wb')
-    >>> fh.write("test")
-    >>> fh.close()
-    >>> os.remove(filename)
+    >>> with NamedTemporaryFile() as tf:
+    ...     filename = tf.name
+    ...     with open(filename, 'wb') as fh:
+    ...         fh.write("just a test")
+    ...     with open(filename, 'r') as fh:
+    ...         print fh.read()
+    just a test
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
     """
 
-    class NamedTemporaryFile(object):
+    def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
+        fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
+        self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-        def __init__(self, fd, fname):
-            self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
-            self.name = fname
+    def __getattr__(self, attr):
+        return getattr(self._fileobj, attr)
 
-        def __getattr__(self, attr):
-            return getattr(self._fileobj, attr)
+    def __enter__(self):
+        return self
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-            self.close()
-            os.remove(self.name)
-
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
-                                                suffix=suffix))
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        self.close()
+        os.remove(self.name)
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):
@@ -436,16 +439,6 @@ def getScriptDirName():
         inspect.currentframe())))
 
 
-def compare_images(*args, **kwargs):
-    from matplotlib.testing.compare import compare_images as mpl_compare_images
-    from matplotlib.pyplot import rcdefaults
-    # set matplotlib builtin default settings for testing
-    rcdefaults()
-    import locale
-    locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
-    return mpl_compare_images(*args, **kwargs)
-
-
 def checkForMatplotlibCompareImages():
     try:
         from matplotlib.testing.compare import compare_images
@@ -455,6 +448,99 @@ def checkForMatplotlibCompareImages():
 
 
 HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+
+
+class ImageComparison(NamedTemporaryFile):
+    """
+    Handles the comparison against a baseline image in an image test.
+
+    :type image_path: str
+    :param image_path: Path to directory where the baseline image is located
+    :type image_name: str
+    :param image_name: Filename (with suffix, without directory path) of the
+        baseline image
+
+    The class should be used with Python's "with" statement. When setting up,
+    the matplotlib rcdefaults are set to ensure consistent image testing. After
+    the plotting is completed, the .compare() method can be used to return the
+    message string from :func:`matplotlib.testing.compare.compare_images`
+    comparing against the previously specified baseline image. At the end of
+    the "with" block all temporary files are deleted.
+
+    .. note::
+        If images created during the testrun should be kept after the test, set
+        environment variable `OBSPY_KEEP_IMAGES` to any value before executing
+        the test (e.g. with `$ obspy-runtests` or `$ python test_sometest.py`).
+        Created images and diffs for failing tests are then stored in a
+        subfolder "testrun" under the baseline image's directory.
+
+    .. rubric:: Example
+
+    >>> from obspy import read
+    >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
+    ...     st = read()  # doctest: +SKIP
+    ...     st.plot(outfile=ic.name)  # doctest: +SKIP
+    ...     # compare images (inside unit test use self.assert(...))
+    ...     assert(not ic.compare())  # doctest: +SKIP
+    """
+    def __init__(self, image_path, image_name, *args, **kwargs):
+        self.suffix = "." + image_name.split(".")[-1]
+        super(ImageComparison, self).__init__(suffix=self.suffix, *args,
+                                              **kwargs)
+        self.image_name = image_name
+        self.baseline_image = os.path.join(image_path, image_name)
+        self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
+        self.output_path = os.path.join(image_path, "testrun")
+        self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
+
+    def __enter__(self):
+        """
+        Set matplotlib defaults.
+        """
+        from matplotlib.pyplot import rcdefaults
+        # set matplotlib builtin default settings for testing
+        rcdefaults()
+        import locale
+        locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        """
+        Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
+        environment variable is set.
+        """
+        self.close()
+        if self.keep_output:
+            self._copy_tempfiles()
+        os.remove(self.name)
+        os.remove(self.diff_filename)
+
+    def compare(self, tol=1e-3):
+        """
+        Run :func:`matplotlib.testing.compare.compare_images` and return its
+        output.
+        """
+        from matplotlib.testing.compare import compare_images
+        return compare_images(self.baseline_image, self.name, tol=tol)
+
+    def _copy_tempfiles(self):
+        """
+        Copies created images from tempfiles to a subfolder of baseline images.
+        """
+        directory = self.output_path
+        if os.path.exists(directory) and not os.path.isdir(directory):
+            msg = "Could not keep output image, target directory exists:" + \
+                  directory
+            warnings.warn(msg)
+            return
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        if os.path.isfile(self.diff_filename):
+            diff_filename_new = \
+                "-failed-diff.".join(self.image_name.rsplit(".", 1))
+            shutil.copy(self.diff_filename, os.path.join(directory,
+                                                         diff_filename_new))
+        shutil.copy(self.name, os.path.join(directory, self.image_name))
 
 
 if __name__ == '__main__':
