@@ -470,9 +470,12 @@ class ImageComparison(NamedTemporaryFile):
     .. note::
         If images created during the testrun should be kept after the test, set
         environment variable `OBSPY_KEEP_IMAGES` to any value before executing
-        the test (e.g. with `$ obspy-runtests` or `$ python test_sometest.py`).
-        Created images and diffs for failing tests are then stored in a
-        subfolder "testrun" under the baseline image's directory.
+        the test (e.g. with `$ OBSPY_KEEP_IMAGES= obspy-runtests` or `$
+        OBSPY_KEEP_IMAGES= python test_sometest.py`). For `obspy-runtests` the
+        option "--keep-images" can also be used instead of setting an
+        environment variable. Created images and diffs for failing tests are
+        then stored in a subfolder "testrun" under the baseline image's
+        directory.
 
     .. rubric:: Example
 
