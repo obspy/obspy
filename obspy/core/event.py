@@ -903,7 +903,7 @@ class WaveformStreamID(__WaveformStreamID):
     use resourceURI as a flexible, abstract, and unique stream ID that allows
     to describe different processing levels, or resampled/filtered products of
     the same initial stream, without violating the intrinsic meaning of the
-    legacy identifiers (network, station, channel, and loca- tion codes).
+    legacy identifiers (network, station, channel, and location codes).
     However, for operation in the context of legacy systems, the classical
     identifier components are supported.
 
