@@ -628,23 +628,42 @@ class Unpickler(object):
         moment_tensor.scalar_moment = moment
         moment_tensor.scalar_moment_errors['uncertainty'] =\
                         moment_stderr
-        focal_mechanism.moment_tensor = moment_tensor
+        data_used = DataUsed()
+        data_used.station_count = station_number + station_number2
+        data_used.component_count = component_number + component_number2
         #TODO: set DataUsed based on computation type
         if computation_type == 'C':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=CMT')
+            #CMT algorithm uses long-period body waves,
+            #very-long-period surface waves and
+            #intermediate period surface waves (since 2004
+            #for shallow and intermediate-depth earthquakes
+            # --Ekstrom et al., 2012)
+            data_used.wave_type = 'combined'
         if computation_type == 'M':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=moment_tensor')
+            #FIXME: not sure which kind of data is used by
+            #"moment tensor" algorithm.
+            data_used.wave_type = 'unknown'
         if computation_type == 'B':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=broadband_data')
+            #FIXME: is 'combined' correct here?
+            data_used.wave_type = 'combined'
         if computation_type == 'F':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=P-wave_first_motion')
+            data_used.wave_type = 'P waves'
         if computation_type == 'S':
             focal_mechanism.method_id =\
                   ResourceIdentifier('smi:ISC/methodID=scalar_moment')
+            #FIXME: not sure which kind of data is used
+            #for scalar moment determination.
+            data_used.wave_type = 'unknown'
+        moment_tensor.data_used = data_used
+        focal_mechanism.moment_tensor = moment_tensor
         event.focal_mechanisms.append(focal_mechanism)
         return focal_mechanism
 
