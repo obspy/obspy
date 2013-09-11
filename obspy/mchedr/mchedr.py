@@ -270,7 +270,7 @@ class Unpickler(object):
         #unused: version_flag = line[51]
         FE_region_number = line[52:55]
         FE_region_name = self._decode_FE_region_number(FE_region_number)
-        #unused: source_code = line[55:60]
+        source_code = line[55:60].strip()
 
         event = Event()
         event.resource_id = ResourceIdentifier(date+time)
@@ -282,6 +282,11 @@ class Unpickler(object):
             type='Flinn-Engdahl region',
             text=FE_region_number)
         event.event_descriptions.append(description)
+        event.creation_info = CreationInfo()
+        if source_code:
+            event.creation_info.agency_id = source_code
+        else:
+            event.creation_info.agency_id = 'USGS-NEIC'
         origin = Origin()
         origin.resource_id = ResourceIdentifier()
         origin.earth_model_id = ResourceIdentifier(resource_id='AK135')
