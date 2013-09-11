@@ -847,7 +847,7 @@ class Unpickler(object):
         arrival.distance = distance
         arrival.time_residual = residual
         origin.arrivals.append(arrival)
-        return pick
+        return pick, arrival
 
     def _parseRecordM(self, line, event, pick):
         """
@@ -885,7 +885,7 @@ class Unpickler(object):
                 station_magnitude.amplitude_id = amplitude.resource_id
             event.station_magnitudes.append(station_magnitude)
 
-    def _parseRecordS(self, line, event, p_pick):
+    def _parseRecordS(self, line, event, p_pick, p_arrival):
         """
         Parses the 'secondary phases' record S
 
@@ -947,6 +947,8 @@ class Unpickler(object):
                 arrival.resource_id = ResourceIdentifier()
                 arrival.pick_id = pick.resource_id
                 arrival.phase = pick.phase_hint
+                arrival.azimuth = p_arrival.azimuth
+                arrival.distance = p_arrival.distance
                 origin.arrivals.append(arrival)
 
     def _deserialize(self):
@@ -981,11 +983,11 @@ class Unpickler(object):
             if record_id == 'Dc':
                 self._parseRecordDc(line, focal_mechanism)
             if record_id == 'P ':
-                pick = self._parseRecordP(line, event)
+                pick, arrival = self._parseRecordP(line, event)
             if record_id == 'M ':
                 self._parseRecordM(line, event, pick)
             if record_id == 'S ':
-                self._parseRecordS(line, event, pick)
+                self._parseRecordS(line, event, pick, arrival)
         self.fh.close()
         if self.tmpdir is not None:
             rmtree(self.tmpdir)
