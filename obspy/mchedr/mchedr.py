@@ -298,6 +298,8 @@ class Unpickler(object):
         origin.quality = OriginQuality()
         origin.quality.associated_station_count = station_number
         origin.quality.standard_error = standard_dev
+        #associated_phase_count can be incremented in records 'P ' and 'S '
+        origin.quality.associated_phase_count = 0
         #depth_phase_count can be incremented in record 'S '
         origin.quality.depth_phase_count = 0
         origin.type = 'hypocenter'
@@ -847,6 +849,12 @@ class Unpickler(object):
         arrival.distance = distance
         arrival.time_residual = residual
         origin.arrivals.append(arrival)
+        origin.quality.minimum_distance = min(
+            d for d in (arrival.distance, origin.quality.minimum_distance)
+            if d is not None)
+        origin.quality.maximum_distance =\
+                max(arrival.distance, origin.quality.minimum_distance)
+        origin.quality.associated_phase_count += 1
         return pick, arrival
 
     def _parseRecordM(self, line, event, pick):
@@ -949,6 +957,7 @@ class Unpickler(object):
                 arrival.phase = pick.phase_hint
                 arrival.azimuth = p_arrival.azimuth
                 arrival.distance = p_arrival.distance
+                origin.quality.associated_phase_count += 1
                 origin.arrivals.append(arrival)
 
     def _deserialize(self):
