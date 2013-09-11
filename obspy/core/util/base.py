@@ -500,11 +500,27 @@ class ImageComparison(NamedTemporaryFile):
         """
         Set matplotlib defaults.
         """
+        from matplotlib import get_backend
         from matplotlib.pyplot import rcdefaults
         # set matplotlib builtin default settings for testing
         rcdefaults()
+
         import locale
-        locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+        try:
+            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+        except:
+            try:
+                locale.setlocale(locale.LC_ALL,
+                                 str('English_United States.1252'))
+            except:
+                msg = "Could not set locale to English/United States. " + \
+                      "Some date-related tests may fail"
+                warnings.warn(msg)
+
+        if get_backend().upper() != 'AGG':
+            msg = "Image comparison with matplotlib backend other than 'AGG'"
+            warnings.warn(msg)
+
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
