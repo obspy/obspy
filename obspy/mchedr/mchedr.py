@@ -282,13 +282,13 @@ class Unpickler(object):
             type='Flinn-Engdahl region',
             text=FE_region_number)
         event.event_descriptions.append(description)
-        event.creation_info = CreationInfo()
-        if source_code:
-            event.creation_info.agency_id = source_code
-        else:
-            event.creation_info.agency_id = 'USGS-NEIC'
         origin = Origin()
         origin.resource_id = ResourceIdentifier()
+        origin.creation_info = CreationInfo()
+        if source_code:
+            origin.creation_info.agency_id = source_code
+        else:
+            origin.creation_info.agency_id = 'USGS-NEIC'
         origin.earth_model_id = ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
@@ -594,6 +594,8 @@ class Unpickler(object):
         if centroid_origin_time.strip() != '.':
             origin = Origin()
             origin.resource_id = ResourceIdentifier()
+            origin.creation_info =\
+                        CreationInfo(agency_id=source_contributor)
             date = event.origins[0].time.strftime('%Y%m%d')
             origin.time = UTCDateTime(date+centroid_origin_time)
             #Check if centroid time is on the next day:
