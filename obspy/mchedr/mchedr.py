@@ -321,10 +321,10 @@ class Unpickler(object):
         Ms_nsta = self._int(line[39:42])
         mag1 = self._float(line[42:45])
         mag1_type = line[45:47]
-        mag1_source_code = line[47:51]
+        mag1_source_code = line[47:51].strip()
         mag2 = self._float(line[51:54])
         mag2_type = line[54:56]
-        mag2_source_code = line[56:60]
+        mag2_source_code = line[56:60].strip()
 
         origin = event.origins[0]
         origin.time_errors['uncertainty'] = orig_time_stderr
@@ -480,7 +480,7 @@ class Unpickler(object):
         standard_dev = self._floatUnused(line[44:48])
         station_number = self._intUnused(line[48:51])
         phase_number = self._intUnused(line[51:55])
-        source_code = line[56:60]
+        source_code = line[56:60].strip()
 
         origin = Origin()
         origin.resource_id = ResourceIdentifier()
@@ -539,7 +539,7 @@ class Unpickler(object):
         """
         Parses the 'source parameter data - primary' record Dp
         """
-        source_contributor = line[2:6]
+        source_contributor = line[2:6].strip()
         computation_type = line[6]
         exponent = self._intZero(line[7])
         scale = 10**exponent
