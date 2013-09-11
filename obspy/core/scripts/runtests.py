@@ -488,7 +488,9 @@ def run(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
-    except ImportError:
+        if matplotlib.get_backend().upper() != "AGG":
+            raise Exception()
+    except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
     usage = "USAGE: %prog [options] module1 module2 ...\n\n"
