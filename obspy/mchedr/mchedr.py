@@ -334,7 +334,7 @@ class Unpickler(object):
         if mb_mag is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
-            mag.creation_info = CreationInfo()
+            mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = mb_mag
             mag.magnitude_type = 'mb'
             mag.station_count = mb_nsta
@@ -343,7 +343,7 @@ class Unpickler(object):
         if Ms_mag is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
-            mag.creation_info = CreationInfo()
+            mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = Ms_mag
             mag.magnitude_type = 'Ms'
             mag.station_count = Ms_nsta
@@ -506,9 +506,9 @@ class Unpickler(object):
         longitude_stderr = self._floatUnused(line[15:21])
         depth_stderr = self._floatUnused(line[22:27])
         gap = self._floatUnused(line[28:33])
-        mag1 = self._floatUnused(line[33:36])
+        mag1 = self._float(line[33:36])
         mag1_type = line[36:38]
-        mag2 = self._floatUnused(line[43:46])
+        mag2 = self._float(line[43:46])
         mag2_type = line[46:48]
 
         #this record is to be associated to the latest origin
@@ -518,18 +518,20 @@ class Unpickler(object):
         origin.longitude_errors['uncertainty'] = longitude_stderr
         origin.depth_errors['uncertainty'] = depth_stderr
         origin.quality.azimuthal_gap = gap
-        if mag1 is not None:
+        if mag1 > 0:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
-            mag.creation_info = CreationInfo()
+            mag.creation_info = CreationInfo(
+                    agency_id=origin.creation_info.agency_id)
             mag.mag = mag1
             mag.magnitude_type = mag1_type
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
-        if mag2 is not None:
+        if mag2 > 0:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
-            mag.creation_info = CreationInfo()
+            mag.creation_info = CreationInfo(
+                    agency_id=origin.creation_info.agency_id)
             mag.mag = mag2
             mag.magnitude_type = mag2_type
             mag.origin_id = origin.resource_id
