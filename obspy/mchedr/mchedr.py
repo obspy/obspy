@@ -838,6 +838,7 @@ class Unpickler(object):
             amplitude.type = 'AB'
             amplitude.magnitude_hint = 'mb'
             amplitude.pick_id = pick.resource_id
+            amplitude.waveform_id = pick.waveform_id
             event.amplitudes.append(amplitude)
             station_magnitude = StationMagnitude()
             station_magnitude.resource_id = ResourceIdentifier()
@@ -845,6 +846,7 @@ class Unpickler(object):
             station_magnitude.mag = mb_magnitude
             station_magnitude.station_magnitude_type = 'mb'
             station_magnitude.amplitude_id = amplitude.resource_id
+            station_magnitude.waveform_id = pick.waveform_id
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
         arrival.resource_id = ResourceIdentifier()
