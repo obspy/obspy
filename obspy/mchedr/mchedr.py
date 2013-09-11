@@ -511,7 +511,8 @@ class Unpickler(object):
         mag2 = self._floatUnused(line[43:46])
         mag2_type = line[46:48]
 
-        origin = event.origins[1]
+        #this record is to be associated to the latest origin
+        origin = event.origins[-1]
         origin.time_errors['uncertainty'] = orig_time_stderr
         origin.latitude_errors['uncertainty'] = latitude_stderr
         origin.longitude_errors['uncertainty'] = longitude_stderr
