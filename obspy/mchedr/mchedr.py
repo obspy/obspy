@@ -855,6 +855,7 @@ class Unpickler(object):
         arrival.azimuth = azimuth
         arrival.distance = distance
         arrival.time_residual = residual
+        arrival.earth_model_id = ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
         origin.arrivals.append(arrival)
         origin.quality.minimum_distance = min(
             d for d in (arrival.distance, origin.quality.minimum_distance)
