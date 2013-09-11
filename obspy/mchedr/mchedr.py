@@ -289,7 +289,7 @@ class Unpickler(object):
             event.creation_info.agency_id = 'USGS-NEIC'
         origin = Origin()
         origin.resource_id = ResourceIdentifier()
-        origin.earth_model_id = ResourceIdentifier(resource_id='AK135')
+        origin.earth_model_id = ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
