@@ -532,7 +532,8 @@ class ImageComparison(NamedTemporaryFile):
         if self.keep_output:
             self._copy_tempfiles()
         os.remove(self.name)
-        os.remove(self.diff_filename)
+        if os.path.exists(self.diff_filename):
+            os.remove(self.diff_filename)
 
     def compare(self, tol=1e-3):
         """
