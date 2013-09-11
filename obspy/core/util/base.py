@@ -442,7 +442,16 @@ def compare_images(*args, **kwargs):
     # set matplotlib builtin default settings for testing
     rcdefaults()
     import locale
-    locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+    try:
+        locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL,
+                             str('English_United States.1252'))
+        except:
+            msg = "Could not set locale to English/United States. " + \
+                  "Some date-related tests may fail"
+            warnings.warn(msg) 
     return mpl_compare_images(*args, **kwargs)
 
 
