@@ -14,11 +14,11 @@ Only supports file format revision of February 24, 2004.
 """
 
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
-    EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
+    EventDescription, OriginUncertainty, OriginQuality, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
-    QuantityError, Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
-    PrincipalAxes, Axis, NodalPlane, SourceTimeFunction, Tensor, DataUsed, \
-    ResourceIdentifier, StationMagnitudeContribution, Amplitude
+    Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
+    PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, \
+    ResourceIdentifier, Amplitude
 from obspy.core.utcdatetime import UTCDateTime
 from datetime import timedelta
 import os
