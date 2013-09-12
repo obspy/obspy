@@ -52,10 +52,12 @@ response information from a RESP file.
 
 .. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_3.py
 
-An obspy.xseed Parser object created using a Dataless SEED file can also be
-used. For each trace the correct RESP response data is extracted internally
-then. When using Trace/Stream.simulate() convenience methods the "date"
-parameter can be omitted (each trace's starttime time is used internally).
+A :class:`~obspy.xseed.parser.Parser` object created using a Dataless SEED file
+can also be used. For each trace the respective RESP response data is extracted
+internally then. When using
+:class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`'s
+:meth:`~obspy.core.trace.Trace.simulate` convenience methods the "date"
+parameter can be omitted (each trace's starttime is used internally).
 
 .. include:: seismometer_correction_simulation_4.py
    :literal:
