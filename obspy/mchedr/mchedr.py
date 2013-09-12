@@ -336,7 +336,7 @@ class Unpickler(object):
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = mb_mag
-            mag.magnitude_type = 'mb'
+            mag.magnitude_type = 'Mb'
             mag.station_count = mb_nsta
             mag.origin_id = origin.resource_id
             event.magnitudes.append(mag)
@@ -633,6 +633,10 @@ class Unpickler(object):
         moment_tensor = MomentTensor()
         if origin is not None:
             moment_tensor.derived_origin_id = origin.resource_id
+        else:
+            #this is required for QuakeML validation:
+            moment_tensor.derived_origin_id =\
+                    ResourceIdentifier('smi:local/no-origin')
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
                 moment_tensor.moment_magnitude_id = mag.resource_id
@@ -816,6 +820,9 @@ class Unpickler(object):
             pick.time += timedelta(days=1)
         pick.waveform_id = WaveformStreamID()
         pick.waveform_id.station_code = station
+        #network_code is required for QuakeML validation
+        pick.waveform_id.network_code = '  '
+        pick.waveform_id.resource_uri = ResourceIdentifier()
         pick.backazimuth = backazimuth
         onset = phase[0]
         if onset == 'e':
@@ -836,7 +843,7 @@ class Unpickler(object):
             amplitude.unit = 'm'
             amplitude.period = mb_period
             amplitude.type = 'AB'
-            amplitude.magnitude_hint = 'mb'
+            amplitude.magnitude_hint = 'Mb'
             amplitude.pick_id = pick.resource_id
             amplitude.waveform_id = pick.waveform_id
             event.amplitudes.append(amplitude)
@@ -844,9 +851,12 @@ class Unpickler(object):
             station_magnitude.resource_id = ResourceIdentifier()
             station_magnitude.origin_id = origin.resource_id
             station_magnitude.mag = mb_magnitude
-            station_magnitude.station_magnitude_type = 'mb'
+            #station_magnitude.mag_errors['uncertainty'] = 0.0
+            station_magnitude.station_magnitude_type = 'Mb'
             station_magnitude.amplitude_id = amplitude.resource_id
             station_magnitude.waveform_id = pick.waveform_id
+            station_magnitude.method_id =\
+                    ResourceIdentifier('smi:ch.ethz.sed/magnitude/generic/body_wave_magnitude')
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
         arrival.resource_id = ResourceIdentifier()
@@ -943,9 +953,7 @@ class Unpickler(object):
                 #Check if pick is on the next day:
                 if pick.time < origin.time:
                     pick.time += timedelta(days=1)
-                pick.waveform_id = WaveformStreamID()
-                pick.waveform_id.station_code =\
-                     p_pick.waveform_id.station_code
+                pick.waveform_id = p_pick.waveform_id
                 pick.backazimuth = p_pick.backazimuth
                 onset = phase[0]
                 if onset == 'e':
@@ -1031,11 +1039,11 @@ def readMchedr(filename):
     >>> cat = readEvents('/path/to/mchedr201201w.dat')
     >>> print cat
     343 Event(s) in Catalog:
-    2012-01-01T00:30:08.770000Z | +12.008, +143.487 | 5.1 mb
+    2012-01-01T00:30:08.770000Z | +12.008, +143.487 | 5.1 Mb
     2012-01-01T00:37:25.280000Z | +63.337, -147.516 | 3.0 ML
     ...
-    2012-01-07T23:25:33.000000Z | +28.100,  +52.720 | 4.7 mb
-    2012-01-07T23:52:30.150000Z | +35.592, +140.818 | 4.2 mb
+    2012-01-07T23:25:33.000000Z | +28.100,  +52.720 | 4.7 Mb
+    2012-01-07T23:52:30.150000Z | +35.592, +140.818 | 4.2 Mb
     """
     return Unpickler().load(filename)
 
