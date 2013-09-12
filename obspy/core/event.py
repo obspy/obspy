@@ -2125,7 +2125,7 @@ class FocalMechanism(__FocalMechanism):
         mechanism determination. Decimal fraction between 0 and 1.
     :type station_distribution_ratio: float, optional
     :param station_distribution_ratio: Station distribution ratio (STDR)
-        parameter. Indicates how the stations are dis- tributed about the focal
+        parameter. Indicates how the stations are distributed about the focal
         sphere (Reasenberg and Oppenheimer 1985). Decimal fraction between 0
         and 1.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
