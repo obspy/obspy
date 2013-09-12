@@ -1104,6 +1104,14 @@ class Trace(object):
 
         .. note::
 
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            <http://docs.obspy.org/master/tutorial/code_snippets/seismometer_correction_simulation.html#using-a-resp-file>`_.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
