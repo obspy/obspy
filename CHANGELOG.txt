@@ -42,6 +42,8 @@ dev:
    * add PPSD support for segments of arbitary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
+   * fix a bug when using evalresp with RESP files with very short epochs.
+     see #631.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
