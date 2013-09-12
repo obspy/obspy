@@ -1158,6 +1158,23 @@ class Trace(object):
             seedresp = kwargs["seedresp"]
             # if date is missing use trace's starttime
             seedresp.setdefault("date", self.stats.starttime)
+            # if a Parser object is provided, get corresponding RESP
+            # information
+            from obspy.xseed import Parser
+            if isinstance(seedresp['filename'], Parser):
+                seedresp = deepcopy(seedresp)
+                kwargs['seedresp'] = seedresp
+                resp_key = ".".join(("RESP", self.stats.network,
+                                     self.stats.station, self.stats.location,
+                                     self.stats.channel))
+                for key, stringio in seedresp['filename'].getRESP():
+                    if key == resp_key:
+                        stringio.seek(0, 0)
+                        seedresp['filename'] = stringio
+                        break
+                else:
+                    msg = "Response for %s not found in Parser" % self.id
+                    raise ValueError(msg)
 
         from obspy.signal import seisSim
         self.data = seisSim(
