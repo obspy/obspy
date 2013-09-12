@@ -155,6 +155,16 @@ class QuantityError(AttribDict):
     confidence_level = None
 
 
+def _bool(value):
+    """
+    A custom bool() implementation that returns
+    True for any value (including zero) of ints and floats.
+    """
+    if type(value) == int or type(value) == float:
+        return True
+    return bool(value)
+
+
 def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     """
     Class factory to unify the creation of all the types needed for the event
@@ -281,9 +291,12 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the attribute and containers that are to be printed. Only not
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
+            # We use custom _bool() for testing getattr() since we want to print
+            # int and float values that are equal to zero.
             attributes = [_i for _i in self._property_keys if not
-                          _i.endswith("_errors") and getattr(self, _i)]
-            containers = [_i for _i in self._containers if getattr(self, _i)]
+                          _i.endswith("_errors") and _bool(getattr(self, _i))]
+            containers = [_i for _i in self._containers if
+                          _bool(getattr(self, _i))]
 
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
@@ -302,7 +315,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 repr_str = getattr(self, key).__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
-                if hasattr(self, error_key) and getattr(self, error_key):
+                if hasattr(self, error_key) and _bool(getattr(self, error_key)):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join(
@@ -313,7 +326,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # single line.
             if len(attributes) <= 3 and not containers:
                 att_strs = ["%s=%s" % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
 
@@ -321,7 +334,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if attributes:
                 format_str = "%" + str(max_length) + "s: %s"
                 att_strs = [format_str % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "\n\t" + "\n\t".join(att_strs)
 
             # For the containers just print the number of elements in each.
@@ -343,7 +356,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return self.__str__()
 
         def __nonzero__(self):
-            if any([bool(getattr(self, _i))
+            # We use custom _bool() for testing getattr() since we want
+            # zero valued int and float attributes to be True.
+            if any([_bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
