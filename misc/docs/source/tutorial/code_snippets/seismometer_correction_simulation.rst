@@ -52,6 +52,14 @@ response information from a RESP file.
 
 .. plot:: source/tutorial/code_snippets/seismometer_correction_simulation_3.py
 
+An obspy.xseed Parser object created using a Dataless SEED file can also be
+used. For each trace the correct RESP response data is extracted internally
+then. When using Trace/Stream.simulate() convenience methods the "date"
+parameter can be omitted (each trace's starttime time is used internally).
+
+.. include:: seismometer_correction_simulation_4.py
+   :literal:
+
 .. _matplotlib: http://matplotlib.sourceforge.net/
 
 .. _evalresp: http://www.iris.edu/software/downloads/seed_tools/
