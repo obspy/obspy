@@ -1153,6 +1153,12 @@ class Trace(object):
         if paz_remove == 'self':
             paz_remove = self.stats.paz
 
+        # some convenience handling for evalresp type instrument correction
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # if date is missing use trace's starttime
+            seedresp.setdefault("date", self.stats.starttime)
+
         from obspy.signal import seisSim
         self.data = seisSim(
             self.data, self.stats.sampling_rate, paz_remove=paz_remove,

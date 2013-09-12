@@ -382,7 +382,9 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         'filename' is the path to a RESP-file generated from a dataless SEED
         volume;
         'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for;
+        that the response function should be extracted for (can be omitted when
+        calling simulate() on Trace/Stream. the Trace's starttime will then be
+        used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
     :type nfft_pow2: Boolean
