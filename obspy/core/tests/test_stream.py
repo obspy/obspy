@@ -3,13 +3,16 @@ from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
 import cPickle
 import numpy as np
 import pickle
 import unittest
 import warnings
 import os
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -1810,24 +1813,18 @@ class StreamTestCase(unittest.TestCase):
         st[1].stats.starttime += 1
         self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         self.mseed_stream.plot(show=False)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         self.mseed_stream.spectrogram(show=False)
 
     def test_deepcopy(self):
