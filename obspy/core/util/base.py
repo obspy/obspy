@@ -533,7 +533,9 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
+        import matplotlib.pyplot as plt
         self.close()
+        plt.close()
         if self.keep_output:
             self._copy_tempfiles()
         os.remove(self.name)
