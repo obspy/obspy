@@ -500,8 +500,7 @@ class ImageComparison(NamedTemporaryFile):
         """
         Set matplotlib defaults.
         """
-        from matplotlib import get_backend
-        from matplotlib.pyplot import rcdefaults
+        from matplotlib import get_backend, rcParams, rcdefaults
         import locale
 
         try:
