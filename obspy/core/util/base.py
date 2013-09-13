@@ -522,7 +522,10 @@ class ImageComparison(NamedTemporaryFile):
         rcdefaults()
         rcParams['font.family'] = 'Bitstream Vera Sans'
         rcParams['text.hinting'] = False
-        rcParams['text.hinting_factor'] = 8
+        try:
+            rcParams['text.hinting_factor'] = 8
+        except KeyError:
+            warnings.warn("could not set rcParams['text.hinting_factor']")
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
