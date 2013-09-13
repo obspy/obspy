@@ -1337,6 +1337,16 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(pr[8].startswith("taper"))
         self.assertTrue(pr[9].startswith("normalize"))
 
+    def test_skip_empty_trace(self):
+        tr = read()[0]
+        t = tr.stats.endtime + 10
+        tr.trim(t, t + 10)
+        tr.detrend()
+        tr.resample(400)
+        tr.differentiate()
+        tr.integrate()
+        tr.taper()
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
