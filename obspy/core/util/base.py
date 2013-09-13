@@ -502,10 +502,8 @@ class ImageComparison(NamedTemporaryFile):
         """
         from matplotlib import get_backend
         from matplotlib.pyplot import rcdefaults
-        # set matplotlib builtin default settings for testing
-        rcdefaults()
-
         import locale
+
         try:
             locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
         except:
@@ -521,6 +519,11 @@ class ImageComparison(NamedTemporaryFile):
             msg = "Image comparison with matplotlib backend other than 'AGG'"
             warnings.warn(msg)
 
+        # set matplotlib builtin default settings for testing
+        rcdefaults()
+        rcParams['font.family'] = 'Bitstream Vera Sans'
+        rcParams['text.hinting'] = False
+        rcParams['text.hinting_factor'] = 8
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
