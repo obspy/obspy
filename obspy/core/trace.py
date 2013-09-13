@@ -13,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked
+from obspy.core.util.decorator import raiseIfMasked, skipIfNoData
 import math
 import numpy as np
 import warnings
@@ -1332,6 +1332,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1525,6 +1526,7 @@ class Trace(object):
         """
         return self.data.std()
 
+    @skipIfNoData
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1561,6 +1563,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1616,6 +1619,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @raiseIfMasked
     def detrend(self, type='simple', **options):
         """
@@ -1664,6 +1668,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def taper(self, type='cosine', side='both', *args, **kwargs):
         """
         Method to taper the trace.
