@@ -441,7 +441,7 @@ def getScriptDirName():
 
 def checkForMatplotlibCompareImages():
     try:
-        from matplotlib.testing.compare import compare_images
+        from matplotlib.testing.compare import compare_images  # @UnusedImport
     except:
         return False
     return True
@@ -515,8 +515,12 @@ class ImageComparison(NamedTemporaryFile):
                 warnings.warn(msg)
 
         if get_backend().upper() != 'AGG':
-            msg = "Image comparison with matplotlib backend other than 'AGG'"
-            warnings.warn(msg)
+            import matplotlib
+            try:
+                matplotlib.use('AGG', warn=False)
+            except TypeError:
+                msg = "Image comparison requires matplotlib backend 'AGG'"
+                warnings.warn(msg)
 
         # set matplotlib builtin default settings for testing
         rcdefaults()
