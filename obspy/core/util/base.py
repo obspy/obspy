@@ -542,7 +542,7 @@ class ImageComparison(NamedTemporaryFile):
         if os.path.exists(self.diff_filename):
             os.remove(self.diff_filename)
 
-    def compare(self, tol=1e-3):
+    def compare(self, tol=1):
         """
         Run :func:`matplotlib.testing.compare.compare_images` and return its
         output.
