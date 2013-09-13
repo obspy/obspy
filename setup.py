@@ -434,6 +434,7 @@ def add_data_files(config):
     # Add some xsd files.
     config.add_data_dir(os.path.join("obspy", "core", "docs"))
     config.add_data_dir(os.path.join("obspy", "xseed", "docs"))
+    config.add_data_dir(os.path.join("obspy", "mseed", "docs"))
     # Add the taup models.
     config.add_data_dir(os.path.join("obspy", "taup", "tables"))
     # Adding the Flinn-Engdahl names files
