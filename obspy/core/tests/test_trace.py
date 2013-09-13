@@ -4,6 +4,7 @@ from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
 from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
