@@ -21,3 +21,7 @@ after_success:
   - coveralls
 notifications:
     email: false
+# Upload any potentially produced diffs and produced images to imgur after a test failure.
+after_failure:
+  - wget "http://imgur.com/tools/imgurbash.sh"
+  - "find . -regex '.*/tests/images/testrun/.*\.png' | xargs -I % bash imgurbash.sh %"
