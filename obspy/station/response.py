@@ -381,14 +381,25 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
 class ResponseListResponseStage(ResponseStage):
     """
+    This response type gives a list of frequency, amplitude and phase value
+    pairs. Effectively corresponds to SEED blockette 55.
+
+    Has all the arguments of the parent class
+    :class:`~obspy.station.response.ResponseStage` and the following:
+
+    :type response_list_elements: list of
+        :class:`~obspy.station.response.ResponseListElement`
+    :param response_list_elements: A list of single discrete frequency,
+        amplitude and phase response values.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
             stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, input_units_description=None,
-            output_units_description=None, description=None,
-            decimation_input_sample_rate=None, decimation_factor=None,
-            decimation_offset=None, decimation_delay=None,
-            decimation_correction=None):
+            resource_id, name, response_list_elements=[],
+            input_units_description=None, output_units_description=None,
+            description=None, decimation_input_sample_rate=None,
+            decimation_factor=None, decimation_offset=None,
+            decimation_delay=None, decimation_correction=None):
+        self.response_list_elements = response_list_elements
         super(ResponseListResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -403,6 +414,20 @@ class ResponseListResponseStage(ResponseStage):
             decimation_offset=decimation_offset,
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
+
+
+class ResponseListElement():
+    """
+    Describes the amplitude and phase response value for a discrete frequency
+    value.
+
+    :type frequency: float
+    :param frequency: The frequency for which the response is valid.
+    :type amplitude: float
+    :param amplitude: The value for the amplitude response at this frequency.
+    :type phase: float
+    :param phase: The value for the phase response at this frequency.
+    """
 
 
 class FIRResponseStage(ResponseStage):
