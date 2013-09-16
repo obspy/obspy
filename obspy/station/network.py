@@ -123,6 +123,9 @@ class SeismicNetwork(BaseNode):
         if not hasattr(values, "__iter__"):
             msg = "stations needs to be iterable, e.g. a list."
             raise ValueError(msg)
+        if any([not isinstance(x, SeismicStation) for x in value]):
+            msg = "stations can only contain SeismicStation objects."
+            raise ValueError(msg)
         self.__stations = values
 
     def __short_str__(self):
