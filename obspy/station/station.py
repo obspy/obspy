@@ -102,6 +102,7 @@ class SeismicStation(BaseNode):
     def __str__(self):
         contents = self.get_contents()
         ret = ("Seismic Station {station_name}\n"
+            "\tStation Code: {station_code}\n"
             "\tChannel Count: {selected}/{total} (Selected/Total)\n"
             "\t{start_date} - {end_date}\n"
             "\tAccess: {restricted} {alternate_code}{historical_code}\n"
@@ -109,6 +110,7 @@ class SeismicStation(BaseNode):
             "Elevation: {elevation:.1f} m\n")\
             .format(
             station_name=contents["stations"][0],
+            station_code=self.code,
             selected=self.selected_number_of_channels,
             total=self.total_number_of_channels,
             start_date=str(self.start_date),
