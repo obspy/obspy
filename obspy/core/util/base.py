@@ -590,9 +590,14 @@ class ImageComparison(NamedTemporaryFile):
 
 
 def get_matplotlib_defaul_tolerance():
+    """
+    The two test images ("ok", "fail") result in the following rms values:
+    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
+    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
+    """
     version = getMatplotlibVersion()
     if version < [1, 3, 0]:
-        return 1e-3
+        return 2e-3
     else:
         return 1
 
