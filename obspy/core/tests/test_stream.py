@@ -4,12 +4,13 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
 import cPickle
 import numpy as np
+import os
 import pickle
 import unittest
 import warnings
-import os
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
