@@ -7,10 +7,18 @@ The audio wav.core test suite.
 from __future__ import division
 from obspy import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from obspy.wav.core import WIDTH2DTYPE
+import numpy as np
 import os
 import unittest
-import numpy as np
+
+
+numpy_version = float(np.version.version.rsplit('.', 1)[0])
+if numpy_version <= 1.3:
+    OLD_NUMPY = True
+else:
+    OLD_NUMPY = False
 
 
 class CoreTestCase(unittest.TestCase):
@@ -69,6 +77,7 @@ class CoreTestCase(unittest.TestCase):
             self.assertEqual(tr3.stats, tr.stats)
             np.testing.assert_array_equal(tr3.data[:13], testdata)
 
+    @skipIf(OLD_NUMPY, 'needs a recent NumPy version')
     def test_rescaleOnWrite(self):
         """
         Read and Write files via obspy.core.Trace

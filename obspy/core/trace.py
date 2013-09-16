@@ -318,21 +318,21 @@ class Trace(object):
         if self.stats.sampling_rate < 0.1:
             if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(delta).1f s, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(delta).1f s, %(npts)d samples"
         else:
             if hasattr(self.stats, 'preview') and self.stats.preview:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
             else:
                 out = out + ' | '\
-                      "%(starttime)s - %(endtime)s | " + \
-                      "%(sampling_rate).1f Hz, %(npts)d samples"
+                    "%(starttime)s - %(endtime)s | " + \
+                    "%(sampling_rate).1f Hz, %(npts)d samples"
         # check for masked array
         if np.ma.count_masked(self.data):
             out += ' (masked)'
@@ -365,7 +365,7 @@ class Trace(object):
         if key == 'data':
             if not isinstance(value, np.ndarray):
                 msg = "Trace.data must be a NumPy array."
-                ValueError(msg)
+                raise ValueError(msg)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
@@ -738,7 +738,7 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -763,7 +763,7 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.spectrogram() # doctest: +SKIP
+        >>> tr.spectrogram()  # doctest: +SKIP
 
         .. plot::
 
@@ -798,7 +798,7 @@ class Trace(object):
         .. rubric:: Example
 
         >>> tr = Trace()
-        >>> tr.write("out.mseed", format="MSEED") # doctest: +SKIP
+        >>> tr.write("out.mseed", format="MSEED")  # doctest: +SKIP
         """
         # we need to import here in order to prevent a circular import of
         # Stream and Trace classes
@@ -815,7 +815,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._ltrim(tr.stats.starttime + 8)
+        >>> tr._ltrim(tr.stats.starttime + 8)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([8, 9])
         >>> tr.stats.starttime
@@ -835,14 +836,14 @@ class Trace(object):
             if delta < 0 and pad:
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
-                        float(self.stats.sampling_rate)
+                    float(self.stats.sampling_rate)
                 newdelta = round((starttime - newstarttime) *
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
         else:
             delta = int(math.floor(round((self.stats.starttime - starttime) *
-                                          self.stats.sampling_rate, 7))) * -1
+                                   self.stats.sampling_rate, 7))) * -1
         # Adjust starttime only if delta is greater than zero or if the values
         # are padded with masked arrays.
         if delta > 0 or pad:
@@ -865,6 +866,7 @@ class Trace(object):
             return
         elif delta > 0:
             self.data = self.data[delta:]
+        return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True, fill_value=None):
         """
@@ -875,7 +877,8 @@ class Trace(object):
 
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
-        >>> tr._rtrim(tr.stats.starttime + 2)
+        >>> tr._rtrim(tr.stats.starttime + 2)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([0, 1, 2])
         >>> tr.stats.endtime
@@ -889,7 +892,7 @@ class Trace(object):
         # check if in boundary
         if nearest_sample:
             delta = round((endtime - self.stats.starttime) *
-                           self.stats.sampling_rate) - self.stats.npts + 1
+                          self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
@@ -911,7 +914,7 @@ class Trace(object):
             return
         elif endtime < self.stats.starttime:
             self.stats.starttime = self.stats.endtime + \
-                                   delta * self.stats.delta
+                delta * self.stats.delta
             self.data = np.empty(0, dtype=org_dtype)
             return
         # cut from right
@@ -920,6 +923,7 @@ class Trace(object):
         if endtime == self.stats.starttime:
             total = 1
         self.data = self.data[:total]
+        return self
 
     def trim(self, starttime=None, endtime=None, pad=False,
              nearest_sample=True, fill_value=None):
@@ -964,7 +968,8 @@ class Trace(object):
         >>> tr = Trace(data=np.arange(0, 10))
         >>> tr.stats.delta = 1.0
         >>> t = tr.stats.starttime
-        >>> tr.trim(t + 2.000001, t + 7.999999)
+        >>> tr.trim(t + 2.000001, t + 7.999999)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([2, 3, 4, 5, 6, 7, 8])
         """
@@ -978,6 +983,14 @@ class Trace(object):
         if endtime:
             self._rtrim(endtime, pad, nearest_sample=nearest_sample,
                         fill_value=fill_value)
+        # if pad=True and fill_value is given convert to NumPy ndarray
+        if pad is True and fill_value is not None:
+            try:
+                self.data = self.data.filled()
+            except AttributeError:
+                # numpy.ndarray object has no attribute 'filled' - ignoring
+                pass
+        return self
 
     def slice(self, starttime=None, endtime=None):
         """
@@ -1031,7 +1044,7 @@ class Trace(object):
                 raise Exception(msg % (sr, delta, len(self.data)))
             # Check if the endtime fits the starttime, npts and sampling_rate.
             if self.stats.endtime != self.stats.starttime + \
-                (self.stats.npts - 1) / float(self.stats.sampling_rate):
+                    (self.stats.npts - 1) / float(self.stats.sampling_rate):
                 msg = "Endtime is not the time of the last sample."
                 raise Exception(msg)
         elif self.stats.npts not in [0, 1]:
@@ -1045,6 +1058,7 @@ class Trace(object):
             msg = "Trace data should be stored as numpy.ndarray in the " + \
                   "system specific byte order."
             raise Exception(msg)
+        return self
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
@@ -1103,7 +1117,7 @@ class Trace(object):
         >>> from obspy.signal import cornFreq2Paz
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.plot()  # doctest: +SKIP
         >>> paz_sts2 = {'poles': [-0.037004+0.037016j, -0.037004-0.037016j,
         ...                       -251.33+0j,
         ...                       -131.04-467.29j, -131.04+467.29j],
@@ -1113,7 +1127,9 @@ class Trace(object):
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> paz_1hz['sensitivity'] = 1.0
         >>> tr.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
-        >>> tr.plot() # doctest: +SKIP
+        ... # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1138,20 +1154,21 @@ class Trace(object):
             paz_remove = self.stats.paz
 
         from obspy.signal import seisSim
-        self.data = seisSim(self.data, self.stats.sampling_rate,
-                paz_remove=paz_remove, paz_simulate=paz_simulate,
-                remove_sensitivity=remove_sensitivity,
-                simulate_sensitivity=simulate_sensitivity, **kwargs)
+        self.data = seisSim(
+            self.data, self.stats.sampling_rate, paz_remove=paz_remove,
+            paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
+            simulate_sensitivity=simulate_sensitivity, **kwargs)
 
         # add processing information to the stats dictionary
         if paz_remove:
             proc_info = "simulate:inverse:%s:sensitivity=%s" % \
-                    (paz_remove, remove_sensitivity)
+                (paz_remove, remove_sensitivity)
             self._addProcessingInfo(proc_info)
         if paz_simulate:
             proc_info = "simulate:forward:%s:sensitivity=%s" % \
-                    (paz_simulate, simulate_sensitivity)
+                (paz_simulate, simulate_sensitivity)
             self._addProcessingInfo(proc_info)
+        return self
 
     def correct_polynomial_response(self, dataless_file=None, **kwargs):
         """
@@ -1246,8 +1263,9 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1267,6 +1285,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "filter:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
     def trigger(self, type, **options):
         """
@@ -1320,10 +1339,12 @@ class Trace(object):
         >>> from obspy import read
         >>> st = read()
         >>> tr = st[0]
-        >>> tr.filter("highpass", freq=1.0)
-        >>> tr.plot() # doctest: +SKIP
-        >>> tr.trigger("recstalta", sta=3, lta=10)
-        >>> tr.plot() # doctest: +SKIP
+        >>> tr.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
+        >>> tr.trigger("recstalta", sta=1, lta=4)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1332,7 +1353,7 @@ class Trace(object):
             tr = st[0]
             tr.filter("highpass", freq=1.0)
             tr.plot()
-            tr.trigger('recstalta', sta=3, lta=10)
+            tr.trigger('recstalta', sta=1, lta=4)
             tr.plot()
         """
         type = type.lower()
@@ -1352,6 +1373,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "trigger:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -1390,7 +1412,8 @@ class Trace(object):
         8
         >>> tr.stats.sampling_rate
         1.0
-        >>> tr.resample(4.0)
+        >>> tr.resample(4.0)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> len(tr)
         32
         >>> tr.stats.sampling_rate
@@ -1421,6 +1444,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "resample:%d:%s" % (sampling_rate, window)
         self._addProcessingInfo(proc_info)
+        return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
@@ -1466,7 +1490,9 @@ class Trace(object):
         1.0
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
-        >>> tr.decimate(4, strict_length=False, no_filter=True)
+        >>> tr.decimate(4, strict_length=False,
+        ...    no_filter=True)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
@@ -1496,6 +1522,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "downsample:integerDecimation:%s" % factor
         self._addProcessingInfo(proc_info)
+        return self
 
     def max(self):
         """
@@ -1575,6 +1602,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "differentiate:%s" % type
         self._addProcessingInfo(proc_info)
+        return self
 
     def integrate(self, type='cumtrapz', **options):
         """
@@ -1629,6 +1657,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "integrate:%s" % (type)
         self._addProcessingInfo(proc_info)
+        return self
 
     @raiseIfMasked
     def detrend(self, type='simple', **options):
@@ -1676,8 +1705,9 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "detrend:%s:%s" % (type, options)
         self._addProcessingInfo(proc_info)
+        return self
 
-    def taper(self, type='cosine', *args, **kwargs):
+    def taper(self, type='cosine', side='both', *args, **kwargs):
         """
         Method to taper the trace.
 
@@ -1689,6 +1719,10 @@ class Trace(object):
         :param type: Type of taper to use for detrending. Defaults to
             ``'cosine'``.  See the `Supported Methods`_ section below for
             further details.
+        :type side: str
+        :param side: Specify if both sides should be tapered (default, "both")
+            or if only the left half ("left") or right half ("right") should be
+            tapered.
 
         .. note::
 
@@ -1746,15 +1780,26 @@ class Trace(object):
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
         type = type.lower()
+        side = side.lower()
+        side_valid = ['both', 'left', 'right']
+        if side not in side_valid:
+            raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        self.data = self.data * func(self.stats.npts, *args, **kwargs)
+        taper = func(self.stats.npts, *args, **kwargs)
+        half_length = int(len(taper) / 2)
+        if side == "left":
+            taper[half_length:] = 1.0
+        elif side == "right":
+            taper[:half_length] = 1.0
+        self.data = self.data * taper
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
         self._addProcessingInfo(proc_info)
+        return self
 
     def normalize(self, norm=None):
         """
@@ -1780,13 +1825,15 @@ class Trace(object):
         .. rubric:: Example
 
         >>> tr = Trace(data=np.array([0, -3, 9, 6]))
-        >>> tr.normalize()
+        >>> tr.normalize()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([ 0.        , -0.33333333,  1.        ,  0.66666667])
         >>> tr.stats.processing
         ['normalize:9']
         >>> tr = Trace(data=np.array([0.3, -3.5, -9.2, 6.4]))
-        >>> tr.normalize()
+        >>> tr.normalize()  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
         >>> tr.data
         array([ 0.0326087 , -0.38043478, -1.        ,  0.69565217])
         >>> tr.stats.processing
@@ -1808,6 +1855,7 @@ class Trace(object):
         # add processing information to the stats dictionary
         proc_info = "normalize:%s" % norm
         self._addProcessingInfo(proc_info)
+        return self
 
     def copy(self):
         """
@@ -1861,13 +1909,14 @@ class Trace(object):
         Splits Trace object containing gaps using a NumPy masked array into
         several traces.
 
-        :rtype: list
-        :returns: List of split traces. A gapless trace will still be
-            returned as list with only one entry.
+        :rtype: :class:`~obspy.core.stream.Stream`
+        :returns: Stream containing all split traces. A gapless trace will
+            still be returned as Stream with only one entry.
         """
+        from obspy import Stream
         if not isinstance(self.data, np.ma.masked_array):
             # no gaps
-            return [self]
+            return Stream([self])
         slices = flatnotmaskedContiguous(self.data)
         trace_list = []
         for slice in slices:
@@ -1876,9 +1925,10 @@ class Trace(object):
             stats = self.stats.copy()
             tr = Trace(header=stats)
             tr.stats.starttime += (stats.delta * slice.start)
-            tr.data = self.data[slice.start:slice.stop]
+            # return the underlying data not the masked array
+            tr.data = self.data.data[slice.start:slice.stop]
             trace_list.append(tr)
-        return trace_list
+        return Stream(trace_list)
 
     def times(self):
         """

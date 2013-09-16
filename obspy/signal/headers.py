@@ -13,10 +13,11 @@ import platform
 # Import shared libsignal depending on the platform.
 # create library names
 lib_names = [
-     # platform specific library name
-    'libsignal_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
+    # platform specific library name
+    'libsignal_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libsignal']
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
@@ -36,9 +37,10 @@ else:
 # create library names
 erlib_names = [
     # platform specific library name
-    'libevresp_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
+    'libevresp_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libevresp']
 # initialize library
 for erlib_name in erlib_names:
@@ -106,9 +108,9 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
 clibsignal.utl_geo_km.restype = C.c_void_p
 
 head_stalta_t = np.dtype([
-   ('N', 'u4', 1),
-   ('nsta', 'u4', 1),
-   ('nlta', 'u4', 1),
+    ('N', 'u4', 1),
+    ('nsta', 'u4', 1),
+    ('nlta', 'u4', 1),
 ], align=True)
 
 clibsignal.stalta.argtypes = [

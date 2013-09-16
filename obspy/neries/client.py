@@ -10,9 +10,9 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
-from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
+from obspy.core.util import NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
@@ -45,8 +45,7 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
-VERSION = _getVersionString("obspy.neries")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 MAX_REQUESTS = 50
@@ -583,7 +582,7 @@ class Client(object):
                 _AttributePlugin({'ModifiedAfter': dt}))
         # add version attribute needed for instruments
         client.options.plugins.append(
-                _AttributePlugin({'Version': '1.0'}))
+            _AttributePlugin({'Version': '1.0'}))
         # request data
         response = client.service.getInventory(usertoken, stationid,
                                                spatialbounds)
@@ -723,7 +722,8 @@ class Client(object):
             (UTCDateTime(endtime) + delta).strftime("%Y-%m-%dT%H:%M:%S")
         # request data
         if format == 'MSEED':
-            client.options.plugins = [_AttributePlugin({'DataFormat':'MSEED'})]
+            client.options.plugins = \
+                [_AttributePlugin({'DataFormat': 'MSEED'})]
         # start data request
         response = client.service.dataRequest(usertoken, stationid)
         client.options.plugins = []

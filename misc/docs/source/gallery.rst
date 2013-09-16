@@ -31,6 +31,11 @@ Gallery
     :target: tutorial/code_snippets/waveform_plotting_tutorial.html#creating-a-one-day-plot
     :alt: Creating a One-Day Plot
 
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+    :width: 300px
+    :target: tutorial/code_snippets/waveform_plotting_tutorial.html#plotting-a-record-section
+    :alt: Plotting a Record Section
+
 .. plot:: source/tutorial/code_snippets/filtering_seismograms.py
     :width: 300px
     :target: tutorial/code_snippets/filtering_seismograms.html

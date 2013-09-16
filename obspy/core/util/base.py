@@ -10,7 +10,7 @@ Base utilities and constants for ObsPy.
 """
 
 from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.types import OrderedDict
+from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
 import ctypes as C
 import doctest
@@ -25,15 +25,15 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css']
+                   'realtime', 'datamark', 'css', 'y']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
+                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -92,7 +92,7 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
         def __enter__(self):
             return self
 
-        def __exit__(self, exc_type, exc_val, exc_tb):
+        def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
             self.close()
             os.remove(self.name)
 
@@ -165,7 +165,10 @@ def getExampleFile(filename):
     IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        try:
+            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        except ImportError:
+            continue
         file = os.path.join(mod.__path__[0], "data", filename)
         if os.path.isfile(file):
             return file
@@ -310,8 +313,8 @@ ENTRY_POINTS = {
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
-    'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                      'writeFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _getOrderedEntryPoints(
+        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
 }
@@ -355,8 +358,8 @@ def _getFunctionFromEntryPoint(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key,
-            'obspy.plugin.%s' % (group), entry_point.name)
+    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
+                            entry_point.name)
     return func
 
 
@@ -393,7 +396,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
             # search isFormat for given entry point
-            isFormat = load_entry_point(format_ep.dist.key,
+            isFormat = load_entry_point(
+                format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # check format
@@ -412,7 +416,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        readFormat = load_entry_point(format_ep.dist.key,
+        readFormat = load_entry_point(
+            format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
@@ -429,6 +434,36 @@ def getScriptDirName():
     """
     return os.path.abspath(os.path.dirname(inspect.getfile(
         inspect.currentframe())))
+
+
+def compare_images(*args, **kwargs):
+    from matplotlib.testing.compare import compare_images as mpl_compare_images
+    from matplotlib.pyplot import rcdefaults
+    # set matplotlib builtin default settings for testing
+    rcdefaults()
+    import locale
+    try:
+        locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+    except:
+        try:
+            locale.setlocale(locale.LC_ALL,
+                             str('English_United States.1252'))
+        except:
+            msg = "Could not set locale to English/United States. " + \
+                  "Some date-related tests may fail"
+            warnings.warn(msg) 
+    return mpl_compare_images(*args, **kwargs)
+
+
+def checkForMatplotlibCompareImages():
+    try:
+        from matplotlib.testing.compare import compare_images
+    except:
+        return False
+    return True
+
+
+HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
 
 
 if __name__ == '__main__':

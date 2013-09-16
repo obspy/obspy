@@ -106,6 +106,23 @@ Event information can be included in the plot as well (experimental feature, syn
 
 .. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_5.py
 
+-------------------------
+Plotting a Record Section
+-------------------------
+
+A record section can be plotted from a :class:`~obspy.core.stream.Stream` object
+by setting parameter ``type`` to ``'section'``:
+
+    >>> stream.plot(type='section')
+
+To plot a record section the ObsPy header ``trace.stats.distance`` (Offset) must be 
+defined in meters. Or a geographical location ``trace.stats.coordinates.latitude`` & 
+``trace.stats.coordinates.longitude`` must be defined if the section is plotted in 
+great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
+For further information please see :meth:`~obspy.core.stream.Stream.plot`
+
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+
 --------------------
 Plot & Color Options
 --------------------

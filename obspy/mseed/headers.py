@@ -18,7 +18,8 @@ ENDIAN = {0: '<', 1: '>'}
 # create library names
 lib_names = [
     # platform specific library name
-    'libmseed_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
+    'libmseed_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # fallback for pre-packaged libraries
     'libmseed']
@@ -493,15 +494,15 @@ clibmseed.msr_endtime.restype = C.c_int64
 clibmseed.ms_detect.argtypes = [C.c_char_p, C.c_int]
 clibmseed.ms_detect.restype = C.c_int
 
-clibmseed.msr_unpack_steim2.argtypes = [C.POINTER(FRAME), C.c_int,
-    C.c_int, C.c_int,
+clibmseed.msr_unpack_steim2.argtypes = [
+    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
 clibmseed.msr_unpack_steim2.restype = C.c_int
 
-clibmseed.msr_unpack_steim1.argtypes = [C.POINTER(FRAME), C.c_int,
-    C.c_int, C.c_int,
+clibmseed.msr_unpack_steim1.argtypes = [
+    C.POINTER(FRAME), C.c_int, C.c_int, C.c_int,
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     C.POINTER(C.c_int32), C.POINTER(C.c_int32), C.c_int, C.c_int]
@@ -509,10 +510,11 @@ clibmseed.msr_unpack_steim2.restype = C.c_int
 
 # tricky, C.POINTER(C.c_char) is a pointer to single character fields
 # this is completely different to C.c_char_p which is a string
-clibmseed.mst_packgroup.argtypes = [C.POINTER(MSTraceGroup),
-    C.CFUNCTYPE(C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
-    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int),
-    C.c_short, C.c_short, C.POINTER(MSRecord)]
+clibmseed.mst_packgroup.argtypes = [
+    C.POINTER(MSTraceGroup), C.CFUNCTYPE(
+        C.c_void_p, C.POINTER(C.c_char), C.c_int, C.c_void_p),
+    C.c_void_p, C.c_int, C.c_short, C.c_short, C.POINTER(C.c_int), C.c_short,
+    C.c_short, C.POINTER(MSRecord)]
 clibmseed.mst_packgroup.restype = C.c_int
 
 clibmseed.msr_addblockette.argtypes = [C.POINTER(MSRecord),

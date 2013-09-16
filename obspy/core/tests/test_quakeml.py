@@ -1,18 +1,29 @@
 # -*- coding: utf-8 -*-
 
-import difflib
-import math
-from obspy.core.event import ResourceIdentifier, WaveformStreamID, \
-    readEvents, Event, Origin, Magnitude, Tensor, MomentTensor, \
-    FocalMechanism, Catalog
+from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
+    Origin, Event, Tensor, MomentTensor, FocalMechanism, Catalog, readEvents
 from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.decorator import skipIf
 from xml.etree.ElementTree import tostring, fromstring
 import StringIO
+import difflib
+import math
 import os
 import unittest
 import warnings
+
+
+# lxml < 2.3 seems not to ship with RelaxNG schema parser and namespace support
+IS_RECENT_LXML = False
+try:
+    from lxml.etree import __version__
+    version = float(__version__.rsplit('.', 1)[0])
+    if version >= 2.3:
+        IS_RECENT_LXML = True
+except:
+    pass
 
 
 class QuakeMLTestCase(unittest.TestCase):
@@ -31,13 +42,15 @@ class QuakeMLTestCase(unittest.TestCase):
         obj2 = fromstring(doc2)
         str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
         str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
+        str1 = ''.join(str1)
+        str2 = ''.join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
         has_error = False
-        for line in unified_diff:
+        for line in unified_diff:  # pragma: no cover
             has_error = True
             print line
-        if has_error:
+        if has_error:  # pragma: no cover
             msg = "Strings are not equal."
             raise AssertionError(msg)
 
@@ -48,21 +61,26 @@ class QuakeMLTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'iris_events.xml')
         catalog = readQuakeML(filename)
         self.assertEqual(len(catalog), 2)
-        self.assertEqual(catalog[0].resource_id,
+        self.assertEqual(
+            catalog[0].resource_id,
             ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=3279407'))
-        self.assertEqual(catalog[1].resource_id,
+        self.assertEqual(
+            catalog[1].resource_id,
             ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=2318174'))
         # NERIES
         filename = os.path.join(self.path, 'neries_events.xml')
         catalog = readQuakeML(filename)
         self.assertEqual(len(catalog), 3)
-        self.assertEqual(catalog[0].resource_id,
+        self.assertEqual(
+            catalog[0].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000041'))
-        self.assertEqual(catalog[1].resource_id,
+        self.assertEqual(
+            catalog[1].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000038'))
-        self.assertEqual(catalog[2].resource_id,
+        self.assertEqual(
+            catalog[2].resource_id,
             ResourceIdentifier('quakeml:eu.emsc/event/20120404_0000039'))
 
     def test_event(self):
@@ -73,7 +91,8 @@ class QuakeMLTestCase(unittest.TestCase):
         catalog = readQuakeML(filename)
         self.assertEqual(len(catalog), 1)
         event = catalog[0]
-        self.assertEqual(event.resource_id,
+        self.assertEqual(
+            event.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/event/historical/1165'))
         # enums
         self.assertEqual(event.event_type, 'earthquake')
@@ -85,7 +104,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[0].resource_id, None)
         self.assertEqual(c[0].creation_info.agency_id, 'EMSC')
         self.assertEqual(c[1].text, 'Another comment')
-        self.assertEqual(c[1].resource_id,
+        self.assertEqual(
+            c[1].resource_id,
             ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # event descriptions
@@ -100,11 +120,14 @@ class QuakeMLTestCase(unittest.TestCase):
         # creation info
         self.assertEqual(event.creation_info.author, "Erika Mustermann")
         self.assertEqual(event.creation_info.agency_id, "EMSC")
-        self.assertEqual(event.creation_info.author_uri,
+        self.assertEqual(
+            event.creation_info.author_uri,
             ResourceIdentifier("smi:smi-registry/organization/EMSC"))
-        self.assertEqual(event.creation_info.agency_uri,
+        self.assertEqual(
+            event.creation_info.agency_uri,
             ResourceIdentifier("smi:smi-registry/organization/EMSC"))
-        self.assertEqual(event.creation_info.creation_time,
+        self.assertEqual(
+            event.creation_info.creation_time,
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(event.creation_info.version, "1.0.1")
         # exporting back to XML should result in the same document
@@ -121,7 +144,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].origins), 1)
         origin = catalog[0].origins[0]
-        self.assertEqual(origin.resource_id,
+        self.assertEqual(
+            origin.resource_id,
             ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?originId=7680412'))
         self.assertEqual(origin.time, UTCDateTime("2011-03-11T05:46:24.1200"))
@@ -132,13 +156,16 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(origin.depth, 29.0)
         self.assertEqual(origin.depth_errors.confidence_level, 50.0)
         self.assertEqual(origin.depth_type, "from location")
-        self.assertEqual(origin.method_id,
+        self.assertEqual(
+            origin.method_id,
             ResourceIdentifier(resource_id="smi:some/method/NA"))
         self.assertEqual(origin.time_fixed, None)
         self.assertEqual(origin.epicenter_fixed, False)
-        self.assertEqual(origin.reference_system_id,
+        self.assertEqual(
+            origin.reference_system_id,
             ResourceIdentifier(resource_id="smi:some/reference/muh"))
-        self.assertEqual(origin.earth_model_id,
+        self.assertEqual(
+            origin.earth_model_id,
             ResourceIdentifier(resource_id="smi:same/model/maeh"))
         self.assertEqual(origin.evaluation_mode, "manual")
         self.assertEqual(origin.evaluation_status, "preliminary")
@@ -174,7 +201,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(origin.comments), 2)
         c = origin.comments
         self.assertEqual(c[0].text, 'Some comment')
-        self.assertEqual(c[0].resource_id,
+        self.assertEqual(
+            c[0].resource_id,
             ResourceIdentifier(resource_id="smi:some/comment/reference"))
         self.assertEqual(c[0].creation_info.author, 'EMSC')
         self.assertEqual(c[1].resource_id, None)
@@ -216,12 +244,14 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
         mag = catalog[0].magnitudes[0]
-        self.assertEqual(mag.resource_id,
+        self.assertEqual(
+            mag.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/magnitude/37465'))
         self.assertEqual(mag.mag, 5.5)
         self.assertEqual(mag.mag_errors.uncertainty, 0.1)
         self.assertEqual(mag.magnitude_type, 'MS')
-        self.assertEqual(mag.method_id,
+        self.assertEqual(
+            mag.method_id,
             ResourceIdentifier(
                 'smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude'))
         self.assertEqual(mag.station_count, 8)
@@ -230,7 +260,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(mag.comments), 2)
         c = mag.comments
         self.assertEqual(c[0].text, 'Some comment')
-        self.assertEqual(c[0].resource_id,
+        self.assertEqual(
+            c[0].resource_id,
             ResourceIdentifier(resource_id="smi:some/comment/id/muh"))
         self.assertEqual(c[0].creation_info.author, 'EMSC')
         self.assertEqual(c[1].creation_info, None)
@@ -252,8 +283,8 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests the station magnitude contribution object.
         """
-        filename = os.path.join(self.path,
-            'quakeml_1.2_stationmagnitudecontributions.xml')
+        filename = os.path.join(
+            self.path, 'quakeml_1.2_stationmagnitudecontributions.xml')
         catalog = readQuakeML(filename)
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].magnitudes), 1)
@@ -262,14 +293,16 @@ class QuakeMLTestCase(unittest.TestCase):
         # Check the first stationMagnitudeContribution object.
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[0]
-        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+        self.assertEqual(
+            stat_contrib.station_magnitude_id.resource_id,
             "smi:ch.ethz.sed/magnitude/station/881342")
         self.assertEqual(stat_contrib.weight, 0.77)
         self.assertEqual(stat_contrib.residual, 0.02)
         # Check the second stationMagnitudeContribution object.
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[1]
-        self.assertEqual(stat_contrib.station_magnitude_id.resource_id,
+        self.assertEqual(
+            stat_contrib.station_magnitude_id.resource_id,
             "smi:ch.ethz.sed/magnitude/station/881334")
         self.assertEqual(stat_contrib.weight, 0.55)
         self.assertEqual(stat_contrib.residual, 0.11)
@@ -290,19 +323,24 @@ class QuakeMLTestCase(unittest.TestCase):
         mag = catalog[0].station_magnitudes[0]
         # Assert the actual StationMagnitude object. Everything that is not set
         # in the QuakeML file should be set to None.
-        self.assertEqual(mag.resource_id,
+        self.assertEqual(
+            mag.resource_id,
             ResourceIdentifier("smi:ch.ethz.sed/magnitude/station/881342"))
-        self.assertEqual(mag.origin_id,
+        self.assertEqual(
+            mag.origin_id,
             ResourceIdentifier('smi:some/example/id'))
         self.assertEqual(mag.mag, 6.5)
         self.assertEqual(mag.mag_errors.uncertainty, 0.2)
         self.assertEqual(mag.station_magnitude_type, 'MS')
-        self.assertEqual(mag.amplitude_id,
+        self.assertEqual(
+            mag.amplitude_id,
             ResourceIdentifier("smi:ch.ethz.sed/amplitude/824315"))
-        self.assertEqual(mag.method_id,
+        self.assertEqual(
+            mag.method_id,
             ResourceIdentifier(
                 "smi:ch.ethz.sed/magnitude/generic/surface_wave_magnitude"))
-        self.assertEqual(mag.waveform_id,
+        self.assertEqual(
+            mag.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
                              resource_uri="smi:ch.ethz.sed/waveform/201754"))
         self.assertEqual(mag.creation_info, None)
@@ -322,7 +360,8 @@ class QuakeMLTestCase(unittest.TestCase):
         ar = catalog[0].origins[0].arrivals[0]
         # Test the actual Arrival object. Everything not set in the QuakeML
         # file should be None.
-        self.assertEqual(ar.pick_id,
+        self.assertEqual(
+            ar.pick_id,
             ResourceIdentifier('smi:ch.ethz.sed/pick/117634'))
         self.assertEqual(ar.phase, 'Pn')
         self.assertEqual(ar.azimuth, 12.0)
@@ -335,7 +374,8 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(ar.time_weight, 0.48)
         self.assertEqual(ar.horizontal_slowness_weight, 0.49)
         self.assertEqual(ar.backazimuth_weight, 0.5)
-        self.assertEqual(ar.earth_model_id,
+        self.assertEqual(
+            ar.earth_model_id,
             ResourceIdentifier('smi:ch.ethz.sed/earthmodel/U21'))
         self.assertEqual(len(ar.comments), 1)
         self.assertEqual(ar.creation_info.author, "Erika Mustermann")
@@ -353,16 +393,20 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 1)
         self.assertEqual(len(catalog[0].picks), 2)
         pick = catalog[0].picks[0]
-        self.assertEqual(pick.resource_id,
+        self.assertEqual(
+            pick.resource_id,
             ResourceIdentifier('smi:ch.ethz.sed/pick/117634'))
         self.assertEqual(pick.time, UTCDateTime('2005-09-18T22:04:35Z'))
         self.assertEqual(pick.time_errors.uncertainty, 0.012)
-        self.assertEqual(pick.waveform_id,
+        self.assertEqual(
+            pick.waveform_id,
             WaveformStreamID(network_code='BW', station_code='FUR',
                              resource_uri='smi:ch.ethz.sed/waveform/201754'))
-        self.assertEqual(pick.filter_id,
+        self.assertEqual(
+            pick.filter_id,
             ResourceIdentifier('smi:ch.ethz.sed/filter/lowpass/standard'))
-        self.assertEqual(pick.method_id,
+        self.assertEqual(
+            pick.method_id,
             ResourceIdentifier('smi:ch.ethz.sed/picker/autopicker/6.0.2'))
         self.assertEqual(pick.backazimuth, 44.0)
         self.assertEqual(pick.onset, 'impulsive')
@@ -387,20 +431,24 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(len(catalog[0].focal_mechanisms), 2)
         fm = catalog[0].focal_mechanisms[0]
         # general
-        self.assertEqual(fm.resource_id,
+        self.assertEqual(
+            fm.resource_id,
             ResourceIdentifier('smi:ISC/fmid=292309'))
         self.assertEqual(fm.waveform_id.network_code, 'BW')
         self.assertEqual(fm.waveform_id.station_code, 'FUR')
-        self.assertEqual(fm.waveform_id.resource_uri,
+        self.assertEqual(
+            fm.waveform_id.resource_uri,
             ResourceIdentifier(resource_id="smi:ch.ethz.sed/waveform/201754"))
         self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
-        self.assertEqual(fm.triggering_origin_id,
+        self.assertEqual(
+            fm.triggering_origin_id,
             ResourceIdentifier('smi:local/originId=7680412'))
         self.assertAlmostEqual(fm.azimuthal_gap, 0.123)
         self.assertEqual(fm.station_polarity_count, 987)
         self.assertAlmostEqual(fm.misfit, 1.234)
         self.assertAlmostEqual(fm.station_distribution_ratio, 2.345)
-        self.assertEqual(fm.method_id,
+        self.assertEqual(
+            fm.method_id,
             ResourceIdentifier('smi:ISC/methodID=Best_double_couple'))
         # comments
         self.assertEqual(len(fm.comments), 2)
@@ -409,17 +457,21 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[0].resource_id, None)
         self.assertEqual(c[0].creation_info.agency_id, 'MUH')
         self.assertEqual(c[1].text, 'Another MUH')
-        self.assertEqual(c[1].resource_id,
+        self.assertEqual(
+            c[1].resource_id,
             ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # creation info
         self.assertEqual(fm.creation_info.author, "Erika Mustermann")
         self.assertEqual(fm.creation_info.agency_id, "MUH")
-        self.assertEqual(fm.creation_info.author_uri,
+        self.assertEqual(
+            fm.creation_info.author_uri,
             ResourceIdentifier("smi:smi-registry/organization/MUH"))
-        self.assertEqual(fm.creation_info.agency_uri,
+        self.assertEqual(
+            fm.creation_info.agency_uri,
             ResourceIdentifier("smi:smi-registry/organization/MUH"))
-        self.assertEqual(fm.creation_info.creation_time,
+        self.assertEqual(
+            fm.creation_info.creation_time,
             UTCDateTime("2012-04-04T16:40:50+00:00"))
         self.assertEqual(fm.creation_info.version, "1.0.1")
         # nodalPlanes
@@ -442,9 +494,11 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(fm.principal_axes.n_axis.length, None)
         # momentTensor
         mt = fm.moment_tensor
-        self.assertEqual(mt.resource_id,
+        self.assertEqual(
+            mt.resource_id,
             ResourceIdentifier('smi:ISC/mtid=123321'))
-        self.assertEqual(mt.derived_origin_id,
+        self.assertEqual(
+            mt.derived_origin_id,
             ResourceIdentifier('smi:ISC/origid=13145006'))
         self.assertAlmostEqual(mt.scalar_moment, 1.100e+18)
         self.assertAlmostEqual(mt.tensor.m_rr, 9.300e+17)
@@ -468,7 +522,7 @@ class QuakeMLTestCase(unittest.TestCase):
             tmpfile = tf.name
             catalog = readQuakeML(filename)
             self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile, validate=True)
+            writeQuakeML(catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
@@ -493,6 +547,7 @@ class QuakeMLTestCase(unittest.TestCase):
                 catalog2 = readEvents(tmpfile)
         self.assertTrue(len(catalog2), 3)
 
+    @skipIf(not IS_RECENT_LXML, "lxml >= 2.3 is required")
     def test_enums(self):
         """
         Parses the QuakeML xsd scheme definition and checks if all enums are
@@ -505,11 +560,11 @@ class QuakeMLTestCase(unittest.TestCase):
         # Currently only works with lxml.
         try:
             from lxml.etree import parse
-        except:
+        except ImportError:
             return
         xsd_enum_definitions = {}
-        xsd_file = os.path.join(self.path, "..", "..", "docs",
-            "QuakeML-BED-1.2.xsd")
+        xsd_file = os.path.join(
+            self.path, "..", "..", "docs", "QuakeML-BED-1.2.xsd")
         root = parse(xsd_file).getroot()
 
         # Get all enums from the xsd file.
@@ -520,8 +575,8 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             if restriction.get("base") != "xs:string":
                 continue
-            enums = restriction.findall("xs:enumeration",
-                namespaces=root.nsmap)
+            enums = restriction.findall(
+                "xs:enumeration", namespaces=root.nsmap)
             if not enums:
                 continue
             enums = [_i.get("value") for _i in enums]
@@ -529,8 +584,8 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # Now import all enums and check if they are correct.
         from obspy.core import event_header
-        from obspy.core.util.types import Enum
-        available_enums = {}
+        from obspy.core.util import Enum
+        all_enums = {}
         for module_item_name in dir(event_header):
             module_item = getattr(event_header, module_item_name)
             if type(module_item) != Enum:
@@ -538,26 +593,26 @@ class QuakeMLTestCase(unittest.TestCase):
             # Assign clearer names.
             enum_name = module_item_name
             enum_values = [_i.lower() for _i in module_item.keys()]
-            available_enums[enum_name] = enum_values
+            all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
         for enum_name, enum_items in xsd_enum_definitions.iteritems():
-            self.assertTrue(enum_name in available_enums.keys())
+            self.assertTrue(enum_name in all_enums.keys())
             # Check that also all enum items are available.
-            available_items = available_enums[enum_name]
-            available_items = [_i.lower() for _i in available_items]
+            all_items = all_enums[enum_name]
+            all_items = [_i.lower() for _i in all_items]
             for enum_item in enum_items:
-                if enum_item.lower() not in available_items:
-                    msg = "Value '%s' not in Enum '%s'" % (enum_item,
-                        enum_name)
+                if enum_item.lower() not in all_items:  # pragma: no cover
+                    msg = "Value '%s' not in Enum '%s'" % \
+                        (enum_item, enum_name)
                     raise Exception(msg)
             # Check if there are too many items.
-            if len(available_items) != len(enum_items):
-                additional_items = [_i for _i in available_items
-                    if _i.lower() not in enum_items]
+            if len(all_items) != len(enum_items):  # pragma: no cover
+                additional_items = [_i for _i in all_items
+                                    if _i.lower() not in enum_items]
                 msg = "Enum {enum_name} has the following additional items" + \
                     " not defined in the xsd style sheet:\n\t{enumerations}"
                 msg = msg.format(enum_name=enum_name,
-                    enumerations=", ".join(additional_items))
+                                 enumerations=", ".join(additional_items))
                 raise Exception(msg)
 
     def test_read_string(self):
@@ -593,8 +648,8 @@ class QuakeMLTestCase(unittest.TestCase):
         # testing objects
         self.assertEqual(ev.preferred_origin(), ev.origins[1])
         self.assertEqual(ev.preferred_magnitude(), ev.magnitudes[1])
-        self.assertEqual(ev.preferred_focal_mechanism(),
-            ev.focal_mechanisms[1])
+        self.assertEqual(
+            ev.preferred_focal_mechanism(), ev.focal_mechanisms[1])
 
     def test_creating_minimal_QuakeML_with_MT(self):
         """
@@ -604,20 +659,20 @@ class QuakeMLTestCase(unittest.TestCase):
         # Rotate into physical domain
         lat, lon, depth, org_time = 10.0, -20.0, 12000, UTCDateTime(2012, 1, 1)
         mrr, mtt, mpp, mtr, mpr, mtp = 1E18, 2E18, 3E18, 3E18, 2E18, 1E18
-        scalar_moment = math.sqrt(mrr ** 2 + mtt ** 2 + mpp ** 2 + mtr ** 2 +
-            mpr ** 2 + mtp ** 2)
+        scalar_moment = math.sqrt(
+            mrr ** 2 + mtt ** 2 + mpp ** 2 + mtr ** 2 + mpr ** 2 + mtp ** 2)
         moment_magnitude = 0.667 * (math.log10(scalar_moment) - 9.1)
 
         # Initialise event
         ev = Event(event_type="earthquake")
 
-        ev_origin = Origin(time=org_time, latitude=lat,
-            longitude=lon, depth=depth, resource_id=ResourceIdentifier())
+        ev_origin = Origin(time=org_time, latitude=lat, longitude=lon,
+                           depth=depth, resource_id=ResourceIdentifier())
         ev.origins.append(ev_origin)
 
         # populte event moment tensor
         ev_tensor = Tensor(m_rr=mrr, m_tt=mtt, m_pp=mpp, m_rt=mtr, m_rp=mpr,
-            m_tp=mtp)
+                           m_tp=mtp)
 
         ev_momenttensor = MomentTensor(tensor=ev_tensor)
         ev_momenttensor.scalar_moment = scalar_moment
@@ -636,7 +691,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # write QuakeML file
         cat = Catalog(events=[ev])
         memfile = StringIO.StringIO()
-        cat.write(memfile, format="quakeml", validate=True)
+        cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)
         new_cat = readQuakeML(memfile)
@@ -655,7 +710,7 @@ class QuakeMLTestCase(unittest.TestCase):
         # Moment tensor.
         mt = fm.moment_tensor.tensor
         self.assertTrue((fm.moment_tensor.scalar_moment - scalar_moment) /
-            scalar_moment < scalar_moment * 1E-10)
+                        scalar_moment < scalar_moment * 1E-10)
         self.assertEqual(mt.m_rr, mrr)
         self.assertEqual(mt.m_pp, mpp)
         self.assertEqual(mt.m_tt, mtt)

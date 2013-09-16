@@ -3,7 +3,7 @@
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict
 from obspy.signal.array_analysis import array_transff_freqslowness, \
-  array_processing
+    array_processing
 from obspy.signal.array_analysis import array_transff_wavenumber
 from obspy.signal.util import utlLonLat
 import numpy as np
@@ -63,7 +63,7 @@ class SonicTestCase(unittest.TestCase):
 
         stime = UTCDateTime(1970, 1, 1, 0, 0)
         etime = UTCDateTime(1970, 1, 1, 0, 0) + \
-                (length - abs(min_dt) - abs(max_dt)) / df
+            (length - abs(min_dt) - abs(max_dt)) / df
 
         win_len = 2.
         step_frac = 0.2
@@ -165,10 +165,10 @@ class SonicTestCase(unittest.TestCase):
         sstep = slim / 2.
 
         transff = array_transff_freqslowness(coords, slim, sstep, fmin, fmax,
-                fstep, coordsys='xy')
+                                             fstep, coordsys='xy')
 
         transffll = array_transff_freqslowness(coordsll, slim, sstep, fmin,
-                fmax, fstep, coordsys='lonlat')
+                                               fmax, fstep, coordsys='lonlat')
 
         transffth = np.array(
             [[0.41915119, 0.33333333, 0.32339525, 0.24751548, 0.67660475],

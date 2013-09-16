@@ -142,7 +142,7 @@ def attach_paz(tr, paz_file):
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
-            tr.stats.paz.seismometer_gain
+        tr.stats.paz.seismometer_gain
     # A0_normalization_factor convention for gse2 paz in Observatory in FFB
     tr.stats.paz.gain = 1.0
 

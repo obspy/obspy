@@ -155,7 +155,7 @@ class BlocketteTestCase(unittest.TestCase):
                 for key2, blkt2 in versions.iteritems():
                     if key2 == 'SEED':
                         continue
-                    xseed = etree.tostring(blkt1['blkt'].getXML(\
+                    xseed = etree.tostring(blkt1['blkt'].getXML(
                         xseed_version=blkt2['version']))
                     self.assertEqual(xseed, versions[key2]['data'],
                                      errmsg % (blkt_number, 'XSEED', key2,

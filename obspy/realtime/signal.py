@@ -603,7 +603,7 @@ def kurtosis(trace, win=3.0, rtmemory_list=None):
         memory_size_input = 1
         memory_size_output = 0
         rtmemory_k4_bar.initialize(sample.dtype, memory_size_input,
-                                memory_size_output, 0, 0)
+                                   memory_size_output, 0, 0)
 
     mu1_last = rtmemory_mu1.input[0]
     mu2_last = rtmemory_mu2.input[0]

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from obspy.core.util.types import Enum
+from obspy.core.util import Enum
 import unittest
 
 

@@ -58,62 +58,68 @@ class Blockette043(Blockette):
                            'C': 'C [Composite]',
                            'D': 'D [Digital (Z-transform)]'}
         string = \
-        '#\t\t+               +-----------------------------------------' + \
-        '---+                +\n' + \
-        '#\t\t+               |   Response (Poles & Zeros),' + \
-        '%6s ch %s   |                +\n' % (station, channel) + \
-        '#\t\t+               +-----------------------------------------' + \
-        '---+                +\n' + \
-        '#\t\t\n' + \
-        'B043F05     Response type:                         %s\n' \
+            '#\t\t+               ' + \
+            '+-----------------------------------------' + \
+            '---+                +\n' + \
+            '#\t\t+               |   Response (Poles & Zeros),' + \
+            '%6s ch %s   |                +\n' % (station, channel) + \
+            '#\t\t+               ' + \
+            '+-----------------------------------------' + \
+            '---+                +\n' + \
+            '#\t\t\n' + \
+            'B043F05     Response type:                         %s\n' \
             % field_five_dict[self.response_type] + \
-        'B043F06     Response in units lookup:              %s\n' \
+            'B043F06     Response in units lookup:              %s\n' \
             % Blockette34Lookup(abbreviations,
                                 self.stage_signal_input_units) + \
-        'B043F07     Response out units lookup:             %s\n' \
+            'B043F07     Response out units lookup:             %s\n' \
             % Blockette34Lookup(abbreviations,
                                 self.stage_signal_output_units) + \
-        'B043F08     A0 normalization factor:               %G\n'\
+            'B043F08     A0 normalization factor:               %G\n'\
             % self.A0_normalization_factor + \
-        'B043F09     Normalization frequency:               %G\n'\
+            'B043F09     Normalization frequency:               %G\n'\
             % self.normalization_frequency + \
-        'B043F10     Number of zeroes:                      %s\n'\
+            'B043F10     Number of zeroes:                      %s\n'\
             % self.number_of_complex_zeros + \
-        'B043F15     Number of poles:                       %s\n'\
+            'B043F15     Number of poles:                       %s\n'\
             % self.number_of_complex_poles + \
-        '#\t\tComplex zeroes:\n' + \
-        '#\t\t  i  real          imag          real_error    imag_error\n'
+            '#\t\tComplex zeroes:\n' + \
+            '#\t\t  i  real          imag          real_error    imag_error\n'
         if self.number_of_complex_zeros > 0:
             if self.number_of_complex_zeros != 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_complex_zeros):
-                    string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (_i,
-                            formatRESP(self.real_zero[_i], 6),
-                            formatRESP(self.imaginary_zero[_i], 6),
-                            formatRESP(self.real_zero_error[_i], 6),
-                            formatRESP(self.imaginary_zero_error[_i], 6))
+                    string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
+                        _i,
+                        formatRESP(self.real_zero[_i], 6),
+                        formatRESP(self.imaginary_zero[_i], 6),
+                        formatRESP(self.real_zero_error[_i], 6),
+                        formatRESP(self.imaginary_zero_error[_i], 6))
             else:
-                string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (0,
-                            formatRESP(self.real_zero, 6),
-                            formatRESP(self.imaginary_zero, 6),
-                            formatRESP(self.real_zero_error, 6),
-                            formatRESP(self.imaginary_zero_error, 6))
+                string += 'B043F11-14 %4s %13s %13s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.real_zero, 6),
+                    formatRESP(self.imaginary_zero, 6),
+                    formatRESP(self.real_zero_error, 6),
+                    formatRESP(self.imaginary_zero_error, 6))
         string += '#\t\tComplex poles:\n' + \
-        '#\t\t  i  real          imag          real_error    imag_error\n'
+            '#\t\t  i  real          imag          real_error    imag_error\n'
         if self.number_of_complex_poles > 0:
             if self.number_of_complex_poles != 1:
                 # Loop over all poles.
                 for _i in range(self.number_of_complex_poles):
-                    string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (_i,
-                            formatRESP(self.real_pole[_i], 6),
-                            formatRESP(self.imaginary_pole[_i], 6),
-                            formatRESP(self.real_pole_error[_i], 6),
-                            formatRESP(self.imaginary_pole_error[_i], 6))
+                    string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
+                        _i,
+                        formatRESP(self.real_pole[_i], 6),
+                        formatRESP(self.imaginary_pole[_i], 6),
+                        formatRESP(self.real_pole_error[_i], 6),
+                        formatRESP(self.imaginary_pole_error[_i], 6))
             else:
-                string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (0,
-                            formatRESP(self.real_pole, 6),
-                            formatRESP(self.imaginary_pole, 6),
-                            formatRESP(self.real_pole_error, 6),
-                            formatRESP(self.imaginary_pole_error, 6))
+                string += 'B043F16-19 %4s %13s %13s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.real_pole, 6),
+                    formatRESP(self.imaginary_pole, 6),
+                    formatRESP(self.real_pole_error, 6),
+                    formatRESP(self.imaginary_pole_error, 6))
         string += '#\t\t\n'
         return string

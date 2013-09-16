@@ -207,7 +207,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
             # Type is not consistent float32 cannot be compressed with STEIM1,
             # therefore a exception should be raised.
             self.assertRaises(Exception, st.write, tempfile, format="MSEED",
-                    encoding=10)
+                              encoding=10)
 
     def test_writeWrongEncodingViaMseedStats(self):
         """
@@ -520,8 +520,9 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         for filename in ('nan_float32.mseed', 'nan_float64.mseed'):
             filename = os.path.join(self.path, 'data', 'encoding', filename)
             data = read(filename)[0].data.tolist()
-            np.testing.assert_array_almost_equal(data, ref,
-                decimal=8, err_msg='Data of file %s not equal' % filename)
+            np.testing.assert_array_almost_equal(
+                data, ref, decimal=8, err_msg='Data of file %s not equal' %
+                filename)
 
     def test_enforcing_reading_byteorder(self):
         """
@@ -582,7 +583,8 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 memfile = StringIO()
                 # Get some random time with the year and byteorder as the seed.
                 random.seed(year + ord(byteorder))
-                tr.stats.starttime = UTCDateTime(year,
+                tr.stats.starttime = UTCDateTime(
+                    year,
                     julday=random.randrange(1, 365),
                     hour=random.randrange(0, 24),
                     minute=random.randrange(0, 60),

@@ -3,6 +3,8 @@
 The obspy.imaging.mopad test suite.
 """
 
+from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+    compare_images
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
@@ -17,10 +19,10 @@ class MopadTestCase(unittest.TestCase):
 
     def setUp(self):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'output')
+        self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(__name__ != '__main__', 'test must be started manually')
-    def test_Beach(self):
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
+    def test_collection(self):
         """
         Tests to plot mopad beachballs as collection into an existing axis
         object. The moment tensor values are taken form the
@@ -51,7 +53,7 @@ class MopadTestCase(unittest.TestCase):
               [150, 87, 1]]
 
         # Initialize figure
-        fig = plt.figure(1, figsize=(6, 6), dpi=300)
+        fig = plt.figure(figsize=(6, 6), dpi=300)
         ax = fig.add_subplot(111, aspect='equal')
 
         # Plot the stations or borders
@@ -66,10 +68,14 @@ class MopadTestCase(unittest.TestCase):
             if (i + 1) % 5 == 0:
                 x = -100
                 y += 50
-
-        # Set the x and y limits and save the output
+        # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
-        fig.savefig(os.path.join(self.path, 'mopad_collection.png'))
+        # create and compare image
+        with NamedTemporaryFile(suffix='.png') as tf:
+            fig.savefig(tf.name)
+            # compare images
+            expected_image = os.path.join(self.path, 'mopad_collection.png')
+            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
 
 def suite():

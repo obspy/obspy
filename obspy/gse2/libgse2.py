@@ -38,10 +38,11 @@ import warnings
 # Import shared libgse2
 # create library names
 lib_names = [
-     # platform specific library name
-    'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],
+    # platform specific library name
+    'libgse2_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libgse2']
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
@@ -289,7 +290,11 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
-    data = uncompress_CM6(f, head.n_samps)
+    if head.n_samps == 0:
+        data = np.empty(0, dtype='int32')
+    else:
+        # aborts with segmentation fault when n_samps == 0
+        data = uncompress_CM6(f, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
         verifyChecksum(f, data, version=2)

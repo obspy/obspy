@@ -301,7 +301,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     except:
         verbose = 0
 
-    lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
+    lil = clibmseed.readMSEEDBuffer(
+        buffer, buflen, selections, unpack_data,
         reclen, C.c_int(verbose), C.c_int(details), header_byteorder,
         allocData)
 
@@ -678,7 +679,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # ctypes manual.
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                del msr
                 raise Exception('Error in msr_addblockette')
         # Only use Blockette 100 if necessary.
         if use_blkt_100:
@@ -693,19 +694,19 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # ctypes manual.
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                del msr
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
         # write method.
-        errcode = clibmseed.mst_pack(mst.mst, recHandler, None,
-            trace_attr['reclen'], trace_attr['encoding'],
-            trace_attr['byteorder'], C.byref(packedsamples), flush, verbose,
-            msr)
+        errcode = clibmseed.mst_pack(
+            mst.mst, recHandler, None, trace_attr['reclen'],
+            trace_attr['encoding'], trace_attr['byteorder'],
+            C.byref(packedsamples), flush, verbose, msr)
 
         if errcode == 0:
             msg = ("Did not write any data for trace '%s' even though it "
-                "contains data values.") % trace
+                   "contains data values.") % trace
             raise ValueError(msg)
         if errcode == -1:
             clibmseed.msr_free(C.pointer(msr))
@@ -759,7 +760,7 @@ class MST(object):
 
         self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
         C.memmove(self.mst.contents.datasamples, data.ctypes.get_data(),
-            bytecount)
+                  bytecount)
 
     def __del__(self):
         """

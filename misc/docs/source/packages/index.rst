@@ -23,6 +23,7 @@ The functionality is provided through the following packages:
    :toctree: .
    :nosignatures:
 
+   obspy.css
    obspy.datamark
    obspy.gse2
    obspy.mseed
@@ -32,6 +33,7 @@ The functionality is provided through the following packages:
    obspy.segy
    obspy.sh
    obspy.wav
+   obspy.y
 
 .. rubric:: Database or Web Service Access Clients
 
@@ -45,4 +47,5 @@ The functionality is provided through the following packages:
    obspy.iris
    obspy.neic
    obspy.neries
+   obspy.seedlink
    obspy.seishub

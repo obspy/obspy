@@ -134,7 +134,7 @@ except ImportError:
             if isinstance(other, OrderedDict):
                 if len(self) != len(other):
                     return False
-                for p, q in  zip(self.items(), other.items()):
+                for p, q in zip(self.items(), other.items()):
                     if p != q:
                         return False
                 return True
@@ -149,6 +149,8 @@ class Enum(object):
     Enumerated type (enum) implementation for Python.
 
     :type enums: list of str
+    :type replace: dict, optional
+    :param replace: Dictionary of keys which are replaced by values.
 
     .. rubric:: Example
 
@@ -188,12 +190,22 @@ class Enum(object):
         >>> units('xxx')
         >>> units(5)
         'other'
+
+    The following enum allows replacing certain entries:
+
+        >>> units2 = Enum(["m", "s", "m/s", "m/(s*s)", "m*s", "other"],
+        ...               replace={'meter': 'm'})
+        >>> units2('m')
+        'm'
+        >>> units2('meter')
+        'm'
     """
     # marker needed for for usage within ABC classes
     __isabstractmethod__ = False
 
-    def __init__(self, enums):
+    def __init__(self, enums, replace={}):
         self.__enums = OrderedDict(zip([str(e).lower() for e in enums], enums))
+        self.__replace = replace
 
     def __call__(self, enum):
         try:
@@ -204,19 +216,23 @@ class Enum(object):
     def get(self, key):
         if isinstance(key, int):
             return self.__enums.values()[key]
+        if key in self._Enum__replace:
+            return self._Enum__replace[key.lower()]
         return self.__enums.__getitem__(key.lower())
 
     __getattr__ = get
     __getitem__ = get
 
-    def set(self, name, value):
+    def __setattr__(self, name, value):
         if name == '_Enum__enums':
             self.__dict__[name] = value
             return
+        elif name == '_Enum__replace':
+            super(Enum, self).__setattr__(name, value)
+            return
         raise NotImplementedError
 
-    __setattr__ = set
-    __setitem__ = set
+    __setitem__ = __setattr__
 
     def __contains__(self, value):
         return value.lower() in self.__enums

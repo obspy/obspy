@@ -32,14 +32,14 @@ class RotateTestCase(unittest.TestCase):
             datcorr_r, datcorr_t = rotate_NE_RT(data_n, data_e, angle)
             # load pitsa files
             data_pitsa_r = np.loadtxt(os.path.join(self.path,
-                'rjob_20051006_r_%sdeg.gz' % angle))
+                                      'rjob_20051006_r_%sdeg.gz' % angle))
             data_pitsa_t = np.loadtxt(os.path.join(self.path,
-                'rjob_20051006_t_%sdeg.gz' % angle))
+                                      'rjob_20051006_t_%sdeg.gz' % angle))
             # Assert.
             self.assertTrue(np.allclose(datcorr_r, data_pitsa_r, rtol=1E-3,
-                atol=1E-5))
+                                        atol=1E-5))
             self.assertTrue(np.allclose(datcorr_t, data_pitsa_t, rtol=1E-3,
-                atol=1E-5))
+                                        atol=1E-5))
 
     def test_rotate_ZNE_LQTVsPitsa(self):
         """
@@ -58,26 +58,26 @@ class RotateTestCase(unittest.TestCase):
             data_back_z, data_back_n, data_back_e = \
                 rotate_LQT_ZNE(data_l, data_q, data_t, ba, inci)
             # load pitsa files
-            data_pitsa_l = np.loadtxt(os.path.join(self.path,
-                'rjob_20051006_l_%sba_%sinc.gz' % (ba, inci)))
-            data_pitsa_q = np.loadtxt(os.path.join(self.path,
-                'rjob_20051006_q_%sba_%sinc.gz' % (ba, inci)))
-            data_pitsa_t = np.loadtxt(os.path.join(self.path,
-                'rjob_20051006_t_%sba_%sinc.gz' % (ba, inci)))
+            data_pitsa_l = np.loadtxt(os.path.join(
+                self.path, 'rjob_20051006_l_%sba_%sinc.gz' % (ba, inci)))
+            data_pitsa_q = np.loadtxt(os.path.join(
+                self.path, 'rjob_20051006_q_%sba_%sinc.gz' % (ba, inci)))
+            data_pitsa_t = np.loadtxt(os.path.join(
+                self.path, 'rjob_20051006_t_%sba_%sinc.gz' % (ba, inci)))
             # Assert the output. Has to be to rather low accuracy due to
             # rounding error prone rotation and single precision value.
-            self.assertTrue(np.allclose(data_l, data_pitsa_l, rtol=1E-3,
-                atol=1E-5))
-            self.assertTrue(np.allclose(data_q, data_pitsa_q, rtol=1E-3,
-                atol=1E-5))
-            self.assertTrue(np.allclose(data_t, data_pitsa_t, rtol=1E-3,
-                atol=1E-5))
-            self.assertTrue(np.allclose(data_z, data_back_z, rtol=1E-3,
-                atol=1E-5))
-            self.assertTrue(np.allclose(data_n, data_back_n, rtol=1E-3,
-                atol=1E-5))
-            self.assertTrue(np.allclose(data_e, data_back_e, rtol=1E-3,
-                atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_l, data_pitsa_l, rtol=1E-3, atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_q, data_pitsa_q, rtol=1E-3, atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_t, data_pitsa_t, rtol=1E-3, atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_z, data_back_z, rtol=1E-3, atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_n, data_back_n, rtol=1E-3, atol=1E-5))
+            self.assertTrue(
+                np.allclose(data_e, data_back_e, rtol=1E-3, atol=1E-5))
 
     def test_rotate_NE_RT_NE(self):
         """

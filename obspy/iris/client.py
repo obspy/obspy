@@ -8,10 +8,9 @@ IRIS Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
-from obspy.core.util import NamedTemporaryFile, BAND_CODE, _getVersionString, \
-    loadtxt
+from obspy.core.util import NamedTemporaryFile, BAND_CODE, loadtxt
 from urllib2 import HTTPError
 import StringIO
 import json
@@ -22,8 +21,7 @@ import urllib2
 import warnings
 
 
-VERSION = _getVersionString("obspy.iris")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
@@ -143,7 +141,7 @@ class Client(object):
             file_opened = True
         else:
             msg = ("Parameter 'filename' must be either a string or an open "
-                "file-like object.")
+                   "file-like object.")
             raise TypeError(msg)
         try:
             fh.write(data)
@@ -225,7 +223,6 @@ class Client(object):
         kwargs['endtime'] = UTCDateTime(endtime) + t_extension
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
             kwargs['quality'] = str(quality).upper()
-
         # single channel request, go via `dataselect` Web service
         if all([val.isalnum() for val in (kwargs['network'],
                                           kwargs['station'],
@@ -1072,7 +1069,7 @@ class Client(object):
         return stream
 
     def bulkdataselect(self, bulk, quality=None, filename=None,
-                       minimumlength=None, longestonly=True):
+                       minimumlength=None, longestonly=False):
         """
         Low-level interface for `bulkdataselect` Web service of IRIS
         (http://www.iris.edu/ws/bulkdataselect/) - release 1.4.5 (2012-05-03).

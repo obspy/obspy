@@ -3,12 +3,12 @@
 The obspy.earthworm.client test suite.
 """
 
-from obspy.earthworm import Client
+from numpy import array
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
+from obspy.earthworm import Client
 import unittest
-from numpy import array
 
 
 class ClientTestCase(unittest.TestCase):
@@ -28,7 +28,7 @@ class ClientTestCase(unittest.TestCase):
         Tests getWaveform method.
         """
         client = Client("pele.ess.washington.edu", 16017)
-        start = UTCDateTime() - 24 * 3600
+        start = UTCDateTime(2013, 1, 17)
         end = start + 30
         # example 1 -- 1 channel, cleanup
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end)
@@ -48,7 +48,7 @@ class ClientTestCase(unittest.TestCase):
         stream = client.getWaveform('UW', 'TUCA', '', 'BHZ', start, end,
                                     cleanup=False)
         self.assertTrue(len(stream) >= 2)
-        summed_length = array([len(trace) for trace in stream]).sum()
+        summed_length = array([len(tr) for tr in stream]).sum()
         self.assertTrue(summed_length == 1201)
         self.assertTrue(stream[0].stats.starttime >= start - delta)
         self.assertTrue(stream[0].stats.starttime <= start + delta)
@@ -81,7 +81,7 @@ class ClientTestCase(unittest.TestCase):
         """
         # initialize client
         client = Client("pele.ess.washington.edu", 16017)
-        start = UTCDateTime() - 24 * 3600
+        start = UTCDateTime(2013, 1, 17)
         end = start + 30
         with NamedTemporaryFile() as tf:
             testfile = tf.name
@@ -101,6 +101,12 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(trace.stats.station, 'TUCA')
         self.assertEqual(trace.stats.location, '')
         self.assertEqual(trace.stats.channel, 'BHZ')
+
+    def test_availability(self):
+        client = Client("pele.ess.washington.edu", 16017)
+        data = client.availability()
+        seeds = ["%s.%s.%s.%s" % (d[0], d[1], d[2], d[3]) for d in data]
+        self.assertTrue('UW.TUCA.--.BHZ' in seeds)
 
 
 def suite():

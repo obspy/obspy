@@ -189,8 +189,8 @@ def getMenu(server, port, scnl=None):
     rid = 'getMenu'
     if scnl:
         # only works on regular waveservers (not winston)
-        getstr = 'MENUSCNL: %s %s %s %s %s\n' % (rid, scnl[0], scnl[1],
-                                             scnl[2], scnl[3])
+        getstr = 'MENUSCNL: %s %s %s %s %s\n' % (
+            rid, scnl[0], scnl[1], scnl[2], scnl[3])
     else:
         # added SCNL not documented but required
         getstr = 'MENU: %s SCNL\n' % rid
@@ -242,7 +242,7 @@ def readWaveServerV(server, port, scnl, start, end):
     flag = tokens[6]
     if flag != 'F':
         msg = 'readWaveServerV returned flag %s - %s'
-        print  msg % (flag, RETURNFLAG_KEY[flag])
+        print msg % (flag, RETURNFLAG_KEY[flag])
         return []
     nbytes = int(tokens[-1])
     dat = getSockBytes(sock, nbytes)

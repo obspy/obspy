@@ -124,7 +124,7 @@ def reftek_rescue(input_file, output_folder, reftek_id, year,
     for ev_no, ev_info in event_info.iteritems():
         filename_old = "%s.%04d" % (reftek_id, ev_no)
         filename_new = filename_old + \
-                ".%d-%d-%05d" % (ev_info['EH'], ev_info['ET'], ev_info['DT'])
+            ".%d-%d-%05d" % (ev_info['EH'], ev_info['ET'], ev_info['DT'])
         if ev_info['EH'] != 1 or ev_info['ET'] != 1 or ev_info['DT'] < 1:
             filename_new += ".bad"
         else:
@@ -147,18 +147,18 @@ def main():
                       help="Path and filename of input file.")
     parser.add_option("-e", "--experiment-number", default="00",
                       type="string", dest="experiment_number",
-                      help="Experiment number set during acquisition " + \
+                      help="Experiment number set during acquisition " +
                            "(2 decimal characters)")
     parser.add_option("-r", "--reftek-id", default="A03F",
                       type="string", dest="reftek_id",
-                      help="REFTEK DAS ID of unit used for acquisition " + \
+                      help="REFTEK DAS ID of unit used for acquisition " +
                            "(4 hex characters)")
     parser.add_option("-y", "--year", default="11",
                       type="string", dest="year",
                       help="Year of acquisition (last 2 characters)")
     parser.add_option("-o", "--output-folder", default="/export/data/rescue",
                       type="string", dest="output_folder",
-                      help="Folder for output of reconstructed data. " + \
+                      help="Folder for output of reconstructed data. " +
                            "An empty folder has to be specified.")
     (options, _) = parser.parse_args()
     # be friendly, do some checks.
