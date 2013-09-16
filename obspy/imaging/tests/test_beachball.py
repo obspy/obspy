@@ -76,7 +76,6 @@ class BeachballTestCase(unittest.TestCase):
         for data_, filename in zip(data, filenames):
             with ImageComparison(self.path, filename) as ic:
                 Beachball(data_, outfile=ic.name)
-                self.assertFalse(ic.compare())
 
     def test_BeachBallOutputFormats(self):
         """
@@ -232,7 +231,6 @@ class BeachballTestCase(unittest.TestCase):
         # create and compare image
         with ImageComparison(self.path, 'bb_collection.png') as ic:
             fig.savefig(ic.name)
-            self.assertFalse(ic.compare())
 
 
 def suite():

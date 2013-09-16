@@ -39,13 +39,11 @@ class SpectrogramTestCase(unittest.TestCase):
             spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            self.assertFalse(ic.compare())
         # 2 - using log=False
         with ImageComparison(self.path, 'spectogram.png') as ic:
             spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            self.assertFalse(ic.compare())
 
 
 def suite():

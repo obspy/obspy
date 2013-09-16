@@ -22,6 +22,7 @@ import sys
 import tempfile
 import shutil
 import warnings
+from unittest import TestCase
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -450,6 +451,10 @@ def checkForMatplotlibCompareImages():
 HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
 
 
+class ImageComparisonException(TestCase.failureException):
+    pass
+
+
 class ImageComparison(NamedTemporaryFile):
     """
     Handles the comparison against a baseline image in an image test.
@@ -537,22 +542,33 @@ class ImageComparison(NamedTemporaryFile):
         Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
         environment variable is set.
         """
-        import matplotlib.pyplot as plt
-        self.close()
-        plt.close()
-        if self.keep_output:
-            self._copy_tempfiles()
-        os.remove(self.name)
-        if os.path.exists(self.diff_filename):
-            os.remove(self.diff_filename)
+        try:
+            self.compare()
+        finally:
+            import matplotlib.pyplot as plt
+            self.close()
+            plt.close()
+            if self.keep_output:
+                self._copy_tempfiles()
+            os.remove(self.name)
+            if os.path.exists(self.diff_filename):
+                os.remove(self.diff_filename)
 
-    def compare(self, tol=1):
+    def compare(self, reltol=1):
         """
-        Run :func:`matplotlib.testing.compare.compare_images` and return its
-        output.
+        Run :func:`matplotlib.testing.compare.compare_images` and raise an
+        unittest.TestCase.failureException with the message string given by
+        matplotlib if the comparison exceeds the allowed tolerance.
+
+        :type reltol: float
+        :param reltol: Multiplier that is applied to the default tolerance
+            value (i.e. 10 means a 10 times harder to pass test tolerance).
         """
         from matplotlib.testing.compare import compare_images
-        return compare_images(self.baseline_image, self.name, tol=tol)
+        tol = get_matplotlib_defaul_tolerance() * reltol
+        msg = compare_images(self.baseline_image, self.name, tol=tol)
+        if msg:
+            raise ImageComparisonException(msg)
 
     def _copy_tempfiles(self):
         """
@@ -572,6 +588,14 @@ class ImageComparison(NamedTemporaryFile):
             shutil.copy(self.diff_filename, os.path.join(directory,
                                                          diff_filename_new))
         shutil.copy(self.name, os.path.join(directory, self.image_name))
+
+
+def get_matplotlib_defaul_tolerance():
+    version = getMatplotlibVersion()
+    if version < [1, 3, 0]:
+        return 1e-3
+    else:
+        return 1
 
 
 if __name__ == '__main__':

@@ -72,7 +72,6 @@ class MopadTestCase(unittest.TestCase):
         # create and compare image
         with ImageComparison(self.path, 'mopad_collection.png') as ic:
             fig.savefig(ic.name)
-            self.assertFalse(ic.compare())
 
 
 def suite():
