@@ -426,3 +426,15 @@ class Site(object):
         self.county = county
         self.region = region
         self.country = country
+
+    def __str__(self):
+        ret = ("Site: {name}\n"
+               "\tDescription: {description}\n"
+               "\tTown:    {town}\n"
+               "\tCounty:  {county}\n"
+               "\tRegion:  {region}\n"
+               "\tCountry: {country}")\
+               .format(
+               name=self.name, description=self.description, town=self.town,
+               county=self.county, region=self.region, country=self.country)
+        return ret
