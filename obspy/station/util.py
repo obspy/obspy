@@ -16,8 +16,8 @@ import re
 class BaseNode(object):
     """
     From the StationXML definition:
-        A base node type for derivation from: Network, Station and Channel
-        types.Station
+        A base node type for derivation of: Network, Station and Channel
+        types.
 
     The parent class for the network, station and channel classes.
     """
