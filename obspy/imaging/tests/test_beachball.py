@@ -4,13 +4,16 @@ The obspy.imaging.beachball test suite.
 """
 
 from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
-    ImageComparison
+    ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
 import matplotlib.pyplot as plt
 import os
 import unittest
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class BeachballTestCase(unittest.TestCase):
@@ -26,6 +29,9 @@ class BeachballTestCase(unittest.TestCase):
         """
         Create beachball examples in tests/output directory.
         """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 60
         # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
         data = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
                 [274, 13, 55],
@@ -74,7 +80,7 @@ class BeachballTestCase(unittest.TestCase):
                      'bb_chile_mt.png',
                      ]
         for data_, filename in zip(data, filenames):
-            with ImageComparison(self.path, filename) as ic:
+            with ImageComparison(self.path, filename, reltol=reltol) as ic:
                 Beachball(data_, outfile=ic.name)
 
     def test_BeachBallOutputFormats(self):

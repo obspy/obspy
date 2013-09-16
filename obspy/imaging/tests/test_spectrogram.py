@@ -4,12 +4,16 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE, \
+    getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
 import unittest
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class SpectrogramTestCase(unittest.TestCase):
@@ -40,7 +44,10 @@ class SpectrogramTestCase(unittest.TestCase):
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
         # 2 - using log=False
-        with ImageComparison(self.path, 'spectogram.png') as ic:
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 3
+        with ImageComparison(self.path, 'spectogram.png', reltol=reltol) as ic:
             spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
