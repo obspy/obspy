@@ -464,6 +464,9 @@ class ImageComparison(NamedTemporaryFile):
     :type image_name: str
     :param image_name: Filename (with suffix, without directory path) of the
         baseline image
+    :type reltol: float (optional)
+    :param reltol: Multiplier that is applied to the default tolerance
+        value (i.e. 10 means a 10 times harder to pass test tolerance).
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing. After
@@ -491,7 +494,7 @@ class ImageComparison(NamedTemporaryFile):
     ...     # compare images (inside unit test use self.assert(...))
     ...     assert(not ic.compare())  # doctest: +SKIP
     """
-    def __init__(self, image_path, image_name, *args, **kwargs):
+    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)
@@ -500,6 +503,7 @@ class ImageComparison(NamedTemporaryFile):
         self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
         self.output_path = os.path.join(image_path, "testrun")
         self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
+        self.tol = get_matplotlib_defaul_tolerance() * reltol
 
     def __enter__(self):
         """
@@ -559,14 +563,9 @@ class ImageComparison(NamedTemporaryFile):
         Run :func:`matplotlib.testing.compare.compare_images` and raise an
         unittest.TestCase.failureException with the message string given by
         matplotlib if the comparison exceeds the allowed tolerance.
-
-        :type reltol: float
-        :param reltol: Multiplier that is applied to the default tolerance
-            value (i.e. 10 means a 10 times harder to pass test tolerance).
         """
         from matplotlib.testing.compare import compare_images
-        tol = get_matplotlib_defaul_tolerance() * reltol
-        msg = compare_images(self.baseline_image, self.name, tol=tol)
+        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
         if msg:
             raise ImageComparisonException(msg)
 
