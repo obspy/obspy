@@ -163,4 +163,7 @@ class SeismicInventory(object):
         if not hasattr(value, "__iter__"):
             msg = "networks needs to be iterable, e.g. a list."
             raise ValueError(msg)
+        if any([not isinstance(x, SeismicNetwork) for x in value]):
+            msg = "networks can only contain SeismicNetwork objects."
+            raise ValueError(msg)
         self.__networks = value
