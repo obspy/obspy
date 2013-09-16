@@ -10,7 +10,7 @@ Provides the SeismicStation class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime
-from obspy.station import BaseNode, Equipment
+from obspy.station import BaseNode, Equipment, Operator
 import textwrap
 
 
@@ -151,31 +151,41 @@ class SeismicStation(BaseNode):
         return content_dict
 
     @property
-    def operator(self):
-        return self.__operator
+    def operators(self):
+        return self.__operators
 
-    @operator.setter
-    def operator(self, value):
+    @operators.setter
+    def operators(self, value):
         if not hasattr(value, "__iter__"):
-            msg = "Operator needs to be iterable, e.g. a list."
+            msg = "Operators needs to be an iterable, e.g. a list."
             raise ValueError(msg)
-        self.__operator = value
+        if any([not isinstance(x, Operator) for x in value]):
+            msg = "Operators can only contain Operator objects."
+            raise ValueError(msg)
+        self.__operators = value
 
     @property
-    def equipment(self):
-        return self.__equipment
+    def equipments(self):
+        return self.__equipments
 
-    @equipment.setter
-    def equipment(self, value):
-        if value is None or isinstance(value, Equipment):
-            self.__equipment = value
-        elif isinstance(value, dict):
-            self.__equipment = Equipment(**value)
-        else:
-            msg = ("equipment needs to be be of type obspy.station.Equipment "
-                "or contain a dictionary with values suitable for "
-                "initialization.")
+    @equipments.setter
+    def equipments(self, value):
+        if not hasattr(value, "__iter__"):
+            msg = "Equipments needs to be an iterable, e.g. a list."
             raise ValueError(msg)
+        if any([not isinstance(x, Equipment) for x in value]):
+            msg = "Equipments can only contain Equipment objects."
+            raise ValueError(msg)
+        self.__equipments = value
+        #if value is None or isinstance(value, Equipment):
+        #    self.__equipment = value
+        #elif isinstance(value, dict):
+        #    self.__equipment = Equipment(**value)
+        #else:
+        #    msg = ("equipment needs to be be of type obspy.station.Equipment "
+        #        "or contain a dictionary with values suitable for "
+        #        "initialization.")
+        #    raise ValueError(msg)
 
     @property
     def creation_date(self):
