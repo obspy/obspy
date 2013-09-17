@@ -416,18 +416,35 @@ class ResponseListResponseStage(ResponseStage):
             decimation_correction=decimation_correction)
 
 
-class ResponseListElement():
+class ResponseListElement(object):
     """
     Describes the amplitude and phase response value for a discrete frequency
     value.
-
-    :type frequency: float
-    :param frequency: The frequency for which the response is valid.
-    :type amplitude: float
-    :param amplitude: The value for the amplitude response at this frequency.
-    :type phase: float
-    :param phase: The value for the phase response at this frequency.
     """
+    def __init__(self, frequency, amplitude, phase):
+        """
+        :type frequency: float
+        :param frequency: The frequency for which the response is valid.
+        :type amplitude: float
+        :param amplitude: The value for the amplitude response at this
+            frequency.
+        :type phase: float
+        :param phase: The value for the phase response at this frequency.
+        """
+        self.frequency = frequency
+        self.amplitude = amplitude
+        self.phase = phase
+
+    @property
+    def phase(self):
+        return self.__phase
+
+    @phase.setter
+    def phase(self, value):
+        value = float(value)
+        if not -360 <= value <= 360:
+            raise ValueError("Phase angle out of allowed range.")
+        self.__phase = value
 
 
 class FIRResponseStage(ResponseStage):
