@@ -11,6 +11,7 @@ Provides the Inventory class.
 """
 import obspy
 from obspy.station import stationxml
+from obspy.station.network import SeismicNetwork
 import textwrap
 
 

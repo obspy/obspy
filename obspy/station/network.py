@@ -10,6 +10,7 @@ Provides the SeismicNetwork class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.station.util import BaseNode
+from obspy.station.station import SeismicStation
 import textwrap
 
 
@@ -123,7 +124,7 @@ class SeismicNetwork(BaseNode):
         if not hasattr(values, "__iter__"):
             msg = "stations needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, SeismicStation) for x in value]):
+        if any([not isinstance(x, SeismicStation) for x in values]):
             msg = "stations can only contain SeismicStation objects."
             raise ValueError(msg)
         self.__stations = values
