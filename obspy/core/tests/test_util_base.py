@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile, \
+    ImageComparison, ImageComparisonException
 from obspy.core.util.decorator import skipIf
 import os
 import unittest
+import shutil
 
 
 # checking for matplotlib
@@ -11,6 +13,14 @@ try:
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
+
+
+def image_comparison_in_function(path, img_basename, img_to_compare):
+    """
+    This is just used to wrap an image comparison to check if it raises or not.
+    """
+    with ImageComparison(path, img_basename) as ic:
+        shutil.copy(img_to_compare, ic.name)
 
 
 class UtilBaseTestCase(unittest.TestCase):
@@ -71,6 +81,32 @@ class UtilBaseTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             filename = tf.name
         self.assertFalse(os.path.exists(filename))
+
+    def test_image_comparison(self):
+        """
+        Tests the image comparison mechanism with an expected fail and an
+        expected passing test.
+        Also tests that temporary files are deleted after both passing and
+        failing tests.
+        """
+        path = os.path.join(os.path.dirname(__file__), "images")
+        img_basename = "image.png"
+        img_ok = os.path.join(path, "image_ok.png")
+        img_fail = os.path.join(path, "image_fail.png")
+
+        # image comparison that should pass
+        with ImageComparison(path, img_basename) as ic:
+            shutil.copy(img_ok, ic.name)
+            self.assertTrue(os.path.exists(ic.name))
+        # check that temp file is deleted
+        self.assertFalse(os.path.exists(ic.name))
+
+        # image comparison that should raise
+        self.assertRaises(ImageComparisonException,
+                          image_comparison_in_function, path, img_basename,
+                          img_fail)
+        # check that temp file is deleted
+        self.assertFalse(os.path.exists(ic.name))
 
 
 def suite():

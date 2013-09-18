@@ -330,8 +330,8 @@ class PPSD():
                 traces by filling with zeros. This results in a clearly
                 identifiable outlier psd line in the PPSD visualization. Select
                 `skip_on_gaps=True` for not filling gaps with zeros which might
-                result in some data segments shorter than `ppsd_length` not used
-                in the PPSD.
+                result in some data segments shorter than `ppsd_length` not
+                used in the PPSD.
         :type is_rotational_data: Boolean (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
@@ -347,8 +347,8 @@ class PPSD():
         :type overlap: float (optional)
         :param overlap: Overlap of segments passed to psd. Overlap may take
                 values between 0 and 1 and is given as fraction of the length
-                of one segment, e.g. `ppsd_length=3600` and `overlap=0.5` result
-                in an overlap of 1800s of the segments.    
+                of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
+                result in an overlap of 1800s of the segments.
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -491,7 +491,7 @@ class PPSD():
     def __check_time_present(self, utcdatetime):
         """
         Checks if the given UTCDateTime is already part of the current PPSD
-        instance. That is, checks if from utcdatetime to utcdatetime plus 
+        instance. That is, checks if from utcdatetime to utcdatetime plus
         ppsd_length there is already data in the PPSD.
         Returns True if adding ppsd_length starting at the given time
         would result in an overlap of the ppsd data base, False if it is OK to
@@ -504,17 +504,17 @@ class PPSD():
             return True
         else:
             return False
-    
+
     def __check_ppsd_length(self):
         """
         Adds ppsd_length and overlap attributes if not existing.
         This ensures compatibility with pickled objects without these
-        attributes.        
+        attributes.
         """
         try:
             self.ppsd_length
             self.overlap
-        except AttributeError: 
+        except AttributeError:
             self.ppsd_length = 3600.
             self.overlap = 0.5
 
@@ -816,7 +816,7 @@ class PPSD():
         :type max_percentage: float (optional)
         :param max_percentage: Maximum percentage to adjust the colormap.
         :type period_lim: tuple of 2 floats (optional)
-        :param period_lim: Period limits to show in histogram. 
+        :param period_lim: Period limits to show in histogram.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -923,7 +923,8 @@ class PPSD():
 
         # plot data coverage
         starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t + self.ppsd_length).datetime) for t in self.times_used]
+        ends = [date2num((t + self.ppsd_length).datetime)
+                for t in self.times_used]
         for start, end in zip(starts, ends):
             ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
         # plot data
