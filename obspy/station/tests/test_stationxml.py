@@ -103,8 +103,8 @@ class StationXMLTestCase(unittest.TestCase):
         """
         Tests the writing of ObsPy related tags.
         """
-        net = obspy.station.SeismicNetwork(code="UL")
-        inv = obspy.station.SeismicInventory(networks=[net], source="BLU")
+        net = obspy.station.Network(code="UL")
+        inv = obspy.station.Inventory(networks=[net], source="BLU")
 
         file_buffer = BytesIO()
         inv.write(file_buffer, format="StationXML", validate=True)

@@ -12,19 +12,19 @@ Test suite for the inventory class.
 import unittest
 
 import obspy
-from obspy.station import SeismicInventory
+from obspy.station import Inventory
 
 
 class InventoryTestCase(unittest.TestCase):
     """
-    Tests the for :class:`~obspy.station.inventory.SeismicInventory` class.
+    Tests the for :class:`~obspy.station.inventory.Inventory` class.
     """
     def test_initialization(self):
         """
         Some simple sanity tests.
         """
         dt = obspy.UTCDateTime()
-        inv = SeismicInventory(source="TEST", networks=[])
+        inv = Inventory(source="TEST", networks=[])
         # If no time is given, the creation time should be set to the current
         # time. Use a large offset for potentially slow computers and test
         # runs.

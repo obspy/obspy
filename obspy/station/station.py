@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Provides the SeismicStation class.
+Provides the Station class.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -14,7 +14,7 @@ from obspy.station import BaseNode, Equipment, Operator
 import textwrap
 
 
-class SeismicStation(BaseNode):
+class Station(BaseNode):
     """
     From the StationXML definition:
         This type represents a Station epoch. It is common to only have a
@@ -28,7 +28,7 @@ class SeismicStation(BaseNode):
             description=None, comments=[], start_date=None, end_date=None,
             restricted_status=None, alternate_code=None, historical_code=None):
         """
-        :type channels: A list of 'obspy.station.SeismicChannel`
+        :type channels: A list of :class:`obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
         :param latitude: The latitude of the station
         :param longitude: The longitude of the station
@@ -94,14 +94,14 @@ class SeismicStation(BaseNode):
         self.total_number_of_channels = total_number_of_channels
         self.selected_number_of_channels = selected_number_of_channels
         self.external_references = []
-        super(SeismicStation, self).__init__(code=code,
+        super(Station, self).__init__(code=code,
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
 
     def __str__(self):
         contents = self.get_contents()
-        ret = ("Seismic Station {station_name}\n"
+        ret = ("Station {station_name}\n"
             "\tStation Code: {station_code}\n"
             "\tChannel Count: {selected}/{total} (Selected/Total)\n"
             "\t{start_date} - {end_date}\n"

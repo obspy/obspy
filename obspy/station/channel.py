@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Provides the SeismicChannel class.
+Provides the Channel class.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -12,7 +12,7 @@ Provides the SeismicChannel class.
 from obspy.station import BaseNode
 
 
-class SeismicChannel(BaseNode):
+class Channel(BaseNode):
     """
     From the StationXML definition:
         Equivalent to SEED blockette 52 and parent element for the related the
@@ -142,14 +142,14 @@ class SeismicChannel(BaseNode):
         self.response = response
         if comments is None:
             comments = []
-        super(SeismicChannel, self).__init__(code=code,
+        super(Channel, self).__init__(code=code,
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
 
     def __str__(self):
         ret = (
-            "Seismic Channel '{id}', Location '{location}' {description}\n"
+            "Channel '{id}', Location '{location}' {description}\n"
             "\tLatitude: {latitude:.2f}, Longitude: {longitude:.2f}, "
             "Elevation: {elevation:.1f} m, Local Depth: {depth:.1f} m\n"
             "{azimuth}"

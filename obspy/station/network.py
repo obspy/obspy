@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Provides the SeismicNetwork class.
+Provides the Network class.
 
 :copyright:
     Lion Krischer (krischer@geophysik.uni-muenchen.de), 2013
@@ -10,11 +10,11 @@ Provides the SeismicNetwork class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.station.util import BaseNode
-from obspy.station.station import SeismicStation
+from obspy.station.station import Station
 import textwrap
 
 
-class SeismicNetwork(BaseNode):
+class Network(BaseNode):
     """
     From the StationXML definition:
         This type represents the Network layer, all station metadata is
@@ -60,7 +60,7 @@ class SeismicNetwork(BaseNode):
         self.total_number_of_stations = total_number_of_stations
         self.selected_number_of_stations = selected_number_of_stations
 
-        super(SeismicNetwork, self).__init__(code=code,
+        super(Network, self).__init__(code=code,
             description=description, comments=comments, start_date=start_date,
             end_date=end_date, restricted_status=restricted_status,
             alternate_code=alternate_code, historical_code=historical_code)
@@ -69,7 +69,7 @@ class SeismicNetwork(BaseNode):
         return self.stations[index]
 
     def __str__(self):
-        ret = ("Seismic Network {id} {description}\n"
+        ret = ("Network {id} {description}\n"
             "\tStation Count: {selected}/{total} (Selected/Total)\n"
             "\t{start_date} - {end_date}\n"
             "\tAccess: {restricted} {alternate_code}{historical_code}\n")\
@@ -124,8 +124,8 @@ class SeismicNetwork(BaseNode):
         if not hasattr(values, "__iter__"):
             msg = "stations needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, SeismicStation) for x in values]):
-            msg = "stations can only contain SeismicStation objects."
+        if any([not isinstance(x, Station) for x in values]):
+            msg = "stations can only contain Station objects."
             raise ValueError(msg)
         self.__stations = values
 

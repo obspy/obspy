@@ -11,7 +11,7 @@ Provides the Inventory class.
 """
 import obspy
 from obspy.station import stationxml
-from obspy.station.network import SeismicNetwork
+from obspy.station.network import Network
 import textwrap
 
 
@@ -50,7 +50,7 @@ def read_inventory(path_or_file_object, format=None):
     return FORMAT_FCTS[fileformat]["read_fct"](path_or_file_object)
 
 
-class SeismicInventory(object):
+class Inventory(object):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.
 
@@ -59,7 +59,7 @@ class SeismicInventory(object):
     def __init__(self, networks, source, sender=None, created=None,
             module=None, module_uri=None):
         """
-        :type networks: List of :class:`~obspy.station.network.SeismicNetwork`
+        :type networks: List of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
         :type source: String
         :param source: Network ID of the institution sending the message.
@@ -112,7 +112,7 @@ class SeismicInventory(object):
         return content_dict
 
     def __str__(self):
-        ret_str = "Seismic Inventory created at %s\n" % str(self.created)
+        ret_str = "Inventory created at %s\n" % str(self.created)
         if self.module:
             module_uri = self.module_uri
             if module_uri and len(module_uri) > 70:
@@ -137,7 +137,7 @@ class SeismicInventory(object):
 
     def write(self, path_or_file_object, format, **kwargs):
         """
-        Writes the seismic inventory object to a file or file-like object in
+        Writes the inventory object to a file or file-like object in
         the specified format.
 
         :param path_or_file_object: Filename or file-like object to be written
@@ -164,7 +164,7 @@ class SeismicInventory(object):
         if not hasattr(value, "__iter__"):
             msg = "networks needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        if any([not isinstance(x, SeismicNetwork) for x in value]):
-            msg = "networks can only contain SeismicNetwork objects."
+        if any([not isinstance(x, Network) for x in value]):
+            msg = "networks can only contain Network objects."
             raise ValueError(msg)
         self.__networks = value

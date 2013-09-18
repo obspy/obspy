@@ -93,7 +93,7 @@ def read_StationXML(path_or_file_object):
     for network in root.findall(_ns("Network")):
         networks.append(_read_network(network, _ns))
 
-    inv = obspy.station.SeismicInventory(networks=networks, source=source,
+    inv = obspy.station.Inventory(networks=networks, source=source,
         sender=sender, created=created, module=module, module_uri=module_uri)
     return inv
 
@@ -123,7 +123,7 @@ def _read_base_node(element, object_to_write_to, _ns):
 
 
 def _read_network(net_element, _ns):
-    network = obspy.station.SeismicNetwork(net_element.get("code"))
+    network = obspy.station.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
     network.total_number_of_stations = _tag2obj(net_element,
         _ns("TotalNumberStations"), int)
@@ -140,7 +140,7 @@ def _read_station(sta_element, _ns):
     latitude = _tag2obj(sta_element, _ns("Latitude"), float)
     longitude = _tag2obj(sta_element, _ns("Longitude"), float)
     elevation = _tag2obj(sta_element, _ns("Elevation"), float)
-    station = obspy.station.SeismicStation(code=sta_element.get("code"),
+    station = obspy.station.Station(code=sta_element.get("code"),
         latitude=latitude, longitude=longitude, elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
@@ -174,7 +174,7 @@ def _read_channel(cha_element, _ns):
     depth = _tag2obj(cha_element, _ns("Depth"), float)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
-    channel = obspy.station.SeismicChannel(code=code,
+    channel = obspy.station.Channel(code=code,
         location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
@@ -476,7 +476,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     """
     Writes an inventory object to a buffer.
 
-    :type inventory: :class:`~obspy.station.inventory.SeismicInventory`
+    :type inventory: :class:`~obspy.station.inventory.Inventory`
     :param inventory: The inventory instance to be written.
     :param file_or_file_object: The file or file-like object to be written to.
     :type validate: Boolean
@@ -553,7 +553,7 @@ def _write_base_node(element, object_to_read_from):
 
 def _write_network(parent, network):
     """
-    Helper function converting a SeismicNetwork instance to an etree.Element.
+    Helper function converting a Network instance to an etree.Element.
     """
     attribs = _get_base_node_attributes(network)
     network_elem = etree.SubElement(parent, "Network", attribs)
