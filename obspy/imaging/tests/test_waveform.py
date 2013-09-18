@@ -5,8 +5,7 @@ The obspy.imaging.waveform test suite.
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
-    compare_images
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 import numpy as np
 import os
@@ -113,12 +112,9 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600, 1000.0)
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_one_hour_many_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_one_hour_many_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotOneHourFewSamples(self):
@@ -130,12 +126,9 @@ class WaveformTestCase(unittest.TestCase):
         start = UTCDateTime(0)
         st = self._createStream(start, start + 3600, 10.0)
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_one_hour_few_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_one_hour_few_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotSimpleGapManySamples(self):
@@ -149,12 +142,9 @@ class WaveformTestCase(unittest.TestCase):
         st = self._createStream(start, start + 3600 * 3 / 4, 500.0)
         st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 500.0)
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_simple_gap_many_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_simple_gap_many_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotSimpleGapFewSamples(self):
@@ -168,12 +158,9 @@ class WaveformTestCase(unittest.TestCase):
         st = self._createStream(start, start + 3600 * 3 / 4, 5.0)
         st += self._createStream(start + 2.25 * 3600, start + 3 * 3600, 5.0)
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_simple_gap_few_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_simple_gap_few_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotComplexGapManySamples(self):
@@ -193,12 +180,9 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_complex_gap_many_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_complex_gap_many_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotComplexGapFewSamples(self):
@@ -218,12 +202,9 @@ class WaveformTestCase(unittest.TestCase):
         temp_st[0].stats.location = '02'
         st += temp_st
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_complex_gap_few_samples.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        image_name = 'waveform_complex_gap_few_samples.png'
+        with ImageComparison(self.path, image_name) as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotMultipleTraces(self):
@@ -232,52 +213,34 @@ class WaveformTestCase(unittest.TestCase):
         """
         # 1 trace
         st = read()[1]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_1_trace.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_1_trace.png') as ic:
+            st.plot(outfile=ic.name, automerge=False)
         # 3 traces
         st = read()
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_3_traces.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_3_traces.png') as ic:
+            st.plot(outfile=ic.name, automerge=False)
         # 5 traces
         st = st[1] * 5
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_5_traces.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_5_traces.png') as ic:
+            st.plot(outfile=ic.name, automerge=False)
         # 10 traces
         st = st[1] * 10
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_10_traces.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_10_traces.png') as ic:
+            st.plot(outfile=ic.name, automerge=False)
         # 10 traces - huge numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data * 10 ** i
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False, equal_scale=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_10_traces_huge.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_10_traces_huge.png') as ic:
+            st.plot(outfile=ic.name, automerge=False, equal_scale=False)
         # 10 traces - tiny numbers
         st = st[1] * 10
         for i, tr in enumerate(st):
             # scale data to have huge numbers
             st[i].data = tr.data / (10 ** i)
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, automerge=False, equal_scale=False)
-            expected_image = os.path.join(self.path,
-                    'waveform_10_traces_tiny.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_10_traces_tiny.png') as ic:
+            st.plot(outfile=ic.name, automerge=False, equal_scale=False)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotWithLabels(self):
@@ -290,12 +253,8 @@ class WaveformTestCase(unittest.TestCase):
         st[1].label = u'Hällö Wörld & Marß'
         st[2].label = '*' * 80
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_labels.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_labels.png') as ic:
+            st.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotBinningError(self):
@@ -305,21 +264,13 @@ class WaveformTestCase(unittest.TestCase):
         """
         tr = Trace(data=np.sin(np.linspace(0, 200, 432000)))
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            tr.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_binning_error.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_binning_error.png') as ic:
+            tr.plot(outfile=ic.name)
 
         tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            tr.plot(outfile=tf.name)
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_binning_error_2.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_binning_error_2.png') as ic:
+            tr.plot(outfile=ic.name)
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotDefaultSection(self):
@@ -332,12 +283,8 @@ class WaveformTestCase(unittest.TestCase):
             st += self._createStream(start, start + 3600, 100)
             st[-1].stats.distance = _i * 10e3
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, type='section')
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_default_section.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'waveform_default_section.png') as ic:
+            st.plot(outfile=ic.name, type='section')
 
     @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotAzimSection(self):
@@ -352,13 +299,9 @@ class WaveformTestCase(unittest.TestCase):
                 'latitude': _i,
                 'longitude': _i})
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            st.plot(outfile=tf.name, type='section', dist_degree=True,
+        with ImageComparison(self.path, 'waveform_azim_section.png') as ic:
+            st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
-            # compare images
-            expected_image = os.path.join(self.path,
-                    'waveform_azim_section.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
 
 
 def suite():
