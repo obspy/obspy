@@ -314,7 +314,7 @@ class SLClient(object):
         """
         Prints the usage message for this class.
         """
-        print("\nUsage: python %s [options] <[host]:port>" % \
+        print("\nUsage: python %s [options] <[host]:port>" %
               (self.__class__.__name__))
         if concise:
             usage = "Use '-h' for detailed help"

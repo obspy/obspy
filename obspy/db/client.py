@@ -144,7 +144,7 @@ class Client(object):
         kwargs = {'network': network, 'station': station,
                   'location': location, 'channel': channel}
         for key, value in kwargs.iteritems():
-            if value == None:
+            if value is None:
                 continue
             col = getattr(WaveformChannel, key)
             if '*' in value or '?' in value:
@@ -214,8 +214,8 @@ class Client(object):
         return file_dict
 
     def getPreview(self, trace_ids=[], starttime=None, endtime=None,
-                    network=None, station=None, location=None, channel=None,
-                    pad=False):
+                   network=None, station=None, location=None, channel=None,
+                   pad=False):
         """
         Returns the preview trace.
         """
@@ -256,7 +256,7 @@ class Client(object):
             kwargs = {'network': network, 'station': station,
                       'location': location, 'channel': channel}
             for key, value in kwargs.iteritems():
-                if value == None:
+                if value is None:
                     continue
                 col = getattr(WaveformChannel, key)
                 if '*' in value or '?' in value:

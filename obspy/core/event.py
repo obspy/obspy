@@ -173,7 +173,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     has already been created. A useful type are Enums if you want to restrict
     the acceptable values.
 
-        >>> from obspy.core.util.types import Enum
+        >>> from obspy.core.util import Enum
         >>> MyEnum = Enum(["a", "b", "c"])
         >>> class_attributes = [ \
                 ("resource_id", ResourceIdentifier), \
@@ -305,8 +305,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if hasattr(self, error_key) and getattr(self, error_key):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
-                    repr_str += " [%s]" % ', '.join([str(k) + "=" + str(v)
-                        for k, v in err_items])
+                    repr_str += " [%s]" % ', '.join(
+                        [str(k) + "=" + str(v) for k, v in err_items])
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
@@ -331,9 +331,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                     ret_str += '\n\t---------'
                 element_str = "%" + str(max_length) + "s: %i Elements"
                 ret_str += "\n\t" + \
-                    "\n\t".join([element_str %
-                    (_i, len(getattr(self, _i)))
-                    for _i in containers])
+                    "\n\t".join(
+                        [element_str % (_i, len(getattr(self, _i)))
+                         for _i in containers])
             return ret_str
 
         def copy(self):
@@ -622,7 +622,7 @@ class ResourceIdentifier(object):
               "referred to by the new resource identifier."
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
-                inspect.currentframe().f_back.f_lineno)
+                               inspect.currentframe().f_back.f_lineno)
         ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
@@ -739,7 +739,8 @@ class ResourceIdentifier(object):
         return self.resource_id.__hash__()
 
 
-__CreationInfo = _eventTypeClassFactory("__CreationInfo",
+__CreationInfo = _eventTypeClassFactory(
+    "__CreationInfo",
     class_attributes=[("agency_id", str),
                       ("agency_uri", ResourceIdentifier),
                       ("author", str),
@@ -773,7 +774,8 @@ class CreationInfo(__CreationInfo):
     """
 
 
-__TimeWindow = _eventTypeClassFactory("__TimeWindow",
+__TimeWindow = _eventTypeClassFactory(
+    "__TimeWindow",
     class_attributes=[("begin", float),
                       ("end", float),
                       ("reference", UTCDateTime)])
@@ -796,7 +798,8 @@ class TimeWindow(__TimeWindow):
     """
 
 
-__CompositeTime = _eventTypeClassFactory("__CompositeTime",
+__CompositeTime = _eventTypeClassFactory(
+    "__CompositeTime",
     class_attributes=[("year", int, ATTRIBUTE_HAS_ERRORS),
                       ("month", int, ATTRIBUTE_HAS_ERRORS),
                       ("day", int, ATTRIBUTE_HAS_ERRORS),
@@ -850,7 +853,8 @@ class CompositeTime(__CompositeTime):
     """
 
 
-__Comment = _eventTypeClassFactory("__Comment",
+__Comment = _eventTypeClassFactory(
+    "__Comment",
     class_attributes=[("text", str),
                       ("resource_id", ResourceIdentifier),
                       ("creation_info", CreationInfo)])
@@ -880,7 +884,8 @@ class Comment(__Comment):
     """
 
 
-__WaveformStreamID = _eventTypeClassFactory("__WaveformStreamID",
+__WaveformStreamID = _eventTypeClassFactory(
+    "__WaveformStreamID",
     class_attributes=[("network_code", str),
                       ("station_code", str),
                       ("channel_code", str),
@@ -898,7 +903,7 @@ class WaveformStreamID(__WaveformStreamID):
     use resourceURI as a flexible, abstract, and unique stream ID that allows
     to describe different processing levels, or resampled/filtered products of
     the same initial stream, without violating the intrinsic meaning of the
-    legacy identifiers (network, station, channel, and loca- tion codes).
+    legacy identifiers (network, station, channel, and location codes).
     However, for operation in the context of legacy systems, the classical
     identifier components are supported.
 
@@ -966,7 +971,8 @@ class WaveformStreamID(__WaveformStreamID):
             self.channel_code if self.channel_code else "")
 
 
-__Amplitude = _eventTypeClassFactory("__Amplitude",
+__Amplitude = _eventTypeClassFactory(
+    "__Amplitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("generic_amplitude", float, ATTRIBUTE_HAS_ERRORS),
                       ("type", str),
@@ -1104,7 +1110,8 @@ class Amplitude(__Amplitude):
     """
 
 
-__Pick = _eventTypeClassFactory("__Pick",
+__Pick = _eventTypeClassFactory(
+    "__Pick",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
                       ("waveform_id", WaveformStreamID),
@@ -1191,7 +1198,8 @@ class Pick(__Pick):
     """
 
 
-__Arrival = _eventTypeClassFactory("__Arrival",
+__Arrival = _eventTypeClassFactory(
+    "__Arrival",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("pick_id", ResourceIdentifier),
                       ("phase", str),
@@ -1278,7 +1286,8 @@ class Arrival(__Arrival):
     """
 
 
-__OriginQuality = _eventTypeClassFactory("__OriginQuality",
+__OriginQuality = _eventTypeClassFactory(
+    "__OriginQuality",
     class_attributes=[("associated_phase_count", int),
                       ("used_phase_count", int),
                       ("associated_station_count", int),
@@ -1342,7 +1351,8 @@ class OriginQuality(__OriginQuality):
     """
 
 
-__ConfidenceEllipsoid = _eventTypeClassFactory("__ConfidenceEllipsoid",
+__ConfidenceEllipsoid = _eventTypeClassFactory(
+    "__ConfidenceEllipsoid",
     class_attributes=[("semi_major_axis_length", float),
                       ("semi_minor_axis_length", float),
                       ("semi_intermediate_axis_length", float),
@@ -1375,7 +1385,8 @@ class ConfidenceEllipsoid(__ConfidenceEllipsoid):
     """
 
 
-__OriginUncertainty = _eventTypeClassFactory("__OriginUncertainty",
+__OriginUncertainty = _eventTypeClassFactory(
+    "__OriginUncertainty",
     class_attributes=[("horizontal_uncertainty", float),
                       ("min_horizontal_uncertainty", float),
                       ("max_horizontal_uncertainty", float),
@@ -1422,7 +1433,8 @@ class OriginUncertainty(__OriginUncertainty):
     """
 
 
-__Origin = _eventTypeClassFactory("__Origin",
+__Origin = _eventTypeClassFactory(
+    "__Origin",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("time", UTCDateTime, ATTRIBUTE_HAS_ERRORS),
                       ("longitude", float, ATTRIBUTE_HAS_ERRORS),
@@ -1602,7 +1614,8 @@ class StationMagnitudeContribution(__StationMagnitudeContribution):
     """
 
 
-__Magnitude = _eventTypeClassFactory("__Magnitude",
+__Magnitude = _eventTypeClassFactory(
+    "__Magnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("mag", float, ATTRIBUTE_HAS_ERRORS),
                       ("magnitude_type", str),
@@ -1685,7 +1698,8 @@ class Magnitude(__Magnitude):
     """
 
 
-__StationMagnitude = _eventTypeClassFactory("__StationMagnitude",
+__StationMagnitude = _eventTypeClassFactory(
+    "__StationMagnitude",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("origin_id", ResourceIdentifier),
                       ("mag", float, ATTRIBUTE_HAS_ERRORS),
@@ -1731,7 +1745,8 @@ class StationMagnitude(__StationMagnitude):
     """
 
 
-__EventDescription = _eventTypeClassFactory("__EventDescription",
+__EventDescription = _eventTypeClassFactory(
+    "__EventDescription",
     class_attributes=[("text", str),
                       ("type", EventDescriptionType)])
 
@@ -1757,7 +1772,8 @@ class EventDescription(__EventDescription):
     """
 
 
-__Tensor = _eventTypeClassFactory("__Tensor",
+__Tensor = _eventTypeClassFactory(
+    "__Tensor",
     class_attributes=[("m_rr", float, ATTRIBUTE_HAS_ERRORS),
                       ("m_tt", float, ATTRIBUTE_HAS_ERRORS),
                       ("m_pp", float, ATTRIBUTE_HAS_ERRORS),
@@ -1799,7 +1815,8 @@ class Tensor(__Tensor):
     """
 
 
-__DataUsed = _eventTypeClassFactory("__DataUsed",
+__DataUsed = _eventTypeClassFactory(
+    "__DataUsed",
     class_attributes=[("wave_type", DataUsedWaveType),
                       ("station_count", int),
                       ("component_count", int),
@@ -1834,7 +1851,8 @@ class DataUsed(__DataUsed):
     """
 
 
-__SourceTimeFunction = _eventTypeClassFactory("__SourceTimeFunction",
+__SourceTimeFunction = _eventTypeClassFactory(
+    "__SourceTimeFunction",
     class_attributes=[("type", SourceTimeFunctionType),
                       ("duration", float),
                       ("rise_time", float),
@@ -1861,7 +1879,8 @@ class SourceTimeFunction(__SourceTimeFunction):
     """
 
 
-__NodalPlane = _eventTypeClassFactory("__NodalPlane",
+__NodalPlane = _eventTypeClassFactory(
+    "__NodalPlane",
     class_attributes=[("strike", float, ATTRIBUTE_HAS_ERRORS),
                       ("dip", float, ATTRIBUTE_HAS_ERRORS),
                       ("rake", float, ATTRIBUTE_HAS_ERRORS)])
@@ -1887,7 +1906,8 @@ class NodalPlane(__NodalPlane):
     """
 
 
-__Axis = _eventTypeClassFactory("__Axis",
+__Axis = _eventTypeClassFactory(
+    "__Axis",
     class_attributes=[("azimuth", float, ATTRIBUTE_HAS_ERRORS),
                       ("plunge", float, ATTRIBUTE_HAS_ERRORS),
                       ("length", float, ATTRIBUTE_HAS_ERRORS)])
@@ -1919,7 +1939,8 @@ class Axis(__Axis):
     """
 
 
-__NodalPlanes = _eventTypeClassFactory("__NodalPlanes",
+__NodalPlanes = _eventTypeClassFactory(
+    "__NodalPlanes",
     class_attributes=[("nodal_plane_1", NodalPlane),
                       ("nodal_plane_2", NodalPlane),
                       ("preferred_plane", int)])
@@ -1943,7 +1964,8 @@ class NodalPlanes(__NodalPlanes):
     """
 
 
-__PrincipalAxes = _eventTypeClassFactory("__PrincipalAxes",
+__PrincipalAxes = _eventTypeClassFactory(
+    "__PrincipalAxes",
     class_attributes=[("t_axis", Axis),
                       ("p_axis", Axis),
                       ("n_axis", Axis)])
@@ -1963,7 +1985,8 @@ class PrincipalAxes(__PrincipalAxes):
     """
 
 
-__MomentTensor = _eventTypeClassFactory("__MomentTensor",
+__MomentTensor = _eventTypeClassFactory(
+    "__MomentTensor",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("derived_origin_id", ResourceIdentifier),
                       ("moment_magnitude_id", ResourceIdentifier),
@@ -2056,7 +2079,8 @@ class MomentTensor(__MomentTensor):
     """
 
 
-__FocalMechanism = _eventTypeClassFactory("__FocalMechanism",
+__FocalMechanism = _eventTypeClassFactory(
+    "__FocalMechanism",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("triggering_origin_id", ResourceIdentifier),
                       ("nodal_planes", NodalPlanes),
@@ -2101,7 +2125,7 @@ class FocalMechanism(__FocalMechanism):
         mechanism determination. Decimal fraction between 0 and 1.
     :type station_distribution_ratio: float, optional
     :param station_distribution_ratio: Station distribution ratio (STDR)
-        parameter. Indicates how the stations are dis- tributed about the focal
+        parameter. Indicates how the stations are distributed about the focal
         sphere (Reasenberg and Oppenheimer 1985). Decimal fraction between 0
         and 1.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
@@ -2134,7 +2158,8 @@ class FocalMechanism(__FocalMechanism):
     """
 
 
-__Event = _eventTypeClassFactory("__Event",
+__Event = _eventTypeClassFactory(
+    "__Event",
     class_attributes=[("resource_id", ResourceIdentifier),
                       ("event_type", EventType),
                       ("event_type_certainty", EventTypeCertainty),
@@ -2272,7 +2297,8 @@ class Event(__Event):
         """
         Print a short summary at the top.
         """
-        return "Event:\t%s\n\n%s" % (self.short_str(),
+        return "Event:\t%s\n\n%s" % (
+            self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
     def preferred_origin(self):
@@ -2708,8 +2734,9 @@ class Catalog(object):
             # get format specific entry point
             format_ep = EVENT_ENTRY_POINTS[format]
             # search writeFormat method for given entry point
-            writeFormat = load_entry_point(format_ep.dist.key,
-                'obspy.plugin.event.%s' % (format_ep.name), 'writeFormat')
+            writeFormat = load_entry_point(
+                format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
+                'writeFormat')
         except (IndexError, ImportError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EVENT_ENTRY_POINTS)))
@@ -2787,7 +2814,6 @@ class Catalog(object):
             raise ValueError('Events can be labeled by magnitude or events can'
                              ' not be labeled. '
                              "'%s' is not supported." % (label,))
-
 
         # lat/lon coordinates, magnitudes, dates
         lats = []
@@ -2931,7 +2957,8 @@ class Catalog(object):
                     zorder=10)
         times = [event.origins[0].time for event in self.events]
         if len(self.events) > 1:
-            plt.title("{event_count} events ({start} to {end}) "
+            plt.title(
+                "{event_count} events ({start} to {end}) "
                 "- Color codes {colorcode}, size the magnitude".format(
                     event_count=len(self.events),
                     start=min(times).strftime("%Y-%m-%d"),

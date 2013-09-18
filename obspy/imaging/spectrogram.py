@@ -114,7 +114,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     if nfft > npts:
         nfft = int(_nearestPow2(npts / 8.0))
 
-    if mult != None:
+    if mult is not None:
         mult = int(_nearestPow2(mult))
         mult = mult * nfft
     nlap = int(nfft * float(per_lap))
@@ -128,10 +128,10 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
     # XXX mlab.specgram uses fft, would be better and faster use rfft
     if MATPLOTLIB_VERSION >= [0, 99, 0]:
         specgram, freq, time = mlab.specgram(data, Fs=samp_rate, NFFT=nfft,
-                                              pad_to=mult, noverlap=nlap)
+                                             pad_to=mult, noverlap=nlap)
     else:
         specgram, freq, time = mlab.specgram(data, Fs=samp_rate,
-                                                NFFT=nfft, noverlap=nlap)
+                                             NFFT=nfft, noverlap=nlap)
     # db scale and remove zero/offset for amplitude
     if dbscale:
         specgram = 10 * np.log10(specgram[1:, :])
@@ -185,7 +185,7 @@ def spectrogram(data, samp_rate, per_lap=0.9, wlen=None, log=False,
         # this method is much much faster!
         specgram = np.flipud(specgram)
         # center bin
-        extent = (time[0] - halfbin_time, time[-1] + halfbin_time, \
+        extent = (time[0] - halfbin_time, time[-1] + halfbin_time,
                   freq[0] - halfbin_freq, freq[-1] + halfbin_freq)
         ax.imshow(specgram, interpolation="nearest", extent=extent,
                   cmap=cmap, zorder=zorder)

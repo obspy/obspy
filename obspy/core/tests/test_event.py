@@ -20,7 +20,7 @@ class EventTestCase(unittest.TestCase):
         event = readEvents()[1]
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
-            " | 4.3 ML | manual", s)
+                         " | 4.3 ML | manual", s)
 
     def test_eq(self):
         """
@@ -423,7 +423,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, ResourceIdentifier,
-                      resource_id=resource_id, referred_object=object_b)
+                              resource_id=resource_id,
+                              referred_object=object_b)
             # Now ignore the warning and actually create the new
             # ResourceIdentifier.
             warnings.simplefilter('ignore', UserWarning)
@@ -511,7 +512,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         # This one contains all valid characters. It should pass the
         # validation.
-        res_id = ("smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        res_id = (
+            "smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
             "STUVWXYZ0123456789-.*()_~'+?=,;&")
         res = ResourceIdentifier(res_id)

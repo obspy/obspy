@@ -43,11 +43,33 @@ class ClientTestCase(unittest.TestCase):
     @skipIf(not hasM2Crypto, 'Module M2Crypto is not installed')
     def test_getWaveformWithDCIDKeyFile(self):
         """
+        Tests various DCID key file formats (with space or equal sign). Also
+        checks if empty lines or comment lines are ignored.
         """
+        # 1 - using = sign between username and password
         with NamedTemporaryFile() as tf:
             dcidfile = tf.name
             with open(dcidfile, 'wt') as fh:
-                fh.write('TEST=XYZ\r\nBIA=OfH9ekhi\r\n')
+                fh.write('#Comment\n\n\nTEST=XYZ\r\nBIA=OfH9ekhi\r\n')
+            # test server for encryption
+            client1 = Client(host="webdc.eu", port=36000,
+                             user="test@obspy.org", dcid_key_file=dcidfile)
+            # public server
+            client2 = Client(host="webdc.eu", port=18001,
+                             user="test@obspy.org")
+        # request data
+        start = UTCDateTime(2010, 1, 1, 10, 0, 0)
+        end = start + 100
+        stream1 = client1.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        stream2 = client2.getWaveform('GE', 'APE', '', 'BHZ', start, end)
+        # compare results
+        np.testing.assert_array_equal(stream1[0].data, stream2[0].data)
+        self.assertEqual(stream1[0].stats, stream2[0].stats)
+        # 2 - using space between username and password
+        with NamedTemporaryFile() as tf:
+            dcidfile = tf.name
+            with open(dcidfile, 'wt') as fh:
+                fh.write('TEST XYZ\r\nBIA OfH9ekhi\r\n')
             # test server for encryption
             client1 = Client(host="webdc.eu", port=36000,
                              user="test@obspy.org", dcid_key_file=dcidfile)

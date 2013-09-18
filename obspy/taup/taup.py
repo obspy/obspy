@@ -67,7 +67,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     modnam = os.path.join(_taup_dir, 'tables', model).ljust(500)
 
     phase_names, tt, toang, dtdd, dtdh, dddp = libtau.ttimes(delta, depth,
-            modnam)
+                                                             modnam)
 
     phases = []
     for _i, phase in enumerate(phase_names):

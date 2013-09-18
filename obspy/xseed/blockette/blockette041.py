@@ -99,37 +99,38 @@ class Blockette041(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+                     +--------------------------------+' + \
-        '                      +\n' + \
-        '#\t\t+                     |   FIR response,' + \
-        '%6s ch %s   |                      +\n' % (station, channel) + \
-        '#\t\t+                     +--------------------------------+' + \
-        '                      +\n' + \
-        '#\t\t\n' + \
-        'B041F05     Symmetry type:                         %s\n' \
-                % self.symmetry_code + \
-        'B041F06     Response in units lookup:              %s - %s\n'\
+            '#\t\t+                     +--------------------------------+' + \
+            '                      +\n' + \
+            '#\t\t+                     |   FIR response,' + \
+            '%6s ch %s   |                      +\n' % (station, channel) + \
+            '#\t\t+                     +--------------------------------+' + \
+            '                      +\n' + \
+            '#\t\t\n' + \
+            'B041F05     Symmetry type:                         %s\n' \
+            % self.symmetry_code + \
+            'B041F06     Response in units lookup:              %s - %s\n'\
+            % (LookupCode(abbreviations, 34, 'unit_name',
+                          'unit_lookup_code', self.signal_in_units),
+               LookupCode(abbreviations, 34, 'unit_description',
+                          'unit_lookup_code', self.signal_in_units)) + \
+            'B041F07     Response out units lookup:             %s - %s\n'\
             % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_in_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_in_units)) + \
-        'B041F07     Response out units lookup:             %s - %s\n'\
-            % (LookupCode(abbreviations, 34, 'unit_name', 'unit_lookup_code',
-                         self.signal_out_units),
-              LookupCode(abbreviations, 34, 'unit_description',
-                    'unit_lookup_code', self.signal_out_units)) + \
-        'B041F08     Number of numerators:                  %s\n' \
-                % self.number_of_factors
+                          self.signal_out_units),
+               LookupCode(abbreviations, 34, 'unit_description',
+                          'unit_lookup_code', self.signal_out_units)) + \
+            'B041F08     Number of numerators:                  %s\n' \
+            % self.number_of_factors
+
         if self.number_of_factors > 1:
             string += '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
+                      '#\t\t  i, coefficient\n'
             for _i in xrange(self.number_of_factors):
                 string += 'B041F09    %4s %13s\n' \
-                            % (_i, formatRESP(self.FIR_coefficient[_i], 6))
+                    % (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_factors == 1:
             string += '#\t\tNumerator coefficients:\n' + \
-                       '#\t\t  i, coefficient\n'
+                '#\t\t  i, coefficient\n'
             string += 'B041F09    %4s %13s\n' \
-                            % (0, formatRESP(self.FIR_coefficient, 6))
+                % (0, formatRESP(self.FIR_coefficient, 6))
         string += '#\t\t\n'
         return string

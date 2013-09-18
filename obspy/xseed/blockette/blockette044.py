@@ -47,52 +47,56 @@ class Blockette044(Blockette):
         Returns RESP string.
         """
         string = \
-        '#\t\t+               +----------------------------------------' + \
-        '---+                 +\n' + \
-        '#\t\t+               |   Response (Coefficients),' + \
-        '%6s ch %s   |                 +\n' % (station, channel) + \
-        '#\t\t+               +----------------------------------------' + \
-        '---+                 +\n' + \
-        '#\t\t\n' + \
-        'B044F05     Response type:                         %s\n' \
-                % self.response_type + \
-        'B044F06     Response in units lookup:              %s\n'\
+            '#\t\t+               +----------------------------------------' +\
+            '---+                 +\n' + \
+            '#\t\t+               |   Response (Coefficients),' + \
+            '%6s ch %s   |                 +\n' % (station, channel) + \
+            '#\t\t+               +----------------------------------------' +\
+            '---+                 +\n' + \
+            '#\t\t\n' + \
+            'B044F05     Response type:                         %s\n' \
+            % self.response_type + \
+            'B044F06     Response in units lookup:              %s\n'\
             % Blockette34Lookup(abbreviations, self.signal_input_units) + \
-        'B044F07     Response out units lookup:             %s\n'\
+            'B044F07     Response out units lookup:             %s\n'\
             % Blockette34Lookup(abbreviations, self.signal_output_units) + \
-        'B044F08     Number of numerators:                  %s\n' \
+            'B044F08     Number of numerators:                  %s\n' \
             % self.number_of_numerators + \
-        'B044F11     Number of denominators:                %s\n' \
+            'B044F11     Number of denominators:                %s\n' \
             % self.number_of_denominators + \
-        '#\t\tNumerator coefficients:\n' + \
-        '#\t\t  i, coefficient,  error\n'
+            '#\t\tNumerator coefficients:\n' + \
+            '#\t\t  i, coefficient,  error\n'
         if self.number_of_numerators:
             string += \
-                    '#\t\tNumerator coefficients:\n' + \
-                    '#\t\t  i, coefficient,  error\n'
+                '#\t\tNumerator coefficients:\n' + \
+                '#\t\t  i, coefficient,  error\n'
             if self.number_of_numerators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B044F09-10  %3s %13s %13s\n' % (_i,
+                    string += 'B044F09-10  %3s %13s %13s\n' % (
+                        _i,
                         formatRESP(self.numerator_coefficient[_i], 6),
                         formatRESP(self.numerator_error[_i], 6))
             else:
-                string += 'B044F09-10  %3s %13s %13s\n' % (0,
-                        formatRESP(self.numerator_coefficient, 6),
-                        formatRESP(self.numerator_error, 6))
+                string += 'B044F09-10  %3s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.numerator_coefficient, 6),
+                    formatRESP(self.numerator_error, 6))
         if self.number_of_denominators:
             string += \
-                    '#\t\tDenominator coefficients:\n' + \
-                    '#\t\t i, coefficient, error\n'
+                '#\t\tDenominator coefficients:\n' + \
+                '#\t\t i, coefficient, error\n'
             if self.number_of_denominators > 1:
                 # Loop over all zeros.
                 for _i in range(self.number_of_numerators):
-                    string += 'B044F12-13  %3s %13s %13s\n' % (_i,
+                    string += 'B044F12-13  %3s %13s %13s\n' % (
+                        _i,
                         formatRESP(self.denominator_coefficient[_i], 6),
                         formatRESP(self.denominator_error[_i], 6))
             else:
-                string += 'B044F12-13  %3s %13s %13s\n' % (0,
-                        formatRESP(self.denominator_coefficient, 6),
-                        formatRESP(self.denominator_error, 6))
+                string += 'B044F12-13  %3s %13s %13s\n' % (
+                    0,
+                    formatRESP(self.denominator_coefficient, 6),
+                    formatRESP(self.denominator_error, 6))
         string += '#\t\t\n'
         return string

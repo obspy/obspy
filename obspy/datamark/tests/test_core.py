@@ -29,11 +29,11 @@ class CoreTestCase(unittest.TestCase):
         st.verify()
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
-                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
+                         UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(st[0].stats.endtime,
-                          UTCDateTime('2010-03-03T02:00:59.990000Z'))
+                         UTCDateTime('2010-03-03T02:00:59.990000Z'))
         self.assertEqual(st[0].stats.starttime,
-                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
+                         UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(len(st[0]), 6000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
         self.assertEqual(st[0].stats.channel, '0')
@@ -48,11 +48,11 @@ class CoreTestCase(unittest.TestCase):
         st.verify()
         self.assertEqual(len(st), 2)
         self.assertEqual(st[0].stats.starttime,
-                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
+                         UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(st[0].stats.endtime,
-                          UTCDateTime('2010-03-03T02:00:59.990000Z'))
+                         UTCDateTime('2010-03-03T02:00:59.990000Z'))
         self.assertEqual(st[0].stats.starttime,
-                          UTCDateTime('2010-03-03T02:00:00.000000Z'))
+                         UTCDateTime('2010-03-03T02:00:00.000000Z'))
         self.assertEqual(len(st[0]), 6000)
         self.assertAlmostEqual(st[0].stats.sampling_rate, 100.0)
         self.assertEqual(st[0].stats.channel, '0')

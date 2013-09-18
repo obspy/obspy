@@ -25,7 +25,7 @@ For more information visit http://www.obspy.org.
 # dependency. Inplace installation with pip works also without importing
 # setuptools.
 try:
-    import setuptools
+    import setuptools  # @UnusedImport
 except:
     pass
 
@@ -105,6 +105,7 @@ ENTRY_POINTS = {
         'MSEED = obspy.mseed.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
+        'Y = obspy.y.core',
         'SEG2 = obspy.seg2.seg2',
         'SEGY = obspy.segy.core',
         'SU = obspy.segy.core',
@@ -192,6 +193,10 @@ ENTRY_POINTS = {
         'isFormat = obspy.wav.core:isWAV',
         'readFormat = obspy.wav.core:readWAV',
         'writeFormat = obspy.wav.core:writeWAV',
+    ],
+    'obspy.plugin.waveform.Y': [
+        'isFormat = obspy.y.core:isY',
+        'readFormat = obspy.y.core:readY',
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
@@ -423,9 +428,14 @@ def add_data_files(config):
             "obspy", "*", "tests", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-4:])
         config.add_data_dir(path)
+    # image directories
+    config.add_data_dir(os.path.join("obspy", "core", "tests", "images"))
+    config.add_data_dir(os.path.join("obspy", "imaging", "tests", "images"))
+    config.add_data_dir(os.path.join("obspy", "segy", "tests", "images"))
     # Add some xsd files.
     config.add_data_dir(os.path.join("obspy", "core", "docs"))
     config.add_data_dir(os.path.join("obspy", "xseed", "docs"))
+    config.add_data_dir(os.path.join("obspy", "mseed", "docs"))
     # Add the taup models.
     config.add_data_dir(os.path.join("obspy", "taup", "tables"))
     # Adding the Flinn-Engdahl names files

@@ -35,11 +35,11 @@ class SacIOTestCase(unittest.TestCase):
         Tests for SacIO read and write
         """
         data = np.array([-8.7422776573475858e-08, -0.30901697278022766,
-                         - 0.58778536319732666, -0.8090171217918396,
-                         - 0.95105659961700439, -1.0, -0.95105630159378052,
-                         - 0.80901658535003662, -0.5877845287322998,
-                         - 0.30901604890823364, 1.1285198979749111e-06],
-                         dtype='<f4')
+                         -0.58778536319732666, -0.8090171217918396,
+                         -0.95105659961700439, -1.0, -0.95105630159378052,
+                         -0.80901658535003662, -0.5877845287322998,
+                         -0.30901604890823364, 1.1285198979749111e-06],
+                        dtype='<f4')
         sacfile = os.path.join(self.path, 'test.sac')
         t = SacIO()
         t.ReadSacFile(sacfile)
@@ -259,7 +259,7 @@ class SacIOTestCase(unittest.TestCase):
         respfile = os.path.join(os.path.dirname(__file__),
                                 'data', 'RESP.NZ.CRLZ.10.HHZ')
         sacpzfile = os.path.join(os.path.dirname(__file__),
-                                'data', 'SAC_PZs_NZ_CRLZ_HHZ')
+                                 'data', 'SAC_PZs_NZ_CRLZ_HHZ')
         # This is a rather lengthy test, in which the
         # poles, zeros and the gain of each instrument response file
         # are converted into the corresponding velocity frequency response
@@ -298,7 +298,7 @@ class SacIOTestCase(unittest.TestCase):
         phase1 = np.unwrap(np.arctan2(-h1.imag, h1.real))
         phase2 = np.unwrap(np.arctan2(-h2.imag, h2.real))
         np.testing.assert_almost_equal(phase1, phase2, decimal=4)
-        rms = np.sqrt(np.sum((amp1 - amp2) ** 2) / \
+        rms = np.sqrt(np.sum((amp1 - amp2) ** 2) /
                       np.sum(amp2 ** 2))
         self.assertTrue(rms < 2.02e-06)
         self.assertTrue(tr1.stats.paz.t_shift, 0.4022344)
