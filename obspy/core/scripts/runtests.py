@@ -488,7 +488,9 @@ def run(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
-    except ImportError:
+        if matplotlib.get_backend().upper() != "AGG":
+            raise Exception()
+    except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
     usage = "USAGE: %prog [options] module1 module2 ...\n\n"
@@ -544,6 +546,10 @@ def run(interactive=True):
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
+    report.add_option("--keep-images", default=False,
+                      dest="keep_images", action="store_true",
+                      help="store images created during image comparison "
+                           "tests in subfolders of baseline images")
     parser.add_option_group(report)
     (options, _) = parser.parse_args()
     # set correct verbosity level
@@ -576,6 +582,8 @@ def run(interactive=True):
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
+    if options.keep_images:
+        os.environ['OBSPY_KEEP_IMAGES'] = ""
     return runTests(
         verbosity, parser.largs, report, options.log,
         options.server, options.all, options.timeit, interactive, options.n,

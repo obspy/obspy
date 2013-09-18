@@ -3,19 +3,12 @@
 The obspy.imaging.mopad test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
 import os
 import unittest
-
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
 
 
 class MopadTestCase(unittest.TestCase):
@@ -77,11 +70,8 @@ class MopadTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            fig.savefig(tf.name)
-            # compare images
-            expected_image = os.path.join(self.path, 'mopad_collection.png')
-            compare_images(tf.name, expected_image, 0.001)
+        with ImageComparison(self.path, 'mopad_collection.png') as ic:
+            fig.savefig(ic.name)
 
 
 def suite():

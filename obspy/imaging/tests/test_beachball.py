@@ -3,7 +3,8 @@
 The obspy.imaging.beachball test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+    ImageComparison, getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
@@ -11,12 +12,8 @@ import matplotlib.pyplot as plt
 import os
 import unittest
 
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class BeachballTestCase(unittest.TestCase):
@@ -32,126 +29,59 @@ class BeachballTestCase(unittest.TestCase):
         """
         Create beachball examples in tests/output directory.
         """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 60
         # http://en.wikipedia.org/wiki/File:USGS_sumatra_mts.gif
-        mt = [0.91, -0.89, -0.02, 1.78, -1.55, 0.47]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_sumatra_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np1 = [274, 13, 55]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_sumatra_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np2 = [130, 79, 98]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np2, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_sumatra_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
-        #
-        np1 = [264.98, 45.00, -159.99]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_19950128_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np2 = [160.55, 76.00, -46.78]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np2, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_19950128_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
-        #
-        mt = [1.45, -6.60, 5.14, -2.67, -3.16, 1.36]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_20090102_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np1 = [235, 80, 35]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_20090102_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np2 = [138, 56, 168]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np2, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb-20090102-np2.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # Explosion
-        mt = [1, 1, 1, 0, 0, 0]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_explosion.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # Implosion
-        mt = [-1, -1, -1, 0, 0, 0]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_implosion.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # CLVD - Compensate Linear Vector Dipole
-        mt = [1, -2, 1, 0, 0, 0]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_clvd.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # Double Couple
-        mt = [1, -1, 0, 0, 0, 0]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_double_couple.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # Lars
-        mt = [1, -1, 0, 0, 0, -1]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_lars.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
-        np1 = [179, 55, -78]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_geiyo_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        #
-        np1 = [10, 42.5, 90]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_honshu_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        np2 = [10, 42.5, 92]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np2, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_honshu_np2.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
-        np1 = [150, 87, 1]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(np1, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_tottori_np1.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/2nd.html
-        mt = [0.99, -2.00, 1.01, 0.92, 0.48, 0.15]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_20040905_1_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/1st.html
-        mt = [5.24, -6.77, 1.53, 0.81, 1.49, -0.05]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_20040905_0_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://iisee.kenken.go.jp/staff/thara/miyagi.htm
-        mt = [16.578, -7.987, -8.592, -5.515, -29.732, 7.517]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_miyagi_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
-        # http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
-        mt = [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94]
-        with NamedTemporaryFile(suffix='.png') as tf:
-            Beachball(mt, outfile=tf.name)
-            expected_image = os.path.join(self.path, 'bb_chile_mt.png')
-            compare_images(tf.name, expected_image, 0.001)
+        data = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
+                [274, 13, 55],
+                [130, 79, 98],
+                [264.98, 45.00, -159.99],
+                [160.55, 76.00, -46.78],
+                [1.45, -6.60, 5.14, -2.67, -3.16, 1.36],
+                [235, 80, 35],
+                [138, 56, 168],
+                # Explosion
+                [1, 1, 1, 0, 0, 0],
+                # Implosion
+                [-1, -1, -1, 0, 0, 0],
+                # CLVD - Compensate Linear Vector Dipole
+                [1, -2, 1, 0, 0, 0],
+                # Double Couple
+                [1, -1, 0, 0, 0, 0],
+                # Lars
+                [1, -1, 0, 0, 0, -1],
+                # http://wwweic.eri.u-tokyo.ac.jp/yuji/Aki-nada/
+                [179, 55, -78],
+                [10, 42.5, 90],
+                [10, 42.5, 92],
+                # http://wwweic.eri.u-tokyo.ac.jp/yuji/tottori/
+                [150, 87, 1],
+                # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_1/
+                # 2nd.html
+                [0.99, -2.00, 1.01, 0.92, 0.48, 0.15],
+                # http://iisee.kenken.go.jp/staff/thara/2004/09/20040905_0/
+                # 1st.html
+                [5.24, -6.77, 1.53, 0.81, 1.49, -0.05],
+                # http://iisee.kenken.go.jp/staff/thara/miyagi.htm
+                [16.578, -7.987, -8.592, -5.515, -29.732, 7.517],
+                # http://iisee.kenken.go.jp/staff/thara/20050613/chile.html
+                [-2.39, 1.04, 1.35, 0.57, -2.94, -0.94],
+                ]
+        filenames = ['bb_sumatra_mt.png', 'bb_sumatra_np1.png',
+                     'bb_sumatra_np2.png', 'bb_19950128_np1.png',
+                     'bb_19950128_np2.png', 'bb_20090102_mt.png',
+                     'bb_20090102_np1.png', 'bb-20090102-np2.png',
+                     'bb_explosion.png', 'bb_implosion.png', 'bb_clvd.png',
+                     'bb_double_couple.png', 'bb_lars.png', 'bb_geiyo_np1.png',
+                     'bb_honshu_np1.png', 'bb_honshu_np2.png',
+                     'bb_tottori_np1.png', 'bb_20040905_1_mt.png',
+                     'bb_20040905_0_mt.png', 'bb_miyagi_mt.png',
+                     'bb_chile_mt.png',
+                     ]
+        for data_, filename in zip(data, filenames):
+            with ImageComparison(self.path, filename, reltol=reltol) as ic:
+                Beachball(data_, outfile=ic.name)
 
     def test_BeachBallOutputFormats(self):
         """
@@ -305,11 +235,8 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            fig.savefig(tf.name)
-            # compare images
-            expected_image = os.path.join(self.path, 'bb_collection.png')
-            compare_images(tf.name, expected_image, 0.001)
+        with ImageComparison(self.path, 'bb_collection.png') as ic:
+            fig.savefig(ic.name)
 
 
 def suite():

@@ -483,7 +483,8 @@ class Stream(object):
         >>> for component in ["1", "Z", "2", "3", "Z", "N", "E", "4", "5"]:
         ...     channel = "EH" + component
         ...     tr = Trace(header={'station': 'TEST', 'channel': channel})
-        ...     st.append(tr)
+        ...     st.append(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         9 Trace(s) in Stream:
         .TEST..EH1 | 1970-01-01T00:00:00.000000Z - ... | 1.0 Hz, 0 samples
@@ -498,7 +499,8 @@ class Stream(object):
 
         >>> for tr in st:
         ...     if tr.stats.channel[-1] not in ["Z", "N", "E"]:
-        ...         st.remove(tr)
+        ...         st.remove(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         .TEST..EHZ | 1970-01-01T00:00:00.000000Z - ... | 1.0 Hz, 0 samples
@@ -677,7 +679,8 @@ class Stream(object):
         >>> st = read()
         >>> tr = Trace()
         >>> tr.stats.station = 'TEST'
-        >>> st.append(tr)
+        >>> st.append(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -690,6 +693,7 @@ class Stream(object):
         else:
             msg = 'Append only supports a single Trace object as an argument.'
             raise TypeError(msg)
+        return self
 
     def extend(self, trace_list):
         """
@@ -706,7 +710,8 @@ class Stream(object):
         >>> tr1.stats.station = 'TEST1'
         >>> tr2 = Trace()
         >>> tr2.stats.station = 'TEST2'
-        >>> st.extend([tr1, tr2])
+        >>> st.extend([tr1, tr2])  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -727,6 +732,7 @@ class Stream(object):
         else:
             msg = 'Extend only supports a list of Trace objects as argument.'
             raise TypeError(msg)
+        return self
 
     def getGaps(self, min_gap=None, max_gap=None):
         """
@@ -753,7 +759,7 @@ class Stream(object):
         >>> st = read()
         >>> st.getGaps()
         []
-        >>> st.printGaps() # doctest: +ELLIPSIS
+        >>> st.printGaps()  # doctest: +ELLIPSIS
         Source            Last Sample                 ...
         Total: 0 gap(s) and 0 overlap(s)
 
@@ -762,9 +768,12 @@ class Stream(object):
 
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t+1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.trim(starttime=t+1)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> st.append(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -839,6 +848,7 @@ class Stream(object):
         else:
             msg = 'Only accepts a Trace object or a list of Trace objects.'
             raise TypeError(msg)
+        return self
 
     def plot(self, *args, **kwargs):
         """
@@ -1061,7 +1071,7 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st.plot() # doctest: +SKIP
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1084,7 +1094,7 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st[0].spectrogram() # doctest: +SKIP
+        >>> st[0].spectrogram()  # doctest: +SKIP
 
         .. plot::
 
@@ -1153,9 +1163,12 @@ class Stream(object):
 
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t+1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.trim(starttime=t+1)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> st.append(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -1169,9 +1182,12 @@ class Stream(object):
         >>> st = read()
         >>> tr = st[0].copy()
         >>> t = UTCDateTime("2009-08-24T00:20:13.0")
-        >>> st[0].trim(endtime=t)
-        >>> tr.trim(starttime=t-1)
-        >>> st.append(tr)
+        >>> st[0].trim(endtime=t)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> tr.trim(starttime=t-1)  # doctest: +ELLIPSIS
+        <...Trace object at 0x...>
+        >>> st.append(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.getGaps()  # doctest: +ELLIPSIS
         [['BW', 'RJOB', '', 'EHZ', UTCDateTime(2009, 8, 24, 0, 20, 13), ...
         >>> st.printGaps()  # doctest: +ELLIPSIS
@@ -1213,13 +1229,15 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> for tr in st.select(component="E"):
-        ...     st.remove(tr)
+        ...     st.remove(tr)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         2 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
-        return self.traces.remove(trace)
+        self.traces.remove(trace)
+        return self
 
     def reverse(self):
         """
@@ -1234,7 +1252,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.reverse()
+        >>> st.reverse()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -1242,6 +1261,7 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
         self.traces.reverse()
+        return self
 
     def sort(self, keys=['network', 'station', 'location', 'channel',
                          'starttime', 'endtime'], reverse=False):
@@ -1272,7 +1292,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.sort()
+        >>> st.sort()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
@@ -1295,6 +1316,7 @@ class Stream(object):
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
+        return self
 
     def write(self, filename, format, **kwargs):
         """
@@ -1314,8 +1336,8 @@ class Stream(object):
         .. rubric:: Example
 
         >>> from obspy import read
-        >>> st = read() # doctest: +SKIP
-        >>> st.write("example.mseed", format="MSEED") # doctest: +SKIP
+        >>> st = read()  # doctest: +SKIP
+        >>> st.write("example.mseed", format="MSEED")  # doctest: +SKIP
 
         Writing single traces into files with meaningful filenames can be done
         e.g. using trace.id
@@ -1423,7 +1445,8 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> dt = UTCDateTime("2009-08-24T00:20:20")
-        >>> st.trim(dt, dt + 5)
+        >>> st.trim(dt, dt + 5)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:20.000000Z ... | 100.0 Hz, 501 samples
@@ -1449,6 +1472,7 @@ class Stream(object):
                        nearest_sample=nearest_sample, fill_value=fill_value)
         # remove empty traces after trimming
         self.traces = [_i for _i in self.traces if _i.stats.npts]
+        return self
 
     def _ltrim(self, starttime, pad=False, nearest_sample=True):
         """
@@ -1460,6 +1484,7 @@ class Stream(object):
                        nearest_sample=nearest_sample)
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def _rtrim(self, endtime, pad=False, nearest_sample=True):
         """
@@ -1470,6 +1495,7 @@ class Stream(object):
             trace.trim(endtime=endtime, pad=pad, nearest_sample=nearest_sample)
         # remove empty traces after trimming
         self.traces = [tr for tr in self.traces if tr.stats.npts]
+        return self
 
     def cutout(self, starttime, endtime):
         """
@@ -1490,7 +1516,8 @@ class Stream(object):
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> t1 = UTCDateTime("2009-08-24T00:20:06")
         >>> t2 = UTCDateTime("2009-08-24T00:20:11")
-        >>> st.cutout(t1, t2)
+        >>> st.cutout(t1, t2)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         6 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 301 samples
@@ -1503,6 +1530,7 @@ class Stream(object):
         tmp = self.slice(endtime=starttime, keep_empty_traces=False)
         tmp += self.slice(starttime=endtime, keep_empty_traces=False)
         self.traces = tmp.traces
+        return self
 
     def slice(self, starttime=None, endtime=None, keep_empty_traces=False):
         """
@@ -1578,7 +1606,7 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
 
         >>> st2 = st.select(network="CZ")
-        >>> print(st2) # doctest: +NORMALIZE_WHITESPACE
+        >>> print(st2)  # doctest: +NORMALIZE_WHITESPACE
         0 Trace(s) in Stream:
 
         .. warning::
@@ -1654,6 +1682,7 @@ class Stream(object):
         """
         for trace in self:
             trace.verify()
+        return self
 
     def _mergeChecks(self):
         """
@@ -1771,6 +1800,7 @@ class Stream(object):
         # trying to restore order, newly created traces are placed at
         # start
         self.traces.sort(key=lambda x: listsort(order, id(x)))
+        return self
 
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
@@ -1840,6 +1870,8 @@ class Stream(object):
         ...             'sensitivity': 2516778400.0}
         >>> paz_1hz = cornFreq2Paz(1.0, damp=0.707)
         >>> st.simulate(paz_remove=paz_sts2, paz_simulate=paz_1hz)
+        ... # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1863,7 +1895,7 @@ class Stream(object):
             tr.simulate(paz_remove=paz_remove, paz_simulate=paz_simulate,
                         remove_sensitivity=remove_sensitivity,
                         simulate_sensitivity=simulate_sensitivity, **kwargs)
-        return
+        return self
 
     def filter(self, type, **options):
         """
@@ -1914,7 +1946,8 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st.filter("highpass", freq=1.0)
+        >>> st.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
         .. plot::
@@ -1926,6 +1959,7 @@ class Stream(object):
         """
         for tr in self:
             tr.filter(type, **options)
+        return self
 
     def trigger(self, type, **options):
         """
@@ -1977,10 +2011,12 @@ class Stream(object):
 
         >>> from obspy import read
         >>> st = read()
-        >>> st.filter("highpass", freq=1.0)
-        >>> st.plot() # doctest: +SKIP
-        >>> st.trigger('recstalta', sta=1, lta=4)
-        >>> st.plot() # doctest: +SKIP
+        >>> st.filter("highpass", freq=1.0)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+        >>> st.plot()  # doctest: +SKIP
+        >>> st.trigger('recstalta', sta=1, lta=4)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
+        >>> st.plot()  # doctest: +SKIP
 
         .. plot::
 
@@ -1993,6 +2029,7 @@ class Stream(object):
         """
         for tr in self:
             tr.trigger(type, **options)
+        return self
 
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
@@ -2032,7 +2069,8 @@ class Stream(object):
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHE | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
-        >>> st.resample(10.0)
+        >>> st.resample(10.0)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> print(st)  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 10.0 Hz, 300 samples
@@ -2042,6 +2080,7 @@ class Stream(object):
         for tr in self:
             tr.resample(sampling_rate, window=window, no_filter=no_filter,
                         strict_length=strict_length)
+        return self
 
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
@@ -2090,6 +2129,8 @@ class Stream(object):
         >>> tr.data
         array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
         >>> st.decimate(4, strict_length=False, no_filter=True)
+        ... # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> tr.stats.sampling_rate
         0.25
         >>> tr.data
@@ -2098,6 +2139,7 @@ class Stream(object):
         for tr in self:
             tr.decimate(factor, no_filter=no_filter,
                         strict_length=strict_length)
+        return self
 
     def max(self):
         """
@@ -2146,6 +2188,7 @@ class Stream(object):
         """
         for tr in self:
             tr.differentiate(type=type)
+        return self
 
     def integrate(self, type='cumtrapz'):
         """
@@ -2171,6 +2214,7 @@ class Stream(object):
         """
         for tr in self:
             tr.integrate(type=type)
+        return self
 
     @raiseIfMasked
     def detrend(self, type='simple'):
@@ -2206,8 +2250,9 @@ class Stream(object):
         """
         for tr in self:
             tr.detrend(type=type)
+        return self
 
-    def taper(self, type='cosine', *args, **kwargs):
+    def taper(self, type='cosine', side='both', *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2222,7 +2267,8 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, *args, **kwargs)
+            tr.taper(type=type, side=side, *args, **kwargs)
+        return self
 
     def std(self):
         """
@@ -2282,7 +2328,8 @@ class Stream(object):
         All traces are normalized to their absolute maximum and processing
         information is added:
 
-        >>> st.normalize()
+        >>> st.normalize()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
         >>> st[0].stats.processing
@@ -2299,7 +2346,8 @@ class Stream(object):
         >>> tr2 = Trace(data=np.array([0.3, -0.5, -0.8, 0.4, 0.3]))
         >>> st = Stream(traces=[tr1, tr2])
 
-        >>> st.normalize(global_max=True)
+        >>> st.normalize(global_max=True)  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st[0].data  # doctest: +ELLIPSIS
         array([ 0.        , -0.33333333,  1.        ,  0.66666667,  ...])
         >>> st[0].stats.processing
@@ -2317,7 +2365,7 @@ class Stream(object):
         # normalize all traces
         for tr in self:
             tr.normalize(norm=norm)
-        return
+        return self
 
     def rotate(self, method, back_azimuth=None, inclination=None):
         """
@@ -2431,6 +2479,7 @@ class Stream(object):
                 for comp in (i_1, i_2, i_3):
                     comp.stats.back_azimuth = back_azimuth
                     comp.stats.inclination = inclination
+        return self
 
     def copy(self):
         """
@@ -2484,11 +2533,13 @@ class Stream(object):
         >>> st = read()
         >>> len(st)
         3
-        >>> st.clear()
+        >>> st.clear()  # doctest: +ELLIPSIS
+        <...Stream object at 0x...>
         >>> st.traces
         []
         """
         self.traces = []
+        return self
 
     def _cleanup(self):
         """

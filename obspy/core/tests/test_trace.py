@@ -3,9 +3,14 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1154,6 +1159,22 @@ class TraceTestCase(unittest.TestCase):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
 
+    def test_taper_onesided(self):
+        """
+        Test onesided taper method of trace
+        """
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(side="left")
+        self.assertTrue(tr.data[:5].sum() < 5.)
+        self.assertTrue(tr.data[6:].sum() == 5.)
+
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(side="right")
+        self.assertTrue(tr.data[:5].sum() == 5.)
+        self.assertTrue(tr.data[6:].sum() < 5.)
+
     def test_times(self):
         """
         Test if the correct times array is returned for normal traces and
@@ -1188,25 +1209,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
@@ -1277,6 +1292,50 @@ class TraceTestCase(unittest.TestCase):
                 endtime=tr.stats.endtime, pad=True, fill_value=-999)
         self.assertEquals(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+
+    def test_method_chaining(self):
+        """
+        Tests that method chaining works for all methods on the Trace object
+        where it is sensible.
+        """
+        # This essentially just checks that the methods are chainable. The
+        # methods are tested elsewhere and a full test would be a lot of work
+        # with questionable return.
+        tr = read()[0]
+        temp_tr = tr.trim(tr.stats.starttime + 1)\
+            .verify()\
+            .filter("lowpass", freq=2.0)\
+            .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
+                                  'zeros': [0j, 0j],
+                                  'gain': 60077000.0,
+                                  'sensitivity': 2516778400.0})\
+            .trigger(type="zdetect", nsta=20)\
+            .decimate(factor=2, no_filter=True)\
+            .resample(tr.stats.sampling_rate / 2.0)\
+            .differentiate()\
+            .integrate()\
+            .detrend()\
+            .taper()\
+            .normalize()
+        self.assertTrue(temp_tr is tr)
+        self.assertTrue(isinstance(tr, Trace))
+        self.assertTrue(tr.stats.npts > 0)
+
+        # Use the processing chain to check the results. The trim() methods
+        # does not have an entry in the processing chain.
+        pr = tr.stats.processing
+        self.assertTrue(pr[0].startswith("filter:lowpass"))
+        self.assertTrue(pr[1].startswith("simulate"))
+        self.assertTrue(pr[2].startswith("trigger"))
+        self.assertTrue(pr[3].startswith("downsample"))
+        self.assertTrue(pr[4].startswith("resample"))
+        self.assertTrue(pr[5].startswith("differentiate"))
+        self.assertTrue(pr[6].startswith("integrate"))
+        self.assertTrue(pr[7].startswith("detrend"))
+        self.assertTrue(pr[8].startswith("taper"))
+        self.assertTrue(pr[9].startswith("normalize"))
 
     def test_issue617(self):
         """

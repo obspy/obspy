@@ -1011,7 +1011,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         if slow < 1e-8:
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
-        baz = azimut - np.sign(azimut) * 180
+        baz = azimut % -360 + 180
         if relpow > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))
