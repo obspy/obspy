@@ -39,16 +39,16 @@ class Station(BaseNode):
             etc
         :param geology: Type of rock and/or geologic formation.
         :param equiment: Equipment used by all channels at a station.
-        :type operators: A list of `obspy.stations.Operators`
+        :type operators: A list of :class:`~obspy.station.util.Operator`
         :param operator: An operating agency and associated contact persons. If
             there multiple operators, each one should be encapsulated within an
             Operator tag. Since the Contact element is a generic type that
             represents any contact person, it also has its own optional Agency
             element.
-        :type creation_date: `obspy.UTCDateTime`
+        :type creation_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param creation_date: Date and time (UTC) when the station was first
             installed
-        :type termination_date: `obspy.UTCDateTime`
+        :type termination_date: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param termination_date: Date and time (UTC) when the station was
             terminated or will be terminated. A blank value should be assumed
             to mean that the station is still active. Optional
@@ -59,7 +59,8 @@ class Station(BaseNode):
         :param selected_number_of_channels: Number of channels recorded at this
             station and selected by the query that produced this document.
             Optional.
-        :type external_references: list of `obspy.station.ExternalReference`
+        :type external_references: list of
+            :class:`~obspy.station.util.ExternalReference`
         :param external_references: URI of any type of external report, such as
             IRIS data reports or dataless SEED volumes. Optional.
         :type description: String, optional
