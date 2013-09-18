@@ -3,9 +3,14 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1204,25 +1209,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
