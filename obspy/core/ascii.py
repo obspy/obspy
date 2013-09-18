@@ -34,6 +34,7 @@ Simple ASCII time series formats
 from StringIO import StringIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
+from obspy.core.trace import DatalessTrace
 from obspy.core.util import AttribDict, loadtxt
 import numpy as np
 
@@ -149,7 +150,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.npts = parts[2]
         if headonly:
             # skip data
-            stream.append(Trace(header=stats))
+            stream.append(DatalessTrace(header=stats))
         else:
             data = _parse_data(data, parts[8])
             stream.append(Trace(data=data, header=stats))
@@ -214,7 +215,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
         stats.npts = parts[2]
         if headonly:
             # skip data
-            stream.append(Trace(header=stats))
+            stream.append(DatalessTrace(header=stats))
         else:
             data = _parse_data(data, parts[8])
             stream.append(Trace(data=data, header=stats))

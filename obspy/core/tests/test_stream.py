@@ -2017,6 +2017,39 @@ class StreamTestCase(unittest.TestCase):
         # Clearing also works for method chaining.
         self.assertEqual(len(st.clear()), 0)
 
+    def test_issue617(self):
+        """
+        Tests a problem with Stream.merge(-1) after a read(.., headonly=True)
+
+        The test Stream has four traces, the first two align perfectly, so
+        after merging the total amount of data samples should be the same.
+        """
+        sample_sums = []
+
+        def sample_sum(st):
+            return sum([tr.stats.npts for tr in st])
+
+        for headonly in [True, False]:
+            st = read("/path/to/issue617.slist", headonly=headonly)
+            sample_sums.append(sample_sum(st))
+            st.merge(-1)
+            sample_sums.append(sample_sum(st))
+
+        for value in sample_sums[1:]:
+            self.assertEqual(value, sample_sums[0])
+
+        # another test, probably already covered by the above but not sure
+        results = []
+        for headonly in [True, False]:
+            st = read("/path/to/issue617.slist", headonly=headonly)
+            t = st[0].stats.starttime
+            st.cutout(t + 0.02, t + 0.04)
+            results.append(st)
+
+        self.assertEqual(len(results[0]), len(results[1]))
+        for tr1, tr2 in zip(results[0], results[1]):
+            self.assertEqual(tr1.stats, tr2.stats)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

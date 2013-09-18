@@ -9,7 +9,7 @@ Module for handling ObsPy Stream objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from glob import glob, has_magic
-from obspy.core.trace import Trace
+from obspy.core.trace import Trace, DatalessTrace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
@@ -1371,6 +1371,12 @@ class Stream(object):
         PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.writePickle`
         =======  ===================  ====================================
         """
+        # Check all traces for DatalessTrace and print warning
+        for trace in self.traces:
+            if isinstance(trace, DatalessTrace):
+                msg = 'Stream contains one or more DatalessTrace. ' + \
+                      'For these, random data get written to file.'
+                warnings.warn(msg, UserWarning)
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
             if isinstance(trace.data, np.ma.masked_array):

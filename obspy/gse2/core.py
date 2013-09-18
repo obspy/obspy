@@ -4,6 +4,7 @@ GSE2/GSE1 bindings to ObsPy core module.
 """
 
 from obspy import Trace, UTCDateTime, Stream
+from obspy.core.trace import DatalessTrace
 from obspy.gse2 import libgse2, libgse1
 import numpy as np
 
@@ -103,7 +104,7 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
                     header['d_year'], header['d_mon'], header['d_day'],
                     header['t_hour'], header['t_min'], 0) + header['t_sec']
                 if headonly:
-                    traces.append(Trace(header=new_header))
+                    traces.append(DatalessTrace(header=new_header))
                 else:
                     traces.append(Trace(header=new_header, data=data))
     return Stream(traces=traces)
@@ -216,7 +217,7 @@ def readGSE1(filename, headonly=False, verify_chksum=True,
             try:
                 if headonly:
                     header = libgse1.readHeader(fh)
-                    traces.append(Trace(header=header))
+                    traces.append(DatalessTrace(header=header))
                 else:
                     header, data = \
                         libgse1.read(fh, verify_chksum=verify_chksum)

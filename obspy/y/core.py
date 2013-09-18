@@ -9,12 +9,13 @@ Y bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
-from obspy import Stream
-from obspy.core.trace import Trace
+from obspy import Stream, Trace
+from obspy.core.trace import DatalessTrace
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict
 from struct import unpack
 import numpy as np
+import warnings
 
 
 def __parseTag(fh):
@@ -102,6 +103,10 @@ def readY(filename, headonly=False, **kwargs):  # @UnusedVariable
     1 Trace(s) in Stream:
     .AYT..BHZ | 2002-12-23T12:48:00.000100Z - ... | 100.0 Hz, 18000 samples
     """
+    if headonly is True:
+        msg = "headonly=True currently not supported for Y format, " + \
+              "reading data as well"
+        warnings.warn(msg, UserWarning)
     # The first tag in a Y-file must be the TAG_Y_FILE (0) tag. This must be
     # followed by the following tags, in any order:
     #   TAG_STATION_INFO (1)

@@ -9,6 +9,7 @@ from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
 from itertools import izip
 from math import log
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.trace import DatalessTrace
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
 import ctypes as C
@@ -347,11 +348,13 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 # The data always will be in sequential order.
                 data = all_data.pop(0)
                 header['npts'] = len(data)
+                # Make sure to init the number of samples.
+                trace = Trace(header=header, data=data)
             else:
                 data = np.array([])
                 header['npts'] = currentSegment.samplecnt
-            # Make sure to init the number of samples.
-            trace = Trace(header=header, data=data)
+                # Make sure to init the number of samples.
+                trace = DatalessTrace(header=header, data=data)
             # Append information if necessary.
             if recinfo:
                 for key, value in info.iteritems():

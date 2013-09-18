@@ -10,6 +10,7 @@ SEISAN bindings to ObsPy core module.
 """
 
 from obspy import Stream, Trace, UTCDateTime
+from obspy.core.trace import DatalessTrace
 from obspy.core import Stats
 import numpy as np
 
@@ -186,7 +187,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
         if headonly:
             # skip data
             fh.seek(dlen * (header['npts'] + 2), 1)
-            stream.append(Trace(header=header))
+            stream.append(DatalessTrace(header=header))
         else:
             # fetch data
             data = np.fromfile(fh, dtype=dtype, count=header['npts'] + 2)

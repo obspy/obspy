@@ -239,8 +239,7 @@ class Trace(object):
             header = {}
         header.setdefault('npts', len(data))
         self.stats = Stats(header)
-        # set data without changing npts in stats object (for headonly option)
-        super(Trace, self).__setattr__('data', data)
+        self.data = data
 
     def __eq__(self, other):
         """
@@ -1903,6 +1902,42 @@ class Trace(object):
         if isinstance(self.data, np.ma.masked_array):
             timeArray = np.ma.array(timeArray, mask=self.data.mask)
         return timeArray
+
+
+class DatalessTrace(Trace):
+    """
+    Modification of :class:`~obspy.core.trace.Trace` with only metadata.
+
+    DatalessTrace objects do not keep track of waveform data and are used when
+    reading waveform files with `headonly=True`. DatalessTrace objects behave
+    like normal :class:`~obspy.core.trace.Trace` objects for operations like
+    trimming.
+    """
+    def __init__(self, data=np.array([]), header=None):
+        super(DatalessTrace, self).__init__(data, header)
+        # we have to manually reset the number of samples from the specified
+        # header as it gets overridden by the automatic metadata sanity checks
+        # in Trace's constructor
+        if header is not None and "npts" in header:
+            self.stats.npts = header['npts']
+
+    def __getattribute__(self, name):
+        if name == "data":
+            # If self.data is requested we set up a bogus, empty masked array
+            # on the fly and serve it.
+            # Use the smallest float data type that numpy has (to save memory).
+            return np.ma.masked_all((self.stats.npts,), dtype=np.int8)
+        return super(DatalessTrace, self).__getattribute__(name)
+
+    def __setattr__(self, name, value):
+        super(DatalessTrace, self).__setattr__(name, value)
+        if name == "data":
+            # After the regular attribute setting (that updated self.stats),
+            # set to None (and circumventing the self.stats update) to let
+            # garbage collection free the memory of the unneeded bogus masked
+            # array.
+            super(Trace, self).__setattr__(name, None)
+        return
 
 
 if __name__ == '__main__':
