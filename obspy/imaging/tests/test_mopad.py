@@ -3,8 +3,7 @@
 The obspy.imaging.mopad test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
-    compare_images
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
@@ -71,11 +70,8 @@ class MopadTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with NamedTemporaryFile(suffix='.png') as tf:
-            fig.savefig(tf.name)
-            # compare images
-            expected_image = os.path.join(self.path, 'mopad_collection.png')
-            self.assertFalse(compare_images(tf.name, expected_image, 0.001))
+        with ImageComparison(self.path, 'mopad_collection.png') as ic:
+            fig.savefig(ic.name)
 
 
 def suite():
