@@ -174,18 +174,3 @@ class Channel(BaseNode):
                 response="\tResponse information available"
                     if self.response else "")
         return ret
-
-        ret_str = "Seismic Channel '%s', Location '%s'\n" % (self.code,
-            self.location_code)
-        ret_str += ("\tLatitude: %.2f, Longitude: %.2f, Elevation: %.1f m, "
-            "Local Depth: %.1f\n") % (self.latitude, self.longitude,
-            self.elevation, self.depth)
-        if self.azimuth is not None:
-            ret_str += "\tAzimuth: %.2f degrees from north, clockwise\n" % \
-                self.azimuth
-        if self.dip is not None:
-            ret_str += "\tDip: %.2f degrees down from horizontal\n" % self.dip
-        if self.types:
-            ret_str += "\tChannel types: %s\n" % ", ".join(self.types)
-
-        return ret_str
