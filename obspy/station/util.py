@@ -10,10 +10,11 @@ Utility objects.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime
+from obspy.core.util.base import ComparingObject
 import re
 
 
-class BaseNode(object):
+class BaseNode(ComparingObject):
     """
     From the StationXML definition:
         A base node type for derivation of: Network, Station and Channel
@@ -97,7 +98,7 @@ class BaseNode(object):
             self.__historical_code = None
 
 
-class Equipment(object):
+class Equipment(ComparingObject):
     """
     An object containing a detailed description of an equipment.
     """
@@ -165,7 +166,7 @@ class Equipment(object):
             self.__removal_date = UTCDateTime(value)
 
 
-class Operator(object):
+class Operator(ComparingObject):
     """
     An operating agency and associated contact persons. If there multiple
     operators, each one should be encapsulated within an Operator tag. Since
@@ -209,7 +210,7 @@ class Operator(object):
         self.__contacts = value
 
 
-class Person(object):
+class Person(ComparingObject):
     """
     From the StationXML definition:
         Representation of a person's contact information. A person can belong
@@ -278,7 +279,7 @@ class Person(object):
         self.__phones = values
 
 
-class PhoneNumber(object):
+class PhoneNumber(ComparingObject):
     """
     A simple object representing a phone number.
     """
@@ -312,7 +313,7 @@ class PhoneNumber(object):
         self.__phone_number = value
 
 
-class ExternalReference(object):
+class ExternalReference(ComparingObject):
     """
     From the StationXML definition:
         This type contains a URI and description for external data that users
@@ -329,7 +330,7 @@ class ExternalReference(object):
         self.description = description
 
 
-class Comment(object):
+class Comment(ComparingObject):
     """
     From the StationXML definition:
         Container for a comment or log entry. Corresponds to SEED blockettes
@@ -395,7 +396,7 @@ class Comment(object):
         self.__authors = values
 
 
-class Site(object):
+class Site(ComparingObject):
     """
     From the StationXML definition:
         Description of a site location using name and optional geopolitical

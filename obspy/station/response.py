@@ -9,9 +9,10 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy.core.util.base import ComparingObject
 
 
-class ResponseStage(object):
+class ResponseStage(ComparingObject):
     """
     From the StationXML Definition:
         This complex type represents channel response and covers SEED
@@ -416,7 +417,7 @@ class ResponseListResponseStage(ResponseStage):
             decimation_correction=decimation_correction)
 
 
-class ResponseListElement(object):
+class ResponseListElement(ComparingObject):
     """
     Describes the amplitude and phase response value for a discrete frequency
     value.
@@ -499,7 +500,7 @@ class PolynomialResponseStage(ResponseStage):
             decimation_correction=decimation_correction)
 
 
-class Response(object):
+class Response(ComparingObject):
     """
     The root response object.
     """
@@ -556,7 +557,7 @@ class Response(object):
         return ret
 
 
-class InstrumentSensitivity(object):
+class InstrumentSensitivity(ComparingObject):
     """
     From the StationXML Definition:
         The total sensitivity for a channel, representing the complete

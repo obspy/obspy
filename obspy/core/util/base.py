@@ -602,5 +602,16 @@ def get_matplotlib_defaul_tolerance():
         return 1
 
 
+class ComparingObject(object):
+    """
+    Simple base class that implements == and != based on self.__dict__
+    """
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

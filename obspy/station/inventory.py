@@ -10,6 +10,7 @@ Provides the Inventory class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import obspy
+from obspy.core.util.base import ComparingObject
 from obspy.station import stationxml
 from obspy.station.network import Network
 import textwrap
@@ -50,7 +51,7 @@ def read_inventory(path_or_file_object, format=None):
     return FORMAT_FCTS[fileformat]["read_fct"](path_or_file_object)
 
 
-class Inventory(object):
+class Inventory(ComparingObject):
     """
     The root object of the Inventory->Network->Station->Channel hierarchy.
 
