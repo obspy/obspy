@@ -158,9 +158,12 @@ class QuantityError(AttribDict):
 def _bool(value):
     """
     A custom bool() implementation that returns
-    True for any value (including zero) of ints and floats.
+    True for any value (including zero) of int and float,
+    and for (empty) strings.
     """
-    if type(value) == int or type(value) == float:
+    if type(value) == int or\
+       type(value) == float or\
+       type(value) == str:
         return True
     return bool(value)
 
@@ -291,8 +294,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the attribute and containers that are to be printed. Only not
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
-            # We use custom _bool() for testing getattr() since we want to print
-            # int and float values that are equal to zero.
+            # We use custom _bool() for testing getattr() since we want to
+            # print int and float values that are equal to zero and empty
+            # strings.
             attributes = [_i for _i in self._property_keys if not
                           _i.endswith("_errors") and _bool(getattr(self, _i))]
             containers = [_i for _i in self._containers if
@@ -315,7 +319,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 repr_str = getattr(self, key).__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
-                if hasattr(self, error_key) and _bool(getattr(self, error_key)):
+                if hasattr(self, error_key) and\
+                   _bool(getattr(self, error_key)):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join(
@@ -357,7 +362,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         def __nonzero__(self):
             # We use custom _bool() for testing getattr() since we want
-            # zero valued int and float attributes to be True.
+            # zero valued int and float and empty string attributes to be True.
             if any([_bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
@@ -945,11 +950,19 @@ class WaveformStreamID(__WaveformStreamID):
     >>> # Can be initialized with a SEED string or with individual components.
     >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR",
     ...                              location_code="", channel_code="EHZ")
-    >>> print stream_id
-    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    WaveformStreamID
+          network_code: 'BW'
+          station_code: 'FUR'
+          channel_code: 'EHZ'
+         location_code: ''
     >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
-    >>> print stream_id
-    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    WaveformStreamID
+          network_code: 'BW'
+          station_code: 'FUR'
+          channel_code: 'EHZ'
+         location_code: ''
     >>> # Can also return the SEED string.
     >>> print stream_id.getSEEDString()
     BW.FUR..EHZ
