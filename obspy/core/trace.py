@@ -1104,6 +1104,14 @@ class Trace(object):
 
         .. note::
 
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            <http://docs.obspy.org/master/tutorial/code_snippets/seismometer_correction_simulation.html#using-a-resp-file>`_.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
@@ -1152,6 +1160,29 @@ class Trace(object):
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
+
+        # some convenience handling for evalresp type instrument correction
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # if date is missing use trace's starttime
+            seedresp.setdefault("date", self.stats.starttime)
+            # if a Parser object is provided, get corresponding RESP
+            # information
+            from obspy.xseed import Parser
+            if isinstance(seedresp['filename'], Parser):
+                seedresp = deepcopy(seedresp)
+                kwargs['seedresp'] = seedresp
+                resp_key = ".".join(("RESP", self.stats.network,
+                                     self.stats.station, self.stats.location,
+                                     self.stats.channel))
+                for key, stringio in seedresp['filename'].getRESP():
+                    if key == resp_key:
+                        stringio.seek(0, 0)
+                        seedresp['filename'] = stringio
+                        break
+                else:
+                    msg = "Response for %s not found in Parser" % self.id
+                    raise ValueError(msg)
 
         from obspy.signal import seisSim
         self.data = seisSim(
