@@ -169,8 +169,10 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: str
-    :param filename: SEED RESP-filename or content of RESP file
+    :type filename: str (or open file like object)
+    :param filename: SEED RESP-filename or open file like object with RESP
+        information. Any object that provides a read() method will be
+        considered to be a file like object.
     :type date: UTCDateTime
     :param date: Date of interest
     :type station: str
@@ -188,8 +190,12 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
+    if isinstance(filename, basestring):
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+    elif hasattr(filename, 'read'):
+        data = filename.read()
     # evalresp needs files with correct line separators depending on OS
-    data = open(filename, 'rb').read()
     with NamedTemporaryFile() as fh:
         tempfile = fh.name
         fh.write(os.linesep.join(data.splitlines()))
@@ -380,9 +386,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type seedresp: Dictionary, None
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
-        volume;
+        volume (or a file like object with RESP information);
         'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for;
+        that the response function should be extracted for (can be omitted when
+        calling simulate() on Trace/Stream. the Trace's starttime will then be
+        used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
     :type nfft_pow2: Boolean
