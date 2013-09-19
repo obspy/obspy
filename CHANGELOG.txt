@@ -20,6 +20,12 @@ dev:
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
    * new option "side" for Stream/Trace.taper() to perform one-sided tapering
    * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
+   * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
+     now be omitted, start time of each trace is used for response lookup then
+   * when using Stream/Trace.simulate(seedresp={...})) for parameter
+     "filename" instead of the path to a local file now also can be provided
+     either a file-like object with RESP information or an obspy.xseed.Parser
+     object (e.g. created reading a dataless SEED file).
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -45,6 +51,10 @@ dev:
      McNamara and Buland 2004.
    * fix a bug when using evalresp with RESP files with very short epochs.
      see #631.
+   * for seisSim(seedresp={...})) for parameter "filename" instead of the
+     path to a local file now also can be provided either a file-like
+     object with RESP information or an obspy.xseed.Parser object
+     (e.g. created reading a dataless SEED file).
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
