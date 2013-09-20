@@ -2042,6 +2042,24 @@ class StreamTestCase(unittest.TestCase):
             tr2 = st.select(component=component)[0]
             self.assertEqual(tr1, tr2)
 
+    def test_select_empty_strings(self):
+        """
+        Test that select works with values that evaluate True when testing with
+        if (e.g. "", 0).
+        """
+        st = self.mseed_stream
+        st[0].stats.location = "00"
+        for tr in st[1:]:
+            tr.stats.network = ""
+            tr.stats.station = ""
+            tr.stats.channel = ""
+            tr.data = tr.data[0:0]
+        st2 = Stream(st[1:])
+        self.assertEqual(st.select(network=""), st2)
+        self.assertEqual(st.select(station=""), st2)
+        self.assertEqual(st.select(channel=""), st2)
+        self.assertEqual(st.select(npts=0), st2)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')
