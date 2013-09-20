@@ -3,6 +3,7 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core import Stats
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import math
@@ -489,6 +490,57 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(gap.data.mask, mask)
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
         np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
+
+    def test_addIntoGap(self):
+        """
+        Test __add__ method of the Trace class
+        Adding a trace that fits perfectly into gap in a trace
+        """
+        myArray = np.arange(6, dtype=np.int32)
+
+        stats = Stats()
+        stats.network = 'VI'
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 0)
+        stats['npts'] = 0
+        stats['station'] = 'IKJA'
+        stats['channel'] = 'EHZ'
+        stats['sampling_rate'] = 1
+
+        bigtrace = Trace(data=np.array([], dtype=np.int32), header=stats)
+        bigtrace_sort = bigtrace.copy()
+        stats['npts'] = len(myArray)
+        myTrace = Trace(data=myArray, header=stats)
+
+        stats['npts'] = 2
+        trace1 = Trace(data=myArray[0:2].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 2)
+        trace2 = Trace(data=myArray[2:4].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
+        trace3 = Trace(data=myArray[4:6].copy(), header=stats)
+        
+        #Random
+        bigtrace = bigtrace.__add__(trace1, method=1, interpolation_samples=0)
+        bigtrace = bigtrace.__add__(trace3, method=1, interpolation_samples=0)
+        bigtrace = bigtrace.__add__(trace2, method=1, interpolation_samples=0)
+        bigtrace_filled = Trace(data=bigtrace.data.filled(0), header=bigtrace.stats)
+
+        #Sorted
+        bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
+        bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
+        bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+
+        self.failUnless((bigtrace_sort.data == myArray).all())
+
+        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myTrace, bigtrace_sort)
+        failinfo += "\n\tExpected %s\n\tbut got  %s" % (myTrace.data, bigtrace_sort.data)
+        self.failUnless(bigtrace_sort == myTrace, failinfo)
+
+        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myArray, bigtrace_filled.data)
+        self.failUnless((bigtrace_filled.data == myArray).all(), failinfo)
+
+        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myTrace, bigtrace_filled)
+        failinfo += "\n\tExpected %s\n\tbut got  %s" % (myTrace.data, bigtrace_filled.data)
+        self.failUnless(bigtrace_filled == myTrace, failinfo)
 
     def test_slice(self):
         """
