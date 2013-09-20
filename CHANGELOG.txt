@@ -26,6 +26,8 @@ dev:
      "filename" instead of the path to a local file now also can be provided
      either a file-like object with RESP information or an obspy.xseed.Parser
      object (e.g. created reading a dataless SEED file).
+   * fix Stream.select() when using values like "" or 0, e.g.
+     Stream.select(location="").
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
