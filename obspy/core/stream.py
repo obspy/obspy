@@ -1847,7 +1847,8 @@ class Stream(object):
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
             :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
-            <http://docs.obspy.org/master/tutorial/code_snippets/seismometer_correction_simulation.html#using-a-resp-file>`_.
+            <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
