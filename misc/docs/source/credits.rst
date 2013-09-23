@@ -12,6 +12,7 @@ libraries and applications, our build tools and our web sites.
     :columns: 3
 
     * Charles J. Ammon
+    * Ólafur St. Arnarsson
     * Robert Barsch
     * Yannik Behr
     * Felix Bernauer
