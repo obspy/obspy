@@ -106,6 +106,49 @@ class ClientTestCase(unittest.TestCase):
         # A wrong resource_type raises a ValueError
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
                           "obspy", "query")
+        
+    def test_location_parameters(self):
+        """
+        Tests how the variety of location values are handled.
+        
+        Why location? Mostly because it is one tricky parameter.  It is not
+        uncommon to assume that a non-existant location is "--", but in
+        reality "--" is "<space><space>". This substitution exists because
+        mostly because various applications have trouble digesting spaces
+        (spaces in the URL, for example).
+        The confusion begins when location is treated as empty instead, which
+        would imply "I want all locations" instead of "I only want locations
+        of <space><space>"
+        """
+        # requests with no specified location should be treated as a wildcard
+        self.assertFalse(
+           "--" in build_url("http://service.iris.edu", 1, "station",
+                             "query", {"network":"IU", "station":"ANMO",
+                                       "starttime":"2013-01-01"}))
+        # location of "  " is the same as "--"
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location":"  "}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=--")
+        # wildcard locations are valid
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location":"*"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=*")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location":"A?"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=A?")
+        # lists are valid, including <space><space> lists
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location":"  ,1?,?0"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=--,1?,?0")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location":"1?,--,?0"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=1?,--,?0")
+        
 
     def test_url_building_with_auth(self):
         """
