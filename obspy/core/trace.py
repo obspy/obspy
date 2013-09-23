@@ -696,9 +696,12 @@ class Trace(object):
                     x = np.ma.masked_array(lt.data[t1:t2])
                     y = np.ma.masked_array(rt.data)
                     data_same = np.choose(x.mask, [x, y])
-                    data = np.choose(x.mask & y.mask, [data_same, np.inf])
-                    if np.inf in data:
+                    data = np.choose(x.mask & y.mask, [data_same, np.nan])
+                    if np.any(np.isnan(data)):
                         data = np.ma.masked_invalid(data)
+                    # convert back to maximum dtype of original data
+                    dtype = np.max((x.dtype, y.dtype))
+                    data = data.astype(dtype)
                     data = [lt.data[:t1], data, lt.data[t2:]]
                 else:
                     data = [lt.data]
