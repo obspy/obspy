@@ -552,6 +552,9 @@ class TraceTestCase(unittest.TestCase):
             self.assertFalse(isinstance(bigtrace, np.ma.masked_array))
             self.assertFalse(isinstance(bigtrace_sort, np.ma.masked_array))
 
+            failinfo = fail_pattern % (myArray.dtype, bigtrace.data.dtype)
+            self.failUnless(myArray.dtype == bigtrace.data.dtype,failinfo)
+
     def test_slice(self):
         """
         Tests the slicing of trace objects.
