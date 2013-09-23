@@ -517,30 +517,40 @@ class TraceTestCase(unittest.TestCase):
         trace2 = Trace(data=myArray[2:4].copy(), header=stats)
         stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
         trace3 = Trace(data=myArray[4:6].copy(), header=stats)
-        
-        #Random
-        bigtrace = bigtrace.__add__(trace1, method=1, interpolation_samples=0)
-        bigtrace = bigtrace.__add__(trace3, method=1, interpolation_samples=0)
-        bigtrace = bigtrace.__add__(trace2, method=1, interpolation_samples=0)
-        bigtrace_filled = Trace(data=bigtrace.data.filled(0), header=bigtrace.stats)
 
-        #Sorted
-        bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
-        bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
-        bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+        tr1 = bigtrace
+        tr2 = bigtrace_sort
+        for method in [0, 1]:
+            #Random
+            bigtrace = tr1.copy()
+            bigtrace = bigtrace.__add__(trace1, method=1)
+            bigtrace = bigtrace.__add__(trace3, method=1)
+            bigtrace = bigtrace.__add__(trace2, method=1)
+            bigtrace_filled = Trace(data=bigtrace.data.filled(0),
+                                    header=bigtrace.stats)
 
-        self.failUnless((bigtrace_sort.data == myArray).all())
+            #Sorted
+            bigtrace_sort = tr2.copy()
+            bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
 
-        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myTrace, bigtrace_sort)
-        failinfo += "\n\tExpected %s\n\tbut got  %s" % (myTrace.data, bigtrace_sort.data)
-        self.failUnless(bigtrace_sort == myTrace, failinfo)
+            self.failUnless((bigtrace_sort.data == myArray).all())
 
-        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myArray, bigtrace_filled.data)
-        self.failUnless((bigtrace_filled.data == myArray).all(), failinfo)
+            fail_pattern = "\n\tExpected %s\n\tbut got  %s"
+            failinfo = fail_pattern % (myTrace, bigtrace_sort)
+            failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
+            self.failUnless(bigtrace_sort == myTrace, failinfo)
 
-        failinfo = "\n\tExpected %s\n\tbut got  %s" % (myTrace, bigtrace_filled)
-        failinfo += "\n\tExpected %s\n\tbut got  %s" % (myTrace.data, bigtrace_filled.data)
-        self.failUnless(bigtrace_filled == myTrace, failinfo)
+            failinfo = fail_pattern % (myArray, bigtrace_filled.data)
+            self.failUnless((bigtrace_filled.data == myArray).all(), failinfo)
+
+            failinfo = fail_pattern % (myTrace, bigtrace_filled)
+            failinfo += fail_pattern % (myTrace.data, bigtrace_filled.data)
+            self.failUnless(bigtrace_filled == myTrace, failinfo)
+
+            self.assertFalse(isinstance(bigtrace, np.ma.masked_array))
+            self.assertFalse(isinstance(bigtrace_sort, np.ma.masked_array))
 
     def test_slice(self):
         """
