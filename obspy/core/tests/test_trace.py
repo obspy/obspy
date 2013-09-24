@@ -526,14 +526,16 @@ class TraceTestCase(unittest.TestCase):
             bigtrace = bigtrace.__add__(trace1, method=1)
             bigtrace = bigtrace.__add__(trace3, method=1)
             bigtrace = bigtrace.__add__(trace2, method=1)
-            bigtrace_filled = Trace(data=bigtrace.data.filled(0),
-                                    header=bigtrace.stats)
 
             #Sorted
             bigtrace_sort = tr2.copy()
             bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
             bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
             bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+
+            for tr in (bigtrace, bigtrace_sort):
+                self.assertTrue(isinstance(tr, Trace))
+                self.assertFalse(isinstance(tr.data, np.ma.masked_array))
 
             self.failUnless((bigtrace_sort.data == myArray).all())
 
@@ -542,18 +544,15 @@ class TraceTestCase(unittest.TestCase):
             failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
             self.failUnless(bigtrace_sort == myTrace, failinfo)
 
-            failinfo = fail_pattern % (myArray, bigtrace_filled.data)
-            self.failUnless((bigtrace_filled.data == myArray).all(), failinfo)
+            failinfo = fail_pattern % (myArray, bigtrace.data)
+            self.failUnless((bigtrace.data == myArray).all(), failinfo)
 
-            failinfo = fail_pattern % (myTrace, bigtrace_filled)
-            failinfo += fail_pattern % (myTrace.data, bigtrace_filled.data)
-            self.failUnless(bigtrace_filled == myTrace, failinfo)
-
-            self.assertFalse(isinstance(bigtrace, np.ma.masked_array))
-            self.assertFalse(isinstance(bigtrace_sort, np.ma.masked_array))
+            failinfo = fail_pattern % (myTrace, bigtrace)
+            failinfo += fail_pattern % (myTrace.data, bigtrace.data)
+            self.failUnless(bigtrace == myTrace, failinfo)
 
             failinfo = fail_pattern % (myArray.dtype, bigtrace.data.dtype)
-            self.failUnless(myArray.dtype == bigtrace.data.dtype,failinfo)
+            self.failUnless(myArray.dtype == bigtrace.data.dtype, failinfo)
 
     def test_slice(self):
         """
