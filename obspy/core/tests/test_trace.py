@@ -551,8 +551,9 @@ class TraceTestCase(unittest.TestCase):
             failinfo += fail_pattern % (myTrace.data, bigtrace.data)
             self.failUnless(bigtrace == myTrace, failinfo)
 
-            failinfo = fail_pattern % (myArray.dtype, bigtrace.data.dtype)
-            self.failUnless(myArray.dtype == bigtrace.data.dtype, failinfo)
+            for array_ in (bigtrace.data, bigtrace_sort.data):
+                failinfo = fail_pattern % (myArray.dtype, array_.dtype)
+                self.failUnless(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """

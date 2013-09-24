@@ -726,6 +726,10 @@ class Trace(object):
         else:
             data = np.concatenate(data)
             data = np.require(data, dtype=lt.data.dtype)
+        # Check if we can downgrade to normal ndarray
+        if isinstance(data, np.ma.masked_array) and \
+           np.ma.count_masked(data) == 0:
+            data = data.compressed()
         out.data = data
         return out
 
