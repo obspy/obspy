@@ -30,6 +30,6 @@ We love pull requests! Here's a quick guide:
  * Performance Tips:
     * [Python](http://wiki.python.org/moin/PythonSpeed/PerformanceTips)
     * [NumPy and ctypes](http://www.scipy.org/Cookbook/Ctypes)
-    * [SciPy](http://www.scipy.org/PerformancePython)
-    * [NumPy Book](http://www.tramy.us/numpybook.pdf)
+    * [SciPy](http://wiki.scipy.org/PerformancePython)
+    * [NumPy Book](http://csc.ucdavis.edu/~chaos/courses/nlp/Software/NumPyBook.pdf)
  * [Interesting reading on git, github](https://github.com/obspy/obspy/wiki/Interesting-Reading-on-Git%2C-GitHub)
