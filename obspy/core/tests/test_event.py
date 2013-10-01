@@ -540,6 +540,14 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.getQuakeMLURI)
 
+    def test_resource_id_valid_quakemluri(self):
+        """
+        Test that a resource identifier per default (i.e. no arguments to
+        __init__()) gets set up with a QUAKEML conform ID.
+        """
+        rid = ResourceIdentifier()
+        self.assertEqual(rid.resource_id, rid.getQuakeMLURI())
+
 
 def suite():
     suite = unittest.TestSuite()

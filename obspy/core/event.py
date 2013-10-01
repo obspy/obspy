@@ -575,8 +575,9 @@ class ResourceIdentifier(object):
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
-            if prefix is not None:
-                resource_id = "%s/%s" % (prefix, resource_id)
+            if prefix is None:
+                prefix = "smi:local"
+            resource_id = "%s/%s" % (prefix, resource_id)
         # Use the setter to assure only hashable ids are set.
         self.__setResourceID(resource_id)
         # Append the referred object in case one is given to the class level
