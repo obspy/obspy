@@ -1165,13 +1165,13 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="left")
+        tr.taper(side="left", max_percentage=None)
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertTrue(tr.data[6:].sum() == 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="right")
+        tr.taper(side="right", max_percentage=None)
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
@@ -1306,8 +1306,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            -0.037004 - 0.037016j,
-                                            -251.33 + 0j],
+                                            - 0.037004 - 0.037016j,
+                                            - 251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
