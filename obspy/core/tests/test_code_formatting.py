@@ -27,9 +27,8 @@ class CodeFormattingTestCase(unittest.TestCase):
         """
         Test codebase for compliance with the flake8 tool.
         """
-        test_dir = os.path.dirname(os.path.dirname(
-            os.path.abspath(inspect.getfile(inspect.currentframe()))))
-        obspy_dir = os.path.dirname(test_dir)
+        test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
+        obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
         error_count = 0
         file_count = 0
         for dirpath, _, filenames in os.walk(obspy_dir):
