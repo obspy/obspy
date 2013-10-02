@@ -1177,14 +1177,24 @@ class TraceTestCase(unittest.TestCase):
 
     def test_taper_length(self):
         data = np.ones(11)
-        tr = Trace(data=data, header={'sampling':1.})
+        tr = Trace(data=data, header={'sampling': 1.})
         # first 3 samples get tapered
         tr.taper(side="left", max_percentage=None, max_length=3)
         # last 5 samples get tapered
-        tr.taper(side="right", max_percentage=0.5, max_length=10)
+        tr.taper(side="right", max_percentage=0.5, max_length=None)
         self.assertTrue(tr.data[:3].sum() < 3.)
         self.assertTrue(tr.data[3:6].sum() == 3.)
         self.assertTrue(tr.data[6:].sum() < 5.)
+
+        data = np.ones(11)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(side="left", max_percentage=0.5, max_length=3)
+        # last 3 samples get tapered
+        tr.taper(side="right", max_percentage=0.3, max_length=5)
+        self.assertTrue(tr.data[:3].sum() < 3.)
+        self.assertTrue(tr.data[3:8].sum() == 5.)
+        self.assertTrue(tr.data[8:].sum() < 3.)
 
     def test_times(self):
         """
