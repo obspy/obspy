@@ -1788,23 +1788,23 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
-        if type == 'cosine' and 'p' in kwargs:
-            msg = "Kwarg p for cosine taper is deprecated. Please use" \
-                  "max_percentage instead."
-            warnings.warn(msg, category=DeprecationWarning)
-            max_percentage = 0.5 * kwargs['p']
         if type == 'cosine':
-            kwargs.update({'p': 1.})
-        if max_percentage is None and max_length and \
-                2 * max_length * self.stats.sampling > npts:
-            msg = "The taper given by max_length is longer than the trace. " \
-                  "Taper will be shortened to trace length."
-            warnings.warn(msg)
+            if 'p' in kwargs:
+                msg = "Kwarg p for cosine taper is deprecated. Please use" \
+                      "max_percentage instead."
+                warnings.warn(msg, category=DeprecationWarning)
+                max_percentage = 0.5 * kwargs['p']
+            kwargs['p'] = 1.0
         if max_percentage is None:
             max_percentage = 0.5
         wlen = int(max_percentage * npts)
-        if max_length and max_length * self.stats.sampling_rate < wlen:
-            wlen = max_length * self.stats.sampling_rate
+        if max_length:
+            wlen_ = int(max_length * self.stats.sampling_rate)
+            wlen = min(wlen, wlen_)
+        if 2 * wlen > npts:
+            msg = "The specified taper is longer than the trace. " \
+                  "The taper will be shortened to trace length."
+            warnings.warn(msg)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
