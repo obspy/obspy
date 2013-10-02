@@ -1712,20 +1712,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
             from 0. to 0.5). Default is 0.05 (5%).
-        :param max_length: Length of taper at one end in seconds.          
+        :param max_length: Length of taper at one end in seconds.
         :type max_length: None, float
         :param max_length:
         :type side: str
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
             tapered.
-        
+
         .. note::
-        
+
             If both `max_percentage` and `max_length` are set to a float, the
             shorter tape length is used. If both `max_percentage` and
-            `max_length` are set to `None`, the standard arguments for the
-            specified taper function are used.  
+            `max_length` are set to `None`, the whole trace will be tapered
 
         .. note::
 
@@ -1794,14 +1793,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             msg = "Kwarg p for cosine taper is deprecated. Please use" \
                   "max_percentage instead."
             warnings.warn(msg, category=DeprecationWarning)
-            max_percentage = 0.5 * p
+            max_percentage = 0.5 * kwargs['p']
         if type == 'cosine':
-            kwargs.update({'p':1.})
-        if (max_percentage is None and max_length and
-            2 * max_length * self.stats.sampling > npts):
+            kwargs.update({'p': 1.})
+        if max_percentage is None and max_length and \
+                2 * max_length * self.stats.sampling > npts:
             msg = "The taper given by max_length is longer than the trace. " \
                   "Taper will be shortened to trace length."
-            warnings.warn (msg)
+            warnings.warn(msg)
         if max_percentage is None:
             max_percentage = 0.5
         wlen = int(max_percentage * npts)
