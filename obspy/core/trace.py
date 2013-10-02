@@ -1795,17 +1795,19 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 warnings.warn(msg, category=DeprecationWarning)
                 max_percentage = 0.5 * kwargs['p']
             kwargs['p'] = 1.0
-        if max_percentage is None:
-            max_percentage = 0.5
-        wlen = int(max_percentage * npts)
-        if max_length:
-            wlen_ = int(max_length * self.stats.sampling_rate)
-            wlen = min(wlen, wlen_)
-        if 2 * wlen > npts:
-            msg = "The specified taper is longer than the trace. " \
+        # store all constraints for maximum taper length
+        max_half_lenghts = [int(npts / 2)]
+        if max_percentage is not None:
+            max_half_lenghts.append(int(max_percentage * npts))
+        if max_length is not None:
+            max_half_lenghts.append(
+                int(int(max_length) * self.stats.sampling_rate))
+        if any([(2 * x) > npts for x in max_half_lenghts]):
+            msg = "The requested taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
-        wlen = min(int(npts / 2), wlen)
+        # select shortest acceptable window half-length
+        wlen = min(max_half_lenghts)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
