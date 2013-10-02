@@ -572,7 +572,8 @@ class ResourceIdentifier(object):
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
 
-    def __init__(self, resource_id=None, prefix="smi:local", referred_object=None):
+    def __init__(self, resource_id=None, prefix="smi:local",
+                 referred_object=None):
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
