@@ -18,6 +18,9 @@ else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
 
+if not HAS_FLAKE8:
+    raise unittest.SkipTest('flake8 is required for this test suite')
+
 
 class CodeFormattingTestCase(unittest.TestCase):
     """
@@ -60,6 +63,4 @@ def suite():
 
 
 if __name__ == '__main__':
-    if not HAS_FLAKE8:
-        raise unittest.SkipTest('flake8 is required for this test suite')
     unittest.main(defaultTest='suite')
