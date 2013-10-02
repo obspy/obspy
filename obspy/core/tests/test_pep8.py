@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import unittest
-from matplotlib.tests.test_coding_standards import test_pep8_conformance
+from matplotlib.tests.test_coding_standards import assert_pep8_conformance, \
+    HAS_PEP8
 import obspy
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
@@ -13,13 +14,6 @@ EXPECTED_BAD_FILES = [
     "*/obspy/lib/__init__.py",
     ]
 PEP8_ADDITONAL_IGNORE = []
-
-try:
-    import pep8
-except ImportError:
-    HAS_PEP8 = False
-else:
-    HAS_PEP8 = pep8.__version__ > '1.4.5'
 
 if HAS_PEP8:
     from matplotlib.tests.test_coding_standards import \
@@ -36,9 +30,9 @@ class Pep8TestCase(unittest.TestCase):
         """
         Test codebase for Pep8 compliance.
         """
-        test_pep8_conformance(module=obspy, exclude_files=EXCLUDE_FILES,
-                              extra_exclude_file=None,
-                              pep8_additional_ignore=PEP8_ADDITONAL_IGNORE)
+        assert_pep8_conformance(module=obspy, exclude_files=EXCLUDE_FILES,
+                                extra_exclude_file=None,
+                                pep8_additional_ignore=PEP8_ADDITONAL_IGNORE)
 
 
 def suite():
