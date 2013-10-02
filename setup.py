@@ -428,6 +428,11 @@ def add_data_files(config):
             "obspy", "*", "tests", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-4:])
         config.add_data_dir(path)
+    # Add all data files
+    for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
+            "obspy", "*", "data")):
+        path = os.path.join(*data_folder.split(os.path.sep)[-3:])
+        config.add_data_dir(path)
     # Add all docs files
     for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
             "obspy", "*", "docs")):
