@@ -1175,6 +1175,17 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
+    def test_taper_length(self):
+        data = np.ones(11)
+        tr = Trace(data=data, header={'sampling':1.})
+        # first 3 samples get tapered
+        tr.taper(side="left", max_percentage=None, max_length=3)
+        # last 5 samples get tapered
+        tr.taper(side="right", max_percentage=0.5, max_length=10)
+        self.assertTrue(tr.data[:3].sum() < 3.)
+        self.assertTrue(tr.data[3:6].sum() == 3.)
+        self.assertTrue(tr.data[6:].sum() < 5.)
+
     def test_times(self):
         """
         Test if the correct times array is returned for normal traces and
