@@ -47,18 +47,14 @@ class CodeFormattingTestCase(unittest.TestCase):
                 if os.path.abspath(py_file) in untracked_files:
                     continue
 
-                # Check if the filename should not be excluded.
-                skip_file = False
+                # Check files that do not match any exclusion pattern
                 for exclude_pattern in EXCLUDE_FILES:
                     if fnmatch.fnmatch(py_file, exclude_pattern):
-                        skip_file = True
-                        continue
-                if skip_file is True:
-                    continue
-
-                file_count += 1
-                if flake8.main.check_file(py_file):
-                    error_count += 1
+                        break
+                else:
+                    file_count += 1
+                    if flake8.main.check_file(py_file):
+                        error_count += 1
         self.assertTrue(file_count > 10)
         self.assertEqual(error_count, 0)
 
