@@ -9,7 +9,7 @@ before_install:
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
   - pip install --use-mirrors matplotlib==1.3.0
-  - pip install --use-mirrors --upgrade flake8
+  - pip install --use-mirrors flake8
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
