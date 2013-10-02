@@ -82,9 +82,9 @@ INSTALL_REQUIRES = [
     'sqlalchemy',
     'suds>=0.4.0']
 EXTRAS_REQUIRE = {
-    'tests': ['pep8>1.4.5',
+    'tests': ['flake8>=2',
               'nose',
-              'matplotlib>=1.4.0']}
+              'matplotlib']}
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',

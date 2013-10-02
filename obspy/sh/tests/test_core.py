@@ -252,7 +252,7 @@ class CoreTestCase(unittest.TestCase):
                         tempfile += '.QHD'
                     tr.write(tempfile, format=format)
                     # test results
-                    with warnings.catch_warnings() as _:
+                    with warnings.catch_warnings() as _:  # NOQA
                         warnings.simplefilter("ignore")
                         st = read(tempfile, format=format)
                     self.assertEqual(len(st), 1)

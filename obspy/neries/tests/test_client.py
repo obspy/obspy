@@ -281,7 +281,8 @@ class ClientTestCase(unittest.TestCase):
         QuakeML version
         """
         client = Client(user='test@obspy.org')
-        events = client.getEvents(minlon=-30, maxlon=40, minlat=30, maxlat=90,
+        events = client.getEvents(
+            minlon=-30, maxlon=40, minlat=30, maxlat=90,
             min_datetime=UTCDateTime(2000, 4, 11, 11, 24, 31),
             max_datetime=UTCDateTime(2000, 4, 11, 11, 24, 32),
             minmag=5.5, format='catalog')

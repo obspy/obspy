@@ -29,7 +29,7 @@ class EventTestCase(unittest.TestCase):
         # events are equal if the have the same public_id
         # Catch warnings about the same different objects with the same
         # resource id so they do not clutter the test output.
-        with warnings.catch_warnings() as _:
+        with warnings.catch_warnings() as _:  # NOQA
             warnings.simplefilter("ignore")
             ev1 = Event('id1')
             ev2 = Event('id1')
