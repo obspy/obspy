@@ -1805,6 +1805,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             msg = "The specified taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
+        wlen = min(int(npts / 2), wlen)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
