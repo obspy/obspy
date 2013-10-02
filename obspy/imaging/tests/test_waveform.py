@@ -303,20 +303,6 @@ class WaveformTestCase(unittest.TestCase):
             st.plot(outfile=ic.name, type='section', dist_degree=True,
                     ev_coord=(0.0, 0.0))
 
-    @skipIf(__name__ != '__main__', 'test must be started manually')
-    def test_plotBinningError(self):
-        """
-        Tests the plotting of a trace with a certain amount of sampling that
-        had a binning problem.
-        """
-        tr = Trace(data=np.sin(np.linspace(0, 200, 432000)))
-        outfile = os.path.join(self.path, 'binning_error.png')
-        tr.plot(outfile=outfile)
-
-        tr = Trace(data=np.sin(np.linspace(0, 200, 431979)))
-        outfile = os.path.join(self.path, 'binning_error_2.png')
-        tr.plot(outfile=outfile)
-
 
 def suite():
     return unittest.makeSuite(WaveformTestCase, 'test')
