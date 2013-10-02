@@ -2797,9 +2797,10 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> cat = readEvents(\ # doctest:+SKIP
-            "http://www.seismicportal.eu/services/event/search?magMin=8.0")
-        >>> cat.plot() # doctest:+SKIP
+        >>> cat = readEvents( \
+            "http://www.seismicportal.eu/services/event/search?magMin=8.0") \
+            # doctest:+SKIP
+        >>> cat.plot()  # doctest:+SKIP
         """
         from mpl_toolkits.basemap import Basemap
         import matplotlib.pyplot as plt

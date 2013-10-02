@@ -1164,7 +1164,6 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
     For a signal with pure amplitude error
 
     >>> import numpy as np
-    >>> from scipy.signal import hilbert
     >>> tmax = 6.
     >>> dt = 0.01
     >>> npts = int(tmax / dt + 1)

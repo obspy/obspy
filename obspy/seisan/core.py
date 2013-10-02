@@ -25,7 +25,7 @@ def isSEISAN(filename):
 
     .. rubric:: Example
 
-    >>> isWAV("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    >>> isSEISAN("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
     try:

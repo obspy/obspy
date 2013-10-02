@@ -192,7 +192,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (6) Using 'starttime' and 'endtime' parameters
 
-        >>> from obspy import read, UTCDateTime
+        >>> from obspy import read
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
         ...           starttime=dt, endtime=dt+10)
