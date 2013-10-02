@@ -1809,14 +1809,14 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        taper_sides = func(2 * wlen, *args, **kwargs)
+        taper_sides = func(2 * wlen + 1, *args, **kwargs)
         if side == 'left':
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
         elif side == 'right':
-            taper = np.hstack((np.ones(npts - wlen), taper_sides[wlen:]))
+            taper = np.hstack((np.ones(npts - wlen), taper_sides[wlen + 1:]))
         else:
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
-                               taper_sides[wlen:]))
+                               taper_sides[wlen + 1:]))
         self.data = self.data * taper
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
