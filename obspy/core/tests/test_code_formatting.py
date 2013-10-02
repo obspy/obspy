@@ -1,51 +1,66 @@
 # -*- coding: utf-8 -*-
 
+import fnmatch
+import inspect
+import os
 import unittest
-from matplotlib.tests.test_coding_standards import test_pep8_conformance
-import obspy
-from obspy.core.util.base import getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
 
-MATPLOTLIB_VERSION = getMatplotlibVersion()
-
-EXCLUDE_FILES = []
-EXPECTED_BAD_FILES = [
-    "*/obspy/lib/__init__.py",
+EXCLUDE_FILES = [
+    "*/__init__.py",
     ]
-PEP8_ADDITONAL_IGNORE = []
 
 try:
-    import pep8
+    import flake8
+    import flake8.main
 except ImportError:
-    HAS_PEP8 = False
+    HAS_FLAKE8 = False
 else:
-    HAS_PEP8 = pep8.__version__ > '1.4.5'
-
-if HAS_PEP8:
-    from matplotlib.tests.test_coding_standards import \
-        StandardReportWithExclusions
-    StandardReportWithExclusions.expected_bad_files = EXPECTED_BAD_FILES
+    # Only accept flake8 version >= 2.0
+    HAS_FLAKE8 = flake8.__version__ >= '2'
 
 
-class Pep8TestCase(unittest.TestCase):
+class CodeFormattingTestCase(unittest.TestCase):
     """
-    Test codebase for Pep8 compliance.
+    Test codebase for compliance with the flake8 tool.
     """
-    @skipIf(MATPLOTLIB_VERSION < [1, 4, 0], "matplotlib >= 1.4 is required")
-    def test_pep8(self):
+    def test_flake8(self):
         """
-        Test codebase for Pep8 compliance.
+        Test codebase for compliance with the flake8 tool.
         """
-        test_pep8_conformance(module=obspy, exclude_files=EXCLUDE_FILES,
-                              extra_exclude_file=None,
-                              pep8_additional_ignore=PEP8_ADDITONAL_IGNORE)
+        test_dir = os.path.dirname(os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))))
+        obspy_dir = os.path.dirname(test_dir)
+        error_count = 0
+        file_count = 0
+        for dirpath, _, filenames in os.walk(obspy_dir):
+            filenames = [_i for _i in filenames if
+                         os.path.splitext(_i)[-1] == os.path.extsep + "py"]
+            if not filenames:
+                continue
+            for py_file in filenames:
+                py_file = os.path.join(dirpath, py_file)
+
+                # Check if the filename should not be excluded.
+                skip_file = False
+                for exclude_pattern in EXCLUDE_FILES:
+                    if fnmatch.fnmatch(py_file, exclude_pattern):
+                        skip_file = True
+                        continue
+                if skip_file is True:
+                    continue
+
+                file_count += 1
+                if flake8.main.check_file(py_file):
+                    error_count += 1
+        self.assertTrue(file_count > 10)
+        self.assertEqual(error_count, 0)
 
 
 def suite():
-    return unittest.makeSuite(Pep8TestCase, 'test')
+    return unittest.makeSuite(CodeFormattingTestCase, 'test')
 
 
 if __name__ == '__main__':
-    if not HAS_PEP8:
-        raise unittest.SkipTest('pep8 is required for this test suite')
+    if not HAS_FLAKE8:
+        raise unittest.SkipTest('flake8 is required for this test suite')
     unittest.main(defaultTest='suite')
