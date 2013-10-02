@@ -1177,18 +1177,19 @@ class TraceTestCase(unittest.TestCase):
 
     def test_taper_length(self):
         npts = 11
+        type_ = "hann"
 
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
         # test an overlong taper request, should still work
-        tr.taper(max_percentage=2, max_length=npts / 2 + 1)
+        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
 
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
         # first 3 samples get tapered
-        tr.taper(side="left", max_percentage=None, max_length=3)
+        tr.taper(type=type_, side="left", max_percentage=None, max_length=3)
         # last 5 samples get tapered
-        tr.taper(side="right", max_percentage=0.5, max_length=None)
+        tr.taper(type=type_, side="right", max_percentage=0.5, max_length=None)
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:6] == 1.))
         self.assertTrue(np.all(tr.data[6:] < 1.))
@@ -1196,9 +1197,9 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
         # first 3 samples get tapered
-        tr.taper(side="left", max_percentage=0.5, max_length=3)
+        tr.taper(type=type_, side="left", max_percentage=0.5, max_length=3)
         # last 3 samples get tapered
-        tr.taper(side="right", max_percentage=0.3, max_length=5)
+        tr.taper(type=type_, side="right", max_percentage=0.3, max_length=5)
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:8] == 1.))
         self.assertTrue(np.all(tr.data[8:] < 1.))
