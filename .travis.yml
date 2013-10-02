@@ -8,7 +8,7 @@ before_install:
   - sudo apt-get install -qq gfortran python-dev python-numpy python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
-  - pip install --use-mirrors matplotlib==1.3.0
+  - pip install --use-mirrors matplotlib>=1.3.0
   - pip install --use-mirrors --upgrade pep8
 install:
   - git remote add obspy git://github.com/obspy/obspy.git

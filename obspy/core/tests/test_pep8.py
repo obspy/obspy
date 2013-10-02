@@ -3,6 +3,10 @@
 import unittest
 from matplotlib.tests.test_coding_standards import test_pep8_conformance
 import obspy
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 EXCLUDE_FILES = []
 EXPECTED_BAD_FILES = [
@@ -27,6 +31,7 @@ class Pep8TestCase(unittest.TestCase):
     """
     Test codebase for Pep8 compliance.
     """
+    @skipIf(MATPLOTLIB_VERSION < [1, 4, 0], "matplotlib >= 1.4 is required")
     def test_pep8(self):
         """
         Test codebase for Pep8 compliance.
