@@ -1712,9 +1712,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
             from 0. to 0.5). Default is 0.05 (5%).
-        :param max_length: Length of taper at one end in seconds.
         :type max_length: None, float
-        :param max_length:
+        :param max_length: Length of taper at one end in seconds.
         :type side: str
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
@@ -1724,7 +1723,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
             If both `max_percentage` and `max_length` are set to a float, the
             shorter tape length is used. If both `max_percentage` and
-            `max_length` are set to `None`, the whole trace will be tapered
+            `max_length` are set to `None`, the whole trace will be tapered.
 
         .. note::
 
