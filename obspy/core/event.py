@@ -436,7 +436,8 @@ class ResourceIdentifier(object):
     :param prefix: An optional identifier that will be put in front of any
         automatically created resource_id. Will only have an effect if
         resource_id is not given. Makes automatically generated resource_ids
-        more reasonable.
+        more reasonable. By default "smi:local" is used which ensures a QuakeML
+        conform resource identifier.
     :type referred_object: Python object, optional
     :param referred_object: The object this instance refers to. All instances
         created with the same resource_id will be able to access the object as
@@ -571,7 +572,7 @@ class ResourceIdentifier(object):
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
 
-    def __init__(self, resource_id=None, prefix=None, referred_object=None):
+    def __init__(self, resource_id=None, prefix="smi:local", referred_object=None):
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
