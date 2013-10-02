@@ -8,6 +8,9 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import os
+import inspect
+from subprocess import Popen, PIPE
 import warnings
 import itertools
 import numpy as np
@@ -215,6 +218,29 @@ except TypeError:
             raise
         # ensures that an array is returned
         return np.atleast_1d(data)
+
+
+def get_untracked_files_from_git():
+    """
+    Tries to return a list of files (absolute paths) that are untracked by git
+    in the repository.
+
+    Returns `None` if the system call to git fails.
+    """
+    dir_ = os.path.abspath(
+        os.path.dirname(inspect.getfile(inspect.currentframe())))
+    dir_ = os.path.dirname(os.path.dirname(os.path.dirname(dir_)))
+    try:
+        p = Popen(['git', 'status', '-u', '--porcelain'],
+                  cwd=dir_, stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        stdout = p.stdout.readlines()
+        files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
+                 for line in stdout
+                 if line.startswith("??")]
+    except:
+        return None
+    return files
 
 
 if __name__ == '__main__':

@@ -4,6 +4,7 @@ import fnmatch
 import inspect
 import os
 import unittest
+from obspy.core.util.misc import get_untracked_files_from_git
 
 EXCLUDE_FILES = [
     "*/__init__.py",
@@ -34,6 +35,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
         error_count = 0
         file_count = 0
+        untracked_files = get_untracked_files_from_git() or []
         for dirpath, _, filenames in os.walk(obspy_dir):
             filenames = [_i for _i in filenames if
                          os.path.splitext(_i)[-1] == os.path.extsep + "py"]
@@ -41,6 +43,9 @@ class CodeFormattingTestCase(unittest.TestCase):
                 continue
             for py_file in filenames:
                 py_file = os.path.join(dirpath, py_file)
+                # ignore untracked files
+                if os.path.abspath(py_file) in untracked_files:
+                    continue
 
                 # Check if the filename should not be excluded.
                 skip_file = False
