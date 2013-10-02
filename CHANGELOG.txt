@@ -18,7 +18,8 @@ dev:
    * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
      the API documentation (#540)
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
-   * new option "side" for Stream/Trace.taper() to perform one-sided tapering
+   * new options for Stream/Trace.taper() to control the length of the
+     tapering for all windowing functions and perform one-sided tapering
    * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
    * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
      now be omitted, start time of each trace is used for response lookup then

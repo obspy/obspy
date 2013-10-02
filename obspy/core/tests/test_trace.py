@@ -1165,15 +1165,44 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="left")
+        tr.taper(side="left", max_percentage=None)
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertTrue(tr.data[6:].sum() == 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="right")
+        tr.taper(side="right", max_percentage=None)
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
+
+    def test_taper_length(self):
+        npts = 11
+        type_ = "hann"
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # test an overlong taper request, should still work
+        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(type=type_, side="left", max_percentage=None, max_length=3)
+        # last 5 samples get tapered
+        tr.taper(type=type_, side="right", max_percentage=0.5, max_length=None)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:6] == 1.))
+        self.assertTrue(np.all(tr.data[6:] < 1.))
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(type=type_, side="left", max_percentage=0.5, max_length=3)
+        # last 3 samples get tapered
+        tr.taper(type=type_, side="right", max_percentage=0.3, max_length=5)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:8] == 1.))
+        self.assertTrue(np.all(tr.data[8:] < 1.))
 
     def test_times(self):
         """
@@ -1306,8 +1335,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            -0.037004 - 0.037016j,
-                                            -251.33 + 0j],
+                                            - 0.037004 - 0.037016j,
+                                            - 251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\

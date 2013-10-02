@@ -1696,7 +1696,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    def taper(self, type='cosine', max_percentage=0.05, max_length=None,
+              side='both', *args, **kwargs):
         """
         Method to taper the trace.
 
@@ -1708,10 +1709,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param type: Type of taper to use for detrending. Defaults to
             ``'cosine'``.  See the `Supported Methods`_ section below for
             further details.
+        :type max_percentage: None, float
+        :param max_percentage: Decimal percentage of taper at one end (ranging
+            from 0. to 0.5). Default is 0.05 (5%).
+        :type max_length: None, float
+        :param max_length: Length of taper at one end in seconds.
         :type side: str
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
             tapered.
+
+        .. note::
+
+            If both `max_percentage` and `max_length` are set to a float, the
+            shorter tape length is used. If both `max_percentage` and
+            `max_length` are set to `None`, the whole trace will be tapered.
 
         .. note::
 
@@ -1771,19 +1783,41 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
+        npts = self.stats.npts
         if side not in side_valid:
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
+        if type == 'cosine':
+            if 'p' in kwargs:
+                msg = "Kwarg p for cosine taper is deprecated. Please use" \
+                      "max_percentage instead."
+                warnings.warn(msg, category=DeprecationWarning)
+                max_percentage = 0.5 * kwargs['p']
+            kwargs['p'] = 1.0
+        # store all constraints for maximum taper length
+        max_half_lenghts = [int(npts / 2)]
+        if max_percentage is not None:
+            max_half_lenghts.append(int(max_percentage * npts))
+        if max_length is not None:
+            max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
+        if any([(2 * x) > npts for x in max_half_lenghts]):
+            msg = "The requested taper is longer than the trace. " \
+                  "The taper will be shortened to trace length."
+            warnings.warn(msg)
+        # select shortest acceptable window half-length
+        wlen = min(max_half_lenghts)
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        taper = func(self.stats.npts, *args, **kwargs)
-        half_length = int(len(taper) / 2)
-        if side == "left":
-            taper[half_length:] = 1.0
-        elif side == "right":
-            taper[:half_length] = 1.0
+        taper_sides = func(2 * wlen + 1, *args, **kwargs)
+        if side == 'left':
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
+        elif side == 'right':
+            taper = np.hstack((np.ones(npts - wlen), taper_sides[wlen + 1:]))
+        else:
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
+                               taper_sides[wlen + 1:]))
         self.data = self.data * taper
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
