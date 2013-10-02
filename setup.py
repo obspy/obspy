@@ -81,6 +81,8 @@ INSTALL_REQUIRES = [
     'lxml',
     'sqlalchemy',
     'suds>=0.4.0']
+EXTRAS_REQUIRE = {
+    'tests': ['pep8']}
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
@@ -474,6 +476,7 @@ def setupPackage():
         namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
+        extras_require=EXTRAS_REQUIRE,
         download_url=("https://github.com/obspy/obspy/zipball/master"
             "#egg=obspy=dev"),  # this is needed for "easy_install obspy==dev"
         include_package_data=True,
