@@ -231,6 +231,13 @@ def get_untracked_files_from_git():
         os.path.dirname(inspect.getfile(inspect.currentframe())))
     dir_ = os.path.dirname(os.path.dirname(os.path.dirname(dir_)))
     try:
+        # Check that the git root directory is actually the ObsPy directory.
+        p = Popen(['git', 'rev-parse', '--show-toplevel'],
+                  cwd=dir_, stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        git_root_dir = p.stdout.readlines()[0].strip()
+        if git_root_dir != dir_:
+            raise Exception
         p = Popen(['git', 'status', '-u', '--porcelain'],
                   cwd=dir_, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
