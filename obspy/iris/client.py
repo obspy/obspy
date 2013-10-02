@@ -1113,7 +1113,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> req = []
         >>> req.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")
