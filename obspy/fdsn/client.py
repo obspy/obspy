@@ -13,7 +13,7 @@ from io import BytesIO
 import obspy
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
-    URL_MAPPINGS, DEFAULT_PARAMETERS
+    URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES
 from obspy.core.util.misc import wrap_long_string
 
 import Queue
@@ -185,16 +185,7 @@ class Client(object):
             raise ValueError(msg)
 
         locs = locals()
-        for param in ("starttime", "endtime", "minlatitude", "maxlatitude",
-                      "minlongitude", "maxlongitude", "latitude", "longitude",
-                      "minradius", "maxradius", "mindepth", "maxdepth",
-                      "minmagnitude", "maxmagnitude", "magnitudetype",
-                      "includeallorigins", "includeallmagnitudes",
-                      "includearrivals", "eventid", "limit", "offset",
-                      "orderby", "catalog", "contributor", "updatedafter"):
-            value = locs[param]
-            if value is not None:
-                kwargs[param] = value
+        setup_query_dict('event', locs, kwargs)
 
         url = self._create_url_from_parameters(
             "event", DEFAULT_PARAMETERS['event'], kwargs)
@@ -305,15 +296,7 @@ class Client(object):
             raise ValueError(msg)
 
         locs = locals()
-        for param in ("starttime", "endtime", "startbefore", "startafter",
-                      "endbefore", "endafter", "network", "station",
-                      "location", "channel", "minlatitude", "maxlatitude",
-                      "minlongitude", "maxlongitude", "latitude", "longitude",
-                      "minradius", "maxradius", "level", "includerestricted",
-                      "includeavailability", "updatedafter"):
-            value = locs[param]
-            if value is not None:
-                kwargs[param] = value
+        setup_query_dict('station', locs, kwargs)
 
         # Special location handling. Convert empty strings to "--".
         if "location" in kwargs and not kwargs["location"]:
@@ -382,25 +365,15 @@ class Client(object):
             msg = "The current client does not have a dataselect service."
             raise ValueError(msg)
 
-        # Combine all parameters in the kwargs dictionary.
-        kwargs["starttime"] = starttime
-        kwargs["endtime"] = endtime
-        kwargs["network"] = network
-        kwargs["station"] = station
-        kwargs["location"] = location
-        kwargs["channel"] = channel
-        if quality is not None:
-            kwargs["quality"] = quality
-        if minimumlength is not None:
-            kwargs["minimumlength"] = minimumlength
-        if longestonly is not None:
-            kwargs["longestonly"] = longestonly
-        url = self._create_url_from_parameters(
-            "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
+        locs = locals()
+        setup_query_dict('dataselect', locs, kwargs)
 
         # Special location handling. Convert empty strings to "--".
         if "location" in kwargs and not kwargs["location"]:
             kwargs["location"] = "--"
+
+        url = self._create_url_from_parameters(
+            "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
         data_stream = self._download(url)
         data_stream.seek(0, 0)
@@ -529,7 +502,7 @@ class Client(object):
                 elif param["default_value"]:
                     req_def = "Default value: %s" % str(param["default_value"])
                 if param["options"]:
-                    req_def += "Choices: %s" % \
+                    req_def += ", Choices: %s" % \
                         ", ".join(map(str, param["options"]))
                 if req_def:
                     req_def = ", %s" % req_def
@@ -751,6 +724,24 @@ def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
         print "Downloaded %s with HTTP code: %i" % (url, code)
 
     return code, data
+
+
+def setup_query_dict(service, locs, kwargs):
+    """
+    """
+    # short aliases are not mentioned in the downloaded WADLs, so we have
+    # to map it here according to the official FDSN WS documentation
+    for key in list(kwargs.keys()):
+        if key in PARAMETER_ALIASES:
+            value = kwargs.pop(key)
+            if value is not None:
+                kwargs[PARAMETER_ALIASES[key]] = value
+
+    for param in DEFAULT_PARAMETERS[service]:
+        param = PARAMETER_ALIASES.get(param, param)
+        value = locs[param]
+        if value is not None:
+            kwargs[param] = value
 
 
 if __name__ == '__main__':

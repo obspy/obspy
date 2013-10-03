@@ -67,9 +67,8 @@ class WADLParser(object):
 
         # Raise a warning if some default parameters are not specified.
         missing_params = []
-        for item in self._default_parameters:
-            param = item[0]
-            if param not in self.parameters:
+        for param in self._default_parameters:
+            if param not in self.parameters.keys():
                 missing_params.append(param)
         if missing_params:
             msg = ("The '%s' service at '%s' cannot deal with the following "

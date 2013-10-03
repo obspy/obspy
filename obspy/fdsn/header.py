@@ -29,34 +29,46 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
 # contains the long name first and the short name second. If it has no short
 # name, it is simply a tuple with only one entry.
 DEFAULT_DATASELECT_PARAMETERS = [
-    ("starttime", "start"), ("endtime", "end"), ("network", "net"),
-    ("station", "sta"), ("location", "loc"), ("channel", "cha"), ("quality", ),
-    ("minimumlength", ), ("longestonly", )]
+    "starttime", "endtime", "network", "station", "location", "channel",
+    "quality", "minimumlength", "longestonly"]
 
 DEFAULT_STATION_PARAMETERS = [
-    ("starttime", "start"), ("endtime", "end"), ("startbefore", ),
-    ("startafter", ), ("endbefore", ), ("endafter", ), ("network", "net"),
-    ("station", "sta"), ("location", "loc"), ("channel", "cha"),
-    ("minlatitude", "minlat"), ("maxlatitude", "maxlat"),
-    ("minlongitude", "minlon"), ("maxlongitude", "maxlon"),
-    ("latitude", "lat"), ("longitude", "lon"), ("minradius", ),
-    ("maxradius",), ("level", ), ("includerestricted", ),
-    ("includeavailability", ), ("updatedafter", )]
+    "starttime", "endtime", "startbefore", "startafter", "endbefore",
+    "endafter", "network", "station", "location", "channel", "minlatitude",
+    "maxlatitude", "minlongitude", "maxlongitude", "latitude", "longitude",
+    "minradius", "maxradius", "level", "includerestricted",
+    "includeavailability", "updatedafter"]
 
 DEFAULT_EVENT_PARAMETERS = [
-    ("starttime", "start"), ("endtime", "end"), ("minlatitude", "minlat"),
-    ("maxlatitude", "maxlat"), ("minlongitude", "minlon"),
-    ("maxlongitude", "maxlon"), ("latitude", "lat"), ("longitude", "lon"),
-    ("minradius", ), ("maxradius", ), ("mindepth", ), ("maxdepth", ),
-    ("minmagnitude", "minmag"), ("maxmagnitude", "maxmag"),
-    ("magnitudetype", "magtype"), ("includeallorigins", ),
-    ("includeallmagnitudes", ), ("includearrivals", ), ("eventid", ),
-    ("limit",), ("offset", ), ("orderby", ), ("catalog", ), ("contributor", ),
-    ("updatedafter", )]
+    "starttime", "endtime", "minlatitude", "maxlatitude", "minlongitude",
+    "maxlongitude", "latitude", "longitude", "minradius", "maxradius",
+    "mindepth", "maxdepth", "minmagnitude", "maxmagnitude", "magnitudetype",
+    "includeallorigins", "includeallmagnitudes", "includearrivals",
+    "eventid", "limit", "offset", "orderby", "catalog", "contributor",
+    "updatedafter"]
+
 DEFAULT_PARAMETERS = {
     "dataselect": DEFAULT_DATASELECT_PARAMETERS,
     "event": DEFAULT_EVENT_PARAMETERS,
     "station": DEFAULT_STATION_PARAMETERS}
+
+PARAMETER_ALIASES = {
+    "net": "network",
+    "sta": "station",
+    "loc": "location",
+    "cha": "channel",
+    "start": "starttime",
+    "end": "endtime",
+    "minlat": "minlatitude",
+    "maxlat": "maxlatitude",
+    "minlon": "minlongitude",
+    "maxlon": "maxlongitude",
+    "lat": "latitude",
+    "lon": "longitude",
+    "minmag": "minmagnitude",
+    "maxmag": "maxmagnitude",
+    "magtype": "magnitudetype",
+    }
 
 
 # The default types if none are given. If the parameter can not be found in
