@@ -13,7 +13,8 @@ from io import BytesIO
 import obspy
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
-    URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES
+    URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
+    WADL_PARAMETERS_NOT_TO_BE_PARSED
 from obspy.core.util.misc import wrap_long_string
 
 import Queue
@@ -417,6 +418,11 @@ class Client(object):
                     msg = ("The standard parameter '%s' is not supporte by "
                            "the webservice. It will be silently ignored." %
                            key)
+                    warnings.warn(msg)
+                    continue
+                elif key in WADL_PARAMETERS_NOT_TO_BE_PARSED:
+                    msg = ("The parameter '%s' is ignored because it is not "
+                           "useful within ObsPy")
                     warnings.warn(msg)
                     continue
                 # Otherwise raise an error.
