@@ -1,0 +1,667 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:quakeml xmlns:ns0="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:local/1409c1e5-537f-4f6f-b320-1ebc8cfa0dff">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275751">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421382</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>NORTHERN IRAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9750095">
+        <time>
+          <value>2011-01-07T23:53:01.010000Z</value>
+        </time>
+        <latitude>
+          <value>30.1235</value>
+        </latitude>
+        <longitude>
+          <value>51.5874</value>
+        </longitude>
+        <depth>
+          <value>15000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421360">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</originID>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421384">
+        <mag>
+          <value>4.3</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750105</originID>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421362">
+        <mag>
+          <value>5.1</value>
+        </mag>
+        <type>mB</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750096</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421361">
+        <mag>
+          <value>4.7</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750096</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421385">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750106</originID>
+        <creationInfo>
+          <author>TEH</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421359">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750095</originID>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421363">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>Ms</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750096</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421364">
+        <mag>
+          <value>4.6</value>
+        </mag>
+        <type>Ms7</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750096</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421365">
+        <mag>
+          <value>4.8</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750097</originID>
+        <creationInfo>
+          <author>ISCJB</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421366">
+        <mag>
+          <value>4.3</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750097</originID>
+        <creationInfo>
+          <author>ISCJB</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421367">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750099</originID>
+        <creationInfo>
+          <author>CSEM</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421368">
+        <mag>
+          <value>5.3</value>
+        </mag>
+        <type>Ms</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750099</originID>
+        <creationInfo>
+          <author>CSEM</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421369">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750100</originID>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421370">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750100</originID>
+        <creationInfo>
+          <author>THR</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421371">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421372">
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <type>mb1</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421373">
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <type>mb1mx</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421374">
+        <mag>
+          <value>4.6</value>
+        </mag>
+        <type>mbtmp</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421375">
+        <mag>
+          <value>4.6</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421376">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421377">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>Ms1</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750101</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421379">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750102</originID>
+        <creationInfo>
+          <author>THR</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421380">
+        <mag>
+          <value>4.7</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750103</originID>
+        <creationInfo>
+          <author>DSN</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421383">
+        <mag>
+          <value>4.9</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750105</originID>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421382">
+        <mag>
+          <value>5.0</value>
+        </mag>
+        <type>MW</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750104</originID>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421381">
+        <mag>
+          <value>5.3</value>
+        </mag>
+        <type>Ms</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9750103</originID>
+        <creationInfo>
+          <author>DSN</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4257915">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420620</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>NEAR S. COAST OF HONSHU, JAPAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749523">
+        <time>
+          <value>2011-01-07T15:22:54.690000Z</value>
+        </time>
+        <latitude>
+          <value>33.3831</value>
+        </latitude>
+        <longitude>
+          <value>137.8563</value>
+        </longitude>
+        <depth>
+          <value>349600.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420627">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749527</originID>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420628">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749528</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420629">
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <type>mB</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749528</originID>
+        <creationInfo>
+          <author>BJI</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420630">
+        <mag>
+          <value>4.3</value>
+        </mag>
+        <type>Mw</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749529</originID>
+        <creationInfo>
+          <author>NIED</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420625">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>mbtmp</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749525</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420620">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749523</originID>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420626">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749526</originID>
+        <creationInfo>
+          <author>ISCJB</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277848">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420794</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>NEAR EAST COAST OF HONSHU, JAPAN</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749661">
+        <time>
+          <value>2011-01-07T17:45:16.850000Z</value>
+        </time>
+        <latitude>
+          <value>35.1483</value>
+        </latitude>
+        <longitude>
+          <value>141.2871</value>
+        </longitude>
+        <depth>
+          <value>27000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420797">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>mb1mx</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749663</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420798">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>mbtmp</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749663</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420803">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749664</originID>
+        <creationInfo>
+          <author>MOS</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420805">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749666</originID>
+        <creationInfo>
+          <author>ISCJB</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420794">
+        <mag>
+          <value>4.4</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749662</originID>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420796">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>mb1</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749663</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420795">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749663</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420792">
+        <mag>
+          <value>4.2</value>
+        </mag>
+        <type>mb</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749661</originID>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258114">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749870</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421089</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>BAJA CALIFORNIA, MEXICO</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749870">
+        <time>
+          <value>2011-01-07T21:17:22.760000Z</value>
+        </time>
+        <latitude>
+          <value>31.2554</value>
+        </latitude>
+        <longitude>
+          <value>-115.6749</value>
+        </longitude>
+        <depth>
+          <value>11000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421089">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749873</originID>
+        <creationInfo>
+          <author>ECX</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421088">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>MD</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749873</originID>
+        <creationInfo>
+          <author>ECX</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258116">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749875</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421093</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>BAJA CALIFORNIA, MEXICO</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749875">
+        <time>
+          <value>2011-01-07T21:19:20.470000Z</value>
+        </time>
+        <latitude>
+          <value>31.2555</value>
+        </latitude>
+        <longitude>
+          <value>-115.6695</value>
+        </longitude>
+        <depth>
+          <value>13600.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421092">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>MD</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749878</originID>
+        <creationInfo>
+          <author>ECX</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421093">
+        <mag>
+          <value>4.1</value>
+        </mag>
+        <type>ML</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749878</originID>
+        <creationInfo>
+          <author>ECX</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258052">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749745</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420907</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>BONIN ISLANDS REGION</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749745">
+        <time>
+          <value>2011-01-07T19:01:43.030000Z</value>
+        </time>
+        <latitude>
+          <value>26.7412</value>
+        </latitude>
+        <longitude>
+          <value>143.9792</value>
+        </longitude>
+        <depth>
+          <value>0.0</value>
+        </depth>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420907">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>MS</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749745</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16420908">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>Ms1</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749745</originID>
+        <creationInfo>
+          <author>IDC</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=4258137">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749914</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421134</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>RYUKYU ISLANDS</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9749914">
+        <time>
+          <value>2011-01-07T21:51:04.860000Z</value>
+        </time>
+        <latitude>
+          <value>29.3988</value>
+        </latitude>
+        <longitude>
+          <value>130.3675</value>
+        </longitude>
+        <depth>
+          <value>47000.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16421134">
+        <mag>
+          <value>4.0</value>
+        </mag>
+        <type>Mw</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9749916</originID>
+        <creationInfo>
+          <author>NIED</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</ns0:quakeml>

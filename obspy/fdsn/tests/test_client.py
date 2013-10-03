@@ -15,18 +15,32 @@ from obspy.fdsn.client import build_url
 from obspy.fdsn.header import DEFAULT_USER_AGENT
 import os
 import unittest
+from difflib import Differ
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
 
 
-def failmsg(got, expected):
+def failmsg(got, expected, ignore_lines=[]):
+    """
+    Create message on difference between objects.
+
+    If both are strings create a line-by-line diff, otherwise create info on
+    both using str().
+    For diffs, lines that contain any string given in ignore_lines will be
+    excluded from the comparison.
+    """
     if isinstance(got, str) and isinstance(expected, str):
-        from difflib import Differ
-        diff = Differ().compare(got.splitlines(True),
-                                expected.splitlines(True))
+        got = [l for l in got.splitlines(True)
+               if all([x not in l for x in ignore_lines])]
+        expected = [l for l in expected.splitlines(True)
+                    if all([x not in l for x in ignore_lines])]
+        diff = Differ().compare(got, expected)
         diff = "".join([l for l in diff if l[0] in "-+?"])
-        return "\nDiff:\n%s" % diff
+        if diff:
+            return "\nDiff:\n%s" % diff
+        else:
+            return ""
     else:
         return "\nGot:\n%s\nExpected:\n%s" % (str(got), str(expected))
 
@@ -124,11 +138,12 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             got = client.get_stations(**query)
             file_ = os.path.join(self.datapath, filename)
-            with open(file_, "wt") as fh:
-                fh.write(got)
+            #with open(file_, "wt") as fh:
+            #    fh.write(got)
             with open(file_) as fh:
                 expected = fh.read()
-            self.assertEqual(got, expected, failmsg(got, expected))
+            msg = failmsg(got, expected, ignore_lines=['<Created>'])
+            self.assertEqual(msg, "", msg)
 
 
 def suite():
