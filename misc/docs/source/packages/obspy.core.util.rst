@@ -22,8 +22,8 @@
        ~misc.guessDelta
        ~misc.scoreatpercentile
        ~misc.toIntOrZero
-       ~types.OrderedDict
-       ~types.Enum
+       ~obspy_types.OrderedDict
+       ~obspy_types.Enum
 
 
     .. comment to end block
@@ -39,7 +39,7 @@
        decorator
        geodetics
        misc
-       types
+       obspy_types
 
     .. comment to end block
 

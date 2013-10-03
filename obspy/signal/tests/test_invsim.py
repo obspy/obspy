@@ -13,6 +13,7 @@ import gzip
 import numpy as np
 import os
 import unittest
+from StringIO import StringIO
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
@@ -339,6 +340,29 @@ class InvSimTestCase(unittest.TestCase):
             kwargs = {'units': 'VEL', 'freq': True}
             _h, f = evalresp(*args, **kwargs)
             self.assertEquals(len(f), nfft // 2 + 1)
+
+    def test_evalresp_file_like_object(self):
+        """
+        Test evalresp with file like object
+        """
+        rawf = os.path.join(self.path, 'CRLZ.HHZ.10.NZ.SAC')
+        respf = os.path.join(self.path, 'RESP.NZ.CRLZ.10.HHZ')
+
+        tr1 = read(rawf)[0]
+        tr2 = read(rawf)[0]
+
+        date = UTCDateTime(2003, 11, 1, 0, 0, 0)
+        seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
+        tr1.data = seisSim(tr1.data, tr1.stats.sampling_rate,
+                           seedresp=seedresp)
+
+        with open(respf) as fh:
+            stringio = StringIO(fh.read())
+        seedresp['filename'] = stringio
+        tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
+                           seedresp=seedresp)
+
+        self.assertEqual(tr1, tr2)
 
 
 def suite():

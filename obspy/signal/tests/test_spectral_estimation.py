@@ -5,6 +5,7 @@ The psd test suite.
 """
 
 from obspy import Trace, Stream, UTCDateTime
+from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np
@@ -115,7 +116,7 @@ class PsdTestCase(unittest.TestCase):
                          (-131.04 + 467.29j)],
                'sensitivity': 2516778400.0,
                'zeros': [0j, 0j]}
-        ppsd = PPSD(tr.stats, paz)
+        ppsd = PPSD(tr.stats, paz, db_bins=(-200, -50, 0.5))
         ppsd.add(st)
         # read results and compare
         result_hist = np.load(file_histogram)
@@ -133,6 +134,32 @@ class PsdTestCase(unittest.TestCase):
         binning = np.load(file_binning)
         np.testing.assert_array_equal(ppsd.spec_bins, binning['spec_bins'])
         np.testing.assert_array_equal(ppsd.period_bins, binning['period_bins'])
+
+        # test saving and loading of the PPSD (using a temporary file)
+        with NamedTemporaryFile() as tf:
+            filename = tf.name
+            # test saving and loading an uncompressed file
+            ppsd.save(filename, compress=False)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
+            # test saving and loading a compressed file
+            ppsd.save(filename, compress=True)
+            ppsd_loaded = PPSD.load(filename)
+            self.assertEqual(len(ppsd_loaded.times), 4)
+            self.assertEqual(ppsd_loaded.nfft, 65536)
+            self.assertEqual(ppsd_loaded.nlap, 49152)
+            np.testing.assert_array_equal(ppsd_loaded.hist_stack, result_hist)
+            np.testing.assert_array_equal(ppsd_loaded.spec_bins,
+                                          binning['spec_bins'])
+            np.testing.assert_array_equal(ppsd_loaded.period_bins,
+                                          binning['period_bins'])
 
 
 def suite():

@@ -223,7 +223,6 @@ class Client(object):
         kwargs['endtime'] = UTCDateTime(endtime) + t_extension
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
             kwargs['quality'] = str(quality).upper()
-
         # single channel request, go via `dataselect` Web service
         if all([val.isalnum() for val in (kwargs['network'],
                                           kwargs['station'],
@@ -1070,7 +1069,7 @@ class Client(object):
         return stream
 
     def bulkdataselect(self, bulk, quality=None, filename=None,
-                       minimumlength=None, longestonly=True):
+                       minimumlength=None, longestonly=False):
         """
         Low-level interface for `bulkdataselect` Web service of IRIS
         (http://www.iris.edu/ws/bulkdataselect/) - release 1.4.5 (2012-05-03).
@@ -1114,7 +1113,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> req = []
         >>> req.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")

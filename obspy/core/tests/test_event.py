@@ -29,7 +29,7 @@ class EventTestCase(unittest.TestCase):
         # events are equal if the have the same public_id
         # Catch warnings about the same different objects with the same
         # resource id so they do not clutter the test output.
-        with warnings.catch_warnings() as _:
+        with warnings.catch_warnings() as _:  # NOQA
             warnings.simplefilter("ignore")
             ev1 = Event('id1')
             ev2 = Event('id1')
@@ -539,6 +539,14 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res_id = ("smi:local/hello^^yea")
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.getQuakeMLURI)
+
+    def test_resource_id_valid_quakemluri(self):
+        """
+        Test that a resource identifier per default (i.e. no arguments to
+        __init__()) gets set up with a QUAKEML conform ID.
+        """
+        rid = ResourceIdentifier()
+        self.assertEqual(rid.resource_id, rid.getQuakeMLURI())
 
 
 def suite():

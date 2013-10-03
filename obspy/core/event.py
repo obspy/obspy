@@ -436,7 +436,8 @@ class ResourceIdentifier(object):
     :param prefix: An optional identifier that will be put in front of any
         automatically created resource_id. Will only have an effect if
         resource_id is not given. Makes automatically generated resource_ids
-        more reasonable.
+        more reasonable. By default "smi:local" is used which ensures a QuakeML
+        conform resource identifier.
     :type referred_object: Python object, optional
     :param referred_object: The object this instance refers to. All instances
         created with the same resource_id will be able to access the object as
@@ -571,7 +572,8 @@ class ResourceIdentifier(object):
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
 
-    def __init__(self, resource_id=None, prefix=None, referred_object=None):
+    def __init__(self, resource_id=None, prefix="smi:local",
+                 referred_object=None):
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
@@ -903,7 +905,7 @@ class WaveformStreamID(__WaveformStreamID):
     use resourceURI as a flexible, abstract, and unique stream ID that allows
     to describe different processing levels, or resampled/filtered products of
     the same initial stream, without violating the intrinsic meaning of the
-    legacy identifiers (network, station, channel, and loca- tion codes).
+    legacy identifiers (network, station, channel, and location codes).
     However, for operation in the context of legacy systems, the classical
     identifier components are supported.
 
@@ -2125,7 +2127,7 @@ class FocalMechanism(__FocalMechanism):
         mechanism determination. Decimal fraction between 0 and 1.
     :type station_distribution_ratio: float, optional
     :param station_distribution_ratio: Station distribution ratio (STDR)
-        parameter. Indicates how the stations are dis- tributed about the focal
+        parameter. Indicates how the stations are distributed about the focal
         sphere (Reasenberg and Oppenheimer 1985). Decimal fraction between 0
         and 1.
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
@@ -2797,9 +2799,10 @@ class Catalog(object):
 
         .. rubric:: Example
 
-        >>> cat = readEvents(\ # doctest:+SKIP
-            "http://www.seismicportal.eu/services/event/search?magMin=8.0")
-        >>> cat.plot() # doctest:+SKIP
+        >>> cat = readEvents( \
+            "http://www.seismicportal.eu/services/event/search?magMin=8.0") \
+            # doctest:+SKIP
+        >>> cat.plot()  # doctest:+SKIP
         """
         from mpl_toolkits.basemap import Basemap
         import matplotlib.pyplot as plt

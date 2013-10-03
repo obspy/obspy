@@ -146,7 +146,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEqual(
             results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
@@ -154,7 +154,7 @@ class ClientTestCase(unittest.TestCase):
         results = client.getRouting('GE', 'APE', dt, dt + 1)
         self.assertEqual(
             results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
@@ -237,18 +237,6 @@ class ClientTestCase(unittest.TestCase):
         # network
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
-
-    def test_getInventory2(self):
-        """
-        Bugfix for location and channel codes for new inventory schema
-        """
-        client = Client(user='test@obspy.org')
-        # new schema
-        inventory = client.getInventory('CH', 'GRYON')
-        self.assertTrue('CH.GRYON..EHE' in inventory)
-        # old schema
-        inventory = client.getInventory('BW', 'MANZ')
-        self.assertTrue('BW.MANZ..EHZ' in inventory)
 
     def test_getWaveformWithMetadata(self):
         """

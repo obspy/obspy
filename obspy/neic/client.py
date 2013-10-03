@@ -35,21 +35,20 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.neic import Client
-    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-    >>> st = client.getWaveform("US", "ISCO", "00", "BH?", t, t + 10)
+    >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
     >>> print st  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
     >>> print st  # doctest: +ELLIPSIS
     3 Trace(s) in Stream:
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
-    US.ISCO.00.BH... | 40.0 Hz, 401 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+    IU.ANMO.00.BH... | 20.0 Hz, 201 samples
     """
     def __init__(self, host="137.227.224.97", port=2061, timeout=30,
                  debug=False):
@@ -101,15 +100,14 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neic import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveform("US", "ISCO", "??", "BH?", t, t + 10)
+        >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)
         >>> print st  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         """
         # padding channel with spaces does not make sense
         if len(channel) < 3 and channel != ".*":
@@ -155,18 +153,12 @@ class Client(object):
         >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
-        >>> st = client.getWaveformNSCL("USISCO BH.00", t, 10)
+        >>> st = client.getWaveformNSCL("IUANMO BH.00", t, 10)
         >>> print st  # doctest: +ELLIPSIS
         3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        >>> st = client.getWaveformNSCL("USISCO B.*", t, 10)
-        >>> print st  # doctest: +ELLIPSIS
-        3 Trace(s) in Stream:
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
-        US.ISCO.00.BH... | 40.0 Hz, 401 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
+        IU.ANMO.00.BH... | 20.0 Hz, 201 samples
         """
         start = str(UTCDateTime(starttime)).replace("T", " ").replace("Z", "")
         line = "'-dbg' '-s' '%s' '-b' '%s' '-d' '%s'\t" % \
@@ -225,9 +217,11 @@ class Client(object):
             except socket.error as e:
                 print traceback.format_exc()
                 print "CWB QueryServer at " + self.host + "/" + str(self.port)
+                raise
             except Exception as e:
                 print traceback.format_exc()
                 print "**** exception found=" + str(e)
+                raise
         if self.debug:
             print ascdate() + " " + asctime() + " success?  len=" + str(totlen)
         st.merge(-1)

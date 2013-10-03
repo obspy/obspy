@@ -15,10 +15,6 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import inspect
-import os
-
-import obspy
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -28,6 +24,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
+import inspect
+import os
+import warnings
 
 
 def isQuakeML(filename):
@@ -918,11 +917,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Magnitude
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
@@ -954,11 +953,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import StationMagnitude
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
@@ -987,11 +986,11 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Origin
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
@@ -1393,8 +1392,7 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and \
-            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1427,16 +1425,27 @@ def readSeisHubEventXML(filename):
     return readQuakeML(temp)
 
 
-def validate(xml_file, verbose=False):
+def _validate(xml_file, verbose=False):
     """
     Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
     either True or False.
     """
+    try:
+        from lxml.etree import RelaxNG
+    except ImportError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    relaxng = etree.RelaxNG(etree.parse(schema_location))
+    try:
+        relaxng = RelaxNG(etree.parse(schema_location))
+    except TypeError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     xmldoc = etree.parse(xml_file)
 
     valid = relaxng.validate(xmldoc)

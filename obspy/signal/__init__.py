@@ -46,6 +46,8 @@ Working with the convenience methods implemented on
 works similar:
 
 >>> tr.filter('highpass', freq=1.0, corners=1, zerophase=True)
+... # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 
 .. plot::
 
@@ -96,6 +98,8 @@ Again, there are convenience methods implemented on
 :class:`~obspy.core.stream.Stream`/:class:`~obspy.core.trace.Trace`:
 
 >>> tr.simulate(paz_remove=sts2, paz_simulate=inst2hz, water_level=60.0)
+... # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 
 .. plot::
 
@@ -131,7 +135,8 @@ The following example demonstrates a recursive STA/LTA triggering:
 >>> from obspy.signal.trigger import recSTALTA, plotTrigger
 >>> st = read()
 >>> tr = st.select(component="Z")[0]
->>> tr.filter("bandpass", freqmin=1, freqmax=20)
+>>> tr.filter("bandpass", freqmin=1, freqmax=20)  # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 >>> sta = 0.5
 >>> lta = 4
 >>> cft = recSTALTA(tr.data, int(sta * tr.stats.sampling_rate),
@@ -161,7 +166,8 @@ It works on and overwrites the traces waveform data and is intended for batch
 processing rather than for interactive determination of triggering parameters.
 But it also means that the trace's built-in methods can be used.
 
->>> tr.trigger("recstalta", sta=0.5, lta=4)
+>>> tr.trigger("recstalta", sta=0.5, lta=4)  # doctest: +ELLIPSIS
+<...Trace object at 0x...>
 >>> tr.plot()  # doctest: +SKIP
 
 .. plot::

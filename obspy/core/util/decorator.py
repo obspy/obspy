@@ -113,30 +113,65 @@ def uncompressFile(func):
         elif not os.path.exists(filename):
             msg = "File not found '%s'" % (filename)
             raise IOError(msg)
-        # check if we got a compressed file
-        unpacked_data = None
-        if filename.endswith('.bz2'):
-            # bzip2
+        # check if we got a compressed file or archive
+        obj_list = []
+        if filename.endswith('.tar') or filename.endswith('.tgz') or \
+                filename.endswith('.tar.gz') or filename.endswith('.tar.bz2'):
+            # tarfile module
+            try:
+                import tarfile
+                if not tarfile.is_tarfile(filename):
+                    raise
+                # reading with transparent compression
+                tar = tarfile.open(filename, 'r|*')
+                for tarinfo in tar:
+                    # only handle regular files
+                    if not tarinfo.isfile():
+                        continue
+                    data = tar.extractfile(tarinfo).read()
+                    obj_list.append(data)
+                tar.close()
+            except:
+                pass
+        elif filename.endswith('.zip'):
+            # zipfile module
+            try:
+                import zipfile
+                if not zipfile.is_zipfile(filename):
+                    raise
+                zip = zipfile.ZipFile(filename)
+                obj_list = [zip.read(name) for name in zip.namelist()]
+            except:
+                pass
+        elif filename.endswith('.bz2'):
+            # bz2 module
             try:
                 import bz2
-                unpacked_data = bz2.decompress(open(filename, 'rb').read())
+                obj_list.append(bz2.decompress(open(filename, 'rb').read()))
             except:
                 pass
         elif filename.endswith('.gz'):
-            # gzip
+            # gzip module
             try:
                 import gzip
-                unpacked_data = gzip.open(filename, 'rb').read()
+                obj_list.append(gzip.open(filename, 'rb').read())
             except:
                 pass
-        if unpacked_data:
-            # we unpacked something without errors - create temporary file
-            with NamedTemporaryFile() as tempfile:
-                tempfile._fileobj.write(unpacked_data)
-                # call wrapped function
-                result = func(tempfile.name, *args, **kwargs)
+        # handle results
+        if obj_list:
+            # write results to temporary files
+            result = None
+            for obj in obj_list:
+                with NamedTemporaryFile() as tempfile:
+                    tempfile._fileobj.write(obj)
+                    stream = func(tempfile.name, *args, **kwargs)
+                    # just add other stream objects to first stream
+                    if result is None:
+                        result = stream
+                    else:
+                        result += stream
         else:
-            # call wrapped function with original filename
+            # no compressions
             result = func(filename, *args, **kwargs)
         return result
     return wrapped_func
