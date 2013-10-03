@@ -79,15 +79,15 @@ class Client(object):
 
         self._discover_services()
 
-    def get_event(self, starttime=None, endtime=None, minlatitude=None,
-                  maxlatitude=None, minlongitude=None, maxlongitude=None,
-                  latitude=None, longitude=None, minradius=None,
-                  maxradius=None, mindepth=None, maxdepth=None,
-                  minmagnitude=None, maxmagnitude=None, magnitudetype=None,
-                  includeallorigins=None, includeallmagnitudes=None,
-                  includearrivals=None, eventid=None, limit=None, offset=None,
-                  orderby=None, catalog=None, contributor=None,
-                  updatedafter=None, filename=None, **kwargs):
+    def get_events(self, starttime=None, endtime=None, minlatitude=None,
+                   maxlatitude=None, minlongitude=None, maxlongitude=None,
+                   latitude=None, longitude=None, minradius=None,
+                   maxradius=None, mindepth=None, maxdepth=None,
+                   minmagnitude=None, maxmagnitude=None, magnitudetype=None,
+                   includeallorigins=None, includeallmagnitudes=None,
+                   includearrivals=None, eventid=None, limit=None, offset=None,
+                   orderby=None, catalog=None, contributor=None,
+                   updatedafter=None, filename=None, **kwargs):
         """
         Query the event service of the client.
 
@@ -209,14 +209,14 @@ class Client(object):
             data_stream.close()
             return cat
 
-    def get_station(self, starttime=None, endtime=None, startbefore=None,
-                    startafter=None, endbefore=None, endafter=None,
-                    network=None, station=None, location=None, channel=None,
-                    minlatitude=None, maxlatitude=None, minlongitude=None,
-                    maxlongitude=None, latitude=None, longitude=None,
-                    minradius=None, maxradius=None, level=None,
-                    includerestricted=None, includeavailability=None,
-                    updatedafter=None, filename=None, **kwargs):
+    def get_stations(self, starttime=None, endtime=None, startbefore=None,
+                     startafter=None, endbefore=None, endafter=None,
+                     network=None, station=None, location=None, channel=None,
+                     minlatitude=None, maxlatitude=None, minlongitude=None,
+                     maxlongitude=None, latitude=None, longitude=None,
+                     minradius=None, maxradius=None, level=None,
+                     includerestricted=None, includeavailability=None,
+                     updatedafter=None, filename=None, **kwargs):
         """
         Query the station service of the client.
 
