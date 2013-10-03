@@ -13,8 +13,8 @@ from io import BytesIO
 import obspy
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
-    DEFAULT_DATASELECT_PARAMETERS, DEFAULT_STATION_PARAMETERS, \
-    DEFAULT_EVENT_PARAMETERS, URL_MAPPINGS
+    URL_MAPPINGS, DEFAULT_PARAMETERS
+from obspy.core.util.misc import wrap_long_string
 
 import Queue
 import threading
@@ -472,84 +472,91 @@ class Client(object):
 
     def __str__(self):
         ret = ("FDSN Webservice Client (base url: {url})\n"
-               "Available Services: {services}".format(
+               "Available Services: '{services}'\n\n"
+               "Use e.g. client.help('dataselect') for the\n"
+               "parameter description of the individual services.".format(
                    url=self.base_url,
-                   services=", ".join(self.services.keys())))
+                   services="', '".join(self.services.keys())))
         return ret
 
-    def help(self, service):
+    def help(self, service=None):
         """
         Print a more extensive help for a given service.
 
         This will use the already parsed WADL files and be specific for each
         data center and always up-to-date.
         """
-        if service not in self.services:
+        if service is not None and service not in self.services:
             msg = "Service '%s' not available for current client." % service
             raise ValueError(msg)
 
-        if service == "dataselect":
-            SERVICE_DEFAULT = DEFAULT_DATASELECT_PARAMETERS
-        elif service == "event":
-            SERVICE_DEFAULT = DEFAULT_EVENT_PARAMETERS
-        elif service == "station":
-            SERVICE_DEFAULT = DEFAULT_STATION_PARAMETERS
+        if service is None:
+            services = self.services.keys()
+        elif service in DEFAULT_PARAMETERS:
+            services = [service]
         else:
             raise NotImplementedError
 
-        print "Parameter description for the '%s' service of '%s':" % (
-            service, self.base_url)
+        for service in services:
+            SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
 
-        # Loop over all parameters and group them in three list: available
-        # default parameters, missing default parameters and additional
-        # parameters
-        available_default_parameters = []
-        missing_default_parameters = []
-        additional_parameters = []
-        long_default_names = [_i[0] for _i in SERVICE_DEFAULT]
-        for name in long_default_names:
-            if name in self.services[service]:
-                available_default_parameters.append(name)
-            else:
-                missing_default_parameters.append(name)
+            print "Parameter description for the '%s' service of '%s':" % (
+                service, self.base_url)
 
-        for name in self.services[service].iterkeys():
-            if name not in long_default_names:
-                additional_parameters.append(name)
+            # Loop over all parameters and group them in three list: available
+            # default parameters, missing default parameters and additional
+            # parameters
+            available_default_parameters = []
+            missing_default_parameters = []
+            additional_parameters = []
+            long_default_names = [_i[0] for _i in SERVICE_DEFAULT]
+            for name in long_default_names:
+                if name in self.services[service]:
+                    available_default_parameters.append(name)
+                else:
+                    missing_default_parameters.append(name)
 
-        def _print_param(name):
-            param = self.services[service][name]
-            name = "%s (%s)" % (name, param["type"].__name__)
-            req_def = ""
-            if param["required"]:
-                req_def = "Required Parameter"
-            elif param["default_value"]:
-                req_def = "Default value: %s" % str(param["default_value"])
-            if param["options"]:
-                req_def += "Choices: %s" % \
-                    ", ".join(map(str, param["options"]))
-            if req_def:
-                req_def = ", %s" % req_def
-            if param["doc_title"]:
-                doc_title = "\n        %s" % param["doc_title"]
-            else:
-                doc_title = ""
+            for name in self.services[service].iterkeys():
+                if name not in long_default_names:
+                    additional_parameters.append(name)
 
-            print "    {name}{req_def}{doc_title}".format(
-                name=name, req_def=req_def, doc_title=doc_title)
+            def _print_param(name):
+                param = self.services[service][name]
+                name = "%s (%s)" % (name, param["type"].__name__)
+                req_def = ""
+                if param["required"]:
+                    req_def = "Required Parameter"
+                elif param["default_value"]:
+                    req_def = "Default value: %s" % str(param["default_value"])
+                if param["options"]:
+                    req_def += "Choices: %s" % \
+                        ", ".join(map(str, param["options"]))
+                if req_def:
+                    req_def = ", %s" % req_def
+                if param["doc_title"]:
+                    doc_title = wrap_long_string(param["doc_title"],
+                                                 prefix="        ")
+                    doc_title = "\n" + doc_title
+                else:
+                    doc_title = ""
 
-        for name in available_default_parameters:
-            _print_param(name)
+                print "    {name}{req_def}{doc_title}".format(
+                    name=name, req_def=req_def, doc_title=doc_title)
 
-        if additional_parameters:
-            print "The service offers the following non-standard parameters:"
-            for name in additional_parameters:
+            for name in available_default_parameters:
                 _print_param(name)
 
-        if missing_default_parameters:
-            print("WARNING: The service does not offer the following "
-                  "standard parameters: %s" %
-                  ", ".join(missing_default_parameters))
+            if additional_parameters:
+                print "The service offers the following non-standard parameters:"
+                for name in additional_parameters:
+                    _print_param(name)
+
+            if missing_default_parameters:
+                print("WARNING: The service does not offer the following "
+                      "standard parameters: %s" %
+                      ", ".join(missing_default_parameters))
+
+            print
 
     def _download(self, url):
         code, data = download_url(url, headers=self.request_headers,

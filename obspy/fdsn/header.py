@@ -53,6 +53,10 @@ DEFAULT_EVENT_PARAMETERS = [
     ("includeallmagnitudes", ), ("includearrivals", ), ("eventid", ),
     ("limit",), ("offset", ), ("orderby", ), ("catalog", ), ("contributor", ),
     ("updatedafter", )]
+DEFAULT_PARAMETERS = {
+    "dataselect": DEFAULT_DATASELECT_PARAMETERS,
+    "event": DEFAULT_EVENT_PARAMETERS,
+    "station": DEFAULT_STATION_PARAMETERS}
 
 
 # The default types if none are given. If the parameter can not be found in
