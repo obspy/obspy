@@ -471,11 +471,10 @@ class Client(object):
                                parameters=final_parameter_set)
 
     def __str__(self):
-        ret = (
-            "FDSN Webservice Client (base url: {url})\n"
-            "Available Services: {services}".format(
-            url=self.base_url,
-            services=", ".join(self.services.keys())))
+        ret = ("FDSN Webservice Client (base url: {url})\n"
+               "Available Services: {services}".format(
+                   url=self.base_url,
+                   services=", ".join(self.services.keys())))
         return ret
 
     def help(self, service):
