@@ -197,7 +197,7 @@ class Client(object):
                 kwargs[param] = value
 
         url = self._create_url_from_parameters(
-            "event", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+            "event", DEFAULT_PARAMETERS['event'], kwargs)
 
         data_stream = self._download(url)
         data_stream.seek(0, 0)
@@ -320,7 +320,7 @@ class Client(object):
             kwargs["location"] = "--"
 
         url = self._create_url_from_parameters(
-            "station", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+            "station", DEFAULT_PARAMETERS['station'], kwargs)
 
         data_stream = self._download(url)
         data_stream.seek(0, 0)
@@ -396,7 +396,7 @@ class Client(object):
         if longestonly is not None:
             kwargs["longestonly"] = longestonly
         url = self._create_url_from_parameters(
-            "dataselect", DEFAULT_DATASELECT_PARAMETERS, kwargs)
+            "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
         # Special location handling. Convert empty strings to "--".
         if "location" in kwargs and not kwargs["location"]:
@@ -547,7 +547,8 @@ class Client(object):
                 _print_param(name)
 
             if additional_parameters:
-                print "The service offers the following non-standard parameters:"
+                print ("The service offers the following "
+                       "non-standard parameters:")
                 for name in additional_parameters:
                     _print_param(name)
 
