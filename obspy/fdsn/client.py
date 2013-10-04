@@ -628,6 +628,18 @@ class Client(object):
 
             print
 
+            if service == "event" and \
+                    "available_event_catalogs" in self.services:
+                print("Available catalogs: %s" %
+                      ", ".join(
+                          self.services["available_event_catalogs"]))
+
+            if service == "event" and \
+                    "available_event_contributors" in self.services:
+                print("Available catalogs: %s" %
+                      ", ".join(
+                          self.services["available_event_contributors"]))
+
     def _download(self, url):
         code, data = download_url(url, headers=self.request_headers,
                                   debug=self.debug, return_string=False)
