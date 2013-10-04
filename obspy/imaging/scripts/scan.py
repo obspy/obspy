@@ -94,8 +94,12 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         data_dict.setdefault(_id, [])
         data_dict[_id].append([date2num(tr.stats.starttime),
                                date2num(tr.stats.endtime)])
-        samp_int_dict.setdefault(_id,
-                                 1.0 / (24 * 3600 * tr.stats.sampling_rate))
+        try:
+            samp_int_dict.\
+                setdefault(_id, 1. / (24 * 3600 * tr.stats.sampling_rate))
+        except ZeroDivisionError:
+            print("Skipping file with zero samlingrate: %s" % (file))
+            return counter
     return (counter + 1)
 
 
@@ -134,7 +138,7 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main():
+def main(option_list=None):
     parser = OptionParser(__doc__.strip())
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
@@ -193,7 +197,7 @@ def main():
     parser.add_option("--print-gaps", default=False,
                       action="store_true", dest="print_gaps",
                       help="Optional, prints a list of gaps at the end.")
-    (options, largs) = parser.parse_args()
+    (options, largs) = parser.parse_args(option_list)
 
     # Print help and exit if no arguments are given
     if len(largs) == 0 and options.load is None:
@@ -272,6 +276,8 @@ def main():
         if options.starttime:
             startend = startend[startend[:, 0] < options.endtime]
         if len(startend) == 0:
+            continue
+        if _id not in samp_int:
             continue
 
         startend_compressed = compressStartend(startend, 1000)
