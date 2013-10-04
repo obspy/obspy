@@ -11,7 +11,7 @@ The obspy.fdsn.client test suite.
 """
 from obspy import readEvents, UTCDateTime, read
 from obspy.fdsn import Client
-from obspy.fdsn.client import build_url
+from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 import os
 import unittest
@@ -148,6 +148,25 @@ class ClientTestCase(unittest.TestCase):
                          set("University of Washington", "ANF", "GCMT",
                              "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
                              "UNKNOWN", "NEIC PDE-M", "NEIC PDE-Q"))
+
+    def test_simple_XML_parser(self):
+        """
+        Tests the simple XML parsing helper function.
+        """
+        catalogs = parse_simple_xml("""
+            <?xml version="1.0"?>
+            <Catalogs>
+              <total>6</total>
+              <Catalog>ANF</Catalog>
+              <Catalog>GCMT</Catalog>
+              <Catalog>TEST</Catalog>
+              <Catalog>ISC</Catalog>
+              <Catalog>UofW</Catalog>
+              <Catalog>NEIC PDE</Catalog>
+            </Catalogs>""")
+        self.assertEqual(catalogs, {"catalogs": set(("ANF", "GCMT", "TEST",
+                                                     "ISC", "UofW",
+                                                     "NEIC PDE"))})
 
     def test_IRIS_example_queries(self):
         """

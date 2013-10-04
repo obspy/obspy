@@ -10,6 +10,7 @@ FDSN Web service client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from io import BytesIO
+from lxml import etree
 import obspy
 from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
@@ -844,6 +845,36 @@ def setup_query_dict(service, locs, kwargs):
         value = locs[param]
         if value is not None:
             kwargs[param] = value
+
+
+def parse_simple_xml(xml_string):
+    """
+    Simple helper function for parsing the Catalog and Contributor availability
+    files.
+
+    Parses XMLs of the form
+
+    <Bs>
+        <total>4</total>
+        <B>1</B>
+        <B>2</B>
+        <B>3</B>
+        <B>4</B>
+    <Bs>
+
+    and return a dictionary with a single item:
+
+    {"Bs": set(("1", "2", "3", "4"))}
+    """
+    root = etree.fromstring(xml_string.strip())
+
+    if not root.tag.endswith("s"):
+        msg = "Could not parse the XML."
+        raise ValueError(msg)
+    child_tag = root.tag[:-1]
+    children = [i.text for i in root if i.tag == child_tag]
+
+    return {root.tag.lower(): set(children)}
 
 
 if __name__ == '__main__':
