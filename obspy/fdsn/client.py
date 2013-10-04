@@ -578,15 +578,17 @@ class Client(object):
             available_default_parameters = []
             missing_default_parameters = []
             additional_parameters = []
-            long_default_names = [_i[0] for _i in SERVICE_DEFAULT]
-            for name in long_default_names:
+
+            printed_something = False
+
+            for name in SERVICE_DEFAULT:
                 if name in self.services[service]:
                     available_default_parameters.append(name)
                 else:
                     missing_default_parameters.append(name)
 
             for name in self.services[service].iterkeys():
-                if name not in long_default_names:
+                if name not in SERVICE_DEFAULT:
                     additional_parameters.append(name)
 
             def _print_param(name):
@@ -612,33 +614,35 @@ class Client(object):
                 print "    {name}{req_def}{doc_title}".format(
                     name=name, req_def=req_def, doc_title=doc_title)
 
-            for name in available_default_parameters:
-                _print_param(name)
-
             if additional_parameters:
+                printed_something = True
                 print ("The service offers the following "
                        "non-standard parameters:")
                 for name in additional_parameters:
                     _print_param(name)
 
             if missing_default_parameters:
+                printed_something = True
                 print("WARNING: The service does not offer the following "
                       "standard parameters: %s" %
                       ", ".join(missing_default_parameters))
 
-            print
-
             if service == "event" and \
                     "available_event_catalogs" in self.services:
+                printed_something = True
                 print("Available catalogs: %s" %
                       ", ".join(
                           self.services["available_event_catalogs"]))
 
             if service == "event" and \
                     "available_event_contributors" in self.services:
+                printed_something = True
                 print("Available catalogs: %s" %
                       ", ".join(
                           self.services["available_event_contributors"]))
+
+            if printed_something is False:
+                print("No derivations from standard detected")
 
     def _download(self, url):
         code, data = download_url(url, headers=self.request_headers,
