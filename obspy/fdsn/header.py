@@ -13,6 +13,11 @@ from obspy import __version__, UTCDateTime
 
 import platform
 
+
+class FDSNException(Exception):
+    pass
+
+
 URL_MAPPINGS = {"IRIS": "http://service.iris.edu",
                 "USGS": "http://comcat.cr.usgs.gov",
                 "RESIF": "http://ws.resif.fr",

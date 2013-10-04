@@ -12,7 +12,7 @@ The obspy.fdsn.client test suite.
 from obspy import readEvents, UTCDateTime, read
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url
-from obspy.fdsn.header import DEFAULT_USER_AGENT
+from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
 import os
 import unittest
 from difflib import Differ
@@ -166,6 +166,12 @@ class ClientTestCase(unittest.TestCase):
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_conflicting_params(self):
+        """
+        """
+        self.assertRaises(FDSNException, self.client.get_stations,
+                          network="IU", net="IU")
 
 
 def suite():
