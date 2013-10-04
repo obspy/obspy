@@ -17,27 +17,29 @@ import unittest
 import warnings
 
 
-def deprecated(func, warning_msg=None):
+def deprecated(warning_msg=None):
     """
     This is a decorator which can be used to mark functions as deprecated.
 
     It will result in a warning being emitted when the function is used.
     """
-    @functools.wraps(func)
-    def new_func(*args, **kwargs):
-        if 'deprecated' in str(func.__doc__).lower():
-            msg = func.__doc__
-        elif warning_msg:
-            msg = warning_msg
-        else:
-            msg = "Call to deprecated function %s." % func.__name__
-        warnings.warn(msg, category=DeprecationWarning)
-        return func(*args, **kwargs)
+    def deprecated_(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            if 'deprecated' in str(func.__doc__).lower():
+                msg = func.__doc__
+            elif warning_msg:
+                msg = warning_msg
+            else:
+                msg = "Call to deprecated function %s." % func.__name__
+            warnings.warn(msg, category=DeprecationWarning)
+            return func(*args, **kwargs)
 
-    new_func.__name__ = func.__name__
-    new_func.__doc__ = func.__doc__
-    new_func.__dict__.update(func.__dict__)
-    return new_func
+        new_func.__name__ = func.__name__
+        new_func.__doc__ = func.__doc__
+        new_func.__dict__.update(func.__dict__)
+        return new_func
+    return deprecated_
 
 
 def deprecated_keywords(keywords):

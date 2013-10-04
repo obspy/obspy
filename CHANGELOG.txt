@@ -39,6 +39,9 @@ dev:
    * obspy-indexer script uses from now on hash symbols (#) instead
      of pipe (|) for features because pipe has a special meaning on
      most operating systems
+ - obspy.fdsn:
+   * new client module to access servers based on the FDSN web service
+     definition (http://www.fdsn.org/webservices/)
  - obspy.imaging:
    * more options to customize day plots
    * obspy-scan: new option --print-gaps
