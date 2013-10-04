@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:quakeml xmlns:ns0="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:local/2973e555-2478-46ed-90e8-4b8a75a90a43">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=609301">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=1305312</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=6680830</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>SOUTH OF FIJI ISLANDS</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=1305312">
+        <time>
+          <value>1997-10-14T09:53:11.070000Z</value>
+        </time>
+        <latitude>
+          <value>-22.1447</value>
+        </latitude>
+        <longitude>
+          <value>-176.7203</value>
+        </longitude>
+        <depth>
+          <value>105400.0</value>
+        </depth>
+        <creationInfo>
+          <author>ISC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=6680830">
+        <mag>
+          <value>7.8</value>
+        </mag>
+        <type>mw</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=1305320</originID>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</ns0:quakeml>

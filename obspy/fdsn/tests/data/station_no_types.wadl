@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+    <doc title="FDSN station web service 1.0"/>
+    <grammars/>
+    <resources base="http://ws.resif.fr/fdsnws/station/1/">
+        <resource path="/">
+            <method name="GET" id="root">
+                <response>
+                    <representation mediaType="text/html"/>
+                </response>
+            </method>
+            <resource path="query">
+                <method name="GET" id="query">
+		    <request>
+		      <param name="starttime" style="query"/>
+		      <param name="endtime" style="query"/>
+		      <param name="startbefore" style="query"/>
+		      <param name="startafter" style="query"/>
+		      <param name="endbefore" style="query"/>
+		      <param name="endafter" style="query"/>
+		      <param name="network" style="query"/>
+		      <param name="station" style="query"/>
+		      <param name="location" style="query"/>
+		      <param name="channel" style="query"/>
+		      <param name="minlatitude" style="query"/>
+		      <param name="maxlatitude" style="query"/>
+		      <param name="minlongitude" style="query"/>
+		      <param name="maxlongitude" style="query"/>
+		      <param name="latitude" style="query"/>
+		      <param name="longitude" style="query"/>
+		      <param name="minradius" style="query"/>
+		      <param name="maxradius" style="query"/>
+		      <param name="level" style="query"/>
+		      <param name="includerestricted" style="query"/>
+		      <param name="includeavailability" style="query"/>
+		      <param name="updatedafter" style="query"/>
+		    </request>
+                    <response>
+                      <representation mediaType="text/plain"/>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="version">
+                <method name="GET" id="version">
+                    <response>
+                      <representation mediaType="text/plain"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="application.wadl">
+                <method name="GET" id="application.wadl">
+                    <response>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+        </resource>
+    </resources>
+</application>
