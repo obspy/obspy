@@ -58,23 +58,23 @@ Naming
 * Use ``CamelCase`` for class names, but ``lower_with_under.py`` for module
   names.
 
-==================  ====================  ====================================
-Type                Public                Internal
-==================  ====================  ====================================
-Packages            ``lower_with_under``    
-Modules             ``lower_with_under``  ``_lower_with_under``
-Classes             ``CamelCase``         ``_CamelCase``
+==================  ======================  ===================================
+Type                Public                  Internal
+==================  ======================  ===================================
+Packages            ``lower_with_under``      
+Modules             ``lower_with_under``    ``_lower_with_under``
+Classes             ``CamelCase``           ``_CamelCase``
 Exceptions          ``CamelCase``    
-Functions           ``mixedCase()``       ``_mixedCase()``
-Constants           ``CAPS_WITH_UNDER``   ``_CAPS_WITH_UNDER``
-Class Variables     ``lower_with_under``  ``_lower_with_under``
-Instance Variables  ``lower_with_under``  ``_lower_with_under`` (protected) or
-                                          ``__lower_with_under`` (private)
-Methods             ``mixedCase()``       ``_mixedCase()`` (protected) or
-                                          ``__mixedCase()`` (private)
-Attributes          ``lower_with_under``    
-Local Variables     ``lower_with_under``    
-==================  ====================  ====================================
+Functions           ``lower_with_under()``  ``_lower_with_under()``
+Constants           ``CAPS_WITH_UNDER``     ``_CAPS_WITH_UNDER``
+Class Variables     ``lower_with_under``    ``_lower_with_under``
+Instance Variables  ``lower_with_under``    ``_lower_with_under`` (protected)
+                                            ``__lower_with_under`` (private)
+Methods             ``lower_with_under()``  ``_lower_with_under()`` (protected)
+                                            ``__lower_with_under()`` (private)
+Attributes          ``lower_with_under``      
+Local Variables     ``lower_with_under``      
+==================  ======================  ===================================
 
 Doc Strings
 -----------
