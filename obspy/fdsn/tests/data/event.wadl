@@ -167,7 +167,7 @@
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includearrivals" style="query" type="xs:boolean" default="false">
                      <doc xml:lang="english" title="Specify if phase arrivals should be included"/>
                   </param>
-                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallmagnitudes" style="query" type="xs:sboolean" default="false">
+                  <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallmagnitudes" style="query" type="xs:boolean" default="false">
                      <doc xml:lang="english" title="Retrieve all magnitudes for the event, or only the primary magnitude from within the catalog"/>
                   </param>
                   <param xmlns:xs="http://www.w3.org/2001/XMLSchema" name="includeallorigins" style="query" type="xs:boolean" default="false">
