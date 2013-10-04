@@ -24,7 +24,8 @@ import warnings
 class WADLParser(object):
     def __init__(self, wadl_string):
         doc = etree.fromstring(wadl_string)
-        self._ns = doc.nsmap.values()[0]
+        self.nsmap = doc.nsmap
+        self._ns = self.nsmap.get(None, None)
         self.parameters = {}
 
         # Get the url.
@@ -184,14 +185,27 @@ class WADLParser(object):
         except:
             return None
 
-    def _xpath(self, doc, xpath):
+    def _xpath(self, doc, expr):
         """
         Simple helper method for using xpaths with the default namespace.
         """
-        xpath = xpath.replace("/", "/ns:")
-        if not xpath.startswith("/ns:"):
-            xpath = "ns:" + xpath
-        return doc.xpath(xpath, namespaces={"ns": self._ns})
+        nsmap = self.nsmap.copy()
+        if self._ns is not None:
+            default_abbreviation = "default"
+            # being paranoid, can happen that another ns goes by that name
+            while default_abbreviation in nsmap:
+                default_abbreviation = default_abbreviation + "x"
+            parts = []
+            # insert prefixes for default namespace
+            for x in expr.split("/"):
+                if x != "" and ":" not in x:
+                    x = "%s:%s" % (default_abbreviation, x)
+                parts.append(x)
+            expr = "/".join(parts)
+            # adapt nsmap accordingly
+            nsmap.pop(None, None)
+            nsmap[default_abbreviation] = self._ns
+        return doc.xpath(expr, namespaces=nsmap)
 
 
 if __name__ == '__main__':
