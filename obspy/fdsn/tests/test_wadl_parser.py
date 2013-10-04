@@ -285,6 +285,8 @@ class WADLParserTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
@@ -314,6 +316,8 @@ class WADLParserTestCase(unittest.TestCase):
         with open(filename, "rt") as fh:
             wadl_string = fh.read()
         with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
             parser = WADLParser(wadl_string)
             # Assert that the warning raised is correct.
             self.assertEqual(len(w), 1)
