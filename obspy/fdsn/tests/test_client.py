@@ -9,7 +9,7 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import readEvents, UTCDateTime
+from obspy import readEvents, UTCDateTime, read
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url
 from obspy.fdsn.header import DEFAULT_USER_AGENT
@@ -144,6 +144,28 @@ class ClientTestCase(unittest.TestCase):
                 expected = fh.read()
             msg = failmsg(got, expected, ignore_lines=['<Created>'])
             self.assertEqual(msg, "", msg)
+
+        # dataselect example queries
+        queries = [
+            ("IU", "ANMO", "00", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:40:00.000")),
+            ("IU", "A*", "*", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+            ("IU", "A??", "*0", "BHZ",
+             UTCDateTime("2010-02-27T06:30:00.000"),
+             UTCDateTime("2010-02-27T06:31:00.000")),
+            ]
+        result_files = ["dataselect_example.mseed",
+                        "dataselect_example_wildcards.mseed",
+                        "dataselect_example_mixed_wildcards.mseed",
+                        ]
+        for query, filename in zip(queries, result_files):
+            got = client.get_waveform(*query)
+            file_ = os.path.join(self.datapath, filename)
+            expected = read(file_)
+            self.assertEqual(got, expected, failmsg(got, expected))
 
 
 def suite():
