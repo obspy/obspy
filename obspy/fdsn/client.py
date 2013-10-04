@@ -11,6 +11,7 @@ FDSN Web service client for ObsPy.
 """
 from io import BytesIO
 import obspy
+from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
@@ -31,16 +32,38 @@ class FDSNException(Exception):
 class Client(object):
     """
     FDSN Web service request client.
+
+    >>> client = Client("IRIS")
+    >>> print client
+    FDSN Webservice Client (base url: http://service.iris.edu)
+    Available Services: 'dataselect', 'station', 'event'
+    <BLANKLINE>
+    Use e.g. client.help('dataselect') for the
+    parameter description of the individual services
+    or client.help() for parameter description of
+    all webservices.
+
+    For details see :meth:`__init__`.
     """
     def __init__(self, base_url="IRIS", major_version=1, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False):
         """
-        Initializes the IRIS Web service client.
+        Initializes an FDSN Web Service client.
+
+        >>> client = Client("IRIS")
+        >>> print client
+        FDSN Webservice Client (base url: http://service.iris.edu)
+        Available Services: 'dataselect', 'station', 'event'
+        <BLANKLINE>
+        Use e.g. client.help('dataselect') for the
+        parameter description of the individual services
+        or client.help() for parameter description of
+        all webservices.
 
         :type base_url: str
-        :param base_url: Base URL of FDSN web service compatible server or key
-            string for recognized server (currently "IRIS", "USGS", "RESIF",
-            "NCEDC")
+        :param base_url: Base URL of FDSN web service compatible server
+            (e.g. "http://service.iris.edu") or key string for recognized
+            server (currently "IRIS", "USGS", "RESIF", "NCEDC")
         :type major_version: int
         :param major_version: Major version number of server to access.
         :type user: str
@@ -91,6 +114,21 @@ class Client(object):
                    updatedafter=None, filename=None, **kwargs):
         """
         Query the event service of the client.
+
+        >>> client = Client("IRIS")
+        >>> cat = client.get_events(eventid=609301)
+        >>> print cat
+        1 Event(s) in Catalog:
+        1997-10-14T09:53:11.070000Z | -22.145, -176.720 | 7.8 mw
+        >>> t1 = UTCDateTime("2011-01-07T01:00:00")
+        >>> t2 = UTCDateTime("2011-01-07T02:00:00")
+        >>> cat = client.get_events(starttime=t1, endtime=t2, minmagnitude=4)
+        >>> print cat
+        4 Event(s) in Catalog:
+        2011-01-07T01:29:49.760000Z | +49.520, +156.895 | 4.2 mb
+        2011-01-07T01:19:16.660000Z | +20.123,  -45.656 | 5.5 MW
+        2011-01-07T01:14:45.500000Z |  -3.268, +100.745 | 4.5 mb
+        2011-01-07T01:14:01.280000Z | +36.095,  +27.550 | 4.0 mb
 
         :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
         :param starttime: Limit to events on or after the specified start time.
@@ -212,6 +250,28 @@ class Client(object):
         """
         Query the station service of the client.
 
+        >>> client = Client("IRIS")
+        >>> stationxml_string = client.get_stations(
+        ...     latitude=-56.1, longitude=-26.7, maxradius=15)
+        >>> for line in stationxml_string.splitlines()[:6]:
+        ...     print line  # doctest: +ELLIPSIS
+        <?xml version="1.0" encoding="ISO-8859-1"?>
+        <BLANKLINE>
+        <FDSNStationXML ...>
+         <Source>IRIS-DMC</Source>
+         <Sender>IRIS-DMC</Sender>
+         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+        >>> stationxml_string = client.get_stations(
+        ...     starttime=UTCDateTime("2013-01-01"), network="IU",
+        ...     sta="ANMO", level="channel")
+        >>> for line in stationxml_string.splitlines()[:6]:
+        ...     print line  # doctest: +ELLIPSIS
+        <?xml version="1.0" encoding="ISO-8859-1"?>
+        <BLANKLINE>
+        <FDSNStationXML ...>
+         <Source>IRIS-DMC</Source>
+         <Sender>IRIS-DMC</Sender>
+         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
 
         :type starttime:
         :param starttime: Limit to metadata epochs starting on or after the
@@ -322,6 +382,37 @@ class Client(object):
                      longestonly=None, filename=None, **kwargs):
         """
         Query the dataselect service of the client.
+
+        >>> client = Client("IRIS")
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = t1 + 1
+        >>> st = client.get_waveform("IU", "ANMO", "00", "BHZ", t1, t2)
+        >>> print st  # doctest: +ELLIPSIS
+        1 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        >>> st = client.get_waveform("IU", "ANMO", "00", "BH*", t1, t2)
+        >>> print st  # doctest: +ELLIPSIS
+        3 Trace(s) in Stream:
+        IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ANMO.00.BH2 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        >>> st = client.get_waveform("IU", "A*", "*", "BHZ", t1, t2)
+        >>> print st  # doctest: +ELLIPSIS
+        7 Trace(s) in Stream:
+        IU.ADK.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ADK.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        IU.AFI.00.BHZ  | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.AFI.10.BHZ  | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        IU.ANTO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        >>> st = client.get_waveform("IU", "A??", "?0", "BHZ", t1, t2)
+        >>> print st  # doctest: +ELLIPSIS
+        4 Trace(s) in Stream:
+        IU.ADK.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ADK.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        IU.AFI.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.AFI.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
 
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
@@ -453,7 +544,9 @@ class Client(object):
         ret = ("FDSN Webservice Client (base url: {url})\n"
                "Available Services: '{services}'\n\n"
                "Use e.g. client.help('dataselect') for the\n"
-               "parameter description of the individual services.".format(
+               "parameter description of the individual services\n"
+               "or client.help() for parameter description of\n"
+               "all webservices.".format(
                    url=self.base_url,
                    services="', '".join(self.services.keys())))
         return ret
