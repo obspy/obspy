@@ -86,9 +86,52 @@ class ClientTestCase(unittest.TestCase):
 
     def test_service_discovery_iris(self):
         """
-        Tests the automatic discovery of services with the IRIS endpoint.
+        Tests the automatic discovery of services with the IRIS endpoint. The
+        test parameters are taken from IRIS' website.
+
+        This will have to be adjusted once IRIS changes their implementation.
         """
-        pass
+        client = self.client
+        self.assertEqual(set(client.services.keys()),
+                         set(("dataselect", "event", "station")))
+
+        # The test sets are copied from the IRIS webpage.
+        self.assertEqual(
+            set(client.services["dataselect"].keys()),
+            set(("starttime", "endtime", "network", "station", "location",
+                 "channel", "quality", "minimumlength", "longestonly")))
+        self.assertEqual(
+            set(client.services["station"].keys()),
+            set(("starttime", "endtime", "startbefore", "startafter",
+                 "endbefore", "endafter", "network", "station", "location",
+                 "channel", "minlatitude", "maxlatitude", "minlongitude",
+                 "maxlongitude", "latitude", "longitude", "minradius",
+                 "maxradius", "level", "includerestricted",
+                 "includeavailability", "updatedafter", "matchtimeseries")))
+        self.assertEqual(
+            set(client.services["event"].keys()),
+            set(("starttime", "endtime", "minlatitude", "maxlatitude",
+                 "minlongitude", "maxlongitude", "latitude", "longitude",
+                 "maxradius", "minradius", "mindepth", "maxdepth",
+                 "minmagnitude", "maxmagnitude",
+                 "magtype",  # XXX: Change once fixed.
+                 "catalog", "contributor", "limit", "offset", "orderby",
+                 "updatedafter", "includeallorigins", "includeallmagnitudes",
+                 "includearrivals", "eventid",
+                 "originid"  # XXX: This is currently just specified in the
+                             #      WADL.
+                 )))
+
+        # Also check an exemplary value in more detail.
+        minradius = client.services["event"]["minradius"]
+        self.assertEqual(minradius["default_value"], 0.0)
+        self.assertEqual(minradius["required"], False)
+        self.assertEqual(minradius["doc"], "")
+        self.assertEqual(minradius["doc_title"], "Specify minimum distance "
+                         "from the geographic point defined by latitude and "
+                         "longitude")
+        self.assertEqual(minradius["type"], float)
+        self.assertEqual(minradius["options"], [])
 
     def test_IRIS_example_queries(self):
         """
