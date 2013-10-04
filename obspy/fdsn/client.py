@@ -25,6 +25,9 @@ import urllib2
 import warnings
 
 
+PARAM_CONFLICT_MSG = "two parameters were provided for the same option: %s, %s"
+
+
 class Client(object):
     """
     FDSN Web service request client.
@@ -824,6 +827,12 @@ def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
 def setup_query_dict(service, locs, kwargs):
     """
     """
+    # check if alias is used together with the normal parameter
+    for key in kwargs:
+        if key in PARAMETER_ALIASES:
+            if locs[PARAMETER_ALIASES[key]] is not None:
+                msg = PARAM_CONFLICT_MSG % (key, PARAMETER_ALIASES[key])
+                raise FDSNException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
     for key in list(kwargs.keys()):
