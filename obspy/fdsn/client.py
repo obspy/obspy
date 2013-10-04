@@ -829,7 +829,7 @@ def setup_query_dict(service, locs, kwargs):
         if key in PARAMETER_ALIASES:
             if locs[PARAMETER_ALIASES[key]] is not None:
                 msg = ("two parameters were provided for the same option: "
-                       "%s, %s"% (key, PARAMETER_ALIASES[key]))
+                       "%s, %s" % (key, PARAMETER_ALIASES[key]))
                 raise FDSNException(msg)
     # short aliases are not mentioned in the downloaded WADLs, so we have
     # to map it here according to the official FDSN WS documentation
