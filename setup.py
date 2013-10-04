@@ -25,7 +25,7 @@ For more information visit http://www.obspy.org.
 # dependency. Inplace installation with pip works also without importing
 # setuptools.
 try:
-    import setuptools  # @UnusedImport
+    import setuptools  # @UnusedImport # NOQA
 except:
     pass
 
@@ -54,14 +54,16 @@ LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
 DOCSTRING = __doc__.split("\n")
 
 # check for MSVC
-if platform.system() == "Windows" and ('msvc' in sys.argv or
-        '-c' not in sys.argv and get_default_compiler() == 'msvc'):
+if platform.system() == "Windows" and (
+        'msvc' in sys.argv or '-c' not in sys.argv and get_default_compiler()
+        == 'msvc'):
     IS_MSVC = True
 else:
     IS_MSVC = False
 
 # package specific settings
-KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
+KEYWORDS = [
+    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
     'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
@@ -281,7 +283,7 @@ def find_packages():
     """
     modules = []
     for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
-            "obspy")):
+                                                      "obspy")):
         if "__init__.py" in filenames:
             modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
     return [_i.replace(os.sep, ".") for _i in modules]
@@ -292,9 +294,9 @@ def _get_lib_name(lib):
     Helper function to get an architecture and Python version specific library
     filename.
     """
-    return "lib%s_%s_%s_py%s" % (lib, platform.system(),
-        platform.architecture()[0], "".join([str(i) for i in
-            platform.python_version_tuple()[:2]]))
+    return "lib%s_%s_%s_py%s" % (
+        lib, platform.system(), platform.architecture()[0], "".join(
+            [str(i) for i in platform.python_version_tuple()[:2]]))
 
 # monkey patches for MS Visual Studio
 if IS_MSVC:
@@ -427,18 +429,18 @@ def add_data_files(config):
     Function adding all necessary data files.
     """
     # Add all test data files
-    for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
-            "obspy", "*", "tests", "data")):
+    for data_folder in glob.iglob(os.path.join(
+            SETUP_DIRECTORY, "obspy", "*", "tests", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-4:])
         config.add_data_dir(path)
     # Add all data files
-    for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
-            "obspy", "*", "data")):
+    for data_folder in glob.iglob(os.path.join(
+            SETUP_DIRECTORY, "obspy", "*", "data")):
         path = os.path.join(*data_folder.split(os.path.sep)[-3:])
         config.add_data_dir(path)
     # Add all docs files
-    for data_folder in glob.iglob(os.path.join(SETUP_DIRECTORY,
-            "obspy", "*", "docs")):
+    for data_folder in glob.iglob(os.path.join(
+            SETUP_DIRECTORY, "obspy", "*", "docs")):
         path = os.path.join(*data_folder.split(os.path.sep)[-3:])
         config.add_data_dir(path)
     # image directories
@@ -449,7 +451,7 @@ def add_data_files(config):
     config.add_data_dir(os.path.join("obspy", "taup", "tables"))
     # Adding the Flinn-Engdahl names files
     config.add_data_dir(os.path.join("obspy", "core", "util", "geodetics",
-        "data"))
+                                     "data"))
     # Adding the version information file
     config.add_data_files(os.path.join("obspy", "RELEASE-VERSION"))
 
@@ -483,8 +485,9 @@ def setupPackage():
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
         extras_require=EXTRAS_REQUIRE,
+        # this is needed for "easy_install obspy==dev"
         download_url=("https://github.com/obspy/obspy/zipball/master"
-            "#egg=obspy=dev"),  # this is needed for "easy_install obspy==dev"
+                      "#egg=obspy=dev"),
         include_package_data=True,
         entry_points=ENTRY_POINTS,
         ext_package='obspy.lib',
