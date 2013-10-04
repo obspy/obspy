@@ -93,7 +93,9 @@ class ClientTestCase(unittest.TestCase):
         """
         client = self.client
         self.assertEqual(set(client.services.keys()),
-                         set(("dataselect", "event", "station")))
+                         set(("dataselect", "event", "station",
+                              "available_event_contributors",
+                              "available_event_catalogs")))
 
         # The test sets are copied from the IRIS webpage.
         self.assertEqual(
