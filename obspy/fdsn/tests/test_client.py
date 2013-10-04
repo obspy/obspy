@@ -138,7 +138,8 @@ class ClientTestCase(unittest.TestCase):
         Tests the parsing of the available event catalogs.
         """
         self.assertEqual(set(self.client.services["available_event_catalogs"]),
-                         set("ANF", "GCMT", "TEST", "ISC", "UofW", "NEIC PDE"))
+                         set(("ANF", "GCMT", "TEST", "ISC", "UofW",
+                              "NEIC PDE")))
 
     def test_IRIS_event_contributors_availability(self):
         """
@@ -146,9 +147,9 @@ class ClientTestCase(unittest.TestCase):
         """
         self.assertEqual(set(
                          self.client.services["available_event_contributors"]),
-                         set("University of Washington", "ANF", "GCMT",
-                             "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
-                             "UNKNOWN", "NEIC PDE-M", "NEIC PDE-Q"))
+                         set(("University of Washington", "ANF", "GCMT",
+                              "GCMT-Q", "ISC", "NEIC ALERT", "NEIC PDE-W",
+                              "UNKNOWN", "NEIC PDE-M", "NEIC PDE-Q")))
 
     def test_simple_XML_parser(self):
         """

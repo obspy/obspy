@@ -674,9 +674,12 @@ class Client(object):
         dataselect_url = self._build_url("dataselect", "application.wadl")
         station_url = self._build_url("station", "application.wadl")
         event_url = self._build_url("event", "application.wadl")
-        urls = (dataselect_url, station_url, event_url)
+        catalog_url = self._build_url("event", "catalogs")
+        contributor_url = self._build_url("event", "contributors")
+        urls = (dataselect_url, station_url, event_url, catalog_url,
+                contributor_url)
 
-        # Request all three WADL files in parallel.
+        # Request all in parallel.
         wadl_queue = Queue.Queue()
 
         headers = self.request_headers
@@ -709,7 +712,7 @@ class Client(object):
                 self.services["dataselect"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered dataselect service"
-            elif "event" in url:
+            elif "event" in url and "application.wadl" in url:
                 self.services["event"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered event service"
@@ -717,6 +720,19 @@ class Client(object):
                 self.services["station"] = WADLParser(wadl).parameters
                 if self.debug is True:
                     print "Discovered station service"
+            elif "event" in url and "catalogs" in url:
+                try:
+                    self.services["available_event_catalogs"] = \
+                        parse_simple_xml(wadl)["catalogs"]
+                except:
+                    pass
+
+            elif "event" in url and "contributors" in url:
+                try:
+                    self.services["available_event_contributors"] = \
+                        parse_simple_xml(wadl)["contributors"]
+                except:
+                    pass
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
