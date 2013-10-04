@@ -317,18 +317,12 @@ class Client(object):
             data_stream.close()
             return station
 
-    def get_waveform(self, starttime, endtime, network, station, location,
-                     channel, quality=None, minimumlength=None,
+    def get_waveform(self, network, station, location, channel, starttime,
+                     endtime, quality=None, minimumlength=None,
                      longestonly=None, filename=None, **kwargs):
         """
         Query the dataselect service of the client.
 
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Limit results to time series samples on or after the
-            specified start time
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: Limit results to time series samples on or before the
-            specified end time
         :type network: str
         :param network: Select one or more network codes. Can be SEED network
             codes or data center defined codes. Multiple codes are
@@ -342,6 +336,12 @@ class Client(object):
         :type channel: str
         :param channel: Select one or more SEED channel codes. Multiple codes
             are comma-separated.
+        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param starttime: Limit results to time series samples on or after the
+            specified start time
+        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param endtime: Limit results to time series samples on or before the
+            specified end time
         :type quality: str, optional
         :param quality: Select a specific SEED quality indicator, handling is
             data center dependent.
