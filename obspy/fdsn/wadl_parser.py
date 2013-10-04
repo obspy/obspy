@@ -120,8 +120,7 @@ class WADLParser(object):
             param_type = float
         elif param_type in ["xs:long", "xs:int", "xs:integer"]:
             param_type = int
-        # XXX: Remove sboolean once iris fixes it!
-        elif param_type in ["xs:boolean", "xs:sboolean"]:
+        elif param_type  == "xs:boolean":
             param_type = bool
         else:
             msg = "Unknown parameter type '%s' in WADL." % param_type
