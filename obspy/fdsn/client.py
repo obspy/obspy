@@ -724,15 +724,17 @@ class Client(object):
                 try:
                     self.services["available_event_catalogs"] = \
                         parse_simple_xml(wadl)["catalogs"]
-                except:
-                    pass
+                except ValueError:
+                    msg = "Could not parse the catalogs at '%s'."
+                    warnings.warn(msg)
 
             elif "event" in url and "contributors" in url:
                 try:
                     self.services["available_event_contributors"] = \
                         parse_simple_xml(wadl)["contributors"]
-                except:
-                    pass
+                except ValueError:
+                    msg = "Could not parse the contributors at '%s'."
+                    warnings.warn(msg)
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
