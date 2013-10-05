@@ -75,11 +75,10 @@ class LibGSE2TestCase(unittest.TestCase):
         f = open(gse2file, 'rb')
         header, data = libgse2.read(f)
         f.close()
-        with NamedTemporaryFile() as tf:
-            tmp_file = tf.name
-            with open(tmp_file, 'wb') as f:
-                libgse2.write(header, data, f)
-            newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
+        with NamedTemporaryFile() as f:
+            libgse2.write(header, data, f)
+            f.flush()
+            newheader, newdata = libgse2.read(open(f.name, 'rb'))
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 

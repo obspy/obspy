@@ -34,6 +34,7 @@ import os
 import platform
 import warnings
 
+count = 0
 
 # Import shared libgse2
 # create library names
@@ -104,20 +105,11 @@ class HEADER(C.Structure):
 C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
 C.pythonapi.PyFile_AsFile.restype = c_file_p
 
-# reading C memory into buffer which can be converted to numpy array
-C.pythonapi.PyBuffer_FromMemory.argtypes = [C.c_void_p, C.c_int]
-C.pythonapi.PyBuffer_FromMemory.restype = C.py_object
-
 ## gse_functions read_header
 clibgse2.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
 clibgse2.read_header.restype = C.c_int
 
 ## gse_functions decomp_6b
-clibgse2.decomp_6b.argtypes = [
-    c_file_p, C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS')]
-clibgse2.decomp_6b.restype = C.c_int
-
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
@@ -136,10 +128,6 @@ clibgse2.check_sum.argtypes = [
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
-# gse_functions buf_init
-clibgse2.buf_init.argtypes = [C.c_void_p]
-clibgse2.buf_init.restype = C.c_void_p
-
 # gse_functions diff_2nd
 clibgse2.diff_2nd.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
@@ -147,22 +135,15 @@ clibgse2.diff_2nd.argtypes = [
 clibgse2.diff_2nd.restype = C.c_void_p
 
 # gse_functions compress_6b
-clibgse2.compress_6b.argtypes = [
+clibgse2.compress_6b_buffer.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int]
-clibgse2.compress_6b.restype = C.c_int
+    C.c_int,
+    C.CFUNCTYPE(C.c_int, C.c_char)]
+clibgse2.compress_6b_buffer.restype = C.c_int
 
 ## gse_functions write_header
 clibgse2.write_header.argtypes = [c_file_p, C.POINTER(HEADER)]
 clibgse2.write_header.restype = C.c_void_p
-
-## gse_functions buf_dump
-clibgse2.buf_dump.argtypes = [c_file_p]
-clibgse2.buf_dump.restype = C.c_void_p
-
-# gse_functions buf_free
-clibgse2.buf_free.argtypes = [C.c_void_p]
-clibgse2.buf_free.restype = C.c_void_p
 
 # module wide variable, can be imported by:
 # >>> from obspy.gse2 import gse2head
@@ -220,7 +201,6 @@ def writeHeader(f, head):
             head.hang,
             head.vang))
 
-
 def uncompress_CM6(f, n_samps):
     """
     Uncompress n_samps of CM6 compressed data from file pointer fp.
@@ -230,13 +210,26 @@ def uncompress_CM6(f, n_samps):
     :type n_samps: Int
     :param n_samps: Number of samples
     """
-    # transform to a C file pointer
-    fp = C.pythonapi.PyFile_AsFile(f)
-    data = np.empty(n_samps, dtype='int32')
-    n = clibgse2.decomp_6b(fp, n_samps, data)
-    if n != n_samps:
-        raise GSEUtiError("Mismatching length in lib.decomp_6b")
-    clibgse2.rem_2nd_diff(data, n_samps)
+    def read83(cbuf, vptr):
+        line = f.readline()
+        if line == '':
+            return None
+        # avoid buffer overflow through clipping to 82
+        sb = C.create_string_buffer(line[:82])
+        # copy also null termination "\0", that is max 83 bytes
+        C.memmove(C.addressof(cbuf.contents), C.addressof(sb), len(line) + 1)
+        return C.addressof(sb)
+
+    cread83 = C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p)(read83)
+    if n_samps == 0:
+        data = np.empty(0, dtype='int32')
+    else:
+        # aborts with segmentation fault when n_samps == 0
+        data = np.empty(n_samps, dtype='int32')
+        n = clibgse2.decomp_6b_buffer(n_samps, data, cread83, None)
+        if n != n_samps:
+            raise GSEUtiError("Mismatching length in lib.decomp_6b")
+        clibgse2.rem_2nd_diff(data, n_samps)
     return data
 
 
@@ -272,7 +265,6 @@ def verifyChecksum(fh, data, version=2):
         raise ChksumError(msg % (chksum_data, chksum_file))
     return
 
-
 def read(f, verify_chksum=True):
     """
     Read GSE2 file and return header and data.
@@ -296,27 +288,7 @@ def read(f, verify_chksum=True):
     errcode = clibgse2.read_header(fp, C.pointer(head))
     if errcode != 0:
         raise GSEUtiError("Error in lib.read_header")
-
-    def read83(cbuf, vptr):
-        line = f.readline()
-        if line == '':
-            return None
-        # avoid buffer overflow through clipping to 82
-        sb = C.create_string_buffer(line[:82])
-        # copy also null termination "\0", that is max 83 bytes
-        C.memmove(C.addressof(cbuf.contents), C.addressof(sb), len(line) + 1)
-        return C.addressof(sb)
-
-    cread83 = C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p)(read83)
-    if head.n_samps == 0:
-        data = np.empty(0, dtype='int32')
-    else:
-        # aborts with segmentation fault when n_samps == 0
-        data = np.empty(head.n_samps, dtype='int32')
-        n = clibgse2.decomp_6b_buffer(head.n_samps, data, cread83, None)
-        if n != head.n_samps:
-            raise GSEUtiError("Mismatching length in lib.decomp_6b")
-        clibgse2.rem_2nd_diff(data, head.n_samps)
+    data = uncompress_CM6(f, head.n_samps)
     # test checksum only if enabled
     if verify_chksum:
         verifyChecksum(f, data, version=2)
@@ -373,9 +345,7 @@ def write(headdict, data, f, inplace=False):
         'hang': float,
         'vang': float
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
     n = len(data)
-    clibgse2.buf_init(None)
     #
     chksum = clibgse2.check_sum(data, n, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
@@ -386,8 +356,19 @@ def write(headdict, data, f, inplace=False):
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
     clibgse2.diff_2nd(data, n, 0)
-    ierr = clibgse2.compress_6b(data, n)
+    global count
+    count = 0
+    # 4 character bytes per 32 bit integer
+    carr = np.zeros(n * 4, dtype='c')
+    def writer(char):
+        global count
+        carr[count] = char
+        count += 1
+        return 0
+    cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
+    ierr = clibgse2.compress_6b_buffer(data, n, cwriter)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
+    raw = "\n".join(carr[:(count // 80 + 1) * 80].view('|S80'))
     # set some defaults if not available and convert header entries
     headdict.setdefault('datatype', 'CM6')
     headdict.setdefault('vang', -1)
@@ -401,10 +382,11 @@ def write(headdict, data, f, inplace=False):
     # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, head)
-    clibgse2.buf_dump(fp)
+    f.write("DAT2\n")
+    f.write(raw)
+    f.write("\n")
     f.write("CHK2 %8ld\n\n" % chksum)
-    clibgse2.buf_free(None)
-    del fp, head
+    del head
 
 
 def readHead(f):
