@@ -112,7 +112,7 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
         while (last_dlon < -3000000.0 or dlon != 0 and
                abs((last_dlon - dlon) / dlon) > 1.0e-9):
             sqr_sin_sigma = pow(math.cos(U2) * math.sin(dlon), 2) + \
-                pow((math.cos(U1) * math.sin(U2) - math.sin(U1) * \
+                pow((math.cos(U1) * math.sin(U2) - math.sin(U1) *
                      math.cos(U2) * math.cos(dlon)), 2)
             Sin_sigma = math.sqrt(sqr_sin_sigma)
             Cos_sigma = math.sin(U1) * math.sin(U2) + math.cos(U1) * \
@@ -121,29 +121,33 @@ matplotlib/files/matplotlib-toolkits/basemap-0.9.5/
             Sin_alpha = math.cos(U1) * math.cos(U2) * math.sin(dlon) / \
                 math.sin(sigma)
             alpha = math.asin(Sin_alpha)
-            Cos2sigma_m = math.cos(sigma) - (2 * math.sin(U1) * \
-                math.sin(U2) / pow(math.cos(alpha), 2))
+            Cos2sigma_m = math.cos(sigma) - \
+                (2 * math.sin(U1) * math.sin(U2) / pow(math.cos(alpha), 2))
             C = (f / 16) * pow(math.cos(alpha), 2) * \
                 (4 + f * (4 - 3 * pow(math.cos(alpha), 2)))
             last_dlon = dlon
-            dlon = omega + (1 - C) * f * math.sin(alpha) * (sigma + C * \
-                math.sin(sigma) * (Cos2sigma_m + C * math.cos(sigma) * \
-                                   (-1 + 2 * pow(Cos2sigma_m, 2))))
+            dlon = omega + (1 - C) * f * math.sin(alpha) * \
+                (sigma + C * math.sin(sigma) *
+                    (Cos2sigma_m + C * math.cos(sigma) *
+                        (-1 + 2 * pow(Cos2sigma_m, 2))))
 
             u2 = pow(math.cos(alpha), 2) * (a * a - b * b) / (b * b)
             A = 1 + (u2 / 16384) * (4096 + u2 * (-768 + u2 * (320 - 175 * u2)))
             B = (u2 / 1024) * (256 + u2 * (-128 + u2 * (74 - 47 * u2)))
-            delta_sigma = B * Sin_sigma * (Cos2sigma_m + (B / 4) * \
-                (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) * \
-                Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) * \
-                (-3 + 4 * pow(Cos2sigma_m, 2))))
+            delta_sigma = B * Sin_sigma * \
+                (Cos2sigma_m + (B / 4) *
+                    (Cos_sigma * (-1 + 2 * pow(Cos2sigma_m, 2)) - (B / 6) *
+                        Cos2sigma_m * (-3 + 4 * sqr_sin_sigma) *
+                        (-3 + 4 * pow(Cos2sigma_m, 2))))
 
             dist = b * A * (sigma - delta_sigma)
-            alpha12 = math.atan2((math.cos(U2) * math.sin(dlon)),
-                (math.cos(U1) * math.sin(U2) - math.sin(U1) * math.cos(U2) * \
+            alpha12 = math.atan2(
+                (math.cos(U2) * math.sin(dlon)),
+                (math.cos(U1) * math.sin(U2) - math.sin(U1) * math.cos(U2) *
                  math.cos(dlon)))
-            alpha21 = math.atan2((math.cos(U1) * math.sin(dlon)),
-                (-math.sin(U1) * math.cos(U2) + math.cos(U1) * math.sin(U2) * \
+            alpha21 = math.atan2(
+                (math.cos(U1) * math.sin(dlon)),
+                (-math.sin(U1) * math.cos(U2) + math.cos(U1) * math.sin(U2) *
                  math.cos(dlon)))
             iterlimit -= 1
             if iterlimit < 0:
@@ -248,8 +252,8 @@ def kilometer2degrees(kilometer, radius=6371):
 
 def locations2degrees(lat1, long1, lat2, long2):
     """
-    Convenience function to calculate the great distance between two points on
-    a spherical Earth.
+    Convenience function to calculate the great circle distance between two
+    points on a spherical Earth.
 
     This method uses the Vincenty formula in the special case of a spherical
     Earth. For more accurate values use the geodesic distance calculations of
@@ -278,11 +282,14 @@ def locations2degrees(lat1, long1, lat2, long2):
     long1 = math.radians(long1)
     long2 = math.radians(long2)
     long_diff = long2 - long1
-    gd = math.degrees(math.atan2(math.sqrt((math.cos(lat2) * \
-        math.sin(long_diff)) ** 2 + (math.cos(lat1) * math.sin(lat2) - \
-        math.sin(lat1) * math.cos(lat2) * math.cos(long_diff)) ** 2),
-        math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) * \
-        math.cos(long_diff)))
+    gd = math.degrees(
+        math.atan2(
+            math.sqrt((
+                math.cos(lat2) * math.sin(long_diff)) ** 2 +
+                (math.cos(lat1) * math.sin(lat2) - math.sin(lat1) *
+                    math.cos(lat2) * math.cos(long_diff)) ** 2),
+            math.sin(lat1) * math.sin(lat2) + math.cos(lat1) * math.cos(lat2) *
+            math.cos(long_diff)))
     return gd
 
 

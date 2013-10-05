@@ -17,4 +17,5 @@ override_dh_installdeb:
 	find $(CURDIR)/debian -name README.txt -exec rm -f {} \;
 	find $(CURDIR) -name RELEASE-VERSION -exec sh -c 'cat {} | sed s/-dirty// > {}.tmp && mv {}.tmp {}; chmod 0644 {}' \;
 	find $(CURDIR)/debian -type d -name src | xargs rm -rf \; # in principle only needed for some modules
+	find $(CURDIR) -name .gitignore | xargs rm -rf \; # obspy/libs/.gitignore strangely gets included in package
 	dh_installdeb

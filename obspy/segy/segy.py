@@ -201,7 +201,7 @@ class SEGYFile(object):
         # which is not supported so far.
         if bfh.number_of_3200_byte_ext_file_header_records_following != 0:
             msg = 'Extended textual headers are supported yet. ' + \
-                   'Please contact the developers.'
+                'Please contact the developers.'
             raise NotImplementedError(msg)
 
     def write(self, file, data_encoding=None, endian=None):
@@ -237,7 +237,7 @@ class SEGYFile(object):
                 self.traces[0].header.sample_interval_in_ms_for_this_trace
         if self.binary_file_header.number_of_samples_per_data_trace <= 0:
             self.binary_file_header.number_of_samples_per_data_trace = \
-                    len(self.traces[0].data)
+                len(self.traces[0].data)
 
         # Always set the SEGY Revision number to 1.0 (hex-coded).
         self.binary_file_header.seg_y_format_revision_number = 16
@@ -247,7 +247,7 @@ class SEGYFile(object):
             self.binary_file_header.fixed_length_trace_flag = 0
         # Extended textual headers are not supported by ObsPy so far.
         self.binary_file_header.\
-        number_of_3200_byte_ext_file_header_records_following = 0
+            number_of_3200_byte_ext_file_header_records_following = 0
         # Enforce the encoding
         if data_encoding:
             self.binary_file_header.data_sample_format_code = data_encoding
@@ -505,7 +505,7 @@ class SEGYTrace(object):
         pos = self.file.tell()
         data_left = self.filesize - pos
         data_needed = DATA_SAMPLE_FORMAT_SAMPLE_SIZE[self.data_encoding] * \
-                      npts
+            npts
         if npts < 1 or data_needed > data_left:
             msg = """
                   Too little data left in the file to unpack it according to
@@ -522,8 +522,8 @@ class SEGYTrace(object):
                 self.file.name, self.file.mode, pos, npts, endian=self.endian)
         else:
             # Unpack the data.
-            self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[\
-                    self.data_encoding](self.file, npts, endian=self.endian)
+            self.data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[
+                self.data_encoding](self.file, npts, endian=self.endian)
 
     def write(self, file, data_encoding=None, endian=None):
         """
@@ -546,7 +546,7 @@ class SEGYTrace(object):
             msg = "No data in the SEGYTrace."
             raise SEGYWritingError(msg)
         DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_encoding](file, self.data,
-                                                  endian=endian)
+                                                         endian=endian)
 
     def _createEmptyTrace(self):
         """
@@ -560,10 +560,11 @@ class SEGYTrace(object):
         Print some information about the trace.
         """
         ret_val = 'Trace sequence number within line: %i\n' % \
-                self.header.trace_sequence_number_within_line
-        ret_val += '%i samples, dtype=%s, %.2f Hz' % (len(self.data),
-                self.data.dtype, 1.0 / \
-                (self.header.sample_interval_in_ms_for_this_trace / \
+            self.header.trace_sequence_number_within_line
+        ret_val += '%i samples, dtype=%s, %.2f Hz' % (
+            len(self.data),
+            self.data.dtype, 1.0 /
+            (self.header.sample_interval_in_ms_for_this_trace /
                 float(1E6)))
         return ret_val
 
@@ -620,9 +621,6 @@ class SEGYTraceHeader(object):
         # much faster and can later be unpacked on the fly.
         if not unpack_headers:
             self.unpacked_header = header
-            # The number of samples is an essential information that always
-            # needs to be unpacked.
-            format = '%sH' % self.endian
         else:
             self.unpacked_header = None
             self._readTraceHeader(header)
@@ -744,7 +742,7 @@ def readSEGY(file, endian=None, textual_header_encoding=None,
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
-        hasattr(file, 'seek'):
+            hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
             return _readSEGY(open_file, endian=endian,
                              textual_header_encoding=textual_header_encoding,
@@ -918,7 +916,7 @@ def readSU(file, endian=None, unpack_headers=False, headonly=False):
     """
     # Open the file if it is not a file like object.
     if not hasattr(file, 'read') or not hasattr(file, 'tell') or not \
-        hasattr(file, 'seek'):
+            hasattr(file, 'seek'):
         with open(file, 'rb') as open_file:
             return _readSU(open_file, endian=endian,
                            unpack_headers=unpack_headers, headonly=headonly)
@@ -1017,7 +1015,7 @@ def autodetectEndianAndSanityCheckSU(file):
             continue
         # Some programs write two digit years.
         if this_year != 0 and (this_year < 1930 or this_year >= 2030) and \
-            (this_year < 0 or this_year >= 100):
+                (this_year < 0 or this_year >= 100):
             continue
         # 9999 is often used as a placeholder
         if (this_julday > 366 or this_julday < 0) and this_julday != 9999:

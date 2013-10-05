@@ -82,7 +82,7 @@ class TriggerTestCase(unittest.TestCase):
             data.append(np.loadtxt(file, dtype='float32'))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
-                200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
+            200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
         ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
@@ -108,7 +108,7 @@ class TriggerTestCase(unittest.TestCase):
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests
-        if False:
+        if False:  # pragma: no cover
             import matplotlib.pyplot as plt
             plt.plot(cft)
             plt.hlines([1.5, 1.0], 0, len(cft))
@@ -175,7 +175,7 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
-                                     trace_ids=trace_ids, sta=0.5, lta=10)
+                                    trace_ids=trace_ids, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -216,8 +216,8 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
-                                     trace_ids=trace_ids,
-                                     max_trigger_length=0.13, sta=0.5, lta=10)
+                                    trace_ids=trace_ids,
+                                    max_trigger_length=0.13, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))

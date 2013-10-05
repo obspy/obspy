@@ -37,10 +37,10 @@ GITDIR=$BUILDDIR/git
 # deactivate, else each time all packages are removed
 rm -rf $BUILDDIR
 mkdir -p $PACKAGEDIR
-git clone https://github.com/${GITFORK}/obspy.git $GITDIR
+git clone git://github.com/${GITFORK}/obspy.git $GITDIR
 if [ "$GITFORK" != "obspy" ]
 then
-    git remote add upstream https://github.com/obspy/obspy.git
+    git remote add upstream git://github.com/obspy/obspy.git
     git fetch upstream
 fi
 

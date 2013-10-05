@@ -60,7 +60,6 @@ class RtTrace(Trace):
     1. Read first trace of example SAC data file and extract contained time
        offset and epicentral distance of an earthquake::
 
-        >>> import numpy as np
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
         >>> from obspy.realtime.signal import calculateMwpMag
@@ -258,7 +257,7 @@ class RtTrace(Trace):
         for proc in self.processing:
             process_name, options, rtmemory_list = proc
             # if gap or overlap, clear memory
-            if gap_or_overlap and rtmemory_list != None:
+            if gap_or_overlap and rtmemory_list is not None:
                 for n in range(len(rtmemory_list)):
                     rtmemory_list[n] = RtMemory()
             # apply processing
@@ -284,16 +283,18 @@ class RtTrace(Trace):
         # fix Trace.__add__ parameters
         # TODO: IMPORTANT? Should check for gaps and overlaps and handle
         # more elegantly
-        sum_trace = Trace.__add__(self, trace, method=0,
-            interpolation_samples=0, fill_value='latest', sanity_checks=True)
+        sum_trace = Trace.__add__(
+            self, trace, method=0, interpolation_samples=0,
+            fill_value='latest', sanity_checks=True)
         # Trace.__add__ returns new Trace, so update to this RtTrace
         self.data = sum_trace.data
         # left trim if data length exceeds max_length
-        if self.max_length != None:
+        if self.max_length is not None:
             max_samples = int(self.max_length * self.stats.sampling_rate + 0.5)
             if np.size(self.data) > max_samples:
-                starttime = self.stats.starttime + (np.size(self.data) - \
-                    max_samples) / self.stats.sampling_rate
+                starttime = self.stats.starttime + \
+                    (np.size(self.data) - max_samples) / \
+                    self.stats.sampling_rate
                 self._ltrim(starttime, pad=False, nearest_sample=True,
                             fill_value=None)
         return trace

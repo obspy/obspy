@@ -72,6 +72,7 @@ def compressStartend(x, stop_iteration):
 
 def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
                        verbose=False, ignore_links=False):
+    from matplotlib.dates import date2num
     if ignore_links and os.path.islink(file):
         print("Ignoring symlink: %s" % (file))
         return counter
@@ -137,7 +138,7 @@ def main():
     parser = OptionParser(__doc__.strip())
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
-                      help="Optional, the file format.\n" + \
+                      help="Optional, the file format.\n" +
                       " ".join(__doc__.split('\n')[-4:]))
     parser.add_option("-v", "--verbose", default=False,
                       action="store_true", dest="verbose",
@@ -150,26 +151,26 @@ def main():
                       help="Optional. Do not follow symbolic links.")
     parser.add_option("--starttime", default=None,
                       type="string", dest="starttime",
-                      help="Optional, a UTCDateTime compatible string. " + \
-                      "Only visualize data after this time and set " + \
+                      help="Optional, a UTCDateTime compatible string. " +
+                      "Only visualize data after this time and set " +
                       "time-axis axis accordingly.")
     parser.add_option("--endtime", default=None,
                       type="string", dest="endtime",
-                      help="Optional, a UTCDateTime compatible string. " + \
-                      "Only visualize data after this time and set " + \
+                      help="Optional, a UTCDateTime compatible string. " +
+                      "Only visualize data after this time and set " +
                       "time-axis axis accordingly.")
     parser.add_option("--ids", default=None,
                       type="string", dest="ids",
-                      help="Optional, a list of SEED channel identifiers " + \
-                      "separated by commas " + \
-                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'. Only these " + \
+                      help="Optional, a list of SEED channel identifiers " +
+                      "separated by commas " +
+                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'. Only these " +
                       "channels will not be plotted.")
     parser.add_option("-t", "--event-times", default=None,
                       type="string", dest="event_times",
-                      help="Optional, a list of UTCDateTime compatible " + \
-                      "strings separated by commas " + \
-                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " + \
-                      "These get marked by vertical lines in the plot. " + \
+                      help="Optional, a list of UTCDateTime compatible " +
+                      "strings separated by commas " +
+                      "(e.g. '2010-01-01T12:00:00,2010-01-01T13:00:00'). " +
+                      "These get marked by vertical lines in the plot. " +
                       "Useful e.g. to mark event origin times.")
     parser.add_option("-w", "--write", default=None,
                       type="string", dest="write",
@@ -187,7 +188,7 @@ def main():
                       help="Optional, Do not plot gaps.")
     parser.add_option("-o", "--output", default=None,
                       type="string", dest="output",
-                      help="Save plot to image file (e.g. out.pdf, " + \
+                      help="Save plot to image file (e.g. out.pdf, " +
                       "out.png) instead of opening a window.")
     parser.add_option("--print-gaps", default=False,
                       action="store_true", dest="print_gaps",

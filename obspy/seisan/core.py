@@ -25,7 +25,7 @@ def isSEISAN(filename):
 
     .. rubric:: Example
 
-    >>> isWAV("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
+    >>> isSEISAN("/path/to/1996-06-03-1917-52S.TEST__002")  #doctest: +SKIP
     True
     """
     try:
@@ -96,10 +96,10 @@ def _getVersion(data):
     if data[0:2] == 'KP' and data[82] == 'P':
         return ("<", 32, 6)
     elif data[0:8] == '\x00\x00\x00\x00\x00\x00\x00P' and \
-        data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+            data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
         return (">", 64, 7)
     elif data[0:8] == 'P\x00\x00\x00\x00\x00\x00\x00' and \
-        data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+            data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
         return ("<", 64, 7)
     elif data[0:4] == '\x00\x00\x00P' and data[84:88] == '\x00\x00\x00P':
         return (">", 32, 7)

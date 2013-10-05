@@ -134,9 +134,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.ERRORSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ERRORSIGNATURE)].lower() == \
-                            SLPacket.ERRORSIGNATURE.lower()
+            SLPacket.ERRORSIGNATURE.lower()
 
     def isEnd(self):
         """
@@ -149,9 +149,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.ENDSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.ENDSIGNATURE)].lower() == \
-                            SLPacket.ENDSIGNATURE.lower()
+            SLPacket.ENDSIGNATURE.lower()
 
     def packetIsInfo(self):
         """
@@ -165,9 +165,9 @@ class SLState(object):
         if self.recptr - self.sendptr < len(SLPacket.INFOSIGNATURE):
             msg = "not enough bytes to determine packet type"
             raise SeedLinkException(msg)
-        return self.databuf[self.sendptr: self.sendptr + \
+        return self.databuf[self.sendptr: self.sendptr +
                             len(SLPacket.INFOSIGNATURE)].lower() == \
-                            SLPacket.INFOSIGNATURE.lower()
+            SLPacket.INFOSIGNATURE.lower()
 
     def incrementSendPointer(self):
         """

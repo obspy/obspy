@@ -99,7 +99,8 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                         user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2', 'end': None,
@@ -107,7 +108,8 @@ class ClientTestCase(unittest.TestCase):
         # 2 - BW network via webdc:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2',
@@ -116,7 +118,8 @@ class ClientTestCase(unittest.TestCase):
         # 3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'BW.RJOB..': [{'priority': 1,
                             'start': UTCDateTime(1980, 1, 1, 0, 0),
                             'host': '141.84.11.2',
@@ -125,29 +128,33 @@ class ClientTestCase(unittest.TestCase):
         # 4 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 5 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 6 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
                         'host': 'eida.gfz-potsdam.de', 'end': None,
                         'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
@@ -230,18 +237,6 @@ class ClientTestCase(unittest.TestCase):
         # network
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
-
-    def test_getInventory2(self):
-        """
-        Bugfix for location and channel codes for new inventory schema
-        """
-        client = Client(user='test@obspy.org')
-        # new schema
-        inventory = client.getInventory('CH', 'GRYON')
-        self.assertTrue('CH.GRYON..EHE' in inventory)
-        # old schema
-        inventory = client.getInventory('BW', 'MANZ')
-        self.assertTrue('BW.MANZ..EHZ' in inventory)
 
     def test_getWaveformWithMetadata(self):
         """
@@ -605,8 +600,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual('RJOB', st[0].stats['station'])
         self.assertEqual(200.0, st[0].stats['sampling_rate'])
         self.assertEqual(6001, st[0].stats['npts'])
-        self.assertEqual('2009-08-24T00:20:03.000000Z',
-                          str(st[0].stats['starttime']))
+        self.assertEqual(
+            '2009-08-24T00:20:03.000000Z', str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 

@@ -8,6 +8,9 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import os
+import inspect
+from subprocess import Popen, PIPE
 import warnings
 import itertools
 import numpy as np
@@ -215,6 +218,142 @@ except TypeError:
             raise
         # ensures that an array is returned
         return np.atleast_1d(data)
+
+
+def get_untracked_files_from_git():
+    """
+    Tries to return a list of files (absolute paths) that are untracked by git
+    in the repository.
+
+    Returns `None` if the system call to git fails.
+    """
+    dir_ = os.path.abspath(
+        os.path.dirname(inspect.getfile(inspect.currentframe())))
+    dir_ = os.path.dirname(os.path.dirname(os.path.dirname(dir_)))
+    try:
+        # Check that the git root directory is actually the ObsPy directory.
+        p = Popen(['git', 'rev-parse', '--show-toplevel'],
+                  cwd=dir_, stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        git_root_dir = p.stdout.readlines()[0].strip()
+        if git_root_dir != dir_:
+            raise Exception
+        p = Popen(['git', 'status', '-u', '--porcelain'],
+                  cwd=dir_, stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        stdout = p.stdout.readlines()
+        files = [os.path.abspath(os.path.join(dir_, line.split()[1].strip()))
+                 for line in stdout
+                 if line.startswith("??")]
+    except:
+        return None
+    return files
+
+
+def wrap_long_string(string, line_length=79, prefix="",
+                     special_first_prefix=None, assumed_tab_width=8,
+                     sloppy=False):
+    """
+    Reformat a long string, wrapping it to a specified length.
+
+    :type string: str
+    :param string: Input string to wrap
+    :type line_length: int
+    :param line_length: total target length of each line, including the
+        prefix if specified
+    :type prefix: str, optional
+    :param prefix: common prefix used to start the line (e.g. some spaces,
+        tabs for indentation)
+    :type special_first_prefix: str, optional
+    :param special_first_prefix: special prefix to use on the first line,
+        instead of the general prefix
+    :type assumed_tab_width: int
+    :param assumed_tab_width: if the prefix strings include tabs the line
+        length can not be computed exactly. assume a tab in general is
+        equivalent to this many spaces.
+    :type sloppy: bool
+    :param sloppy: Controls the behavior when a single word without spaces is
+        to long to fit on a single line. Default (False) is to allow a single
+        line to be longer than the specified line length. If set to True,
+        Long words will be force-hyphenated to fit the line.
+
+    .. rubric:: Examples
+
+    >>> string = ("Retrieve an event based on the unique origin "
+    ...           "ID numbers assigned by the IRIS DMC")
+    >>> print wrap_long_string(string, prefix="\t*\t > ",
+    ...                        line_length=50)  # doctest: +SKIP
+            *        > Retrieve an event based on
+            *        > the unique origin ID numbers
+            *        > assigned by the IRIS DMC
+    >>> print wrap_long_string(string, prefix="\t* ",
+    ...                        line_length=70)  # doctest: +SKIP
+            * Retrieve an event based on the unique origin ID
+            * numbers assigned by the IRIS DMC
+    >>> print wrap_long_string(string, prefix="\t \t  > ",
+    ...                        special_first_prefix="\t*\t",
+    ...                        line_length=50)  # doctest: +SKIP
+            *        Retrieve an event based on
+                     > the unique origin ID numbers
+                     > assigned by the IRIS DMC
+    >>> problem_string = ("Retrieve_an_event_based_on_the_unique "
+    ...                   "origin ID numbers assigned by the IRIS DMC")
+    >>> print wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40, sloppy=True)  # doctest: +SKIP
+                    Retrieve_an_event_based_on_the_unique
+                    origin ID
+                    numbers
+                    assigned by
+                    the IRIS DMC
+    >>> print wrap_long_string(problem_string, prefix="\t\t",
+    ...                        line_length=40)  # doctest: +SKIP
+                    Retrieve_an_event_base\
+                    d_on_the_unique origin
+                    ID numbers assigned by
+                    the IRIS DMC
+    """
+    def text_width_for_prefix(line_length, prefix):
+        text_width = line_length - len(prefix) - \
+            (assumed_tab_width - 1) * prefix.count("\t")
+        return text_width
+
+    lines = []
+    if special_first_prefix is not None:
+        text_width = text_width_for_prefix(line_length, special_first_prefix)
+    else:
+        text_width = text_width_for_prefix(line_length, prefix)
+
+    while len(string) > text_width:
+        ind = string.rfind(" ", 0, text_width)
+        # no suitable place to split found
+        if ind < 1:
+            # sloppy: search to right for space to split at
+            if sloppy:
+                ind = string.find(" ", text_width)
+                if ind == -1:
+                    ind = len(string) - 1
+                part = string[:ind]
+                string = string[ind + 1:]
+            # not sloppy: force hyphenate
+            else:
+                ind = text_width - 2
+                part = string[:ind] + "\\"
+                string = string[ind:]
+        # found a suitable place to split
+        else:
+            part = string[:ind]
+            string = string[ind + 1:]
+        # need to use special first line prefix?
+        if special_first_prefix is not None and not lines:
+            line = special_first_prefix + part
+        else:
+            line = prefix + part
+        lines.append(line)
+        # need to set default text width, just in case we had a different
+        # text width for the first line
+        text_width = text_width_for_prefix(line_length, prefix)
+    lines.append(prefix + string)
+    return "\n".join(lines)
 
 
 if __name__ == '__main__':

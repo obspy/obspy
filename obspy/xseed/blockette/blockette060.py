@@ -126,10 +126,10 @@ class Blockette060(Blockette):
             inner_stage = SubElement(node, 'stage')
             SubElement(inner_stage, 'stage_sequence_number').text = str(_i + 1)
             SubElement(inner_stage, 'number_of_responses').text = \
-                                                    str(len(self.stages[_i]))
+                str(len(self.stages[_i]))
             for _j in xrange(len(self.stages[_i])):
                 SubElement(inner_stage, 'response_lookup_key').text = \
-                            setXPath('dictionary', self.stages[_i][_j])
+                    setXPath('dictionary', self.stages[_i][_j])
         return node
 
     def parseXML(self, xml_doc, version='1.0', *args, **kwargs):
@@ -159,27 +159,27 @@ class Blockette060(Blockette):
         dict_blockettes = [41, 43, 44, 45, 46, 47, 48]
         for _i in xrange(len(self.stages)):
             string += \
-            '#\t\t+            +----------------------------------' + \
-            '----------------+             +\n' + \
-            '#\t\t+            |   Response Reference Information,' + \
-            '%6s ch %s   |             +\n' % (station, channel) + \
-            '#\t\t+            +----------------------------------' + \
-            '----------------+             +\n' + \
-            '#\t\t\n' + \
-            'B060F03     Number of Stages:                      %s\n' \
-                    % len(self.stages) + \
-            'B060F04     Stage number:                          %s\n' \
+                '#\t\t+            +----------------------------------' + \
+                '----------------+             +\n' + \
+                '#\t\t+            |   Response Reference Information,' + \
+                '%6s ch %s   |             +\n' % (station, channel) + \
+                '#\t\t+            +----------------------------------' + \
+                '----------------+             +\n' + \
+                '#\t\t\n' + \
+                'B060F03     Number of Stages:                      %s\n' \
+                % len(self.stages) + \
+                'B060F04     Stage number:                          %s\n' \
                 % (_i + 1) + \
-            'B060F05     Number of Responses:                   %s\n' \
+                'B060F05     Number of Responses:                   %s\n' \
                 % len(self.stages[_i]) + \
-            '#\t\t\n'
+                '#\t\t\n'
             # Loop over all keys and print the information in order.
             for response_key in self.stages[_i]:
                 # Find the corresponding key in the abbreviations.
                 found_abbrev = False
                 for blockette in abbreviations:
                     if blockette.id in dict_blockettes and \
-                                blockette.response_lookup_key == response_key:
+                            blockette.response_lookup_key == response_key:
                         try:
                             string += \
                                 blockette.getRESP(station, channel,

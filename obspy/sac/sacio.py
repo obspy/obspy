@@ -489,7 +489,7 @@ class SacIO(object):
         except:
             raise SacError("Unable to read number of points from header")
         if lenchk and npts != len(self.seis):
-            raise SacError("Number of points in header and " + \
+            raise SacError("Number of points in header and " +
                            "length of trace inconsistent!")
         if fsize:
             st = os.stat(name)  # file's size = st[6]
@@ -1128,11 +1128,11 @@ class SacIO(object):
         try:
             ms = self.GetHvalue('nzmsec') * 1000
             self.reftime = UTCDateTime(year=self.GetHvalue('nzyear'),
-                                         julday=self.GetHvalue('nzjday'),
-                                         hour=self.GetHvalue('nzhour'),
-                                         minute=self.GetHvalue('nzmin'),
-                                         second=self.GetHvalue('nzsec'),
-                                         microsecond=ms)
+                                       julday=self.GetHvalue('nzjday'),
+                                       hour=self.GetHvalue('nzhour'),
+                                       minute=self.GetHvalue('nzmin'),
+                                       second=self.GetHvalue('nzsec'),
+                                       microsecond=ms)
             b = float(self.GetHvalue('b'))
             if b != -12345.0:
                 self.starttime = self.reftime + b
@@ -1260,7 +1260,7 @@ class SacIO(object):
             # fix for issue #156
             if i == 'delta':
                 header['sampling_rate'] = \
-                        np.float32(1.0) / np.float32(self.hf[0])
+                    np.float32(1.0) / np.float32(self.hf[0])
             else:
                 header[j] = value
         if header['calib'] == -12345.0:
@@ -1449,7 +1449,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
 
 
 def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
-               tohz=False):
+                tohz=False):
     """
     Extract key instrument response information from a RESP file, which
     can be extracted from a dataless SEED volume by, for example, using

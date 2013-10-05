@@ -33,8 +33,6 @@
                 <rng:anyName>
                     <rng:except>
                         <rng:nsName ns=""/>
-                        <rng:nsName ns="http://quakeml.org/xmlns/quakeml-rt/1.2"/>
-                        <rng:nsName ns="http://quakeml.org/xmlns/bed-rt/1.2"/>
                         <rng:nsName ns="http://quakeml.org/xmlns/quakeml/1.2"/>
                         <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
                     </rng:except>
@@ -50,8 +48,6 @@
                 <rng:anyName>
                     <rng:except>
                         <rng:nsName ns=""/>
-                        <rng:nsName ns="http://quakeml.org/xmlns/quakeml-rt/1.2"/>
-                        <rng:nsName ns="http://quakeml.org/xmlns/bed-rt/1.2"/>
                         <rng:nsName ns="http://quakeml.org/xmlns/quakeml/1.2"/>
                         <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
                     </rng:except>

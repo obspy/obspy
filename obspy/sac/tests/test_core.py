@@ -23,10 +23,11 @@ class CoreTestCase(unittest.TestCase):
         self.file = os.path.join(self.path, 'data', 'test.sac')
         self.filexy = os.path.join(self.path, 'data', 'testxy.sac')
         self.filebe = os.path.join(self.path, 'data', 'test.sac.swap')
-        self.testdata = np.array([-8.74227766e-08, -3.09016973e-01,
-            - 5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
-            - 1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
-            - 5.87784529e-01, -3.09016049e-01], dtype='float32')
+        self.testdata = np.array(
+            [-8.74227766e-08, -3.09016973e-01,
+             -5.87785363e-01, -8.09017122e-01, -9.51056600e-01,
+             -1.00000000e+00, -9.51056302e-01, -8.09016585e-01,
+             -5.87784529e-01, -3.09016049e-01], dtype='float32')
 
     def test_readViaObsPy(self):
         """
@@ -124,7 +125,7 @@ class CoreTestCase(unittest.TestCase):
         """
         Writing artificial files via L{obspy.Stream}
         """
-        st = Stream(traces=[Trace(header={'sac':{}}, data=self.testdata)])
+        st = Stream(traces=[Trace(header={'sac': {}}, data=self.testdata)])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             st.write(tempfile, format='SAC')
@@ -197,11 +198,11 @@ class CoreTestCase(unittest.TestCase):
         self.assertEqual(st2[0].stats.sac.nvhdr, 6)
         self.assertAlmostEqual(st2[0].stats.sac.b, 0.000400)
         # compare with correct digit size (nachkommastellen)
-        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1) * \
+        self.assertAlmostEqual((0.0004 + (st[0].stats.npts - 1) *
                                st[0].stats.delta) / st2[0].stats.sac.e, 1.0)
         self.assertEqual(st2[0].stats.sac.iftype, 1)
         self.assertEqual(st2[0].stats.sac.leven, 1)
-        self.assertAlmostEqual(st2[0].stats.sampling_rate / \
+        self.assertAlmostEqual(st2[0].stats.sampling_rate /
                                st[0].stats.sampling_rate, 1.0)
 
     def test_iztype11(self):

@@ -3,12 +3,18 @@ from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.xseed import Parser
+from obspy.core.util.decorator import skipIf
 import cPickle
 import numpy as np
+import os
 import pickle
 import unittest
 import warnings
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class StreamTestCase(unittest.TestCase):
@@ -36,7 +42,7 @@ class StreamTestCase(unittest.TestCase):
         header['npts'] = 50668
         trace4 = Trace(
             data=np.random.randint(0, 1000, 50668).astype('float64'),
-           header=deepcopy(header))
+            header=deepcopy(header))
         self.mseed_stream = Stream(traces=[trace1, trace2, trace3, trace4])
         header = {'network': '', 'station': 'RNON ', 'location': '',
                   'starttime': UTCDateTime(2004, 6, 9, 20, 5, 59, 849998),
@@ -46,6 +52,20 @@ class StreamTestCase(unittest.TestCase):
             data=np.random.randint(0, 1000, 12000).astype('float64'),
             header=header)
         self.gse2_stream = Stream(traces=[trace])
+
+    def test_init(self):
+        """
+        Tests the __init__ method of the Stream object.
+        """
+        # empty
+        st = Stream()
+        self.assertEqual(len(st), 0)
+        # single trace
+        st = Stream(Trace())
+        self.assertEqual(len(st), 1)
+        # array of traces
+        st = Stream([Trace(), Trace()])
+        self.assertEqual(len(st), 2)
 
     def test_setitem(self):
         """
@@ -103,6 +123,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(new_stream[8], other_stream[0])
         self.assertEqual(new_stream[8].stats, other_stream[0].stats)
         np.testing.assert_array_equal(new_stream[8].data, other_stream[0].data)
+        # adding something else than stream or trace results into TypeError
+        self.assertRaises(TypeError, stream.__add__, 1)
+        self.assertRaises(TypeError, stream.__add__, 'test')
 
     def test_iadd(self):
         """
@@ -120,6 +143,21 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(other_stream[0], stream[-1])
         self.assertEqual(other_stream[0].stats, stream[-1].stats)
         np.testing.assert_array_equal(other_stream[0].data, stream[-1].data)
+        # adding something else than stream or trace results into TypeError
+        self.assertRaises(TypeError, stream.__iadd__, 1)
+        self.assertRaises(TypeError, stream.__iadd__, 'test')
+
+    def test_mul(self):
+        """
+        Tests the __mul__ method of the Stream objects.
+        """
+        st = Stream(Trace())
+        self.assertEqual(len(st), 1)
+        st = st * 4
+        self.assertEqual(len(st), 4)
+        # multiplying by something else than an integer results into TypeError
+        self.assertRaises(TypeError, st.__mul__, 1.2345)
+        self.assertRaises(TypeError, st.__mul__, 'test')
 
     def test_addTraceToStream(self):
         """
@@ -851,9 +889,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st2[2]), 824)
         self.assertEqual(len(st2[3]), 50668)
         self.assertEqual(st2[0].stats.starttime,
-                          UTCDateTime("2007-12-31T23:59:59.915000"))
+                         UTCDateTime("2007-12-31T23:59:59.915000"))
         self.assertEqual(st2[3].stats.endtime,
-                          UTCDateTime("2008-01-01T00:04:31.790000"))
+                         UTCDateTime("2008-01-01T00:04:31.790000"))
         for i in xrange(4):
             self.assertEqual(st2[i].stats.sampling_rate, 200)
             self.assertEqual(st2[i].getId(), 'BW.BGLD..EHE')
@@ -998,7 +1036,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st[0].stats.starttime, trace1.stats.starttime)
         # endtime of last trace
         endtime = trace1.stats.starttime + \
-                  (4 * 1440 - 1) * trace1.stats.delta
+            (4 * 1440 - 1) * trace1.stats.delta
         self.assertEqual(st[0].stats.endtime, endtime)
 
     def test_mergeOverlapsMethod1(self):
@@ -1056,8 +1094,8 @@ class StreamTestCase(unittest.TestCase):
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=(-1))
-        np.testing.assert_array_equal(st[0].data,
-                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
+        np.testing.assert_array_equal(
+            st[0].data, np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
         # Interpolate all samples (``interpolation_samples=5``)::
         # Given number of samples is bigger than the actual overlap - should
         # interpolate all samples
@@ -1070,8 +1108,8 @@ class StreamTestCase(unittest.TestCase):
         trace2.stats.starttime += 4
         st = Stream([trace1, trace2])
         st.merge(method=1, interpolation_samples=5)
-        np.testing.assert_array_equal(st[0].data,
-                          np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
+        np.testing.assert_array_equal(
+            st[0].data, np.array([0] * 4 + [1] + [2] + [3] + [4] + [5] * 4))
 
     def test_trimRemovingEmptyTraces(self):
         """
@@ -1181,30 +1219,50 @@ class StreamTestCase(unittest.TestCase):
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
 
+    def test_isPickle(self):
+        """
+        Testing isPickle function.
+        """
+        # existing file
+        st = read()
+        with NamedTemporaryFile() as tf:
+            st.write(tf.name, format='PICKLE')
+            # check using file name
+            self.assertTrue(isPickle(tf.name))
+            # check using file handler
+            self.assertTrue(isPickle(tf))
+        # not existing files
+        self.assertFalse(isPickle('/path/to/pickle.file'))
+        self.assertFalse(isPickle(12345))
+
     def test_readWritePickle(self):
         """
+        Testing readPickle and writePickle functions.
         """
         st = read()
         # write
         with NamedTemporaryFile() as tf:
-            tmpfile = tf.name
-            with NamedTemporaryFile() as tf2:
-                tmpfile2 = tf2.name
-                writePickle(st, tmpfile)
-                st.write(tmpfile2, format='PICKLE')
-                # check and read directly
-                self.assertTrue(isPickle(tmpfile), True)
-                st2 = readPickle(tmpfile)
-                self.assertEqual(len(st2), 3)
-                np.testing.assert_array_equal(st2[0].data, st[0].data)
-                # use read() with given format
-                st2 = read(tmpfile2, format='PICKLE')
-                self.assertEqual(len(st2), 3)
-                np.testing.assert_array_equal(st2[0].data, st[0].data)
-                # use read() and autodetect format
-                st2 = read(tmpfile2)
-                self.assertEqual(len(st2), 3)
-                np.testing.assert_array_equal(st2[0].data, st[0].data)
+            # write using file name
+            writePickle(st, tf.name)
+            self.assertTrue(isPickle(tf.name))
+            # write using file handler
+            writePickle(st, tf)
+            tf.seek(0)
+            self.assertTrue(isPickle(tf))
+            # write using stream write method
+            st.write(tf.name, format='PICKLE')
+            # check and read directly
+            st2 = readPickle(tf.name)
+            self.assertEqual(len(st2), 3)
+            np.testing.assert_array_equal(st2[0].data, st[0].data)
+            # use read() with given format
+            st2 = read(tf.name, format='PICKLE')
+            self.assertEqual(len(st2), 3)
+            np.testing.assert_array_equal(st2[0].data, st[0].data)
+            # use read() and automatically detect format
+            st2 = read(tf.name)
+            self.assertEqual(len(st2), 3)
+            np.testing.assert_array_equal(st2[0].data, st[0].data)
 
     def test_getGaps2(self):
         """
@@ -1465,6 +1523,11 @@ class StreamTestCase(unittest.TestCase):
                    ".12345.. | 1970-01-01T00:00:00.000000Z - 1970-01-01" + \
                    "T00:00:00.000000Z | 1.0 Hz, 0 samples"
         self.assertEqual(result, expected)
+        # streams containing more than 20 lines will be compressed
+        st2 = Stream([tr1]) * 40
+        result = st2.__str__()
+        self.assertTrue('40 Trace(s) in Stream:' in result)
+        self.assertTrue('other traces' in result)
 
     def test_cleanup(self):
         """
@@ -1564,8 +1627,8 @@ class StreamTestCase(unittest.TestCase):
         st2.integrate()
         st2.differentiate()
 
-        np.testing.assert_array_almost_equal(st1[0].data[:-1],
-                st2[0].data[:-1], decimal=5)
+        np.testing.assert_array_almost_equal(
+            st1[0].data[:-1], st2[0].data[:-1], decimal=5)
 
     def test_cleanupNonDefaultPrecisionUTCDateTime(self):
         """
@@ -1590,9 +1653,9 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         UTCDateTime.DEFAULT_PRECISION = 6
 
-    def test_readArguments(self):
+    def test_read(self):
         """
-        Testing arguments on read function.
+        Testing read function.
         """
         # 1 - default example
         # dtype
@@ -1634,6 +1697,24 @@ class StreamTestCase(unittest.TestCase):
         # headonly
         tr = read('/path/to/slist_float.ascii', headonly=True)[0]
         self.assertFalse(tr.data)
+        # not existing
+        self.assertRaises(IOError, read, '/path/to/UNKNOWN')
+
+        # 4 - file patterns
+        path = os.path.dirname(__file__)
+        filename = os.path.join(path, 'data', 'slist.*')
+        st = read(filename)
+        self.assertEquals(len(st), 2)
+        # exception if no file matches file pattern
+        filename = path + os.sep + 'data' + os.sep + 'NOTEXISTING.*'
+        self.assertRaises(Exception, read, filename)
+
+        # argument headonly should not be used with starttime, endtime or dtype
+        with warnings.catch_warnings(record=True):
+            # will usually warn only but here we force to raise an exception
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, read, '/path/to/slist_float.ascii',
+                              headonly=True, starttime=0, endtime=1)
 
     def test_copy(self):
         """
@@ -1712,24 +1793,40 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(np.allclose(st[4].data, st2[4].data))
         self.assertTrue(np.allclose(st[5].data, st2[5].data))
 
+        # unknown rotate method will raise ValueError
+        self.assertRaises(ValueError, st.rotate, method='UNKNOWN')
+        # rotating without back_azimuth raises TypeError
+        st = Stream()
+        self.assertRaises(TypeError, st.rotate, method='RT->NE')
+        # rotating without inclination raises TypeError for LQT-> or ZNE->
+        self.assertRaises(TypeError, st.rotate, method='LQT->ZNE',
+                          back_azimuth=30)
+        # having traces with different timespans or sampling rates will fail
+        st = read()
+        st[1].stats.sampling_rate = 2.0
+        self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        st = read()
+        st[1].stats.starttime += 1
+        self.assertRaises(ValueError, st.rotate, method='NE->RT')
+        st = read()
+        st[1].stats.sampling_rate = 2.0
+        self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+        st = read()
+        st[1].stats.starttime += 1
+        self.assertRaises(ValueError, st.rotate, method='ZNE->LQT')
+
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         self.mseed_stream.plot(show=False)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         self.mseed_stream.spectrogram(show=False)
 
     def test_deepcopy(self):
@@ -1753,6 +1850,197 @@ class StreamTestCase(unittest.TestCase):
         st[0].stats.mseed.dataquality = 'X'
         self.assertEquals(st[0].stats.mseed.dataquality, 'X')
         self.assertEquals(ct[0].stats.mseed.dataquality, 'A')
+
+    def test_write(self):
+        # writing in unknown format raises TypeError
+        st = read()
+        self.assertRaises(TypeError, st.write, 'file.ext', format="UNKNOWN")
+
+    def test_detrend(self):
+        """
+        Test detrend method of stream
+        """
+        t = np.arange(10)
+        data = 0.1 * t + 1.
+
+        tr = Trace(data=data.copy())
+        st = Stream([tr, tr])
+        st.detrend(type='simple')
+        np.testing.assert_array_almost_equal(st[0].data, np.zeros(10))
+        np.testing.assert_array_almost_equal(st[1].data, np.zeros(10))
+
+        tr = Trace(data=data.copy())
+        st = Stream([tr, tr])
+        st.detrend(type='linear')
+        np.testing.assert_array_almost_equal(st[0].data, np.zeros(10))
+        np.testing.assert_array_almost_equal(st[1].data, np.zeros(10))
+
+        data = np.zeros(10)
+        data[3:7] = 1.
+
+        tr = Trace(data=data.copy())
+        st = Stream([tr, tr])
+        st.detrend(type='simple')
+        np.testing.assert_almost_equal(st[0].data[0], 0.)
+        np.testing.assert_almost_equal(st[0].data[-1], 0.)
+        np.testing.assert_almost_equal(st[1].data[0], 0.)
+        np.testing.assert_almost_equal(st[1].data[-1], 0.)
+
+        tr = Trace(data=data.copy())
+        st = Stream([tr, tr])
+        st.detrend(type='linear')
+        np.testing.assert_almost_equal(st[0].data[0], -0.4)
+        np.testing.assert_almost_equal(st[0].data[-1], -0.4)
+        np.testing.assert_almost_equal(st[1].data[0], -0.4)
+        np.testing.assert_almost_equal(st[1].data[-1], -0.4)
+
+    def test_taper(self):
+        """
+        Test taper method of stream
+        """
+        data = np.ones(10)
+        tr = Trace(data=data.copy())
+        st = Stream([tr, tr])
+        st.taper()
+        for i in range(len(data)):
+            self.assertTrue(st[0].data[i] <= 1.)
+            self.assertTrue(st[0].data[i] >= 0.)
+            self.assertTrue(st[1].data[i] <= 1.)
+            self.assertTrue(st[1].data[i] >= 0.)
+
+    def test_issue540(self):
+        """
+        Trim with pad=True and given fill value should not return a masked
+        NumPy array.
+        """
+        # fill_value = None
+        st = read()
+        self.assertEquals(len(st[0]), 3000)
+        st.trim(starttime=st[0].stats.starttime - 0.01,
+                endtime=st[0].stats.endtime + 0.01, pad=True, fill_value=None)
+        self.assertEquals(len(st[0]), 3002)
+        self.assertTrue(isinstance(st[0].data, np.ma.masked_array))
+        self.assertTrue(st[0].data[0] is np.ma.masked)
+        self.assertTrue(st[0].data[1] is not np.ma.masked)
+        self.assertTrue(st[0].data[-2] is not np.ma.masked)
+        self.assertTrue(st[0].data[-1] is np.ma.masked)
+        # fill_value = 999
+        st = read()
+        self.assertEquals(len(st[1]), 3000)
+        st.trim(starttime=st[1].stats.starttime - 0.01,
+                endtime=st[1].stats.endtime + 0.01, pad=True, fill_value=999)
+        self.assertEquals(len(st[1]), 3002)
+        self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
+        self.assertEquals(st[1].data[0], 999)
+        self.assertEquals(st[1].data[-1], 999)
+        # given fill_value but actually no padding at all
+        st = read()
+        self.assertEquals(len(st[2]), 3000)
+        st.trim(starttime=st[2].stats.starttime, endtime=st[2].stats.endtime,
+                pad=True, fill_value=-999)
+        self.assertEquals(len(st[2]), 3000)
+        self.assertFalse(isinstance(st[2].data, np.ma.masked_array))
+
+    def test_method_chaining(self):
+        """
+        Tests that method chaining works for all methods on the Stream object
+        where it is sensible.
+        """
+        st1 = read()[0:1]
+        st2 = read()
+
+        self.assertEqual(len(st1), 1)
+        self.assertEqual(len(st2), 3)
+
+        # Test some list like methods.
+        temp_st = st1.append(st1[0].copy())\
+            .extend(st2)\
+            .insert(0, st1[0].copy())\
+            .remove(st1[0])
+        self.assertTrue(temp_st is st1)
+        self.assertEqual(len(st1), 5)
+        self.assertEqual(st1[0], st1[1])
+        self.assertEqual(st1[2], st2[0])
+        self.assertEqual(st1[3], st2[1])
+        self.assertEqual(st1[4], st2[2])
+
+        # Sort and reverse methods.
+        st = st2.copy()
+        st[0].stats.channel = "B"
+        st[1].stats.channel = "C"
+        st[2].stats.channel = "A"
+        temp_st = st.sort(keys=["channel"]).reverse()
+        self.assertTrue(temp_st is st)
+        self.assertTrue([tr.stats.channel for tr in st], ["C", "B", "A"])
+
+        # The others are pretty hard to properly test and probably not worth
+        # the effort. A simple demonstrating that they can be chained should be
+        # enough.
+        temp = st.trim(st[0].stats.starttime + 1, st[0].stats.starttime + 10)\
+            .decimate(factor=2, no_filter=True)\
+            .resample(st[0].stats.sampling_rate / 2)\
+            .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+                                            -0.037004 - 0.037016j,
+                                            -251.33 + 0j],
+                                  'zeros': [0j, 0j],
+                                  'gain': 60077000.0,
+                                  'sensitivity': 2516778400.0})\
+            .filter("lowpass", freq=2.0)\
+            .differentiate()\
+            .integrate()\
+            .merge()\
+            .cutout(st[0].stats.starttime + 2, st[0].stats.starttime + 2)\
+            .detrend()\
+            .taper()\
+            .normalize()\
+            .verify()\
+            .trigger(type="zdetect", nsta=20)\
+            .rotate(method="NE->RT", back_azimuth=40)
+
+        # Use the processing chain to check the results. The trim(), merge(),
+        # cutout(), verify(), and rotate() methods do not have an entry in the
+        # processing chain.
+        pr = st[0].stats.processing
+        self.assertTrue(pr[0].startswith("downsample"))
+        self.assertTrue(pr[1].startswith("resample"))
+        self.assertTrue(pr[2].startswith("simulate"))
+        self.assertTrue(pr[3].startswith("filter:lowpass"))
+        self.assertTrue(pr[4].startswith("differentiate"))
+        self.assertTrue(pr[5].startswith("integrate"))
+        self.assertTrue(pr[6].startswith("detrend"))
+        self.assertTrue(pr[7].startswith("taper"))
+        self.assertTrue(pr[8].startswith("normalize"))
+        self.assertTrue(pr[9].startswith("trigger"))
+
+        self.assertTrue(temp is st)
+        # Cutout duplicates the number of traces.
+        self.assertTrue(len(st), 6)
+        # Clearing also works for method chaining.
+        self.assertEqual(len(st.clear()), 0)
+
+    def test_simulate_seedresp_Parser(self):
+        """
+        Test simulate() with giving a Parser object to use for RESP information
+        in evalresp.
+        Also tests usage without specifying a date for response lookup
+        explicitely.
+        """
+        st = read()
+        p = Parser("/path/to/dataless.seed.BW_RJOB")
+        kwargs = dict(seedresp={'filename': p, 'units': "DIS"},
+                      pre_filt=(1, 2, 50, 60), waterlevel=60)
+        st.simulate(**kwargs)
+
+        for resp_string, stringio in p.getRESP():
+            stringio.seek(0, 0)
+            component = resp_string[-1]
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(stringio.read())
+                tr1 = read().select(component=component)[0]
+                tr1.simulate(**kwargs)
+            tr2 = st.select(component=component)[0]
+            self.assertEqual(tr1, tr2)
 
 
 def suite():
