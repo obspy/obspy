@@ -82,8 +82,7 @@ int32_t check_sum (signal_int, number_of_samples, checksum)
 
     St. Stange, 28.4.1998
 *********************************************************************/
-
-int compress_6b (int32_t *data, int n_of_samples)
+int compress_6b_buffer (int32_t *data, int n_of_samples, int (* writer)(char))
 {
   static char achar[] =
        " +-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -115,19 +114,22 @@ int compress_6b (int32_t *data, int n_of_samples)
 	{				/* one character per turn */
 		jc = value/expo_2[case_expo] + nflag + mflag;
 		/*if (jc > 64 || jc < 1) return jc;*/
-		buf_putchar(achar[jc]);		/* store a character */
+		(*writer)(achar[jc]);		/* store a character */
 		value = value & expo_2m1_o[case_expo];
 		nflag = 1;
 	}
 		
 	jc = value + nflag;		/* one character to go */
-	buf_putchar(achar[jc]);		/* store a character */
+	(*writer)(achar[jc]);		/* store a character */
 
   }
         return 0;
 
 }	/* end of compress_6b */
 
+int compress_6b(int32_t *data, int n_of_samples) {
+    return compress_6b_buffer(data, n_of_samples, &buf_putchar);
+}
 
 /*********************************************************************
   Function: diff_2nd

@@ -79,7 +79,8 @@ int buf_putchar(char C)
 		return (buf_putchar(C));
 	/* Pufferzeile fehlt */
 	default:
-		buf_err(FATAL,"buf_putchar","kein Schreibpuffer vohanden ----- Initialisierung fehlt wahrscheinlich"); return(-1);
+		buf_err(FATAL,"buf_putchar","kein Schreibpuffer vohanden ----- Initialisierung fehlt wahrscheinlich");
+		return(-1);
 	}
 }
 /*****************************************************************
@@ -215,6 +216,7 @@ void buf_err(int mode, char *func_name, char *message)
 		break;
 	default:
 		printf ("whoooops\n");
+		break;
 	}
 }
 /******************************************************************
