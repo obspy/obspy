@@ -8,6 +8,7 @@ EXPORTS
     read_header
     rem_2nd_diff
     decomp_6b
+    compress_6b_buffer
     buf_init
     buf_putchar
     buf_dump

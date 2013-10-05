@@ -22,6 +22,8 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include "gse_header.h"
+#include "gse_types.h"
 #include "buf.h"
 #include "buf_intern.h"
 /*
@@ -219,6 +221,19 @@ void buf_err(int mode, char *func_name, char *message)
 		break;
 	}
 }
+
+int compress_6b(int32_t *data, int n_of_samples) {
+    return compress_6b_buffer(data, n_of_samples, &buf_putchar);
+}
+
+char * get_line_83(char * cbuf, void * fop) {
+    return fgets (cbuf,83,fop);
+}
+
+int decomp_6b(FILE *fop, int n_of_samples, int32_t *dta) {
+    return decomp_6b_buffer (n_of_samples, dta, &get_line_83,(void *) fop);
+}
+
 /******************************************************************
 *
 *	Testprogramm

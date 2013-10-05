@@ -4,7 +4,6 @@
 #include <string.h>
 #include "gse_header.h"
 #include "gse_types.h"
-#include "buf.h"
 #define     MODULO_VALUE 100000000
 
 /*********************************************************************
@@ -125,10 +124,6 @@ int compress_6b_buffer (int32_t *data, int n_of_samples, int (* writer)(char))
   }
         return 0;
 
-}	/* end of compress_6b */
-
-int compress_6b(int32_t *data, int n_of_samples) {
-    return compress_6b_buffer(data, n_of_samples, &buf_putchar);
 }
 
 /*********************************************************************
@@ -277,14 +272,6 @@ int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, 
   return i;				/* return actual # of samples read */
 
 }	/* end of decomp_6b */
-
-char * get_line_83(char * cbuf, void * fop) {
-    return fgets (cbuf,83,fop);
-}
-
-int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta) {
-    return decomp_6b_buffer (n_of_samples, dta, &get_line_83,(void *) fop);
-}
 
 /*********************************************************************
   Function: rem_2nd_diff
