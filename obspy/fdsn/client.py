@@ -77,21 +77,24 @@ class Client(object):
         :param debug: Debug flag.
         """
         self.debug = debug
-        #if user and password:
-            ## Create an OpenerDirector for HTTP Digest Authentication
-            #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            #password_mgr.add_password(None, base_url, user, password)
-            #auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            #opener = urllib2.build_opener(auth_handler)
-            ## install globally
-            #urllib2.install_opener(opener)
+        self.user = user
 
         if base_url.upper() in URL_MAPPINGS:
-            self.base_url = URL_MAPPINGS[base_url.upper()]
-        else:
-            self.base_url = base_url
+            base_url = URL_MAPPINGS[base_url.upper()]
+
         # Make sure the base_url does not end with a slash.
-        self.base_url = self.base_url.strip("/")
+        base_url = base_url.strip("/")
+        self.base_url = base_url
+
+        # Authentication
+        if user is not None and password is not None:
+            # Create an OpenerDirector for HTTP Digest Authentication
+            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, base_url, user, password)
+            auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
+            opener = urllib2.build_opener(auth_handler)
+            # install globally
+            urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_version = major_version
@@ -679,8 +682,15 @@ class Client(object):
 
     def _build_url(self, resource_type, service, parameters={}):
         """
-        Builds a correct URL.
+        Builds the correct URL.
+
+        Replaces "query" with "queryauth" if client has authentication
+        information.
         """
+        # authenticated dataselect queries have different target URL
+        if self.user is not None:
+            if resource_type == "dataselect" and service == "query":
+                service = "queryauth"
         return build_url(self.base_url, self.major_version, resource_type,
                          service, parameters)
 
