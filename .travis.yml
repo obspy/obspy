@@ -18,7 +18,9 @@ install:
   - git status
   - pip install --use-mirrors .
   - git status
+  - printenv
 script:
+  - printenv
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
 after_success:
