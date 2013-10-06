@@ -274,6 +274,7 @@ class ClientTestCase(unittest.TestCase):
         implementation.
         """
         client = self.client
+        client.help()
 
         # Capture output
         sys.stdout = StringIO()

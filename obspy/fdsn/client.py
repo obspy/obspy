@@ -569,6 +569,8 @@ class Client(object):
             raise NotImplementedError
 
         for service in services:
+            if service not in DEFAULT_PARAMETERS:
+                continue
             SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
 
             print "Parameter description for the '%s' service of '%s':" % (
@@ -618,8 +620,8 @@ class Client(object):
 
             if additional_parameters:
                 printed_something = True
-                print ("The service offers the following "
-                       "non-standard parameters:")
+                print("The service offers the following "
+                      "non-standard parameters:")
                 for name in additional_parameters:
                     _print_param(name)
 
@@ -639,7 +641,7 @@ class Client(object):
             if service == "event" and \
                     "available_event_contributors" in self.services:
                 printed_something = True
-                print("Available catalogs: %s" %
+                print("Available contributors: %s" %
                       ", ".join(
                           self.services["available_event_contributors"]))
 
