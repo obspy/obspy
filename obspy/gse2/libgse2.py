@@ -367,7 +367,6 @@ def write(headdict, data, f, inplace=False):
     cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
     ierr = clibgse2.compress_6b_buffer(data, n, cwriter)
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
-    raw = "\n".join(carr[:(count // 80 + 1) * 80].view('|S80'))
     # set some defaults if not available and convert header entries
     headdict.setdefault('calib', 1.0)
     headdict.setdefault('gse2', {})
@@ -382,8 +381,8 @@ def write(headdict, data, f, inplace=False):
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, headdict)
     f.write("DAT2\n")
-    f.write(raw)
-    f.write("\n")
+    for line in carr[:(count // 80 + 1) * 80].view('|S80'):
+        f.write("%s\n" % line)
     f.write("CHK2 %8ld\n\n" % chksum)
 
 if __name__ == '__main__':
