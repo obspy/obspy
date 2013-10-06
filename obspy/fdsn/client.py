@@ -16,7 +16,7 @@ from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException
+    WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
 
 import Queue
@@ -31,10 +31,11 @@ class Client(object):
     FDSN Web service request client.
 
     >>> client = Client("IRIS")
-    >>> print client  # doctest: +NORMALIZE_WHITESPACE
+    >>> print client  # doctest: +SKIP
     FDSN Webservice Client (base url: http://service.iris.edu)
-    Available Services: 'available_event_contributors', 'dataselect',
-    'station', 'event', 'available_event_catalogs'
+    Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
+    'station' (v1.0.7), 'available_event_contributors',
+    'available_event_catalogs'
     <BLANKLINE>
     Use e.g. client.help('dataselect') for the
     parameter description of the individual services
@@ -49,10 +50,11 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print client  # doctest: +NORMALIZE_WHITESPACE
+        >>> print client  # doctest: +SKIP
         FDSN Webservice Client (base url: http://service.iris.edu)
-        Available Services: 'available_event_contributors', 'dataselect',
-        'station', 'event', 'available_event_catalogs'
+        Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
+        'station' (v1.0.7), 'available_event_contributors',
+        'available_event_catalogs'
         <BLANKLINE>
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
@@ -543,14 +545,20 @@ class Client(object):
                                parameters=final_parameter_set)
 
     def __str__(self):
+        versions = dict([(s, self._get_webservice_versionstring(s))
+                         for s in self.services if s in FDSNWS])
+        services_string = ["'%s' (v%s)" % (s, versions[s])
+                           for s in FDSNWS if s in self.services]
+        services_string += ["'%s'" % s
+                            for s in self.services if s not in FDSNWS]
+        services_string = ", ".join(services_string)
         ret = ("FDSN Webservice Client (base url: {url})\n"
-               "Available Services: '{services}'\n\n"
+               "Available Services: {services}\n\n"
                "Use e.g. client.help('dataselect') for the\n"
                "parameter description of the individual services\n"
                "or client.help() for parameter description of\n"
-               "all webservices.".format(
-                   url=self.base_url,
-                   services="', '".join(self.services.keys())))
+               "all webservices.".format(url=self.base_url,
+                                         services=services_string))
         return ret
 
     def help(self, service=None):
@@ -566,18 +574,23 @@ class Client(object):
 
         if service is None:
             services = self.services.keys()
-        elif service in DEFAULT_PARAMETERS:
+        elif service in FDSNWS:
             services = [service]
         else:
-            raise NotImplementedError
+            msg = "Service '%s is not a valid FDSN web service." % service
+            raise ValueError(msg)
 
+        msg = []
         for service in services:
-            if service not in DEFAULT_PARAMETERS:
+            if service not in FDSNWS:
                 continue
             SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
 
-            print "Parameter description for the '%s' service of '%s':" % (
-                service, self.base_url)
+            msg.append("Parameter description for the "
+                       "'%s' service (v%s) of '%s':" % (
+                           service,
+                           self._get_webservice_versionstring(service),
+                           self.base_url))
 
             # Loop over all parameters and group them in three list: available
             # default parameters, missing default parameters and additional
@@ -598,7 +611,7 @@ class Client(object):
                 if name not in SERVICE_DEFAULT:
                     additional_parameters.append(name)
 
-            def _print_param(name):
+            def _param_info_string(name):
                 param = self.services[service][name]
                 name = "%s (%s)" % (name, param["type"].__name__)
                 req_def = ""
@@ -618,42 +631,45 @@ class Client(object):
                 else:
                     doc_title = ""
 
-                print "    {name}{req_def}{doc_title}".format(
+                return "    {name}{req_def}{doc_title}".format(
                     name=name, req_def=req_def, doc_title=doc_title)
 
             if additional_parameters:
                 printed_something = True
-                print("The service offers the following "
-                      "non-standard parameters:")
+                msg.append("The service offers the following "
+                           "non-standard parameters:")
                 for name in additional_parameters:
-                    _print_param(name)
+                    msg.append(_param_info_string(name))
 
             if missing_default_parameters:
                 printed_something = True
-                print("WARNING: The service does not offer the following "
-                      "standard parameters: %s" %
-                      ", ".join(missing_default_parameters))
+                msg.append("WARNING: The service does not offer the following "
+                           "standard parameters: %s" %
+                           ", ".join(missing_default_parameters))
 
             if service == "event" and \
                     "available_event_catalogs" in self.services:
                 printed_something = True
-                print("Available catalogs: %s" %
-                      ", ".join(
-                          self.services["available_event_catalogs"]))
+                msg.append("Available catalogs: %s" %
+                           ", ".join(
+                               self.services["available_event_catalogs"]))
 
             if service == "event" and \
                     "available_event_contributors" in self.services:
                 printed_something = True
-                print("Available contributors: %s" %
-                      ", ".join(
-                          self.services["available_event_contributors"]))
+                msg.append("Available contributors: %s" %
+                           ", ".join(
+                               self.services["available_event_contributors"]))
 
             if printed_something is False:
-                print("No derivations from standard detected")
+                msg.append("No derivations from standard detected")
 
-    def _download(self, url):
+        print "\n".join(msg)
+
+    def _download(self, url, return_string=False):
         code, data = download_url(url, headers=self.request_headers,
-                                  debug=self.debug, return_string=False)
+                                  debug=self.debug,
+                                  return_string=return_string)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -770,6 +786,29 @@ class Client(object):
                    "be due to a temporary service outage or an invalid FDSN "
                    "service address." % self.base_url)
             raise FDSNException(msg)
+
+    def get_webservice_version(self, service):
+        """
+        Get full version information of webservice (as a tuple of ints).
+        """
+        if service is not None and service not in self.services:
+            msg = "Service '%s' not available for current client." % service
+            raise ValueError(msg)
+
+        if service not in FDSNWS:
+            msg = "Service '%s is not a valid FDSN web service." % service
+            raise ValueError(msg)
+
+        url = self._build_url(service, "version")
+        version = self._download(url, return_string=True)
+        return map(int, version.split("."))
+
+    def _get_webservice_versionstring(self, service):
+        """
+        Get full version information of webservice as a string.
+        """
+        version = self.get_webservice_version(service)
+        return ".".join(map(str, version))
 
 
 def convert_to_string(value):

@@ -18,6 +18,7 @@ from StringIO import StringIO
 import sys
 import unittest
 from difflib import Differ
+import re
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -45,6 +46,13 @@ def failmsg(got, expected, ignore_lines=[]):
             return ""
     else:
         return "\nGot:\n%s\nExpected:\n%s" % (str(got), str(expected))
+
+
+def normalize_version_number(string):
+    """
+    Returns imput string with version numbers normalized for testing purposes.
+    """
+    return re.sub('[0-9]\.[0-9]\.[0-9]', "vX.X.X", string)
 
 
 class ClientTestCase(unittest.TestCase):
@@ -308,63 +316,89 @@ class ClientTestCase(unittest.TestCase):
         This will have to be adopted any time IRIS changes their
         implementation.
         """
-        client = self.client
-        client.help()
+        try:
+            client = self.client
+            sys.stdout = StringIO()
+            client.help()
+            sys.stdout.close()
 
-        # Capture output
-        sys.stdout = StringIO()
+            # Capture output
+            sys.stdout = StringIO()
 
-        client.help("event")
-        got = sys.stdout.getvalue()
+            client.help("event")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'event' service (v1.0.6) of "
+                "'http://service.iris.edu':\n"
+                "The service offers the following non-standard parameters:\n"
+                "    magtype (str)\n"
+                "        type of Magnitude used to test minimum and maximum "
+                "limits (case\n        insensitive)\n"
+                "    originid (int)\n"
+                "        Retrieve an event based on the unique origin ID "
+                "numbers assigned by\n"
+                "        the IRIS DMC\n"
+                "WARNING: The service does not offer the following standard "
+                "parameters: magnitudetype\n"
+                "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
+                "Available contributors: NEIC PDE-W, ANF, University of "
+                "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
+                "NEIC PDE-M, GCMT\n")
+            # allow for changes in version number..
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            # Reset. Creating a new one is faster then clearing the old one.
+            sys.stdout.close()
+            sys.stdout = StringIO()
+
+            client.help("station")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'station' service (v1.0.7) of "
+                "'http://service.iris.edu':\n"
+                "The service offers the following non-standard parameters:\n"
+                "    matchtimeseries (bool)\n"
+                "        Specify that the availabilities line up with"
+                "available data. This is\n"
+                "        an IRIS extension to the FDSN specification\n")
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            # Reset.
+            sys.stdout.close()
+            sys.stdout = StringIO()
+
+            client.help("dataselect")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'dataselect' service (v1.0.0)"
+                "of 'http://service.iris.edu':\n"
+                "No derivations from standard detected\n")
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            sys.stdout.close()
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_str_method(self):
+        got = str(self.client)
         expected = (
-            "Parameter description for the 'event' service of "
-            "'http://service.iris.edu':\n"
-            "The service offers the following non-standard parameters:\n"
-            "    magtype (str)\n"
-            "        type of Magnitude used to test minimum and maximum limits"
-            " (case\n"
-            "        insensitive)\n"
-            "    originid (int)\n"
-            "        Retrieve an event based on the unique origin ID numbers "
-            "assigned by\n"
-            "        the IRIS DMC\n"
-            "WARNING: The service does not offer the following standard "
-            "parameters: magnitudetype\n"
-            "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
-            "Available catalogs: NEIC PDE-W, ANF, University of Washington, "
-            "GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, NEIC PDE-M, GCMT\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
-
-        # Reset. Creating a new one is faster then clearing the old one.
-        sys.stdout.close()
-        sys.stdout = StringIO()
-
-        client.help("station")
-        got = sys.stdout.getvalue()
-        expected = (
-            "Parameter description for the 'station' service of "
-            "'http://service.iris.edu':\n"
-            "The service offers the following non-standard parameters:\n"
-            "    matchtimeseries (bool)\n"
-            "        Specify that the availabilities line up with available "
-            "data. This is\n"
-            "        an IRIS extension to the FDSN specification\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
-
-        # Reset.
-        sys.stdout.close()
-        sys.stdout = StringIO()
-
-        client.help("dataselect")
-        got = sys.stdout.getvalue()
-        expected = (
-            "Parameter description for the 'dataselect' service of "
-            "'http://service.iris.edu':\n"
-            "No derivations from standard detected\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
-
-        sys.stdout.close()
-        sys.stdout = sys.__stdout__
+            "FDSN Webservice Client (base url: http://service.iris.edu)\n"
+            "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
+            "'station' (v1.0.7), 'available_event_contributors', "
+            "'available_event_catalogs'\n\n"
+            "Use e.g. client.help('dataselect') for the\n"
+            "parameter description of the individual services\n"
+            "or client.help() for parameter description of\n"
+            "all webservices.")
+        self.assertEqual(normalize_version_number(got),
+                         normalize_version_number(expected),
+                         failmsg(got, expected))
 
 
 def suite():
