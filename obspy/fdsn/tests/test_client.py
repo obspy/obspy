@@ -360,7 +360,7 @@ class ClientTestCase(unittest.TestCase):
                 "'http://service.iris.edu':\n"
                 "The service offers the following non-standard parameters:\n"
                 "    matchtimeseries (bool)\n"
-                "        Specify that the availabilities line up with"
+                "        Specify that the availabilities line up with "
                 "available data. This is\n"
                 "        an IRIS extension to the FDSN specification\n")
             self.assertEqual(normalize_version_number(got),
@@ -374,7 +374,7 @@ class ClientTestCase(unittest.TestCase):
             client.help("dataselect")
             got = sys.stdout.getvalue()
             expected = (
-                "Parameter description for the 'dataselect' service (v1.0.0)"
+                "Parameter description for the 'dataselect' service (v1.0.0) "
                 "of 'http://service.iris.edu':\n"
                 "No derivations from standard detected\n")
             self.assertEqual(normalize_version_number(got),
