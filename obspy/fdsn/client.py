@@ -31,9 +31,10 @@ class Client(object):
     FDSN Web service request client.
 
     >>> client = Client("IRIS")
-    >>> print client
+    >>> print client  # doctest: +NORMALIZE_WHITESPACE
     FDSN Webservice Client (base url: http://service.iris.edu)
-    Available Services: 'dataselect', 'station', 'event'
+    Available Services: 'available_event_contributors', 'dataselect',
+    'station', 'event', 'available_event_catalogs'
     <BLANKLINE>
     Use e.g. client.help('dataselect') for the
     parameter description of the individual services
@@ -48,9 +49,10 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print client
+        >>> print client  # doctest: +NORMALIZE_WHITESPACE
         FDSN Webservice Client (base url: http://service.iris.edu)
-        Available Services: 'dataselect', 'station', 'event'
+        Available Services: 'available_event_contributors', 'dataselect',
+        'station', 'event', 'available_event_catalogs'
         <BLANKLINE>
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services

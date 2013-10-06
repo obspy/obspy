@@ -75,12 +75,21 @@ class ClientTestCase(unittest.TestCase):
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/station/1/application.wadl")
 
-        # Some parameters. Only one is tested because the order is random if
-        # more than one is given.
+        # Test one parameter.
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "dataselect",
                       "query", {"network": "BW"}),
             "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "dataselect",
+                      "queryauth", {"network": "BW"}),
+            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW")
+        # Test two parameters. Note random order, two possible results.
+        self.assertTrue(
+            build_url("http://service.iris.edu", 1, "dataselect",
+                      "query", {"net": "A", "sta": "BC"}) in
+            ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
+             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A"))
 
         # A wrong resource_type raises a ValueError
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
