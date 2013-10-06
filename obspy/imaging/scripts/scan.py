@@ -278,6 +278,7 @@ def main(option_list=None):
         if len(startend) == 0:
             continue
         if _id not in samp_int:
+            warnings.warn('Problem with _id=%s, skipping' % _id)
             continue
 
         startend_compressed = compressStartend(startend, 1000)

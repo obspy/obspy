@@ -39,7 +39,7 @@ class ScanTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'scan.png', reltol=reltol) as ic:
             try:
                 tmp_stdout = sys.stdout
-                sys.stdout = open(os.devnull, 'w')
+                sys.stdout = open(os.devnull, 'wb')
                 obspy_scan(waveform_dirs + ['--output', ic.name])
             finally:
                 sys.stdout.close()
