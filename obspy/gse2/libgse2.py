@@ -26,7 +26,8 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
 from distutils import sysconfig
 from obspy import UTCDateTime
-from obspy.core.util import c_file_p
+#XXX: we might be able to remove c_file_p, check
+#from obspy.core.util import c_file_p
 import ctypes as C
 import doctest
 import numpy as np
@@ -74,42 +75,7 @@ class GSEUtiError(StandardError):
     pass
 
 
-# gse2 header struct
-class HEADER(C.Structure):
-    """
-    Ctypes based GSE2 header structure for internal usage.
-    """
-    _fields_ = [
-        ('d_year', C.c_int),
-        ('d_mon', C.c_int),
-        ('d_day', C.c_int),
-        ('t_hour', C.c_int),
-        ('t_min', C.c_int),
-        ('t_sec', C.c_float),
-        ('station', C.c_char * 6),
-        ('channel', C.c_char * 4),
-        ('auxid', C.c_char * 5),
-        ('datatype', C.c_char * 4),
-        ('n_samps', C.c_int),
-        ('samp_rate', C.c_float),
-        ('calib', C.c_float),
-        ('calper', C.c_float),
-        ('instype', C.c_char * 7),
-        ('hang', C.c_float),
-        ('vang', C.c_float),
-    ]
-
-
-# ctypes, PyFile_AsFile: convert python file pointer/ descriptor to C file
-# pointer descriptor
-C.pythonapi.PyFile_AsFile.argtypes = [C.py_object]
-C.pythonapi.PyFile_AsFile.restype = c_file_p
-
-## gse_functions read_header
-clibgse2.read_header.argtypes = [c_file_p, C.POINTER(HEADER)]
-clibgse2.read_header.restype = C.c_int
-
-## gse_functions decomp_6b
+# gse_functions decomp_6b_buffer
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
@@ -134,20 +100,12 @@ clibgse2.diff_2nd.argtypes = [
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
-# gse_functions compress_6b
+# gse_functions compress_6b_buffer
 clibgse2.compress_6b_buffer.argtypes = [
     np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
 clibgse2.compress_6b_buffer.restype = C.c_int
-
-## gse_functions write_header
-clibgse2.write_header.argtypes = [c_file_p, C.POINTER(HEADER)]
-clibgse2.write_header.restype = C.c_void_p
-
-# module wide variable, can be imported by:
-# >>> from obspy.gse2 import gse2head
-gse2head = [_i[0] for _i in HEADER._fields_]
 
 
 def isGse2(f):
@@ -164,7 +122,70 @@ def isGse2(f):
         raise TypeError("File is not in GSE2 format")
 
 
-def writeHeader(f, head):
+def readHeader(fh):
+    """
+    Reads GSE2 header from file pointer and returns it as dictionary.
+
+    The method searches for the next available WID2 field beginning from the
+    current file position.
+    """
+    # example header of tests/data/loc_RNON20040609200559.z:
+    #
+    # WID2 2009/05/18 06:47:20.255 RNHA  EHN      CM6      750  200.000000
+    # 0123456789012345678901234567890123456789012345678901234567890123456789
+    # 0         10        20        30        40        50        60
+    #  9.49e-02   1.000    M24  -1.0 -0.0
+    # 0123456789012345678901234567890123456789012345678901234567890123456789
+    # 70        80        90        100
+    #
+    # search for WID field
+    while True:
+        line = fh.readline()
+        if line.startswith('WID2'):
+            # valid GSE2 header
+            break
+        if line == '':
+            raise EOFError
+    # fetch header
+    header, date = {}, {}
+    header['gse2'] = {}
+    # starttime
+    for key, start, stop in [
+        ('year', 5, 9),
+        ('month', 10, 12),
+        ('day', 13, 15),
+        ('hour', 16, 18),
+        ('minute', 19, 21),
+        ('second', 22, 24),
+        ('microsecond', 25, 28),
+            ]:
+        date[key] = int(line[slice(start, stop)])
+    date['microsecond'] *= 1000
+    header['starttime'] = UTCDateTime(**date)
+    # remaining fields
+    _str = lambda s: s.strip()
+    for key, start, stop, fct in [
+        ('station', 29, 34, _str),
+        ('channel', 35, 38, lambda s: s.strip().upper()),
+        ('gse2.auxid', 39, 43, _str),
+        ('gse2.datatype', 44, 48, _str),
+        ('npts', 48, 56, int),
+        ('sampling_rate', 57, 68, float),
+        ('calib', 69, 79, float),
+        ('gse2.calper', 80, 87, float),
+        ('gse2.instype', 88, 94, _str),
+        ('gse2.hang', 95, 100, float),
+        ('gse2.vang', 101, 105, float),
+            ]:
+        value = fct(line[slice(start, stop)])
+        if 'gse2.' in key:
+            header['gse2'][key[5:]] = value
+        else:
+            header[key] = value
+    return header
+
+
+def writeHeader(f, headdict):
     """
     Rewriting the write_header Function of gse_functions.c
 
@@ -176,30 +197,33 @@ def writeHeader(f, head):
 
     :type f: File pointer
     :param f: File pointer to to GSE2 file to write
-    :type head: Ctypes struct
-    :param head: Ctypes structure to write
+    :type headdict: obspy header
+    :param headdict: obspy header
     """
-    calib = "%10.2e" % (head.calib)
-    header = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
-             "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
-    f.write(header % (
-            head.d_year,
-            head.d_mon,
-            head.d_day,
-            head.t_hour,
-            head.t_min,
-            head.t_sec,
-            head.station,
-            head.channel,
-            head.auxid,
-            head.datatype,
-            head.n_samps,
-            head.samp_rate,
+    calib = "%10.2e" % (headdict['calib'])
+    date = headdict['starttime']
+    fmt = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
+          "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
+    f.write(fmt % (
+            date.year,
+            date.month,
+            date.day,
+            date.hour,
+            date.minute,
+            date.second + date.microsecond / 1e6,
+            headdict['station'],
+            headdict['channel'],
+            headdict['gse2']['auxid'],
+            headdict['gse2']['datatype'],
+            headdict['npts'],
+            headdict['sampling_rate'],
             calib,
-            head.calper,
-            head.instype,
-            head.hang,
-            head.vang))
+            headdict['gse2']['calper'],
+            headdict['gse2']['instype'],
+            headdict['gse2']['hang'],
+            headdict['gse2']['vang'])
+            )
+
 
 def uncompress_CM6(f, n_samps):
     """
@@ -265,6 +289,7 @@ def verifyChecksum(fh, data, version=2):
         raise ChksumError(msg % (chksum_data, chksum_file))
     return
 
+
 def read(f, verify_chksum=True):
     """
     Read GSE2 file and return header and data.
@@ -283,20 +308,11 @@ def read(f, verify_chksum=True):
     :rtype: Dictionary, Numpy.ndarray int32
     :return: Header entries and data as numpy.ndarray of type int32.
     """
-    fp = C.pythonapi.PyFile_AsFile(f)
-    head = HEADER()
-    errcode = clibgse2.read_header(fp, C.pointer(head))
-    if errcode != 0:
-        raise GSEUtiError("Error in lib.read_header")
-    data = uncompress_CM6(f, head.n_samps)
+    headdict = readHeader(f)
+    data = uncompress_CM6(f, headdict['npts'])
     # test checksum only if enabled
     if verify_chksum:
         verifyChecksum(f, data, version=2)
-    headdict = {}
-    for i in head._fields_:
-        headdict[i[0]] = getattr(head, i[0])
-    # cleaning up
-    del fp, head
     return headdict, data
 
 
@@ -324,26 +340,7 @@ def write(headdict, data, f, inplace=False):
                     on the data itself --- note this will change the data
                     values and make them therefore unusable
     :type headdict: Dictionary
-    :param headdict: Header containing the following entries::
-        'd_year': int,
-        'd_mon': int,
-        'd_mon': int,
-        'd_day': int,
-        't_hour': int,
-        't_min': int,
-        't_sec': float,
-        'station': char*6,
-        'station': char*6,
-        'channel': char*4,
-        'auxid': char*5,
-        'datatype': char*4,
-        'n_samps': int,
-        'samp_rate': float,
-        'calib': float,
-        'calper': float,
-        'instype': char*7,
-        'hang': float,
-        'vang': float
+    :param headdict: Obspy Header
     """
     n = len(data)
     #
@@ -356,10 +353,12 @@ def write(headdict, data, f, inplace=False):
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
     clibgse2.diff_2nd(data, n, 0)
+    #XXX: extract as extra function
     global count
     count = 0
     # 4 character bytes per 32 bit integer
     carr = np.zeros(n * 4, dtype='c')
+
     def writer(char):
         global count
         carr[count] = char
@@ -370,74 +369,22 @@ def write(headdict, data, f, inplace=False):
     assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
     raw = "\n".join(carr[:(count // 80 + 1) * 80].view('|S80'))
     # set some defaults if not available and convert header entries
-    headdict.setdefault('datatype', 'CM6')
-    headdict.setdefault('vang', -1)
-    headdict.setdefault('calper', 1.0)
     headdict.setdefault('calib', 1.0)
-    head = HEADER()
-    for _i in headdict.keys():
-        if _i in gse2head:
-            setattr(head, _i, headdict[_i])
+    headdict.setdefault('gse2', {})
+    headdict['gse2'].setdefault('auxid', '')
+    headdict['gse2'].setdefault('datatype', 'CM6')
+    headdict['gse2'].setdefault('calper', 1.0)
+    headdict['gse2'].setdefault('instype', '')
+    headdict['gse2'].setdefault('hang', -1)
+    headdict['gse2'].setdefault('vang', -1)
     # This is the actual function where the header is written. It avoids
     # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
-    writeHeader(f, head)
+    writeHeader(f, headdict)
     f.write("DAT2\n")
     f.write(raw)
     f.write("\n")
     f.write("CHK2 %8ld\n\n" % chksum)
-    del head
-
-
-def readHead(f):
-    """
-    Return (and read) only the header of gse2 file as dictionary.
-
-    Currently supports only CM6 compressed GSE2 files, this should be
-    sufficient for most cases.
-
-    :type file: File Pointer
-    :param file: Open file pointer of GSE2 file to read, opened in binary
-                 mode, e.g. f = open('myfile','rb')
-    :rtype: Dictionary
-    :return: Header entries.
-    """
-    fp = C.pythonapi.PyFile_AsFile(f)
-    head = HEADER()
-    clibgse2.read_header(fp, C.pointer(head))
-    headdict = {}
-    for i in head._fields_:
-        headdict[i[0]] = getattr(head, i[0])
-    del fp, head
-    return headdict
-
-
-def getStartAndEndTime(f):
-    """
-    Return start and endtime/date of GSE2 file
-
-    Currently supports only CM6 compressed GSE2 files, this should be
-    sufficient for most cases.
-
-    :type f: File Pointer
-    :param f: Open file pointer of GSE2 file to read, opened in binary
-              mode, e.g. f = open('myfile','rb')
-    :rtype: List
-    :return: C{[startdate,stopdate,startime,stoptime]} Start and Stop time as
-             Julian seconds and as date string.
-    """
-    fp = C.pythonapi.PyFile_AsFile(f)
-    head = HEADER()
-    clibgse2.read_header(fp, C.pointer(head))
-    seconds = int(head.t_sec)
-    microseconds = int(1e6 * (head.t_sec - seconds))
-    startdate = UTCDateTime(head.d_year, head.d_mon, head.d_day,
-                            head.t_hour, head.t_min, seconds, microseconds)
-    stopdate = UTCDateTime(startdate.timestamp +
-                           head.n_samps / float(head.samp_rate))
-    del fp, head
-    return [startdate, stopdate, startdate.timestamp, stopdate.timestamp]
-
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
