@@ -56,6 +56,9 @@ class ClientTestCase(unittest.TestCase):
         self.path = os.path.dirname(__file__)
         self.datapath = os.path.join(self.path, "data")
         self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        self.client_auth = \
+            Client(base_url="IRIS", user_agent=USER_AGENT,
+                   user="nobody@iris.edu", password="anonymous")
 
     def test_url_building(self):
         """
@@ -94,6 +97,23 @@ class ClientTestCase(unittest.TestCase):
         # A wrong resource_type raises a ValueError
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
                           "obspy", "query")
+
+    def test_url_building_with_auth(self):
+        """
+        Tests the Client._build_url() method with authentication.
+
+        Necessary on top of test_url_building test case because clients with
+        authentication have to build different URLs for dataselect.
+        """
+        # no authentication
+        got = self.client._build_url("dataselect", "query", {'net': "BW"})
+        expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
+        self.assertEqual(got, expected)
+        # with authentication
+        got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        self.assertEqual(got, expected)
 
     def test_service_discovery_iris(self):
         """
@@ -259,6 +279,21 @@ class ClientTestCase(unittest.TestCase):
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_authentication(self):
+        """
+        Test dataselect with authentication.
+        """
+        client = self.client_auth
+        # dataselect example queries
+        query = ("IU", "ANMO", "00", "BHZ",
+                 UTCDateTime("2010-02-27T06:30:00.000"),
+                 UTCDateTime("2010-02-27T06:40:00.000"))
+        filename = "dataselect_example.mseed"
+        got = client.get_waveform(*query)
+        file_ = os.path.join(self.datapath, filename)
+        expected = read(file_)
+        self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_conflicting_params(self):
         """
