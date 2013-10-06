@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.imaging.scripts.scan test suite.
+The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 
 from obspy.core.util.base import HAS_COMPARE_IMAGE, \
