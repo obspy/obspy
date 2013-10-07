@@ -557,7 +557,8 @@ class Client(object):
 
         locs = locals()
         # if it's an iterable, we build up the query string from it
-        if hasattr(bulk, "__iter__"):
+        # StringIO objects also have __iter__ so check for read as well
+        if hasattr(bulk, "__iter__") and not hasattr(bulk, "read"):
             # XXX build up query string
             # XXX not ready yet
             raise NotImplementedError()

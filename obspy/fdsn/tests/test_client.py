@@ -467,9 +467,9 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a file-like object
         for client in clients:
-            got = client.get_waveform_bulk(StringIO.StringIO(bulk1))
+            got = client.get_waveform_bulk(StringIO(bulk1))
             self.assertEqual(got, expected1, failmsg(got, expected1))
-            got = client.get_waveform_bulk(StringIO.StringIO(bulk2))
+            got = client.get_waveform_bulk(StringIO(bulk2))
             self.assertEqual(got, expected2, failmsg(got, expected2))
 
 
