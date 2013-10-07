@@ -10,7 +10,7 @@ obspy.core.util - Various utilities for ObsPy
 
     instead of
 
-    >>> from obspy.core.util.types import OrderedDict  # bad
+    >>> from obspy.core.util.obspy_types import OrderedDict  # bad
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -32,6 +32,6 @@ from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     scoreatpercentile, toIntOrZero, loadtxt
-from obspy.core.util.types import OrderedDict, Enum
+from obspy.core.util.obspy_types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
 from obspy.core.util.version import get_git_version as _getVersionString

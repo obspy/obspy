@@ -209,7 +209,7 @@ class UTCDateTime(object):
         # set default precision
         self.precision = kwargs.pop('precision', self.DEFAULT_PRECISION)
         # iso8601 flag
-        iso8601 = kwargs.pop('iso8601', False) == True
+        iso8601 = kwargs.pop('iso8601', False) is True
         # check parameter
         if len(args) == 0 and len(kwargs) == 0:
             # use current time if no time is given
@@ -259,7 +259,7 @@ class UTCDateTime(object):
                     # looks like an compact ordinal date string
                     pattern = "%Y%j"
                 elif len(parts) > 1 and len(parts[1]) == 3 and \
-                   parts[1].isdigit():
+                        parts[1].isdigit():
                     # looks like an ordinal date string
                     value = ''.join(parts)
                     if len(parts) > 2:
@@ -289,6 +289,7 @@ class UTCDateTime(object):
                 # UTCDateTime which contains the class specifications. If
                 # argument is not a digit by now, it must be a binary string
                 # and we pass it to datetime.datetime,
+                # XXX: can't reproduce: not sure this is still needed
                 if not ''.join(parts).isdigit():
                     dt = datetime.datetime(*args, **kwargs)
                     self._fromDateTime(dt)
@@ -357,7 +358,7 @@ class UTCDateTime(object):
             td = (dt - TIMESTAMP0)
         except TypeError:
             td = (dt.replace(tzinfo=None) - dt.utcoffset()) - TIMESTAMP0
-        self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) * \
+        self.timestamp = (td.microseconds + (td.seconds + td.days * 86400) *
                           1000000) / 1000000.0 + ms
 
     @staticmethod
@@ -409,13 +410,19 @@ class UTCDateTime(object):
         # check for time zone information
         # note that the zone designator is the actual offset from UTC and
         # does not include any information on daylight saving time
-        delta = 0
-        if time.count('+') == 1:
-            (time, tz) = time.split('+')
-            delta = -1 * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
-        elif time.count('-') == 1:
-            (time, tz) = time.split('-')
-            delta = int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60
+        if time.count('+') == 1 and '+' in time[-6:]:
+            (time, tz) = time.rsplit('+')
+            delta = -1
+        elif time.count('-') == 1 and '-' in time[-6:]:
+            (time, tz) = time.rsplit('-')
+            delta = 1
+        else:
+            delta = 0
+        if delta:
+            tz = tz.replace(':', '')
+            while len(tz) < 3:
+                tz += '0'
+            delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
         # split microseconds
         ms = 0
         if '.' in time:
@@ -839,8 +846,8 @@ class UTCDateTime(object):
         """
         if isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
-            value = (value.microseconds + (value.seconds + value.days * \
-                86400) * 1000000) / 1000000.0
+            value = (value.microseconds + (value.seconds + value.days *
+                     86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp + value)
 
     def __sub__(self, value):
@@ -869,8 +876,8 @@ class UTCDateTime(object):
             return round(self.timestamp - value.timestamp, self.__precision)
         elif isinstance(value, datetime.timedelta):
             # see datetime.timedelta.total_seconds
-            value = (value.microseconds + (value.seconds + value.days * \
-                86400) * 1000000) / 1000000.0
+            value = (value.microseconds + (value.seconds + value.days *
+                     86400) * 1000000) / 1000000.0
         return UTCDateTime(self.timestamp - value)
 
     def __str__(self):
@@ -1092,6 +1099,17 @@ class UTCDateTime(object):
         # needed for unittest.assertAlmostEqual tests on linux
         return abs(self.timestamp)
 
+    def __hash__(self):
+        """
+        An object is hashable if it has a hash value which never changes
+        during its lifetime. As an UTCDateTime object may change over time,
+        it's not hashable. Use the :meth:`~UTCDateTime.datetime()` method to
+        generate a :class:`datetime.datetime` object for hashing. But be aware:
+        once the UTCDateTime object changes, the hash is not valid anymore.
+        """
+        # explicitly flag it as unhashable
+        return None
+
     def strftime(self, format):
         """
         Return a string representing the date and time, controlled by an
@@ -1246,8 +1264,8 @@ class UTCDateTime(object):
         '2008275T123035.0450Z'
         """
         return "%04d%03dT%02d%02d%02d.%04dZ" % \
-                (self.year, self.julday, self.hour, self.minute, self.second,
-                 self.microsecond // 100)
+            (self.year, self.julday, self.hour, self.minute, self.second,
+             self.microsecond // 100)
 
     def formatArcLink(self):
         """
@@ -1335,8 +1353,8 @@ class UTCDateTime(object):
         '2008-05-27T12:30:35.045'
         """
         return "%04d-%02d-%02dT%02d:%02d:%02d.%03d" % \
-                (self.year, self.month, self.day, self.hour, self.minute,
-                 self.second, self.microsecond // 1000)
+            (self.year, self.month, self.day, self.hour, self.minute,
+             self.second, self.microsecond // 1000)
 
     def _getPrecision(self):
         """

@@ -111,7 +111,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra[0] = res.real
         spectra[1] = res.imag
         new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
-                count=1, max_memory_usage=1024, normalize=True)
+                                            count=1, max_memory_usage=1024,
+                                            normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
@@ -200,7 +201,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
         scaling_factor = 2.
     else:
         raise ValueError("sides must be one of: 'default', 'onesided', or "
-            "'twosided'")
+                         "'twosided'")
 
     # Matlab divides by the sampling frequency so that density function
     # has units of dB/Hz and can be integrated by the plotted frequency

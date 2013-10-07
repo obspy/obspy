@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='utf-8'?>
+<ns0:quakeml xmlns:ns0="http://quakeml.org/xmlns/quakeml/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2">
+  <eventParameters publicID="smi:local/376a9ab1-60d4-424f-b91f-10be1642dd3b">
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277093">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528002</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167952</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>PUERTO RICO REGION</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9528002">
+        <time>
+          <value>2011-01-07T01:38:09.930000Z</value>
+        </time>
+        <latitude>
+          <value>18.266</value>
+        </latitude>
+        <longitude>
+          <value>-65.085</value>
+        </longitude>
+        <depth>
+          <value>83200.0</value>
+        </depth>
+        <creationInfo>
+          <author>RSPR</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167952">
+        <mag>
+          <value>3.2</value>
+        </mag>
+        <type>MD</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528002</originID>
+        <creationInfo>
+          <author>RSPR</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3275736">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528001</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167951</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>NORTHERN MID-ATLANTIC RIDGE</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9528001">
+        <time>
+          <value>2011-01-07T01:19:16.700000Z</value>
+        </time>
+        <latitude>
+          <value>20.114</value>
+        </latitude>
+        <longitude>
+          <value>-45.617</value>
+        </longitude>
+        <depth>
+          <value>10000.0</value>
+        </depth>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167951">
+        <mag>
+          <value>5.5</value>
+        </mag>
+        <type>MW</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528001</originID>
+        <creationInfo>
+          <author>GCMT</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+    <event publicID="smi:service.iris.edu/fdsnws/event/1/query?eventid=3277092">
+      <preferredOriginID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528000</preferredOriginID>
+      <preferredMagnitudeID>smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167949</preferredMagnitudeID>
+      <type>earthquake</type>
+      <description>
+        <text>SOUTHERN SUMATERA, INDONESIA</text>
+        <type>Flinn-Engdahl region</type>
+      </description>
+      <origin publicID="smi:service.iris.edu/fdsnws/event/1/query?originid=9528000">
+        <time>
+          <value>2011-01-07T01:14:48.900000Z</value>
+        </time>
+        <latitude>
+          <value>-3.385</value>
+        </latitude>
+        <longitude>
+          <value>100.763</value>
+        </longitude>
+        <depth>
+          <value>62100.0</value>
+        </depth>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </origin>
+      <magnitude publicID="smi:service.iris.edu/fdsnws/event/1/query?magnitudeid=16167949">
+        <mag>
+          <value>4.5</value>
+        </mag>
+        <type>MB</type>
+        <originID>smi:service.iris.edu/fdsnws/event/1/query?originid=9528000</originID>
+        <creationInfo>
+          <author>NEIC</author>
+        </creationInfo>
+      </magnitude>
+    </event>
+  </eventParameters>
+</ns0:quakeml>

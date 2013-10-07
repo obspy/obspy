@@ -202,7 +202,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data',
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # should not fail
-        _st = read(gse2file, verify_chksum=False)
+        read(gse2file, verify_chksum=False)
         # should fail
         self.assertRaises(ChksumError, read, gse2file, verify_chksum=True)
 
@@ -214,7 +214,7 @@ class CoreTestCase(unittest.TestCase):
         gse2file = os.path.join(self.path, 'data',
                                 'loc_RJOB20050831023349.z.wrong_chksum')
         # add wrong starttime flag of mseed, should also not fail
-        _st = read(gse2file, verify_chksum=False, starttime=None)
+        read(gse2file, verify_chksum=False, starttime=None)
 
     def test_readGSE1ViaObsPy(self):
         """

@@ -28,7 +28,7 @@ exec 2>&1 >> $LOG
 echo '#############'
 echo "#### `date`"
 
-git clone https://github.com/obspy/obspy.git $GITDIR
+git clone git://github.com/obspy/obspy.git $GITDIR
 
 for DIST in squeeze wheezy lucid natty oneiric precise quantal raring; do
     for ARCH in i386 amd64; do
@@ -38,10 +38,6 @@ for DIST in squeeze wheezy lucid natty oneiric precise quantal raring; do
         git clean -fxd
         cd /tmp  # can make problems to enter schroot environment from a folder not present in the schroot
         COMMAND="cd $DEBSCRIPTDIR; ./deb__build_debs.sh -f $GITFORK -t $GITTARGET &>> $LOG"
-        if [[ "$DIST" == "quantal" ]]
-        then
-            COMMAND="export GIT_SSL_NO_VERIFY=true; $COMMAND"
-        fi
         SCHROOT_SESSION=$(schroot --begin-session -c $DISTARCH)
         echo "$COMMAND" | schroot --run-session -c "$SCHROOT_SESSION"
         schroot -f --end-session -c "$SCHROOT_SESSION"

@@ -48,8 +48,8 @@ class CoreTestCase(unittest.TestCase):
         # check that empty files are not recognized as CSS
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
-            with open(tempfile, "wb") as fh:
-                pass
+            fh = open(tempfile, "wb")
+            fh.close()
             assert(not isCSS(tempfile))
 
     def test_readViaObsPy(self):

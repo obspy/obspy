@@ -25,8 +25,9 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
                      'origin_id': 1347097, 'longitude': 57.143,
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
-                     'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
-                     'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
+                     'depth': -700.0, 'magnitude': 4.4, 'magnitude_type':
+                     u'mb', 'latitude': 26.303,
+                     'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEqual(results, expected)
         # 2
         results = client.getEvents(format="list", min_latitude=-95,
@@ -35,8 +36,8 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'NEIR', 'event_id': u'20041016_0000009',
                      'origin_id': 120690, 'longitude': 33.682,
                      'datetime': UTCDateTime('2004-10-16T01:29:14Z'),
-                     'depth':-10.0, 'magnitude': 5.0, 'magnitude_type': u'm ',
-                     'latitude':-46.394,
+                     'depth': -10.0, 'magnitude': 5.0, 'magnitude_type': u'm ',
+                     'latitude': -46.394,
                      'flynn_region': u'PRINCE EDWARD ISLANDS REGION'}]
         self.assertEqual(results, expected)
         # 3
@@ -46,12 +47,12 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'EMSC', 'event_id': u'20001206_0000014',
                      'origin_id': 1441886, 'longitude': 54.843,
                      'datetime': UTCDateTime('2000-12-06T17:11:05Z'),
-                     'depth':-11.4, 'magnitude': 6.7, 'magnitude_type': u'mb',
+                     'depth': -11.4, 'magnitude': 6.7, 'magnitude_type': u'mb',
                      'latitude': 39.604},
                     {'author': u'EMSC', 'event_id': u'20010210_0000010',
                      'origin_id': 1438991, 'longitude': 43.784,
                      'datetime': UTCDateTime('2001-02-10T18:21:57Z'),
-                     'depth':-17.0, 'magnitude': 6.6,
+                     'depth': -17.0, 'magnitude': 6.6,
                      'magnitude_type': u'mb', 'latitude': 12.045,
                      'flynn_region': u'NEAR THE COAST OF YEMEN'}]
         self.assertEqual(results, expected)
@@ -62,17 +63,17 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'EMSC', 'event_id': u'19980110_0000006',
                      'origin_id': 1500183, 'longitude': 20.816,
                      'datetime': UTCDateTime('1998-01-10T19:21:55Z'),
-                     'depth':-10.0, 'magnitude': 5.5, 'magnitude_type': u'mw',
+                     'depth': -10.0, 'magnitude': 5.5, 'magnitude_type': u'mw',
                      'latitude': 37.243, 'flynn_region': u'IONIAN SEA'},
                     {'author': u'EMSC', 'event_id': u'19980128_0000006',
                      'origin_id': 1500249, 'longitude': 32.204,
                      'datetime': UTCDateTime('1998-01-28T22:38:57Z'),
-                     'depth':-41.6, 'magnitude': 4.3, 'magnitude_type': u'mw',
+                     'depth': -41.6, 'magnitude': 4.3, 'magnitude_type': u'mw',
                      'latitude': 34.429},
                     {'author': u'EMSC', 'event_id': u'19980213_0000004',
                      'origin_id': 1500135, 'longitude': 28.459,
                      'datetime': UTCDateTime('1998-02-13T07:18:50Z'),
-                     'depth':-69.2, 'magnitude': 4.8, 'magnitude_type': u'mw',
+                     'depth': -69.2, 'magnitude': 4.8, 'magnitude_type': u'mw',
                      'latitude': 36.284}]
         self.assertEqual(results, expected)
 
@@ -87,7 +88,8 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
                      'origin_id': 1347097, 'longitude': 57.143,
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
-                     'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
+                     'depth': -700.0, 'magnitude': 4.4,
+                     'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEqual(results, expected)
         # 2
@@ -97,7 +99,8 @@ class ClientTestCase(unittest.TestCase):
         expected = [{'author': u'EMSC', 'event_id': u'20040312_0000026',
                      'origin_id': 1347097, 'longitude': 57.143,
                      'datetime': UTCDateTime('2004-03-12T22:48:05Z'),
-                     'depth':-700.0, 'magnitude': 4.4, 'magnitude_type': u'mb',
+                     'depth': -700.0, 'magnitude': 4.4,
+                     'magnitude_type': u'mb',
                      'latitude': 26.303, 'flynn_region': u'SOUTHERN IRAN'}]
         self.assertEqual(results, expected)
 
@@ -271,6 +274,20 @@ class ClientTestCase(unittest.TestCase):
                                      min_longitude=-2, max_longitude=-3)
         self.assertTrue(isinstance(result, object))
         self.assertEqual(result.ArclinkInventory.inventory.network._code, 'GE')
+
+    def test_issue531(self):
+        """
+        Event_type "other" has been replaced by "other event" in recent
+        QuakeML version
+        """
+        client = Client(user='test@obspy.org')
+        events = client.getEvents(
+            minlon=-30, maxlon=40, minlat=30, maxlat=90,
+            min_datetime=UTCDateTime(2000, 4, 11, 11, 24, 31),
+            max_datetime=UTCDateTime(2000, 4, 11, 11, 24, 32),
+            minmag=5.5, format='catalog')
+        self.assertEquals(len(events), 1)
+        self.assertEquals(events[0].event_type, 'other event')
 
 
 def suite():

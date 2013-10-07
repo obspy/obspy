@@ -23,9 +23,10 @@ class ParserTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
-        self.BW_SEED_files = [os.path.join(self.path, file) for file in
-                ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
-                 'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
+        self.BW_SEED_files = [
+            os.path.join(self.path, file) for file in
+            ['dataless.seed.BW_FURT', 'dataless.seed.BW_MANZ',
+             'dataless.seed.BW_ROTZ', 'dataless.seed.BW_ZUGS']]
 
     def test_issue165(self):
         """
@@ -47,8 +48,8 @@ class ParserTestCase(unittest.TestCase):
             parser.read(file)
             self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue('date' and 'required' in \
-                                    w[-1].message.message.lower())
+            self.assertTrue('date' and 'required' in
+                            w[-1].message.message.lower())
             # Triggers a warning.
             paz = parser.getPAZ("NZ.DCZ.20.HNZ", t)
             result = {'digitizer_gain': 419430.0, 'gain': 24595700000000.0,
@@ -106,38 +107,39 @@ class ParserTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'dataless.seed.BW_FURT')
         p = Parser(filename)
-        self.assertEqual(p.getInventory(),
+        self.assertEqual(
+            p.getInventory(),
             {'networks': [{'network_code': 'BW',
-                'network_name': 'BayernNetz'}],
-            'stations': [{'station_name': 'Furstenfeldbruck, Bavaria, BW-Net',
-                'station_id': 'BW.FURT'}],
-            'channels': [
-                {'channel_id': 'BW.FURT..EHZ',
-                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
-                    'instrument': 'Lennartz LE-3D/1 seismometer',
-                    'elevation_in_m': 565.0,
-                    'latitude': 48.162899,
-                    'local_depth_in_m': 0.0,
-                    'longitude': 11.2752,
-                    'end_date': '', 'sampling_rate': 200.0},
-                {'channel_id': 'BW.FURT..EHN',
-                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
-                    'instrument': 'Lennartz LE-3D/1 seismometer',
-                    'elevation_in_m': 565.0,
-                    'latitude': 48.162899,
-                    'local_depth_in_m': 0.0,
-                    'longitude': 11.2752,
-                    'end_date': '',
-                    'sampling_rate': 200.0},
-                {'channel_id': 'BW.FURT..EHE',
-                    'start_date': UTCDateTime(2001, 1, 1, 0, 0),
-                    'instrument': 'Lennartz LE-3D/1 seismometer',
-                    'elevation_in_m': 565.0,
-                    'latitude': 48.162899,
-                    'local_depth_in_m': 0.0,
-                    'longitude': 11.2752,
-                    'end_date': '',
-                    'sampling_rate': 200.0}]})
+             'network_name': 'BayernNetz'}],
+             'stations': [{'station_name': 'Furstenfeldbruck, Bavaria, BW-Net',
+                          'station_id': 'BW.FURT'}],
+             'channels': [
+                 {'channel_id': 'BW.FURT..EHZ',
+                  'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                  'instrument': 'Lennartz LE-3D/1 seismometer',
+                  'elevation_in_m': 565.0,
+                  'latitude': 48.162899,
+                  'local_depth_in_m': 0.0,
+                  'longitude': 11.2752,
+                  'end_date': '', 'sampling_rate': 200.0},
+                 {'channel_id': 'BW.FURT..EHN',
+                  'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                  'instrument': 'Lennartz LE-3D/1 seismometer',
+                  'elevation_in_m': 565.0,
+                  'latitude': 48.162899,
+                  'local_depth_in_m': 0.0,
+                  'longitude': 11.2752,
+                  'end_date': '',
+                  'sampling_rate': 200.0},
+                 {'channel_id': 'BW.FURT..EHE',
+                  'start_date': UTCDateTime(2001, 1, 1, 0, 0),
+                  'instrument': 'Lennartz LE-3D/1 seismometer',
+                  'elevation_in_m': 565.0,
+                  'latitude': 48.162899,
+                  'local_depth_in_m': 0.0,
+                  'longitude': 11.2752,
+                  'end_date': '',
+                  'sampling_rate': 200.0}]})
 
     def test_nonExistingFilename(self):
         """
@@ -332,8 +334,9 @@ class ParserTestCase(unittest.TestCase):
         # Just checks whether certain blockettes are written.
         self.assertEqual(len(sp.stations), 1)
         self.assertEqual([_i.id for _i in sp.volume], [10])
-        self.assertEqual([_i.id for _i in sp.abbreviations],
-                [30, 33, 33, 34, 34, 34, 34, 41, 43, 44, 47, 47, 48, 48, 48])
+        self.assertEqual(
+            [_i.id for _i in sp.abbreviations],
+            [30, 33, 33, 34, 34, 34, 34, 41, 43, 44, 47, 47, 48, 48, 48])
         self.assertEqual([_i.id for _i in sp.stations[0]], [50, 52, 60, 58])
         self.assertEqual(sp.stations[0][0].network_code, 'GR')
         self.assertEqual(sp.stations[0][0].station_call_letters, 'FUR')
@@ -347,9 +350,11 @@ class ParserTestCase(unittest.TestCase):
         paz = sp.getPAZ('BHE')
         self.assertEqual(paz['gain'], +6.00770e+07)
         self.assertEqual(paz['zeros'], [0j, 0j])
-        self.assertEqual(paz['poles'], [(-3.70040e-02 + 3.70160e-02j),
-            (-3.70040e-02 - 3.70160e-02j), (-2.51330e+02 + 0.00000e+00j),
-            (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
+        self.assertEqual(
+            paz['poles'],
+            [(-3.70040e-02 + 3.70160e-02j),
+             (-3.70040e-02 - 3.70160e-02j), (-2.51330e+02 + 0.00000e+00j),
+             (-1.31040e+02 - 4.67290e+02j), (-1.31040e+02 + 4.67290e+02j)])
         self.assertEqual(paz['sensitivity'], +7.86576e+08)
         self.assertEqual(paz['seismometer_gain'], +1.50000E+03)
         # Raise exception for undefined channels
@@ -464,7 +469,7 @@ class ParserTestCase(unittest.TestCase):
         # SEED
         sp = Parser(os.path.join(self.path, 'dataless.seed.BW_RJOB'))
         result = {'elevation': 860.0, 'latitude': 47.737166999999999,
-            'longitude': 12.795714, 'local_depth': 0}
+                  'longitude': 12.795714, 'local_depth': 0}
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2007-01-01"))
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         paz = sp.getCoordinates("BW.RJOB..EHZ", UTCDateTime("2010-01-01"))
@@ -501,7 +506,7 @@ class ParserTestCase(unittest.TestCase):
             # parse XML-SEED
             sp2 = Parser(tempfile)
             # create RESP files
-            _resp_list = sp2.getRESP()
+            sp2.getRESP()
         ### example 2
         # parse Dataless SEED
         filename = os.path.join(self.path, 'arclink_full.seed')
@@ -513,7 +518,7 @@ class ParserTestCase(unittest.TestCase):
             # parse XML-SEED
             sp2 = Parser(tempfile)
             # create RESP files
-            _resp_list = sp2.getRESP()
+            sp2.getRESP()
 
     def test_compareBlockettes(self):
         """
@@ -599,7 +604,7 @@ class ParserTestCase(unittest.TestCase):
         Test case for issue #157: re-using parser object.
         """
         expected = {'latitude': 48.162899, 'elevation': 565.0,
-            'longitude': 11.2752, 'local_depth': 0.0}
+                    'longitude': 11.2752, 'local_depth': 0.0}
         filename1 = os.path.join(self.path, 'dataless.seed.BW_FURT')
         filename2 = os.path.join(self.path, 'dataless.seed.BW_MANZ')
         t = UTCDateTime("2010-07-01")

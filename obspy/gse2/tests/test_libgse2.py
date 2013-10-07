@@ -62,7 +62,7 @@ class LibGSE2TestCase(unittest.TestCase):
         self.assertRaises(ChksumError, libgse2.read, fp, verify_chksum=True)
         # should not fail
         fp.seek(0)
-        _trl = libgse2.read(fp, verify_chksum=False)
+        libgse2.read(fp, verify_chksum=False)
         fp.close()
 
     def test_readAndWrite(self):
@@ -153,11 +153,11 @@ class LibGSE2TestCase(unittest.TestCase):
             data = [2, 26, 1]
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
-                                  testfile)
+                                  f)
             data = np.array([2, 26, 1], dtype='f')
             with open(testfile, 'wb') as f:
                 self.assertRaises(ArgumentError, libgse2.write, header, data,
-                                  testfile)
+                                  f)
 
     def test_CHK2InCM6(self):
         """

@@ -20,7 +20,7 @@ class EventTestCase(unittest.TestCase):
         event = readEvents()[1]
         s = event.short_str()
         self.assertEqual("2012-04-04T14:18:37.000000Z | +39.342,  +41.044" +
-            " | 4.3 ML | manual", s)
+                         " | 4.3 ML | manual", s)
 
     def test_eq(self):
         """
@@ -29,7 +29,7 @@ class EventTestCase(unittest.TestCase):
         # events are equal if the have the same public_id
         # Catch warnings about the same different objects with the same
         # resource id so they do not clutter the test output.
-        with warnings.catch_warnings() as _:
+        with warnings.catch_warnings() as _:  # NOQA
             warnings.simplefilter("ignore")
             ev1 = Event('id1')
             ev2 = Event('id1')
@@ -423,7 +423,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, ResourceIdentifier,
-                      resource_id=resource_id, referred_object=object_b)
+                              resource_id=resource_id,
+                              referred_object=object_b)
             # Now ignore the warning and actually create the new
             # ResourceIdentifier.
             warnings.simplefilter('ignore', UserWarning)
@@ -511,7 +512,8 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         # This one contains all valid characters. It should pass the
         # validation.
-        res_id = ("smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        res_id = (
+            "smi:abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             "1234567890-.*()_~'/abcdefghijklmnopqrstuvwxyzABCDEFGHIKLMNOPQR"
             "STUVWXYZ0123456789-.*()_~'+?=,;&")
         res = ResourceIdentifier(res_id)
@@ -537,6 +539,14 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res_id = ("smi:local/hello^^yea")
         res = ResourceIdentifier(res_id)
         self.assertRaises(ValueError, res.getQuakeMLURI)
+
+    def test_resource_id_valid_quakemluri(self):
+        """
+        Test that a resource identifier per default (i.e. no arguments to
+        __init__()) gets set up with a QUAKEML conform ID.
+        """
+        rid = ResourceIdentifier()
+        self.assertEqual(rid.resource_id, rid.getQuakeMLURI())
 
 
 def suite():

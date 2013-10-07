@@ -46,7 +46,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
@@ -81,7 +81,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
@@ -143,7 +143,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
@@ -171,7 +171,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
@@ -205,7 +205,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr[:-200] - data_pitsa[:-200]) ** 2) /
                       np.sum(data_pitsa[:-200] ** 2))
         self.assertEqual(rms < 1.0e-05, True)
 
@@ -227,7 +227,7 @@ class FilterTestCase(unittest.TestCase):
         data_pitsa = np.loadtxt(f)
         f.close()
         # calculate normalized rms
-        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) / \
+        rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                       np.sum(data_pitsa ** 2))
         self.assertEqual(rms < 1.0e-02, True)
 
@@ -237,7 +237,7 @@ class FilterTestCase(unittest.TestCase):
         """
         df = 200  # Hz
         b, a = lowpassCheby2(data=None, freq=50,
-            df=df, maxorder=12, ba=True)
+                             df=df, maxorder=12, ba=True)
         nyquist = 200 * 0.5
         # calculate frequency response
         w, h = sg.freqz(b, a, int(nyquist))

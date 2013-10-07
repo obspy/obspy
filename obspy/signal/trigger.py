@@ -267,7 +267,7 @@ def delayedSTALTA(a, nsta, nlta):
     for i in xrange(m):
         sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
-                 nlta + lta[i - 1]
+            nlta + lta[i - 1]
     sta[0:nlta + nsta + 50] = 0
     lta[0:nlta + nsta + 50] = 1  # avoid division by zero
     return sta / lta
@@ -647,8 +647,7 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         templates = event_templates.get(sta)
         if templates:
             event['similarity'][sta] = \
-                templatesMaxSimilarity(stream, event['time'],
-                                                              templates)
+                templatesMaxSimilarity(stream, event['time'], templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
@@ -680,8 +679,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         if event['coincidence_sum'] < thr_coincidence_sum:
             if not event['similarity']:
                 continue
-            elif not any([val > similarity_threshold[sta] \
-                          for sta, val in event['similarity'].iteritems()]):
+            elif not any([val > similarity_threshold[_s]
+                          for _s, val in event['similarity'].iteritems()]):
                 continue
         # skip coincidence trigger if it is just a subset of the previous
         # (determined by a shared off-time, this is a bit sloppy)

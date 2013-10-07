@@ -15,10 +15,6 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-import inspect
-import os
-
-import obspy
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -28,6 +24,9 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
 import StringIO
+import inspect
+import os
+import warnings
 
 
 def isQuakeML(filename):
@@ -128,8 +127,8 @@ class Unpickler(object):
         obj.author_uri = self._xpath2obj('creationInfo/authorURI', element)
         obj.agency_id = self._xpath2obj('creationInfo/agencyID', element)
         obj.author = self._xpath2obj('creationInfo/author', element)
-        obj.creation_time = self._xpath2obj('creationInfo/creationTime',
-            element, UTCDateTime)
+        obj.creation_time = self._xpath2obj(
+            'creationInfo/creationTime', element, UTCDateTime)
         obj.version = self._xpath2obj('creationInfo/version', element)
         return obj
 
@@ -713,8 +712,8 @@ class Unpickler(object):
             if event_type == "null":
                 event_type = "not reported"
             event.event_type = event_type
-            event.event_type_certainty = self._xpath2obj('typeCertainty',
-                    event_el)
+            event.event_type_certainty = self._xpath2obj(
+                'typeCertainty', event_el)
             event.creation_info = self._creation_info(event_el)
             event.event_descriptions = self._event_description(event_el)
             event.comments = self._comments(event_el)
@@ -918,16 +917,16 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Magnitude
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> magnitude = Magnitude()
         >>> magnitude.mag = 3.2
         >>> el = Pickler()._magnitude(magnitude)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <magnitude ...<mag><value>3.2</value></mag>...</magnitude>
         """
-        element = etree.Element('magnitude',
-            attrib={'publicID': self._id(magnitude.resource_id)})
+        element = etree.Element(
+            'magnitude', attrib={'publicID': self._id(magnitude.resource_id)})
         self._value(magnitude.mag, magnitude.mag_errors, element, 'mag', True)
         # optional parameter
         self._str(magnitude.magnitude_type, element, 'type')
@@ -954,15 +953,16 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import StationMagnitude
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> station_mag = StationMagnitude()
         >>> station_mag.mag = 3.2
         >>> el = Pickler()._station_magnitude(station_mag)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <stationMagnitude ...<value>3.2</value>...</stationMagnitude>
         """
-        element = etree.Element('stationMagnitude',
+        element = etree.Element(
+            'stationMagnitude',
             attrib={'publicID': self._id(magnitude.resource_id)})
         self._str(magnitude.origin_id, element, 'originID', True)
         self._value(magnitude.mag, magnitude.mag_errors, element, 'mag', True)
@@ -986,16 +986,16 @@ class Pickler(object):
 
         >>> from obspy.core.quakeml import Pickler
         >>> from obspy.core.event import Origin
-        >>> from obspy.core.util import tostring
+        >>> from obspy.core.util import tostring as _tostring
         >>> origin = Origin()
         >>> origin.latitude = 34.23
         >>> el = Pickler()._origin(origin)
-        >>> print(tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        >>> print(_tostring(el))  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         <?xml version='1.0' encoding='utf-8'?>
         <origin ...<latitude><value>34.23</value></latitude>...</origin>
         """
-        element = etree.Element('origin',
-            attrib={'publicID': self._id(origin.resource_id)})
+        element = etree.Element(
+            'origin', attrib={'publicID': self._id(origin.resource_id)})
         self._value(origin.time, origin.time_errors, element, 'time', True)
         self._value(origin.latitude, origin.latitude_errors, element,
                     'latitude', True)
@@ -1090,8 +1090,8 @@ class Pickler(object):
         :type pick: :class:`~obspy.core.event.Pick`
         :rtype: etree.Element
         """
-        element = etree.Element('pick',
-        attrib={'publicID': self._id(pick.resource_id)})
+        element = etree.Element(
+            'pick', attrib={'publicID': self._id(pick.resource_id)})
         # required parameter
         self._value(pick.time, pick.time_errors, element, 'time', True)
         self._waveform_id(pick.waveform_id, element, True)
@@ -1194,7 +1194,8 @@ class Pickler(object):
         """
         if moment_tensor is None:
             return
-        mt_el = etree.Element('momentTensor',
+        mt_el = etree.Element(
+            'momentTensor',
             attrib={'publicID': self._id(moment_tensor.resource_id)})
         # required parameters
         self._str(moment_tensor.derived_origin_id, mt_el, 'derivedOriginID')
@@ -1209,10 +1210,10 @@ class Pickler(object):
             self._str(sub.shortest_period, sub_el, 'shortestPeriod')
             self._str(sub.longest_period, sub_el, 'longestPeriod')
             mt_el.append(sub_el)
-        self._str(moment_tensor.moment_magnitude_id, mt_el,
-            'momentMagnitudeID')
+        self._str(moment_tensor.moment_magnitude_id,
+                  mt_el, 'momentMagnitudeID')
         self._value(moment_tensor.scalar_moment,
-            moment_tensor.scalar_moment_errors, mt_el, 'scalarMoment')
+                    moment_tensor.scalar_moment_errors, mt_el, 'scalarMoment')
         # Tensor
         if moment_tensor.tensor:
             sub_el = etree.Element('tensor')
@@ -1254,7 +1255,8 @@ class Pickler(object):
         :type pick: :class:`~obspy.core.event.FocalMechanism`
         :rtype: etree.Element
         """
-        element = etree.Element('focalMechanism',
+        element = etree.Element(
+            'focalMechanism',
             attrib={'publicID': self._id(focal_mechanism.resource_id)})
         # optional parameter
         self._waveform_id(focal_mechanism.waveform_id, element)
@@ -1275,7 +1277,7 @@ class Pickler(object):
         self._moment_tensor(focal_mechanism.moment_tensor, element)
         self._str(focal_mechanism.evaluation_mode, element, 'evaluationMode')
         self._str(focal_mechanism.evaluation_status, element,
-            'evaluationStatus')
+                  'evaluationStatus')
         self._comments(focal_mechanism.comments, element)
         self._creation_info(focal_mechanism.creation_info, element)
         return element
@@ -1287,7 +1289,8 @@ class Pickler(object):
         root_el = etree.Element(
             '{http://quakeml.org/xmlns/quakeml/1.2}quakeml',
             attrib={'xmlns': "http://quakeml.org/xmlns/bed/1.2"})
-        catalog_el = etree.Element('eventParameters',
+        catalog_el = etree.Element(
+            'eventParameters',
             attrib={'publicID': self._id(catalog.resource_id)})
         # optional catalog parameters
         if catalog.description:
@@ -1297,24 +1300,24 @@ class Pickler(object):
         root_el.append(catalog_el)
         for event in catalog:
             # create event node
-            event_el = etree.Element('event',
-                attrib={'publicID': self._id(event.resource_id)})
+            event_el = etree.Element(
+                'event', attrib={'publicID': self._id(event.resource_id)})
             # optional event attributes
             if hasattr(event, "preferred_origin_id"):
                 self._str(event.preferred_origin_id, event_el,
-                        'preferredOriginID')
+                          'preferredOriginID')
             if hasattr(event, "preferred_magnitude_id"):
                 self._str(event.preferred_magnitude_id, event_el,
-                         'preferredMagnitudeID')
+                          'preferredMagnitudeID')
             if hasattr(event, "preferred_focal_mechanism_id"):
                 self._str(event.preferred_focal_mechanism_id, event_el,
-                         'preferredFocalMechanismID')
+                          'preferredFocalMechanismID')
             # event type and event type certainty also are optional attributes.
             if hasattr(event, "event_type"):
                 self._str(event.event_type, event_el, 'type')
             if hasattr(event, "event_type_certainty"):
                 self._str(event.event_type_certainty, event_el,
-                    'typeCertainty')
+                          'typeCertainty')
             # event descriptions
             for description in event.event_descriptions:
                 el = etree.Element('description')
@@ -1369,7 +1372,7 @@ def readQuakeML(filename):
 
 
 def writeQuakeML(catalog, filename, validate=False,
-        **kwargs):  # @UnusedVariable
+                 **kwargs):  # @UnusedVariable
     """
     Writes a QuakeML file.
 
@@ -1389,8 +1392,7 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and \
-            not obspy.core.quakeml.validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1423,16 +1425,27 @@ def readSeisHubEventXML(filename):
     return readQuakeML(temp)
 
 
-def validate(xml_file, verbose=False):
+def _validate(xml_file, verbose=False):
     """
     Validates a QuakeML file against the QuakeML 1.2 RelaxNG Schema. Returns
     either True or False.
     """
+    try:
+        from lxml.etree import RelaxNG
+    except ImportError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs", "QuakeML-1.2.rng")
 
-    relaxng = etree.RelaxNG(etree.parse(schema_location))
+    try:
+        relaxng = RelaxNG(etree.parse(schema_location))
+    except TypeError:
+        msg = "Could not validate QuakeML - try using a newer lxml version"
+        warnings.warn(msg, UserWarning)
+        return True
     xmldoc = etree.parse(xml_file)
 
     valid = relaxng.validate(xmldoc)

@@ -35,8 +35,8 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     try:
         # use lxml
         return __etree.tostring(element, xml_declaration=xml_declaration,
-                              method="xml", encoding=encoding,
-                              pretty_print=pretty_print)
+                                method="xml", encoding=encoding,
+                                pretty_print=pretty_print)
     except:
         pass
     # use xml

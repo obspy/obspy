@@ -116,17 +116,19 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     if halfcosine:
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
-        cos_win[idx1:idx2 + 1] = 0.5 * (1.0 - np.cos((np.pi * \
-            (np.arange(idx1, idx2 + 1) - idx1) / (idx2 - idx1))))
+        cos_win[idx1:idx2 + 1] = 0.5 * (
+            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - idx1) /
+                          (idx2 - idx1))))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = 0.5 * (1.0 + np.cos((np.pi * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3))))
+        cos_win[idx3:idx4 + 1] = 0.5 * (
+            1.0 + np.cos((np.pi * (idx3 - np.arange(idx3, idx4 + 1)) /
+                          (idx4 - idx3))))
     else:
-        cos_win[idx1:idx2 + 1] = np.cos(-(np.pi / 2.0 * \
-               (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+        cos_win[idx1:idx2 + 1] = np.cos(-(
+            np.pi / 2.0 * (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
-        cos_win[idx3:idx4 + 1] = np.cos((np.pi / 2.0 * \
-            (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+        cos_win[idx3:idx4 + 1] = np.cos((
+            np.pi / 2.0 * (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -167,8 +169,10 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :param t_samp: Sampling interval in seconds
     :type nfft: int
     :param nfft: Number of FFT points of signal which needs correction
-    :type filename: str
-    :param filename: SEED RESP-filename or content of RESP file
+    :type filename: str (or open file like object)
+    :param filename: SEED RESP-filename or open file like object with RESP
+        information. Any object that provides a read() method will be
+        considered to be a file like object.
     :type date: UTCDateTime
     :param date: Date of interest
     :type station: str
@@ -186,8 +190,12 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
+    if isinstance(filename, basestring):
+        with open(filename, 'rb') as fh:
+            data = fh.read()
+    elif hasattr(filename, 'read'):
+        data = filename.read()
     # evalresp needs files with correct line separators depending on OS
-    data = open(filename, 'rb').read()
     with NamedTemporaryFile() as fh:
         tempfile = fh.name
         fh.write(os.linesep.join(data.splitlines()))
@@ -209,7 +217,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         else:
             vbs = C.create_string_buffer("")
         rtyp = C.create_string_buffer("CS")
-        datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
+        datime = C.create_string_buffer(date.formatSEED())
         fn = C.create_string_buffer(tempfile)
         nfreqs = C.c_int(freqs.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
@@ -378,9 +386,11 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
     :type seedresp: Dictionary, None
     :param seedresp: Dictionary contains keys 'filename', 'date', 'units'.
         'filename' is the path to a RESP-file generated from a dataless SEED
-        volume;
+        volume (or a file like object with RESP information);
         'date' is a `~obspy.core.utcdatetime.UTCDateTime` object for the date
-        that the response function should be extracted for;
+        that the response function should be extracted for (can be omitted when
+        calling simulate() on Trace/Stream. the Trace's starttime will then be
+        used);
         'units' defines the units of the response function.
         Can be either 'DIS', 'VEL' or 'ACC'.
     :type nfft_pow2: Boolean
@@ -488,8 +498,8 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
         del freq_response
     # Forward filtering = Instrument simulation
     if paz_simulate:
-        data *= pazToFreqResp(paz_simulate['poles'],
-                paz_simulate['zeros'], paz_simulate['gain'], delta, nfft)
+        data *= pazToFreqResp(paz_simulate['poles'], paz_simulate['zeros'],
+                              paz_simulate['gain'], delta, nfft)
 
     data[-1] = abs(data[-1]) + 0.0j
     # transform data back into the time domain
@@ -583,7 +593,7 @@ def estimateMagnitude(paz, amplitude, timespan, h_dist):
     # mean of input amplitudes (if more than one) should be used in final
     # magnitude estimation (usually N and E components)
     magnitude = np.log10(wa_ampl_mean) + np.log10(h_dist / 100.0) + \
-                0.00301 * (h_dist - 100.0) + 3.0
+        0.00301 * (h_dist - 100.0) + 3.0
     return magnitude
 
 
@@ -605,7 +615,7 @@ def estimateWoodAndersonAmplitude(paz, amplitude, timespan):
     wa_ampl = amplitude / 2.0  # half peak to peak amplitude
     wa_ampl /= (paz2AmpValueOfFreqResp(paz, freq) * paz['sensitivity'])
     wa_ampl *= paz2AmpValueOfFreqResp(WOODANDERSON, freq) * \
-            WOODANDERSON['sensitivity']
+        WOODANDERSON['sensitivity']
     wa_ampl *= 1000  # convert to mm
     return wa_ampl
 

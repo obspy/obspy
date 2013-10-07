@@ -33,11 +33,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
         #2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='ak135')
         lines = data[34:59]
@@ -49,11 +49,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
         #3
         tt = getTravelTimes(delta=150.0, depth=300.0, model='ak135')
         lines = data[61:88]
@@ -65,11 +65,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
 
     def test_getTravelTimesIASP91(self):
         """
@@ -89,11 +89,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
         #2
         tt = getTravelTimes(delta=50.0, depth=300.0, model='iasp91')
         lines = data[34:59]
@@ -105,11 +105,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
         #3
         tt = getTravelTimes(delta=150.0, depth=300.0, model='iasp91')
         lines = data[61:89]
@@ -121,11 +121,11 @@ class TauPTestCase(unittest.TestCase):
             self.assertEquals(item['phase_name'], parts[0].strip())
             self.assertAlmostEqual(item['time'], float(parts[1].strip()), 2)
             self.assertAlmostEqual(item['take-off angle'],
-                float(parts[2].strip()), 2)
+                                   float(parts[2].strip()), 2)
             self.assertAlmostEqual(item['dT/dD'], float(parts[3].strip()), 2)
             self.assertAlmostEqual(item['dT/dh'], float(parts[4].strip()), 2)
             self.assertAlmostEqual(item['d2T/dD2'],
-                float(parts[5].strip()), 2)
+                                   float(parts[5].strip()), 2)
 
 
 def suite():
