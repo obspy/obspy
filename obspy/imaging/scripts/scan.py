@@ -296,7 +296,7 @@ def main(option_list=None):
         gapsum = diffs[diffs > 0].sum()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * np.array(samp_int[_id][1:])
+        gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
             # dont handle last endtime as start of gap

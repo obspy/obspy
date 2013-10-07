@@ -4,7 +4,7 @@ The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 
 from obspy.core.util.base import HAS_COMPARE_IMAGE, \
-    ImageComparison, getMatplotlibVersion
+    ImageComparison, getMatplotlibVersion, NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
@@ -44,6 +44,41 @@ class ScanTestCase(unittest.TestCase):
             finally:
                 sys.stdout.close()
                 sys.stdout = tmp_stdout
+
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
+    def test_multipleSamplingrates(self):
+        """
+        Check for multiple sampling rates
+        """
+        lines = [
+            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, " + \
+                "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
+            "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, " + \
+                "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
+            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, " + \
+                "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
+        ]
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 60
+        files = []
+        with NamedTemporaryFile() as f1:
+            with NamedTemporaryFile() as f2:
+                with NamedTemporaryFile() as f3:
+                    for i, fp in enumerate([f1, f2, f3]):
+                        fp.write("%s\n" % lines[i])
+                        fp.flush()
+                        fp.seek(0)
+                        files.append(fp.name)
+                    with ImageComparison(self.path, 'scan_mult_sampl.png',
+                                         reltol=reltol) as ic:
+                        try:
+                            tmp_stdout = sys.stdout
+                            sys.stdout = open(os.devnull, 'wb')
+                            obspy_scan(files + ['--output', ic.name])
+                        finally:
+                            sys.stdout.close()
+                            sys.stdout = tmp_stdout
 
 
 def suite():
