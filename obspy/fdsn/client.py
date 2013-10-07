@@ -559,13 +559,14 @@ class Client(object):
         # if it's an iterable, we build up the query string from it
         # StringIO objects also have __iter__ so check for read as well
         if hasattr(bulk, "__iter__") and not hasattr(bulk, "read"):
-            # XXX build up query string
-            # XXX not ready yet
-            raise NotImplementedError()
-            setup_query_dict('dataselect', locs, kwargs)
-            # Special location handling. Convert empty strings to "--".
-            if kwargs.get("location", None) == "":
-                kwargs["location"] = "--"
+            tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
+                   for key in ("quality", "minimumlength", "longestonly")
+                   if locs[key] is not None]
+            # empty location codes have to be represented by two dashes
+            tmp += [" ".join((net, sta, loc or "--", cha,
+                             convert_to_string(t1), convert_to_string(t2)))
+                    for net, sta, loc, cha, t1, t2 in bulk]
+            bulk = "\n".join(tmp)
         else:
             override_keys = ("quality", "minimumlength", "longestonly")
             if any([locs[key] is not None for key in override_keys]):

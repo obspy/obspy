@@ -418,7 +418,7 @@ class ClientTestCase(unittest.TestCase):
                   UTCDateTime("2010-03-25T00:00:08")),
                  ("IU", "ANMO", "10", "HHZ",
                   UTCDateTime("2010-05-25T00:00:00"),
-                  UTCDateTime("2010-05-26T00:00:04")),
+                  UTCDateTime("2010-05-25T00:00:04")),
                  ("II", "KURK", "00", "BHN",
                   UTCDateTime("2010-03-25T00:00:00"),
                   UTCDateTime("2010-03-25T00:00:04")))
