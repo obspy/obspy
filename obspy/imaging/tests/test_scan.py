@@ -51,12 +51,12 @@ class ScanTestCase(unittest.TestCase):
         Check for multiple sampling rates
         """
         lines = [
-            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, " + \
-                "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
-            "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, " + \
-                "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
-            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, " + \
-                "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
+            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
+            "2008-01-15T00:00:00.000000, SLIST, INTEGER, Counts",
+            "TIMESERIES XX_TEST__BHZ_R,  50 samples,  50 sps, "
+            "2008-01-15T00:00:01.000000, SLIST, INTEGER, Counts",
+            "TIMESERIES XX_TEST__BHZ_R, 200 samples, 200 sps, "
+            "2008-01-15T00:00:02.000000, SLIST, INTEGER, Counts",
         ]
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
