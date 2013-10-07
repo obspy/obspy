@@ -97,7 +97,7 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         try:
             samp_int_dict.setdefault(_id, [])
             samp_int_dict[_id].\
-                setdefault(_id, 1. / (24 * 3600 * tr.stats.sampling_rate))
+                append(1. / (24 * 3600 * tr.stats.sampling_rate))
         except ZeroDivisionError:
             print("Skipping file with zero samlingrate: %s" % (file))
             return counter
@@ -278,8 +278,9 @@ def main(option_list=None):
             startend = startend[startend[:, 0] < options.endtime]
         if len(startend) == 0:
             continue
-        if _id not in samp_int:
-            warnings.warn('Problem with _id=%s, skipping' % _id)
+        timerange = startend[:, 1].max() - startend[:, 0].min()
+        if timerange == 0.0:
+            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
             continue
 
         startend_compressed = compressStartend(startend, 1000)
@@ -293,7 +294,6 @@ def main(option_list=None):
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
-        timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
         gap_indices = diffs > 1.8 * np.array(samp_int[_id][1:])
