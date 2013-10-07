@@ -33,8 +33,6 @@ import os
 import platform
 import warnings
 
-count = 0
-
 # Import shared libgse2
 # create library names
 lib_names = [
@@ -252,6 +250,31 @@ def uncompress_CM6(f, n_samps):
     return data
 
 
+def compress_CM6(data):
+    """
+    CM6 compress data
+
+    :type data: i4 numpy array
+    :param data: the data to write
+    :returns: numpy chararray containing compressed samples
+    """
+    N = len(data)
+    count = [0]  # closure, must be container
+    # 4 character bytes per int32_t
+    carr = np.zeros(N * 4, dtype='c')
+
+    def writer(char):
+        carr[count[0]] = char
+        count[0] += 1
+        return 0
+    cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
+    ierr = clibgse2.compress_6b_buffer(data, N, cwriter)
+    if ierr != 0:
+        msg = "Error status after compress_6b_buffer is NOT 0 but %d"
+        raise GSEUtiError(msg % ierr)
+    return carr[:(count[0] // 80 + 1) * 80].view('|S80')
+
+
 def verifyChecksum(fh, data, version=2):
     """
     Calculate checksum from data, as in gse_driver.c line 60
@@ -337,9 +360,9 @@ def write(headdict, data, f, inplace=False):
     :type headdict: Dictionary
     :param headdict: Obspy Header
     """
-    n = len(data)
+    N = len(data)
     #
-    chksum = clibgse2.check_sum(data, n, C.c_int32(0))
+    chksum = clibgse2.check_sum(data, N, C.c_int32(0))
     # Maximum values above 2^26 will result in corrupted/wrong data!
     # do this after chksum as chksum does the type checking for numpy array
     # for you
@@ -347,21 +370,8 @@ def write(headdict, data, f, inplace=False):
         data = data.copy()
     if data.max() > 2 ** 26:
         raise OverflowError("Compression Error, data must be less equal 2^26")
-    clibgse2.diff_2nd(data, n, 0)
-    #XXX: extract as extra function
-    global count
-    count = 0
-    # 4 character bytes per int32_t
-    carr = np.zeros(n * 4, dtype='c')
-
-    def writer(char):
-        global count
-        carr[count] = char
-        count += 1
-        return 0
-    cwriter = C.CFUNCTYPE(C.c_int, C.c_char)(writer)
-    ierr = clibgse2.compress_6b_buffer(data, n, cwriter)
-    assert ierr == 0, "Error status after compression is NOT 0 but %d" % ierr
+    clibgse2.diff_2nd(data, N, 0)
+    data_cm6 = compress_CM6(data)
     # set some defaults if not available and convert header entries
     headdict.setdefault('calib', 1.0)
     headdict.setdefault('gse2', {})
@@ -376,7 +386,7 @@ def write(headdict, data, f, inplace=False):
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, headdict)
     f.write("DAT2\n")
-    for line in carr[:(count // 80 + 1) * 80].view('|S80'):
+    for line in data_cm6:
         f.write("%s\n" % line)
     f.write("CHK2 %8ld\n\n" % chksum)
 
