@@ -649,7 +649,7 @@ class Client(object):
                 # If it is not in the service but in the default parameters
                 # raise a warning.
                 if key in default_params:
-                    msg = ("The standard parameter '%s' is not supporte by "
+                    msg = ("The standard parameter '%s' is not supported by "
                            "the webservice. It will be silently ignored." %
                            key)
                     warnings.warn(msg)
@@ -657,7 +657,7 @@ class Client(object):
                 elif key in WADL_PARAMETERS_NOT_TO_BE_PARSED:
                     msg = ("The parameter '%s' is ignored because it is not "
                            "useful within ObsPy")
-                    warnings.warn(msg)
+                    warnings.warn(msg % key)
                     continue
                 # Otherwise raise an error.
                 else:
@@ -832,7 +832,6 @@ class Client(object):
             raise FDSNException("Service responds: Internal server error")
         elif code == 503:
             raise FDSNException("Service temporarily unavailable")
-
         return data
 
     def _build_url(self, resource_type, service, parameters={}):

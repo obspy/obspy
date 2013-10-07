@@ -240,6 +240,14 @@ class ClientTestCase(unittest.TestCase):
             #got.write(file_, "QUAKEML")
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_events(filename=tf.name, **query)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
+            self.assertEqual(got, expected, failmsg(got, expected))
 
         # station example queries
         queries = [
@@ -264,7 +272,17 @@ class ClientTestCase(unittest.TestCase):
             #    fh.write(got)
             with open(file_) as fh:
                 expected = fh.read()
-            msg = failmsg(got, expected, ignore_lines=['<Created>'])
+            ignore_lines = ['<Created>', '<TotalNumberStations>']
+            msg = failmsg(got, expected, ignore_lines=ignore_lines)
+            self.assertEqual(msg, "", msg)
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_stations(filename=tf.name, **query)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
+            msg = failmsg(got, expected, ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
         # dataselect example queries
@@ -284,9 +302,18 @@ class ClientTestCase(unittest.TestCase):
                         "dataselect_example_mixed_wildcards.mseed",
                         ]
         for query, filename in zip(queries, result_files):
+            # test output to stream
             got = client.get_waveform(*query)
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
+            self.assertEqual(got, expected, failmsg(got, expected))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform(*query, filename=tf.name)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
             self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_authentication(self):
@@ -407,8 +434,10 @@ class ClientTestCase(unittest.TestCase):
         bulk request.
         """
         clients = [self.client, self.client_auth]
-        expected1 = read(os.path.join(self.datapath, "bulk1.mseed"))
-        expected2 = read(os.path.join(self.datapath, "bulk2.mseed"))
+        file1 = os.path.join(self.datapath, "bulk1.mseed")
+        file2 = os.path.join(self.datapath, "bulk2.mseed")
+        expected1 = read(file1)
+        expected2 = read(file2)
         # test cases for providing lists of lists
         bulk1 = (("TA", "A25A", "", "BHZ",
                   UTCDateTime("2010-03-25T00:00:00"),
@@ -433,9 +462,19 @@ class ClientTestCase(unittest.TestCase):
                   UTCDateTime("2010-03-25T00:00:08")))
         params2 = dict(quality="B", longestonly=False, minimumlength=5)
         for client in clients:
+            # test output to stream
             got = client.get_waveform_bulk(bulk1)
             self.assertEqual(got, expected1, failmsg(got, expected1))
             got = client.get_waveform_bulk(bulk2, **params2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk1, filename=tf.name)
+                got = read(tf.name)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk2, filename=tf.name, **params2)
+                got = read(tf.name)
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a request string
         bulk1 = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
@@ -449,9 +488,19 @@ class ClientTestCase(unittest.TestCase):
                  "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
                  "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
         for client in clients:
+            # test output to stream
             got = client.get_waveform_bulk(bulk1)
             self.assertEqual(got, expected1, failmsg(got, expected1))
             got = client.get_waveform_bulk(bulk2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk1, filename=tf.name)
+                got = read(tf.name)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk2, filename=tf.name)
+                got = read(tf.name)
             self.assertEqual(got, expected2, failmsg(got, expected2))
         # test cases for providing a filename
         for client in clients:
