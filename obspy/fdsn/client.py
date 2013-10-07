@@ -24,6 +24,7 @@ import threading
 import urllib
 import urllib2
 import warnings
+import os
 
 
 class Client(object):
@@ -481,6 +482,124 @@ class Client(object):
             data_stream.close()
             return st
 
+    def get_waveform_bulk(self, bulk, quality=None, minimumlength=None,
+                          longestonly=None, filename=None, **kwargs):
+        """
+        Query the dataselect service of the client. Bulk request.
+
+        Send a bulk request for waveforms to the server. `bulk` can either be
+        specified as a filename, a file-like object or a string (with
+        information formatted according to the FDSN standard) or a list of
+        lists (each specifying network, station, location, channel, starttime
+        and endtime). See examples and parameter description for more
+        details.
+
+        `bulk` will be tried to be interpreted in the following order:
+
+        (1) Check if `bulk` is a list of lists (or tuples etc.).
+
+        (2) Check if `bulk` is a file-like object that can be used.
+
+        (3) If bulk is a string:
+
+             - Check if a file with the filename `bulk` exists (only if no
+               linebreaks are encountered).
+
+             - If not, use `bulk` as request data.
+
+        >>> client = Client("IRIS")
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = t1 + 1
+        >>> t3 = t1 + 3
+        >>> bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+        ...         ("IU", "AFI", "1?", "BHE", t1, t3),
+        ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
+        >>> st = client.get_waveform_bulk(bulk)
+        >>> print st  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        >>> bulk = "quality=B\n" + \
+        ...        "longestonly=false\n" + \
+        ...        "IU ANMO * BHZ 2010-02-27 2010-02-27T00:00:02\n" + \
+        ...        "IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n" + \
+        ...        "GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n" + \
+        >>> st = client.get_waveform_bulk(bulk)
+        >>> print st  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+
+        :type bulk: str, file-like object or list of lists
+        :param bulk: Information about the requested data. See above for
+            details.
+        :type quality: str, optional
+        :param quality: Select a specific SEED quality indicator, handling is
+            data center dependent.
+        :type minimumlength: float, optional
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds.
+        :type longestonly: bool, optional
+        :param longestonly: Limit results to the longest continuous segment per
+            channel.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "dataselect" not in self.services:
+            msg = "The current client does not have a dataselect service."
+            raise ValueError(msg)
+
+        locs = locals()
+        # if it's an iterable, we build up the query string from it
+        if hasattr(bulk, "__iter__"):
+            # XXX build up query string
+            # XXX not ready yet
+            raise NotImplementedError()
+            setup_query_dict('dataselect', locs, kwargs)
+            # Special location handling. Convert empty strings to "--".
+            if kwargs.get("location", None) == "":
+                kwargs["location"] = "--"
+        else:
+            override_keys = ("quality", "minimumlength", "longestonly")
+            if any([locs[key] is not None for key in override_keys]):
+                msg = ("Parameters %s are ignored when request data is "
+                       "provided as a string or file!")
+                warnings.warn(msg % override_keys)
+            # if it has a read method, read data from there
+            if hasattr(bulk, "read"):
+                bulk = bulk.read()
+            elif isinstance(bulk, basestring):
+                # check if bulk is a local file
+                if "\n" not in bulk and os.path.isfile(bulk):
+                    with open(bulk) as fh:
+                        tmp = fh.read()
+                    bulk = tmp
+                # just use bulk as input data
+                else:
+                    pass
+            else:
+                msg = ("Unrecognized input for 'bulk' argument. Please "
+                       "contact developers if you think this is a bug.")
+                raise NotImplementedError(msg)
+
+        url = self._build_url("dataselect", "query")
+
+        data_stream = self._download(url, data=bulk)
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            st = obspy.read(data_stream, format="MSEED")
+            data_stream.close()
+            return st
+
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
             filename_or_object.write(data_stream.read())
@@ -666,10 +785,10 @@ class Client(object):
 
         print "\n".join(msg)
 
-    def _download(self, url, return_string=False):
-        code, data = download_url(url, headers=self.request_headers,
-                                  debug=self.debug,
-                                  return_string=return_string)
+    def _download(self, url, return_string=False, data=None):
+        code, data = download_url(
+            url, headers=self.request_headers, debug=self.debug,
+            return_string=return_string, data=data)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -871,7 +990,8 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
+def download_url(url, timeout=10, headers={}, debug=False,
+                 return_string=True, data=None):
     """
     Returns a pair of tuples.
 
@@ -879,13 +999,15 @@ def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
     string.
 
     Will return a touple of Nones if the service could not be found.
+
+    Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
         print "Downloading %s" % url
 
     try:
         url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
-                                  timeout=timeout)
+                                  timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib2.HTTPError as e:
         if debug is True:
