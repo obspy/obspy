@@ -26,8 +26,6 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 
 from distutils import sysconfig
 from obspy import UTCDateTime
-#XXX: we might be able to remove c_file_p, check
-#from obspy.core.util import c_file_p
 import ctypes as C
 import doctest
 import numpy as np
@@ -61,6 +59,34 @@ else:
     raise ImportError(msg)
 
 
+clibgse2.decomp_6b_buffer.argtypes = [
+    C.c_int,
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
+clibgse2.decomp_6b_buffer.restype = C.c_int
+
+clibgse2.rem_2nd_diff.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int]
+clibgse2.rem_2nd_diff.restype = C.c_int
+
+clibgse2.check_sum.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int, C.c_int32]
+clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
+
+clibgse2.diff_2nd.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int, C.c_int]
+clibgse2.diff_2nd.restype = C.c_void_p
+
+clibgse2.compress_6b_buffer.argtypes = [
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    C.c_int,
+    C.CFUNCTYPE(C.c_int, C.c_char)]
+clibgse2.compress_6b_buffer.restype = C.c_int
+
+
 class ChksumError(StandardError):
     """
     Exception type for mismatching checksums
@@ -75,37 +101,37 @@ class GSEUtiError(StandardError):
     pass
 
 
-# gse_functions decomp_6b_buffer
-clibgse2.decomp_6b_buffer.argtypes = [
-    C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
-clibgse2.decomp_6b_buffer.restype = C.c_int
-
-# gse_functions rem_2nd_diff
-clibgse2.rem_2nd_diff.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int]
-clibgse2.rem_2nd_diff.restype = C.c_int
-
-# gse_functions check_sum
-clibgse2.check_sum.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int, C.c_int32]
-clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
-
-# gse_functions diff_2nd
-clibgse2.diff_2nd.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int, C.c_int]
-clibgse2.diff_2nd.restype = C.c_void_p
-
-# gse_functions compress_6b_buffer
-clibgse2.compress_6b_buffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
-    C.c_int,
-    C.CFUNCTYPE(C.c_int, C.c_char)]
-clibgse2.compress_6b_buffer.restype = C.c_int
+# example header of tests/data/loc_RNON20040609200559.z:
+#
+# WID2 2009/05/18 06:47:20.255 RNHA  EHN      CM6      750  200.000000
+# 0123456789012345678901234567890123456789012345678901234567890123456789
+# 0         10        20        30        40        50        60
+#  9.49e-02   1.000    M24  -1.0 -0.0
+# 0123456789012345678901234567890123456789012345678901234567890123456789
+# 70        80        90        100
+_str = lambda s: s.strip()
+GSE2_FIELDS = [
+    # local used date fields
+    ('year', 5, 9, int),
+    ('month', 10, 12, int),
+    ('day', 13, 15, int),
+    ('hour', 16, 18, int),
+    ('minute', 19, 21, int),
+    ('second', 22, 24, int),
+    ('microsecond', 25, 28, int),
+    # global obspy stats names
+    ('station', 29, 34, _str),
+    ('channel', 35, 38, lambda s: s.strip().upper()),
+    ('gse2.auxid', 39, 43, _str),
+    ('gse2.datatype', 44, 48, _str),
+    ('npts', 48, 56, int),
+    ('sampling_rate', 57, 68, float),
+    ('calib', 69, 79, float),
+    ('gse2.calper', 80, 87, float),
+    ('gse2.instype', 88, 94, _str),
+    ('gse2.hang', 95, 100, float),
+    ('gse2.vang', 101, 105, float),
+]
 
 
 def isGse2(f):
@@ -129,59 +155,28 @@ def readHeader(fh):
     The method searches for the next available WID2 field beginning from the
     current file position.
     """
-    # example header of tests/data/loc_RNON20040609200559.z:
-    #
-    # WID2 2009/05/18 06:47:20.255 RNHA  EHN      CM6      750  200.000000
-    # 0123456789012345678901234567890123456789012345678901234567890123456789
-    # 0         10        20        30        40        50        60
-    #  9.49e-02   1.000    M24  -1.0 -0.0
-    # 0123456789012345678901234567890123456789012345678901234567890123456789
-    # 70        80        90        100
-    #
-    # search for WID field
+    # search for WID2 field
     while True:
         line = fh.readline()
         if line.startswith('WID2'):
             # valid GSE2 header
             break
-        if line == '':
+        elif line == '':
             raise EOFError
     # fetch header
-    header, date = {}, {}
+    header = {}
     header['gse2'] = {}
-    # starttime
-    for key, start, stop in [
-        ('year', 5, 9),
-        ('month', 10, 12),
-        ('day', 13, 15),
-        ('hour', 16, 18),
-        ('minute', 19, 21),
-        ('second', 22, 24),
-        ('microsecond', 25, 28),
-            ]:
-        date[key] = int(line[slice(start, stop)])
-    date['microsecond'] *= 1000
-    header['starttime'] = UTCDateTime(**date)
-    # remaining fields
-    _str = lambda s: s.strip()
-    for key, start, stop, fct in [
-        ('station', 29, 34, _str),
-        ('channel', 35, 38, lambda s: s.strip().upper()),
-        ('gse2.auxid', 39, 43, _str),
-        ('gse2.datatype', 44, 48, _str),
-        ('npts', 48, 56, int),
-        ('sampling_rate', 57, 68, float),
-        ('calib', 69, 79, float),
-        ('gse2.calper', 80, 87, float),
-        ('gse2.instype', 88, 94, _str),
-        ('gse2.hang', 95, 100, float),
-        ('gse2.vang', 101, 105, float),
-            ]:
+    for key, start, stop, fct in GSE2_FIELDS:
         value = fct(line[slice(start, stop)])
         if 'gse2.' in key:
             header['gse2'][key[5:]] = value
         else:
             header[key] = value
+    # convert and remove date entries from header dict
+    header['microsecond'] *= 1000
+    date = dict((k, header.pop(k)) for k in
+                "year month day hour minute second microsecond".split())
+    header['starttime'] = UTCDateTime(**date)
     return header
 
 
@@ -356,7 +351,7 @@ def write(headdict, data, f, inplace=False):
     #XXX: extract as extra function
     global count
     count = 0
-    # 4 character bytes per 32 bit integer
+    # 4 character bytes per int32_t
     carr = np.zeros(n * 4, dtype='c')
 
     def writer(char):

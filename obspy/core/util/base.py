@@ -42,15 +42,6 @@ _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
-
-
 class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.

@@ -109,16 +109,13 @@ class CoreTestCase(unittest.TestCase):
         files = [os.path.join(self.path, 'data', 'loc_RNON20040609200559.z'),
                  os.path.join(self.path, 'data', 'loc_RJOB20050831023349.z')]
         testdata = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
-        # setup test
+        # write test file containing multiple GSE2 parts
         with NamedTemporaryFile() as tf:
-            tmpfile1 = tf.name
-            # write test file containing multiple GSE2 parts
-            with open(tmpfile1, 'wb') as f:
-                for i in xrange(2):
-                    with open(files[i], 'rb') as f1:
-                        f.write(f1.read())
-            # read
-            st1 = read(tmpfile1)
+            for filename in files:
+                with open(filename, 'rb') as f1:
+                    tf.write(f1.read())
+            tf.flush()
+            st1 = read(tf.name)
         st1.verify()
         self.assertEqual(len(st1), 2)
         tr11 = st1[0]

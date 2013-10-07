@@ -3,7 +3,6 @@ EXPORTS
     check_sum
     diff_2nd
     decomp_6b_buffer
-    read_header
     rem_2nd_diff
     compress_6b_buffer
 

@@ -54,22 +54,17 @@ def readGSE2(filename, headonly=False, verify_chksum=True,
     """
     traces = []
     with open(filename, 'rb') as f:
-        # scan for multiple gse2 parts
+        # reading multiple gse2 parts
         while True:
-            pos = f.tell()
-            widi = f.readline()[0:4]
-            if widi == '':  # end of file
+            try:
+                if headonly:
+                    header = libgse2.readHeader(f)
+                    traces.append(Trace(header=header))
+                else:
+                    header, data = libgse2.read(f, verify_chksum=verify_chksum)
+                    traces.append(Trace(header=header, data=data))
+            except EOFError:
                 break
-            elif widi != 'WID2':
-                continue
-            # valid gse2 part
-            f.seek(pos)
-            if headonly:
-                header = libgse2.readHeader(f)
-                traces.append(Trace(header=header))
-            else:
-                header, data = libgse2.read(f, verify_chksum=verify_chksum)
-                traces.append(Trace(header=header, data=data))
     return Stream(traces=traces)
 
 

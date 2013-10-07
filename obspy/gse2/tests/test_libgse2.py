@@ -179,17 +179,16 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         Checks that null pointers are returned correctly by read83 function
         of read. Error "decomp_6b: Neither DAT2 or DAT1 found!" is on
-        purpose
+        purpose.
         """
         filename = os.path.join(self.path,
                                 'loc_RJOB20050831023349_first100_dos.z')
-        with NamedTemporaryFile() as tf:
-            with open(tf.name, 'wb+') as fout:
-                with open(filename, 'rb') as fin:
-                    lines = (l for l in fin if not l.startswith('DAT2'))
-                    fout.write("\n".join(lines))
-                fout.seek(0)
-                self.assertRaises(GSEUtiError, libgse2.read, fout)
+        fout = StringIO()
+        with open(filename, 'rb') as fin:
+            lines = (l for l in fin if not l.startswith('DAT2'))
+            fout.write("\n".join(lines))
+        fout.seek(0)
+        self.assertRaises(GSEUtiError, libgse2.read, fout)
 
 
 def suite():
