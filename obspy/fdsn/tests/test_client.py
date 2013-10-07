@@ -13,6 +13,7 @@ from obspy import readEvents, UTCDateTime, read
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.core.util.base import NamedTemporaryFile
 import os
 from StringIO import StringIO
 import sys
@@ -399,6 +400,77 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual(normalize_version_number(got),
                          normalize_version_number(expected),
                          failmsg(got, expected))
+
+    def test_bulk(self):
+        """
+        Test bulk requests, POSTing data to server. Also tests authenticated
+        bulk request.
+        """
+        clients = [self.client, self.client_auth]
+        expected1 = read(os.path.join(self.datapath, "bulk1.mseed"))
+        expected2 = read(os.path.join(self.datapath, "bulk2.mseed"))
+        # test cases for providing lists of lists
+        bulk1 = (("TA", "A25A", "", "BHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")),
+                 ("IU", "ANMO", "*", "BH?",
+                  UTCDateTime("2010-03-25"),
+                  UTCDateTime("2010-03-25T00:00:08")),
+                 ("IU", "ANMO", "10", "HHZ",
+                  UTCDateTime("2010-05-25T00:00:00"),
+                  UTCDateTime("2010-05-25T00:00:04")),
+                 ("II", "KURK", "00", "BHN",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")))
+        bulk2 = (("TA", "A25A", "", "BHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")),
+                 ("TA", "A25A", "", "BHE",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:06")),
+                 ("IU", "ANMO", "*", "HHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:08")))
+        params2 = dict(quality="B", longestonly=False, minimumlength=5)
+        for client in clients:
+            got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(bulk2, **params2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a request string
+        bulk1 = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                 "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
+                 "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
+                 "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
+        bulk2 = ("quality=B\n"
+                 "longestonly=false\n"
+                 "minimumlength=5\n"
+                 "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
+                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
+        for client in clients:
+            got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(bulk2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a filename
+        for client in clients:
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(bulk1)
+                got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(bulk2)
+                got = client.get_waveform_bulk(bulk2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a file-like object
+        for client in clients:
+            got = client.get_waveform_bulk(StringIO(bulk1))
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(StringIO(bulk2))
+            self.assertEqual(got, expected2, failmsg(got, expected2))
 
 
 def suite():
