@@ -22,6 +22,8 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
     station Albuquerque, New Mexico (``"ANMO"``) of the Global Seismograph
     Network (``"IU"``) for an seismic event around 2010-02-27 06:45 (UTC).
     Results are returned as a :class:`~obspy.core.stream.Stream` object.
+    For how to send multiple requests simultaneously (avoiding network
+    overhead) see :meth:`~obspy.fdsn.client.Client.get_waveform_bulk()`
 
     >>> from obspy.fdsn import Client
     >>> from obspy import UTCDateTime
