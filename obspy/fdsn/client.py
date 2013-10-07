@@ -484,7 +484,7 @@ class Client(object):
 
     def get_waveform_bulk(self, bulk, quality=None, minimumlength=None,
                           longestonly=None, filename=None, **kwargs):
-        """
+        r"""
         Query the dataselect service of the client. Bulk request.
 
         Send a bulk request for waveforms to the server. `bulk` can either be
@@ -494,18 +494,18 @@ class Client(object):
         and endtime). See examples and parameter description for more
         details.
 
-        `bulk` will be tried to be interpreted in the following order:
+        `bulk` can be provided in the following forms:
 
-        (1) Check if `bulk` is a list of lists (or tuples etc.).
+        (1) As a list of lists. Each list item has to be list of network,
+            station, location, channel, starttime and endtime.
 
-        (2) Check if `bulk` is a file-like object that can be used.
+        (2) As a valid request string/file as defined in the
+            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            The request information can be provided as a..
 
-        (3) If bulk is a string:
-
-             - Check if a file with the filename `bulk` exists (only if no
-               linebreaks are encountered).
-
-             - If not, use `bulk` as request data.
+              - a string containing the request information
+              - a string with the path to a local file with the request
+              - an open file handle (or file-like object) with the request
 
         >>> client = Client("IRIS")
         >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
@@ -517,29 +517,47 @@ class Client(object):
         >>> st = client.get_waveform_bulk(bulk)
         >>> print st  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
+        GR.GRA1..BHE   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
-        >>> bulk = "quality=B\n" + \
-        ...        "longestonly=false\n" + \
-        ...        "IU ANMO * BHZ 2010-02-27 2010-02-27T00:00:02\n" + \
-        ...        "IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n" + \
-        ...        "GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n" + \
+        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        >>> bulk = 'quality=B\n' + \
+        ...        'longestonly=false\n' + \
+        ...        'IU ANMO * BHZ 2010-02-27 2010-02-27T00:00:02\n' + \
+        ...        'IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n' + \
+        ...        'GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n'
         >>> st = client.get_waveform_bulk(bulk)
         >>> print st  # doctest: +ELLIPSIS
         5 Trace(s) in Stream:
-        IU.ANMO.00.BH1 | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
+        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: #SKIP
+        >>> print st  # doctest: +SKIP
+        5 Trace(s) in Stream:
+        GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
 
         :type bulk: str, file-like object or list of lists
         :param bulk: Information about the requested data. See above for
             details.
         :type quality: str, optional
         :param quality: Select a specific SEED quality indicator, handling is
-            data center dependent.
+            data center dependent. Ignored when `bulk` is provided as a
+            request string/file.
         :type minimumlength: float, optional
         :param minimumlength: Limit results to continuous data segments of a
-            minimum length specified in seconds.
+            minimum length specified in seconds. Ignored when `bulk` is
+            provided as a request string/file.
         :type longestonly: bool, optional
         :param longestonly: Limit results to the longest continuous segment per
-            channel.
+            channel. Ignored when `bulk` is provided as a request string/file.
         :type filename: str or open file-like object
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
