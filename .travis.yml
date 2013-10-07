@@ -19,8 +19,10 @@ install:
   - pip install --use-mirrors .
   - git status
   - printenv
+  - python -c "import platform; print 'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],''.join([str(i) for i in platform.python_version_tuple()[:2]]))"
 script:
   - printenv
+  - python -c "import platform; print 'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],''.join([str(i) for i in platform.python_version_tuple()[:2]]))"
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
 after_success:
