@@ -1798,12 +1798,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
-        if type == 'cosine':
-            if 'p' in kwargs:
-                msg = "Kwarg p for cosine taper is deprecated. Please use" \
-                      "max_percentage instead."
-                warnings.warn(msg, category=DeprecationWarning)
-                max_percentage = 0.5 * kwargs.pop('p')
         # store all constraints for maximum taper length
         max_half_lenghts = [int(npts / 2)]
         if max_percentage is not None:
