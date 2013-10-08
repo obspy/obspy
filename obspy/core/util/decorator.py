@@ -253,17 +253,21 @@ def taper_API_change():
                 max_perc = old / 2.0
                 return func(self, max_percentage=max_perc, type="cosine")
             # some other taper type was specified so use it over the full trace
-            elif isinstance(args[0], basestring):
-                # emulate old behavior with corresponding taper and tapering
-                # over the full trace
-                msg = ("The call 'Trace.taper(type='mytype')' is deprecated. "
-                       "Please use "
-                       "'Trace.taper(max_percentage=0.5, type='mytype')' "
-                       "instead to taper over the full trace with the given "
-                       "type.")
-                warnings.warn(msg, DeprecationWarning)
-                type_ = args[0]
-                return func(self, type=type_, max_percentage=None)
+            else:
+                if 'max_percentage' in kwargs:
+                    # normal new usage, so do nothing
+                    pass
+                elif isinstance(args[0], basestring):
+                    # emulate old behavior with corresponding taper and
+                    # tapering over the full trace
+                    msg = ("The call 'Trace.taper(type='mytype')' is "
+                           "deprecated. Please use "
+                           "'Trace.taper(max_percentage=0.5, type='mytype')' "
+                           "instead to taper over the full trace with the "
+                           "given type.")
+                    warnings.warn(msg, DeprecationWarning)
+                    type_ = args[0]
+                    return func(self, type=type_, max_percentage=None)
             # normal new usage, so do nothing
             return func(self, *args, **kwargs)
 
