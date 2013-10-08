@@ -244,14 +244,15 @@ def taper_API_change():
                     raise NotImplementedError(msg)
                 # emulate old behavior with cosine taper and old p parameter
                 # behavior
-                old = kwargs['p']
+                p = kwargs.pop('p')
                 msg = ("Calls like 'Trace.taper('cosine', p=%f)' are "
                        "deprecated. Please use "
                        "'Trace.taper(max_percentage=%f / 2.0, type='cosine')' "
-                       "instead.") % (old, old)
+                       "instead.") % (p, p)
                 warnings.warn(msg, DeprecationWarning)
-                max_perc = old / 2.0
-                return func(self, max_percentage=max_perc, type="cosine")
+                kwargs.pop("type", None)
+                return func(self, max_percentage=p / 2.0, type="cosine",
+                            **kwargs)
             # some other taper type was specified so use it over the full trace
             else:
                 if 'max_percentage' in kwargs:
@@ -267,7 +268,8 @@ def taper_API_change():
                            "given type.")
                     warnings.warn(msg, DeprecationWarning)
                     type_ = args[0]
-                    return func(self, type=type_, max_percentage=None)
+                    return func(self, type=type_, max_percentage=None,
+                                **kwargs)
             # normal new usage, so do nothing
             return func(self, *args, **kwargs)
 
