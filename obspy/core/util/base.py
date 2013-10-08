@@ -442,7 +442,9 @@ def getScriptDirName():
 
 def checkForMatplotlibCompareImages():
     try:
-        from matplotlib.testing.compare import compare_images  # @UnusedImport # NOQA
+        # trying to stay inside 80 char line
+        import matplotlib.testing.compare as _compare
+        compare_images = _compare.compare_images  # NOQA
     except:
         return False
     return True
