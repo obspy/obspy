@@ -1366,6 +1366,26 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(pr[8].startswith("taper"))
         self.assertTrue(pr[9].startswith("normalize"))
 
+    def test_taper_backwards_compatibility(self):
+        """
+        Test that old style .taper() calls get emulated correctly.
+        """
+        tr = Trace(np.ones(10))
+        tr1 = tr.copy().taper()
+        tr2 = tr.copy().taper("cosine", p=0.1)
+        self.assertEqual(tr1, tr2)
+        tr1 = tr.copy().taper("hann")
+        tr2 = tr.copy().taper(type="hann", max_percentage=None)
+        self.assertEqual(tr1, tr2)
+        tr1 = tr.copy().taper(type="cosine", p=0.2)
+        tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
+        self.assertEqual(tr1, tr2)
+        tr1 = tr.copy().taper(type="cosine", p=1.0)
+        tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+        self.assertEqual(tr1, tr2)
+
+        self.assertRaises(tr.copy().taper, type="hann", p=0.3)
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
