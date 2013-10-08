@@ -21,6 +21,10 @@ install:
   - printenv
   - python -c "import platform; print 'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],''.join([str(i) for i in platform.python_version_tuple()[:2]]))"
 script:
+  # We change directories to make sure that python won't find the copy
+  # of numpy in the source directory (source numpy).
+  - mkdir empty
+  - cd empty
   - printenv
   - python -c "import platform; print 'libgse2_%s_%s_py%s' % (platform.system(), platform.architecture()[0],''.join([str(i) for i in platform.python_version_tuple()[:2]]))"
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
