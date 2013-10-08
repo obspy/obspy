@@ -1722,7 +1722,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
-            To get the same resaults as the default taper in SAC, use
+            To get the same results as the default taper in SAC, use
             `max_percentage=0.05` and leave `type` as `hann`.
 
         .. note::
