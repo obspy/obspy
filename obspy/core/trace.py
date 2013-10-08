@@ -13,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked
+from obspy.core.util.decorator import raiseIfMasked, taper_API_change
 import math
 import numpy as np
 import warnings
@@ -1696,7 +1696,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
-    def taper(self, type='cosine', max_percentage=0.05, max_length=None,
+    @taper_API_change()
+    def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
         """
         Method to taper the trace.
@@ -1718,6 +1719,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
             tapered.
+
+        .. note::
+
+            To get the same resaults as the default taper in SAC, use
+            `max_percentage=0.05` and leave `type` as `hann`.
 
         .. note::
 
@@ -1780,6 +1786,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
+        msg = ("From the next major release onward the default behavior when "
+               "calling Trace.taper() without arguments will be a Hanning "
+               "window of 5% on each side.")
+        warnings.warn(msg, category=DeprecationWarning)
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
