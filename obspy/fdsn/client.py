@@ -16,7 +16,7 @@ from obspy import UTCDateTime
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException
+    WADL_PARAMETERS_NOT_TO_BE_PARSED, FDSNException, FDSNWS
 from obspy.core.util.misc import wrap_long_string
 
 import Queue
@@ -24,6 +24,7 @@ import threading
 import urllib
 import urllib2
 import warnings
+import os
 
 
 class Client(object):
@@ -31,9 +32,11 @@ class Client(object):
     FDSN Web service request client.
 
     >>> client = Client("IRIS")
-    >>> print client
+    >>> print client  # doctest: +SKIP
     FDSN Webservice Client (base url: http://service.iris.edu)
-    Available Services: 'dataselect', 'station', 'event'
+    Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
+    'station' (v1.0.7), 'available_event_contributors',
+    'available_event_catalogs'
     <BLANKLINE>
     Use e.g. client.help('dataselect') for the
     parameter description of the individual services
@@ -48,9 +51,11 @@ class Client(object):
         Initializes an FDSN Web Service client.
 
         >>> client = Client("IRIS")
-        >>> print client
+        >>> print client  # doctest: +SKIP
         FDSN Webservice Client (base url: http://service.iris.edu)
-        Available Services: 'dataselect', 'station', 'event'
+        Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6),
+        'station' (v1.0.7), 'available_event_contributors',
+        'available_event_catalogs'
         <BLANKLINE>
         Use e.g. client.help('dataselect') for the
         parameter description of the individual services
@@ -75,21 +80,24 @@ class Client(object):
         :param debug: Debug flag.
         """
         self.debug = debug
-        #if user and password:
-            ## Create an OpenerDirector for HTTP Digest Authentication
-            #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
-            #password_mgr.add_password(None, base_url, user, password)
-            #auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            #opener = urllib2.build_opener(auth_handler)
-            ## install globally
-            #urllib2.install_opener(opener)
+        self.user = user
 
         if base_url.upper() in URL_MAPPINGS:
-            self.base_url = URL_MAPPINGS[base_url.upper()]
-        else:
-            self.base_url = base_url
+            base_url = URL_MAPPINGS[base_url.upper()]
+
         # Make sure the base_url does not end with a slash.
-        self.base_url = self.base_url.strip("/")
+        base_url = base_url.strip("/")
+        self.base_url = base_url
+
+        # Authentication
+        if user is not None and password is not None:
+            # Create an OpenerDirector for HTTP Digest Authentication
+            password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            password_mgr.add_password(None, base_url, user, password)
+            auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
+            opener = urllib2.build_opener(auth_handler)
+            # install globally
+            urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_version = major_version
@@ -474,6 +482,144 @@ class Client(object):
             data_stream.close()
             return st
 
+    def get_waveform_bulk(self, bulk, quality=None, minimumlength=None,
+                          longestonly=None, filename=None, **kwargs):
+        r"""
+        Query the dataselect service of the client. Bulk request.
+
+        Send a bulk request for waveforms to the server. `bulk` can either be
+        specified as a filename, a file-like object or a string (with
+        information formatted according to the FDSN standard) or a list of
+        lists (each specifying network, station, location, channel, starttime
+        and endtime). See examples and parameter description for more
+        details.
+
+        `bulk` can be provided in the following forms:
+
+        (1) As a list of lists. Each list item has to be list of network,
+            station, location, channel, starttime and endtime.
+
+        (2) As a valid request string/file as defined in the
+            `FDSNWS documentation <http://www.fdsn.org/webservices/>`_.
+            The request information can be provided as a..
+
+              - a string containing the request information
+              - a string with the path to a local file with the request
+              - an open file handle (or file-like object) with the request
+
+        >>> client = Client("IRIS")
+        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
+        >>> t2 = t1 + 1
+        >>> t3 = t1 + 3
+        >>> bulk = [("IU", "ANMO", "*", "BHZ", t1, t2),
+        ...         ("IU", "AFI", "1?", "BHE", t1, t3),
+        ...         ("GR", "GRA1", "*", "BH*", t2, t3)]
+        >>> st = client.get_waveform_bulk(bulk)
+        >>> print st  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        GR.GRA1..BHE   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T06:30:01... | 20.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 20 samples
+        IU.ANMO.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 40 samples
+        >>> bulk = 'quality=B\n' + \
+        ...        'longestonly=false\n' + \
+        ...        'IU ANMO * BHZ 2010-02-27 2010-02-27T00:00:02\n' + \
+        ...        'IU AFI 1? BHE 2010-02-27 2010-02-27T00:00:04\n' + \
+        ...        'GR GRA1 * BH? 2010-02-27 2010-02-27T00:00:02\n'
+        >>> st = client.get_waveform_bulk(bulk)
+        >>> print st  # doctest: +ELLIPSIS
+        5 Trace(s) in Stream:
+        GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
+        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: #SKIP
+        >>> print st  # doctest: +SKIP
+        5 Trace(s) in Stream:
+        GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHN   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
+        IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
+
+        :type bulk: str, file-like object or list of lists
+        :param bulk: Information about the requested data. See above for
+            details.
+        :type quality: str, optional
+        :param quality: Select a specific SEED quality indicator, handling is
+            data center dependent. Ignored when `bulk` is provided as a
+            request string/file.
+        :type minimumlength: float, optional
+        :param minimumlength: Limit results to continuous data segments of a
+            minimum length specified in seconds. Ignored when `bulk` is
+            provided as a request string/file.
+        :type longestonly: bool, optional
+        :param longestonly: Limit results to the longest continuous segment per
+            channel. Ignored when `bulk` is provided as a request string/file.
+        :type filename: str or open file-like object
+        :param filename: If given, the downloaded data will be saved there
+            instead of being parse to an ObsPy object. Thus it will contain the
+            raw data from the webservices.
+
+        Any additional keyword arguments will be passed to the webservice as
+        additional arguments. If you pass one of the default parameters and the
+        webservice does not support it, a warning will be issued. Passing any
+        non-default parameters that the webservice does not support will raise
+        an error.
+        """
+        if "dataselect" not in self.services:
+            msg = "The current client does not have a dataselect service."
+            raise ValueError(msg)
+
+        locs = locals()
+        # if it's an iterable, we build up the query string from it
+        # StringIO objects also have __iter__ so check for read as well
+        if hasattr(bulk, "__iter__") and not hasattr(bulk, "read"):
+            tmp = ["%s=%s" % (key, convert_to_string(locs[key]))
+                   for key in ("quality", "minimumlength", "longestonly")
+                   if locs[key] is not None]
+            # empty location codes have to be represented by two dashes
+            tmp += [" ".join((net, sta, loc or "--", cha,
+                             convert_to_string(t1), convert_to_string(t2)))
+                    for net, sta, loc, cha, t1, t2 in bulk]
+            bulk = "\n".join(tmp)
+        else:
+            override_keys = ("quality", "minimumlength", "longestonly")
+            if any([locs[key] is not None for key in override_keys]):
+                msg = ("Parameters %s are ignored when request data is "
+                       "provided as a string or file!")
+                warnings.warn(msg % override_keys)
+            # if it has a read method, read data from there
+            if hasattr(bulk, "read"):
+                bulk = bulk.read()
+            elif isinstance(bulk, basestring):
+                # check if bulk is a local file
+                if "\n" not in bulk and os.path.isfile(bulk):
+                    with open(bulk) as fh:
+                        tmp = fh.read()
+                    bulk = tmp
+                # just use bulk as input data
+                else:
+                    pass
+            else:
+                msg = ("Unrecognized input for 'bulk' argument. Please "
+                       "contact developers if you think this is a bug.")
+                raise NotImplementedError(msg)
+
+        url = self._build_url("dataselect", "query")
+
+        data_stream = self._download(url, data=bulk)
+        data_stream.seek(0, 0)
+        if filename:
+            self._write_to_file_object(filename, data_stream)
+            data_stream.close()
+        else:
+            st = obspy.read(data_stream, format="MSEED")
+            data_stream.close()
+            return st
+
     def _write_to_file_object(self, filename_or_object, data_stream):
         if hasattr(filename_or_object, "write"):
             filename_or_object.write(data_stream.read())
@@ -503,7 +649,7 @@ class Client(object):
                 # If it is not in the service but in the default parameters
                 # raise a warning.
                 if key in default_params:
-                    msg = ("The standard parameter '%s' is not supporte by "
+                    msg = ("The standard parameter '%s' is not supported by "
                            "the webservice. It will be silently ignored." %
                            key)
                     warnings.warn(msg)
@@ -511,7 +657,7 @@ class Client(object):
                 elif key in WADL_PARAMETERS_NOT_TO_BE_PARSED:
                     msg = ("The parameter '%s' is ignored because it is not "
                            "useful within ObsPy")
-                    warnings.warn(msg)
+                    warnings.warn(msg % key)
                     continue
                 # Otherwise raise an error.
                 else:
@@ -538,14 +684,20 @@ class Client(object):
                                parameters=final_parameter_set)
 
     def __str__(self):
+        versions = dict([(s, self._get_webservice_versionstring(s))
+                         for s in self.services if s in FDSNWS])
+        services_string = ["'%s' (v%s)" % (s, versions[s])
+                           for s in FDSNWS if s in self.services]
+        services_string += ["'%s'" % s
+                            for s in self.services if s not in FDSNWS]
+        services_string = ", ".join(services_string)
         ret = ("FDSN Webservice Client (base url: {url})\n"
-               "Available Services: '{services}'\n\n"
+               "Available Services: {services}\n\n"
                "Use e.g. client.help('dataselect') for the\n"
                "parameter description of the individual services\n"
                "or client.help() for parameter description of\n"
-               "all webservices.".format(
-                   url=self.base_url,
-                   services="', '".join(self.services.keys())))
+               "all webservices.".format(url=self.base_url,
+                                         services=services_string))
         return ret
 
     def help(self, service=None):
@@ -561,16 +713,23 @@ class Client(object):
 
         if service is None:
             services = self.services.keys()
-        elif service in DEFAULT_PARAMETERS:
+        elif service in FDSNWS:
             services = [service]
         else:
-            raise NotImplementedError
+            msg = "Service '%s is not a valid FDSN web service." % service
+            raise ValueError(msg)
 
+        msg = []
         for service in services:
+            if service not in FDSNWS:
+                continue
             SERVICE_DEFAULT = DEFAULT_PARAMETERS[service]
 
-            print "Parameter description for the '%s' service of '%s':" % (
-                service, self.base_url)
+            msg.append("Parameter description for the "
+                       "'%s' service (v%s) of '%s':" % (
+                           service,
+                           self._get_webservice_versionstring(service),
+                           self.base_url))
 
             # Loop over all parameters and group them in three list: available
             # default parameters, missing default parameters and additional
@@ -591,7 +750,7 @@ class Client(object):
                 if name not in SERVICE_DEFAULT:
                     additional_parameters.append(name)
 
-            def _print_param(name):
+            def _param_info_string(name):
                 param = self.services[service][name]
                 name = "%s (%s)" % (name, param["type"].__name__)
                 req_def = ""
@@ -611,42 +770,45 @@ class Client(object):
                 else:
                     doc_title = ""
 
-                print "    {name}{req_def}{doc_title}".format(
+                return "    {name}{req_def}{doc_title}".format(
                     name=name, req_def=req_def, doc_title=doc_title)
 
             if additional_parameters:
                 printed_something = True
-                print ("The service offers the following "
-                       "non-standard parameters:")
+                msg.append("The service offers the following "
+                           "non-standard parameters:")
                 for name in additional_parameters:
-                    _print_param(name)
+                    msg.append(_param_info_string(name))
 
             if missing_default_parameters:
                 printed_something = True
-                print("WARNING: The service does not offer the following "
-                      "standard parameters: %s" %
-                      ", ".join(missing_default_parameters))
+                msg.append("WARNING: The service does not offer the following "
+                           "standard parameters: %s" %
+                           ", ".join(missing_default_parameters))
 
             if service == "event" and \
                     "available_event_catalogs" in self.services:
                 printed_something = True
-                print("Available catalogs: %s" %
-                      ", ".join(
-                          self.services["available_event_catalogs"]))
+                msg.append("Available catalogs: %s" %
+                           ", ".join(
+                               self.services["available_event_catalogs"]))
 
             if service == "event" and \
                     "available_event_contributors" in self.services:
                 printed_something = True
-                print("Available catalogs: %s" %
-                      ", ".join(
-                          self.services["available_event_contributors"]))
+                msg.append("Available contributors: %s" %
+                           ", ".join(
+                               self.services["available_event_contributors"]))
 
             if printed_something is False:
-                print("No derivations from standard detected")
+                msg.append("No derivations from standard detected")
 
-    def _download(self, url):
-        code, data = download_url(url, headers=self.request_headers,
-                                  debug=self.debug, return_string=False)
+        print "\n".join(msg)
+
+    def _download(self, url, return_string=False, data=None):
+        code, data = download_url(
+            url, headers=self.request_headers, debug=self.debug,
+            return_string=return_string, data=data)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -670,13 +832,19 @@ class Client(object):
             raise FDSNException("Service responds: Internal server error")
         elif code == 503:
             raise FDSNException("Service temporarily unavailable")
-
         return data
 
     def _build_url(self, resource_type, service, parameters={}):
         """
-        Builds a correct URL.
+        Builds the correct URL.
+
+        Replaces "query" with "queryauth" if client has authentication
+        information.
         """
+        # authenticated dataselect queries have different target URL
+        if self.user is not None:
+            if resource_type == "dataselect" and service == "query":
+                service = "queryauth"
         return build_url(self.base_url, self.major_version, resource_type,
                          service, parameters)
 
@@ -757,6 +925,29 @@ class Client(object):
                    "service address." % self.base_url)
             raise FDSNException(msg)
 
+    def get_webservice_version(self, service):
+        """
+        Get full version information of webservice (as a tuple of ints).
+        """
+        if service is not None and service not in self.services:
+            msg = "Service '%s' not available for current client." % service
+            raise ValueError(msg)
+
+        if service not in FDSNWS:
+            msg = "Service '%s is not a valid FDSN web service." % service
+            raise ValueError(msg)
+
+        url = self._build_url(service, "version")
+        version = self._download(url, return_string=True)
+        return map(int, version.split("."))
+
+    def _get_webservice_versionstring(self, service):
+        """
+        Get full version information of webservice as a string.
+        """
+        version = self.get_webservice_version(service)
+        return ".".join(map(str, version))
+
 
 def convert_to_string(value):
     """
@@ -818,7 +1009,8 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
     return url
 
 
-def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
+def download_url(url, timeout=10, headers={}, debug=False,
+                 return_string=True, data=None):
     """
     Returns a pair of tuples.
 
@@ -826,13 +1018,15 @@ def download_url(url, timeout=10, headers={}, debug=False, return_string=True):
     string.
 
     Will return a touple of Nones if the service could not be found.
+
+    Performs a http GET if data=None, otherwise a http POST.
     """
     if debug is True:
         print "Downloading %s" % url
 
     try:
         url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
-                                  timeout=timeout)
+                                  timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib2.HTTPError as e:
         if debug is True:

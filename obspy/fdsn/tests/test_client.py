@@ -13,11 +13,13 @@ from obspy import readEvents, UTCDateTime, read
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
+from obspy.core.util.base import NamedTemporaryFile
 import os
 from StringIO import StringIO
 import sys
 import unittest
 from difflib import Differ
+import re
 
 
 USER_AGENT = "ObsPy (test suite) " + " ".join(DEFAULT_USER_AGENT.split())
@@ -47,6 +49,13 @@ def failmsg(got, expected, ignore_lines=[]):
         return "\nGot:\n%s\nExpected:\n%s" % (str(got), str(expected))
 
 
+def normalize_version_number(string):
+    """
+    Returns imput string with version numbers normalized for testing purposes.
+    """
+    return re.sub('[0-9]\.[0-9]\.[0-9]', "vX.X.X", string)
+
+
 class ClientTestCase(unittest.TestCase):
     """
     Test cases for obspy.fdsn.client.Client.
@@ -56,6 +65,9 @@ class ClientTestCase(unittest.TestCase):
         self.path = os.path.dirname(__file__)
         self.datapath = os.path.join(self.path, "data")
         self.client = Client(base_url="IRIS", user_agent=USER_AGENT)
+        self.client_auth = \
+            Client(base_url="IRIS", user_agent=USER_AGENT,
+                   user="nobody@iris.edu", password="anonymous")
 
     def test_url_building(self):
         """
@@ -75,16 +87,42 @@ class ClientTestCase(unittest.TestCase):
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/station/1/application.wadl")
 
-        # Some parameters. Only one is tested because the order is random if
-        # more than one is given.
+        # Test one parameter.
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "dataselect",
                       "query", {"network": "BW"}),
             "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "dataselect",
+                      "queryauth", {"network": "BW"}),
+            "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW")
+        # Test two parameters. Note random order, two possible results.
+        self.assertTrue(
+            build_url("http://service.iris.edu", 1, "dataselect",
+                      "query", {"net": "A", "sta": "BC"}) in
+            ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
+             "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A"))
 
         # A wrong resource_type raises a ValueError
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
                           "obspy", "query")
+
+    def test_url_building_with_auth(self):
+        """
+        Tests the Client._build_url() method with authentication.
+
+        Necessary on top of test_url_building test case because clients with
+        authentication have to build different URLs for dataselect.
+        """
+        # no authentication
+        got = self.client._build_url("dataselect", "query", {'net': "BW"})
+        expected = "http://service.iris.edu/fdsnws/dataselect/1/query?net=BW"
+        self.assertEqual(got, expected)
+        # with authentication
+        got = self.client_auth._build_url("dataselect", "query", {'net': "BW"})
+        expected = ("http://service.iris.edu/fdsnws/dataselect/1/"
+                    "queryauth?net=BW")
+        self.assertEqual(got, expected)
 
     def test_service_discovery_iris(self):
         """
@@ -202,6 +240,14 @@ class ClientTestCase(unittest.TestCase):
             #got.write(file_, "QUAKEML")
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_events(filename=tf.name, **query)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
+            self.assertEqual(got, expected, failmsg(got, expected))
 
         # station example queries
         queries = [
@@ -226,7 +272,17 @@ class ClientTestCase(unittest.TestCase):
             #    fh.write(got)
             with open(file_) as fh:
                 expected = fh.read()
-            msg = failmsg(got, expected, ignore_lines=['<Created>'])
+            ignore_lines = ['<Created>', '<TotalNumberStations>']
+            msg = failmsg(got, expected, ignore_lines=ignore_lines)
+            self.assertEqual(msg, "", msg)
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_stations(filename=tf.name, **query)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
+            msg = failmsg(got, expected, ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
         # dataselect example queries
@@ -246,10 +302,34 @@ class ClientTestCase(unittest.TestCase):
                         "dataselect_example_mixed_wildcards.mseed",
                         ]
         for query, filename in zip(queries, result_files):
+            # test output to stream
             got = client.get_waveform(*query)
             file_ = os.path.join(self.datapath, filename)
             expected = read(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform(*query, filename=tf.name)
+                with open(tf.name) as fh:
+                    got = fh.read()
+                with open(file_) as fh:
+                    expected = fh.read()
+            self.assertEqual(got, expected, failmsg(got, expected))
+
+    def test_authentication(self):
+        """
+        Test dataselect with authentication.
+        """
+        client = self.client_auth
+        # dataselect example queries
+        query = ("IU", "ANMO", "00", "BHZ",
+                 UTCDateTime("2010-02-27T06:30:00.000"),
+                 UTCDateTime("2010-02-27T06:40:00.000"))
+        filename = "dataselect_example.mseed"
+        got = client.get_waveform(*query)
+        file_ = os.path.join(self.datapath, filename)
+        expected = read(file_)
+        self.assertEqual(got, expected, failmsg(got, expected))
 
     def test_conflicting_params(self):
         """
@@ -264,62 +344,182 @@ class ClientTestCase(unittest.TestCase):
         This will have to be adopted any time IRIS changes their
         implementation.
         """
-        client = self.client
+        try:
+            client = self.client
+            sys.stdout = StringIO()
+            client.help()
+            sys.stdout.close()
 
-        # Capture output
-        sys.stdout = StringIO()
+            # Capture output
+            sys.stdout = StringIO()
 
-        client.help("event")
-        got = sys.stdout.getvalue()
+            client.help("event")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'event' service (v1.0.6) of "
+                "'http://service.iris.edu':\n"
+                "The service offers the following non-standard parameters:\n"
+                "    magtype (str)\n"
+                "        type of Magnitude used to test minimum and maximum "
+                "limits (case\n        insensitive)\n"
+                "    originid (int)\n"
+                "        Retrieve an event based on the unique origin ID "
+                "numbers assigned by\n"
+                "        the IRIS DMC\n"
+                "WARNING: The service does not offer the following standard "
+                "parameters: magnitudetype\n"
+                "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
+                "Available contributors: NEIC PDE-W, ANF, University of "
+                "Washington, GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, "
+                "NEIC PDE-M, GCMT\n")
+            # allow for changes in version number..
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            # Reset. Creating a new one is faster then clearing the old one.
+            sys.stdout.close()
+            sys.stdout = StringIO()
+
+            client.help("station")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'station' service (v1.0.7) of "
+                "'http://service.iris.edu':\n"
+                "The service offers the following non-standard parameters:\n"
+                "    matchtimeseries (bool)\n"
+                "        Specify that the availabilities line up with "
+                "available data. This is\n"
+                "        an IRIS extension to the FDSN specification\n")
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            # Reset.
+            sys.stdout.close()
+            sys.stdout = StringIO()
+
+            client.help("dataselect")
+            got = sys.stdout.getvalue()
+            expected = (
+                "Parameter description for the 'dataselect' service (v1.0.0) "
+                "of 'http://service.iris.edu':\n"
+                "No derivations from standard detected\n")
+            self.assertEqual(normalize_version_number(got),
+                             normalize_version_number(expected),
+                             failmsg(got, expected))
+
+            sys.stdout.close()
+        finally:
+            sys.stdout = sys.__stdout__
+
+    def test_str_method(self):
+        got = str(self.client)
         expected = (
-            "Parameter description for the 'event' service of "
-            "'http://service.iris.edu':\n"
-            "The service offers the following non-standard parameters:\n"
-            "    magtype (str)\n"
-            "        type of Magnitude used to test minimum and maximum limits"
-            " (case\n"
-            "        insensitive)\n"
-            "    originid (int)\n"
-            "        Retrieve an event based on the unique origin ID numbers "
-            "assigned by\n"
-            "        the IRIS DMC\n"
-            "WARNING: The service does not offer the following standard "
-            "parameters: magnitudetype\n"
-            "Available catalogs: ANF, UofW, NEIC PDE, ISC, TEST, GCMT\n"
-            "Available catalogs: NEIC PDE-W, ANF, University of Washington, "
-            "GCMT-Q, NEIC PDE-Q, UNKNOWN, NEIC ALERT, ISC, NEIC PDE-M, GCMT\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
+            "FDSN Webservice Client (base url: http://service.iris.edu)\n"
+            "Available Services: 'dataselect' (v1.0.0), 'event' (v1.0.6), "
+            "'station' (v1.0.7), 'available_event_contributors', "
+            "'available_event_catalogs'\n\n"
+            "Use e.g. client.help('dataselect') for the\n"
+            "parameter description of the individual services\n"
+            "or client.help() for parameter description of\n"
+            "all webservices.")
+        self.assertEqual(normalize_version_number(got),
+                         normalize_version_number(expected),
+                         failmsg(got, expected))
 
-        # Reset. Creating a new one is faster then clearing the old one.
-        sys.stdout.close()
-        sys.stdout = StringIO()
-
-        client.help("station")
-        got = sys.stdout.getvalue()
-        expected = (
-            "Parameter description for the 'station' service of "
-            "'http://service.iris.edu':\n"
-            "The service offers the following non-standard parameters:\n"
-            "    matchtimeseries (bool)\n"
-            "        Specify that the availabilities line up with available "
-            "data. This is\n"
-            "        an IRIS extension to the FDSN specification\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
-
-        # Reset.
-        sys.stdout.close()
-        sys.stdout = StringIO()
-
-        client.help("dataselect")
-        got = sys.stdout.getvalue()
-        expected = (
-            "Parameter description for the 'dataselect' service of "
-            "'http://service.iris.edu':\n"
-            "No derivations from standard detected\n")
-        self.assertEqual(got, expected, failmsg(got, expected))
-
-        sys.stdout.close()
-        sys.stdout = sys.__stdout__
+    def test_bulk(self):
+        """
+        Test bulk requests, POSTing data to server. Also tests authenticated
+        bulk request.
+        """
+        clients = [self.client, self.client_auth]
+        file1 = os.path.join(self.datapath, "bulk1.mseed")
+        file2 = os.path.join(self.datapath, "bulk2.mseed")
+        expected1 = read(file1)
+        expected2 = read(file2)
+        # test cases for providing lists of lists
+        bulk1 = (("TA", "A25A", "", "BHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")),
+                 ("IU", "ANMO", "*", "BH?",
+                  UTCDateTime("2010-03-25"),
+                  UTCDateTime("2010-03-25T00:00:08")),
+                 ("IU", "ANMO", "10", "HHZ",
+                  UTCDateTime("2010-05-25T00:00:00"),
+                  UTCDateTime("2010-05-25T00:00:04")),
+                 ("II", "KURK", "00", "BHN",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")))
+        bulk2 = (("TA", "A25A", "", "BHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:04")),
+                 ("TA", "A25A", "", "BHE",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:06")),
+                 ("IU", "ANMO", "*", "HHZ",
+                  UTCDateTime("2010-03-25T00:00:00"),
+                  UTCDateTime("2010-03-25T00:00:08")))
+        params2 = dict(quality="B", longestonly=False, minimumlength=5)
+        for client in clients:
+            # test output to stream
+            got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(bulk2, **params2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk1, filename=tf.name)
+                got = read(tf.name)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk2, filename=tf.name, **params2)
+                got = read(tf.name)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a request string
+        bulk1 = ("TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                 "IU ANMO * BH? 2010-03-25 2010-03-25T00:00:08\n"
+                 "IU ANMO 10 HHZ 2010-05-25T00:00:00 2010-05-25T00:00:04\n"
+                 "II KURK 00 BHN 2010-03-25T00:00:00 2010-03-25T00:00:04\n")
+        bulk2 = ("quality=B\n"
+                 "longestonly=false\n"
+                 "minimumlength=5\n"
+                 "TA A25A -- BHZ 2010-03-25T00:00:00 2010-03-25T00:00:04\n"
+                 "TA A25A -- BHE 2010-03-25T00:00:00 2010-03-25T00:00:06\n"
+                 "IU ANMO * HHZ 2010-03-25T00:00:00 2010-03-25T00:00:08\n")
+        for client in clients:
+            # test output to stream
+            got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(bulk2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+            # test output to file
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk1, filename=tf.name)
+                got = read(tf.name)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                client.get_waveform_bulk(bulk2, filename=tf.name)
+                got = read(tf.name)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a filename
+        for client in clients:
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(bulk1)
+                got = client.get_waveform_bulk(bulk1)
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(bulk2)
+                got = client.get_waveform_bulk(bulk2)
+            self.assertEqual(got, expected2, failmsg(got, expected2))
+        # test cases for providing a file-like object
+        for client in clients:
+            got = client.get_waveform_bulk(StringIO(bulk1))
+            self.assertEqual(got, expected1, failmsg(got, expected1))
+            got = client.get_waveform_bulk(StringIO(bulk2))
+            self.assertEqual(got, expected2, failmsg(got, expected2))
 
 
 def suite():

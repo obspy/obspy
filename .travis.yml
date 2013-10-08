@@ -19,6 +19,11 @@ install:
   - pip install --use-mirrors .
   - git status
 script:
+  # We change directories to make sure that python won't find the copy
+  # of obspy in the source directory, see 
+  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
+  - mkdir empty
+  - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
 after_success:

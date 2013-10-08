@@ -1697,12 +1697,12 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self
 
     def taper(self, type='cosine', max_percentage=0.05, max_length=None,
-              side='both', *args, **kwargs):
+              side='both', **kwargs):
         """
         Method to taper the trace.
 
         Optional (and sometimes necessary) options to the tapering function can
-        be provided as args and kwargs. See respective function definitions in
+        be provided as kwargs. See respective function definitions in
         `Supported Methods`_ section below.
 
         :type type: str
@@ -1810,7 +1810,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        taper_sides = func(2 * wlen + 1, *args, **kwargs)
+        taper_sides = func(2 * wlen + 1, **kwargs)
         if side == 'left':
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
         elif side == 'right':
@@ -1820,7 +1820,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                                taper_sides[wlen + 1:]))
         self.data = self.data * taper
         # add processing information to the stats dictionary
-        proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
+        proc_info = "taper:%s:%s:%s:%s:%s" % (type, str(max_percentage),
+                                              str(max_length), side, kwargs)
         self._addProcessingInfo(proc_info)
         return self
 

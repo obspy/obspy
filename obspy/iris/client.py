@@ -32,7 +32,7 @@ DEPR_WARN = ("This service will be shut down on the server side in december "
              "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
 DEPR_WARNS = {}
-for new in ["get_waveform", "get_events", "get_stations"]:
+for new in ["get_waveform", "get_events", "get_stations", "get_waveform_bulk"]:
     DEPR_WARNS[new] = DEPR_WARN % "obspy.fdsn.client.Client.%s" % new
 
 
@@ -1082,7 +1082,7 @@ class Client(object):
                 stream = Stream()
         return stream
 
-    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
+    @deprecated(warning_msg=DEPR_WARNS['get_waveform_bulk'])
     def bulkdataselect(self, bulk, quality=None, filename=None,
                        minimumlength=None, longestonly=False):
         """
