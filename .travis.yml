@@ -34,4 +34,4 @@ notifications:
 after_failure:
   - cd
   - wget "http://imgur.com/tools/imgurbash.sh"
-  - "find . -regex '.*/tests/images/testrun/.*png' | xargs -I % bash imgurbash.sh %"
+  - for FILE in `find . -regex '.*/tests/images/testrun/.*png' | sort`; do echo $FILE; bash imgurbash.sh $FILE; done
