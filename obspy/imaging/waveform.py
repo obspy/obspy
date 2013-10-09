@@ -847,20 +847,24 @@ class WaveformPlotting(object):
         """
         Goes through all axes in pyplot and sets time ticks on the x axis.
         """
-        # Loop over all axes.
-        for ax in self.axis:
-            if self.type == "relative":
-                locator = MaxNLocator(5)
-            else:
-                ax.xaxis_date()
-                locator = AutoDateLocator(minticks=3, maxticks=5)
-                formatter = ObsPyAutoDateFormatter(locator)
-                formatter.scaled[1/(24.*60.)] = \
-                    FuncFormatter(decimal_seconds_date_tick_format)
-                ax.xaxis.set_major_formatter(formatter)
-            ax.xaxis.set_major_locator(locator)
-            plt.setp(ax.get_xticklabels(), fontsize='small',
-                     rotation=self.tick_rotation)
+        self.fig.subplots_adjust(hspace=0)
+        # Loop over all but last axes.
+        for ax in self.axis[:-1]:
+            plt.setp(ax.get_xticklabels(), visible=False)
+        # set bottom most axes:
+        ax = self.axis[-1]
+        if self.type == "relative":
+            locator = MaxNLocator(5)
+        else:
+            ax.xaxis_date()
+            locator = AutoDateLocator(minticks=4, maxticks=5)
+            formatter = ObsPyAutoDateFormatter(locator)
+            formatter.scaled[1/(24.*60.)] = \
+                FuncFormatter(decimal_seconds_date_tick_format)
+            ax.xaxis.set_major_formatter(formatter)
+        ax.xaxis.set_major_locator(locator)
+        plt.setp(ax.get_xticklabels(), fontsize='small',
+                 rotation=self.tick_rotation)
 
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -885,8 +889,9 @@ class WaveformPlotting(object):
             min_range = mean - max_distance
             max_range = mean + max_distance
             ## Set the title of each plot.
-            ax.set_title(self.stats[_i][0], horizontalalignment='center',
-                         fontsize='small', verticalalignment='center')
+            ax.text(0.02, 0.95, self.stats[_i][0], transform=ax.transAxes,
+                    fontdict=dict(fontsize="small", ha='left', va='top'),
+                    bbox=dict(boxstyle="round", fc="w", alpha=0.8))
             plt.setp(ax.get_yticklabels(), fontsize='small')
             ax.yaxis.set_major_locator(MaxNLocator(7))
             ax.yaxis.set_major_formatter(ScalarFormatter())
