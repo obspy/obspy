@@ -1804,7 +1804,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             max_half_lenghts.append(int(max_percentage * npts))
         if max_length is not None:
             max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
-        if any([(2 * x) > npts for x in max_half_lenghts]):
+        if max(max_half_lenghts) > 2 * npts:
             msg = "The requested taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
