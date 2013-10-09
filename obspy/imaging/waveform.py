@@ -1358,8 +1358,6 @@ class WaveformPlotting(object):
         self.fig.set_dpi(self.dpi)
         self.fig.set_figwidth(float(self.width) / self.dpi)
         self.fig.set_figheight(float(self.height) / self.dpi)
-        x = self.__getX(10)
-        y = self.__getY(15)
         # Default timestamp pattern
         pattern = '%Y-%m-%dT%H:%M:%SZ'
         if hasattr(self.stream, 'label'):
@@ -1370,7 +1368,6 @@ class WaveformPlotting(object):
         elif self.type == 'dayplot':
             suptitle = '%s %s' % (self.stream[0].id,
                                   self.starttime.strftime('%Y-%m-%d'))
-            x = self.fig.subplotpars.left
         elif self.type == 'section':
             suptitle = 'Network: %s [%s] - (%i traces / %s)' % \
                 (self.stream[-1].stats.network, self.stream[-1].stats.channel,
@@ -1380,11 +1377,5 @@ class WaveformPlotting(object):
             suptitle = '%s  -  %s' % (self.starttime.strftime(pattern),
                                       self.endtime.strftime(pattern))
         # add suptitle
-        self.fig.suptitle(suptitle, x=x, y=y, fontsize='small',
-                          horizontalalignment='left')
-
-    def __getY(self, dy):
-        return (self.height - dy) * 1.0 / self.height
-
-    def __getX(self, dx):
-        return dx * 1.0 / self.width
+        self.fig.suptitle(suptitle, fontsize='small',
+                          horizontalalignment='center')
