@@ -1812,6 +1812,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         max_half_lenghts.append(int(npts / 2))
         # select shortest acceptable window half-length
         wlen = min(max_half_lenghts)
+        # obspy.signal.cosTaper has a default value for taper percentage,
+        # we need to override is as we control percentage completely via npts
+        # of taper function and insert ones in the middle afterwards
+        if type == "cosine":
+            kwargs['p'] = 1.0
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
