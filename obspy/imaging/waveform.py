@@ -7,6 +7,15 @@
 #
 # Copyright (C) 2008-2012 Lion Krischer
 #---------------------------------------------------------------------
+"""
+Waveform plotting for obspy.Stream objects.
+
+:copyright:
+    The ObsPy Development Team (devs@obspy.org)
+:license:
+    GNU General Public License (GPL)
+    (http://www.gnu.org/licenses/gpl.txt)
+"""
 from copy import copy
 from datetime import datetime
 from obspy import UTCDateTime, Stream, Trace
@@ -373,11 +382,13 @@ class WaveformPlotting(object):
                       "sampling rate."
                 raise Exception(msg)
             sampling_rate = sampling_rates.pop()
-            if self.background_color:
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
-                                          axisbg=self.background_color)
+            if _i == 0:
+                sharex = None
             else:
-                ax = self.fig.add_subplot(len(stream_new), 1, _i + 1)
+                sharex = self.axis[0]
+            ax = self.fig.add_subplot(len(stream_new), 1, _i + 1,
+                                      axisbg=self.background_color,
+                                      sharex=sharex)
             self.axis.append(ax)
             # XXX: Also enable the minmax plotting for previews.
             if self.plotting_method != 'full' and \
@@ -705,8 +716,16 @@ class WaveformPlotting(object):
             # set starttime and calculate endtime
             trace.stats.starttime = self.starttime
         trace.data *= calib
+        if self.type == 'relative':
+            start = 0
+            end = self.endtime - self.starttime
+            x_values = np.linspace(start, end, num=len(trace))
+        else:
+            start, end = self.starttime, self.endtime
+            x_values = np.linspace(date2num(start), date2num(end),
+                                   num=len(trace))
         ax.plot(
-            trace.data, color=self.color, linewidth=self.linewidth,
+            x_values, trace.data, color=self.color, linewidth=self.linewidth,
             linestyle=self.linestyle)
         ax.xaxis.grid(
             color=self.grid_color, linestyle=self.grid_linestyle,
@@ -716,7 +735,7 @@ class WaveformPlotting(object):
             linewidth=self.grid_linewidth)
         # Set the x limit for the graph to also show the masked values at the
         # beginning/end.
-        ax.set_xlim(0, len(trace.data) - 1)
+        ax.set_xlim(x_values[0], x_values[-1])
 
     def __plotMinMax(self, trace, ax, *args, **kwargs):  # @UnusedVariable
         """
@@ -803,7 +822,14 @@ class WaveformPlotting(object):
                            minmax[:, 1].max()])
         # Finally plot the data.
         x_values = np.empty(2 * self.width)
-        aranged = np.arange(self.width)
+        if self.type == 'relative':
+            start = 0
+            end = self.endtime - self.starttime
+            aranged = np.linspace(start, end, num=self.width)
+        else:
+            start, end = self.starttime, self.endtime
+            aranged = np.linspace(date2num(start), date2num(end),
+                                  num=self.width)
         x_values[0::2] = aranged
         x_values[1::2] = aranged
         # Initialize completely masked array. This version is a little bit
@@ -815,7 +841,7 @@ class WaveformPlotting(object):
         y_values[1::2] = minmax[:, 1]
         ax.plot(x_values, y_values, color=self.color)
         # Set the x-limit to avoid clipping of masked values.
-        ax.set_xlim(0, self.width - 1)
+        ax.set_xlim(x_values[0], x_values[-1])
 
     def __plotSetXTicks(self, *args, **kwargs):  # @UnusedVariable
         """
@@ -823,24 +849,18 @@ class WaveformPlotting(object):
         """
         # Loop over all axes.
         for ax in self.axis:
-            # Get the xlimits.
-            start, end = ax.get_xlim()
-            # Set the location of the ticks.
-            ax.set_xticks(np.linspace(start, end, self.number_of_ticks))
-            # Figure out times.
-            interval = float(self.endtime - self.starttime) / \
-                (self.number_of_ticks - 1)
-            # Set the actual labels.
-            if self.type == 'relative':
-                labels = ['%.2f' % (self.starttime + _i * interval).timestamp
-                          for _i in range(self.number_of_ticks)]
+            if self.type == "relative":
+                locator = MaxNLocator(5)
             else:
-                labels = [(self.starttime + _i *
-                          interval).strftime(self.tick_format) for _i in
-                          range(self.number_of_ticks)]
-
-            ax.set_xticklabels(labels, fontsize='small',
-                               rotation=self.tick_rotation)
+                ax.xaxis_date()
+                locator = AutoDateLocator(minticks=3, maxticks=5)
+                formatter = ObsPyAutoDateFormatter(locator)
+                formatter.scaled[1/(24.*60.)] = \
+                    FuncFormatter(decimal_seconds_date_tick_format)
+                ax.xaxis.set_major_formatter(formatter)
+            ax.xaxis.set_major_locator(locator)
+            plt.setp(ax.get_xticklabels(), fontsize='small',
+                     rotation=self.tick_rotation)
 
     def __plotSetYTicks(self, *args, **kwargs):  # @UnusedVariable
         """
