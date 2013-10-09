@@ -29,7 +29,7 @@ from matplotlib.path import Path
 import matplotlib.patches as patches
 from matplotlib.dates import date2num, num2date, AutoDateFormatter, \
     DateFormatter, AutoDateLocator
-from matplotlib.ticker import FuncFormatter, MaxNLocator
+from matplotlib.ticker import FuncFormatter, MaxNLocator, ScalarFormatter
 import numpy as np
 import scipy.signal as signal
 import warnings
@@ -881,32 +881,15 @@ class WaveformPlotting(object):
                 trace = self.stats[_i]
                 max_distance = max(trace[1] - trace[2],
                                    trace[3] - trace[1]) * 1.1
-            # Set the ylimit.
+            ## Set the ylimit.
             min_range = mean - max_distance
             max_range = mean + max_distance
-            # Set the location of the ticks.
-            ticks = [mean - 0.75 * max_distance,
-                     mean - 0.5 * max_distance,
-                     mean - 0.25 * max_distance,
-                     mean,
-                     mean + 0.25 * max_distance,
-                     mean + 0.5 * max_distance,
-                     mean + 0.75 * max_distance]
-            ax.set_yticks(ticks)
-            # Setup format of the major ticks
-            if abs(max(ticks) - min(ticks)) > 10:
-                # integer numbers
-                fmt = '%d'
-                if abs(min(ticks)) > 10e6:
-                    # but switch back to exponential for huge numbers
-                    fmt = '%.2g'
-            else:
-                fmt = '%.2g'
-            ax.set_yticklabels([fmt % t for t in ax.get_yticks()],
-                               fontsize='small')
-            # Set the title of each plot.
+            ## Set the title of each plot.
             ax.set_title(self.stats[_i][0], horizontalalignment='center',
                          fontsize='small', verticalalignment='center')
+            plt.setp(ax.get_yticklabels(), fontsize='small')
+            ax.yaxis.set_major_locator(MaxNLocator(7))
+            ax.yaxis.set_major_formatter(ScalarFormatter())
             ax.set_ylim(min_range, max_range)
 
     def __dayplotGetMinMaxValues(self, *args, **kwargs):  # @UnusedVariable
