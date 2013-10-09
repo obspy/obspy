@@ -1397,6 +1397,10 @@ class TraceTestCase(unittest.TestCase):
 
         self.assertRaises(tr.copy().taper, type="hann", p=0.3)
 
+        tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
+        self.assertTrue(np.all(tr1.data[6:] < 1))
+
+
 
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
