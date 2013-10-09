@@ -1799,15 +1799,17 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
         # store all constraints for maximum taper length
-        max_half_lenghts = [int(npts / 2)]
+        max_half_lenghts = []
         if max_percentage is not None:
             max_half_lenghts.append(int(max_percentage * npts))
         if max_length is not None:
             max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
-        if 2 * max(max_half_lenghts) > npts:
+        if np.any([2 * mhl > npts for mhl in max_half_lenghts]):
             msg = "The requested taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
+        # add full trace length to constraints
+        max_half_lenghts.append(int(npts / 2))
         # select shortest acceptable window half-length
         wlen = min(max_half_lenghts)
         # tapering. tapering functions are expected to accept the number of
