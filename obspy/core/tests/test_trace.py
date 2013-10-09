@@ -1401,7 +1401,6 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(np.all(tr1.data[6:] < 1))
 
 
-
 def suite():
     return unittest.makeSuite(TraceTestCase, 'test')
 
