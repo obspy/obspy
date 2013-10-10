@@ -13,7 +13,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked
+from obspy.core.util.decorator import raiseIfMasked, taper_API_change
 import math
 import numpy as np
 import warnings
@@ -1696,7 +1696,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
-    def taper(self, type='cosine', max_percentage=0.05, max_length=None,
+    @taper_API_change()
+    def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
         """
         Method to taper the trace.
@@ -1718,6 +1719,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
             tapered.
+
+        .. note::
+
+            To get the same results as the default taper in SAC, use
+            `max_percentage=0.05` and leave `type` as `hann`.
 
         .. note::
 
@@ -1780,6 +1786,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
+        msg = ("From the next major release onward the default behavior when "
+               "calling Trace.taper() without arguments will be a Hanning "
+               "window of 5% on each side.")
+        warnings.warn(msg, category=DeprecationWarning)
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
@@ -1788,36 +1798,40 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
-        if type == 'cosine':
-            if 'p' in kwargs:
-                msg = "Kwarg p for cosine taper is deprecated. Please use" \
-                      "max_percentage instead."
-                warnings.warn(msg, category=DeprecationWarning)
-                max_percentage = 0.5 * kwargs['p']
-            kwargs['p'] = 1.0
         # store all constraints for maximum taper length
-        max_half_lenghts = [int(npts / 2)]
+        max_half_lenghts = []
         if max_percentage is not None:
             max_half_lenghts.append(int(max_percentage * npts))
         if max_length is not None:
             max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
-        if any([(2 * x) > npts for x in max_half_lenghts]):
+        if np.all([2 * mhl > npts for mhl in max_half_lenghts]):
             msg = "The requested taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
+        # add full trace length to constraints
+        max_half_lenghts.append(int(npts / 2))
         # select shortest acceptable window half-length
         wlen = min(max_half_lenghts)
+        # obspy.signal.cosTaper has a default value for taper percentage,
+        # we need to override is as we control percentage completely via npts
+        # of taper function and insert ones in the middle afterwards
+        if type == "cosine":
+            kwargs['p'] = 1.0
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        taper_sides = func(2 * wlen + 1, **kwargs)
+        if 2 * wlen == npts:
+            taper_sides = func(2 * wlen, **kwargs)
+        else:
+            taper_sides = func(2 * wlen + 1, **kwargs)
         if side == 'left':
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
         elif side == 'right':
-            taper = np.hstack((np.ones(npts - wlen), taper_sides[wlen + 1:]))
+            taper = np.hstack((np.ones(npts - wlen),
+                               taper_sides[len(taper_sides) - wlen:]))
         else:
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
-                               taper_sides[wlen + 1:]))
+                               taper_sides[len(taper_sides) - wlen:]))
         self.data = self.data * taper
         # add processing information to the stats dictionary
         proc_info = "taper:%s:%s:%s:%s:%s" % (type, str(max_percentage),

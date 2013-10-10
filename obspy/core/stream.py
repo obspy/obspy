@@ -2255,7 +2255,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.detrend(type=type)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    def taper(self, *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2270,7 +2270,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, side=side, *args, **kwargs)
+            tr.taper(*args, **kwargs)
         return self
 
     def std(self):
