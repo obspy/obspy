@@ -27,45 +27,14 @@ import StringIO
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 import matplotlib.patches as patches
-from matplotlib.dates import date2num, num2date, AutoDateFormatter, \
-    DateFormatter, AutoDateLocator
+from matplotlib.dates import date2num, AutoDateLocator
 from matplotlib.ticker import FuncFormatter, MaxNLocator, ScalarFormatter
 import numpy as np
 import scipy.signal as signal
 import warnings
+from obspy.imaging.util import decimal_seconds_format, ObsPyAutoDateFormatter
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
-
-
-def decimal_seconds_date_tick_format(x, pos=None):
-    """
-    This format function is used to format date ticklabels with decimal
-    seconds but stripping trailing zeros.
-    """
-    x = num2date(x)
-    ret = x.strftime('%H:%M:%S.%f')
-    ret = ret.rstrip("0")
-    ret = ret.rstrip(".")
-    return ret
-
-
-class ObsPyAutoDateFormatter(AutoDateFormatter):
-    def __call__(self, x, pos=None):
-        scale = float(self._locator._get_unit())
-        fmt = self.defaultfmt
-
-        for k in sorted(self.scaled):
-            if k >= scale:
-                fmt = self.scaled[k]
-                break
-
-        if isinstance(fmt, basestring):
-            self._formatter = DateFormatter(fmt, self._tz)
-            return self._formatter(x, pos)
-        elif hasattr(fmt, '__call__'):
-            return fmt(x, pos)
-        else:
-            raise NotImplementedError()
 
 
 class WaveformPlotting(object):
@@ -860,7 +829,7 @@ class WaveformPlotting(object):
             locator = AutoDateLocator(minticks=4, maxticks=5)
             formatter = ObsPyAutoDateFormatter(locator)
             formatter.scaled[1/(24.*60.)] = \
-                FuncFormatter(decimal_seconds_date_tick_format)
+                FuncFormatter(decimal_seconds_format)
             ax.xaxis.set_major_formatter(formatter)
         ax.xaxis.set_major_locator(locator)
         plt.setp(ax.get_xticklabels(), fontsize='small',
