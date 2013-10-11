@@ -998,9 +998,21 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
             (resource_type, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
-    # Special location handling. Convert empty strings to "--".
-    if "location" in parameters and not parameters["location"].strip():
-        parameters["location"] = "--"
+    # Special location handling.
+    if "location" in parameters:
+        loc = parameters["location"].replace(" ", "")
+        # Empty location.
+        if not loc:
+            loc = "--"
+        # Empty location at start of list.
+        if loc.startswith(','):
+            loc = "--" + loc
+        # Empty location at end of list.
+        if loc.endswith(','):
+            loc += "--"
+        # Empty location in middle of list.
+        loc = loc.replace(",,", "--")
+        parameters["location"] = loc
 
     url = "/".join((base_url, "fdsnws", resource_type,
                     str(major_version), service))

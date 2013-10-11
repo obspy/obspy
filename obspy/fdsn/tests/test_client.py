@@ -130,24 +130,28 @@ class ClientTestCase(unittest.TestCase):
             build_url("http://service.iris.edu", 1, "station",
                       "query", {"location": "  "}),
             "http://service.iris.edu/fdsnws/station/1/query?location=--")
-        # wildcard locations are valid
+        # wildcard locations are valid. Will be encoded.
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "station",
                       "query", {"location": "*"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=*")
+            "http://service.iris.edu/fdsnws/station/1/query?location=%2A")
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "station",
                       "query", {"location": "A?"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=A?")
-        # lists are valid, including <space><space> lists
+            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F")
+
+        # lists are valid, including <space><space> lists. Again encoded
+        # result.
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "station",
                       "query", {"location": "  ,1?,?0"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=--,1?,?0")
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=--%2C1%3F%2C%3F0")
         self.assertEqual(
             build_url("http://service.iris.edu", 1, "station",
                       "query", {"location": "1?,--,?0"}),
-            "http://service.iris.edu/fdsnws/station/1/query?location=1?,--,?0")
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=1%3F%2C--%2C%3F0")
 
     def test_url_building_with_auth(self):
         """
