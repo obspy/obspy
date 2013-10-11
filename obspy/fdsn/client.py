@@ -364,10 +364,6 @@ class Client(object):
         locs = locals()
         setup_query_dict('station', locs, kwargs)
 
-        # Special location handling. Convert empty strings to "--".
-        if "location" in kwargs and not kwargs["location"]:
-            kwargs["location"] = "--"
-
         url = self._create_url_from_parameters(
             "station", DEFAULT_PARAMETERS['station'], kwargs)
 
@@ -1002,9 +998,19 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
             (resource_type, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
+    # Special location handling. Convert empty strings to "--".
+    if "location" in parameters and not parameters["location"].strip():
+        parameters["location"] = "--"
+
     url = "/".join((base_url, "fdsnws", resource_type,
                     str(major_version), service))
     if parameters:
+        # Strip parameters.
+        for key, value in parameters.iteritems():
+            try:
+                parameters[key] = value.strip()
+            except:
+                pass
         url = "?".join((url, urllib.urlencode(parameters)))
     return url
 
