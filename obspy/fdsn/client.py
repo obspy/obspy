@@ -1011,7 +1011,7 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
         if loc.endswith(','):
             loc += "--"
         # Empty location in middle of list.
-        loc = loc.replace(",,", "--")
+        loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
 
     url = "/".join((base_url, "fdsnws", resource_type,

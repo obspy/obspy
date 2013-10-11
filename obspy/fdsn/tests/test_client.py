@@ -153,6 +153,23 @@ class ClientTestCase(unittest.TestCase):
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=1%3F%2C--%2C%3F0")
 
+        # Test all three special cases with empty parameters into lists.
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "  ,AA,BB"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=--%2CAA%2CBB")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "AA,  ,BB"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=AA%2C--%2CBB")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "AA,BB,  "}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=AA%2CBB%2C--")
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.
