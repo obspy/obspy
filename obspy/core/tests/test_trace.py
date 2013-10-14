@@ -1377,28 +1377,71 @@ class TraceTestCase(unittest.TestCase):
 
     def test_taper_backwards_compatibility(self):
         """
-        Test that old style .taper() calls get emulated correctly.
+        Test that old style .taper() calls get emulated correctly and asserts
+        the correct warnings are issued.
+
+        This test should be removed once again after 0.9 has been released.
         """
         tr = Trace(np.ones(10))
 
-        tr1 = tr.copy().taper()
-        tr2 = tr.copy().taper("cosine", p=0.1)
+        # Call without any arguments.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper()
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("'Trace.taper()' is deprecated"
+                            in str(w[-1].message))
+
+        # Old call to set the cosine percentage.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr2 = tr.copy().taper("cosine", p=0.1)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
         self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper("hann")
+        # No max percentage given.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper("hann")
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("'Trace.taper(type='mytype')' is"
+                            in str(w[-1].message))
+
         tr2 = tr.copy().taper(max_percentage=None, type="hann")
         self.assertEqual(tr1, tr2)
+
         tr2 = tr.copy().taper(None, type="hann")
         self.assertEqual(tr1, tr2)
-        tr2 = tr.copy().taper(type="hann", max_percentage=None)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper(type="cosine", p=0.2)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
+        tr2 = tr.copy().taper(max_percentage=0.1, type="cosine")
         self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper(type="cosine", p=0.2)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-        self.assertEqual(tr1, tr2)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper(type="cosine", p=1.0)
 
-        tr1 = tr.copy().taper(type="cosine", p=1.0)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
+        tr2 = tr.copy().taper(max_percentage=0.5, type="cosine")
+
         # processing info is different for this case
         tr1.stats.pop("processing")
         tr2.stats.pop("processing")
