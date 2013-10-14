@@ -1901,7 +1901,7 @@ class StreamTestCase(unittest.TestCase):
         data = np.ones(10)
         tr = Trace(data=data.copy())
         st = Stream([tr, tr])
-        st.taper()
+        st.taper(max_percentage=0.05, type="hann")
         for i in range(len(data)):
             self.assertTrue(st[0].data[i] <= 1.)
             self.assertTrue(st[0].data[i] >= 0.)
@@ -1991,7 +1991,7 @@ class StreamTestCase(unittest.TestCase):
             .merge()\
             .cutout(st[0].stats.starttime + 2, st[0].stats.starttime + 2)\
             .detrend()\
-            .taper()\
+            .taper(max_percentage=0.05)\
             .normalize()\
             .verify()\
             .trigger(type="zdetect", nsta=20)\
