@@ -471,11 +471,13 @@ class ImageComparison(NamedTemporaryFile):
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 
     The class should be used with Python's "with" statement. When setting up,
-    the matplotlib rcdefaults are set to ensure consistent image testing. After
-    the plotting is completed, the .compare() method can be used to return the
-    message string from :func:`matplotlib.testing.compare.compare_images`
-    comparing against the previously specified baseline image. At the end of
-    the "with" block all temporary files are deleted.
+    the matplotlib rcdefaults are set to ensure consistent image testing.
+    After the plotting is completed, the :meth:`ImageComparison.compare`
+    method is called automatically at the end of the "with" block, comparing
+    against the previously specified baseline image. This raises an exception
+    (if the test fails) with the message string from
+    :func:`matplotlib.testing.compare.compare_images`. Afterwards all
+    temporary files are deleted automatically.
 
     .. note::
         If images created during the testrun should be kept after the test, set
@@ -493,8 +495,7 @@ class ImageComparison(NamedTemporaryFile):
     >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
     ...     st = read()  # doctest: +SKIP
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
-    ...     # compare images (inside unit test use self.assert(...))
-    ...     assert(not ic.compare())  # doctest: +SKIP
+    ...     # image is compared against baseline image automatically
     """
     def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]
