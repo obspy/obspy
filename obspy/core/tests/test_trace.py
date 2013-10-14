@@ -1409,7 +1409,6 @@ class TraceTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
             tr1 = tr.copy().taper("hann")
-
             self.assertEqual(len(w), 1)
             self.assertTrue(w[-1].category, DeprecationWarning)
             self.assertTrue("'Trace.taper(type='mytype')' is"
