@@ -1786,10 +1786,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
-        msg = ("From the next major release onward the default behavior when "
-               "calling Trace.taper() without arguments will be a Hanning "
-               "window of 5% on each side.")
-        warnings.warn(msg, category=DeprecationWarning)
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
