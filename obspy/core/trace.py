@@ -1712,7 +1712,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             further details.
         :type max_percentage: None, float
         :param max_percentage: Decimal percentage of taper at one end (ranging
-            from 0. to 0.5). Default is 0.05 (5%).
+            from 0. to 0.5). Default is 0.05 (5%) - applied if set to None.
         :type max_length: None, float
         :param max_length: Length of taper at one end in seconds.
         :type side: str
@@ -1786,10 +1786,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         ``'triang'``
             Triangular window. (uses: :func:`scipy.signal.triang`)
         """
-        msg = ("From the next major release onward the default behavior when "
-               "calling Trace.taper() without arguments will be a Hanning "
-               "window of 5% on each side.")
-        warnings.warn(msg, category=DeprecationWarning)
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
@@ -1798,20 +1794,28 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
-        # store all constraints for maximum taper length
-        max_half_lenghts = []
+
+        # Store all constraints on the maximum taper length
+        max_half_lengths = []
         if max_percentage is not None:
-            max_half_lenghts.append(int(max_percentage * npts))
+            max_half_lengths.append(int(max_percentage * npts))
         if max_length is not None:
-            max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
-        if np.all([2 * mhl > npts for mhl in max_half_lenghts]):
+            max_half_lengths.append(int(max_length * self.stats.sampling_rate))
+        if max_half_lengths and \
+                all([(2 * mhl) > npts for mhl in max_half_lengths]):
             msg = "The requested taper is longer than the trace. " \
                   "The taper will be shortened to trace length."
             warnings.warn(msg)
         # add full trace length to constraints
-        max_half_lenghts.append(int(npts / 2))
+        max_half_lengths.append(int(npts / 2))
+
+       # Effectively set the default value.
+        if max_percentage is None and max_length is None:
+            max_half_lengths.append(int(0.05 * npts))
+
         # select shortest acceptable window half-length
-        wlen = min(max_half_lenghts)
+        wlen = min(max_half_lengths)
+
         # obspy.signal.cosTaper has a default value for taper percentage,
         # we need to override is as we control percentage completely via npts
         # of taper function and insert ones in the middle afterwards

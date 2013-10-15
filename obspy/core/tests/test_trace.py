@@ -8,6 +8,7 @@ from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -1154,7 +1155,7 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(10)
         tr = Trace(data=data)
-        tr.taper()
+        tr.taper(0.05, type="cosine")
         for i in range(len(data)):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
@@ -1165,13 +1166,13 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="left", max_percentage=None)
+        tr.taper(max_percentage=0.5, side="left")
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertTrue(tr.data[6:].sum() == 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="right", max_percentage=None)
+        tr.taper(max_percentage=0.5, side="right")
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
@@ -1180,26 +1181,34 @@ class TraceTestCase(unittest.TestCase):
         type_ = "hann"
 
         data = np.ones(npts)
-        tr = Trace(data=data, header={'sampling': 1.})
-        # test an overlong taper request, should still work
-        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+        tr = Trace(data=data, header={'sampling_rate': 1.0})
+        # test an overlong taper request, should still work but raise a
+        # warning.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("taper is longer" in str(w[-1].message))
 
         data = np.ones(npts)
-        tr = Trace(data=data, header={'sampling': 1.})
+        tr = Trace(data=data, header={'sampling_rate': 1.0})
         # first 3 samples get tapered
-        tr.taper(type=type_, side="left", max_percentage=None, max_length=3)
+        tr.taper(max_percentage=0.5, type=type_, side="left", max_length=3)
         # last 5 samples get tapered
-        tr.taper(type=type_, side="right", max_percentage=0.5, max_length=None)
+        tr.taper(max_percentage=0.5, type=type_, side="right", max_length=None)
+
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:6] == 1.))
         self.assertTrue(np.all(tr.data[6:] < 1.))
 
         data = np.ones(npts)
-        tr = Trace(data=data, header={'sampling': 1.})
+        tr = Trace(data=data, header={'sampling_rate': 1.0})
         # first 3 samples get tapered
-        tr.taper(type=type_, side="left", max_percentage=0.5, max_length=3)
+        tr.taper(max_percentage=0.5, type=type_, side="left", max_length=3)
         # last 3 samples get tapered
-        tr.taper(type=type_, side="right", max_percentage=0.3, max_length=5)
+        tr.taper(max_percentage=0.3, type=type_, side="right", max_length=5)
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:8] == 1.))
         self.assertTrue(np.all(tr.data[8:] < 1.))
@@ -1346,7 +1355,7 @@ class TraceTestCase(unittest.TestCase):
             .differentiate()\
             .integrate()\
             .detrend()\
-            .taper()\
+            .taper(0.05, type="hann")\
             .normalize()
         self.assertTrue(temp_tr is tr)
         self.assertTrue(isinstance(tr, Trace))
@@ -1368,28 +1377,70 @@ class TraceTestCase(unittest.TestCase):
 
     def test_taper_backwards_compatibility(self):
         """
-        Test that old style .taper() calls get emulated correctly.
+        Test that old style .taper() calls get emulated correctly and asserts
+        the correct warnings are issued.
+
+        This test should be removed once again after 0.9 has been released.
         """
         tr = Trace(np.ones(10))
 
-        tr1 = tr.copy().taper()
-        tr2 = tr.copy().taper("cosine", p=0.1)
+        # Call without any arguments.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper()
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("'Trace.taper()' is deprecated"
+                            in str(w[-1].message))
+
+        # Old call to set the cosine percentage.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr2 = tr.copy().taper("cosine", p=0.1)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
         self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper("hann")
+        # No max percentage given.
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper("hann")
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("'Trace.taper(type='mytype')' is"
+                            in str(w[-1].message))
+
         tr2 = tr.copy().taper(max_percentage=None, type="hann")
         self.assertEqual(tr1, tr2)
+
         tr2 = tr.copy().taper(None, type="hann")
         self.assertEqual(tr1, tr2)
-        tr2 = tr.copy().taper(type="hann", max_percentage=None)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper(type="cosine", p=0.2)
+
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
+        tr2 = tr.copy().taper(max_percentage=0.1, type="cosine")
         self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper(type="cosine", p=0.2)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-        self.assertEqual(tr1, tr2)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            tr1 = tr.copy().taper(type="cosine", p=1.0)
 
-        tr1 = tr.copy().taper(type="cosine", p=1.0)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+            self.assertEqual(len(w), 1)
+            self.assertTrue(w[-1].category, DeprecationWarning)
+            self.assertTrue("are deprecated" in str(w[-1].message))
+
+        tr2 = tr.copy().taper(max_percentage=0.5, type="cosine")
+
         # processing info is different for this case
         tr1.stats.pop("processing")
         tr2.stats.pop("processing")

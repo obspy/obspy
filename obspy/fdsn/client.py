@@ -12,7 +12,7 @@ FDSN Web service client for ObsPy.
 from io import BytesIO
 from lxml import etree
 import obspy
-from obspy import UTCDateTime
+from obspy import UTCDateTime  # NOQA
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
