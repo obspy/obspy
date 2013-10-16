@@ -189,7 +189,7 @@ class XMLParser:
         if element is None:
             element = self.xml_root
         try:
-            element = element.getchildren()[0]
+            element = element[0]
         except:
             return None
         return self._getElementNamespace(element)
