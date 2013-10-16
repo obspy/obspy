@@ -8,6 +8,7 @@ from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -1154,7 +1155,7 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(10)
         tr = Trace(data=data)
-        tr.taper()
+        tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
@@ -1165,13 +1166,13 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="left", max_percentage=None)
+        tr.taper(max_percentage=None, side="left")
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertTrue(tr.data[6:].sum() == 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="right", max_percentage=None)
+        tr.taper(max_percentage=None, side="right")
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
 
@@ -1187,9 +1188,9 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
         # first 3 samples get tapered
-        tr.taper(type=type_, side="left", max_percentage=None, max_length=3)
+        tr.taper(max_percentage=None, type=type_, side="left", max_length=3)
         # last 5 samples get tapered
-        tr.taper(type=type_, side="right", max_percentage=0.5, max_length=None)
+        tr.taper(max_percentage=0.5, type=type_, side="right", max_length=None)
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:6] == 1.))
         self.assertTrue(np.all(tr.data[6:] < 1.))
@@ -1197,9 +1198,9 @@ class TraceTestCase(unittest.TestCase):
         data = np.ones(npts)
         tr = Trace(data=data, header={'sampling': 1.})
         # first 3 samples get tapered
-        tr.taper(type=type_, side="left", max_percentage=0.5, max_length=3)
+        tr.taper(max_percentage=0.5, type=type_, side="left", max_length=3)
         # last 3 samples get tapered
-        tr.taper(type=type_, side="right", max_percentage=0.3, max_length=5)
+        tr.taper(max_percentage=0.3, type=type_, side="right", max_length=5)
         self.assertTrue(np.all(tr.data[:3] < 1.))
         self.assertTrue(np.all(tr.data[3:8] == 1.))
         self.assertTrue(np.all(tr.data[8:] < 1.))
@@ -1346,7 +1347,7 @@ class TraceTestCase(unittest.TestCase):
             .differentiate()\
             .integrate()\
             .detrend()\
-            .taper()\
+            .taper(max_percentage=0.05, type='cosine')\
             .normalize()
         self.assertTrue(temp_tr is tr)
         self.assertTrue(isinstance(tr, Trace))
@@ -1370,35 +1371,37 @@ class TraceTestCase(unittest.TestCase):
         """
         Test that old style .taper() calls get emulated correctly.
         """
-        tr = Trace(np.ones(10))
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', DeprecationWarning)
+            tr = Trace(np.ones(10))
 
-        tr1 = tr.copy().taper()
-        tr2 = tr.copy().taper("cosine", p=0.1)
-        self.assertEqual(tr1, tr2)
+            tr1 = tr.copy().taper()
+            tr2 = tr.copy().taper("cosine", p=0.1)
+            self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper("hann")
-        tr2 = tr.copy().taper(max_percentage=None, type="hann")
-        self.assertEqual(tr1, tr2)
-        tr2 = tr.copy().taper(None, type="hann")
-        self.assertEqual(tr1, tr2)
-        tr2 = tr.copy().taper(type="hann", max_percentage=None)
-        self.assertEqual(tr1, tr2)
+            tr1 = tr.copy().taper("hann")
+            tr2 = tr.copy().taper(max_percentage=None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(type="hann", max_percentage=None)
+            self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper(type="cosine", p=0.2)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
-        self.assertEqual(tr1, tr2)
+            tr1 = tr.copy().taper(type="cosine", p=0.2)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
+            self.assertEqual(tr1, tr2)
 
-        tr1 = tr.copy().taper(type="cosine", p=1.0)
-        tr2 = tr.copy().taper(type="cosine", max_percentage=None)
-        # processing info is different for this case
-        tr1.stats.pop("processing")
-        tr2.stats.pop("processing")
-        self.assertEqual(tr1, tr2)
+            tr1 = tr.copy().taper(type="cosine", p=1.0)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+            # processing info is different for this case
+            tr1.stats.pop("processing")
+            tr2.stats.pop("processing")
+            self.assertEqual(tr1, tr2)
 
-        self.assertRaises(tr.copy().taper, type="hann", p=0.3)
+            self.assertRaises(tr.copy().taper, type="hann", p=0.3)
 
-        tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
-        self.assertTrue(np.all(tr1.data[6:] < 1))
+            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
+            self.assertTrue(np.all(tr1.data[6:] < 1))
 
 
 def suite():
