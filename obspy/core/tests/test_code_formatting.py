@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 
+from obspy.core.util.decorator import skipIf
+from obspy.core.util.misc import get_untracked_files_from_git
 import fnmatch
 import inspect
 import os
 import unittest
-from obspy.core.util.misc import get_untracked_files_from_git
 
 EXCLUDE_FILES = [
     "*/__init__.py",
@@ -19,14 +20,12 @@ else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
 
-if not HAS_FLAKE8:
-    raise unittest.SkipTest('flake8 is required for this test suite')
-
 
 class CodeFormattingTestCase(unittest.TestCase):
     """
     Test codebase for compliance with the flake8 tool.
     """
+    @skipIf(not HAS_FLAKE8, 'flake8 is required for this test suite')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.
