@@ -12,7 +12,6 @@ EXCLUDE_FILES = [
 
 try:
     import flake8
-    import flake8.main
 except ImportError:
     HAS_FLAKE8 = False
 else:
@@ -30,6 +29,7 @@ class CodeFormattingTestCase(unittest.TestCase):
         """
         if not HAS_FLAKE8:
             raise Exception('flake8 is required to check code formatting')
+        import flake8.main
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
         error_count = 0
