@@ -11,7 +11,8 @@ Module for handling ObsPy Stream objects.
 from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, getExampleFile
+from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
@@ -26,6 +27,7 @@ import urllib2
 import warnings
 
 
+@map_example_filename("pathname_or_url")
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
          **kwargs):
@@ -204,14 +206,6 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     kwargs['starttime'] = starttime
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
-    # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
-       pathname_or_url.startswith('/path/to/'):
-        try:
-            pathname_or_url = getExampleFile(pathname_or_url[9:])
-        except:
-            # otherwise just try to read the given /path/to folder
-            pass
     # create stream
     st = Stream()
     if pathname_or_url is None:
