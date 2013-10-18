@@ -301,8 +301,12 @@ def map_example_filename(arg_kwarg_name):
             if arg_kwarg_name in kwargs:
                 if isinstance(kwargs[arg_kwarg_name], basestring):
                     if kwargs[arg_kwarg_name].startswith(prefix):
-                        kwargs[arg_kwarg_name] = \
-                            getExampleFile(kwargs[arg_kwarg_name][9:])
+                        try:
+                            kwargs[arg_kwarg_name] = \
+                                getExampleFile(kwargs[arg_kwarg_name][9:])
+                        # file not found by getExampleFile:
+                        except IOError:
+                            pass
             # check args
             else:
                 try:
@@ -312,9 +316,13 @@ def map_example_filename(arg_kwarg_name):
                 else:
                     if isinstance(args[ind], basestring):
                         if args[ind].startswith(prefix):
-                            args = list(args)
-                            args[ind] = getExampleFile(args[ind][9:])
-                            args = tuple(args)
+                            try:
+                                args = list(args)
+                                args[ind] = getExampleFile(args[ind][9:])
+                                args = tuple(args)
+                            # file not found by getExampleFile:
+                            except IOError:
+                                pass
             return func(*args, **kwargs)
 
         new_func.__name__ = func.__name__
