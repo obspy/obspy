@@ -20,6 +20,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, \
     ResourceIdentifier, Amplitude
 from obspy.core.utcdatetime import UTCDateTime
+from obspy.core.util import getExampleFile
 from datetime import timedelta
 import os
 import StringIO
@@ -1053,19 +1054,22 @@ def readMchedr(filename):
     .. rubric:: Example
 
     >>> from obspy.core.event import readEvents
-    >>> cat = readEvents('/path/to/mchedr201201w.dat')
+    >>> cat = readEvents('/path/to/mchedr.dat')
     >>> print cat
-    343 Event(s) in Catalog:
-    2012-01-01T00:30:08.770000Z | +12.008, +143.487 | 5.1 Mb
-    2012-01-01T00:37:25.280000Z | +63.337, -147.516 | 3.0 ML
-    ...
-    2012-01-07T23:25:33.000000Z | +28.100,  +52.720 | 4.7 Mb
-    2012-01-07T23:52:30.150000Z | +35.592, +140.818 | 4.2 Mb
+    1 Event(s) in Catalog:
+    2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """
+    # if filename starts with /path/to/ try to search in examples
+    if isinstance(filename, basestring) and \
+       filename.startswith('/path/to/'):
+        try:
+            filename = getExampleFile(filename[9:])
+        except:
+            # otherwise just try to read the given /path/to folder
+            pass
     return Unpickler().load(filename)
 
 
 if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod(exclude_empty=True)
-    pass
+    import doctest
+    doctest.testmod(exclude_empty=True)

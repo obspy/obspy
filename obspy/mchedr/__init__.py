@@ -12,6 +12,5 @@ obspy.mchedr - NEIC PDE mchedr read support
 
 
 if __name__ == '__main__':
-    #import doctest
-    #doctest.testmod(exclude_empty=True)
-    pass
+    import doctest
+    doctest.testmod(exclude_empty=True)
