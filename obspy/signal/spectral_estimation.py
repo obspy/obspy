@@ -90,9 +90,6 @@ CDICT = {'red': ((0.0, 1.0, 1.0),
                   (1.0, 0.0, 0.0))}
 NOISE_MODEL_FILE = os.path.join(os.path.dirname(__file__),
                                 "data", "noise_models.npz")
-# do not change these variables, otherwise results may differ from PQLX!
-PPSD_LENGTH = 3600  # psds are calculated on 1h long segments
-PPSD_STRIDE = 1800  # psds are calculated overlapping, moving 0.5h ahead
 
 
 def psd(x, NFFT=256, Fs=2, detrend=detrend_none, window=window_hanning,
@@ -293,7 +290,8 @@ class PPSD():
     .. _`ObsPy Tutorial`: http://docs.obspy.org/tutorial/
     """
     def __init__(self, stats, paz=None, parser=None, skip_on_gaps=False,
-                 is_rotational_data=False, db_bins=[-200, -50, 0.5]):
+                 is_rotational_data=False, db_bins=(-200, -50, 1.),
+                 ppsd_length=3600., overlap=0.5):
         """
         Initialize the PPSD object setting all fixed information on the station
         that should not change afterwards to guarantee consistent spectral
@@ -328,19 +326,29 @@ class PPSD():
                 from a Dataless SEED volume)
         :type skip_on_gaps: Boolean (optional)
         :param skip_on_gaps: Determines whether time segments with gaps should
-                be skipped entirely. McNamara & Buland merge gappy
+                be skipped entirely. [McNamara2004]_ merge gappy
                 traces by filling with zeros. This results in a clearly
                 identifiable outlier psd line in the PPSD visualization. Select
                 `skip_on_gaps=True` for not filling gaps with zeros which might
-                result in some data segments shorter than 1 hour not used in
-                the PPSD.
+                result in some data segments shorter than `ppsd_length` not
+                used in the PPSD.
         :type is_rotational_data: Boolean (optional)
         :param is_rotational_data: If set to True adapt processing of data to
                 rotational data. See note for details.
-        :type db_bins: List of three ints/floats
+        :type db_bins: Tuple of three ints/floats
         :param db_bins: Specify the lower and upper boundary and the width of
                 the db bins. The bin width might get adjusted to fit  a number
                 of equally spaced bins in between the given boundaries.
+        :type ppsd_length: float (optional)
+        :param ppsd_length: Length of data segments passed to psd in seconds.
+                In the paper by [McNamara2004]_ a value of 3600 (1 hour) was
+                chosen. Longer segments increase the upper limit of analyzed
+                periods but decrease the number of analyzed segments.
+        :type overlap: float (optional)
+        :param overlap: Overlap of segments passed to psd. Overlap may take
+                values between 0 and 1 and is given as fraction of the length
+                of one segment, e.g. `ppsd_length=3600` and `overlap=0.5`
+                result in an overlap of 1800s of the segments.
         """
         # check if matplotlib is available, no official dependency for
         # obspy.signal
@@ -360,8 +368,10 @@ class PPSD():
         self.sampling_rate = stats.sampling_rate
         self.delta = 1.0 / self.sampling_rate
         self.is_rotational_data = is_rotational_data
-        # trace length for one hour piece
-        self.len = int(self.sampling_rate * PPSD_LENGTH)
+        self.ppsd_length = ppsd_length
+        self.overlap = overlap
+        # trace length for one segment
+        self.len = int(self.sampling_rate * ppsd_length)
         # set paz either from kwarg or try to get it from stats
         self.paz = paz
         self.parser = parser
@@ -372,8 +382,8 @@ class PPSD():
         # nfft is determined mimicing the fft setup in McNamara&Buland paper:
         # (they take 13 segments overlapping 75% and truncate to next lower
         #  power of 2)
-        #  - take number of points of whole ppsd segment (currently 1 hour)
-        self.nfft = PPSD_LENGTH * self.sampling_rate
+        #  - take number of points of whole ppsd segment (default 1 hour)
+        self.nfft = ppsd_length * self.sampling_rate
         #  - make 13 single segments overlapping by 75%
         #    (1 full segment length + 25% * 12 full segment lengths)
         self.nfft = self.nfft / 4.0
@@ -481,19 +491,32 @@ class PPSD():
     def __check_time_present(self, utcdatetime):
         """
         Checks if the given UTCDateTime is already part of the current PPSD
-        instance. That is, checks if from utcdatetime to utcdatetime plus 1
-        hour there is already data in the PPSD.
-        Returns True if adding an one hour piece starting at the given time
+        instance. That is, checks if from utcdatetime to utcdatetime plus
+        ppsd_length there is already data in the PPSD.
+        Returns True if adding ppsd_length starting at the given time
         would result in an overlap of the ppsd data base, False if it is OK to
         insert this piece of data.
         """
         index1 = bisect.bisect_left(self.times_used, utcdatetime)
         index2 = bisect.bisect_right(self.times_used,
-                                     utcdatetime + PPSD_LENGTH)
+                                     utcdatetime + self.ppsd_length)
         if index1 != index2:
             return True
         else:
             return False
+
+    def __check_ppsd_length(self):
+        """
+        Adds ppsd_length and overlap attributes if not existing.
+        This ensures compatibility with pickled objects without these
+        attributes.
+        """
+        try:
+            self.ppsd_length
+            self.overlap
+        except AttributeError:
+            self.ppsd_length = 3600.
+            self.overlap = 0.5
 
     def add(self, stream, verbose=False):
         """
@@ -508,6 +531,7 @@ class PPSD():
         :returns: True if appropriate data were found and the ppsd statistics
                 were changed, False otherwise.
         """
+        self.__check_ppsd_length()
         # return later if any changes were applied to the ppsd statistics
         changed = False
         # prepare the list of traces to go through
@@ -530,7 +554,7 @@ class PPSD():
                 continue
             t1 = tr.stats.starttime
             t2 = tr.stats.endtime
-            while t1 + PPSD_LENGTH <= t2:
+            while t1 + self.ppsd_length <= t2:
                 if self.__check_time_present(t1):
                     msg = "Already covered time spans detected (e.g. %s), " + \
                           "skipping these slices."
@@ -538,8 +562,8 @@ class PPSD():
                     warnings.warn(msg)
                 else:
                     # throw warnings if trace length is different
-                    # than one hour..!?!
-                    slice = tr.slice(t1, t1 + PPSD_LENGTH)
+                    # than ppsd_lenth..!?!
+                    slice = tr.slice(t1, t1 + self.ppsd_length)
                     # XXX not good, should be working in place somehow
                     # XXX how to do it with the padding, though?
                     success = self.__process(slice)
@@ -548,7 +572,7 @@ class PPSD():
                         if verbose:
                             print t1
                         changed = True
-                t1 += PPSD_STRIDE  # advance half an hour
+                t1 += (1 - self.overlap) * self.ppsd_length  # advance
 
             # enforce time limits, pad zeros if gaps
             #tr.trim(t, t+PPSD_LENGTH, pad=True)
@@ -556,7 +580,7 @@ class PPSD():
 
     def __process(self, tr):
         """
-        Processes a one-hour segment of data and adds the information to the
+        Processes a segment of data and adds the information to the
         PPSD histogram. If Trace is compatible (station, channel, ...) has to
         checked beforehand.
 
@@ -570,7 +594,7 @@ class PPSD():
             tr.data = tr.data[:-1]
         # one last check..
         if len(tr) != self.len:
-            msg = "Got an non-one-hour piece of data to process. Skipping"
+            msg = "Got a piece of data with wrong length. Skipping"
             warnings.warn(msg)
             print len(tr), self.len
             return False
@@ -764,7 +788,8 @@ class PPSD():
 
     def plot(self, filename=None, show_coverage=True, show_histogram=True,
              show_percentiles=False, percentiles=[0, 25, 50, 75, 100],
-             show_noise_models=True, grid=True, show=True):
+             show_noise_models=True, grid=True, show=True,
+             max_percentage=30, period_lim=(0.01, 179)):
         """
         Plot the 2D histogram of the current PPSD.
         If a filename is specified the plot is saved to this file, otherwise
@@ -788,6 +813,10 @@ class PPSD():
         :param grid: Enable/disable grid in histogram plot.
         :type show: bool (optional)
         :param show: Enable/disable immediately showing the plot.
+        :type max_percentage: float (optional)
+        :param max_percentage: Maximum percentage to adjust the colormap.
+        :type period_lim: tuple of 2 floats (optional)
+        :param period_lim: Period limits to show in histogram.
         """
         # check if any data has been added yet
         if self.hist_stack is None:
@@ -809,7 +838,7 @@ class PPSD():
             ppsd = ax.pcolor(X, Y, hist_stack.T, cmap=self.colormap)
             cb = plt.colorbar(ppsd, ax=ax)
             cb.set_label("[%]")
-            color_limits = (0, 30)
+            color_limits = (0, max_percentage)
             ppsd.set_clim(*color_limits)
             cb.set_clim(*color_limits)
             if grid:
@@ -832,7 +861,7 @@ class PPSD():
             ax.plot(model_periods, low_noise, '0.4', linewidth=2)
 
         ax.semilogx()
-        ax.set_xlim(0.01, 179)
+        ax.set_xlim(period_lim)
         ax.set_ylim(self.spec_bins[0], self.spec_bins[-1])
         ax.set_xlabel('Period [s]')
         ax.set_ylabel('Amplitude [dB]')
@@ -886,6 +915,7 @@ class PPSD():
         """
         Helper function to plot coverage into given axes.
         """
+        self.__check_ppsd_length()
         ax.figure
         ax.clear()
         ax.xaxis_date()
@@ -893,7 +923,8 @@ class PPSD():
 
         # plot data coverage
         starts = [date2num(t.datetime) for t in self.times_used]
-        ends = [date2num((t + PPSD_LENGTH).datetime) for t in self.times_used]
+        ends = [date2num((t + self.ppsd_length).datetime)
+                for t in self.times_used]
         for start, end in zip(starts, ends):
             ax.axvspan(start, end, 0, 0.7, alpha=0.5, lw=0)
         # plot data

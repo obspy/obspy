@@ -530,6 +530,16 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue(isinstance(result, basestring))
         self.assertTrue('<?xml' in result)
 
+    def test_issue623(self):
+        """
+        obspy.iris bulkdataselect only returns last trace in result
+        """
+        t1 = UTCDateTime("2011-03-11T06:31:30Z")
+        t2 = UTCDateTime("2011-03-11T06:48:00Z")
+        client = Client()
+        st = client.getWaveform("GE", "EIL", "", "BHZ", t1, t2)
+        self.assertEqual(len(st), 5)
+
 
 def suite():
     return unittest.makeSuite(ClientTestCase, 'test')

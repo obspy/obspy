@@ -35,7 +35,6 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.neic import Client
-    >>> from obspy import UTCDateTime
     >>> client = Client()
     >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
     >>> st = client.getWaveform("IU", "ANMO", "00", "BH?", t, t + 10)
@@ -101,7 +100,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.neic import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> t = UTCDateTime() - 5 * 3600  # 5 hours before now
         >>> st = client.getWaveform("IU", "ANMO", "0?", "BH?", t, t + 10)

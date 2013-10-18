@@ -416,12 +416,6 @@ class Parser(object):
                         continue
                     if sta is not None and blk.station_call_letters != sta:
                         continue
-                    if datetime is not None:
-                        if blk.start_effective_date > datetime:
-                            continue
-                        if blk.end_effective_date and \
-                           blk.end_effective_date < datetime:
-                            continue
                     station_flag = True
                     tmpb50 = blk
                 elif blk.id == 52 and station_flag:

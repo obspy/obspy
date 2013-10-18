@@ -20,6 +20,9 @@ import numpy as np
 import os
 import sys
 import tempfile
+import shutil
+import warnings
+from unittest import TestCase
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -27,7 +30,7 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink', 'neic']
+                   'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -48,11 +51,11 @@ class FILE(C.Structure):  # Never directly used
 c_file_p = C.POINTER(FILE)
 
 
-def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
+class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This function is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -62,42 +65,43 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     :param suffix: The temporary file name will end with that suffix. Defaults
         to ``'.tmp'``.
 
-    .. warning::
-        Caller is responsible for deleting the file when done with it.
-
     .. rubric:: Example
 
-    >>> ntf = NamedTemporaryFile()
-    >>> ntf._fileobj  # doctest: +ELLIPSIS
+    >>> with NamedTemporaryFile() as tf:
+    ...     tf._fileobj  # doctest: +ELLIPSIS
+    ...     tf.write("test")
+    ...     os.path.exists(tf.name)
     <open file '<fdopen>', mode 'w+b' at 0x...>
-    >>> ntf._fileobj.close()
-    >>> os.remove(ntf.name)
+    True
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
 
-    >>> filename = NamedTemporaryFile().name
-    >>> fh = open(filename, 'wb')
-    >>> fh.write("test")
-    >>> fh.close()
-    >>> os.remove(filename)
+    >>> with NamedTemporaryFile() as tf:
+    ...     filename = tf.name
+    ...     with open(filename, 'wb') as fh:
+    ...         fh.write("just a test")
+    ...     with open(filename, 'r') as fh:
+    ...         print fh.read()
+    just a test
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
     """
 
-    class NamedTemporaryFile(object):
+    def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
+        fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
+        self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-        def __init__(self, fd, fname):
-            self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
-            self.name = fname
+    def __getattr__(self, attr):
+        return getattr(self._fileobj, attr)
 
-        def __getattr__(self, attr):
-            return getattr(self._fileobj, attr)
+    def __enter__(self):
+        return self
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-            self.close()
-            os.remove(self.name)
-
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
-                                                suffix=suffix))
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        self.close()
+        os.remove(self.name)
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):
@@ -434,6 +438,171 @@ def getScriptDirName():
     """
     return os.path.abspath(os.path.dirname(inspect.getfile(
         inspect.currentframe())))
+
+
+def checkForMatplotlibCompareImages():
+    try:
+        # trying to stay inside 80 char line
+        import matplotlib.testing.compare as _compare
+        compare_images = _compare.compare_images  # NOQA
+    except:
+        return False
+    return True
+
+
+HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+
+
+class ImageComparisonException(TestCase.failureException):
+    pass
+
+
+class ImageComparison(NamedTemporaryFile):
+    """
+    Handles the comparison against a baseline image in an image test.
+
+    :type image_path: str
+    :param image_path: Path to directory where the baseline image is located
+    :type image_name: str
+    :param image_name: Filename (with suffix, without directory path) of the
+        baseline image
+    :type reltol: float (optional)
+    :param reltol: Multiplier that is applied to the default tolerance
+        value (i.e. 10 means a 10 times harder to pass test tolerance).
+
+    The class should be used with Python's "with" statement. When setting up,
+    the matplotlib rcdefaults are set to ensure consistent image testing.
+    After the plotting is completed, the :meth:`ImageComparison.compare`
+    method is called automatically at the end of the "with" block, comparing
+    against the previously specified baseline image. This raises an exception
+    (if the test fails) with the message string from
+    :func:`matplotlib.testing.compare.compare_images`. Afterwards all
+    temporary files are deleted automatically.
+
+    .. note::
+        If images created during the testrun should be kept after the test, set
+        environment variable `OBSPY_KEEP_IMAGES` to any value before executing
+        the test (e.g. with `$ OBSPY_KEEP_IMAGES= obspy-runtests` or `$
+        OBSPY_KEEP_IMAGES= python test_sometest.py`). For `obspy-runtests` the
+        option "--keep-images" can also be used instead of setting an
+        environment variable. Created images and diffs for failing tests are
+        then stored in a subfolder "testrun" under the baseline image's
+        directory.
+
+    .. rubric:: Example
+
+    >>> from obspy import read
+    >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
+    ...     st = read()  # doctest: +SKIP
+    ...     st.plot(outfile=ic.name)  # doctest: +SKIP
+    ...     # image is compared against baseline image automatically
+    """
+    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
+        self.suffix = "." + image_name.split(".")[-1]
+        super(ImageComparison, self).__init__(suffix=self.suffix, *args,
+                                              **kwargs)
+        self.image_name = image_name
+        self.baseline_image = os.path.join(image_path, image_name)
+        self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
+        self.output_path = os.path.join(image_path, "testrun")
+        self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
+        self.tol = get_matplotlib_defaul_tolerance() * reltol
+
+    def __enter__(self):
+        """
+        Set matplotlib defaults.
+        """
+        from matplotlib import get_backend, rcParams, rcdefaults
+        import locale
+
+        try:
+            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+        except:
+            try:
+                locale.setlocale(locale.LC_ALL,
+                                 str('English_United States.1252'))
+            except:
+                msg = "Could not set locale to English/United States. " + \
+                      "Some date-related tests may fail"
+                warnings.warn(msg)
+
+        if get_backend().upper() != 'AGG':
+            import matplotlib
+            try:
+                matplotlib.use('AGG', warn=False)
+            except TypeError:
+                msg = "Image comparison requires matplotlib backend 'AGG'"
+                warnings.warn(msg)
+
+        # set matplotlib builtin default settings for testing
+        rcdefaults()
+        rcParams['font.family'] = 'Bitstream Vera Sans'
+        rcParams['text.hinting'] = False
+        try:
+            rcParams['text.hinting_factor'] = 8
+        except KeyError:
+            warnings.warn("could not set rcParams['text.hinting_factor']")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        """
+        Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
+        environment variable is set.
+        """
+        try:
+            self.compare()
+        finally:
+            import matplotlib.pyplot as plt
+            self.close()
+            plt.close()
+            if self.keep_output:
+                self._copy_tempfiles()
+            os.remove(self.name)
+            if os.path.exists(self.diff_filename):
+                os.remove(self.diff_filename)
+
+    def compare(self, reltol=1):
+        """
+        Run :func:`matplotlib.testing.compare.compare_images` and raise an
+        unittest.TestCase.failureException with the message string given by
+        matplotlib if the comparison exceeds the allowed tolerance.
+        """
+        from matplotlib.testing.compare import compare_images
+        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
+        if msg:
+            raise ImageComparisonException(msg)
+
+    def _copy_tempfiles(self):
+        """
+        Copies created images from tempfiles to a subfolder of baseline images.
+        """
+        directory = self.output_path
+        if os.path.exists(directory) and not os.path.isdir(directory):
+            msg = "Could not keep output image, target directory exists:" + \
+                  directory
+            warnings.warn(msg)
+            return
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        if os.path.isfile(self.diff_filename):
+            diff_filename_new = \
+                "-failed-diff.".join(self.image_name.rsplit(".", 1))
+            shutil.copy(self.diff_filename, os.path.join(directory,
+                                                         diff_filename_new))
+        shutil.copy(self.name, os.path.join(directory, self.image_name))
+
+
+def get_matplotlib_defaul_tolerance():
+    """
+    The two test images ("ok", "fail") result in the following rms values:
+    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
+    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
+    """
+    version = getMatplotlibVersion()
+    if version < [1, 3, 0]:
+        return 2e-3
+    else:
+        return 1
 
 
 if __name__ == '__main__':

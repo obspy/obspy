@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<application xmlns="http://wadl.dev.java.net/2009/02" xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+	<resources base="http://comcat.cr.usgs.gov/fdsnws/event/1/">
+		<resource path="version">
+			<method id="version" name="GET">
+			<response status="200">
+				<representation mediaType="text/plain"/>
+			</response>
+			</method>
+		</resource>
+		<resource path="catalogs">
+			<method id="catalogs" name="GET">
+			<response status="200">
+				<representation mediaType="application/xml"/>
+			</response>
+			</method>
+		</resource>
+		<resource path="contributors">
+			<method id="contributors" name="GET">
+			<response status="200">
+				<representation mediaType="application/xml"/>
+			</response>
+			</method>
+		</resource>
+		<resource path="application.wadl">
+			<method id="application.wadl" name="GET">
+			<response status="200">
+				<representation mediaType="application/xml"/>
+			</response>
+			</method>
+		</resource>
+		<resource path="query">
+			<method id="query" name="GET">
+			<request>
+				<param name="starttime" style="query" type="xs:dateTime"/>
+				<param name="endtime" style="query" type="xs:dateTime"/>
+				<param name="updatedafter" style="query" type="xs:dateTime"/>
+				<param name="minlatitude" style="query" type="xs:double" default="-90"/>
+				<param name="maxlatitude" style="query" type="xs:double" default="90"/>
+				<param name="minlongitude" style="query" type="xs:double" default="-180"/>
+				<param name="minlongitude" style="query" type="xs:double" default="180"/>
+				<param name="latitude" style="query" type="xs:double" default="0"/>
+				<param name="longitude" style="query" type="xs:double" default="0"/>
+				<param name="minradius" style="query" type="xs:double" default="0"/>
+				<param name="maxradius" style="query" type="xs:double" default="180"/>
+				<param name="mindepth" style="query" type="xs:double"/>
+				<param name="maxdepth" style="query" type="xs:double"/>
+				<param name="minmagnitude" style="query" type="xs:double"/>
+				<param name="maxmagnitude" style="query" type="xs:double"/>
+				<param name="magnitudetype" style="query" type="xs:string"/>
+				<param name="includeallmagnitudes" style="query" type="xs:boolean"/>
+				<param name="includeallorigins" style="query" type="xs:boolean"/>
+				<param name="includearrivals" style="query" type="xs:boolean"/>
+				<param name="eventid" style="query" type="xs:string"/>
+				<param name="limit" style="query" type="xs:integer"/>
+				<param name="offset" style="query" type="xs:integer" default="1"/>
+				<param name="orderby" style="query" default="time">
+					<option value="time"/>
+					<option value="time-asc"/>
+					<option value="magnitude"/>
+					<option value="magnitude-asc"/>
+				</param>
+				<param name="contributor" style="query" type="xs:string"/>
+				<param name="catalog" style="query" type="xs:string"/>
+				<!-- extensions -->
+				<param name="format" style="query" default="quakeml">
+					<option value="quakeml" mediaType="application/xml"/>
+					<option value="csv" mediaType="text/csv"/>
+					<option value="geojson" mediaType="application/json"/>
+					<option value="kml" mediaType="application/vnd.google-earth.kml+xml"/>
+				</param>
+				<param name="callback" style="query" mediaType="text/javascript"/>
+				<param name="kmlcolorby" style="query" default="age">
+					<option value="age"/>
+					<option value="depth"/>
+				</param>
+				<param name="kmlanimated" style="query" type="xs:boolean" default="false"/>
+				<param name="eventtype" style="query" type="xs:string"/>
+				<param name="reviewstatus" style="query">
+					<option value="automatic"/>
+					<option value="reviewed"/>
+				</param>
+				<param name="minmmi" style="query" type="xs:double"/>
+				<param name="maxmmi" style="query" type="xs:double"/>
+				<param name="mincdi" style="query" type="xs:double"/>
+				<param name="maxcdi" style="query" type="xs:double"/>
+				<param name="minfelt" style="query" type="xs:integer"/>
+				<param name="alertlevel" style="query" default="*">
+					<option value="green"/>
+					<option value="yellow"/>
+					<option value="orange"/>
+					<option value="red"/>
+					<option value="*"/>
+				</param>
+				<param name="mingap" style="query" type="xs:double"/>
+				<param name="maxgap" style="query" type="xs:double"/>
+				<param name="minsig" style="query" type="xs:integer"/>
+				<param name="maxsig" style="query" type="xs:integer"/>
+				<param name="producttype" style="query">
+					<option value="moment-tensor"/>
+					<option value="focal-mechanism"/>
+					<option value="shakemap"/>
+					<option value="losspager"/>
+					<option value="dyfi"/>
+				</param>
+			</request>
+			<response status="200">
+				<representation mediaType="application/xml" element="q:quakeml"/>
+				<representation mediaType="text/csv"/>
+				<representation mediaType="application/vnd.google-earth.kml+xml"/>
+				<representation mediaType="text/javascript"/>
+				<representation mediaType="application/json"/>
+			</response>
+			</method>
+		</resource>
+	</resources>
+</application>

@@ -18,6 +18,20 @@ dev:
    * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
      the API documentation (#540)
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
+   * new options for Stream/Trace.taper() to control the length of the
+     tapering for all windowing functions and perform one-sided tapering
+   * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
+   * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
+     now be omitted, start time of each trace is used for response lookup then
+   * when using Stream/Trace.simulate(seedresp={...})) for parameter
+     "filename" instead of the path to a local file now also can be provided
+     either a file-like object with RESP information or an obspy.xseed.Parser
+     object (e.g. created reading a dataless SEED file).
+   * event.ResourceIdentifier objects are now initialized with a QuakeML
+     conform string by default, i.e. if no custom prefix is provided during
+     initialization.
+   * added a new test that asserts that the whole codebase is valid according
+     to the flake8 tool.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -25,10 +39,14 @@ dev:
    * obspy-indexer script uses from now on hash symbols (#) instead
      of pipe (|) for features because pipe has a special meaning on
      most operating systems
+ - obspy.fdsn:
+   * new client module to access servers based on the FDSN web service
+     definition (http://www.fdsn.org/webservices/)
  - obspy.imaging:
    * more options to customize day plots
    * obspy-scan: new option --print-gaps
    * added plotting of record sections
+   * automatic merging can be disabled for obspy-plot
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
@@ -37,6 +55,15 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
+   * add PPSD support for segments of arbitary length
+   * default bin width of PPSD is changed to 1dB. This is the value used by
+     McNamara and Buland 2004.
+   * fix a bug when using evalresp with RESP files with very short epochs.
+     see #631.
+   * for seisSim(seedresp={...})) for parameter "filename" instead of the
+     path to a local file now also can be provided either a file-like
+     object with RESP information or an obspy.xseed.Parser object
+     (e.g. created reading a dataless SEED file).
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose

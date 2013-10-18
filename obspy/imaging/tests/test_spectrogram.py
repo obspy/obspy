@@ -4,19 +4,16 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE, \
+    getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
 import unittest
 
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class SpectrogramTestCase(unittest.TestCase):
@@ -42,21 +39,18 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        with NamedTemporaryFile(suffix='.png') as tf:
-            spectrogram.spectrogram(st[0].data, log=True, outfile=tf.name,
+        with ImageComparison(self.path, 'spectogram_log.png') as ic:
+            spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            # compare images
-            expected_image = os.path.join(self.path, 'spectogram_log.png')
-            compare_images(tf.name, expected_image, 0.001)
         # 2 - using log=False
-        with NamedTemporaryFile(suffix='.png') as tf:
-            spectrogram.spectrogram(st[0].data, log=False, outfile=tf.name,
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 3, 0]:
+            reltol = 3
+        with ImageComparison(self.path, 'spectogram.png', reltol=reltol) as ic:
+            spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
-            # compare images
-            expected_image = os.path.join(self.path, 'spectogram.png')
-            compare_images(tf.name, expected_image, 0.001)
 
 
 def suite():

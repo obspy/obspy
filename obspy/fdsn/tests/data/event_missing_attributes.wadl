@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+    <doc title="FDSN station web service 1.0"/>
+    <grammars/>
+    <resources base="http://www.ncedc.org/fdsnws/event/1/">
+        <resource path="/">
+            <method name="GET" id="root">
+                <response>
+                    <representation mediaType="text/html"/>
+                </response>
+            </method>
+            <resource path="query">
+                <method name="GET" id="query">
+		    <request>
+		      <param name="starttime" style="query"/>
+		      <param name="endtime" style="query"/>
+		      <param name="minlatitude" style="query"/>
+		      <param name="maxlatitude" style="query"/>
+		      <param name="minlongitude" style="query"/>
+		      <param name="maxlongitude" style="query"/>
+		      <param name="latitude" style="query"/>
+		      <param name="longitude" style="query"/>
+		      <param name="minradius" style="query"/>
+		      <param name="maxradius" style="query"/>
+		      <param name="mindepth" style="query"/>
+		      <param name="maxdepth" style="query"/>
+		      <param name="minmagnitude" style="query"/>
+		      <param name="maxmagnitude" style="query"/>
+		      <param name="magnitudetype" style="query"/>
+		      <param name="includeallmagnitudes" style="query"/>
+		      <param name="includearrivals" style="query"/>
+		      <param name="includemechanisms" style="query"/>
+		      <param name="eventid" style="query"/>
+		      <param name="limit" style="query"/>
+		      <param name="offset" style="query"/>
+		      <param name="orderby" style="query"/>
+		      <param name="catalog" style="query"/>
+		      <param name="contributor" style="query"/>
+		    </request>
+                    <response>
+                      <representation mediaType="text/plain"/>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="catalogs">
+                <method name="GET" id="catalogs">
+                    <response>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="contributors">
+                <method name="GET" id="contributors">
+                    <response>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="version">
+                <method name="GET" id="version">
+                    <response>
+                      <representation mediaType="text/plain"/>
+                    </response>
+                </method>
+            </resource>
+            <resource path="application.wadl">
+                <method name="GET" id="application.wadl">
+                    <response>
+                      <representation mediaType="application/xml"/>
+                    </response>
+                </method>
+            </resource>
+        </resource>
+    </resources>
+</application>

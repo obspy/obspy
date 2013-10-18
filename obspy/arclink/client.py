@@ -1203,23 +1203,23 @@ class Client(object):
                 # instruments
                 for stream in station.xpath('ns:' + stream_ns,
                                             namespaces={'ns': xml_ns}):
-                    # date / times
-                    try:
-                        start = UTCDateTime(stream.get('start'))
-                    except:
-                        start = None
-                    try:
-                        end = UTCDateTime(stream.get('end'))
-                    except:
-                        end = None
-                    # check date/time boundaries
-                    if start > endtime:
-                        continue
-                    if end and starttime > end:
-                        continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
                                              namespaces={'ns': xml_ns}):
+                        # date / times
+                        try:
+                            start = UTCDateTime(comp.get('start'))
+                        except:
+                            start = None
+                        try:
+                            end = UTCDateTime(comp.get('end'))
+                        except:
+                            end = None
+                        # check date/time boundaries
+                        if start > endtime:
+                            continue
+                        if end and starttime > end:
+                            continue
                         if xml_ns == _INVENTORY_NS_0_2:
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:

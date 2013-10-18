@@ -99,7 +99,6 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()

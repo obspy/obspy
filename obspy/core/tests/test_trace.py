@@ -3,9 +3,15 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+import warnings
+
+
+MATPLOTLIB_VERSION = getMatplotlibVersion()
 
 
 class TraceTestCase(unittest.TestCase):
@@ -1149,10 +1155,55 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(10)
         tr = Trace(data=data)
-        tr.taper()
+        tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
+
+    def test_taper_onesided(self):
+        """
+        Test onesided taper method of trace
+        """
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(max_percentage=None, side="left")
+        self.assertTrue(tr.data[:5].sum() < 5.)
+        self.assertTrue(tr.data[6:].sum() == 5.)
+
+        data = np.ones(11)
+        tr = Trace(data=data)
+        tr.taper(max_percentage=None, side="right")
+        self.assertTrue(tr.data[:5].sum() == 5.)
+        self.assertTrue(tr.data[6:].sum() < 5.)
+
+    def test_taper_length(self):
+        npts = 11
+        type_ = "hann"
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # test an overlong taper request, should still work
+        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(max_percentage=None, type=type_, side="left", max_length=3)
+        # last 5 samples get tapered
+        tr.taper(max_percentage=0.5, type=type_, side="right", max_length=None)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:6] == 1.))
+        self.assertTrue(np.all(tr.data[6:] < 1.))
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(max_percentage=0.5, type=type_, side="left", max_length=3)
+        # last 3 samples get tapered
+        tr.taper(max_percentage=0.3, type=type_, side="right", max_length=5)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:8] == 1.))
+        self.assertTrue(np.all(tr.data[8:] < 1.))
 
     def test_times(self):
         """
@@ -1188,25 +1239,19 @@ class TraceTestCase(unittest.TestCase):
         self.assertEqual(len(st), 1)
         self.assertFalse(tr.data is st[0].data)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_plot(self):
         """
         Tests plot method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.plot(show=False)
 
+    @skipIf(not MATPLOTLIB_VERSION, 'matplotlib is not installed')
     def test_spectrogram(self):
         """
         Tests spectrogram method if matplotlib is installed
         """
-        try:
-            import matplotlib  # @UnusedImport
-        except ImportError:
-            return
         tr = Trace(data=np.arange(25))
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
@@ -1277,6 +1322,86 @@ class TraceTestCase(unittest.TestCase):
                 endtime=tr.stats.endtime, pad=True, fill_value=-999)
         self.assertEquals(len(tr), 3000)
         self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+
+    def test_method_chaining(self):
+        """
+        Tests that method chaining works for all methods on the Trace object
+        where it is sensible.
+        """
+        # This essentially just checks that the methods are chainable. The
+        # methods are tested elsewhere and a full test would be a lot of work
+        # with questionable return.
+        tr = read()[0]
+        temp_tr = tr.trim(tr.stats.starttime + 1)\
+            .verify()\
+            .filter("lowpass", freq=2.0)\
+            .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
+                                            - 0.037004 - 0.037016j,
+                                            - 251.33 + 0j],
+                                  'zeros': [0j, 0j],
+                                  'gain': 60077000.0,
+                                  'sensitivity': 2516778400.0})\
+            .trigger(type="zdetect", nsta=20)\
+            .decimate(factor=2, no_filter=True)\
+            .resample(tr.stats.sampling_rate / 2.0)\
+            .differentiate()\
+            .integrate()\
+            .detrend()\
+            .taper(max_percentage=0.05, type='cosine')\
+            .normalize()
+        self.assertTrue(temp_tr is tr)
+        self.assertTrue(isinstance(tr, Trace))
+        self.assertTrue(tr.stats.npts > 0)
+
+        # Use the processing chain to check the results. The trim() methods
+        # does not have an entry in the processing chain.
+        pr = tr.stats.processing
+        self.assertTrue(pr[0].startswith("filter:lowpass"))
+        self.assertTrue(pr[1].startswith("simulate"))
+        self.assertTrue(pr[2].startswith("trigger"))
+        self.assertTrue(pr[3].startswith("downsample"))
+        self.assertTrue(pr[4].startswith("resample"))
+        self.assertTrue(pr[5].startswith("differentiate"))
+        self.assertTrue(pr[6].startswith("integrate"))
+        self.assertTrue(pr[7].startswith("detrend"))
+        self.assertTrue(pr[8].startswith("taper"))
+        self.assertTrue(pr[9].startswith("normalize"))
+
+    def test_taper_backwards_compatibility(self):
+        """
+        Test that old style .taper() calls get emulated correctly.
+        """
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', DeprecationWarning)
+            tr = Trace(np.ones(10))
+
+            tr1 = tr.copy().taper()
+            tr2 = tr.copy().taper("cosine", p=0.1)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper("hann")
+            tr2 = tr.copy().taper(max_percentage=None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(type="hann", max_percentage=None)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper(type="cosine", p=0.2)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper(type="cosine", p=1.0)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+            # processing info is different for this case
+            tr1.stats.pop("processing")
+            tr2.stats.pop("processing")
+            self.assertEqual(tr1, tr2)
+
+            self.assertRaises(tr.copy().taper, type="hann", p=0.3)
+
+            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
+            self.assertTrue(np.all(tr1.data[6:] < 1))
 
 
 def suite():

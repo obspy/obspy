@@ -180,6 +180,7 @@ class WaveformPlotting(object):
         # be dependent on your matplotlib backend.
         self.format = kwargs.get('format')
         self.show = kwargs.get('show', True)
+        self.draw = kwargs.get('draw', True)
         self.block = kwargs.get('block', True)
         # plot parameters options
         self.x_labels_size = kwargs.get('x_labels_size', 8)
@@ -259,7 +260,8 @@ class WaveformPlotting(object):
             fract_x = 80.0 / self.width
             self.fig.subplots_adjust(top=1.0 - fract_y, bottom=fract_y2,
                                      left=fract_x, right=1.0 - fract_x / 2)
-        self.fig.canvas.draw()
+        if self.draw:
+            self.fig.canvas.draw()
         # The following just serves as a unified way of saving and displaying
         # the plots.
         if not self.transparent:
@@ -357,6 +359,8 @@ class WaveformPlotting(object):
                 ((self.endtime - self.starttime) * sampling_rate >
                  self.max_npts):
                 self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
+            elif self.plotting_method.lower() == 'fast':
+                self.__plotMinMax(stream_new[_i], ax, *args, **kwargs)
             else:
                 self.__plotStraight(stream_new[_i], ax, *args, **kwargs)
         # Set ticks.
@@ -441,7 +445,8 @@ class WaveformPlotting(object):
                               linewidth=self.grid_linewidth)
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
-        self.fig.suptitle(self.title, fontsize=self.title_size)
+        if self.title is not None:
+            self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
         # Potentially download some events with the help of obspy.neries.

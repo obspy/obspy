@@ -11,6 +11,7 @@ IRIS Web service client for ObsPy.
 from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
 from obspy.core.util import NamedTemporaryFile, BAND_CODE, loadtxt
+from obspy.core.util.decorator import deprecated
 from urllib2 import HTTPError
 import StringIO
 import json
@@ -26,6 +27,13 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
+DEPR_WARN = ("This service will be shut down on the server side in december "
+             "2013, please use %s instead. Further information: "
+             "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
+             "new-fdsn-web-services-and-retirement-of-deprecated-services/")
+DEPR_WARNS = {}
+for new in ["get_waveform", "get_events", "get_stations", "get_waveform_bulk"]:
+    DEPR_WARNS[new] = DEPR_WARN % "obspy.fdsn.client.Client.%s" % new
 
 
 class Client(object):
@@ -150,6 +158,7 @@ class Client(object):
             if file_opened is True:
                 fh.close()
 
+    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, quality='B'):
         """
@@ -223,7 +232,6 @@ class Client(object):
         kwargs['endtime'] = UTCDateTime(endtime) + t_extension
         if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
             kwargs['quality'] = str(quality).upper()
-
         # single channel request, go via `dataselect` Web service
         if all([val.isalnum() for val in (kwargs['network'],
                                           kwargs['station'],
@@ -239,6 +247,7 @@ class Client(object):
         st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
         return st
 
+    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def saveWaveform(self, filename, network, station, location, channel,
                      starttime, endtime, quality='B'):
         """
@@ -306,6 +315,7 @@ class Client(object):
             kwargs['quality'] = str(quality).upper()
         self.dataselect(**kwargs)
 
+    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='RESP'):
         """
@@ -357,6 +367,7 @@ class Client(object):
             raise ValueError("Unsupported format %s" % format)
         return self._toFileOrData(filename, data)
 
+    @deprecated(warning_msg=DEPR_WARNS['get_events'])
     def getEvents(self, format='catalog', **kwargs):
         """
         Retrieves event data from IRIS.
@@ -811,6 +822,7 @@ class Client(object):
             raise Exception(msg)
         return self._toFileOrData(filename, data)
 
+    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def station(self, network, station, location="*", channel="*",
                 starttime=None, endtime=None, level='sta', filename=None,
                 **kwargs):
@@ -989,6 +1001,7 @@ class Client(object):
             raise Exception(msg)
         return self._toFileOrData(filename, data)
 
+    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def dataselect(self, network, station, location, channel,
                    starttime, endtime, quality='B', filename=None, **kwargs):
         """
@@ -1069,8 +1082,9 @@ class Client(object):
                 stream = Stream()
         return stream
 
+    @deprecated(warning_msg=DEPR_WARNS['get_waveform_bulk'])
     def bulkdataselect(self, bulk, quality=None, filename=None,
-                       minimumlength=None, longestonly=True):
+                       minimumlength=None, longestonly=False):
         """
         Low-level interface for `bulkdataselect` Web service of IRIS
         (http://www.iris.edu/ws/bulkdataselect/) - release 1.4.5 (2012-05-03).
@@ -1114,7 +1128,6 @@ class Client(object):
         .. rubric:: Example
 
         >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
         >>> client = Client()
         >>> req = []
         >>> req.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")
@@ -1165,6 +1178,7 @@ class Client(object):
                 stream = Stream()
         return stream
 
+    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def availability(self, network="*", station="*", location="*",
                      channel="*", starttime=UTCDateTime() - (60 * 60 * 24 * 7),
                      endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
@@ -1889,6 +1903,7 @@ class Client(object):
             else:
                 return self._toFileOrData(filename, data)
 
+    @deprecated(warning_msg=DEPR_WARNS['get_events'])
     def event(self, filename=None, **kwargs):
         """
         Low-level interface for `event` Web service of IRIS
