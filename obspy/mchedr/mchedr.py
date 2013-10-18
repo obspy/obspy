@@ -229,6 +229,7 @@ class Unpickler(object):
             number = int(number)
         if self.FE_regions is None:
             FE_filename = os.path.join(os.path.dirname(__file__),
+                                       'data',
                                        'Flinn-Engdahl.csv')
             with open(FE_filename, 'rb') as csvfile:
                 FE_csv = csv.reader(csvfile, delimiter=';',
