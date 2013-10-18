@@ -314,7 +314,8 @@ def map_example_filename(arg_kwarg_name):
                 except ValueError:
                     pass
                 else:
-                    if isinstance(args[ind], basestring):
+                    # need to check length of args from inspect
+                    if ind < len(args) and isinstance(args[ind], basestring):
                         if args[ind].startswith(prefix):
                             try:
                                 args = list(args)
