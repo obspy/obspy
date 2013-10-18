@@ -1,5 +1,5 @@
-.. currentmodule:: obspy.mchedr
-.. automodule:: obspy.mchedr
+.. currentmodule:: obspy.pde
+.. automodule:: obspy.pde
 
     .. comment to end block
 

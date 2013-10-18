@@ -46,8 +46,8 @@ The functionality is provided through the following packages:
    obspy.earthworm
    obspy.fdsn
    obspy.iris
-   obspy.mchedr
    obspy.neic
    obspy.neries
+   obspy.pde
    obspy.seedlink
    obspy.seishub

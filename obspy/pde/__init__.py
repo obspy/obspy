@@ -1,10 +1,12 @@
 """
-obspy.mchedr - NEIC PDE mchedr read support
-===========================================
+obspy.pde - NEIC PDE Bulletin read support for ObsPy
+====================================================
 
-NEIC PDE mchedr (machine-readable Earthquake Data Report) read support.
+This module provides read support for NEIC Preliminary Determination of
+Epicenters (PDE) Bulletin.
 
-Only supports file format revision of February 24, 2004.
+Currently, only the mchedr (machine readable Earthquake Data Report)
+format is supported.
 
 .. seealso:: http://earthquake.usgs.gov/research/data/pde.php
 

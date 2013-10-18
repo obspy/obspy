@@ -4,7 +4,7 @@ import unittest
 from obspy.core.util import add_doctests, add_unittests
 
 
-MODULE_NAME = "obspy.mchedr"
+MODULE_NAME = "obspy.pde"
 
 
 def suite():

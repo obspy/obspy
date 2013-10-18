@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core.event import ResourceIdentifier, readEvents
-from obspy.mchedr.mchedr import readMchedr
+from obspy.pde.mchedr import readMchedr
 from obspy.core.quakeml import readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
