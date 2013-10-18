@@ -5,7 +5,6 @@ from obspy.mchedr.mchedr import readMchedr
 from obspy.core.quakeml import readQuakeML, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
-import StringIO
 import os
 import unittest
 import warnings
@@ -84,7 +83,9 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.  ')
         self.assertEqual(len(catalog[0].origins), 4)
         origin = catalog[0].origins[0]
         self.assertEqual(origin.type, 'hypocenter')
-        self.assertEqual(origin.time, UTCDateTime(2012, 1, 1, 5, 27, 55, 980000))
+        self.assertEqual(
+            origin.time,
+            UTCDateTime(2012, 1, 1, 5, 27, 55, 980000))
         self.assertEqual(origin.latitude, 31.456)
         self.assertEqual(origin.latitude_errors.uncertainty, 1.72)
         self.assertEqual(origin.longitude, 138.072)

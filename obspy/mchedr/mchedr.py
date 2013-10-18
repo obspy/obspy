@@ -109,7 +109,8 @@ class Unpickler(object):
         self.filename = filename
         if can_uncompress and filename.endswith('.Z'):
             self.tmpdir = mkdtemp()
-            patoolib.extract_archive(filename, verbosity=-1, outdir=self.tmpdir)
+            patoolib.extract_archive(filename, verbosity=-1,
+                                     outdir=self.tmpdir)
             filename = self.tmpdir + '/' + filename.rstrip('.Z')
         self.fh = open(filename, 'r')
         return self._deserialize()
@@ -135,12 +136,14 @@ class Unpickler(object):
 
     def _intUnused(self, string):
         val = self._int(string)
-        if val < 0: val = None
+        if val < 0:
+            val = None
         return val
 
     def _intZero(self, string):
         val = self._int(string)
-        if val is None: val = 0
+        if val is None:
+            val = 0
         return val
 
     def _float(self, string):
@@ -151,7 +154,8 @@ class Unpickler(object):
 
     def _floatUnused(self, string):
         val = self._float(string)
-        if val < 0: val = None
+        if val < 0:
+            val = None
         return val
 
     def _floatWithFormat(self, string, format_string, scale=1):
@@ -159,7 +163,7 @@ class Unpickler(object):
         nint = ndigits-ndec
         val = self._float(string[0:nint] + '.' + string[nint:nint+ndec])
         if val is not None:
-                val *= scale
+            val *= scale
         return val
 
     def _coordinateSign(self, type):
@@ -174,15 +178,24 @@ class Unpickler(object):
         and translates 'f' code to 'p'
         """
         #FIXME: is that correct?
-        if code == 'xx': return 'tt', 1
-        if code == 'yy': return 'pp', 1
-        if code == 'zz': return 'rr', 1
-        if code == 'xy': return 'tp', -1
-        if code == 'xz': return 'rt', 1
-        if code == 'yz': return 'rp', -1
-        if code == 'ff': return 'pp', 1
-        if code == 'rf': return 'rp', 1
-        if code == 'tf': return 'tp', 1
+        if code == 'xx':
+            return 'tt', 1
+        if code == 'yy':
+            return 'pp', 1
+        if code == 'zz':
+            return 'rr', 1
+        if code == 'xy':
+            return 'tp', -1
+        if code == 'xz':
+            return 'rt', 1
+        if code == 'yz':
+            return 'rp', -1
+        if code == 'ff':
+            return 'pp', 1
+        if code == 'rf':
+            return 'rp', 1
+        if code == 'tf':
+            return 'tp', 1
         return code, 1
 
     def _tensorStore(self, tensor, code, value, error):
@@ -220,7 +233,7 @@ class Unpickler(object):
                 FE_csv = csv.reader(csvfile, delimiter=';',
                                     quotechar='#', skipinitialspace=True)
                 self.FE_regions =\
-                        {int(row[0]): row[1] for row in FE_csv if len(row)>1}
+                    {int(row[0]): row[1] for row in FE_csv if len(row) > 1}
         return self.FE_regions[number]
 
     def _to_rad(self, degrees):
@@ -242,7 +255,8 @@ class Unpickler(object):
     def _angle_between(self, u1, u2):
         """
         Returns the angle in degrees between unit vectors 'u1' and 'u2':
-        Source: http://stackoverflow.com/questions/2827393/angles-between-two-n-dimensional-vectors-in-python
+        Source: http://stackoverflow.com/questions/2827393/
+                       angles-between-two-n-dimensional-vectors-in-python
         """
         angle = np.arccos(np.dot(u1, u2))
         if np.isnan(angle):
@@ -289,7 +303,8 @@ class Unpickler(object):
             origin.creation_info.agency_id = source_code
         else:
             origin.creation_info.agency_id = 'USGS-NEIC'
-        origin.earth_model_id = ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
+        origin.earth_model_id =\
+            ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
@@ -387,9 +402,9 @@ class Unpickler(object):
         semi_minor_axis_plunge = self._float(line[46:51])
         semi_minor_axis_length = self._float(line[51:59])
 
-        if semi_minor_axis_azimuth ==\
-           semi_minor_axis_plunge ==\
-           semi_minor_axis_length == 0:
+        if (semi_minor_axis_azimuth ==
+           semi_minor_axis_plunge ==
+           semi_minor_axis_length == 0):
             semi_minor_axis_azimuth = intermediate_axis_azimuth
             semi_minor_axis_plunge = intermediate_axis_plunge
             semi_minor_axis_length = intermediate_axis_length
@@ -397,31 +412,31 @@ class Unpickler(object):
 
         #FIXME: The following code needs to be double-checked!
         semi_major_axis_unit_vect =\
-                self._spherical_to_cartesian((
-                    1,
-                    semi_major_axis_azimuth,
-                    semi_major_axis_plunge
-                    ))
+            self._spherical_to_cartesian((
+                1,
+                semi_major_axis_azimuth,
+                semi_major_axis_plunge
+                ))
         semi_minor_axis_unit_vect =\
-                self._spherical_to_cartesian((
-                    1,
-                    semi_minor_axis_azimuth,
-                    semi_minor_axis_plunge
-                    ))
+            self._spherical_to_cartesian((
+                1,
+                semi_minor_axis_azimuth,
+                semi_minor_axis_plunge
+                ))
         major_axis_rotation = self._angle_between(
-                    semi_major_axis_unit_vect,
-                    semi_minor_axis_unit_vect
-                    )
+            semi_major_axis_unit_vect,
+            semi_minor_axis_unit_vect
+            )
 
         origin.origin_uncertainty = OriginUncertainty()
         origin.origin_uncertainty.preferred_description =\
-                'confidence ellipsoid'
+            'confidence ellipsoid'
         origin.origin_uncertainty.confidence_level = 90
         confidence_ellipsoid = ConfidenceEllipsoid()
         confidence_ellipsoid.semi_major_axis_length = semi_major_axis_length
         confidence_ellipsoid.semi_minor_axis_length = semi_minor_axis_length
         confidence_ellipsoid.semi_intermediate_axis_length =\
-                intermediate_axis_length
+            intermediate_axis_length
         confidence_ellipsoid.major_axis_plunge = semi_major_axis_plunge
         confidence_ellipsoid.major_axis_azimuth = semi_major_axis_azimuth
         confidence_ellipsoid.major_axis_rotation = major_axis_rotation
@@ -522,7 +537,7 @@ class Unpickler(object):
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo(
-                    agency_id=origin.creation_info.agency_id)
+                agency_id=origin.creation_info.agency_id)
             mag.mag = mag1
             mag.magnitude_type = mag1_type
             mag.origin_id = origin.resource_id
@@ -531,7 +546,7 @@ class Unpickler(object):
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier()
             mag.creation_info = CreationInfo(
-                    agency_id=origin.creation_info.agency_id)
+                agency_id=origin.creation_info.agency_id)
             mag.mag = mag2
             mag.magnitude_type = mag2_type
             mag.origin_id = origin.resource_id
@@ -551,7 +566,7 @@ class Unpickler(object):
             orig_time_stderr = 'Fixed'
         else:
             orig_time_stderr =\
-                 self._floatWithFormat(orig_time_stderr, '2.1', scale)
+                self._floatWithFormat(orig_time_stderr, '2.1', scale)
         centroid_latitude = self._floatWithFormat(line[17:21], '4.2')
         lat_type = line[21]
         if centroid_latitude is not None:
@@ -561,7 +576,7 @@ class Unpickler(object):
             lat_stderr = 'Fixed'
         else:
             lat_stderr =\
-                       self._floatWithFormat(lat_stderr, '3.2', scale)
+                self._floatWithFormat(lat_stderr, '3.2', scale)
         centroid_longitude = self._floatWithFormat(line[25:30], '5.2')
         lon_type = line[30]
         if centroid_longitude is not None:
@@ -571,14 +586,14 @@ class Unpickler(object):
             lon_stderr = 'Fixed'
         else:
             lon_stderr =\
-                       self._floatWithFormat(lon_stderr, '3.2', scale)
+                self._floatWithFormat(lon_stderr, '3.2', scale)
         centroid_depth = self._floatWithFormat(line[34:38], '4.1')
         depth_stderr = line[38:40]
         if depth_stderr == 'FX' or depth_stderr == 'BD':
             depth_stderr = 'Fixed'
         else:
             depth_stderr =\
-                     self._floatWithFormat(depth_stderr, '2.1', scale)
+                self._floatWithFormat(depth_stderr, '2.1', scale)
         station_number = self._intZero(line[40:43])
         component_number = self._intZero(line[43:46])
         station_number2 = self._intZero(line[46:48])
@@ -598,7 +613,7 @@ class Unpickler(object):
             origin = Origin()
             origin.resource_id = ResourceIdentifier()
             origin.creation_info =\
-                        CreationInfo(agency_id=source_contributor)
+                CreationInfo(agency_id=source_contributor)
             date = event.origins[0].time.strftime('%Y%m%d')
             origin.time = UTCDateTime(date+centroid_origin_time)
             #Check if centroid time is on the next day:
@@ -620,36 +635,36 @@ class Unpickler(object):
                 origin.depth_errors['uncertainty'] = depth_stderr
             quality = OriginQuality()
             quality.used_station_count =\
-                            station_number + station_number2
+                station_number + station_number2
             quality.used_phase_count =\
-                            component_number + component_number2
+                component_number + component_number2
             origin.quality = quality
             origin.type = 'centroid'
             event.origins.append(origin)
         focal_mechanism = FocalMechanism()
         focal_mechanism.resource_id = ResourceIdentifier()
         focal_mechanism.creation_info =\
-                        CreationInfo(agency_id=source_contributor)
+            CreationInfo(agency_id=source_contributor)
         moment_tensor = MomentTensor()
         if origin is not None:
             moment_tensor.derived_origin_id = origin.resource_id
         else:
             #this is required for QuakeML validation:
             moment_tensor.derived_origin_id =\
-                    ResourceIdentifier('smi:local/no-origin')
+                ResourceIdentifier('smi:local/no-origin')
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
                 moment_tensor.moment_magnitude_id = mag.resource_id
         moment_tensor.resource_id = ResourceIdentifier()
         moment_tensor.scalar_moment = moment
         moment_tensor.scalar_moment_errors['uncertainty'] =\
-                        moment_stderr
+            moment_stderr
         data_used = DataUsed()
         data_used.station_count = station_number + station_number2
         data_used.component_count = component_number + component_number2
         if computation_type == 'C':
             focal_mechanism.method_id =\
-                  ResourceIdentifier('smi:ISC/methodID=CMT')
+                ResourceIdentifier('smi:ISC/methodID=CMT')
             #CMT algorithm uses long-period body waves,
             #very-long-period surface waves and
             #intermediate period surface waves (since 2004
@@ -658,22 +673,22 @@ class Unpickler(object):
             data_used.wave_type = 'combined'
         if computation_type == 'M':
             focal_mechanism.method_id =\
-                  ResourceIdentifier('smi:ISC/methodID=moment_tensor')
+                ResourceIdentifier('smi:ISC/methodID=moment_tensor')
             #FIXME: not sure which kind of data is used by
             #"moment tensor" algorithm.
             data_used.wave_type = 'unknown'
         if computation_type == 'B':
             focal_mechanism.method_id =\
-                  ResourceIdentifier('smi:ISC/methodID=broadband_data')
+                ResourceIdentifier('smi:ISC/methodID=broadband_data')
             #FIXME: is 'combined' correct here?
             data_used.wave_type = 'combined'
         if computation_type == 'F':
             focal_mechanism.method_id =\
-                  ResourceIdentifier('smi:ISC/methodID=P-wave_first_motion')
+                ResourceIdentifier('smi:ISC/methodID=P-wave_first_motion')
             data_used.wave_type = 'P waves'
         if computation_type == 'S':
             focal_mechanism.method_id =\
-                  ResourceIdentifier('smi:ISC/methodID=scalar_moment')
+                ResourceIdentifier('smi:ISC/methodID=scalar_moment')
             #FIXME: not sure which kind of data is used
             #for scalar moment determination.
             data_used.wave_type = 'unknown'
@@ -724,17 +739,17 @@ class Unpickler(object):
         scale = 10**exponent
         t_axis_len = self._floatWithFormat(line[5:9], '4.2', scale)
         t_axis_stderr =\
-                self._floatWithFormat(line[9:12], '3.2', scale)
+            self._floatWithFormat(line[9:12], '3.2', scale)
         t_axis_plunge = self._int(line[12:14])
         t_axis_azimuth = self._int(line[14:17])
         n_axis_len = self._floatWithFormat(line[17:21], '4.2', scale)
         n_axis_stderr =\
-                self._floatWithFormat(line[21:24], '3.2', scale)
+            self._floatWithFormat(line[21:24], '3.2', scale)
         n_axis_plunge = self._int(line[24:26])
         n_axis_azimuth = self._int(line[26:29])
         p_axis_len = self._floatWithFormat(line[29:33], '4.2', scale)
         p_axis_stderr =\
-                self._floatWithFormat(line[33:36], '3.2', scale)
+            self._floatWithFormat(line[33:36], '3.2', scale)
         p_axis_plunge = self._int(line[36:38])
         p_axis_azimuth = self._int(line[38:41])
         np1_strike = self._int(line[42:45])
@@ -802,11 +817,11 @@ class Unpickler(object):
         arrival_time = line[15:24]
         residual = self._float(line[25:30])
         #unused: residual_flag = line[30]
-        distance = self._float(line[32:38]) #degrees
+        distance = self._float(line[32:38])  # degrees
         azimuth = self._float(line[39:44])
         backazimuth = azimuth % -360 + 180
         mb_period = self._float(line[44:48])
-        mb_amplitude = self._float(line[48:55]) #nanometers
+        mb_amplitude = self._float(line[48:55])  # nanometers
         mb_magnitude = self._float(line[56:59])
         #unused: mb_usage_flag = line[59]
 
@@ -856,7 +871,8 @@ class Unpickler(object):
             station_magnitude.amplitude_id = amplitude.resource_id
             station_magnitude.waveform_id = pick.waveform_id
             station_magnitude.method_id =\
-                    ResourceIdentifier('smi:ch.ethz.sed/magnitude/generic/body_wave_magnitude')
+                ResourceIdentifier(
+                    'smi:ch.ethz.sed/magnitude/generic/body_wave_magnitude')
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
         arrival.resource_id = ResourceIdentifier()
@@ -865,13 +881,14 @@ class Unpickler(object):
         arrival.azimuth = azimuth
         arrival.distance = distance
         arrival.time_residual = residual
-        arrival.earth_model_id = ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
+        arrival.earth_model_id =\
+            ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
         origin.arrivals.append(arrival)
         origin.quality.minimum_distance = min(
             d for d in (arrival.distance, origin.quality.minimum_distance)
             if d is not None)
         origin.quality.maximum_distance =\
-                max(arrival.distance, origin.quality.minimum_distance)
+            max(arrival.distance, origin.quality.minimum_distance)
         origin.quality.associated_phase_count += 1
         return pick, arrival
 
@@ -884,7 +901,7 @@ class Unpickler(object):
         # note: according to the format documentation,
         # column 20 should be blank. However, it seems that
         # Z_amplitude includes that column
-        Z_amplitude = self._float(line[13:21]) #micrometers
+        Z_amplitude = self._float(line[13:21])  # micrometers
         #TODO: N_comp and E_comp seems to be never there
         MSZ_mag = line[49:52]
         Ms_mag = self._float(line[53:56])
@@ -918,7 +935,7 @@ class Unpickler(object):
         Secondary phases are following phases of the reading,
         and can be P-type or S-type.
         """
-        arrivals=[]
+        arrivals = []
         phase = line[7:15].strip()
         arrival_time = line[15:24]
         if phase:
@@ -943,7 +960,7 @@ class Unpickler(object):
                     #FIXME: is this enough to say that
                     #the event is constained by depth pahses?
                     origin.depth_type =\
-                            'constrained by depth phases'
+                        'constrained by depth phases'
                     origin.quality.depth_phase_count += 1
             else:
                 pick = Pick()
