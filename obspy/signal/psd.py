@@ -11,8 +11,9 @@ Various Routines Related to Spectral Estimation
 """
 
 import warnings
-from obspy.signal.spectral_estimation import psd, fft_taper, welch_taper, \
-    welch_window, PPSD, get_NLNM, get_NHNM
+from obspy.signal.spectral_estimation import psd, fft_taper  # NOQA
+from obspy.signal.spectral_estimation import welch_taper, welch_window  # NOQA
+from obspy.signal.spectral_estimation import PPSD, get_NLNM, get_NHNM  # NOQA
 
 msg = 'Module obspy.signal.psd is deprecated! Use ' + \
       'obspy.signal.spectral_estimation instead or import directly ' + \

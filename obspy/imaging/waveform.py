@@ -445,7 +445,8 @@ class WaveformPlotting(object):
                               linewidth=self.grid_linewidth)
         self.fig.axes[0].yaxis.grid(False)
         # Set the title of the plot.
-        self.fig.suptitle(self.title, fontsize=self.title_size)
+        if self.title is not None:
+            self.fig.suptitle(self.title, fontsize=self.title_size)
         # Now try to plot some events.
         events = kwargs.get("events", [])
         # Potentially download some events with the help of obspy.neries.

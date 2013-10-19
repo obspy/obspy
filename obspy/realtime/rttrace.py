@@ -60,7 +60,6 @@ class RtTrace(Trace):
     1. Read first trace of example SAC data file and extract contained time
        offset and epicentral distance of an earthquake::
 
-        >>> import numpy as np
         >>> from obspy.realtime import RtTrace
         >>> from obspy import read
         >>> from obspy.realtime.signal import calculateMwpMag

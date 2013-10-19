@@ -192,7 +192,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (6) Using 'starttime' and 'endtime' parameters
 
-        >>> from obspy import read, UTCDateTime
+        >>> from obspy import read
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
         ...           starttime=dt, endtime=dt+10)
@@ -1847,7 +1847,8 @@ class Stream(object):
             information, the deconvolution can be performed using evalresp
             instead by using the option `seedresp` (see documentation of
             :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
-            <http://docs.obspy.org/master/tutorial/code_snippets/seismometer_correction_simulation.html#using-a-resp-file>`_.
+            <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
@@ -2254,7 +2255,7 @@ class Stream(object):
             tr.detrend(type=type)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    def taper(self, *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2269,7 +2270,7 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, side=side, *args, **kwargs)
+            tr.taper(*args, **kwargs)
         return self
 
     def std(self):

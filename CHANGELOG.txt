@@ -18,7 +18,8 @@ dev:
    * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
      the API documentation (#540)
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
-   * new option "side" for Stream/Trace.taper() to perform one-sided tapering
+   * new options for Stream/Trace.taper() to control the length of the
+     tapering for all windowing functions and perform one-sided tapering
    * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
    * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
      now be omitted, start time of each trace is used for response lookup then
@@ -27,6 +28,11 @@ dev:
      either a file-like object with RESP information or an obspy.xseed.Parser
      object (e.g. created reading a dataless SEED file).
    * fix a bug when merging valid data into a masked trace (see #638)
+   * event.ResourceIdentifier objects are now initialized with a QuakeML
+     conform string by default, i.e. if no custom prefix is provided during
+     initialization.
+   * added a new test that asserts that the whole codebase is valid according
+     to the flake8 tool.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -34,6 +40,9 @@ dev:
    * obspy-indexer script uses from now on hash symbols (#) instead
      of pipe (|) for features because pipe has a special meaning on
      most operating systems
+ - obspy.fdsn:
+   * new client module to access servers based on the FDSN web service
+     definition (http://www.fdsn.org/webservices/)
  - obspy.imaging:
    * more options to customize day plots
    * obspy-scan: new option --print-gaps
