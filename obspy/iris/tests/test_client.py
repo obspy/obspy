@@ -9,6 +9,7 @@ from obspy.iris import Client
 import filecmp
 import numpy as np
 import os
+import StringIO
 import unittest
 import urllib
 import warnings
@@ -60,6 +61,23 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(Exception, client.saveWaveform, "YY", "XXXX", "00",
                           "BHZ", start, end)
 
+    def test_saveWaveformToStringIO(self):
+        """
+        Same as test_saveWaveform but saves to a StringIO.
+        """
+        # file identical to file retrieved via web interface
+        client = Client()
+        start = UTCDateTime("2010-02-27T06:30:00")
+        end = UTCDateTime("2010-02-27T06:31:00")
+        memfile = StringIO.StringIO()
+        client.saveWaveform(memfile, "IU", "ANMO", "00", "BHZ", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        origfile = os.path.join(self.path, 'data', 'IU.ANMO.00.BHZ.mseed')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        self.assertEqual(new_data, org_data)
+
     def test_saveResponse(self):
         """
         Fetches and stores response information as SEED RESP file.
@@ -93,6 +111,47 @@ class ClientTestCase(unittest.TestCase):
             client.saveResponse(tempfile, "IU", "ANMO", "00", "BHZ", start,
                                 end, format="SACPZ")
             data = open(tempfile).read()
+        self.assertTrue('NETWORK   (KNETWK): IU' in data)
+        self.assertTrue('STATION    (KSTNM): ANMO' in data)
+
+    def test_saveResponseToStringIO(self):
+        """
+        Same as test_saveResponse but saves to a StringIO.
+        """
+        client = Client()
+        start = UTCDateTime("2005-001T00:00:00")
+        end = UTCDateTime("2008-001T00:00:00")
+        # RESP, single channel
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU.00.BHZ')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        self.assertEqual(new_data, org_data)
+        # RESP, multiple channels
+        origfile = os.path.join(self.path, 'data', 'RESP.ANMO.IU._.BH_')
+        with open(origfile, "rb") as fh:
+            org_data = fh.read()
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "*", "BH?", start, end)
+        memfile.seek(0, 0)
+        new_data = memfile.read()
+        self.assertEqual(new_data, org_data)
+        # StationXML, single channel
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
+                            format="StationXML")
+        memfile.seek(0, 0)
+        data = memfile.read()
+        self.assertTrue('<Station net_code="IU" sta_code="ANMO">' in data)
+        # SACPZ, single channel
+        memfile = StringIO.StringIO()
+        client.saveResponse(memfile, "IU", "ANMO", "00", "BHZ", start, end,
+                            format="SACPZ")
+        memfile.seek(0, 0)
+        data = memfile.read()
         self.assertTrue('NETWORK   (KNETWK): IU' in data)
         self.assertTrue('STATION    (KSTNM): ANMO' in data)
 
@@ -200,7 +259,8 @@ class ClientTestCase(unittest.TestCase):
         Tests calculation of travel-times for seismic phases.
         """
         client = Client()
-        result = client.traveltime(evloc=(-36.122, -72.898), evdepth=22.9,
+        result = client.traveltime(
+            evloc=(-36.122, -72.898), evdepth=22.9,
             staloc=[(-33.45, -70.67), (47.61, -122.33), (35.69, 139.69)])
         self.assertTrue(result.startswith('Model: iasp91'))
 
@@ -216,79 +276,79 @@ class ClientTestCase(unittest.TestCase):
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # plot-amp as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-amp',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # plot-phase as PNG file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='plot-phase',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
+            self.assertEqual(open(tempfile, 'rb').read(4)[1:4], 'PNG')
         # fap as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # cs as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='cs',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05 -1.202685E+04 1.677835E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05 -1.202685E+04 1.677835E+02\n')
         # fap & def as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='def',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & dis as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='dis',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  7.557425E-01  2.692007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  7.557425E-01  2.692007E+02\n')
         # fap & vel as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='vel',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.202802E+04  1.792007E+02\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.202802E+04  1.792007E+02\n')
         # fap & acc as ASCII file
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
             client.evalresp(network="IU", station="ANMO", location="00",
                             channel="BHZ", time=dt, output='fap', units='acc',
                             filename=tempfile)
-        self.assertEqual(open(tempfile, 'rt').readline(),
-                         '1.000000E-05  1.914318E+08  8.920073E+01\n')
+            self.assertEqual(open(tempfile, 'rt').readline(),
+                             '1.000000E-05  1.914318E+08  8.920073E+01\n')
         # fap as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='fap')
-        np.testing.assert_array_equal(data[0],
-            [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
+        np.testing.assert_array_equal(
+            data[0], [1.00000000e-05, 1.20280200e+04, 1.79200700e+02])
         # cs as NumPy ndarray
         data = client.evalresp(network="IU", station="ANMO", location="00",
                                channel="BHZ", time=dt, output='cs')
-        np.testing.assert_array_equal(data[0],
-            [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
+        np.testing.assert_array_equal(
+            data[0], [1.00000000e-05, -1.20268500e+04, 1.67783500e+02])
 
     def test_event(self):
         """
@@ -469,6 +529,16 @@ class ClientTestCase(unittest.TestCase):
                                      endtime=t2, output='xml')
         self.assertTrue(isinstance(result, basestring))
         self.assertTrue('<?xml' in result)
+
+    def test_issue623(self):
+        """
+        obspy.iris bulkdataselect only returns last trace in result
+        """
+        t1 = UTCDateTime("2011-03-11T06:31:30Z")
+        t2 = UTCDateTime("2011-03-11T06:48:00Z")
+        client = Client()
+        st = client.getWaveform("GE", "EIL", "", "BHZ", t1, t2)
+        self.assertEqual(len(st), 5)
 
 
 def suite():

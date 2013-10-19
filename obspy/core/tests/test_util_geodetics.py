@@ -8,7 +8,7 @@ import warnings
 
 # checking for geographiclib
 try:
-    import geographiclib  # @UnusedImport
+    import geographiclib  # @UnusedImport # NOQA
     HAS_GEOGRAPHICLIB = True
 except ImportError:
     HAS_GEOGRAPHICLIB = False
@@ -134,9 +134,8 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         """
         # Inline method to avoid messy code.
         def assertLoc(lat1, long1, lat2, long2, approx_distance):
-            self.assertTrue( \
-            abs(math.radians(locations2degrees(lat1, long1, lat2, long2)) \
-                * 6371 - approx_distance) <= 20)
+            self.assertTrue(abs(math.radians(locations2degrees(
+                lat1, long1, lat2, long2)) * 6371 - approx_distance) <= 20)
 
         # Approximate values from the Great Circle Calculator:
         #   http://williams.best.vwh.net/gccalc.htm
@@ -164,22 +163,21 @@ class UtilGeodeticsTestCase(unittest.TestCase):
         assertLoc(0, 0, 0, 180, 20004)
         assertLoc(11, 55, 11, 55, 0)
 
+    @skipIf(not HAS_GEOGRAPHICLIB, 'Module geographiclib is not installed')
     def test_issue_375(self):
         """
         Test for #375.
         """
-        if not HAS_GEOGRAPHICLIB:
-            return
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 + 1)
         self.assertEqual(round(azim, 0), 32)
         self.assertEqual(round(bazim, 0), 213)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 + 1, 10 - 1)
         self.assertEqual(round(azim, 0), 328)
         self.assertEqual(round(bazim, 0), 147)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 + 1)
         self.assertEqual(round(azim, 0), 147)
         self.assertEqual(round(bazim, 0), 327)
-        dist, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
+        _, azim, bazim = gps2DistAzimuth(50, 10, 50 - 1, 10 - 1)
         self.assertEqual(round(azim, 0), 213)
         self.assertEqual(round(bazim, 0), 33)
 

@@ -10,6 +10,7 @@ AttribDict class for ObsPy.
 """
 
 import collections
+import copy
 
 
 class AttribDict(collections.MutableMapping):
@@ -95,11 +96,11 @@ class AttribDict(collections.MutableMapping):
     __delattr__ = __delitem__
 
     def copy(self):
-        return self.__class__(self.__dict__.copy())
+        return copy.deepcopy(self)
 
     def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable
         ad = self.__class__()
-        ad.update(self.__dict__)
+        ad.update(copy.deepcopy(self.__dict__))
         return ad
 
     def update(self, adict={}):

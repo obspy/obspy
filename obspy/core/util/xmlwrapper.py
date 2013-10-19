@@ -35,8 +35,8 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     try:
         # use lxml
         return __etree.tostring(element, xml_declaration=xml_declaration,
-                              method="xml", encoding=encoding,
-                              pretty_print=pretty_print)
+                                method="xml", encoding=encoding,
+                                pretty_print=pretty_print)
     except:
         pass
     # use xml
@@ -189,7 +189,7 @@ class XMLParser:
         if element is None:
             element = self.xml_root
         try:
-            element = element.getchildren()[0]
+            element = element[0]
         except:
             return None
         return self._getElementNamespace(element)

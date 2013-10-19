@@ -123,8 +123,9 @@ def cfrequency(data, fs, smoothie, fk):
         #        np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
         #        [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        cfreq_add = np.hstack(([cfreq[0]] * (np.size(fk) // 2), cfreq, \
-                  [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2)))
+        cfreq_add = np.hstack(
+            ([cfreq[0]] * (np.size(fk) // 2), cfreq,
+             [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2)))
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
         #dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
         # correct start and end values of time derivative
@@ -173,8 +174,9 @@ def bwith(data, fs, smoothie, fk):
         #        np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
         #        [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        bwith_add = np.hstack(([bwith[0]] * (np.size(fk) // 2), bwith, \
-                [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2)))
+        bwith_add = np.hstack(
+            ([bwith[0]] * (np.size(fk) // 2), bwith,
+             [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2)))
         dbwith = signal.lfilter(fk, 1, bwith_add)
         #dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
         # correct start and end values of time derivative
@@ -224,8 +226,9 @@ def domperiod(data, fs, smoothie, fk):
         #dperiod_add = np.append(np.append([dperiod[0]] * (np.size(fk) // 2), \
         #    dperiod), [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        dperiod_add = np.hstack(([dperiod[0]] * (np.size(fk) // 2), dperiod, \
-                [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2)))
+        dperiod_add = np.hstack(
+            ([dperiod[0]] * (np.size(fk) // 2), dperiod,
+             [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2)))
         ddperiod = signal.lfilter(fk, 1, dperiod_add)
         #ddperiod = ddperiod[np.size(fk) / \
         #    2:(np.size(ddperiod) - np.size(fk) // 2)]
@@ -261,8 +264,8 @@ def logbankm(p, n, fs, w):
     fl = np.floor(fs) / np.floor(n)
     fh = np.floor(fs / 2)
     lr = np.log((fh) / (fl)) / (p + 1)
-    bl = n * ((fl) * \
-        np.exp(np.array([0, 1, p, p + 1]) * float(lr)) / float(fs))
+    bl = n * ((fl) *
+              np.exp(np.array([0, 1, p, p + 1]) * float(lr)) / float(fs))
     b2 = np.ceil(bl[1])
     b3 = np.floor(bl[2])
     b1 = np.floor(bl[0]) + 1

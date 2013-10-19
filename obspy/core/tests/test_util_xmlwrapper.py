@@ -106,22 +106,22 @@ class XMLWrapperTestCase(unittest.TestCase):
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         self.assertEqual(p._getRootNamespace(),
-                          "http://quakeml.org/xmlns/quakeml/1.2")
+                         "http://quakeml.org/xmlns/quakeml/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         self.assertEqual(p._getRootNamespace(),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
         self.assertEqual(p._getRootNamespace(),
-                          "http://quakeml.org/xmlns/quakeml/1.2")
+                         "http://quakeml.org/xmlns/quakeml/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
         self.assertEqual(p._getRootNamespace(),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
 
     def test_getElementNamespace(self):
         """
@@ -130,52 +130,52 @@ class XMLWrapperTestCase(unittest.TestCase):
         # xml + iris
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        eventParameters = p.xml_root.getchildren()[0]
+        eventParameters = p.xml_root[0]
         self.assertEqual(p._getElementNamespace(eventParameters),
-                          "http://quakeml.org/xmlns/bed/1.2")
+                         "http://quakeml.org/xmlns/bed/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        eventParameters = p.xml_root.getchildren()[0]
+        eventParameters = p.xml_root[0]
         self.assertEqual(p._getElementNamespace(eventParameters),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        eventParameters = p.xml_root.getchildren()[0]
+        eventParameters = p.xml_root[0]
         self.assertEqual(p._getElementNamespace(eventParameters),
-                          "http://quakeml.org/xmlns/bed/1.2")
+                         "http://quakeml.org/xmlns/bed/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        eventParameters = p.xml_root.getchildren()[0]
+        eventParameters = p.xml_root[0]
         self.assertEqual(p._getElementNamespace(eventParameters),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
         # checking sub elements
         # xml + iris
         xml_doc = xml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        event = p.xml_root.getchildren()[0].getchildren()[0]
+        event = p.xml_root[0][0]
         self.assertEqual(p._getElementNamespace(event),
-                          "http://quakeml.org/xmlns/bed/1.2")
+                         "http://quakeml.org/xmlns/bed/1.2")
         # xml + neries
         xml_doc = xml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        event = p.xml_root.getchildren()[0].getchildren()[0]
+        event = p.xml_root[0][0]
         self.assertEqual(p._getElementNamespace(event),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
         # lxml + iris
         xml_doc = lxml_etree.parse(self.iris_xml)
         p = XMLParser(xml_doc)
-        event = p.xml_root.getchildren()[0].getchildren()[0]
+        event = p.xml_root[0][0]
         self.assertEqual(p._getElementNamespace(event),
-                          "http://quakeml.org/xmlns/bed/1.2")
+                         "http://quakeml.org/xmlns/bed/1.2")
         # lxml + neries
         xml_doc = lxml_etree.parse(self.neries_xml)
         p = XMLParser(xml_doc)
-        event = p.xml_root.getchildren()[0].getchildren()[0]
+        event = p.xml_root[0][0]
         self.assertEqual(p._getElementNamespace(event),
-                          "http://quakeml.org/xmlns/quakeml/1.0")
+                         "http://quakeml.org/xmlns/quakeml/1.0")
 
     def test_xpathWithNamespace(self):
         """

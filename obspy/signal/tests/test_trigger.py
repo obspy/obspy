@@ -82,7 +82,7 @@ class TriggerTestCase(unittest.TestCase):
             data.append(np.loadtxt(file, dtype='float32'))
         # some default arguments
         samp_rate, f1, f2, lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s = \
-                200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
+            200.0, 1.0, 20.0, 1.0, 0.1, 4.0, 1.0, 2, 8, 0.1, 0.2
         ptime, stime = arPick(data[0], data[1], data[2], samp_rate, f1, f2,
                               lta_p, sta_p, lta_s, sta_s, m_p, m_s, l_p, l_s)
         self.assertAlmostEqual(ptime, 30.6350002289)
@@ -108,7 +108,7 @@ class TriggerTestCase(unittest.TestCase):
         np.testing.assert_array_equal(picks_del, on_of[np.array([0, 1, 5, 6])])
         #
         # set True for visual understanding the tests
-        if False:
+        if False:  # pragma: no cover
             import matplotlib.pyplot as plt
             plt.plot(cft)
             plt.hlines([1.5, 1.0], 0, len(cft))
@@ -175,7 +175,7 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 3,
-                                     trace_ids=trace_ids, sta=0.5, lta=10)
+                                    trace_ids=trace_ids, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -216,8 +216,8 @@ class TriggerTestCase(unittest.TestCase):
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('ignore', UserWarning)
             re = coincidenceTrigger("recstalta", 3.5, 1, st.copy(), 1.2,
-                                     trace_ids=trace_ids,
-                                     max_trigger_length=0.13, sta=0.5, lta=10)
+                                    trace_ids=trace_ids,
+                                    max_trigger_length=0.13, sta=0.5, lta=10)
             self.assertTrue(len(re) == 2)
             self.assertTrue(re[0]['time'] > UTCDateTime("2010-05-27T16:24:31"))
             self.assertTrue(re[0]['time'] < UTCDateTime("2010-05-27T16:24:35"))
@@ -313,16 +313,92 @@ class TriggerTestCase(unittest.TestCase):
                 self.assertTrue(isinstance(item[key], _type))
         # check some of the detailed info
         ev = res[-1]
-        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.097582068353855)
-        self.assertAlmostEqual(ev['cft_std_wmean'], 4.7972436395074087)
-        self.assertAlmostEqual(ev['cft_peaks'][0], 18.973097608513633)
+        self.assertAlmostEqual(ev['cft_peak_wmean'], 18.101139518271076)
+        self.assertAlmostEqual(ev['cft_std_wmean'], 4.800051726246676)
+        self.assertAlmostEqual(ev['cft_peaks'][0], 18.985548683223936)
         self.assertAlmostEqual(ev['cft_peaks'][1], 16.852175794415011)
         self.assertAlmostEqual(ev['cft_peaks'][2], 18.64005853900883)
         self.assertAlmostEqual(ev['cft_peaks'][3], 17.572363634564621)
-        self.assertAlmostEqual(ev['cft_stds'][0], 4.8811165222946951)
+        self.assertAlmostEqual(ev['cft_stds'][0], 4.8909448258821362)
         self.assertAlmostEqual(ev['cft_stds'][1], 4.4446373508521804)
         self.assertAlmostEqual(ev['cft_stds'][2], 5.3499401252675964)
         self.assertAlmostEqual(ev['cft_stds'][3], 4.2723814539487703)
+
+    def test_coincidenceTriggerWithSimilarityChecking(self):
+        """
+        Test network coincidence trigger with cross correlation similarity
+        checking of given event templates.
+        """
+        st = Stream()
+        files = ["BW.UH1._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH2._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH3._.SHZ.D.2010.147.cut.slist.gz",
+                 "BW.UH3._.SHN.D.2010.147.cut.slist.gz",
+                 "BW.UH3._.SHE.D.2010.147.cut.slist.gz",
+                 "BW.UH4._.EHZ.D.2010.147.cut.slist.gz"]
+        for filename in files:
+            filename = os.path.join(self.path, filename)
+            st += read(filename)
+        # some prefiltering used for UH network
+        st.filter('bandpass', freqmin=10, freqmax=20)
+        # set up template event streams
+        times = ["2010-05-27T16:24:33.095000", "2010-05-27T16:27:30.370000"]
+        templ = {}
+        for t in times:
+            t = UTCDateTime(t)
+            st_ = st.select(station="UH3").slice(t, t + 2.5).copy()
+            templ.setdefault("UH3", []).append(st_)
+        times = ["2010-05-27T16:27:30.574999"]
+        for t in times:
+            t = UTCDateTime(t)
+            st_ = st.select(station="UH1").slice(t, t + 2.5).copy()
+            templ.setdefault("UH1", []).append(st_)
+        trace_ids = {"BW.UH1..SHZ": 1,
+                     "BW.UH2..SHZ": 1,
+                     "BW.UH3..SHZ": 1,
+                     "BW.UH4..EHZ": 1}
+        similarity_thresholds = {"UH1": 0.8, "UH3": 0.7}
+        trig = coincidenceTrigger("classicstalta", 5, 1, st.copy(), 4, sta=0.5,
+                                  lta=10, trace_ids=trace_ids,
+                                  event_templates=templ,
+                                  similarity_threshold=similarity_thresholds)
+        # check floats in resulting dictionary separately
+        self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
+        self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)
+        self.assertAlmostEqual(trig[2].pop('duration'), 1.9200000762939453)
+        self.assertAlmostEqual(trig[3].pop('duration'), 3.9200000762939453)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH1'), 0.94149447384)
+        self.assertAlmostEqual(trig[0]['similarity'].pop('UH3'), 1)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH1'), 0.65228204570)
+        self.assertAlmostEqual(trig[1]['similarity'].pop('UH3'), 0.72679293429)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH1'), 0.89404458774)
+        self.assertAlmostEqual(trig[2]['similarity'].pop('UH3'), 0.74581409371)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH1'), 1)
+        self.assertAlmostEqual(trig[3]['similarity'].pop('UH3'), 1)
+        remaining_results = \
+            [{'coincidence_sum': 4.0,
+              'similarity': {},
+              'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+              'time': UTCDateTime(2010, 5, 27, 16, 24, 33, 210000),
+              'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ',
+                            'BW.UH4..EHZ']},
+             {'coincidence_sum': 3.0,
+              'similarity': {},
+              'stations': ['UH3', 'UH1', 'UH2'],
+              'time': UTCDateTime(2010, 5, 27, 16, 25, 26, 710000),
+              'trace_ids': ['BW.UH3..SHZ', 'BW.UH1..SHZ', 'BW.UH2..SHZ']},
+             {'coincidence_sum': 3.0,
+              'similarity': {},
+              'stations': ['UH2', 'UH1', 'UH3'],
+              'time': UTCDateTime(2010, 5, 27, 16, 27, 2, 260000),
+              'trace_ids': ['BW.UH2..SHZ', 'BW.UH1..SHZ', 'BW.UH3..SHZ']},
+             {'coincidence_sum': 4.0,
+              'similarity': {},
+              'stations': ['UH3', 'UH2', 'UH1', 'UH4'],
+              'time': UTCDateTime(2010, 5, 27, 16, 27, 30, 510000),
+              'trace_ids': ['BW.UH3..SHZ', 'BW.UH2..SHZ', 'BW.UH1..SHZ',
+                            'BW.UH4..EHZ']}]
+        self.assertTrue(trig == remaining_results)
 
     def test_classicSTALTAPyC(self):
         """

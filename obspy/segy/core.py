@@ -212,8 +212,8 @@ def readSEGY(filename, headonly=False, byteorder=None,
         tr_header = trace.stats.segy.trace_header
         if tr_header.sample_interval_in_ms_for_this_trace > 0:
             trace.stats.delta = \
-                    float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                    1E6
+                float(tr.header.sample_interval_in_ms_for_this_trace) / \
+                1E6
         # If the year is not zero, calculate the start time. The end time is
         # then calculated from the start time and the sampling rate.
         if tr_header.year_data_recorded > 0:
@@ -232,8 +232,9 @@ def readSEGY(filename, headonly=False, byteorder=None,
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(year=year, julday=julday,
-                                    hour=hour, minute=minute, second=second)
+            trace.stats.starttime = UTCDateTime(
+                year=year, julday=julday, hour=hour, minute=minute,
+                second=second)
     return stream
 
 
@@ -308,7 +309,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         if hasattr(stream, 'stats') and hasattr(stream.stats, 'data_encoding'):
             data_encoding = stream.stats.data_encoding
         if hasattr(stream, 'stats') and hasattr(stream.stats,
-                                              'binary_file_header'):
+                                                'binary_file_header'):
             data_encoding = \
                 stream.stats.binary_file_header.data_sample_format_code
         # Set it to float if it in not given.
@@ -354,8 +355,8 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     # Map the byteorder.
     byteorder = ENDIAN[byteorder]
     if textual_header_encoding is None:
-        if hasattr(stream, 'stats') and hasattr(stream.stats,
-                                            'textual_file_header_encoding'):
+        if hasattr(stream, 'stats') and hasattr(
+                stream.stats, 'textual_file_header_encoding'):
             textual_header_encoding = \
                 stream.stats.textual_file_header_encoding
         else:
@@ -366,7 +367,7 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
     # Set the file wide headers.
     segy_file.textual_file_header = stream.stats.textual_file_header
     segy_file.textual_header_encoding = \
-            textual_header_encoding
+        textual_header_encoding
     binary_header = SEGYBinaryFileHeader()
     this_binary_header = stream.stats.binary_file_header
     # Loop over all items and if they exists set them. Ignore all other
@@ -523,8 +524,8 @@ def readSU(filename, headonly=False, byteorder=None,
         tr_header = trace.stats.su.trace_header
         if tr_header.sample_interval_in_ms_for_this_trace > 0:
             trace.stats.delta = \
-                    float(tr.header.sample_interval_in_ms_for_this_trace) / \
-                    1E6
+                float(tr.header.sample_interval_in_ms_for_this_trace) / \
+                1E6
         # If the year is not zero, calculate the start time. The end time is
         # then calculated from the start time and the sampling rate.
         # 99 is often used as a placeholder.
@@ -545,8 +546,9 @@ def readSU(filename, headonly=False, byteorder=None,
             hour = tr_header.hour_of_day
             minute = tr_header.minute_of_hour
             second = tr_header.second_of_minute
-            trace.stats.starttime = UTCDateTime(year=year, julday=julday,
-                                    hour=hour, minute=minute, second=second)
+            trace.stats.starttime = UTCDateTime(
+                year=year, julday=julday, hour=hour, minute=minute,
+                second=second)
     return stream
 
 
@@ -594,7 +596,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
     # Figure out endianness and the encoding of the textual file header.
     if byteorder is None:
         if hasattr(stream[0].stats, 'su') and hasattr(stream[0].stats.su,
-                                                        'endian'):
+                                                      'endian'):
             byteorder = stream[0].stats.su.endian
         else:
             byteorder = '>'
@@ -622,7 +624,7 @@ def writeSU(stream, filename, byteorder=None, **kwargs):  # @UnusedVariable
         # Set some special attributes, e.g. the sample count and other stuff.
         new_trace_header.number_of_samples_in_this_trace = trace.stats.npts
         new_trace_header.sample_interval_in_ms_for_this_trace = \
-                int(round((trace.stats.delta * 1E6)))
+            int(round((trace.stats.delta * 1E6)))
         # Set the date of the Trace if it is not UTCDateTime(0).
         if starttime == UTCDateTime(0):
             new_trace.header.year_data_recorded = 0
@@ -651,30 +653,31 @@ def __segy_trace__str__(self, *args, **kwargs):
     number within the line.
     """
     try:
-        out = "%s" % ('Seq. No. in line: %4i' % \
-             self.stats.segy.trace_header.trace_sequence_number_within_line)
+        out = "%s" % (
+            'Seq. No. in line: %4i' %
+            self.stats.segy.trace_header.trace_sequence_number_within_line)
     except KeyError:
         # fall back if for some reason the segy attribute does not exists
         return getattr(Trace, '__original_str__')(self, *args, **kwargs)
     # output depending on delta or sampling rate bigger than one
     if self.stats.sampling_rate < 0.1:
-        if hasattr(self.stats, 'preview')  and self.stats.preview:
+        if hasattr(self.stats, 'preview') and self.stats.preview:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(delta).1f s, %(npts)d samples [preview]"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(delta).1f s, %(npts)d samples [preview]"
         else:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(delta).1f s, %(npts)d samples"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(delta).1f s, %(npts)d samples"
     else:
-        if hasattr(self.stats, 'preview')  and self.stats.preview:
+        if hasattr(self.stats, 'preview') and self.stats.preview:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(sampling_rate).1f Hz, %(npts)d samples [preview]"
         else:
             out = out + ' | '\
-                  "%(starttime)s - %(endtime)s | " + \
-                  "%(sampling_rate).1f Hz, %(npts)d samples"
+                "%(starttime)s - %(endtime)s | " + \
+                "%(sampling_rate).1f Hz, %(npts)d samples"
     # check for masked array
     if np.ma.count_masked(self.data):
         out += ' (masked)'

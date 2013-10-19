@@ -33,7 +33,7 @@ def _calcOffset(trace):
     if scalco < 10 and scalco != 1:
         scalco = pow(10, scalco)
     offset = 1.0 / scalco * \
-        math.sqrt(pow(th.group_coordinate_x - th.source_coordinate_x, 2) + \
+        math.sqrt(pow(th.group_coordinate_x - th.source_coordinate_x, 2) +
                   pow(th.group_coordinate_y - th.source_coordinate_y, 2))
     return offset
 
@@ -169,7 +169,7 @@ def plotBenchmark(sufiles, normalize='traces', clip_partial_traces=True,
     for st in streams:
         if normalize == 'stream':
             data_range = max([_i.data.max() for _i in st.traces]) - \
-                         min([_i.data.min() for _i in st.traces])
+                min([_i.data.min() for _i in st.traces])
         for tr in st.traces:
             if normalize == 'traces':
                 data_range = tr.data.max() - tr.data.min()

@@ -10,9 +10,8 @@ Base utilities and constants for ObsPy.
 """
 
 from obspy.core.util.misc import toIntOrZero
-from obspy.core.util.types import OrderedDict
+from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
-import ctypes as C
 import doctest
 import glob
 import inspect
@@ -20,39 +19,33 @@ import numpy as np
 import os
 import sys
 import tempfile
+import shutil
+import warnings
+from unittest import TestCase
 
 
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css']
+                   'realtime', 'datamark', 'css', 'y']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink']
+                   'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
-                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'SEGY', 'SU',
-                            'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+                            'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
+                            'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
 
 
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
-
-
-def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
+class NamedTemporaryFile(object):
     """
     Weak replacement for the Python's tempfile.TemporaryFile.
 
-    This function is a replacment for :func:`tempfile.NamedTemporaryFile` but
+    This class is a replacment for :func:`tempfile.NamedTemporaryFile` but
     will work also with Windows 7/Vista's UAC.
 
     :type dir: str
@@ -62,42 +55,43 @@ def NamedTemporaryFile(dir=None, suffix='.tmp', prefix='obspy-'):
     :param suffix: The temporary file name will end with that suffix. Defaults
         to ``'.tmp'``.
 
-    .. warning::
-        Caller is responsible for deleting the file when done with it.
-
     .. rubric:: Example
 
-    >>> ntf = NamedTemporaryFile()
-    >>> ntf._fileobj  # doctest: +ELLIPSIS
+    >>> with NamedTemporaryFile() as tf:
+    ...     tf._fileobj  # doctest: +ELLIPSIS
+    ...     tf.write("test")
+    ...     os.path.exists(tf.name)
     <open file '<fdopen>', mode 'w+b' at 0x...>
-    >>> ntf._fileobj.close()
-    >>> os.remove(ntf.name)
+    True
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
 
-    >>> filename = NamedTemporaryFile().name
-    >>> fh = open(filename, 'wb')
-    >>> fh.write("test")
-    >>> fh.close()
-    >>> os.remove(filename)
+    >>> with NamedTemporaryFile() as tf:
+    ...     filename = tf.name
+    ...     with open(filename, 'wb') as fh:
+    ...         fh.write("just a test")
+    ...     with open(filename, 'r') as fh:
+    ...         print fh.read()
+    just a test
+    >>> # when using the with statement, the file is deleted at the end:
+    >>> os.path.exists(tf.name)
+    False
     """
 
-    class NamedTemporaryFile(object):
+    def __init__(self, dir=None, suffix='.tmp', prefix='obspy-'):
+        fd, self.name = tempfile.mkstemp(dir=dir, prefix=prefix, suffix=suffix)
+        self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
 
-        def __init__(self, fd, fname):
-            self._fileobj = os.fdopen(fd, 'w+b', 0)  # 0 -> do not buffer
-            self.name = fname
+    def __getattr__(self, attr):
+        return getattr(self._fileobj, attr)
 
-        def __getattr__(self, attr):
-            return getattr(self._fileobj, attr)
+    def __enter__(self):
+        return self
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            self.close()
-            os.remove(self.name)
-
-    return NamedTemporaryFile(*tempfile.mkstemp(dir=dir, prefix=prefix,
-                                                suffix=suffix))
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        self.close()
+        os.remove(self.name)
 
 
 def createEmptyDataChunk(delta, dtype, fill_value=None):
@@ -165,7 +159,10 @@ def getExampleFile(filename):
     IOError: Could not find file does.not.exists ...
     """
     for module in ALL_MODULES:
-        mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        try:
+            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+        except ImportError:
+            continue
         file = os.path.join(mod.__path__[0], "data", filename)
         if os.path.isfile(file):
             return file
@@ -310,8 +307,8 @@ ENTRY_POINTS = {
     'differentiate': _getEntryPoints('obspy.plugin.differentiate'),
     'waveform': _getOrderedEntryPoints('obspy.plugin.waveform',
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
-    'waveform_write': _getOrderedEntryPoints('obspy.plugin.waveform',
-                                      'writeFormat', WAVEFORM_PREFERRED_ORDER),
+    'waveform_write': _getOrderedEntryPoints(
+        'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
 }
@@ -355,8 +352,8 @@ def _getFunctionFromEntryPoint(group, type):
     # import function point
     # any issue during import of entry point should be raised, so the user has
     # a chance to correct the problem
-    func = load_entry_point(entry_point.dist.key,
-            'obspy.plugin.%s' % (group), entry_point.name)
+    func = load_entry_point(entry_point.dist.key, 'obspy.plugin.%s' % (group),
+                            entry_point.name)
     return func
 
 
@@ -393,7 +390,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         # auto detect format - go through all known formats in given sort order
         for format_ep in EPS.values():
             # search isFormat for given entry point
-            isFormat = load_entry_point(format_ep.dist.key,
+            isFormat = load_entry_point(
+                format_ep.dist.key,
                 'obspy.plugin.%s.%s' % (plugin_type, format_ep.name),
                 'isFormat')
             # check format
@@ -412,7 +410,8 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
     # file format should be known by now
     try:
         # search readFormat for given entry point
-        readFormat = load_entry_point(format_ep.dist.key,
+        readFormat = load_entry_point(
+            format_ep.dist.key,
             'obspy.plugin.%s.%s' % (plugin_type, format_ep.name), 'readFormat')
     except ImportError:
         msg = "Format \"%s\" is not supported. Supported types: %s"
@@ -429,6 +428,171 @@ def getScriptDirName():
     """
     return os.path.abspath(os.path.dirname(inspect.getfile(
         inspect.currentframe())))
+
+
+def checkForMatplotlibCompareImages():
+    try:
+        # trying to stay inside 80 char line
+        import matplotlib.testing.compare as _compare
+        compare_images = _compare.compare_images  # NOQA
+    except:
+        return False
+    return True
+
+
+HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
+
+
+class ImageComparisonException(TestCase.failureException):
+    pass
+
+
+class ImageComparison(NamedTemporaryFile):
+    """
+    Handles the comparison against a baseline image in an image test.
+
+    :type image_path: str
+    :param image_path: Path to directory where the baseline image is located
+    :type image_name: str
+    :param image_name: Filename (with suffix, without directory path) of the
+        baseline image
+    :type reltol: float (optional)
+    :param reltol: Multiplier that is applied to the default tolerance
+        value (i.e. 10 means a 10 times harder to pass test tolerance).
+
+    The class should be used with Python's "with" statement. When setting up,
+    the matplotlib rcdefaults are set to ensure consistent image testing.
+    After the plotting is completed, the :meth:`ImageComparison.compare`
+    method is called automatically at the end of the "with" block, comparing
+    against the previously specified baseline image. This raises an exception
+    (if the test fails) with the message string from
+    :func:`matplotlib.testing.compare.compare_images`. Afterwards all
+    temporary files are deleted automatically.
+
+    .. note::
+        If images created during the testrun should be kept after the test, set
+        environment variable `OBSPY_KEEP_IMAGES` to any value before executing
+        the test (e.g. with `$ OBSPY_KEEP_IMAGES= obspy-runtests` or `$
+        OBSPY_KEEP_IMAGES= python test_sometest.py`). For `obspy-runtests` the
+        option "--keep-images" can also be used instead of setting an
+        environment variable. Created images and diffs for failing tests are
+        then stored in a subfolder "testrun" under the baseline image's
+        directory.
+
+    .. rubric:: Example
+
+    >>> from obspy import read
+    >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
+    ...     st = read()  # doctest: +SKIP
+    ...     st.plot(outfile=ic.name)  # doctest: +SKIP
+    ...     # image is compared against baseline image automatically
+    """
+    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
+        self.suffix = "." + image_name.split(".")[-1]
+        super(ImageComparison, self).__init__(suffix=self.suffix, *args,
+                                              **kwargs)
+        self.image_name = image_name
+        self.baseline_image = os.path.join(image_path, image_name)
+        self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
+        self.output_path = os.path.join(image_path, "testrun")
+        self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
+        self.tol = get_matplotlib_defaul_tolerance() * reltol
+
+    def __enter__(self):
+        """
+        Set matplotlib defaults.
+        """
+        from matplotlib import get_backend, rcParams, rcdefaults
+        import locale
+
+        try:
+            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+        except:
+            try:
+                locale.setlocale(locale.LC_ALL,
+                                 str('English_United States.1252'))
+            except:
+                msg = "Could not set locale to English/United States. " + \
+                      "Some date-related tests may fail"
+                warnings.warn(msg)
+
+        if get_backend().upper() != 'AGG':
+            import matplotlib
+            try:
+                matplotlib.use('AGG', warn=False)
+            except TypeError:
+                msg = "Image comparison requires matplotlib backend 'AGG'"
+                warnings.warn(msg)
+
+        # set matplotlib builtin default settings for testing
+        rcdefaults()
+        rcParams['font.family'] = 'Bitstream Vera Sans'
+        rcParams['text.hinting'] = False
+        try:
+            rcParams['text.hinting_factor'] = 8
+        except KeyError:
+            warnings.warn("could not set rcParams['text.hinting_factor']")
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
+        """
+        Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
+        environment variable is set.
+        """
+        try:
+            self.compare()
+        finally:
+            import matplotlib.pyplot as plt
+            self.close()
+            plt.close()
+            if self.keep_output:
+                self._copy_tempfiles()
+            os.remove(self.name)
+            if os.path.exists(self.diff_filename):
+                os.remove(self.diff_filename)
+
+    def compare(self, reltol=1):
+        """
+        Run :func:`matplotlib.testing.compare.compare_images` and raise an
+        unittest.TestCase.failureException with the message string given by
+        matplotlib if the comparison exceeds the allowed tolerance.
+        """
+        from matplotlib.testing.compare import compare_images
+        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
+        if msg:
+            raise ImageComparisonException(msg)
+
+    def _copy_tempfiles(self):
+        """
+        Copies created images from tempfiles to a subfolder of baseline images.
+        """
+        directory = self.output_path
+        if os.path.exists(directory) and not os.path.isdir(directory):
+            msg = "Could not keep output image, target directory exists:" + \
+                  directory
+            warnings.warn(msg)
+            return
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+        if os.path.isfile(self.diff_filename):
+            diff_filename_new = \
+                "-failed-diff.".join(self.image_name.rsplit(".", 1))
+            shutil.copy(self.diff_filename, os.path.join(directory,
+                                                         diff_filename_new))
+        shutil.copy(self.name, os.path.join(directory, self.image_name))
+
+
+def get_matplotlib_defaul_tolerance():
+    """
+    The two test images ("ok", "fail") result in the following rms values:
+    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
+    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
+    """
+    version = getMatplotlibVersion()
+    if version < [1, 3, 0]:
+        return 2e-3
+    else:
+        return 1
 
 
 if __name__ == '__main__':

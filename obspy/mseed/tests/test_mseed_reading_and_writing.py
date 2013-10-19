@@ -71,7 +71,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual('BGLD', trace.stats.station)
             self.assertEqual('EHE', trace.stats.channel)
             self.assertEqual(200, trace.stats.sampling_rate)
-            self.assertEqual(starttime[i],
+            self.assertEqual(
+                starttime[i],
                 util._convertDatetimeToMSTime(trace.stats.starttime))
             self.assertEqual(datalist[i], trace.data[0:9].tolist())
             i += 1
@@ -177,8 +178,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             self.assertEqual(256, info['record_length'])
         # No really good test files for the record length so just two files
         # with known record lengths are tested.
-        info = util.getRecordInformation(os.path.join(self.path, 'data',
-                                        'timingquality.mseed'))
+        info = util.getRecordInformation(
+            os.path.join(self.path, 'data', 'timingquality.mseed'))
         self.assertEqual(info['record_length'], 512)
         info = util.getRecordInformation(os.path.join(self.path, 'data',
                                          'steim2.mseed'))
@@ -401,8 +402,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # 5 seconds are 5s * 200Hz + 1 samples.
         self.assertEqual(samplecount, 1001)
         # Choose time outside of frame.
-        st = read(file,
-                starttime=UTCDateTime() - 10, endtime=UTCDateTime())
+        st = read(
+            file, starttime=UTCDateTime() - 10, endtime=UTCDateTime())
         # Should just result in an empty stream.
         self.assertEqual(len(st), 0)
 
@@ -515,8 +516,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                     stream[0].stats.mseed.encoding = encoding
                     # Convert the data so that it is compatible with the
                     # encoding.
-                    stream[0].data = np.require(stream[0].data,
-                                        np_encodings[encoding])
+                    stream[0].data = np.require(
+                        stream[0].data, np_encodings[encoding])
                     # Write it.
                     with NamedTemporaryFile() as tf:
                         tempfile = tf.name
@@ -569,7 +570,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         Tests writing all different types. This is an test which is independent
         of the read method. Only the data part is verified.
         """
-        file = os.path.join(self.path, "data", \
+        file = os.path.join(self.path, "data",
                             "BW.BGLD.__.EHE.D.2008.001.first_record")
         # Read the data and copy them
         st = read(file)
@@ -658,25 +659,26 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         def_content = np.arange(1, 51, dtype='int32')
         files = {
             os.path.join(path, "smallASCII.mseed"):
-                ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
+            ('|S1', 'a', 0, np.fromstring('ABCDEFGH', dtype='|S1')),
             # Tests all ASCII letters.
             os.path.join(path, "fullASCII.mseed"):
-                ('|S1', 'a', 0, np.fromstring(""" !"#$%&'()*+,-./""" + \
-                   """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" + \
-                   """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
+            ('|S1', 'a', 0, np.fromstring(
+                """ !"#$%&'()*+,-./""" +
+                """0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`""" +
+                """abcdefghijklmnopqrstuvwxyz{|}~""", dtype='|S1')),
             # Note: int16 array will also be returned as int32.
             os.path.join(path, "int16_INT16.mseed"):
-                ('int32', 'i', 1, def_content.astype('int16')),
+            ('int32', 'i', 1, def_content.astype('int16')),
             os.path.join(path, "int32_INT32.mseed"):
-                ('int32', 'i', 3, def_content),
+            ('int32', 'i', 3, def_content),
             os.path.join(path, "int32_Steim1.mseed"):
-                ('int32', 'i', 10, def_content),
+            ('int32', 'i', 10, def_content),
             os.path.join(path, "int32_Steim2.mseed"):
-                ('int32', 'i', 11, def_content),
+            ('int32', 'i', 11, def_content),
             os.path.join(path, "float32_Float32.mseed"):
-                ('float32', 'f', 4, def_content.astype('float32')),
+            ('float32', 'f', 4, def_content.astype('float32')),
             os.path.join(path, "float64_Float64.mseed"):
-                ('float64', 'd', 5, def_content.astype('float64'))
+            ('float64', 'd', 5, def_content.astype('float64'))
         }
         # Loop over all files and read them.
         for file in files.keys():
@@ -742,8 +744,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = np.random.randint(-1000, 1000, 50).astype('int32')
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed': {'dataquality': 'D'}}
+                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
+                  'mseed': {'dataquality': 'D'}}
         stats1['starttime'] = UTCDateTime(2000, 1, 1)
         stats2 = copy.deepcopy(stats1)
         stats2['mseed']['dataquality'] = 'R'
@@ -780,8 +782,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = np.zeros(10)
         # Create 4 different traces with 4 different dataqualities.
         stats1 = {'network': 'BW', 'station': 'TEST', 'location': 'A',
-                 'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
-                 'mseed': {'dataquality': 'X'}}
+                  'channel': 'EHE', 'npts': len(data), 'sampling_rate': 200.0,
+                  'mseed': {'dataquality': 'X'}}
         st = Stream([Trace(data=data, header=stats1)])
         with NamedTemporaryFile() as tf:
             tempfile = tf.name
@@ -857,6 +859,11 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over some record lengths.
         for encoding, value in ENCODINGS.iteritems():
             seed_dtype = value[2]
+            # Special handling for the ASCII dtype. NumPy 1.7 changes the
+            # default dtype of numpy.string_ from "|S1" to "|S32". Enforce
+            # "|S1|" here to be consistent across NumPy versions.
+            if encoding == 0:
+                seed_dtype = "|S1"
             with NamedTemporaryFile() as tf:
                 tempfile = tf.name
                 # Write it once with the encoding key and once with the value.
@@ -865,7 +872,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                 st.write(tempfile, format="MSEED", encoding=encoding)
                 st2 = read(tempfile)
                 del st2[0].stats.mseed
-                np.testing.assert_array_equal(st[0].data, st2[0].data)
+                np.testing.assert_array_equal(
+                    st[0].data, st2[0].data,
+                    "Arrays are not equal for encoding '%s'" %
+                    ENCODINGS[encoding][0])
                 del st2
                 ms = _MSStruct(tempfile)
                 ms.read(-1, 1, 1, 0)
@@ -922,12 +932,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # changes, sum of all points in stream must stay the same
         self.assertEqual(one_big_st[0].stats.npts, res[:]['npts'].sum())
         # timing quality must be inside the range of 0 to 100 [%]
-        self.assertEqual((res[:]['qual'] >= 0).sum(),  res.shape[0])
-        self.assertEqual((res[:]['qual'] <= 100).sum(),  res.shape[0])
+        self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
+        self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
 
 
 def suite():
-    return unittest.makeSuite(MSEEDReadingAndWritingTestCase,  'test')
+    return unittest.makeSuite(MSEEDReadingAndWritingTestCase, 'test')
 
 
 if __name__ == '__main__':

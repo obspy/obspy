@@ -31,6 +31,7 @@ from collections import deque
 import numpy as np
 from obspy import UTCDateTime
 from obspy.signal.headers import clibsignal, head_stalta_t
+from obspy.signal.cross_correlation import templatesMaxSimilarity
 
 
 def recSTALTA(a, nsta, nlta):
@@ -266,7 +267,7 @@ def delayedSTALTA(a, nsta, nlta):
     for i in xrange(m):
         sta[i] = (a[i] ** 2 + a[i - nsta] ** 2) / nsta + sta[i - 1]
         lta[i] = (a[i - nsta - 1] ** 2 + a[i - nsta - nlta - 1] ** 2) / \
-                 nlta + lta[i - 1]
+            nlta + lta[i - 1]
     sta[0:nlta + nsta + 50] = 0
     lta[0:nlta + nsta + 50] = 1  # avoid division by zero
     return sta / lta
@@ -495,7 +496,9 @@ def plotTrigger(trace, cft, thr_on, thr_off, show=True):
 def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
                        thr_coincidence_sum, trace_ids=None,
                        max_trigger_length=1e6, delete_long_trigger=False,
-                       trigger_off_extension=0, details=False, **options):
+                       trigger_off_extension=0, details=False,
+                       event_templates={}, similarity_threshold=0.7,
+                       **options):
     """
     Perform a network coincidence trigger.
 
@@ -511,7 +514,8 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
 
     .. note::
         An example can be found in the
-        `Tutorial <http://docs.obspy.org/tutorial/trigger_tutorial.html>`_
+        `Trigger/Picker Tutorial
+        <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
 
     .. note::
         Setting `trigger_type=None` precomputed characteristic functions can
@@ -572,16 +576,32 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
         and ``nlta`` (samples) by multiplying with sampling rate of trace.
         (e.g. ``sta=3``, ``lta=10`` would call the trigger with 3 and 10
         seconds average, respectively)
+    :param event_templates: Event templates to use in checking similarity of
+        single station triggers against known events. Expected are streams with
+        three traces for Z, N, E component. A dictionary is expected where for
+        each station used in the trigger, a list of streams can be provided as
+        the value to the network/station key (e.g. {"GR.FUR": [stream1,
+        stream2]}).
+    :type event_templates: dict
+    :param similarity_threshold: similarity threshold (0.0-1.0) at which a
+        single station trigger gets included in the output network event
+        trigger list. A common threshold can be set for all stations (float) or
+        a dictionary mapping station names to float values for each station.
+    :type similarity_threshold: float or dict
     :rtype: list
     :returns: List of event triggers sorted chronologically.
     """
-    st = stream
+    st = stream.copy()
     # if no trace ids are specified use all traces ids found in stream
     if trace_ids is None:
         trace_ids = [tr.id for tr in st]
     # we always work with a dictionary with trace ids and their weights later
     if isinstance(trace_ids, list) or isinstance(trace_ids, tuple):
         trace_ids = dict.fromkeys(trace_ids, 1)
+    # set up similarity thresholds as a dictionary if necessary
+    if not isinstance(similarity_threshold, dict):
+        similarity_threshold = dict.fromkeys([tr.stats.station for tr in st],
+                                             similarity_threshold)
 
     # the single station triggering
     triggers = []
@@ -612,41 +632,59 @@ def coincidenceTrigger(trigger_type, thr_on, thr_off, stream,
     while triggers != []:
         # remove first trigger from list and look for overlaps
         on, off, tr_id, cft_peak, cft_std = triggers.pop(0)
+        sta = tr_id.split(".")[1]
         event = {}
         event['time'] = UTCDateTime(on)
         event['stations'] = [tr_id.split(".")[1]]
         event['trace_ids'] = [tr_id]
         event['coincidence_sum'] = float(trace_ids[tr_id])
+        event['similarity'] = {}
         if details:
             event['cft_peaks'] = [cft_peak]
             event['cft_stds'] = [cft_std]
+        # evaluate maximum similarity for station if event templates were
+        # provided
+        templates = event_templates.get(sta)
+        if templates:
+            event['similarity'][sta] = \
+                templatesMaxSimilarity(stream, event['time'], templates)
         # compile the list of stations that overlap with the current trigger
         for trigger in triggers:
             tmp_on, tmp_off, tmp_tr_id, tmp_cft_peak, tmp_cft_std = trigger
+            tmp_sta = tmp_tr_id.split(".")[1]
             # skip retriggering of already present station in current
             # coincidence trigger
             if tmp_tr_id in event['trace_ids']:
                 continue
-            # check for overlapping trigger
-            if tmp_on <= off + trigger_off_extension:
-                event['stations'].append(tmp_tr_id.split(".")[1])
-                event['trace_ids'].append(tmp_tr_id)
-                event['coincidence_sum'] += trace_ids[tmp_tr_id]
-                if details:
-                    event['cft_peaks'].append(tmp_cft_peak)
-                    event['cft_stds'].append(tmp_cft_std)
-                # allow sets of triggers that overlap only on subsets of all
-                # stations (e.g. A overlaps with B and B overlaps w/ C => ABC)
-                off = max(off, tmp_off)
+            # check for overlapping trigger,
             # break if there is a gap in between the two triggers
-            else:
+            if tmp_on > off + trigger_off_extension:
                 break
-        # skip if coincidence sum threshold is not met
+            event['stations'].append(tmp_sta)
+            event['trace_ids'].append(tmp_tr_id)
+            event['coincidence_sum'] += trace_ids[tmp_tr_id]
+            if details:
+                event['cft_peaks'].append(tmp_cft_peak)
+                event['cft_stds'].append(tmp_cft_std)
+            # allow sets of triggers that overlap only on subsets of all
+            # stations (e.g. A overlaps with B and B overlaps w/ C => ABC)
+            off = max(off, tmp_off)
+            # evaluate maximum similarity for station if event templates were
+            # provided
+            templates = event_templates.get(tmp_sta)
+            if templates:
+                event['similarity'][tmp_sta] = \
+                    templatesMaxSimilarity(stream, event['time'], templates)
+        # skip if both coincidence sum and similarity thresholds are not met
         if event['coincidence_sum'] < thr_coincidence_sum:
-            continue
+            if not event['similarity']:
+                continue
+            elif not any([val > similarity_threshold[_s]
+                          for _s, val in event['similarity'].iteritems()]):
+                continue
         # skip coincidence trigger if it is just a subset of the previous
         # (determined by a shared off-time, this is a bit sloppy)
-        if off == last_off_time:
+        if off <= last_off_time:
             continue
         event['duration'] = off - on
         if details:

@@ -5,7 +5,7 @@ The SacIO test suite.
 """
 from obspy import Trace, read
 from obspy.core.util import NamedTemporaryFile
-from obspy.sac import SacIO, SacError, attach_paz, attach_resp
+from obspy.sac import SacIO, SacError, SacIOError, attach_paz, attach_resp
 import StringIO
 import numpy as np
 import os
@@ -35,11 +35,11 @@ class SacIOTestCase(unittest.TestCase):
         Tests for SacIO read and write
         """
         data = np.array([-8.7422776573475858e-08, -0.30901697278022766,
-                         - 0.58778536319732666, -0.8090171217918396,
-                         - 0.95105659961700439, -1.0, -0.95105630159378052,
-                         - 0.80901658535003662, -0.5877845287322998,
-                         - 0.30901604890823364, 1.1285198979749111e-06],
-                         dtype='<f4')
+                         -0.58778536319732666, -0.8090171217918396,
+                         -0.95105659961700439, -1.0, -0.95105630159378052,
+                         -0.80901658535003662, -0.5877845287322998,
+                         -0.30901604890823364, 1.1285198979749111e-06],
+                        dtype='<f4')
         sacfile = os.path.join(self.path, 'test.sac')
         t = SacIO()
         t.ReadSacFile(sacfile)
@@ -259,7 +259,7 @@ class SacIOTestCase(unittest.TestCase):
         respfile = os.path.join(os.path.dirname(__file__),
                                 'data', 'RESP.NZ.CRLZ.10.HHZ')
         sacpzfile = os.path.join(os.path.dirname(__file__),
-                                'data', 'SAC_PZs_NZ_CRLZ_HHZ')
+                                 'data', 'SAC_PZs_NZ_CRLZ_HHZ')
         # This is a rather lengthy test, in which the
         # poles, zeros and the gain of each instrument response file
         # are converted into the corresponding velocity frequency response
@@ -298,7 +298,7 @@ class SacIOTestCase(unittest.TestCase):
         phase1 = np.unwrap(np.arctan2(-h1.imag, h1.real))
         phase2 = np.unwrap(np.arctan2(-h2.imag, h2.real))
         np.testing.assert_almost_equal(phase1, phase2, decimal=4)
-        rms = np.sqrt(np.sum((amp1 - amp2) ** 2) / \
+        rms = np.sqrt(np.sum((amp1 - amp2) ** 2) /
                       np.sum(amp2 ** 2))
         self.assertTrue(rms < 2.02e-06)
         self.assertTrue(tr1.stats.paz.t_shift, 0.4022344)
@@ -325,6 +325,40 @@ class SacIOTestCase(unittest.TestCase):
             trace.SetHvalue('stel', 91.0)
             trace.WriteSacHeader(tempfile)
             trace = SacIO(tempfile)
+
+    def test_read_with_fsize(self):
+        """
+        Testing fsize option on SacIO.ReadSacFile()
+        """
+        # reading sac file with wrong file size should raise error
+        longer_file = os.path.join(self.path, 'seism-longer.sac')
+        shorter_file = os.path.join(self.path, 'seism-shorter.sac')
+        t = SacIO()
+        # default
+        self.assertRaises(SacError, t.ReadSacFile, longer_file)
+        self.assertRaises(SacError, t.ReadSacFile, shorter_file)
+        # fsize=True
+        self.assertRaises(SacError, t.ReadSacFile, longer_file, fsize=True)
+        self.assertRaises(SacError, t.ReadSacFile, shorter_file, fsize=True)
+        # using fsize=False should not work for shorter file
+        # (this is not supported by SAC) ...
+        self.assertRaises(SacIOError, t.ReadSacFile, shorter_file, fsize=False)
+        # ...but it should work for longer file
+        t.ReadSacFile(longer_file, fsize=False)
+        # checking trace
+        self.assertEqual(t.GetHvalue('nzyear'), 1981)
+        self.assertEqual(t.GetHvalue('nzjday'), 88)
+        self.assertEqual(t.GetHvalue('nzhour'), 10)
+        self.assertEqual(t.GetHvalue('nzmin'), 38)
+        self.assertEqual(t.GetHvalue('nzsec'), 14)
+        self.assertEqual(t.GetHvalue('nzmsec'), 0)
+        # we should never test equality for float values:
+        self.assertTrue(abs(t.GetHvalue('delta') - 0.01) <= 1e-9)
+        self.assertEqual(t.GetHvalue('scale'), -12345.0)
+        self.assertEqual(t.GetHvalue('npts'), 998)
+        self.assertEqual(t.GetHvalue('knetwk'), '-12345  ')
+        self.assertEqual(t.GetHvalue('kstnm'), 'CDV     ')
+        self.assertEqual(t.GetHvalue('kcmpnm'), 'Q       ')
 
 
 def suite():

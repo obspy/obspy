@@ -237,7 +237,7 @@ class RealTimeSignalTestCase(unittest.TestCase):
         # check results
         trace = self.orig_trace.copy()
         np.testing.assert_almost_equal(self.filt_trace_data,
-                                        self.rt_trace.data)
+                                       self.rt_trace.data)
         np.testing.assert_almost_equal(trace.data[1:], self.rt_trace.data[1:])
         np.testing.assert_almost_equal(trace.data[1:],
                                        self.filt_trace_data[1:])

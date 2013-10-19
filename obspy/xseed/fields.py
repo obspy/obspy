@@ -90,7 +90,7 @@ class Field(object):
             sn = sn.replace(" ", "_")
         rx = "|".join(rx_list)
         sn = "".join(re.findall(rx, sn))
-        if re.match("(" + rx + ")*$", sn) == None:
+        if re.match("(" + rx + ")*$", sn) is None:
             msg = "Can't convert string %s with flags %s" % (s, self.flags)
             raise SEEDTypeException(msg)
         return sn

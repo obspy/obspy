@@ -16,3 +16,4 @@ distribute-*.egg
 distribute-*.tar.gz
 misc/docs/source/packages/autogen
 obspy/lib/*.pyd
+misc/docs/_build/

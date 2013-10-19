@@ -130,7 +130,7 @@ Further Resources
   * http://geofon.gfz-potsdam.de/_sc3_neries_/arclink.pdf
   * https://raw.github.com/obspy/obspy/master/obspy/arclink/docs/protocol.txt
 
-* `Short introduction <http://www.webdc.eu/webdc_sum.html>`_ to the ArcLink
+* `Short introduction <http://www.webdc.eu/arclink/help.html>`_ to the ArcLink
   protocol
 * Latest `ArcLink server
   <ftp://ftp.gfz-potsdam.de/pub/home/st/GEOFON/software/SeisComP/ArcLink/>`_

@@ -139,7 +139,7 @@ EventType = Enum([
     "rockslide",
     "meteorite",
     "volcanic eruption",
-])
+], replace={'other': 'other event'})
 
 EventTypeCertainty = Enum([
     "known",

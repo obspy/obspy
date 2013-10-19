@@ -99,71 +99,64 @@ class ClientTestCase(unittest.TestCase):
         client = Client(host="erde.geophysik.uni-muenchen.de", port=18001,
                         user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
-            {'BW...': [{'end': None,
-                        'host': 'webdc.eu',
-                        'port': 18002,
-                        'priority': 2,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)},
-                       {'end': None,
-                        'host': 'erde.geophysik.uni-muenchen.de',
-                        'port': 18001,
-                        'priority': 1,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
+        self.assertEqual(
+            results,
+            {'BW.RJOB..': [{'priority': 1,
+                            'start': UTCDateTime(1980, 1, 1, 0, 0),
+                            'host': '141.84.11.2', 'end': None,
+                            'port': 18001}]})
         # 2 - BW network via webdc:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
-            {'BW...': [{'end': None,
-                        'host': 'webdc.eu',
-                        'port': 18002,
-                        'priority': 2,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)},
-                       {'end': None,
-                        'host': 'erde.geophysik.uni-muenchen.de',
-                        'port': 18001,
-                        'priority': 1,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
+        self.assertEqual(
+            results,
+            {'BW.RJOB..': [{'priority': 1,
+                            'start': UTCDateTime(1980, 1, 1, 0, 0),
+                            'host': '141.84.11.2',
+                            'end': None,
+                            'port': 18001}]})
         # 3 - BW network via webdc:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('BW', 'RJOB', dt, dt + 1)
-        self.assertEqual(results,
-            {'BW...': [{'end': None,
-                        'host': 'webdc.eu',
-                        'port': 18002,
-                        'priority': 2,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)},
-                       {'end': None,
-                        'host': 'erde.geophysik.uni-muenchen.de',
-                        'port': 18001,
-                        'priority': 1,
-                        'start': UTCDateTime(1980, 1, 1, 0, 0)}]})
+        self.assertEqual(
+            results,
+            {'BW.RJOB..': [{'priority': 1,
+                            'start': UTCDateTime(1980, 1, 1, 0, 0),
+                            'host': '141.84.11.2',
+                            'end': None,
+                            'port': 18001}]})
         # 4 - IV network via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 5 - IV network via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('IV', '', dt, dt + 1)
-        self.assertEqual(results,
+        self.assertEqual(
+            results,
             {'IV...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
                         'host': 'eida.rm.ingv.it', 'end': None,
                         'port': 18002}]})
         # 6 - GE.APE via webdc.eu:18001
         client = Client(host="webdc.eu", port=18001, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'webdc.eu', 'end': None, 'port': 18002}]})
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
+                        'host': 'eida.gfz-potsdam.de', 'end': None,
+                        'port': 18002}]})
         # 7 - GE.APE via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('GE', 'APE', dt, dt + 1)
-        self.assertEqual(results,
-            {'GE...': [{'priority': 1, 'start': UTCDateTime(1980, 1, 1, 0, 0),
-                        'host': 'webdc.eu', 'end': None, 'port': 18002}]})
+        self.assertEqual(
+            results,
+            {'GE...': [{'priority': 1, 'start': UTCDateTime(1993, 1, 1, 0, 0),
+                        'host': 'eida.gfz-potsdam.de', 'end': None,
+                        'port': 18002}]})
         # 8 - unknown network 00 via webdc.eu:18002
         client = Client(host="webdc.eu", port=18002, user='test@obspy.org')
         results = client.getRouting('00', '', dt, dt + 1)
@@ -206,7 +199,7 @@ class ClientTestCase(unittest.TestCase):
         self.assertTrue('BW' in result)
         self.assertTrue('BW.MANZ' in result)
         self.assertTrue('BW.MANZ..EHE' in result)
-        self.assertEqual(len(result['BW.MANZ..EHE']), 1)
+        self.assertEqual(len(result['BW.MANZ..EHE']), 2)
         self.assertTrue('gain' in result['BW.MANZ..EHE'][0])
         self.assertTrue('paz' not in result['BW.MANZ..EHE'][0])
         # 7 - history of instruments
@@ -245,18 +238,6 @@ class ClientTestCase(unittest.TestCase):
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
         client.getInventory('BW', starttime=dt, endtime=dt + 1)
 
-    def test_getInventory2(self):
-        """
-        Bugfix for location and channel codes for new inventory schema
-        """
-        client = Client(user='test@obspy.org')
-        # new schema
-        inventory = client.getInventory('CH', 'GRYON')
-        self.assertTrue('CH.GRYON..EHE' in inventory)
-        # old schema
-        inventory = client.getInventory('BW', 'MANZ')
-        self.assertTrue('BW.MANZ..EHZ' in inventory)
-
     def test_getWaveformWithMetadata(self):
         """
         """
@@ -271,8 +252,8 @@ class ClientTestCase(unittest.TestCase):
             '_format': 'MSEED',
             'paz': AttribDict({
                 'normalization_factor': 60077000.0,
-                'name': 'LMU:STS-2/N/g=1500',
-                'sensitivity': 2516778600.0,
+                'name': 'RJOB.2007.351.HZ',
+                'sensitivity': 2516800000.0,
                 'normalization_frequency': 1.0,
                 'sensor_manufacturer': 'Streckeisen',
                 'sensitivity_unit': 'M/S',
@@ -282,7 +263,7 @@ class ClientTestCase(unittest.TestCase):
                           (-131.04 + 467.29j)],
                 'gain': 60077000.0,
                 'zeros': [0j, 0j],
-                'sensor_model': 'STS-2/N'}),
+                'sensor_model': 'STS-2'}),
             'mseed': AttribDict({
                 'record_length': 512,
                 'encoding': 'STEIM1',
@@ -294,14 +275,14 @@ class ClientTestCase(unittest.TestCase):
                 'latitude': 47.737167,
                 'elevation': 860.0,
                 'longitude': 12.795714}),
-            'delta': 0.005,
+            'sampling_rate': 200.0,
             'station': 'RJOB',
             'location': '',
             'starttime': UTCDateTime(2010, 8, 1, 12, 0),
-            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
-            'npts': 1370,
+            'delta': 0.005,
             'calib': 1.0,
-            'sampling_rate': 200.0,
+            'npts': 1370,
+            'endtime': UTCDateTime(2010, 8, 1, 12, 0, 6, 845000),
             'channel': 'EHZ'}
         self.assertEqual(st[0].stats, results)
         # example 2
@@ -398,12 +379,13 @@ class ClientTestCase(unittest.TestCase):
         result = client.getStations(start, end, 'BW')
         self.assertTrue(
             AttribDict({'remark': '', 'code': 'RWMO', 'elevation': 763.0,
-                        'description': 'Wildenmoos, Bavaria',
-                        'start': UTCDateTime(2006, 6, 4, 0, 0),
+                        'description': 'Wildenmoos, Bavaria, BW-Net',
+                        'start': UTCDateTime(2006, 7, 4, 0, 0),
                         'restricted': False, 'archive_net': '',
-                        'longitude': 12.729887, 'affiliation': '',
-                        'depth': None, 'place': '', 'country': '',
-                        'latitude': 47.744172, 'end': None}) in result)
+                        'longitude': 12.729887, 'affiliation': 'BayernNetz',
+                        'depth': None, 'place': 'Wildenmoos',
+                        'country': ' BW-Net', 'latitude': 47.744171,
+                        'end': None}) in result)
 
     def test_saveWaveform(self):
         """
@@ -600,7 +582,7 @@ class ClientTestCase(unittest.TestCase):
                          (-251.33000000000001 + 0j),
                          (-131.03999999999999 - 467.29000000000002j),
                          (-131.03999999999999 + 467.29000000000002j)],
-               'sensitivity': 2516778600.0,
+               'sensitivity': 2516800000.0,
                'zeros': [0j, 0j]}
         dat1 = np.array([288, 300, 292, 285, 265, 287, 279, 250, 278, 278])
         dat2 = np.array([445, 432, 425, 400, 397, 471, 426, 390, 450, 442])
@@ -618,8 +600,8 @@ class ClientTestCase(unittest.TestCase):
         self.assertEqual('RJOB', st[0].stats['station'])
         self.assertEqual(200.0, st[0].stats['sampling_rate'])
         self.assertEqual(6001, st[0].stats['npts'])
-        self.assertEqual('2009-08-24T00:20:03.000000Z',
-                          str(st[0].stats['starttime']))
+        self.assertEqual(
+            '2009-08-24T00:20:03.000000Z', str(st[0].stats['starttime']))
         np.testing.assert_array_equal(dat1, st[0].data[:10])
         np.testing.assert_array_equal(dat2, st[0].data[-10:])
 

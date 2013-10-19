@@ -39,12 +39,12 @@ The first lines of our SRTM data file (from
 * Shading/Illumination can be added. See the basemap example plotmap_shaded.py_
   for more info.
 
-.. _basemap: http://matplotlib.sourceforge.net/basemap/doc/html/index.html
+.. _basemap: http://matplotlib.org/basemap/
 .. _download: http://sourceforge.net/projects/matplotlib/files/matplotlib-toolkits/
 .. _here: http://examples.obspy.org/srtm_1240-1300E_4740-4750N.asc.gz
 .. _NumPy: http://numpy.scipy.org/
 .. _GDAL: http://trac.osgeo.org/gdal/wiki/GdalOgrInPython
-.. _ASTER: http://www.gdem.aster.ersdac.or.jp/search.jsp
+.. _ASTER: http://gdem.ersdac.jspacesystems.or.jp/search.jsp
 .. _plotmap_shaded.py: http://matplotlib.svn.sourceforge.net/viewvc/matplotlib/trunk/toolkits/basemap/examples/plotmap_shaded.py
 
 
