@@ -39,6 +39,8 @@ from obspy.core.event import readEvents
 from obspy.core.util.base import make_waveform_plugin_table
 read.__doc__ = \
     read.__doc__ % make_waveform_plugin_table("read", numspaces=4)[4:]
+#Stream.write.__doc__ = \
+#    Stream.write.__doc__ % make_waveform_plugin_table("write", numspaces=8)[8:]
 
 __version__ = _getVersionString()
 

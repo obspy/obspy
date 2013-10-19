@@ -1322,7 +1322,7 @@ class Stream(object):
         e.g. using trace.id
 
         >>> for tr in st: #doctest: +SKIP
-        ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
+        ...     tr.write(tr.id + ".MSEED", format="MSEED") #doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -1330,25 +1330,10 @@ class Stream(object):
         :meth:`~obspy.core.stream.Stream.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the *Linked Function Call* of each module for any extra
-        options available.
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
 
-        =======  ===================  ====================================
-        Format   Required Module      Linked Function Call
-        =======  ===================  ====================================
-        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
-        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
-        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
-        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
-        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
-        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
-        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
-        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.writeSLIST`
-        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
-        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
-        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.writePickle`
-        =======  ===================  ====================================
+        %s
         """
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
