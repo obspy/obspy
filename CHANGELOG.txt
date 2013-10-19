@@ -27,6 +27,7 @@ dev:
      "filename" instead of the path to a local file now also can be provided
      either a file-like object with RESP information or an obspy.xseed.Parser
      object (e.g. created reading a dataless SEED file).
+   * fix a bug when merging valid data into a masked trace (see #638)
    * event.ResourceIdentifier objects are now initialized with a QuakeML
      conform string by default, i.e. if no custom prefix is provided during
      initialization.
