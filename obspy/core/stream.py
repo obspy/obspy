@@ -102,28 +102,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
-    ========  =====================  ========================================
-    Format    Required Module        _`Linked Function Call`
-    ========  =====================  ========================================
-    MSEED     :mod:`obspy.mseed`     :func:`obspy.mseed.core.readMSEED`
-    SAC       :mod:`obspy.sac`       :func:`obspy.sac.core.readSAC`
-    GSE2      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE2`
-    SEISAN    :mod:`obspy.seisan`    :func:`obspy.seisan.core.readSEISAN`
-    SACXY     :mod:`obspy.sac`       :func:`obspy.sac.core.readSACXY`
-    GSE1      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE1`
-    Q         :mod:`obspy.sh`        :func:`obspy.sh.core.readQ`
-    SH_ASC    :mod:`obspy.sh`        :func:`obspy.sh.core.readASC`
-    SLIST     :mod:`obspy.core`      :func:`obspy.core.ascii.readSLIST`
-    TSPAIR    :mod:`obspy.core`      :func:`obspy.core.ascii.readTSPAIR`
-    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY`
-    SEGY      :mod:`obspy.segy`      :func:`obspy.segy.core.readSEGY`
-    SU        :mod:`obspy.segy`      :func:`obspy.segy.core.readSU`
-    SEG2      :mod:`obspy.seg2`      :func:`obspy.seg2.seg2.readSEG2`
-    WAV       :mod:`obspy.wav`       :func:`obspy.wav.core.readWAV`
-    PICKLE    :mod:`obspy.core`      :func:`obspy.core.stream.readPICKLE`
-    DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK`
-    CSS       :mod:`obspy.css`       :func:`obspy.css.core.readCSS`
-    ========  =====================  ========================================
+    %s
 
     Next to the :func:`~obspy.core.stream.read` function the
     :meth:`~obspy.core.stream.Stream.write` method of the returned

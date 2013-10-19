@@ -35,6 +35,10 @@ from obspy.core.trace import Trace
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents
 
+# insert waveform plugins dynamically
+from obspy.core.util.base import make_waveform_plugin_table
+read.__doc__ = \
+    read.__doc__ % make_waveform_plugin_table("read", numspaces=4)[4:]
 
 __version__ = _getVersionString()
 
