@@ -209,7 +209,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     else:
         vbs = C.create_string_buffer("")
     rtyp = C.create_string_buffer("CS")
-    datime = C.create_string_buffer("%d,%3d" % (date.year, date.julday))
+    datime = C.create_string_buffer(date.formatSEED())
     fn = C.create_string_buffer(tempfile)
     nfreqs = C.c_int(freqs.shape[0])
     res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
