@@ -367,8 +367,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         except ValueError:
             break
 
-    clibmseed.lil_free(lil)
-    del lil
+    clibmseed.lil_free(lil)  # NOQA
+    del lil  # NOQA
     return Stream(traces=traces)
 
 
@@ -686,15 +686,15 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(' ')
             C.memset(C.pointer(blkt100), 0, size)
-            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
-                                                 size, 100, 0)
+            ret_val = clibmseed.msr_addblockette(
+                msr, C.pointer(blkt100), size, 100, 0)  # NOQA
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             if bool(ret_val) is False:
-                clibmseed.msr_free(C.pointer(msr))
-                del msr
+                clibmseed.msr_free(C.pointer(msr))  # NOQA
+                del msr  # NOQA
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
@@ -702,19 +702,19 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         errcode = clibmseed.mst_pack(
             mst.mst, recHandler, None, trace_attr['reclen'],
             trace_attr['encoding'], trace_attr['byteorder'],
-            C.byref(packedsamples), flush, verbose, msr)
+            C.byref(packedsamples), flush, verbose, msr)  # NOQA
 
         if errcode == 0:
             msg = ("Did not write any data for trace '%s' even though it "
                    "contains data values.") % trace
             raise ValueError(msg)
         if errcode == -1:
-            clibmseed.msr_free(C.pointer(msr))
-            del mst, msr
+            clibmseed.msr_free(C.pointer(msr))  # NOQA
+            del mst, msr  # NOQA
             raise Exception('Error in mst_pack')
         # Deallocate any allocated memory.
-        clibmseed.msr_free(C.pointer(msr))
-        del mst, msr
+        clibmseed.msr_free(C.pointer(msr))  # NOQA
+        del mst, msr  # NOQA
     # Close if its a file handler.
     if isinstance(f, file):
         f.close()

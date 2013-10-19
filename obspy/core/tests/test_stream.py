@@ -4,6 +4,7 @@ from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.xseed import Parser
 from obspy.core.util.decorator import skipIf
 import cPickle
 import numpy as np
@@ -2016,6 +2017,30 @@ class StreamTestCase(unittest.TestCase):
         self.assertTrue(len(st), 6)
         # Clearing also works for method chaining.
         self.assertEqual(len(st.clear()), 0)
+
+    def test_simulate_seedresp_Parser(self):
+        """
+        Test simulate() with giving a Parser object to use for RESP information
+        in evalresp.
+        Also tests usage without specifying a date for response lookup
+        explicitely.
+        """
+        st = read()
+        p = Parser("/path/to/dataless.seed.BW_RJOB")
+        kwargs = dict(seedresp={'filename': p, 'units': "DIS"},
+                      pre_filt=(1, 2, 50, 60), waterlevel=60)
+        st.simulate(**kwargs)
+
+        for resp_string, stringio in p.getRESP():
+            stringio.seek(0, 0)
+            component = resp_string[-1]
+            with NamedTemporaryFile() as tf:
+                with open(tf.name, "wb") as fh:
+                    fh.write(stringio.read())
+                tr1 = read().select(component=component)[0]
+                tr1.simulate(**kwargs)
+            tr2 = st.select(component=component)[0]
+            self.assertEqual(tr1, tr2)
 
 
 def suite():

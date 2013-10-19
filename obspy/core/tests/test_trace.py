@@ -3,11 +3,13 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core import Stats
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import math
 import numpy as np
 import unittest
+import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -489,6 +491,70 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(gap.data.mask, mask)
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
         np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
+
+    def test_addIntoGap(self):
+        """
+        Test __add__ method of the Trace class
+        Adding a trace that fits perfectly into gap in a trace
+        """
+        myArray = np.arange(6, dtype=np.int32)
+
+        stats = Stats()
+        stats.network = 'VI'
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 0)
+        stats['npts'] = 0
+        stats['station'] = 'IKJA'
+        stats['channel'] = 'EHZ'
+        stats['sampling_rate'] = 1
+
+        bigtrace = Trace(data=np.array([], dtype=np.int32), header=stats)
+        bigtrace_sort = bigtrace.copy()
+        stats['npts'] = len(myArray)
+        myTrace = Trace(data=myArray, header=stats)
+
+        stats['npts'] = 2
+        trace1 = Trace(data=myArray[0:2].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 2)
+        trace2 = Trace(data=myArray[2:4].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
+        trace3 = Trace(data=myArray[4:6].copy(), header=stats)
+
+        tr1 = bigtrace
+        tr2 = bigtrace_sort
+        for method in [0, 1]:
+            #Random
+            bigtrace = tr1.copy()
+            bigtrace = bigtrace.__add__(trace1, method=1)
+            bigtrace = bigtrace.__add__(trace3, method=1)
+            bigtrace = bigtrace.__add__(trace2, method=1)
+
+            #Sorted
+            bigtrace_sort = tr2.copy()
+            bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+
+            for tr in (bigtrace, bigtrace_sort):
+                self.assertTrue(isinstance(tr, Trace))
+                self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+
+            self.failUnless((bigtrace_sort.data == myArray).all())
+
+            fail_pattern = "\n\tExpected %s\n\tbut got  %s"
+            failinfo = fail_pattern % (myTrace, bigtrace_sort)
+            failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
+            self.failUnless(bigtrace_sort == myTrace, failinfo)
+
+            failinfo = fail_pattern % (myArray, bigtrace.data)
+            self.failUnless((bigtrace.data == myArray).all(), failinfo)
+
+            failinfo = fail_pattern % (myTrace, bigtrace)
+            failinfo += fail_pattern % (myTrace.data, bigtrace.data)
+            self.failUnless(bigtrace == myTrace, failinfo)
+
+            for array_ in (bigtrace.data, bigtrace_sort.data):
+                failinfo = fail_pattern % (myArray.dtype, array_.dtype)
+                self.failUnless(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1154,7 +1220,7 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(10)
         tr = Trace(data=data)
-        tr.taper()
+        tr.taper(max_percentage=0.05, type='cosine')
         for i in range(len(data)):
             self.assertTrue(tr.data[i] <= 1.)
             self.assertTrue(tr.data[i] >= 0.)
@@ -1165,15 +1231,44 @@ class TraceTestCase(unittest.TestCase):
         """
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="left")
+        tr.taper(max_percentage=None, side="left")
         self.assertTrue(tr.data[:5].sum() < 5.)
         self.assertTrue(tr.data[6:].sum() == 5.)
 
         data = np.ones(11)
         tr = Trace(data=data)
-        tr.taper(side="right")
+        tr.taper(max_percentage=None, side="right")
         self.assertTrue(tr.data[:5].sum() == 5.)
         self.assertTrue(tr.data[6:].sum() < 5.)
+
+    def test_taper_length(self):
+        npts = 11
+        type_ = "hann"
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # test an overlong taper request, should still work
+        tr.taper(max_percentage=0.7, max_length=int(npts / 2) + 1)
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(max_percentage=None, type=type_, side="left", max_length=3)
+        # last 5 samples get tapered
+        tr.taper(max_percentage=0.5, type=type_, side="right", max_length=None)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:6] == 1.))
+        self.assertTrue(np.all(tr.data[6:] < 1.))
+
+        data = np.ones(npts)
+        tr = Trace(data=data, header={'sampling': 1.})
+        # first 3 samples get tapered
+        tr.taper(max_percentage=0.5, type=type_, side="left", max_length=3)
+        # last 3 samples get tapered
+        tr.taper(max_percentage=0.3, type=type_, side="right", max_length=5)
+        self.assertTrue(np.all(tr.data[:3] < 1.))
+        self.assertTrue(np.all(tr.data[3:8] == 1.))
+        self.assertTrue(np.all(tr.data[8:] < 1.))
 
     def test_times(self):
         """
@@ -1306,8 +1401,8 @@ class TraceTestCase(unittest.TestCase):
             .verify()\
             .filter("lowpass", freq=2.0)\
             .simulate(paz_remove={'poles': [-0.037004 + 0.037016j,
-                                            -0.037004 - 0.037016j,
-                                            -251.33 + 0j],
+                                            - 0.037004 - 0.037016j,
+                                            - 251.33 + 0j],
                                   'zeros': [0j, 0j],
                                   'gain': 60077000.0,
                                   'sensitivity': 2516778400.0})\
@@ -1317,7 +1412,7 @@ class TraceTestCase(unittest.TestCase):
             .differentiate()\
             .integrate()\
             .detrend()\
-            .taper()\
+            .taper(max_percentage=0.05, type='cosine')\
             .normalize()
         self.assertTrue(temp_tr is tr)
         self.assertTrue(isinstance(tr, Trace))
@@ -1346,6 +1441,42 @@ class TraceTestCase(unittest.TestCase):
         tr.differentiate()
         tr.integrate()
         tr.taper()
+
+    def test_taper_backwards_compatibility(self):
+        """
+        Test that old style .taper() calls get emulated correctly.
+        """
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('ignore', DeprecationWarning)
+            tr = Trace(np.ones(10))
+
+            tr1 = tr.copy().taper()
+            tr2 = tr.copy().taper("cosine", p=0.1)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper("hann")
+            tr2 = tr.copy().taper(max_percentage=None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(None, type="hann")
+            self.assertEqual(tr1, tr2)
+            tr2 = tr.copy().taper(type="hann", max_percentage=None)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper(type="cosine", p=0.2)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=0.1)
+            self.assertEqual(tr1, tr2)
+
+            tr1 = tr.copy().taper(type="cosine", p=1.0)
+            tr2 = tr.copy().taper(type="cosine", max_percentage=None)
+            # processing info is different for this case
+            tr1.stats.pop("processing")
+            tr2.stats.pop("processing")
+            self.assertEqual(tr1, tr2)
+
+            self.assertRaises(tr.copy().taper, type="hann", p=0.3)
+
+            tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
+            self.assertTrue(np.all(tr1.data[6:] < 1))
 
 
 def suite():

@@ -94,8 +94,13 @@ def parse_file_to_dict(data_dict, samp_int_dict, file, counter, format=None,
         data_dict.setdefault(_id, [])
         data_dict[_id].append([date2num(tr.stats.starttime),
                                date2num(tr.stats.endtime)])
-        samp_int_dict.setdefault(_id,
-                                 1.0 / (24 * 3600 * tr.stats.sampling_rate))
+        try:
+            samp_int_dict.setdefault(_id, [])
+            samp_int_dict[_id].\
+                append(1. / (24 * 3600 * tr.stats.sampling_rate))
+        except ZeroDivisionError:
+            print("Skipping file with zero samlingrate: %s" % (file))
+            return counter
     return (counter + 1)
 
 
@@ -134,7 +139,7 @@ def load_npz(file_, data_dict, samp_int_dict):
         npz_dict.close()
 
 
-def main():
+def main(option_list=None):
     parser = OptionParser(__doc__.strip())
     parser.add_option("-f", "--format", default=None,
                       type="string", dest="format",
@@ -193,7 +198,7 @@ def main():
     parser.add_option("--print-gaps", default=False,
                       action="store_true", dest="print_gaps",
                       help="Optional, prints a list of gaps at the end.")
-    (options, largs) = parser.parse_args()
+    (options, largs) = parser.parse_args(option_list)
 
     # Print help and exit if no arguments are given
     if len(largs) == 0 and options.load is None:
@@ -273,6 +278,10 @@ def main():
             startend = startend[startend[:, 0] < options.endtime]
         if len(startend) == 0:
             continue
+        timerange = startend[:, 1].max() - startend[:, 0].min()
+        if timerange == 0.0:
+            warnings.warn('Zero sample long data for _id=%s, skipping' % _id)
+            continue
 
         startend_compressed = compressStartend(startend, 1000)
 
@@ -285,10 +294,9 @@ def main():
         # find the gaps
         diffs = startend[1:, 0] - startend[:-1, 1]  # currend.start - last.end
         gapsum = diffs[diffs > 0].sum()
-        timerange = startend[:, 1].max() - startend[:, 0].min()
         perc = (timerange - gapsum) / timerange
         labels[_i] = labels[_i] + "\n%.1f%%" % (perc * 100)
-        gap_indices = diffs > 1.8 * samp_int[_id]
+        gap_indices = diffs > 1.8 * np.array(samp_int[_id][:-1])
         gap_indices = np.concatenate((gap_indices, [False]))
         if any(gap_indices):
             # dont handle last endtime as start of gap

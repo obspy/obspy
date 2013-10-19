@@ -12,7 +12,6 @@ Base utilities and constants for ObsPy.
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
-import ctypes as C
 import doctest
 import glob
 import inspect
@@ -30,7 +29,7 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink', 'neic']
+                   'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -40,15 +39,6 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
-
-
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
 
 
 class NamedTemporaryFile(object):
@@ -442,7 +432,9 @@ def getScriptDirName():
 
 def checkForMatplotlibCompareImages():
     try:
-        from matplotlib.testing.compare import compare_images  # @UnusedImport
+        # trying to stay inside 80 char line
+        import matplotlib.testing.compare as _compare
+        compare_images = _compare.compare_images  # NOQA
     except:
         return False
     return True
@@ -469,11 +461,13 @@ class ImageComparison(NamedTemporaryFile):
         value (i.e. 10 means a 10 times harder to pass test tolerance).
 
     The class should be used with Python's "with" statement. When setting up,
-    the matplotlib rcdefaults are set to ensure consistent image testing. After
-    the plotting is completed, the .compare() method can be used to return the
-    message string from :func:`matplotlib.testing.compare.compare_images`
-    comparing against the previously specified baseline image. At the end of
-    the "with" block all temporary files are deleted.
+    the matplotlib rcdefaults are set to ensure consistent image testing.
+    After the plotting is completed, the :meth:`ImageComparison.compare`
+    method is called automatically at the end of the "with" block, comparing
+    against the previously specified baseline image. This raises an exception
+    (if the test fails) with the message string from
+    :func:`matplotlib.testing.compare.compare_images`. Afterwards all
+    temporary files are deleted automatically.
 
     .. note::
         If images created during the testrun should be kept after the test, set
@@ -491,8 +485,7 @@ class ImageComparison(NamedTemporaryFile):
     >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
     ...     st = read()  # doctest: +SKIP
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
-    ...     # compare images (inside unit test use self.assert(...))
-    ...     assert(not ic.compare())  # doctest: +SKIP
+    ...     # image is compared against baseline image automatically
     """
     def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
         self.suffix = "." + image_name.split(".")[-1]

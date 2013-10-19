@@ -23,7 +23,7 @@ obspy.core.util - Various utilities for ObsPy
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, add_doctests, \
     add_unittests, ALL_MODULES, DEFAULT_MODULES, NATIVE_BYTEORDER, \
-    c_file_p, createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
+    createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
     NETWORK_MODULES, _readFromPlugin, getScriptDirName
 from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
