@@ -13,7 +13,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked, taper_API_change
+from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
+    taper_API_change
 import math
 import numpy as np
 import warnings
@@ -1396,6 +1397,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1589,6 +1591,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return self.data.std()
 
+    @skipIfNoData
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1625,6 +1628,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1680,6 +1684,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @raiseIfMasked
     def detrend(self, type='simple', **options):
         """
@@ -1728,6 +1733,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @taper_API_change()
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
