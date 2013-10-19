@@ -27,7 +27,6 @@ from distutils.errors import DistutilsExecError, CompileError
 from distutils.unixccompiler import UnixCCompiler
 from setuptools import find_packages, setup
 from setuptools.extension import Extension
-import distribute_setup
 import glob
 import os
 import platform
@@ -629,8 +628,6 @@ def setupLibTauP():
 
 
 def setupPackage(gfortran=True, ccompiler=True):
-    # automatically install distribute if the user does not have it installed
-    distribute_setup.use_setuptools()
     # use lib2to3 for Python 3.x
     if sys.version_info[0] == 3:
         convert2to3()
