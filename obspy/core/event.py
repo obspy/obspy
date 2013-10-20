@@ -281,6 +281,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             for key, _ in self._properties:
                 if key.endswith("_errors") and getattr(self, key) is None:
                     setattr(self, key, QuantityError())
+            if self.get("resource_id", False) is None:
+                setattr(self, "resource_id", ResourceIdentifier())
 
         def clear(self):
             super(AbstractEventType, self).clear()
