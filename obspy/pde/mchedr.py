@@ -30,7 +30,7 @@ import numpy as np
 
 
 # ResourceIdentifier prefix used throughout this code
-res_id_prefix = 'smi:gov.usgs.earthquake'
+res_id_prefix = 'quakeml:us.anss.org'
 
 
 def isMchedr(filename):
@@ -233,7 +233,7 @@ class Unpickler(object):
                 angle = 0.0
             else:
                 angle = np.pi
-        return self._to_deg(angle)
+        return round(self._to_deg(angle), 1)
 
     def _parseRecordHY(self, line):
         """
@@ -280,7 +280,7 @@ class Unpickler(object):
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
-        origin.depth = depth
+        origin.depth = depth * 1000
         origin.depth_type = 'from location'
         origin.quality = OriginQuality()
         origin.quality.associated_station_count = station_number
@@ -315,9 +315,11 @@ class Unpickler(object):
 
         origin = event.origins[0]
         origin.time_errors['uncertainty'] = orig_time_stderr
+        # FIXME: comvert latitude and longitude errors to degrees!
         origin.latitude_errors['uncertainty'] = latitude_stderr
         origin.longitude_errors['uncertainty'] = longitude_stderr
-        origin.depth_errors['uncertainty'] = depth_stderr
+        if depth_stderr is not None:
+            origin.depth_errors['uncertainty'] = depth_stderr * 1000
         if mb_mag is not None:
             mag = Magnitude()
             mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
@@ -405,13 +407,18 @@ class Unpickler(object):
             'confidence ellipsoid'
         origin.origin_uncertainty.confidence_level = 90
         confidence_ellipsoid = ConfidenceEllipsoid()
-        confidence_ellipsoid.semi_major_axis_length = semi_major_axis_length
-        confidence_ellipsoid.semi_minor_axis_length = semi_minor_axis_length
+        confidence_ellipsoid.semi_major_axis_length =\
+            semi_major_axis_length * 1000
+        confidence_ellipsoid.semi_minor_axis_length =\
+            semi_minor_axis_length * 1000
         confidence_ellipsoid.semi_intermediate_axis_length =\
-            intermediate_axis_length
+            intermediate_axis_length * 1000
         confidence_ellipsoid.major_axis_plunge = semi_major_axis_plunge
         confidence_ellipsoid.major_axis_azimuth = semi_major_axis_azimuth
-        confidence_ellipsoid.major_axis_rotation = major_axis_rotation
+        # We need to add 90 to match NEIC QuakeML format,
+        # but I don't understand why...
+        confidence_ellipsoid.major_axis_rotation =\
+            major_axis_rotation + 90
         origin.origin_uncertainty.confidence_ellipsoid = confidence_ellipsoid
 
     def _parseRecordA(self, line, event):
@@ -478,7 +485,7 @@ class Unpickler(object):
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
-        origin.depth = depth
+        origin.depth = depth * 1000
         origin.depth_type = 'from location'
         origin.quality = OriginQuality()
         origin.quality.standard_error = standard_dev
@@ -506,7 +513,7 @@ class Unpickler(object):
         origin.time_errors['uncertainty'] = orig_time_stderr
         origin.latitude_errors['uncertainty'] = latitude_stderr
         origin.longitude_errors['uncertainty'] = longitude_stderr
-        origin.depth_errors['uncertainty'] = depth_stderr
+        origin.depth_errors['uncertainty'] = depth_stderr * 1000
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
@@ -607,7 +614,8 @@ class Unpickler(object):
                 origin.depth_type = 'operator assigned'
             else:
                 origin.depth_type = 'from location'
-                origin.depth_errors['uncertainty'] = depth_stderr
+                if depth_stderr is not None:
+                    origin.depth_errors['uncertainty'] = depth_stderr * 1000
             quality = OriginQuality()
             quality.used_station_count =\
                 station_number + station_number2

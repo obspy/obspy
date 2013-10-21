@@ -38,7 +38,7 @@ class mchedrTestCase(unittest.TestCase):
         self.assertEqual(
             catalog[0].resource_id,
             ResourceIdentifier(
-                resource_id='smi:gov.usgs.earthquake/20120101052755.98'))
+                resource_id='quakeml:us.anss.org/20120101052755.98'))
         self.assertEqual(
             str(catalog),
             '''1 Event(s) in Catalog:
@@ -91,8 +91,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(origin.latitude_errors.uncertainty, 1.72)
         self.assertEqual(origin.longitude, 138.072)
         self.assertEqual(origin.longitude_errors.uncertainty, 1.64)
-        self.assertEqual(origin.depth, 365.3)
-        self.assertEqual(origin.depth_errors.uncertainty, 2.7)
+        self.assertEqual(origin.depth, 365300.0)
+        self.assertEqual(origin.depth_errors.uncertainty, 2700.0)
         self.assertEqual(origin.depth_type, 'from location')
         self.assertEqual(origin.method_id, None)
         self.assertEqual(origin.time_fixed, None)
@@ -100,7 +100,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             origin.earth_model_id,
             ResourceIdentifier(
-                resource_id='smi:gov.usgs.earthquake/emid=AK135'))
+                resource_id='quakeml:us.anss.org/emid=AK135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
         self.assertEqual(origin.origin_type, None)
@@ -136,12 +136,12 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(u.azimuth_max_horizontal_uncertainty, None)
         # confidence ellipsoid
         c = u.confidence_ellipsoid
-        self.assertEqual(c.semi_intermediate_axis_length, 2.75)
+        self.assertEqual(c.semi_intermediate_axis_length, 2750.0)
         #c.major_axis_rotation is computed during file reading:
-        self.assertAlmostEqual(c.major_axis_rotation, 80.505, places=3)
+        self.assertAlmostEqual(c.major_axis_rotation, 170.5, places=3)
         self.assertEqual(c.major_axis_plunge, 76.06)
-        self.assertEqual(c.semi_minor_axis_length, 2.21)
-        self.assertEqual(c.semi_major_axis_length, 4.22)
+        self.assertEqual(c.semi_minor_axis_length, 2210.0)
+        self.assertEqual(c.semi_major_axis_length, 4220.0)
         self.assertEqual(c.major_axis_azimuth, 292.79)
 
     def test_magnitude(self):
@@ -221,7 +221,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(ar.backazimuth_weight, None)
         self.assertEqual(
             ar.earth_model_id,
-            ResourceIdentifier('smi:gov.usgs.earthquake/emid=AK135'))
+            ResourceIdentifier('quakeml:us.anss.org/emid=AK135'))
         self.assertEqual(len(ar.comments), 0)
 
     def test_pick(self):
@@ -263,7 +263,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             fm.method_id,
             ResourceIdentifier(
-                resource_id='smi:gov.usgs.earthquake/methodID=CMT'))
+                resource_id='quakeml:us.anss.org/methodID=CMT'))
         # comments
         self.assertEqual(len(fm.comments), 0)
         # creation info
