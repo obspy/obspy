@@ -817,7 +817,7 @@ class Unpickler(object):
         #unused: residual_flag = line[30]
         distance = self._float(line[32:38])  # degrees
         azimuth = self._float(line[39:44])
-        backazimuth = azimuth % -360 + 180
+        backazimuth = round(azimuth % -360 + 180, 1)
         mb_period = self._float(line[44:48])
         mb_amplitude = self._float(line[48:55])  # nanometers
         mb_magnitude = self._float(line[56:59])
