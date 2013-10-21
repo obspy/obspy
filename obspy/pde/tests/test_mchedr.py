@@ -63,7 +63,7 @@ class mchedrTestCase(unittest.TestCase):
 Felt (V) at Chiba; (IV) at Fussa, Kawasaki, Saitama, Tokyo, \
 Yokohama and Yokosuka; (III) at Ebina, Zama and Zushi; (II) \
 at Misawa and Narita, Honshu. Recorded (4 JMA) in Chiba, Fukushima, \
-Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.  ')
+Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         # event descriptions
         self.assertEqual(len(event.event_descriptions), 2)
         d = event.event_descriptions

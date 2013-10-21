@@ -23,6 +23,7 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile
 from datetime import timedelta
 import os
+import string as s
 import StringIO
 import csv
 import numpy as np
@@ -448,6 +449,9 @@ class Unpickler(object):
             comment.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             event.comments.append(comment)
             comment.text = line[2:60]
+        # strip non printable-characters
+        comment.text =\
+            filter(lambda x: x in s.printable, comment.text)
 
     def _parseRecordAH(self, line, event):
         """
@@ -1027,6 +1031,10 @@ class Unpickler(object):
             if record_id == 'S ':
                 self._parseRecordS(line, event, pick, arrival)
         self.fh.close()
+        # strip extra whitespaces from event comments
+        for event in catalog:
+            for comment in event.comments:
+                comment.text = comment.text.strip()
         return catalog
 
 
