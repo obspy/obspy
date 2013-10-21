@@ -276,7 +276,7 @@ class Unpickler(object):
             origin.creation_info.agency_id = 'USGS-NEIC'
         origin.earth_model_id =\
             ResourceIdentifier(
-                resource_id='/'.join((res_id_prefix, 'emid=AK135')))
+                resource_id='/'.join((res_id_prefix, 'earthmodel/ak135')))
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
@@ -887,7 +887,7 @@ class Unpickler(object):
         arrival.time_residual = residual
         arrival.earth_model_id =\
             ResourceIdentifier(
-                resource_id='/'.join((res_id_prefix, 'emid=AK135')))
+                resource_id='/'.join((res_id_prefix, 'earthmodel/ak135')))
         origin.arrivals.append(arrival)
         origin.quality.minimum_distance = min(
             d for d in (arrival.distance, origin.quality.minimum_distance)
