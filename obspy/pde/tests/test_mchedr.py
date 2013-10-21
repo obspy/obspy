@@ -100,7 +100,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             origin.earth_model_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/emid=AK135'))
+                resource_id='quakeml:us.anss.org/earthmodel/ak135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
         self.assertEqual(origin.origin_type, None)
@@ -221,7 +221,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(ar.backazimuth_weight, None)
         self.assertEqual(
             ar.earth_model_id,
-            ResourceIdentifier('quakeml:us.anss.org/emid=AK135'))
+            ResourceIdentifier('quakeml:us.anss.org/earthmodel/ak135'))
         self.assertEqual(len(ar.comments), 0)
 
     def test_pick(self):
