@@ -2853,6 +2853,8 @@ class Catalog(object):
         mags = []
         colors = []
         for event in self:
+            if len(event.origins) == 0 or len(event.magnitudes) == 0:
+                continue
             origin = event.preferred_origin() or event.origins[0]
             lats.append(origin.latitude)
             lons.append(origin.longitude)
