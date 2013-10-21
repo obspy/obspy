@@ -37,7 +37,8 @@ class mchedrTestCase(unittest.TestCase):
         self.assertEqual(len(catalog), 1)
         self.assertEqual(
             catalog[0].resource_id,
-            ResourceIdentifier(resource_id='20120101052755.98'))
+            ResourceIdentifier(
+                resource_id='smi:gov.usgs.earthquake/20120101052755.98'))
         self.assertEqual(
             str(catalog),
             '''1 Event(s) in Catalog:
@@ -98,7 +99,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.  ')
         self.assertEqual(origin.epicenter_fixed, None)
         self.assertEqual(
             origin.earth_model_id,
-            ResourceIdentifier(resource_id='smi:ISC/emid=AK135'))
+            ResourceIdentifier(
+                resource_id='smi:gov.usgs.earthquake/emid=AK135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
         self.assertEqual(origin.origin_type, None)
@@ -219,7 +221,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.  ')
         self.assertEqual(ar.backazimuth_weight, None)
         self.assertEqual(
             ar.earth_model_id,
-            ResourceIdentifier('smi:ISC/emid=AK135'))
+            ResourceIdentifier('smi:gov.usgs.earthquake/emid=AK135'))
         self.assertEqual(len(ar.comments), 0)
 
     def test_pick(self):
@@ -260,7 +262,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.  ')
         self.assertEqual(fm.station_distribution_ratio, None)
         self.assertEqual(
             fm.method_id,
-            ResourceIdentifier(resource_id='smi:ISC/methodID=CMT'))
+            ResourceIdentifier(
+                resource_id='smi:gov.usgs.earthquake/methodID=CMT'))
         # comments
         self.assertEqual(len(fm.comments), 0)
         # creation info

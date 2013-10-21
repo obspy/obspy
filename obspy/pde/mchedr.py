@@ -47,6 +47,9 @@ try:
 except ImportError:
     can_uncompress = False
 
+# ResourceIdentifier prefix used throughout this code
+res_id_prefix = 'smi:gov.usgs.earthquake'
+
 
 def isMchedr(filename):
     """
@@ -288,7 +291,9 @@ class Unpickler(object):
         source_code = line[55:60].strip()
 
         event = Event()
-        event.resource_id = ResourceIdentifier(date+time)
+        event.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, date+time)))
         description = EventDescription(
             type='region name',
             text=FE_region_name)
@@ -298,14 +303,15 @@ class Unpickler(object):
             text=FE_region_number)
         event.event_descriptions.append(description)
         origin = Origin()
-        origin.resource_id = ResourceIdentifier()
+        origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         origin.creation_info = CreationInfo()
         if source_code:
             origin.creation_info.agency_id = source_code
         else:
             origin.creation_info.agency_id = 'USGS-NEIC'
         origin.earth_model_id =\
-            ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
+            ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, 'emid=AK135')))
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
         origin.longitude = longitude * self._coordinateSign(lon_type)
@@ -349,7 +355,7 @@ class Unpickler(object):
         origin.depth_errors['uncertainty'] = depth_stderr
         if mb_mag is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = mb_mag
             mag.magnitude_type = 'Mb'
@@ -358,7 +364,7 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if Ms_mag is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = Ms_mag
             mag.magnitude_type = 'Ms'
@@ -367,7 +373,7 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag1 is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(agency_id=mag1_source_code)
             mag.mag = mag1
             mag.magnitude_type = mag1_type
@@ -375,7 +381,7 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag2 is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(agency_id=mag2_source_code)
             mag.mag = mag2
             mag.magnitude_type = mag2_type
@@ -475,7 +481,7 @@ class Unpickler(object):
             comment.text += line[2:60]
         except IndexError:
             comment = Comment()
-            comment.resource_id = ResourceIdentifier()
+            comment.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             event.comments.append(comment)
             comment.text = line[2:60]
 
@@ -499,7 +505,7 @@ class Unpickler(object):
         source_code = line[56:60].strip()
 
         origin = Origin()
-        origin.resource_id = ResourceIdentifier()
+        origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         origin.creation_info = CreationInfo(agency_id=source_code)
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
@@ -536,7 +542,7 @@ class Unpickler(object):
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(
                 agency_id=origin.creation_info.agency_id)
             mag.mag = mag1
@@ -545,7 +551,7 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag2 > 0:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier()
+            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             mag.creation_info = CreationInfo(
                 agency_id=origin.creation_info.agency_id)
             mag.mag = mag2
@@ -612,7 +618,7 @@ class Unpickler(object):
         origin = None
         if centroid_origin_time.strip() != '.':
             origin = Origin()
-            origin.resource_id = ResourceIdentifier()
+            origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             origin.creation_info =\
                 CreationInfo(agency_id=source_contributor)
             date = event.origins[0].time.strftime('%Y%m%d')
@@ -643,7 +649,7 @@ class Unpickler(object):
             origin.type = 'centroid'
             event.origins.append(origin)
         focal_mechanism = FocalMechanism()
-        focal_mechanism.resource_id = ResourceIdentifier()
+        focal_mechanism.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         focal_mechanism.creation_info =\
             CreationInfo(agency_id=source_contributor)
         moment_tensor = MomentTensor()
@@ -652,11 +658,13 @@ class Unpickler(object):
         else:
             #this is required for QuakeML validation:
             moment_tensor.derived_origin_id =\
-                ResourceIdentifier('smi:local/no-origin')
+                ResourceIdentifier(
+                    resource_id='/'.join((res_id_prefix, 'no-origin'))
+                    )
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
                 moment_tensor.moment_magnitude_id = mag.resource_id
-        moment_tensor.resource_id = ResourceIdentifier()
+        moment_tensor.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         moment_tensor.scalar_moment = moment
         moment_tensor.scalar_moment_errors['uncertainty'] =\
             moment_stderr
@@ -665,7 +673,8 @@ class Unpickler(object):
         data_used.component_count = component_number + component_number2
         if computation_type == 'C':
             focal_mechanism.method_id =\
-                ResourceIdentifier('smi:ISC/methodID=CMT')
+                ResourceIdentifier(
+                    resource_id='/'.join((res_id_prefix, 'methodID=CMT')))
             #CMT algorithm uses long-period body waves,
             #very-long-period surface waves and
             #intermediate period surface waves (since 2004
@@ -674,22 +683,34 @@ class Unpickler(object):
             data_used.wave_type = 'combined'
         if computation_type == 'M':
             focal_mechanism.method_id =\
-                ResourceIdentifier('smi:ISC/methodID=moment_tensor')
+                ResourceIdentifier(
+                    resource_id='/'.join(
+                        (res_id_prefix, 'methodID=moment_tensor'))
+                    )
             #FIXME: not sure which kind of data is used by
             #"moment tensor" algorithm.
             data_used.wave_type = 'unknown'
         if computation_type == 'B':
             focal_mechanism.method_id =\
-                ResourceIdentifier('smi:ISC/methodID=broadband_data')
+                ResourceIdentifier(
+                    resource_id='/'.join(
+                        (res_id_prefix, 'methodID=broadband_data'))
+                    )
             #FIXME: is 'combined' correct here?
             data_used.wave_type = 'combined'
         if computation_type == 'F':
             focal_mechanism.method_id =\
-                ResourceIdentifier('smi:ISC/methodID=P-wave_first_motion')
+                ResourceIdentifier(
+                    resource_id='/'.join(
+                        (res_id_prefix, 'methodID=P-wave_first_motion'))
+                    )
             data_used.wave_type = 'P waves'
         if computation_type == 'S':
             focal_mechanism.method_id =\
-                ResourceIdentifier('smi:ISC/methodID=scalar_moment')
+                ResourceIdentifier(
+                    resource_id='/'.join(
+                        (res_id_prefix, 'methodID=scalar_moment'))
+                    )
             #FIXME: not sure which kind of data is used
             #for scalar moment determination.
             data_used.wave_type = 'unknown'
@@ -802,7 +823,7 @@ class Unpickler(object):
             comment.text += line[2:60]
         except IndexError:
             comment = Comment()
-            comment.resource_id = ResourceIdentifier()
+            comment.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             focal_mechanism.comments.append(comment)
             comment.text = line[2:60]
 
@@ -828,7 +849,7 @@ class Unpickler(object):
 
         origin = event.origins[0]
         pick = Pick()
-        pick.resource_id = ResourceIdentifier()
+        pick.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         date = origin.time.strftime('%Y%m%d')
         pick.time = UTCDateTime(date + arrival_time)
         #Check if pick is on the next day:
@@ -838,7 +859,8 @@ class Unpickler(object):
         pick.waveform_id.station_code = station
         #network_code is required for QuakeML validation
         pick.waveform_id.network_code = '  '
-        pick.waveform_id.resource_uri = ResourceIdentifier()
+        pick.waveform_id.resource_uri =\
+            ResourceIdentifier(prefix=res_id_prefix)
         pick.backazimuth = backazimuth
         onset = phase[0]
         if onset == 'e':
@@ -854,7 +876,8 @@ class Unpickler(object):
         event.picks.append(pick)
         if mb_amplitude is not None:
             amplitude = Amplitude()
-            amplitude.resource_id = ResourceIdentifier()
+            amplitude.resource_id =\
+                ResourceIdentifier(prefix=res_id_prefix)
             amplitude.generic_amplitude = mb_amplitude * 1E-9
             amplitude.unit = 'm'
             amplitude.period = mb_period
@@ -864,7 +887,8 @@ class Unpickler(object):
             amplitude.waveform_id = pick.waveform_id
             event.amplitudes.append(amplitude)
             station_magnitude = StationMagnitude()
-            station_magnitude.resource_id = ResourceIdentifier()
+            station_magnitude.resource_id =\
+                ResourceIdentifier(prefix=res_id_prefix)
             station_magnitude.origin_id = origin.resource_id
             station_magnitude.mag = mb_magnitude
             #station_magnitude.mag_errors['uncertainty'] = 0.0
@@ -872,18 +896,22 @@ class Unpickler(object):
             station_magnitude.amplitude_id = amplitude.resource_id
             station_magnitude.waveform_id = pick.waveform_id
             station_magnitude.method_id =\
-                ResourceIdentifier(
-                    'smi:ch.ethz.sed/magnitude/generic/body_wave_magnitude')
+                ResourceIdentifier(resource_id='/'.join(
+                    (res_id_prefix,
+                     'magnitude/generic/body_wave_magnitude')
+                    )
+                )
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
-        arrival.resource_id = ResourceIdentifier()
+        arrival.resource_id = ResourceIdentifier(prefix=res_id_prefix)
         arrival.pick_id = pick.resource_id
         arrival.phase = pick.phase_hint
         arrival.azimuth = azimuth
         arrival.distance = distance
         arrival.time_residual = residual
         arrival.earth_model_id =\
-            ResourceIdentifier(resource_id='smi:ISC/emid=AK135')
+            ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, 'emid=AK135')))
         origin.arrivals.append(arrival)
         origin.quality.minimum_distance = min(
             d for d in (arrival.distance, origin.quality.minimum_distance)
@@ -911,7 +939,7 @@ class Unpickler(object):
         amplitude = None
         if Z_amplitude is not None:
             amplitude = Amplitude()
-            amplitude.resource_id = ResourceIdentifier()
+            amplitude.resource_id = ResourceIdentifier(prefix=res_id_prefix)
             amplitude.generic_amplitude = Z_amplitude * 1E-6
             amplitude.unit = 'm'
             amplitude.period = Z_period
@@ -921,7 +949,8 @@ class Unpickler(object):
             event.amplitudes.append(amplitude)
         if MSZ_mag is not None:
             station_magnitude = StationMagnitude()
-            station_magnitude.resource_id = ResourceIdentifier()
+            station_magnitude.resource_id =\
+                ResourceIdentifier(prefix=res_id_prefix)
             station_magnitude.origin_id = event.origins[0].resource_id
             station_magnitude.mag = Ms_mag
             station_magnitude.station_magnitude_type = 'Ms'
@@ -965,7 +994,7 @@ class Unpickler(object):
                     origin.quality.depth_phase_count += 1
             else:
                 pick = Pick()
-                pick.resource_id = ResourceIdentifier()
+                pick.resource_id = ResourceIdentifier(prefix=res_id_prefix)
                 date = origin.time.strftime('%Y%m%d')
                 pick.time = UTCDateTime(date + arrival_time)
                 #Check if pick is on the next day:
@@ -986,7 +1015,7 @@ class Unpickler(object):
                 pick.phase_hint = phase.strip()
                 event.picks.append(pick)
                 arrival = Arrival()
-                arrival.resource_id = ResourceIdentifier()
+                arrival.resource_id = ResourceIdentifier(prefix=res_id_prefix)
                 arrival.pick_id = pick.resource_id
                 arrival.phase = pick.phase_hint
                 arrival.azimuth = p_arrival.azimuth
@@ -996,7 +1025,9 @@ class Unpickler(object):
 
     def _deserialize(self):
         catalog = Catalog()
-        catalog.resource_id = ResourceIdentifier(self.filename)
+        catalog.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, self.filename)))
         catalog.description = 'Created from NEIC PDE mchedr format'
         catalog.comments = ''
         catalog.creation_info = CreationInfo(creation_time=UTCDateTime())
