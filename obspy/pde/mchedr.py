@@ -26,26 +26,7 @@ import os
 import StringIO
 import csv
 import numpy as np
-from tempfile import mkdtemp
-from shutil import rmtree
-# Monthly mchedr files from ftp://hazards.cr.usgs.gov/edr/mchedr/
-# are compressed using unix 'compress' utility.
-# Python has no standard library to decompress this format (which is a
-# variation of LZW).
-# We optionally use patool (http://wummel.github.com/patool)
-# which uses external helper programs to handle decompression.
-# (For 'compress' format, those are: gzip on Linux/Mac, 7zip on Windows)
-# If patool is not installed, or if no external decompression program
-# is available, this module will fail opening compressed mchedr files.
-try:
-    import patoolib
-    try:
-        patoolib.find_archive_program('compress', 'extract')
-        can_uncompress = True
-    except patoolib.util.PatoolError:
-        can_uncompress = False
-except ImportError:
-    can_uncompress = False
+
 
 # ResourceIdentifier prefix used throughout this code
 res_id_prefix = 'smi:gov.usgs.earthquake'
@@ -63,32 +44,21 @@ def isMchedr(filename):
 
     .. rubric:: Example
 
-    >>> isMchedr('/path/to/mchedrXXXXXX.dat')  # doctest: +SKIP
+    >>> isMchedr('/path/to/mchedr.dat')  # doctest: +SKIP
     True
     """
     if not isinstance(filename, basestring):
         return False
-    tmpdir = None
-    if can_uncompress and filename.endswith('.Z'):
-        tmpdir = mkdtemp()
-        patoolib.extract_archive(filename, verbosity=-1, outdir=tmpdir)
-        filename = tmpdir + '/' + filename.rstrip('.Z')
-    fh = open(filename, 'r')
-    for line in fh.readlines():
-        # skip blanck lines at beginnning, if any
-        if line.strip() == '':
-            continue
-        # first record has to be 'HY':
-        if line[0:2] == 'HY':
-            fh.close()
-            if tmpdir:
-                rmtree(tmpdir)
-            return True
-        else:
-            fh.close()
-            if tmpdir:
-                rmtree(tmpdir)
-            return False
+    with open(filename, 'r') as fh:
+        for line in fh.readlines():
+            # skip blanck lines at beginnning, if any
+            if line.strip() == '':
+                continue
+            # first record has to be 'HY':
+            if line[0:2] == 'HY':
+                return True
+            else:
+                return False
 
 
 class Unpickler(object):
@@ -96,7 +66,6 @@ class Unpickler(object):
     De-serializes a mchedr string into an ObsPy Catalog object.
     """
     def __init__(self):
-        self.tmpdir = None
         self.FE_regions = None
 
     def load(self, filename):
@@ -111,11 +80,6 @@ class Unpickler(object):
         if not isinstance(filename, basestring):
             raise TypeError('File name must be a string.')
         self.filename = filename
-        if can_uncompress and filename.endswith('.Z'):
-            self.tmpdir = mkdtemp()
-            patoolib.extract_archive(filename, verbosity=-1,
-                                     outdir=self.tmpdir)
-            filename = self.tmpdir + '/' + filename.rstrip('.Z')
         self.fh = open(filename, 'r')
         return self._deserialize()
 
@@ -1063,8 +1027,6 @@ class Unpickler(object):
             if record_id == 'S ':
                 self._parseRecordS(line, event, pick, arrival)
         self.fh.close()
-        if self.tmpdir is not None:
-            rmtree(self.tmpdir)
         return catalog
 
 
