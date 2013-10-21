@@ -178,7 +178,6 @@ class Unpickler(object):
         Converts tensor from 'x,y,z' system to 'r,t,p'
         and translates 'f' code to 'p'
         """
-        #FIXME: is that correct?
         if code == 'xx':
             return 'tt', 1
         if code == 'yy':
