@@ -691,7 +691,6 @@ class Unpickler(object):
         catalog = Catalog()
         # optional catalog attributes
         catalog.resource_id = catalog_el.get('publicID')
-        print 'resource_id inside `_deserialize()`:', catalog.resource_id
         catalog.description = self._xpath2obj('description', catalog_el)
         catalog.comments = self._comments(catalog_el)
         catalog.creation_info = self._creation_info(catalog_el)

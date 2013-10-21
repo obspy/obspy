@@ -341,6 +341,13 @@ class CatalogTestCase(unittest.TestCase):
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
 
+    def test_catalog_resource_id(self):
+        """
+        See #662
+        """
+        cat = readEvents(self.neries_xml)
+        self.assertEqual(str(cat.resource_id), r"smi://eu.emsc/unid")
+
 
 class WaveformStreamIDTestCase(unittest.TestCase):
     """
