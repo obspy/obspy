@@ -1042,7 +1042,7 @@ def readMchedr(filename):
     :type filename: str
     :param filename: mchedr file to be read.
     :rtype: :class:`~obspy.core.event.Catalog`
-    :return: A ObsPy Catalog object.
+    :return: An ObsPy Catalog object.
 
     .. rubric:: Example
 

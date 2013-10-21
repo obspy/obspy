@@ -51,10 +51,10 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
-        `Supported Formats`_ section below for a full list of supported
-        formats.
-    :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
+    :param format: Format of the file to read. One of ``"QUAKEML"``,
+        ``"MCHEDR"``. See the `Supported Formats`_ section below for a full
+        list of supported formats.
+    :return: An ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
 
@@ -69,6 +69,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     Format   Required Module      _`Linked Function Call`
     =======  ===================  ======================================
     QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.readQuakeML`
+    MCHEDR   :mod:`obspy.pde`     :func:`obspy.pde.mchedr.readMchedr`
     =======  ===================  ======================================
 
     Next to the :func:`~obspy.core.event.readEvents` function the
