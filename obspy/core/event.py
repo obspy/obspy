@@ -2455,8 +2455,6 @@ class Catalog(object):
             return False
         if self.events != other.events:
             return False
-        if self.resource_id != other.resource_id:
-            return False
         return True
 
     def __getitem__(self, index):
