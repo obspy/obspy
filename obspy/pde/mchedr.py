@@ -318,12 +318,11 @@ class Unpickler(object):
         origin.time_errors['uncertainty'] = orig_time_stderr
         # Convert latitude and longitude errors from km to degrees,
         # using a simple fomula
-        # FIXME: latitude uncertainty is oh, but longitude uncertainty
-        # is much larger than the uncertainty prvided in NEIC QuakeML!
         origin.latitude_errors['uncertainty'] =\
-            round(latitude_stderr / 111.12, 4)
+            round(latitude_stderr / 111.1949, 4)
         origin.longitude_errors['uncertainty'] =\
-            round(longitude_stderr / (111.12 * math.cos(origin.latitude)), 4)
+            round(longitude_stderr /
+                  (111.1949 * math.cos(self._to_rad(origin.latitude))), 4)
         if depth_stderr is not None:
             origin.depth_errors['uncertainty'] = depth_stderr * 1000
         if mb_mag is not None:

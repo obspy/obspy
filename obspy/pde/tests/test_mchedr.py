@@ -92,7 +92,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             origin.latitude_errors.uncertainty, 0.0155, places=3)
         self.assertEqual(origin.longitude, 138.072)
         self.assertAlmostEqual(
-            origin.longitude_errors.uncertainty, 0.0148, places=3)
+            origin.longitude_errors.uncertainty, 0.0173, places=3)
         self.assertEqual(origin.depth, 365300.0)
         self.assertEqual(origin.depth_errors.uncertainty, 2700.0)
         self.assertEqual(origin.depth_type, 'from location')
