@@ -2853,7 +2853,15 @@ class Catalog(object):
         mags = []
         colors = []
         for event in self:
-            if len(event.origins) == 0 or len(event.magnitudes) == 0:
+            if not event.origins:
+                msg = ("Event '%s' does not have an origin and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
+                continue
+            if not event.magnitudes:
+                msg = ("Event '%s' does not have a magnitude and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
                 continue
             origin = event.preferred_origin() or event.origins[0]
             lats.append(origin.latitude)
