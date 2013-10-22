@@ -107,6 +107,69 @@ class ClientTestCase(unittest.TestCase):
         self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
                           "obspy", "query")
 
+    def test_location_parameters(self):
+        """
+        Tests how the variety of location values are handled.
+
+        Why location? Mostly because it is one tricky parameter.  It is not
+        uncommon to assume that a non-existant location is "--", but in
+        reality "--" is "<space><space>". This substitution exists because
+        mostly because various applications have trouble digesting spaces
+        (spaces in the URL, for example).
+        The confusion begins when location is treated as empty instead, which
+        would imply "I want all locations" instead of "I only want locations
+        of <space><space>"
+        """
+        # requests with no specified location should be treated as a wildcard
+        self.assertFalse(
+            "--" in build_url("http://service.iris.edu", 1, "station",
+                              "query", {"network": "IU", "station": "ANMO",
+                                        "starttime": "2013-01-01"}))
+        # location of "  " is the same as "--"
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "  "}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=--")
+        # wildcard locations are valid. Will be encoded.
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "*"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=%2A")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "A?"}),
+            "http://service.iris.edu/fdsnws/station/1/query?location=A%3F")
+
+        # lists are valid, including <space><space> lists. Again encoded
+        # result.
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "  ,1?,?0"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=--%2C1%3F%2C%3F0")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "1?,--,?0"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=1%3F%2C--%2C%3F0")
+
+        # Test all three special cases with empty parameters into lists.
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "  ,AA,BB"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=--%2CAA%2CBB")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "AA,  ,BB"}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=AA%2C--%2CBB")
+        self.assertEqual(
+            build_url("http://service.iris.edu", 1, "station",
+                      "query", {"location": "AA,BB,  "}),
+            "http://service.iris.edu/fdsnws/station/1/query?"
+            "location=AA%2CBB%2C--")
+
     def test_url_building_with_auth(self):
         """
         Tests the Client._build_url() method with authentication.

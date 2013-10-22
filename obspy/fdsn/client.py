@@ -364,10 +364,6 @@ class Client(object):
         locs = locals()
         setup_query_dict('station', locs, kwargs)
 
-        # Special location handling. Convert empty strings to "--".
-        if "location" in kwargs and not kwargs["location"]:
-            kwargs["location"] = "--"
-
         url = self._create_url_from_parameters(
             "station", DEFAULT_PARAMETERS['station'], kwargs)
 
@@ -982,7 +978,7 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, major_version, resource_type, service, parameters={}):
+def build_url(base_url, major_version, service, resource_type, parameters={}):
     """
     URL builder for the FDSN webservices.
 
@@ -997,14 +993,36 @@ def build_url(base_url, major_version, resource_type, service, parameters={}):
     'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
     """
     # Only allow certain resource types.
-    if resource_type not in ["dataselect", "event", "station"]:
+    if service not in ["dataselect", "event", "station"]:
         msg = "Resource type '%s' not allowed. Allowed resource types: \n%s" %\
-            (resource_type, ",".join(("dataselect", "event", "station")))
+            (service, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
-    url = "/".join((base_url, "fdsnws", resource_type,
-                    str(major_version), service))
+    # Special location handling.
+    if "location" in parameters:
+        loc = parameters["location"].replace(" ", "")
+        # Empty location.
+        if not loc:
+            loc = "--"
+        # Empty location at start of list.
+        if loc.startswith(','):
+            loc = "--" + loc
+        # Empty location at end of list.
+        if loc.endswith(','):
+            loc += "--"
+        # Empty location in middle of list.
+        loc = loc.replace(",,", ",--,")
+        parameters["location"] = loc
+
+    url = "/".join((base_url, "fdsnws", service,
+                    str(major_version), resource_type))
     if parameters:
+        # Strip parameters.
+        for key, value in parameters.iteritems():
+            try:
+                parameters[key] = value.strip()
+            except:
+                pass
         url = "?".join((url, urllib.urlencode(parameters)))
     return url
 

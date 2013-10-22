@@ -144,8 +144,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("/path/to/loc_R*.z")  # doctest: +SKIP
         >>> print(st)  # doctest: +SKIP
         2 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
-        .RNON..Z | 2004-06-09T20:05:59.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
+        .RNON..Z | 2004-06-09T20:05:59.850000Z - ... | 200.0 Hz, 12000 samples
 
     (2) Reading a local file without format detection.
 
@@ -156,7 +156,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("/path/to/loc_RJOB20050831023349.z", format="GSE2")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (3) Reading a remote file via HTTP protocol.
 
@@ -164,7 +164,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (4) Reading a compressed files.
 
@@ -188,7 +188,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (6) Using 'starttime' and 'endtime' parameters
 
@@ -198,7 +198,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         ...           starttime=dt, endtime=dt+10)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:59.999999Z - ... | 200.0 Hz, 2001 samples
+        .RJOB..Z | 2005-08-31T02:34:00.000000Z - ... | 200.0 Hz, 2001 samples
     """
     # add default parameters to kwargs so sub-modules may handle them
     kwargs['starttime'] = starttime
@@ -2255,7 +2255,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             tr.detrend(type=type)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    def taper(self, *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2270,7 +2270,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, side=side, *args, **kwargs)
+            tr.taper(*args, **kwargs)
         return self
 
     def std(self):

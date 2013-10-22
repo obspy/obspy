@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from obspy.core.util.misc import get_untracked_files_from_git
 import fnmatch
 import inspect
 import os
 import unittest
-from obspy.core.util.misc import get_untracked_files_from_git
 
 EXCLUDE_FILES = [
     "*/__init__.py",
@@ -12,15 +12,11 @@ EXCLUDE_FILES = [
 
 try:
     import flake8
-    import flake8.main
 except ImportError:
     HAS_FLAKE8 = False
 else:
     # Only accept flake8 version >= 2.0
     HAS_FLAKE8 = flake8.__version__ >= '2'
-
-if not HAS_FLAKE8:
-    raise unittest.SkipTest('flake8 is required for this test suite')
 
 
 class CodeFormattingTestCase(unittest.TestCase):
@@ -31,6 +27,9 @@ class CodeFormattingTestCase(unittest.TestCase):
         """
         Test codebase for compliance with the flake8 tool.
         """
+        if not HAS_FLAKE8:
+            raise Exception('flake8 is required to check code formatting')
+        import flake8.main
         test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
         obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
         error_count = 0
