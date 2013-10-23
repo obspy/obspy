@@ -1546,6 +1546,8 @@ class Origin(__Origin):
     :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param earth_model_id: Identifies the earth model used in method_id.
+    :type arrivals: list of :class:`~obspy.core.event.Arrival`, optional
+    :param arrivals: List of arrivals associated with the origin.
     :type composite_times: list of :class:`~obspy.core.event.CompositeTime`,
         optional
     :param composite_times: Supplementary information on time of rupture start.
