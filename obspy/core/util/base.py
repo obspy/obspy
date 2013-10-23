@@ -36,6 +36,7 @@ ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
                             'Q', 'SH_ASC', 'SLIST', 'TSPAIR', 'Y', 'SEGY',
                             'SU', 'SEG2', 'WAV', 'PICKLE', 'DATAMARK', 'CSS']
+EVENT_PREFERRED_ORDER = ['QUAKEML']
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
@@ -309,7 +310,8 @@ ENTRY_POINTS = {
                                        'readFormat', WAVEFORM_PREFERRED_ORDER),
     'waveform_write': _getOrderedEntryPoints(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
-    'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
+    'event': _getOrderedEntryPoints('obspy.plugin.event', 'readFormat',
+                                    EVENT_PREFERRED_ORDER),
     'taper': _getEntryPoints('obspy.plugin.taper'),
 }
 
