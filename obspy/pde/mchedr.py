@@ -21,11 +21,10 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, Amplitude
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile
+from obspy.core.util.geodetics import FlinnEngdahl
 from datetime import timedelta
-import os
 import string as s
 import StringIO
-import csv
 import math
 import numpy as np
 
@@ -68,7 +67,7 @@ class Unpickler(object):
     De-serializes a mchedr string into an ObsPy Catalog object.
     """
     def __init__(self):
-        self.FE_regions = None
+        self.flinn_engdahl = FlinnEngdahl()
 
     def load(self, filename):
         """
@@ -195,16 +194,7 @@ class Unpickler(object):
         #FIXME: this should be checked against #451 for redundancy
         if not isinstance(number, int):
             number = int(number)
-        if self.FE_regions is None:
-            FE_filename = os.path.join(os.path.dirname(__file__),
-                                       'data',
-                                       'Flinn-Engdahl.csv')
-            with open(FE_filename, 'rb') as csvfile:
-                FE_csv = csv.reader(csvfile, delimiter=';',
-                                    quotechar='#', skipinitialspace=True)
-                self.FE_regions =\
-                    {int(row[0]): row[1] for row in FE_csv if len(row) > 1}
-        return self.FE_regions[number]
+        return self.flinn_engdahl.get_region_by_number(number)
 
     def _to_rad(self, degrees):
         radians = np.pi * degrees / 180
