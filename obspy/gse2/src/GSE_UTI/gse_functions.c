@@ -4,10 +4,8 @@
 #include <string.h>
 #include "gse_header.h"
 #include "gse_types.h"
-#include "buf.h"
 #define     MODULO_VALUE 100000000
 
- 
 /*********************************************************************
   Function: check_sum
     This function computes the GSE2.0 checksum used in the CHK2 line
@@ -83,8 +81,7 @@ int32_t check_sum (signal_int, number_of_samples, checksum)
 
     St. Stange, 28.4.1998
 *********************************************************************/
-
-int compress_6b (int32_t *data, int n_of_samples)
+int compress_6b_buffer (int32_t *data, int n_of_samples, int (* writer)(char))
 {
   static char achar[] =
        " +-0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -116,18 +113,18 @@ int compress_6b (int32_t *data, int n_of_samples)
 	{				/* one character per turn */
 		jc = value/expo_2[case_expo] + nflag + mflag;
 		/*if (jc > 64 || jc < 1) return jc;*/
-		buf_putchar(achar[jc]);		/* store a character */
+		(*writer)(achar[jc]);		/* store a character */
 		value = value & expo_2m1_o[case_expo];
 		nflag = 1;
 	}
 		
 	jc = value + nflag;		/* one character to go */
-	buf_putchar(achar[jc]);		/* store a character */
+	(*writer)(achar[jc]);		/* store a character */
 
   }
         return 0;
 
-}	/* end of compress_6b */
+}
 
 /*********************************************************************
   Function: diff_2nd
@@ -196,7 +193,7 @@ void write_header(FILE *fp, struct header *head)
 #include <math.h>
 #include <ctype.h>
 
-int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
+int decomp_6b_buffer (int n_of_samples, int32_t *dta, char * (* reader)(char *, void *), void * vptr)
 {
   static int ichar[]={0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
              0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,2,3,4,5,6,7,
@@ -209,7 +206,7 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   int i, ibuf=-1, k, inn, jsign=0, joflow=0;
   int32_t itemp;
   char cbuf[83]=" ";
-  
+
   if (n_of_samples == 0) { printf ("decomp_6b: no action.\n"); return 0; }
   
   while (1) {
@@ -221,19 +218,18 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
           break;
       }
       /* print error if we reached the end of the file */
-      if (fgets (cbuf,83,fop) == NULL) {
+    if ((*reader)(cbuf, vptr) == NULL) {
           printf ("decomp_6b: Neither DAT2 or DAT1 found!\n"); 
           return -1;
       }
   }
-
-  if (fgets (cbuf,83,fop) == NULL) /* read first char line */
+    if ((*reader)(cbuf, vptr) == NULL) /* read first char line */
   	{printf ("decomp_6b: Whoops! No data after DAT2 or DAT1.\n"); return -1; }
   for (i = 0; i < n_of_samples; i++)		/* loop over expected samples */
   {
   	ibuf += 1;
   	if (ibuf > 79 || isspace(cbuf[ibuf])) { 
-  	  if (fgets (cbuf,83,fop) == NULL) 	/* get next line */
+  	if ((*reader)(cbuf, vptr) == NULL) /* get next line */
   		{printf ("decomp_6b: missing input line?\n"); return -1; }
       /* We need a space to be sure that CHK2 is not occuring in the middle
        * of the encoded string/buffer */
@@ -256,7 +252,7 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   	  itemp <<= 5;			/* multiply with 32 for next byte */
   	  ibuf += 1;
   	  if (ibuf > 79 || isspace(cbuf[ibuf])) {
-  	    if (fgets (cbuf,83,fop) == NULL) 	/* get next line */
+  	    if ((*reader)(cbuf, vptr) == NULL) /* get next line */
   		{printf ("decomp_6b: missing input line.\n"); return -1; }
   	    ibuf = 0;
 	  }
@@ -276,6 +272,7 @@ int decomp_6b (FILE *fop, int n_of_samples, int32_t *dta)
   return i;				/* return actual # of samples read */
 
 }	/* end of decomp_6b */
+
 /*********************************************************************
   Function: rem_2nd_diff
     This routine removes the second differences of a data stream

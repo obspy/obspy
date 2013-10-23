@@ -7,8 +7,12 @@ import csv
 
 class FlinnEngdahl(object):
     """
-    Load data from asc files and allow to resolve coordinates
+    Load data from asc files and allow to resolve coordinates or region numbers
     to Flinn Engdahl region names.
+
+    >>> fe = FlinnEngdahl()
+    >>> print fe.get_region(12, 48)
+    GERMANY
     """
 
     data_directory = os.path.join(os.path.dirname(__file__), 'data')
@@ -107,6 +111,12 @@ class FlinnEngdahl(object):
     def get_region(self, longitude, latitude):
         """
         Return region from given coordinate
+
+        >>> fe = FlinnEngdahl()
+        >>> print fe.get_region(12, 48)
+        GERMANY
+        >>> print fe.get_region(-60, -30)
+        NORTHEASTERN ARGENTINA
 
         :param longitude: WGS84 longitude
         :type longitude: int or float

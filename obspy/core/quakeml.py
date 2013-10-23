@@ -1348,7 +1348,7 @@ class Pickler(object):
 
 def readQuakeML(filename):
     """
-    Reads a QuakeML file and returns a ObsPy Catalog object.
+    Reads a QuakeML file and returns an ObsPy Catalog object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -1357,7 +1357,7 @@ def readQuakeML(filename):
     :type filename: str
     :param filename: QuakeML file to be read.
     :rtype: :class:`~obspy.core.event.Catalog`
-    :return: A ObsPy Catalog object.
+    :return: An ObsPy Catalog object.
 
     .. rubric:: Example
 
@@ -1413,7 +1413,7 @@ def writeQuakeML(catalog, filename, validate=False,
 
 def readSeisHubEventXML(filename):
     """
-    Reads a single SeisHub event XML file and returns a ObsPy Catalog object.
+    Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
     # XXX: very ugly way to add new root tags without parsing
     lines = open(filename, 'rt').readlines()

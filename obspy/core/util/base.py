@@ -12,7 +12,6 @@ Base utilities and constants for ObsPy.
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
-import ctypes as C
 import doctest
 import glob
 import inspect
@@ -40,15 +39,6 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
-
-
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
 
 
 class NamedTemporaryFile(object):

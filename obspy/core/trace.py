@@ -13,7 +13,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked, taper_API_change
+from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
+    taper_API_change
 import math
 import numpy as np
 import warnings
@@ -539,6 +540,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA
                     Trace 2:     FF
                     1 + 2  : AAAA--AAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         1       Discard data of the previous trace assuming the following trace
                 contains data with a more correct time value. The parameter
                 ``interpolation_samples`` specifies the number of samples used
@@ -571,6 +578,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         ======  ===============================================================
 
         .. rubric:: _`Handling gaps`
@@ -674,9 +687,25 @@ class Trace(object):
             lenrt = len(rt)
             t1 = len(lt) - delta
             t2 = t1 + lenrt
-            if np.all(lt.data[t1:t2] == rt.data):
-                # check if data are the same
-                data = [lt.data]
+            # check if data are the same
+            data_equal = (lt.data[t1:t2] == rt.data)
+            # force a masked array and fill it for check of equality of valid
+            # data points
+            if np.all(np.ma.masked_array(data_equal).filled()):
+                # if all (unmasked) data are equal,
+                if isinstance(data_equal, np.ma.masked_array):
+                    x = np.ma.masked_array(lt.data[t1:t2])
+                    y = np.ma.masked_array(rt.data)
+                    data_same = np.choose(x.mask, [x, y])
+                    data = np.choose(x.mask & y.mask, [data_same, np.nan])
+                    if np.any(np.isnan(data)):
+                        data = np.ma.masked_invalid(data)
+                    # convert back to maximum dtype of original data
+                    dtype = np.max((x.dtype, y.dtype))
+                    data = data.astype(dtype)
+                    data = [lt.data[:t1], data, lt.data[t2:]]
+                else:
+                    data = [lt.data]
             elif method == 0:
                 gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
                 data = [lt.data[:t1], gap, lt.data[t2:]]
@@ -698,6 +727,10 @@ class Trace(object):
         else:
             data = np.concatenate(data)
             data = np.require(data, dtype=lt.data.dtype)
+        # Check if we can downgrade to normal ndarray
+        if isinstance(data, np.ma.masked_array) and \
+           np.ma.count_masked(data) == 0:
+            data = data.compressed()
         out.data = data
         return out
 
@@ -1364,6 +1397,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1557,6 +1591,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         """
         return self.data.std()
 
+    @skipIfNoData
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1593,6 +1628,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1648,6 +1684,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @raiseIfMasked
     def detrend(self, type='simple', **options):
         """
@@ -1696,6 +1733,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @taper_API_change()
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):

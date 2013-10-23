@@ -3,6 +3,7 @@
 from copy import deepcopy
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read, Stream
+from obspy.core import Stats
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import math
@@ -490,6 +491,70 @@ class TraceTestCase(unittest.TestCase):
         np.testing.assert_array_equal(gap.data.mask, mask)
         np.testing.assert_array_equal(gap.data.data[:1000], tr2.data)
         np.testing.assert_array_equal(gap.data.data[1600:], tr3.data)
+
+    def test_addIntoGap(self):
+        """
+        Test __add__ method of the Trace class
+        Adding a trace that fits perfectly into gap in a trace
+        """
+        myArray = np.arange(6, dtype=np.int32)
+
+        stats = Stats()
+        stats.network = 'VI'
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 0)
+        stats['npts'] = 0
+        stats['station'] = 'IKJA'
+        stats['channel'] = 'EHZ'
+        stats['sampling_rate'] = 1
+
+        bigtrace = Trace(data=np.array([], dtype=np.int32), header=stats)
+        bigtrace_sort = bigtrace.copy()
+        stats['npts'] = len(myArray)
+        myTrace = Trace(data=myArray, header=stats)
+
+        stats['npts'] = 2
+        trace1 = Trace(data=myArray[0:2].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 2)
+        trace2 = Trace(data=myArray[2:4].copy(), header=stats)
+        stats['starttime'] = UTCDateTime(2009, 8, 5, 0, 0, 4)
+        trace3 = Trace(data=myArray[4:6].copy(), header=stats)
+
+        tr1 = bigtrace
+        tr2 = bigtrace_sort
+        for method in [0, 1]:
+            #Random
+            bigtrace = tr1.copy()
+            bigtrace = bigtrace.__add__(trace1, method=1)
+            bigtrace = bigtrace.__add__(trace3, method=1)
+            bigtrace = bigtrace.__add__(trace2, method=1)
+
+            #Sorted
+            bigtrace_sort = tr2.copy()
+            bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+
+            for tr in (bigtrace, bigtrace_sort):
+                self.assertTrue(isinstance(tr, Trace))
+                self.assertFalse(isinstance(tr.data, np.ma.masked_array))
+
+            self.failUnless((bigtrace_sort.data == myArray).all())
+
+            fail_pattern = "\n\tExpected %s\n\tbut got  %s"
+            failinfo = fail_pattern % (myTrace, bigtrace_sort)
+            failinfo += fail_pattern % (myTrace.data, bigtrace_sort.data)
+            self.failUnless(bigtrace_sort == myTrace, failinfo)
+
+            failinfo = fail_pattern % (myArray, bigtrace.data)
+            self.failUnless((bigtrace.data == myArray).all(), failinfo)
+
+            failinfo = fail_pattern % (myTrace, bigtrace)
+            failinfo += fail_pattern % (myTrace.data, bigtrace.data)
+            self.failUnless(bigtrace == myTrace, failinfo)
+
+            for array_ in (bigtrace.data, bigtrace_sort.data):
+                failinfo = fail_pattern % (myArray.dtype, array_.dtype)
+                self.failUnless(myArray.dtype == array_.dtype, failinfo)
 
     def test_slice(self):
         """
@@ -1366,6 +1431,16 @@ class TraceTestCase(unittest.TestCase):
         self.assertTrue(pr[7].startswith("detrend"))
         self.assertTrue(pr[8].startswith("taper"))
         self.assertTrue(pr[9].startswith("normalize"))
+
+    def test_skip_empty_trace(self):
+        tr = read()[0]
+        t = tr.stats.endtime + 10
+        tr.trim(t, t + 10)
+        tr.detrend()
+        tr.resample(400)
+        tr.differentiate()
+        tr.integrate()
+        tr.taper()
 
     def test_taper_backwards_compatibility(self):
         """
