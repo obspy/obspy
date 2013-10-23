@@ -13,6 +13,8 @@ class FlinnEngdahl(object):
     >>> fe = FlinnEngdahl()
     >>> print fe.get_region(12, 48)
     GERMANY
+    >>> print fe.get_region_by_number(543)
+    GERMANY
     """
 
     data_directory = os.path.join(os.path.dirname(__file__), 'data')
