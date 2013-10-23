@@ -49,11 +49,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
         object will be returned.
     :type format: string, optional
-    :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
-        ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
-        the `Supported Formats`_ section below for a full list of supported
-        formats. If format is set to ``None`` it will be automatically detected
-        which results in a slightly slower reading. If you specify a format no
+    :param format: Format of the file to read (e.g. ``"MSEED"``). See
+        the `Supported Formats`_ section below for a list of supported formats.
+        If format is set to ``None`` it will be automatically detected which
+        results in a slightly slower reading. If a format is specified, no
         further format checking is done.
     :type headonly: bool, optional
     :param headonly: If set to ``True``, read only the data header. This is
@@ -1304,10 +1303,8 @@ class Stream(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            the `Supported Formats`_ section below for a full list of supported
+        :param format: The file format to use (e.g. ``"MSEED"``). See
+            the `Supported Formats`_ section below for a list of supported
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.

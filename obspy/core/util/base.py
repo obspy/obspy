@@ -595,25 +595,44 @@ def get_matplotlib_defaul_tolerance():
         return 1
 
 
-def make_waveform_plugin_table(type="read", numspaces=4):
+def make_format_plugin_table(group="waveform", method="read", numspaces=4,
+                             unindent_first_line=True):
     """
     Returns a markdown formatted table with read waveform plugins to insert
     in docstrings.
 
-    :param type: Either 'read' or 'write' to select read/write plugins.
-    """
-    type = type.lower()
-    if type not in ("read", "write"):
-        raise ValueError("no valid type: %s" % type)
+    >>> table = make_format_plugin_table("event", "write", 4, True)
+    >>> print table  # doctest: +NORMALIZE_WHITESPACE
+    ======= ================= =======================================
+        Format  Required Module   _`Linked Function Call`
+        ======= ================= =======================================
+        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
+        ======= ================= =======================================
 
-    type += "Format"
-    eps = _getOrderedEntryPoints("obspy.plugin.waveform", type,
+    :type group: str
+    :param group: Plugin group to search (e.g. "waveform" or "event").
+    :type method: str
+    :param method: Either 'read' or 'write' to select plugins based on either
+        read or write capability.
+    :type numspaces: int
+    :param numspaces: Number of spaces prepended to each line (for indentation
+        in docstrings).
+    :type unindent_first_line: bool
+    :param unindent_first_line: Determines if first line should start with
+        prepended spaces or not.
+    """
+    method = method.lower()
+    if method not in ("read", "write"):
+        raise ValueError("no valid type: %s" % method)
+
+    method += "Format"
+    eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
                                  WAVEFORM_PREFERRED_ORDER)
     mod_list = []
     for name, ep in eps.iteritems():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
-        func = load_entry_point("obspy", "obspy.plugin.waveform.%s" % name,
-                                "readFormat")
+        func = load_entry_point("obspy", "obspy.plugin.%s.%s" % (group, name),
+                                method)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.func_name))
         mod_list.append((name, module_short, func_str))
 
@@ -632,7 +651,10 @@ def make_waveform_plugin_table(type="read", numspaces=4):
             " ".join([mod_infos[i].ljust(maxlens[i]) for i in xrange(3)]))
     info_str.append(info_str[0])
 
-    return " " * numspaces + ("\n" + " " * numspaces).join(info_str)
+    ret = " " * numspaces + ("\n" + " " * numspaces).join(info_str)
+    if unindent_first_line:
+        ret = ret[numspaces:]
+    return ret
 
 
 if __name__ == '__main__':
