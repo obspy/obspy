@@ -51,9 +51,8 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
-        `Supported Formats`_ section below for a full list of supported
-        formats.
+    :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
+        `Supported Formats`_ section below for a list of supported formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
@@ -65,11 +64,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
-    =======  ===================  ======================================
-    Format   Required Module      _`Linked Function Call`
-    =======  ===================  ======================================
-    QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.readQuakeML`
-    =======  ===================  ======================================
+    %s
 
     Next to the :func:`~obspy.core.event.readEvents` function the
     :meth:`~obspy.core.event.Catalog.write` method of the returned
@@ -2726,9 +2721,8 @@ class Catalog(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. One of
-            ``"QUAKEML"``. See the `Supported Formats`_ section below for a
-            full list of supported formats.
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See the
+            `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -2742,7 +2736,7 @@ class Catalog(object):
         e.g. using event.id
 
         >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write("%s.xml" % ev.id, format="QUAKEML") #doctest: +SKIP
+        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -2753,11 +2747,7 @@ class Catalog(object):
         Please refer to the `Linked Function Call`_ of each module for any
         extra options available.
 
-        =======  ===================  =======================================
-        Format   Required Module      _`Linked Function Call`
-        =======  ===================  =======================================
-        QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.writeQuakeML`
-        =======  ===================  =======================================
+        %s
         """
         format = format.upper()
         try:
