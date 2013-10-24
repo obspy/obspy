@@ -307,11 +307,14 @@ class Unpickler(object):
         origin.time_errors['uncertainty'] = orig_time_stderr
         # Convert latitude and longitude errors from km to degrees,
         # using a simple fomula
-        origin.latitude_errors['uncertainty'] =\
-            round(latitude_stderr / 111.1949, 4)
-        origin.longitude_errors['uncertainty'] =\
-            round(longitude_stderr /
-                  (111.1949 * math.cos(self._to_rad(origin.latitude))), 4)
+        if latitude_stderr is not None:
+            origin.latitude_errors['uncertainty'] =\
+                round(latitude_stderr / 111.1949, 4)
+        if longitude_stderr is not None:
+            origin.longitude_errors['uncertainty'] =\
+                round(longitude_stderr /
+                      (111.1949 * math.cos(self._to_rad(origin.latitude))),
+                      4)
         if depth_stderr is not None:
             origin.depth_errors['uncertainty'] = depth_stderr * 1000
         if mb_mag is not None:
@@ -507,7 +510,8 @@ class Unpickler(object):
         origin.time_errors['uncertainty'] = orig_time_stderr
         origin.latitude_errors['uncertainty'] = latitude_stderr
         origin.longitude_errors['uncertainty'] = longitude_stderr
-        origin.depth_errors['uncertainty'] = depth_stderr * 1000
+        if depth_stderr is not None:
+            origin.depth_errors['uncertainty'] = depth_stderr * 1000
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
