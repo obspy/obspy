@@ -191,7 +191,6 @@ class Unpickler(object):
         """
         Converts Flinn-Engdahl region number to string.
         """
-        #FIXME: this should be checked against #451 for redundancy
         if not isinstance(number, int):
             number = int(number)
         return self.flinn_engdahl.get_region_by_number(number)
