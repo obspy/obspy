@@ -246,9 +246,11 @@ class Unpickler(object):
         source_code = line[55:60].strip()
 
         event = Event()
+        #FIXME: a smarter way to define evid?
+        evid = date+time
         event.resource_id =\
             ResourceIdentifier(
-                resource_id='/'.join((res_id_prefix, date+time)))
+                resource_id='/'.join((res_id_prefix, 'event', evid)))
         description = EventDescription(
             type='region name',
             text=FE_region_name)
@@ -258,7 +260,9 @@ class Unpickler(object):
             text=FE_region_number)
         event.event_descriptions.append(description)
         origin = Origin()
-        origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        origin.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, 'origin', evid)))
         origin.creation_info = CreationInfo()
         if source_code:
             origin.creation_info.agency_id = source_code
@@ -303,6 +307,7 @@ class Unpickler(object):
         mag2_type = line[54:56]
         mag2_source_code = line[56:60].strip()
 
+        evid = event.resource_id.resource_id.split('/')[-1]
         origin = event.origins[0]
         origin.time_errors['uncertainty'] = orig_time_stderr
         # Convert latitude and longitude errors from km to degrees,
@@ -319,7 +324,8 @@ class Unpickler(object):
             origin.depth_errors['uncertainty'] = depth_stderr * 1000
         if mb_mag is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, 'magnitude', evid, 'mb')))
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = mb_mag
             mag.magnitude_type = 'Mb'
@@ -328,7 +334,8 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if Ms_mag is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join((res_id_prefix, 'magnitude', evid, 'ms')))
             mag.creation_info = CreationInfo(agency_id='USGS-NEIC')
             mag.mag = Ms_mag
             mag.magnitude_type = 'Ms'
@@ -337,7 +344,10 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag1 is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag1_id = mag1_type.lower()
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'magnitude', evid, mag1_id)))
             mag.creation_info = CreationInfo(agency_id=mag1_source_code)
             mag.mag = mag1
             mag.magnitude_type = mag1_type
@@ -345,7 +355,12 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag2 is not None:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag2_id = mag2_type.lower()
+            if mag2_id == mag1_id:
+                mag2_id += '2'
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'magnitude', evid, mag2_id)))
             mag.creation_info = CreationInfo(agency_id=mag2_source_code)
             mag.mag = mag2
             mag.magnitude_type = mag2_type
@@ -476,8 +491,12 @@ class Unpickler(object):
         phase_number = self._intUnused(line[51:55])
         source_code = line[56:60].strip()
 
+        evid = event.resource_id.resource_id.split('/')[-1]
         origin = Origin()
-        origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        origin.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'origin', evid, source_code.lower())))
         origin.creation_info = CreationInfo(agency_id=source_code)
         origin.time = UTCDateTime(date+time)
         origin.latitude = latitude * self._coordinateSign(lat_type)
@@ -505,6 +524,7 @@ class Unpickler(object):
         mag2 = self._float(line[43:46])
         mag2_type = line[46:48]
 
+        evid = event.resource_id.resource_id.split('/')[-1]
         #this record is to be associated to the latest origin
         origin = event.origins[-1]
         origin.time_errors['uncertainty'] = orig_time_stderr
@@ -515,7 +535,10 @@ class Unpickler(object):
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag1_id = mag1_type.lower()
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'magnitude', evid, mag1_id)))
             mag.creation_info = CreationInfo(
                 agency_id=origin.creation_info.agency_id)
             mag.mag = mag1
@@ -524,7 +547,12 @@ class Unpickler(object):
             event.magnitudes.append(mag)
         if mag2 > 0:
             mag = Magnitude()
-            mag.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            mag2_id = mag2_type.lower()
+            if mag2_id == mag1_id:
+                mag2_id += '2'
+            mag.resource_id = ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'magnitude', evid, mag2_id)))
             mag.creation_info = CreationInfo(
                 agency_id=origin.creation_info.agency_id)
             mag.mag = mag2
@@ -587,11 +615,17 @@ class Unpickler(object):
         if (moment_stderr is not None) and (moment_exponent is not None):
             moment_stderr *= 10**moment_exponent
 
+        evid = event.resource_id.resource_id.split('/')[-1]
         #Create a new origin only if centroid time is defined:
         origin = None
         if centroid_origin_time.strip() != '.':
             origin = Origin()
-            origin.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            origin.resource_id =\
+                ResourceIdentifier(
+                    resource_id='/'.join(
+                        (res_id_prefix, 'origin',
+                         evid, source_contributor.lower(),
+                         'mw' + computation_type.lower())))
             origin.creation_info =\
                 CreationInfo(agency_id=source_contributor)
             date = event.origins[0].time.strftime('%Y%m%d')
@@ -623,7 +657,12 @@ class Unpickler(object):
             origin.type = 'centroid'
             event.origins.append(origin)
         focal_mechanism = FocalMechanism()
-        focal_mechanism.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        focal_mechanism.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'focalmechanism',
+                     evid, source_contributor.lower(),
+                     'mw' + computation_type.lower())))
         focal_mechanism.creation_info =\
             CreationInfo(agency_id=source_contributor)
         moment_tensor = MomentTensor()
@@ -638,7 +677,12 @@ class Unpickler(object):
         for mag in event.magnitudes:
             if mag.creation_info.agency_id == source_contributor:
                 moment_tensor.moment_magnitude_id = mag.resource_id
-        moment_tensor.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        moment_tensor.resource_id =\
+            ResourceIdentifier(
+                resource_id='/'.join(
+                    (res_id_prefix, 'momenttensor',
+                     evid, source_contributor.lower(),
+                     'mw' + computation_type.lower())))
         moment_tensor.scalar_moment = moment
         moment_tensor.scalar_moment_errors['uncertainty'] =\
             moment_stderr
@@ -822,19 +866,27 @@ class Unpickler(object):
         #unused: mb_usage_flag = line[59]
 
         origin = event.origins[0]
+        evid = event.resource_id.resource_id.split('/')[-1]
+        waveform_id = WaveformStreamID()
+        waveform_id.station_code = station
+        #network_code is required for QuakeML validation
+        waveform_id.network_code = '  '
+        station_string =\
+            waveform_id.getSEEDString()\
+            .replace(' ', '-').replace('.', '_').lower()
+        waveform_id.resource_uri =\
+            ResourceIdentifier(prefix='/'.join(
+                (res_id_prefix, 'waveformstream', evid, station_string)))
         pick = Pick()
-        pick.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        pick.resource_id =\
+            ResourceIdentifier(prefix='/'.join(
+                (res_id_prefix, 'pick', evid, station_string)))
         date = origin.time.strftime('%Y%m%d')
         pick.time = UTCDateTime(date + arrival_time)
         #Check if pick is on the next day:
         if pick.time < origin.time:
             pick.time += timedelta(days=1)
-        pick.waveform_id = WaveformStreamID()
-        pick.waveform_id.station_code = station
-        #network_code is required for QuakeML validation
-        pick.waveform_id.network_code = '  '
-        pick.waveform_id.resource_uri =\
-            ResourceIdentifier(prefix=res_id_prefix)
+        pick.waveform_id = waveform_id
         pick.backazimuth = backazimuth
         onset = phase[0]
         if onset == 'e':
@@ -851,7 +903,8 @@ class Unpickler(object):
         if mb_amplitude is not None:
             amplitude = Amplitude()
             amplitude.resource_id =\
-                ResourceIdentifier(prefix=res_id_prefix)
+                ResourceIdentifier(prefix='/'.join(
+                    (res_id_prefix, 'amp', evid, station_string)))
             amplitude.generic_amplitude = mb_amplitude * 1E-9
             amplitude.unit = 'm'
             amplitude.period = mb_period
@@ -862,7 +915,8 @@ class Unpickler(object):
             event.amplitudes.append(amplitude)
             station_magnitude = StationMagnitude()
             station_magnitude.resource_id =\
-                ResourceIdentifier(prefix=res_id_prefix)
+                ResourceIdentifier(prefix='/'.join(
+                    (res_id_prefix, 'stationmagntiude', evid, station_string)))
             station_magnitude.origin_id = origin.resource_id
             station_magnitude.mag = mb_magnitude
             #station_magnitude.mag_errors['uncertainty'] = 0.0
@@ -877,7 +931,9 @@ class Unpickler(object):
                 )
             event.station_magnitudes.append(station_magnitude)
         arrival = Arrival()
-        arrival.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+        arrival.resource_id =\
+            ResourceIdentifier(prefix='/'.join(
+                (res_id_prefix, 'arrival', evid, station_string)))
         arrival.pick_id = pick.resource_id
         arrival.phase = pick.phase_hint
         arrival.azimuth = azimuth
@@ -910,10 +966,16 @@ class Unpickler(object):
         Ms_mag = self._float(line[53:56])
         #unused: Ms_usage_flag = line[56]
 
+        evid = event.resource_id.resource_id.split('/')[-1]
+        station_string =\
+            pick.waveform_id.getSEEDString()\
+            .replace(' ', '-').replace('.', '_').lower()
         amplitude = None
         if Z_amplitude is not None:
             amplitude = Amplitude()
-            amplitude.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+            amplitude.resource_id =\
+                ResourceIdentifier(prefix='/'.join(
+                    (res_id_prefix, 'amp', evid, station_string)))
             amplitude.generic_amplitude = Z_amplitude * 1E-6
             amplitude.unit = 'm'
             amplitude.period = Z_period
@@ -924,7 +986,8 @@ class Unpickler(object):
         if MSZ_mag is not None:
             station_magnitude = StationMagnitude()
             station_magnitude.resource_id =\
-                ResourceIdentifier(prefix=res_id_prefix)
+                ResourceIdentifier(prefix='/'.join(
+                    (res_id_prefix, 'stationmagntiude', evid, station_string)))
             station_magnitude.origin_id = event.origins[0].resource_id
             station_magnitude.mag = Ms_mag
             station_magnitude.station_magnitude_type = 'Ms'
@@ -953,6 +1016,10 @@ class Unpickler(object):
         if phase:
             arrivals.append((phase, arrival_time))
 
+        evid = event.resource_id.resource_id.split('/')[-1]
+        station_string =\
+            p_pick.waveform_id.getSEEDString()\
+            .replace(' ', '-').replace('.', '_').lower()
         origin = event.origins[0]
         for phase, arrival_time in arrivals:
             if phase[0:2] == 'D=':
@@ -968,7 +1035,9 @@ class Unpickler(object):
                     origin.quality.depth_phase_count += 1
             else:
                 pick = Pick()
-                pick.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+                pick.resource_id =\
+                    ResourceIdentifier(prefix='/'.join(
+                        (res_id_prefix, 'pick', evid, station_string)))
                 date = origin.time.strftime('%Y%m%d')
                 pick.time = UTCDateTime(date + arrival_time)
                 #Check if pick is on the next day:
@@ -989,7 +1058,9 @@ class Unpickler(object):
                 pick.phase_hint = phase.strip()
                 event.picks.append(pick)
                 arrival = Arrival()
-                arrival.resource_id = ResourceIdentifier(prefix=res_id_prefix)
+                arrival.resource_id =\
+                    ResourceIdentifier(prefix='/'.join(
+                        (res_id_prefix, 'arrival', evid, station_string)))
                 arrival.pick_id = pick.resource_id
                 arrival.phase = pick.phase_hint
                 arrival.azimuth = p_arrival.azimuth
