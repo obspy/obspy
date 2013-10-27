@@ -225,6 +225,21 @@ class Unpickler(object):
                 angle = np.pi
         return round(self._to_deg(angle), 1)
 
+    def _lat_err_to_deg(self, latitude_stderr):
+        """
+        Convert latitude error from km to degrees
+        using a simple fomula
+        """
+        return round(latitude_stderr / 111.1949, 4)
+
+    def _lon_err_to_deg(self, longitude_stderr, latitude):
+        """
+        Convert longitude error from km to degrees
+        using a simple fomula
+        """
+        return round(longitude_stderr /
+                     (111.1949 * math.cos(self._to_rad(latitude))), 4)
+
     def _parseRecordHY(self, line):
         """
         Parses the 'hypocenter' record HY
@@ -310,16 +325,12 @@ class Unpickler(object):
         evid = event.resource_id.resource_id.split('/')[-1]
         origin = event.origins[0]
         origin.time_errors['uncertainty'] = orig_time_stderr
-        # Convert latitude and longitude errors from km to degrees,
-        # using a simple fomula
         if latitude_stderr is not None:
             origin.latitude_errors['uncertainty'] =\
-                round(latitude_stderr / 111.1949, 4)
-        if longitude_stderr is not None:
+                self._lat_err_to_deg(latitude_stderr)
+        if longitude_stderr is not None and origin.latitude is not None:
             origin.longitude_errors['uncertainty'] =\
-                round(longitude_stderr /
-                      (111.1949 * math.cos(self._to_rad(origin.latitude))),
-                      4)
+                self._lon_err_to_deg(longitude_stderr, origin.latitude)
         if depth_stderr is not None:
             origin.depth_errors['uncertainty'] = depth_stderr * 1000
         if mb_mag is not None:
@@ -528,8 +539,12 @@ class Unpickler(object):
         #this record is to be associated to the latest origin
         origin = event.origins[-1]
         origin.time_errors['uncertainty'] = orig_time_stderr
-        origin.latitude_errors['uncertainty'] = latitude_stderr
-        origin.longitude_errors['uncertainty'] = longitude_stderr
+        if latitude_stderr is not None:
+            origin.latitude_errors['uncertainty'] =\
+                self._lat_err_to_deg(latitude_stderr)
+        if longitude_stderr is not None and origin.latitude is not None:
+            origin.longitude_errors['uncertainty'] =\
+                self._lon_err_to_deg(longitude_stderr, origin.latitude)
         if depth_stderr is not None:
             origin.depth_errors['uncertainty'] = depth_stderr * 1000
         origin.quality.azimuthal_gap = gap
