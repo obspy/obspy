@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile, \
-    ImageComparison, ImageComparisonException
+    ImageComparison, ImageComparisonException, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 import os
 import unittest
@@ -82,6 +82,7 @@ class UtilBaseTestCase(unittest.TestCase):
             filename = tf.name
         self.assertFalse(os.path.exists(filename))
 
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_image_comparison(self):
         """
         Tests the image comparison mechanism with an expected fail and an
