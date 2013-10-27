@@ -5,8 +5,7 @@ The obspy.imaging.waveform test suite.
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import ImageComparison
 import numpy as np
 import os
 import unittest
@@ -100,7 +99,6 @@ class WaveformTestCase(unittest.TestCase):
         st += self._createStream(start + 10, start + 20, 10.0)
         self.assertRaises(Exception, st.plot)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotOneHourManySamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -116,7 +114,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotOneHourFewSamples(self):
         """
         Plots one hour, starting Jan 1970.
@@ -130,7 +127,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotSimpleGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -146,7 +142,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotSimpleGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -162,7 +157,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotComplexGapManySamples(self):
         """
         Plots three hours with a gap.
@@ -184,7 +178,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotComplexGapFewSamples(self):
         """
         Plots three hours with a gap.
@@ -206,7 +199,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, image_name) as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotMultipleTraces(self):
         """
         Plots multiple traces underneath.
@@ -242,7 +234,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_10_traces_tiny.png') as ic:
             st.plot(outfile=ic.name, automerge=False, equal_scale=False)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotWithLabels(self):
         """
         Plots with labels.
@@ -256,7 +247,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_labels.png') as ic:
             st.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotBinningError(self):
         """
         Tests the plotting of a trace with a certain amount of sampling that
@@ -272,7 +262,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_binning_error_2.png') as ic:
             tr.plot(outfile=ic.name)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotDefaultSection(self):
         """
         Tests plotting 10 in a section
@@ -286,7 +275,6 @@ class WaveformTestCase(unittest.TestCase):
         with ImageComparison(self.path, 'waveform_default_section.png') as ic:
             st.plot(outfile=ic.name, type='section')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_plotAzimSection(self):
         """
         Tests plotting 10 in a azimuthal distant section

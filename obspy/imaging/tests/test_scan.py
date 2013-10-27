@@ -3,9 +3,8 @@
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 
-from obspy.core.util.base import HAS_COMPARE_IMAGE, \
-    ImageComparison, getMatplotlibVersion, NamedTemporaryFile
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import ImageComparison, getMatplotlibVersion, \
+    NamedTemporaryFile
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir
 import sys
@@ -25,7 +24,6 @@ class ScanTestCase(unittest.TestCase):
         self.root = abspath(join(dirname(__file__), pardir, pardir))
         self.path = join(self.root, 'imaging', 'tests', 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_scan(self):
         """
         Run obspy-scan on selected tests/data directories
@@ -45,7 +43,6 @@ class ScanTestCase(unittest.TestCase):
                 sys.stdout.close()
                 sys.stdout = tmp_stdout
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_multipleSamplingrates(self):
         """
         Check for multiple sampling rates

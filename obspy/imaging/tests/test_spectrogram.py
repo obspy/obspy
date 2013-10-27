@@ -4,9 +4,7 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE, \
-    getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
+from obspy.core.util.base import ImageComparison, getMatplotlibVersion
 from obspy.imaging import spectrogram
 import numpy as np
 import os
@@ -24,7 +22,6 @@ class SpectrogramTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_spectogram(self):
         """
         Create spectogram plotting examples in tests/output directory.

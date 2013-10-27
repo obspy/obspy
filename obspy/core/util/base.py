@@ -21,7 +21,7 @@ import sys
 import tempfile
 import shutil
 import warnings
-from unittest import TestCase
+from unittest import TestCase, SkipTest
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -459,6 +459,9 @@ class ImageComparison(NamedTemporaryFile):
     :type reltol: float (optional)
     :param reltol: Multiplier that is applied to the default tolerance
         value (i.e. 10 means a 10 times harder to pass test tolerance).
+    :type raise_SkipTest: bool (optional)
+    :param raise_SkipTest: If True raises unittest.SkipTest on initialization
+        if HAS_COMPARE_IMAGE is False.
 
     The class should be used with Python's "with" statement. When setting up,
     the matplotlib rcdefaults are set to ensure consistent image testing.
@@ -487,7 +490,11 @@ class ImageComparison(NamedTemporaryFile):
     ...     st.plot(outfile=ic.name)  # doctest: +SKIP
     ...     # image is compared against baseline image automatically
     """
-    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
+    def __init__(self, image_path, image_name, reltol=1, raise_SkipTest=True,
+                 *args, **kwargs):
+        if not HAS_COMPARE_IMAGE and raise_SkipTest:
+            msg = "nose not installed or matplotlib too old."
+            raise SkipTest(msg)
         self.suffix = "." + image_name.split(".")[-1]
         super(ImageComparison, self).__init__(suffix=self.suffix, *args,
                                               **kwargs)

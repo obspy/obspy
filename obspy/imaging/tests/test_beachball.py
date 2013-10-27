@@ -3,9 +3,8 @@
 The obspy.imaging.beachball test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
+from obspy.core.util.base import NamedTemporaryFile, \
     ImageComparison, getMatplotlibVersion
-from obspy.core.util.decorator import skipIf
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
 import matplotlib.pyplot as plt
@@ -24,7 +23,6 @@ class BeachballTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_Beachball(self):
         """
         Create beachball examples in tests/output directory.
@@ -184,7 +182,6 @@ class BeachballTestCase(unittest.TestCase):
         self.assertAlmostEqual(P.dip, 33.5833323)
         self.assertAlmostEqual(P.strike, 213.273886)
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
     def test_collection(self):
         """
         Tests to plot beachballs as collection into an existing axis
