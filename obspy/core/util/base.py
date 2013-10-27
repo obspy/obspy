@@ -527,7 +527,10 @@ class ImageComparison(NamedTemporaryFile):
         # set matplotlib builtin default settings for testing
         rcdefaults()
         rcParams['font.family'] = 'Bitstream Vera Sans'
-        rcParams['text.hinting'] = False
+        try:
+            rcParams['text.hinting'] = False
+        except KeyError:
+            warnings.warn("could not set rcParams['text.hinting']")
         try:
             rcParams['text.hinting_factor'] = 8
         except KeyError:
