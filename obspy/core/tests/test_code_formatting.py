@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core.util.misc import get_untracked_files_from_git
+from obspy.core.util.decorator import skipIf
 import fnmatch
 import inspect
 import os
@@ -23,6 +24,7 @@ class CodeFormattingTestCase(unittest.TestCase):
     """
     Test codebase for compliance with the flake8 tool.
     """
+    @skipIf('OBSPY_NO_FLAKE8' in os.environ, 'flake8 check disabled')
     def test_flake8(self):
         """
         Test codebase for compliance with the flake8 tool.
