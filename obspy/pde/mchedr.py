@@ -137,7 +137,7 @@ class Unpickler(object):
 
     def _storeUncertainty(self, error, value, scale=1):
         if not isinstance(error, QuantityError):
-            raise TypeError, "'error' is not a 'QuantityError'"
+            raise TypeError("'error' is not a 'QuantityError'")
         if value is not None:
             error['uncertainty'] = value * scale
 
@@ -193,7 +193,7 @@ class Unpickler(object):
             tensor.m_tp = value * sign
             self._storeUncertainty(tensor.m_tp_errors, error)
 
-    def _decode_FE_region_number(self, number):
+    def _decodeFERegionNumber(self, number):
         """
         Converts Flinn-Engdahl region number to string.
         """
@@ -201,23 +201,23 @@ class Unpickler(object):
             number = int(number)
         return self.flinn_engdahl.get_region_by_number(number)
 
-    def _to_rad(self, degrees):
+    def _toRad(self, degrees):
         radians = np.pi * degrees / 180
         return radians
 
-    def _to_deg(self, radians):
+    def _toDeg(self, radians):
         degrees = 180 * radians / np.pi
         return degrees
 
-    def _spherical_to_cartesian(self, (lenght, azimuth, plunge)):
-        plunge_rad = self._to_rad(plunge)
-        azimuth_rad = self._to_rad(azimuth)
+    def _sphericalToCartesian(self, (lenght, azimuth, plunge)):
+        plunge_rad = self._toRad(plunge)
+        azimuth_rad = self._toRad(azimuth)
         x = lenght * np.sin(plunge_rad) * np.cos(azimuth_rad)
         y = lenght * np.sin(plunge_rad) * np.sin(azimuth_rad)
         z = lenght * np.cos(plunge_rad)
         return (x, y, z)
 
-    def _angle_between(self, u1, u2):
+    def _angleBetween(self, u1, u2):
         """
         Returns the angle in degrees between unit vectors 'u1' and 'u2':
         Source: http://stackoverflow.com/questions/2827393/
@@ -229,9 +229,9 @@ class Unpickler(object):
                 angle = 0.0
             else:
                 angle = np.pi
-        return round(self._to_deg(angle), 1)
+        return round(self._toDeg(angle), 1)
 
-    def _lat_err_to_deg(self, latitude_stderr):
+    def _latErrToDeg(self, latitude_stderr):
         """
         Convert latitude error from km to degrees
         using a simple fomula
@@ -241,14 +241,14 @@ class Unpickler(object):
         else:
             return None
 
-    def _lon_err_to_deg(self, longitude_stderr, latitude):
+    def _lonErrToDeg(self, longitude_stderr, latitude):
         """
         Convert longitude error from km to degrees
         using a simple fomula
         """
         if longitude_stderr is not None and latitude is not None:
             return round(longitude_stderr /
-                         (111.1949 * math.cos(self._to_rad(latitude))), 4)
+                         (111.1949 * math.cos(self._toRad(latitude))), 4)
         else:
             return None
 
@@ -269,7 +269,7 @@ class Unpickler(object):
         station_number = self._int(line[48:51])
         #unused: version_flag = line[51]
         FE_region_number = line[52:55]
-        FE_region_name = self._decode_FE_region_number(FE_region_number)
+        FE_region_name = self._decodeFERegionNumber(FE_region_number)
         source_code = line[55:60].strip()
 
         event = Event()
@@ -335,10 +335,10 @@ class Unpickler(object):
         origin = event.origins[0]
         self._storeUncertainty(origin.time_errors, orig_time_stderr)
         self._storeUncertainty(origin.latitude_errors,
-                               self._lat_err_to_deg(latitude_stderr))
+                               self._latErrToDeg(latitude_stderr))
         self._storeUncertainty(origin.longitude_errors,
-                               self._lon_err_to_deg(longitude_stderr,
-                                                    origin.latitude))
+                               self._lonErrToDeg(longitude_stderr,
+                                                 origin.latitude))
         self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
         if mb_mag is not None:
             mag = Magnitude()
@@ -414,16 +414,16 @@ class Unpickler(object):
 
         #FIXME: The following code needs to be double-checked!
         semi_major_axis_unit_vect =\
-            self._spherical_to_cartesian((1,
-                                          semi_major_axis_azimuth,
-                                          semi_major_axis_plunge))
+            self._sphericalToCartesian((1,
+                                        semi_major_axis_azimuth,
+                                        semi_major_axis_plunge))
         semi_minor_axis_unit_vect =\
-            self._spherical_to_cartesian((1,
-                                          semi_minor_axis_azimuth,
-                                          semi_minor_axis_plunge))
+            self._sphericalToCartesian((1,
+                                        semi_minor_axis_azimuth,
+                                        semi_minor_axis_plunge))
         major_axis_rotation =\
-            self._angle_between(semi_major_axis_unit_vect,
-                                semi_minor_axis_unit_vect)
+            self._angleBetween(semi_major_axis_unit_vect,
+                               semi_minor_axis_unit_vect)
 
         origin.origin_uncertainty = OriginUncertainty()
         origin.origin_uncertainty.preferred_description =\
@@ -538,10 +538,10 @@ class Unpickler(object):
         origin = event.origins[-1]
         self._storeUncertainty(origin.time_errors, orig_time_stderr)
         self._storeUncertainty(origin.latitude_errors,
-                               self._lat_err_to_deg(latitude_stderr))
+                               self._latErrToDeg(latitude_stderr))
         self._storeUncertainty(origin.longitude_errors,
-                               self._lon_err_to_deg(longitude_stderr,
-                                                    origin.latitude))
+                               self._lonErrToDeg(longitude_stderr,
+                                                 origin.latitude))
         self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
@@ -592,8 +592,7 @@ class Unpickler(object):
         if lat_stderr == 'FX':
             lat_stderr = 'Fixed'
         else:
-            lat_stderr =\
-                self._floatWithFormat(lat_stderr, '3.2', scale)
+            lat_stderr = self._floatWithFormat(lat_stderr, '3.2', scale)
         centroid_longitude = self._floatWithFormat(line[25:30], '5.2')
         lon_type = line[30]
         if centroid_longitude is not None:
@@ -602,15 +601,13 @@ class Unpickler(object):
         if lon_stderr == 'FX':
             lon_stderr = 'Fixed'
         else:
-            lon_stderr =\
-                self._floatWithFormat(lon_stderr, '3.2', scale)
+            lon_stderr = self._floatWithFormat(lon_stderr, '3.2', scale)
         centroid_depth = self._floatWithFormat(line[34:38], '4.1')
         depth_stderr = line[38:40]
         if depth_stderr == 'FX' or depth_stderr == 'BD':
             depth_stderr = 'Fixed'
         else:
-            depth_stderr =\
-                self._floatWithFormat(depth_stderr, '2.1', scale)
+            depth_stderr = self._floatWithFormat(depth_stderr, '2.1', scale)
         station_number = self._intZero(line[40:43])
         component_number = self._intZero(line[43:46])
         station_number2 = self._intZero(line[46:48])
@@ -648,10 +645,10 @@ class Unpickler(object):
                 origin.epicenter_fixed = True
             else:
                 self._storeUncertainty(origin.latitude_errors,
-                                       self._lat_err_to_deg(lat_stderr))
+                                       self._latErrToDeg(lat_stderr))
                 self._storeUncertainty(origin.longitude_errors,
-                                       self._lon_err_to_deg(lon_stderr,
-                                                            origin.latitude))
+                                       self._lonErrToDeg(lon_stderr,
+                                                         origin.latitude))
             if depth_stderr == 'Fixed':
                 origin.depth_type = 'operator assigned'
             else:
@@ -770,18 +767,15 @@ class Unpickler(object):
         exponent = self._intZero(line[3:5])
         scale = math.pow(10, exponent)
         t_axis_len = self._floatWithFormat(line[5:9], '4.2', scale)
-        t_axis_stderr =\
-            self._floatWithFormat(line[9:12], '3.2', scale)
+        t_axis_stderr = self._floatWithFormat(line[9:12], '3.2', scale)
         t_axis_plunge = self._int(line[12:14])
         t_axis_azimuth = self._int(line[14:17])
         n_axis_len = self._floatWithFormat(line[17:21], '4.2', scale)
-        n_axis_stderr =\
-            self._floatWithFormat(line[21:24], '3.2', scale)
+        n_axis_stderr = self._floatWithFormat(line[21:24], '3.2', scale)
         n_axis_plunge = self._int(line[24:26])
         n_axis_azimuth = self._int(line[26:29])
         p_axis_len = self._floatWithFormat(line[29:33], '4.2', scale)
-        p_axis_stderr =\
-            self._floatWithFormat(line[33:36], '3.2', scale)
+        p_axis_stderr = self._floatWithFormat(line[33:36], '3.2', scale)
         p_axis_plunge = self._int(line[36:38])
         p_axis_azimuth = self._int(line[38:41])
         np1_strike = self._int(line[42:45])
@@ -793,17 +787,17 @@ class Unpickler(object):
 
         t_axis = Axis()
         t_axis.length = t_axis_len
-        t_axis.length_errors['uncertainity'] = t_axis_stderr
+        self._storeUncertainty(t_axis.length_errors, t_axis_stderr)
         t_axis.plunge = t_axis_plunge
         t_axis.azimuth = t_axis_azimuth
         n_axis = Axis()
         n_axis.length = n_axis_len
-        n_axis.length_errors['uncertainity'] = n_axis_stderr
+        self._storeUncertainty(n_axis.length_errors, n_axis_stderr)
         n_axis.plunge = n_axis_plunge
         n_axis.azimuth = n_axis_azimuth
         p_axis = Axis()
         p_axis.length = p_axis_len
-        p_axis.length_errors['uncertainity'] = p_axis_stderr
+        self._storeUncertainty(p_axis.length_errors, p_axis_stderr)
         p_axis.plunge = p_axis_plunge
         p_axis.azimuth = p_axis_azimuth
         principal_axes = PrincipalAxes()
@@ -1015,8 +1009,7 @@ class Unpickler(object):
                 if depth_usage_flag == 'X':
                     #FIXME: is this enough to say that
                     #the event is constained by depth pahses?
-                    origin.depth_type =\
-                        'constrained by depth phases'
+                    origin.depth_type = 'constrained by depth phases'
                     origin.quality.depth_phase_count += 1
             else:
                 pick = Pick()
