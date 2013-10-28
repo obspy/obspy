@@ -321,9 +321,11 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
                     err_items = getattr(self, error_key).items()
-                    err_items.sort()
-                    repr_str += " [%s]" % ', '.join(
-                        [str(k) + "=" + str(v) for k, v in err_items])
+                    _err_items = [(k, v) for k, v in err_items if _bool(v)]
+                    _err_items.sort()
+                    if _err_items:
+                        repr_str += " [%s]" % ', '.join(
+                            [str(k) + "=" + str(v) for k, v in _err_items])
                 return repr_str
 
             # Case 2: Short representation for small objects. Will just print a
@@ -639,9 +641,10 @@ class ResourceIdentifier(object):
         # the referred object.
         if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
             return
-        msg = "The resource identifier already exists and points to " + \
+        msg = "The resource identifier '%s' already exists and points to " + \
               "another object. It will now point to the object " + \
               "referred to by the new resource identifier."
+        msg = msg % referred_object.resource_id.resource_id
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
