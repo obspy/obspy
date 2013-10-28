@@ -161,9 +161,9 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if type(value) == int or\
-       type(value) == float or\
-       type(value) == str:
+    if isinstance(value, int) or\
+       isinstance(value, float) or\
+       isinstance(value, basestring):
         return True
     return bool(value)
 
