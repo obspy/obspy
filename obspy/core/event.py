@@ -161,8 +161,7 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if isinstance(value, int) or\
-       isinstance(value, float) or\
+    if value == 0 or\
        isinstance(value, basestring):
         return True
     return bool(value)
