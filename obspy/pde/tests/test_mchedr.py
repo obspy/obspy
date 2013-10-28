@@ -272,8 +272,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             fm.resource_id,
             ResourceIdentifier(
                 resource_id=
-                'quakeml:us.anss.org/focalmechanism/20120101052755.98/ucmt/mwc'
-                ))
+                'quakeml:us.anss.org/focalmechanism/'
+                '20120101052755.98/ucmt/mwc'))
         # general
         self.assertEqual(fm.waveform_id, None)
         self.assertEqual(fm.triggering_origin_id, None)
@@ -318,8 +318,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
             mt.resource_id,
             ResourceIdentifier(
                 resource_id=
-                'quakeml:us.anss.org/momenttensor/20120101052755.98/ucmt/mwc'
-                ))
+                'quakeml:us.anss.org/momenttensor/'
+                '20120101052755.98/ucmt/mwc'))
         self.assertAlmostEqual(mt.scalar_moment, 1.9e+19)
         self.assertAlmostEqual(mt.tensor.m_rr, -3.4e+18)
         self.assertAlmostEqual(mt.tensor.m_tt, -8e+17)
