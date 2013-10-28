@@ -40,28 +40,22 @@ Here are the results of the automatic PEP 8 syntax checker:
 """)
 
 
-error_file_count, message, file_count = check_flake8()
-message = message.splitlines()
-error_classes = set([x.split(" ", 1)[1] for x in message])
-statistics = {}
-for msg in message:
-    err_class = msg.split(" ", 1)[1]
-    statistics.setdefault(err_class, 0)
-    statistics[err_class] += 1
+report, message = check_flake8()
+statistics = report.get_statistics()
+error_count = report.get_count()
 
-table_border = "=" * 7 + " " + "=" * max([len(x) for x in error_classes])
-
-if error_file_count == 0:
+if error_count == 0:
     fh.write("The PEP 8 checker didn't find any issues.\n")
 else:
+    table_border = \
+        "=" * 7 + " " + "=" * (max([len(x) for x in statistics]) - 8)
     fh.write("\n")
     fh.write(".. rubric:: Statistic\n")
     fh.write("\n")
     fh.write(table_border + "\n")
     fh.write("Count   PEP 8 message string                                 \n")
     fh.write(table_border + "\n")
-    for err, count in statistics.iteritems():
-        fh.write(str(count).ljust(8) + err + "\n")
+    fh.write("\n".join(statistics) + "\n")
     fh.write(table_border + "\n")
     fh.write("\n")
 
@@ -70,7 +64,6 @@ else:
     fh.write("::\n")
     fh.write("\n")
 
-    message = "\n".join(message)
     message = message.replace(path, '    obspy')
     fh.write(message)
     fh.write("\n")
@@ -83,7 +76,7 @@ try:
 except:
     pass
 # copy correct pep8 image
-if count > 0:
+if error_count > 0:
     copyfile(PEP8_FAIL_IMAGE, PEP8_IMAGE)
 else:
     copyfile(PEP8_PASS_IMAGE, PEP8_IMAGE)

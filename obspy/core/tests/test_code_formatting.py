@@ -15,9 +15,11 @@ class CodeFormattingTestCase(unittest.TestCase):
         """
         Test codebase for compliance with the flake8 tool.
         """
-        error_file_count, message, file_count = check_flake8()
+        report, message = check_flake8()
+        file_count = report.counters["files"]
+        error_count = report.get_count()
         self.assertTrue(file_count > 10)
-        self.assertEqual(error_file_count, 0, message)
+        self.assertEqual(error_count, 0, message)
 
 
 def suite():
