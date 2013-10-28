@@ -19,9 +19,12 @@ try:
 except:
     pass
 
+report, message = check_flake8()
+statistics = report.get_statistics()
+error_count = report.get_count()
+
 # write index.rst
-fh = open(os.path.join('source', 'pep8', 'index.rst'), 'wt')
-fh.write("""
+head = ("""
 .. _pep8-index:
 
 ====
@@ -39,36 +42,32 @@ Here are the results of the automatic PEP 8 syntax checker:
 
 """)
 
+with open(os.path.join('source', 'pep8', 'index.rst'), 'wt') as fh:
+    fh.write(head)
 
-report, message = check_flake8()
-statistics = report.get_statistics()
-error_count = report.get_count()
+    if error_count == 0:
+        fh.write("The PEP 8 checker didn't find any issues.\n")
+    else:
+        table_border = \
+            "=" * 7 + " " + "=" * (max([len(x) for x in statistics]) - 8)
+        fh.write("\n")
+        fh.write(".. rubric:: Statistic\n")
+        fh.write("\n")
+        fh.write(table_border + "\n")
+        fh.write("Count   PEP 8 message string\n")
+        fh.write(table_border + "\n")
+        fh.write("\n".join(statistics) + "\n")
+        fh.write(table_border + "\n")
+        fh.write("\n")
 
-if error_count == 0:
-    fh.write("The PEP 8 checker didn't find any issues.\n")
-else:
-    table_border = \
-        "=" * 7 + " " + "=" * (max([len(x) for x in statistics]) - 8)
-    fh.write("\n")
-    fh.write(".. rubric:: Statistic\n")
-    fh.write("\n")
-    fh.write(table_border + "\n")
-    fh.write("Count   PEP 8 message string                                 \n")
-    fh.write(table_border + "\n")
-    fh.write("\n".join(statistics) + "\n")
-    fh.write(table_border + "\n")
-    fh.write("\n")
+        fh.write(".. rubric:: Warnings\n")
+        fh.write("\n")
+        fh.write("::\n")
+        fh.write("\n")
 
-    fh.write(".. rubric:: Warnings\n")
-    fh.write("\n")
-    fh.write("::\n")
-    fh.write("\n")
-
-    message = message.replace(path, '    obspy')
-    fh.write(message)
-    fh.write("\n")
-
-    fh.close()
+        message = message.replace(path, '    obspy')
+        fh.write(message)
+        fh.write("\n")
 
 # remove any old image
 try:
