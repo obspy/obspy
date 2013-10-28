@@ -550,6 +550,9 @@ def run(interactive=True):
                       dest="keep_images", action="store_true",
                       help="store images created during image comparison "
                            "tests in subfolders of baseline images")
+    report.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
     parser.add_option_group(report)
     (options, _) = parser.parse_args()
     # set correct verbosity level
@@ -584,6 +587,8 @@ def run(interactive=True):
         interactive = False
     if options.keep_images:
         os.environ['OBSPY_KEEP_IMAGES'] = ""
+    if options.no_flake8:
+        os.environ['OBSPY_NO_FLAKE8'] = ""
     return runTests(
         verbosity, parser.largs, report, options.log,
         options.server, options.all, options.timeit, interactive, options.n,

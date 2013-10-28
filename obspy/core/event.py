@@ -156,9 +156,8 @@ def _bool(value):
     True for any value (including zero) of int and float,
     and for (empty) strings.
     """
-    if type(value) == int or\
-       type(value) == float or\
-       type(value) == str:
+    if value == 0 or\
+       isinstance(value, basestring):
         return True
     return bool(value)
 
@@ -281,7 +280,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             super(AbstractEventType, self).clear()
             self.__init__()
 
-        def __str__(self):
+        def __str__(self, force_one_line=False):
             """
             Fairly extensive in an attempt to cover several use cases. It is
             always possible to change it in the child class.
@@ -324,7 +323,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
             # Case 2: Short representation for small objects. Will just print a
             # single line.
-            if len(attributes) <= 3 and not containers:
+            if len(attributes) <= 3 and not containers or\
+               force_one_line:
                 att_strs = ["%s=%s" % (_i, get_value_repr(_i))
                             for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "(%s)" % ", ".join(att_strs)
@@ -353,7 +353,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return copy.deepcopy(self)
 
         def __repr__(self):
-            return self.__str__()
+            return self.__str__(force_one_line=True)
 
         def __nonzero__(self):
             # We use custom _bool() for testing getattr() since we want
@@ -1541,6 +1541,8 @@ class Origin(__Origin):
     :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param earth_model_id: Identifies the earth model used in method_id.
+    :type arrivals: list of :class:`~obspy.core.event.Arrival`, optional
+    :param arrivals: List of arrivals associated with the origin.
     :type composite_times: list of :class:`~obspy.core.event.CompositeTime`,
         optional
     :param composite_times: Supplementary information on time of rupture start.
@@ -2843,6 +2845,16 @@ class Catalog(object):
         mags = []
         colors = []
         for event in self:
+            if not event.origins:
+                msg = ("Event '%s' does not have an origin and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
+                continue
+            if not event.magnitudes:
+                msg = ("Event '%s' does not have a magnitude and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
+                continue
             origin = event.preferred_origin() or event.origins[0]
             lats.append(origin.latitude)
             lons.append(origin.longitude)

@@ -427,7 +427,7 @@ class ParserTestCase(unittest.TestCase):
                   'seismometer_gain': 1500.0,
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
-                  'digitizer_gain':  1677850.0}
+                  'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
         # last test again, check arg name changed in [3722]
         paz = sp.getPAZ(channel_id="BW.RJOB..EHZ",
@@ -441,7 +441,7 @@ class ParserTestCase(unittest.TestCase):
                   'seismometer_gain': 1500.0,
                   'sensitivity': 2516800000.0,
                   'zeros': [0j, 0j],
-                  'digitizer_gain':  1677850.0}
+                  'digitizer_gain': 1677850.0}
         self.assertEqual(sorted(paz.items()), sorted(result.items()))
 
     def test_getPAZFromXSEED(self):

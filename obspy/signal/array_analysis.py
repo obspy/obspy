@@ -588,12 +588,12 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-@deprecated
+@deprecated()
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
           verbose=False, coordsys='lonlat', timestamp='mlabday'):
     """
-    DEPRECATED: Please use ``obspy.signal.array_processing()``
+    DEPRECATED: Please use :func:`obspy.signal.array_analysis.array_processing`
     """
     return array_processing(
         stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
