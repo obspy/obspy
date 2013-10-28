@@ -3,8 +3,8 @@
 The obspy.imaging.scripts.scan / obspy-scan test suite.
 """
 
-from obspy.core.util.base import HAS_COMPARE_IMAGE, \
-    ImageComparison, getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
+from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.scripts.scan import main as obspy_scan
 from os.path import dirname, abspath, join, pardir

@@ -3,7 +3,7 @@
 The obspy.segy benchmark test suite.
 """
 
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.segy.benchmark import plotBenchmark
 import glob

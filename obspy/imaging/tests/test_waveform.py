@@ -5,7 +5,7 @@ The obspy.imaging.waveform test suite.
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.stream import read
 from obspy.core.util import AttribDict
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 import numpy as np
 import os

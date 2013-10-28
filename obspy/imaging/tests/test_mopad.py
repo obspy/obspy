@@ -2,8 +2,7 @@
 """
 The obspy.imaging.mopad test suite.
 """
-
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt

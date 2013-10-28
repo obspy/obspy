@@ -4,8 +4,8 @@ The obspy.imaging.spectogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE, \
-    getMatplotlibVersion
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np

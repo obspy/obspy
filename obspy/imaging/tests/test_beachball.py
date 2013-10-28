@@ -3,8 +3,8 @@
 The obspy.imaging.beachball test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile, HAS_COMPARE_IMAGE, \
-    ImageComparison, getMatplotlibVersion
+from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
+from obspy.core.util.testing import HAS_COMPARE_IMAGE, ImageComparison
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.beachball import Beachball, AuxPlane, StrikeDip, TDL, \
     MomentTensor, MT2Plane, MT2Axes, Beach
