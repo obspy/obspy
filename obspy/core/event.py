@@ -285,7 +285,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             super(AbstractEventType, self).clear()
             self.__init__()
 
-        def __str__(self):
+        def __str__(self, force_one_line=False):
             """
             Fairly extensive in an attempt to cover several use cases. It is
             always possible to change it in the child class.
@@ -328,7 +328,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
             # Case 2: Short representation for small objects. Will just print a
             # single line.
-            if len(attributes) <= 3 and not containers:
+            if len(attributes) <= 3 and not containers or\
+               force_one_line:
                 att_strs = ["%s=%s" % (_i, get_value_repr(_i))
                             for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "(%s)" % ", ".join(att_strs)
@@ -357,7 +358,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return copy.deepcopy(self)
 
         def __repr__(self):
-            return self.__str__()
+            return self.__str__(force_one_line=True)
 
         def __nonzero__(self):
             # We use custom _bool() for testing getattr() since we want
