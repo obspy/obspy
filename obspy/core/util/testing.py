@@ -276,9 +276,7 @@ def get_matplotlib_defaul_tolerance():
         return 1
 
 
-FLAKE8_EXCLUDE_FILES = [
-    "*/__init__.py",
-    ]
+FLAKE8_EXCLUDE_FILES = ["*/__init__.py", ]
 
 try:
     import flake8

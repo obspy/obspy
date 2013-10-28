@@ -74,8 +74,7 @@ PARAMETER_ALIASES = {
     "lon": "longitude",
     "minmag": "minmagnitude",
     "maxmag": "maxmagnitude",
-    "magtype": "magnitudetype",
-    }
+    "magtype": "magnitudetype"}
 
 
 # The default types if none are given. If the parameter can not be found in

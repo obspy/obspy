@@ -282,17 +282,16 @@ class ClientTestCase(unittest.TestCase):
         client = self.client
 
         # event example queries
-        queries = [
-            dict(eventid=609301),
-            dict(starttime=UTCDateTime("2011-01-07T01:00:00"),
-                 endtime=UTCDateTime("2011-01-07T02:00:00"),
-                 catalog="NEIC PDE"),
-            dict(starttime=UTCDateTime("2011-01-07T14:00:00"),
-                 endtime=UTCDateTime("2011-01-08T00:00:00"), minlatitude=15,
-                 maxlatitude=40, minlongitude=-170, maxlongitude=170,
-                 includeallmagnitudes=True, minmagnitude=4,
-                 orderby="magnitude"),
-            ]
+        queries = [dict(eventid=609301),
+                   dict(starttime=UTCDateTime("2011-01-07T01:00:00"),
+                        endtime=UTCDateTime("2011-01-07T02:00:00"),
+                        catalog="NEIC PDE"),
+                   dict(starttime=UTCDateTime("2011-01-07T14:00:00"),
+                        endtime=UTCDateTime("2011-01-08T00:00:00"),
+                        minlatitude=15, maxlatitude=40,
+                        minlongitude=-170, maxlongitude=170,
+                        includeallmagnitudes=True, minmagnitude=4,
+                        orderby="magnitude")]
         result_files = ["events_by_eventid.xml",
                         "events_by_time.xml",
                         "events_by_misc.xml",
@@ -313,16 +312,17 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(got, expected, failmsg(got, expected))
 
         # station example queries
-        queries = [
-            dict(latitude=-56.1, longitude=-26.7, maxradius=15),
-            dict(startafter=UTCDateTime("2003-01-07"),
-                 endbefore=UTCDateTime("2011-02-07"), minlatitude=15,
-                 maxlatitude=55, minlongitude=170, maxlongitude=-170),
-            dict(starttime=UTCDateTime("2013-01-01"), network="IU",
-                 sta="ANMO", level="channel"),
-            dict(starttime=UTCDateTime("2013-01-01"), network="IU", sta="A*",
-                 location="00", level="channel", format="text"),
-            ]
+        queries = [dict(latitude=-56.1, longitude=-26.7, maxradius=15),
+                   dict(startafter=UTCDateTime("2003-01-07"),
+                        endbefore=UTCDateTime("2011-02-07"),
+                        minlatitude=15, maxlatitude=55,
+                        minlongitude=170, maxlongitude=-170),
+                   dict(starttime=UTCDateTime("2013-01-01"),
+                        network="IU", sta="ANMO",
+                        level="channel"),
+                   dict(starttime=UTCDateTime("2013-01-01"),
+                        network="IU", sta="A*", location="00",
+                        level="channel", format="text")]
         result_files = ["stations_by_latlon.xml",
                         "stations_by_misc.xml",
                         "stations_by_station.xml",
@@ -349,17 +349,15 @@ class ClientTestCase(unittest.TestCase):
             self.assertEqual(msg, "", msg)
 
         # dataselect example queries
-        queries = [
-            ("IU", "ANMO", "00", "BHZ",
-             UTCDateTime("2010-02-27T06:30:00.000"),
-             UTCDateTime("2010-02-27T06:40:00.000")),
-            ("IU", "A*", "*", "BHZ",
-             UTCDateTime("2010-02-27T06:30:00.000"),
-             UTCDateTime("2010-02-27T06:31:00.000")),
-            ("IU", "A??", "*0", "BHZ",
-             UTCDateTime("2010-02-27T06:30:00.000"),
-             UTCDateTime("2010-02-27T06:31:00.000")),
-            ]
+        queries = [("IU", "ANMO", "00", "BHZ",
+                    UTCDateTime("2010-02-27T06:30:00.000"),
+                    UTCDateTime("2010-02-27T06:40:00.000")),
+                   ("IU", "A*", "*", "BHZ",
+                    UTCDateTime("2010-02-27T06:30:00.000"),
+                    UTCDateTime("2010-02-27T06:31:00.000")),
+                   ("IU", "A??", "*0", "BHZ",
+                    UTCDateTime("2010-02-27T06:30:00.000"),
+                    UTCDateTime("2010-02-27T06:31:00.000"))]
         result_files = ["dataselect_example.mseed",
                         "dataselect_example_wildcards.mseed",
                         "dataselect_example_mixed_wildcards.mseed",
