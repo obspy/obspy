@@ -319,7 +319,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         format = format.upper()
         try:
             format_ep = EPS[format]
-        except IndexError:
+        except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
