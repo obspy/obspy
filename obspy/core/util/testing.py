@@ -293,12 +293,12 @@ def check_flake8():
     if not HAS_FLAKE8:
         raise Exception('flake8 is required to check code formatting')
     import flake8.main
+    from flake8.engine import get_style_guide
+
     test_dir = os.path.abspath(inspect.getfile(inspect.currentframe()))
     obspy_dir = os.path.dirname(os.path.dirname(os.path.dirname(test_dir)))
-    error_file_count = 0
-    file_count = 0
     untracked_files = get_untracked_files_from_git() or []
-    sys.stdout = StringIO.StringIO()
+    files = []
     for dirpath, _, filenames in os.walk(obspy_dir):
         filenames = [_i for _i in filenames if
                      os.path.splitext(_i)[-1] == os.path.extsep + "py"]
@@ -315,13 +315,15 @@ def check_flake8():
                 if fnmatch.fnmatch(py_file, exclude_pattern):
                     break
             else:
-                file_count += 1
-                if flake8.main.check_file(py_file):
-                    error_file_count += 1
+                files.append(py_file)
+    flake8_style = get_style_guide(parse_argv=False,
+                                   config_file=flake8.main.DEFAULT_CONFIG)
+    sys.stdout = StringIO.StringIO()
+    report = flake8_style.check_files(files)
     sys.stdout.seek(0)
     message = sys.stdout.read()
     sys.stdout = sys.__stdout__
-    return error_file_count, message, file_count
+    return report, message
 
 
 if __name__ == '__main__':
