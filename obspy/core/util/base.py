@@ -437,6 +437,12 @@ def checkForMatplotlibCompareImages():
         compare_images = _compare.compare_images  # NOQA
     except:
         return False
+    # matplotlib's (< 1.2) compare_images() uses PIL internally
+    if getMatplotlibVersion() < [1, 2, 0]:
+        try:
+            import PIL  # NOQA
+        except ImportError:
+            return False
     return True
 
 
@@ -591,8 +597,7 @@ def get_matplotlib_defaul_tolerance():
     matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
     matplotlib v1.2.1: 1.7e-3 and 3.6e-3
     """
-    version = getMatplotlibVersion()
-    if version < [1, 3, 0]:
+    if getMatplotlibVersion() < [1, 3, 0]:
         return 2e-3
     else:
         return 1
