@@ -1473,7 +1473,8 @@ class TraceTestCase(unittest.TestCase):
             tr2.stats.pop("processing")
             self.assertEqual(tr1, tr2)
 
-            self.assertRaises(tr.copy().taper, type="hann", p=0.3)
+            self.assertRaises(NotImplementedError, tr.copy().taper,
+                              type="hann", p=0.3)
 
             tr1 = tr.copy().taper(max_percentage=0.5, type='cosine')
             self.assertTrue(np.all(tr1.data[6:] < 1))

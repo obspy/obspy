@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 
-from pep8 import input_file, input_dir, get_statistics, get_count, \
-    process_options
 import obspy
+from obspy.core.util.testing import check_flake8
 import os
-import sys
-from StringIO import StringIO
 from shutil import copyfile
 
 
@@ -43,31 +40,29 @@ Here are the results of the automatic PEP 8 syntax checker:
 """)
 
 
-# backup stdout
-stdout = sys.stdout
-sys.stdout = StringIO()
+error_file_count, message, file_count = check_flake8()
+message = message.splitlines()
+error_classes = set([x.split(" ", 1)[1] for x in message])
+statistics = {}
+for msg in message:
+    err_class = msg.split(" ", 1)[1]
+    statistics.setdefault(err_class, 0)
+    statistics[err_class] += 1
 
-# clean up runner options
-options, args = process_options()
-options.repeat = True
-input_dir(path, runner=input_file)
-sys.stdout.seek(0)
-data = sys.stdout.read()
-statistic = get_statistics('')
-count = get_count()
+table_border = "=" * 7 + " " + "=" * max([len(x) for x in error_classes])
 
-if count == 0:
+if error_file_count == 0:
     fh.write("The PEP 8 checker didn't find any issues.\n")
 else:
     fh.write("\n")
     fh.write(".. rubric:: Statistic\n")
     fh.write("\n")
-    fh.write("======= =====================================================\n")
+    fh.write(table_border + "\n")
     fh.write("Count   PEP 8 message string                                 \n")
-    fh.write("======= =====================================================\n")
-    for stat in statistic:
-        fh.write(stat + "\n")
-    fh.write("======= =====================================================\n")
+    fh.write(table_border + "\n")
+    for err, count in statistics.iteritems():
+        fh.write(str(count).ljust(8) + err + "\n")
+    fh.write(table_border + "\n")
     fh.write("\n")
 
     fh.write(".. rubric:: Warnings\n")
@@ -75,14 +70,12 @@ else:
     fh.write("::\n")
     fh.write("\n")
 
-    data = data.replace(path, '    obspy')
-    fh.write(data)
+    message = "\n".join(message)
+    message = message.replace(path, '    obspy')
+    fh.write(message)
     fh.write("\n")
 
     fh.close()
-
-# restore stdout
-sys.stdout = stdout
 
 # remove any old image
 try:
