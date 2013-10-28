@@ -18,7 +18,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
     Arrival, FocalMechanism, MomentTensor, NodalPlanes, \
     PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, \
-    ResourceIdentifier, Amplitude
+    ResourceIdentifier, Amplitude, QuantityError
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile
 from obspy.core.util.geodetics import FlinnEngdahl
@@ -135,6 +135,12 @@ class Unpickler(object):
             val *= scale
         return val
 
+    def _storeUncertainty(self, error, value, scale=1):
+        if not isinstance(error, QuantityError):
+            raise TypeError, "'error' is not a 'QuantityError'"
+        if value is not None:
+            error['uncertainty'] = value * scale
+
     def _coordinateSign(self, type):
         if type == 'S' or type == 'W':
             return -1
@@ -170,22 +176,22 @@ class Unpickler(object):
         code, sign = self._tensorCodeSign(code)
         if code == 'rr':
             tensor.m_rr = value * sign
-            tensor.m_rr_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_rr_errors, error)
         if code == 'tt':
             tensor.m_tt = value * sign
-            tensor.m_tt_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_tt_errors, error)
         if code == 'pp':
             tensor.m_pp = value * sign
-            tensor.m_pp_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_pp_errors, error)
         if code == 'rt':
             tensor.m_rt = value * sign
-            tensor.m_rt_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_rt_errors, error)
         if code == 'rp':
             tensor.m_rp = value * sign
-            tensor.m_rp_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_rp_errors, error)
         if code == 'tp':
             tensor.m_tp = value * sign
-            tensor.m_tp_errors['uncertainty'] = error
+            self._storeUncertainty(tensor.m_tp_errors, error)
 
     def _decode_FE_region_number(self, number):
         """
@@ -230,15 +236,21 @@ class Unpickler(object):
         Convert latitude error from km to degrees
         using a simple fomula
         """
-        return round(latitude_stderr / 111.1949, 4)
+        if latitude_stderr is not None:
+            return round(latitude_stderr / 111.1949, 4)
+        else:
+            return None
 
     def _lon_err_to_deg(self, longitude_stderr, latitude):
         """
         Convert longitude error from km to degrees
         using a simple fomula
         """
-        return round(longitude_stderr /
-                     (111.1949 * math.cos(self._to_rad(latitude))), 4)
+        if longitude_stderr is not None and latitude is not None:
+            return round(longitude_stderr /
+                         (111.1949 * math.cos(self._to_rad(latitude))), 4)
+        else:
+            return None
 
     def _parseRecordHY(self, line):
         """
@@ -321,15 +333,13 @@ class Unpickler(object):
 
         evid = event.resource_id.resource_id.split('/')[-1]
         origin = event.origins[0]
-        origin.time_errors['uncertainty'] = orig_time_stderr
-        if latitude_stderr is not None:
-            origin.latitude_errors['uncertainty'] =\
-                self._lat_err_to_deg(latitude_stderr)
-        if longitude_stderr is not None and origin.latitude is not None:
-            origin.longitude_errors['uncertainty'] =\
-                self._lon_err_to_deg(longitude_stderr, origin.latitude)
-        if depth_stderr is not None:
-            origin.depth_errors['uncertainty'] = depth_stderr * 1000
+        self._storeUncertainty(origin.time_errors, orig_time_stderr)
+        self._storeUncertainty(origin.latitude_errors,
+                               self._lat_err_to_deg(latitude_stderr))
+        self._storeUncertainty(origin.longitude_errors,
+                               self._lon_err_to_deg(longitude_stderr,
+                                                    origin.latitude))
+        self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
         if mb_mag is not None:
             mag = Magnitude()
             res_id = '/'.join((res_id_prefix, 'magnitude', evid, 'mb'))
@@ -526,15 +536,13 @@ class Unpickler(object):
         evid = event.resource_id.resource_id.split('/')[-1]
         #this record is to be associated to the latest origin
         origin = event.origins[-1]
-        origin.time_errors['uncertainty'] = orig_time_stderr
-        if latitude_stderr is not None:
-            origin.latitude_errors['uncertainty'] =\
-                self._lat_err_to_deg(latitude_stderr)
-        if longitude_stderr is not None and origin.latitude is not None:
-            origin.longitude_errors['uncertainty'] =\
-                self._lon_err_to_deg(longitude_stderr, origin.latitude)
-        if depth_stderr is not None:
-            origin.depth_errors['uncertainty'] = depth_stderr * 1000
+        self._storeUncertainty(origin.time_errors, orig_time_stderr)
+        self._storeUncertainty(origin.latitude_errors,
+                               self._lat_err_to_deg(latitude_stderr))
+        self._storeUncertainty(origin.longitude_errors,
+                               self._lon_err_to_deg(longitude_stderr,
+                                                    origin.latitude))
+        self._storeUncertainty(origin.depth_errors, depth_stderr, scale=1000)
         origin.quality.azimuthal_gap = gap
         if mag1 > 0:
             mag = Magnitude()
@@ -632,21 +640,24 @@ class Unpickler(object):
             #Check if centroid time is on the next day:
             if origin.time < event.origins[0].time:
                 origin.time += timedelta(days=1)
-            origin.time_errors['uncertainty'] = orig_time_stderr
+            self._storeUncertainty(origin.time_errors, orig_time_stderr)
             origin.latitude = centroid_latitude
             origin.longitude = centroid_longitude
             origin.depth = centroid_depth
             if lat_stderr == 'Fixed' and lon_stderr == 'Fixed':
                 origin.epicenter_fixed = True
             else:
-                origin.latitude_errors['uncertainty'] = lat_stderr
-                origin.longitude_errors['uncertainty'] = lon_stderr
+                self._storeUncertainty(origin.latitude_errors,
+                                       self._lat_err_to_deg(lat_stderr))
+                self._storeUncertainty(origin.longitude_errors,
+                                       self._lon_err_to_deg(lon_stderr,
+                                                            origin.latitude))
             if depth_stderr == 'Fixed':
                 origin.depth_type = 'operator assigned'
             else:
                 origin.depth_type = 'from location'
-                if depth_stderr is not None:
-                    origin.depth_errors['uncertainty'] = depth_stderr * 1000
+                self._storeUncertainty(origin.depth_errors,
+                                       depth_stderr, scale=1000)
             quality = OriginQuality()
             quality.used_station_count =\
                 station_number + station_number2
@@ -678,8 +689,8 @@ class Unpickler(object):
                            'mw' + computation_type.lower()))
         moment_tensor.resource_id = ResourceIdentifier(resource_id=res_id)
         moment_tensor.scalar_moment = moment
-        moment_tensor.scalar_moment_errors['uncertainty'] =\
-            moment_stderr
+        self._storeUncertainty(moment_tensor.scalar_moment_errors,
+                               moment_stderr)
         data_used = DataUsed()
         data_used.station_count = station_number + station_number2
         data_used.component_count = component_number + component_number2
