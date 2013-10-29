@@ -26,6 +26,7 @@ class JSONTestCase(unittest.TestCase):
         default = Default()
         self.assertTrue( hasattr( default, '_catalog_attrib') )
         self.assertTrue( hasattr( default, 'OMIT_NULLS') )
+        self.assertTrue( hasattr( default, 'TIME_FORMAT') )
         self.assertTrue( hasattr( default, '__init__') )
         self.assertTrue( hasattr( default, '__call__') )
         
