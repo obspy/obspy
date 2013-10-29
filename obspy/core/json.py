@@ -13,9 +13,9 @@ python json module, and versions of the json.dump and json.dumps functions
 which can directly accept ObsPy Event objects.
 
 """
-import json
 from obspy.core.event import ( AttribDict, Catalog, UTCDateTime, 
     ResourceIdentifier )
+
 
 class Default(object):
     """
@@ -64,43 +64,18 @@ class Default(object):
             return None
 
 
-def _parse_kwargs(kw_dict, **kwargs):
-    """Prepare keyword arguments for json dump function"""
-    if kwargs.get("compact"):
-        kw_dict["separators"] =  (',',':')
+def get_dump_kwargs(compact=True, **kwargs):
+    """
+    Return dict of keyword args for json.dump or json.dumps
+
+    :param bool compact: Use no spaces between separators and omit null values
+    
+    """
+    if compact:
+        kwargs["separators"] =  (',',':')
         no_nulls = True
     else:
         no_nulls = False
-    kw_dict["default"] = Default(omit_nulls=no_nulls)
-    return kw_dict
-
-def dumps(c, compact=True, **kwargs):
-    """
-    Return JSON string of an OBSPY Event-type object.
-
-    :type c: obspy.core.event object
-    :param c: ObsPy object to serialize
-    :param bool compact: Use no spaces between separators and omit null values
-    
-    All other keyword params are passed to json.dumps
-
-    """
-    kwargs = _parse_kwargs(kwargs, compact=compact)
-    return json.dumps(c, **kwargs)    
-
-def dump(c, fp, compact=True, **kwargs):
-    """
-    Write OBSPY Event-type object to file as JSON.
-    
-    :type c: obspy.core.event object
-    :param c: ObsPy object to serialize
-    :type fp: file-like object
-    :param fp: File to write JSON
-    :param bool compact: Use no spaces between separators and omit null values
-
-    All other keyword params are passed to json.dump
-    
-    """
-    kwargs = _parse_kwargs(kwargs, compact=compact)
-    return json.dump(c, fp, **kwargs)    
+    kwargs["default"] = Default(omit_nulls=no_nulls)
+    return kwargs
 
