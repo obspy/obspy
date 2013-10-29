@@ -44,7 +44,7 @@ class JSONTestCase(unittest.TestCase):
         s1 = json.dumps(self.event, **kw)
         self.verify_json(s1)
         
-        kw = get_dump_kwargs(compact=False)
+        kw = get_dump_kwargs(minify=False, no_nulls=False)
         self.assertTrue( 'default' in kw )
         self.assertTrue( 'separators' not in kw )
         self.assertIsInstance( kw['default'], Default )

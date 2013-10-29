@@ -8,9 +8,20 @@ and transmitting structured data over a network connection. It is used
 primarily to transmit data between a server and web application, serving as an
 alternative to XML.
 
-This module provides a class to create a "default" function accepted by the 
-python json module, and versions of the json.dump and json.dumps functions
-which can directly accept ObsPy Event objects.
+This module provides:
+---------------------
+Default : a class to create a "default" function accepted by the 
+python json module Encoder classes, valid for obspy.core.event objects
+
+get_dump_kwargs : function that wraps a Default function and some other params
+into a dictionary suitable for passing to json.dumps. 
+
+Example
+-------
+>>> import json, obspy
+>>> c = obspy.core.event.Catalog()
+>>> d = Default(omit_nulls=False)
+>>> s = json.dumps(c, default=d)
 
 """
 from obspy.core.event import ( AttribDict, Catalog, UTCDateTime, 
@@ -27,10 +38,19 @@ class Default(object):
         'resource_id')
 
     OMIT_NULLS = None
-    
-    def __init__(self, omit_nulls=True):
+    TIME_FORMAT = None
+
+    def __init__(self, omit_nulls=True, time_format=None):
+        """
+        Create a "default" function for JSONEncoder for ObsPy objects
+
+        :param bool omit_nulls: Leave out any null or empty values (True)
+        :param str time_format: Format string passed to strftime (None)
+
+        """
         # Allows customization of the function
         self.OMIT_NULLS = omit_nulls
+        self.TIME_FORMAT = time_format
 
     def __call__(self, obj):
         """
@@ -55,8 +75,10 @@ class Default(object):
                 if getattr(obj,k) 
             }
         elif isinstance(obj, UTCDateTime):
-            # Use a special format strftime?
-            return str(obj)
+            if self.TIME_FORMAT is None:
+                return str(obj)
+            else:
+                return obj.strftime(self.TIME_FORMAT)
         elif isinstance(obj, ResourceIdentifier):
             # Always want ID as a string
             return str(obj)
@@ -64,18 +86,17 @@ class Default(object):
             return None
 
 
-def get_dump_kwargs(compact=True, **kwargs):
+def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):
     """
     Return dict of keyword args for json.dump or json.dumps
 
-    :param bool compact: Use no spaces between separators and omit null values
+    :param bool minify: Use no spaces between separators (True)
+    :param bool no_nulls: Omit null values and empty sequences/mappings (True)
     
     """
-    if compact:
+    if minify:
         kwargs["separators"] =  (',',':')
-        no_nulls = True
-    else:
-        no_nulls = False
     kwargs["default"] = Default(omit_nulls=no_nulls)
     return kwargs
+
 
