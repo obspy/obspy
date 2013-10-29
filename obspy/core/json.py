@@ -71,7 +71,6 @@ def _parse_kwargs(kw_dict, **kwargs):
         no_nulls = True
     else:
         no_nulls = False
-    print no_nulls
     kw_dict["default"] = Default(omit_nulls=no_nulls)
     return kw_dict
 
