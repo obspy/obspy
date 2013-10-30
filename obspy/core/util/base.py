@@ -381,8 +381,8 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     mod_list = []
     for name, ep in eps.iteritems():
         module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
-        func = load_entry_point("obspy", "obspy.plugin.%s.%s" % (group, name),
-                                method)
+        func = load_entry_point(ep.dist.key,
+                                "obspy.plugin.%s.%s" % (group, name), method)
         func_str = ':func:`%s`' % ".".join((ep.module_name, func.func_name))
         mod_list.append((name, module_short, func_str))
 
