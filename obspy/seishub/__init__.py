@@ -20,7 +20,8 @@ Basic Example
 >>> client = Client(timeout=20)
 >>> t = UTCDateTime('2010-01-01T10:00:00')
 >>> st = client.waveform.getWaveform("BW", "MANZ", "", "EH*", t, t+20)
->>> st.sort()
+>>> st.sort()  # doctest: +ELLIPSIS
+<obspy.core.stream.Stream object at ...>
 >>> print(st)  # doctest: +ELLIPSIS
 3 Trace(s) in Stream:
 BW.MANZ..EHE | 2010-01-01T10:00:00.000000Z - ... | 200.0 Hz, 4001 samples

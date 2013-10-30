@@ -30,7 +30,7 @@ echo "#### `date`"
 
 git clone git://github.com/obspy/obspy.git $GITDIR
 
-for DIST in squeeze wheezy lucid precise quantal raring; do
+for DIST in squeeze wheezy lucid precise quantal raring saucy; do
     for ARCH in i386 amd64; do
         DISTARCH=${DIST}_${ARCH}
         echo "#### $DISTARCH"
