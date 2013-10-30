@@ -268,7 +268,13 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 kwargs[class_attributes[_i][0]] = item
             # Set all property values to None or the kwarg value.
             for key, _ in self._properties:
-                setattr(self, key, kwargs.get(key, None))
+                value = kwargs.get(key, None)
+                # special handling for resource id
+                if key == "resource_id":
+                    if kwargs.get("force_resource_id", False):
+                        if value is None:
+                            value = ResourceIdentifier()
+                setattr(self, key, value)
             # Containers currently are simple lists.
             for name in self._containers:
                 setattr(self, name, list(kwargs.get(name, [])))
@@ -280,7 +286,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         def clear(self):
             super(AbstractEventType, self).clear()
-            self.__init__()
+            self.__init__(force_resource_id=False)
 
         def __str__(self, force_one_line=False):
             """
@@ -415,9 +421,20 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if name == "resource_id" and value is not None:
                 self.resource_id.setReferredObject(self)
 
+    class AbstractEventTypeWithResourceID(AbstractEventType):
+        def __init__(self, force_resource_id=True, *args, **kwargs):
+            kwargs["force_resource_id"] = force_resource_id
+            super(AbstractEventTypeWithResourceID, self).__init__(*args,
+                                                                  **kwargs)
+
+    if "resource_id" in [item[0] for item in class_attributes]:
+        base_class = AbstractEventTypeWithResourceID
+    else:
+        base_class = AbstractEventType
+
     # Set the class type name.
-    setattr(AbstractEventType, "__name__", class_name)
-    return AbstractEventType
+    setattr(base_class, "__name__", class_name)
+    return base_class
 
 
 class ResourceIdentifier(object):
@@ -891,10 +908,16 @@ class Comment(__Comment):
     :param text: Text of comment.
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_id: Resource identifier of comment.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation info for the comment.
 
-    >>> comment = Comment("Some comment")
+    >>> comment = Comment(text="Some comment")
+    >>> print comment  # doctest:+ELLIPSIS
+    Comment(text='Some comment', resource_id=ResourceIdentifier(...))
+    >>> comment = Comment(text="Some comment", force_resource_id=False)
     >>> print comment
     Comment(text='Some comment')
     >>> comment.resource_id = "comments/obspy-comment-123456"
@@ -1031,6 +1054,9 @@ class Amplitude(__Amplitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Amplitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type generic_amplitude: float
     :param generic_amplitude: Measured amplitude value for the given
         waveformID. Note that this attribute can describe different physical
@@ -1166,6 +1192,9 @@ class Pick(__Pick):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Observed onset time of signal (“pick time”).
     :type time_errors: :class:`~obspy.core.util.AttribDict`
@@ -1262,6 +1291,9 @@ class Arrival(__Arrival):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Arrival.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param pick_id: Refers to the resource_id of a Pick.
     :type phase: str
@@ -1494,6 +1526,9 @@ class Origin(__Origin):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Origin.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Focal time.
     :type time_errors: :class:`~obspy.core.util.AttribDict`
@@ -1672,6 +1707,9 @@ class Magnitude(__Magnitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type mag: float
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
@@ -1749,6 +1787,9 @@ class StationMagnitude(__StationMagnitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_id: Resource identifier of StationMagnitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
@@ -2047,6 +2088,9 @@ class MomentTensor(__MomentTensor):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of MomentTensor.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type derived_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param derived_origin_id: Refers to the resource_id of the Origin derived
         in the moment tensor inversion.
@@ -2139,6 +2183,9 @@ class FocalMechanism(__FocalMechanism):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of FocalMechanism.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type triggering_origin_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param triggering_origin_id: Refers to the resource_id of the triggering
@@ -2214,6 +2261,9 @@ class Event(__Event):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type event_type: str, optional
     :param event_type: Describes the type of an event. Allowed values are the
         following:

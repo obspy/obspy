@@ -44,8 +44,6 @@ class QuakeMLTestCase(unittest.TestCase):
         obj2 = fromstring(doc2)
         str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
         str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
-        str1 = ''.join(str1)
-        str2 = ''.join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
         has_error = False
