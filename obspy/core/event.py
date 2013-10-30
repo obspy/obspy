@@ -642,9 +642,11 @@ class ResourceIdentifier(object):
         if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
-              "another object. It will now point to the object " + \
-              "referred to by the new resource identifier."
-        msg = msg % referred_object.resource_id.resource_id
+              "another object: '%s'." +\
+              "It will now point to the object referred to by the new " + \
+              "resource identifier."
+        msg = msg % (self.resource_id,
+                     repr(ResourceIdentifier.__resource_id_weak_dict[self]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
