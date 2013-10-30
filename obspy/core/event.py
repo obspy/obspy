@@ -84,49 +84,51 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         except:
             # otherwise just try to read the given /path/to folder
             pass
-    # create catalog
-    cat = Catalog()
+
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
-        cat = _createExampleCatalog()
+        return _createExampleCatalog()
     elif not isinstance(pathname_or_url, basestring):
         # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
         try:
             # first try reading directly
             catalog = _read(pathname_or_url, format, **kwargs)
-            cat.extend(catalog.events)
         except TypeError:
             # if this fails, create a temporary file which is read directly
             # from the file system
             pathname_or_url.seek(0)
             with NamedTemporaryFile() as fh:
                 fh.write(pathname_or_url.read())
-                cat.extend(_read(fh.name, format, **kwargs).events)
-        pathname_or_url.seek(0)
+                catalog = _read(fh.name, format, **kwargs)
+        return catalog
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
-        cat.extend(catalog.events)
+        return _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
             fh.write(urllib2.urlopen(pathname_or_url).read())
-            cat.extend(_read(fh.name, format, **kwargs).events)
+            catalog = _read(fh.name, format, **kwargs)
+        return catalog
     else:
-        # file name
         pathname = pathname_or_url
-        for file in glob.iglob(pathname):
-            cat.extend(_read(file, format, **kwargs).events)
-        if len(cat) == 0:
+        # File name(s)
+        pathnames = glob.glob(pathname)
+        if not pathnames:
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
-    return cat
+
+        catalog = _read(pathnames[0], format, **kwargs)
+        if len(pathnames) == 1:
+            return catalog
+        else:
+            for filename in pathnames[1:]:
+                catalog.extend(_read(filename, format, **kwargs).events)
 
 
 @uncompressFile
