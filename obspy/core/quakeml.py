@@ -98,9 +98,7 @@ class Unpickler(object):
         for el in self._xpath('comment', element):
             comment = Comment()
             comment.text = self._xpath2obj('text', el)
-            temp = el.get('id', None)
-            if temp is not None:
-                comment.resource_id = temp
+            comment.resource_id = el.get('id', None)
             comment.creation_info = self._creation_info(el)
             obj.append(comment)
         return obj
@@ -698,7 +696,7 @@ class Unpickler(object):
         for event_el in self._xpath('event', catalog_el):
             # create new Event object
             resource_id = event_el.get('publicID')
-            event = Event(resource_id)
+            event = Event(resource_id=resource_id)
             # optional event attributes
             event.preferred_origin_id = \
                 self._xpath2obj('preferredOriginID', event_el)

@@ -33,6 +33,8 @@ class QuakeMLTestCase(unittest.TestCase):
     def setUp(self):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'data')
+        self.neries_filename = os.path.join(self.path, 'neries_events.xml')
+        self.neries_catalog = readQuakeML(self.neries_filename)
 
     def _compareStrings(self, doc1, doc2):
         """
@@ -42,8 +44,6 @@ class QuakeMLTestCase(unittest.TestCase):
         obj2 = fromstring(doc2)
         str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
         str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
-        str1 = ''.join(str1)
-        str2 = ''.join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
         has_error = False
@@ -70,8 +70,7 @@ class QuakeMLTestCase(unittest.TestCase):
             ResourceIdentifier(
                 'smi:www.iris.edu/ws/event/query?eventId=2318174'))
         # NERIES
-        filename = os.path.join(self.path, 'neries_events.xml')
-        catalog = readQuakeML(filename)
+        catalog = self.neries_catalog
         self.assertEqual(len(catalog), 3)
         self.assertEqual(
             catalog[0].resource_id,
@@ -534,10 +533,9 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Tests reading a QuakeML document via readEvents.
         """
-        filename = os.path.join(self.path, 'neries_events.xml')
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = readEvents(filename)
+            catalog = readEvents(self.neries_filename)
             self.assertTrue(len(catalog), 3)
             catalog.write(tmpfile, format='QUAKEML')
             # Read file again. Avoid the (legit) warning about the already used
@@ -619,8 +617,7 @@ class QuakeMLTestCase(unittest.TestCase):
         """
         Test reading a QuakeML string/unicode object via readEvents.
         """
-        filename = os.path.join(self.path, 'neries_events.xml')
-        data = open(filename, 'rt').read()
+        data = open(self.neries_filename, 'rt').read()
         catalog = readEvents(data)
         self.assertEqual(len(catalog), 3)
 
@@ -721,6 +718,17 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertAlmostEqual(mag.mag, moment_magnitude)
         self.assertEqual(mag.magnitude_type, "Mw")
         self.assertEqual(mag.evaluation_mode, "automatic")
+
+    def test_read_equivalence(self):
+        """
+        See #662.
+        Tests if readQuakeML() and readEvents() return the same results.
+        """
+        warnings.simplefilter("ignore", UserWarning)
+        cat1 = readEvents(self.neries_filename)
+        cat2 = readQuakeML(self.neries_filename)
+        warnings.filters.pop(0)
+        self.assertEqual(cat1, cat2)
 
 
 def suite():
