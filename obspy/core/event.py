@@ -289,7 +289,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         def clear(self):
             super(AbstractEventType, self).clear()
-            self.__init__()
+            self.__init__(force_resource_id=False)
 
         def __str__(self, force_one_line=False):
             """
