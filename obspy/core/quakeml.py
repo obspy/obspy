@@ -698,7 +698,7 @@ class Unpickler(object):
         for event_el in self._xpath('event', catalog_el):
             # create new Event object
             resource_id = event_el.get('publicID')
-            event = Event(resource_id)
+            event = Event(resource_id=resource_id)
             # optional event attributes
             event.preferred_origin_id = \
                 self._xpath2obj('preferredOriginID', event_el)
