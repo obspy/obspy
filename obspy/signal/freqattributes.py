@@ -107,16 +107,12 @@ def cfrequency(data, fs, smoothie, fk):
     :return: **cfreq[, dcfreq]** - Central frequency, Time derivative of center
         frequency (windowed only).
     """
-    nfft = util.nextpow2(data.shape[1])
-    freq = np.linspace(0, fs, nfft + 1)
-    freqaxis = freq[0:nfft / 2]
-    cfreq = np.zeros(data.shape[0])
+    # for windowed data
     if np.size(data.shape) > 1:
+        cfreq = np.zeros(data.shape[0])
         i = 0
         for row in data:
-            Px_wm = welch(row, np.hamming(len(row)), util.nextpow2(len(row)))
-            Px = Px_wm[0:len(Px_wm) / 2]
-            cfreq[i] = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+            cfreq[i] = cfrequency_unwindowed(data,fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         #cfreq_add = \
@@ -131,11 +127,35 @@ def cfrequency(data, fs, smoothie, fk):
         # correct start and end values of time derivative
         dcfreq = dcfreq[np.size(fk) - 1:np.size(dcfreq)]
         return cfreq, dcfreq
+    # for unwindowed data
     else:
-        Px_wm = welch(data, np.hamming(len(data)), util.nextpow2(len(data)))
-        Px = Px_wm[0:len(Px_wm) / 2]
-        cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+        cfreq=cfrequency_unwindowed(data, fs)
         return cfreq
+
+def cfrequency_unwindowed(data, fs):
+    """
+    Central frequency of a signal.
+
+    Computes the central frequency of the given data (a single waveform).
+    The central frequency is a measure of the frequency where the
+    power is concentrated. It corresponds to the second moment of the power
+    spectral density function.
+
+    The central frequency is returned in Hz.
+
+    :type data: :class:`~numpy.array`
+    :param data: Data to estimate central frequency from.
+    :param fs: Sampling frequency in Hz.
+    :return: **cfreq** - Central frequency in Hz
+    """
+    nfft=util.nextpow2(len(data))
+    freq = np.linspace(0, fs, nfft + 1)
+    freqaxis = freq[0:nfft / 2]
+    Px_wm = welch(data, np.hamming(len(data)), nfft)
+    Px = Px_wm[0:len(Px_wm) / 2]
+    cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+    return cfreq
+ 
 
 
 def bwith(data, fs, smoothie, fk):
