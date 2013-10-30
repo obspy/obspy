@@ -636,9 +636,12 @@ class ResourceIdentifier(object):
         # the referred object.
         if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
             return
-        msg = "The resource identifier already exists and points to " + \
-              "another object. It will now point to the object " + \
-              "referred to by the new resource identifier."
+        msg = "The resource identifier '%s' already exists and points to " + \
+              "another object: '%s'." +\
+              "It will now point to the object referred to by the new " + \
+              "resource identifier."
+        msg = msg % (self.resource_id,
+                     repr(ResourceIdentifier.__resource_id_weak_dict[self]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
@@ -2329,6 +2332,9 @@ class Event(__Event):
         return "Event:\t%s\n\n%s" % (
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
+
+    def __repr__(self):
+        return super(Event, self).__str__(force_one_line=True)
 
     def preferred_origin(self):
         """
