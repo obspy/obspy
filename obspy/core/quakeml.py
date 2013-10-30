@@ -98,9 +98,7 @@ class Unpickler(object):
         for el in self._xpath('comment', element):
             comment = Comment()
             comment.text = self._xpath2obj('text', el)
-            temp = el.get('id', None)
-            if temp is not None:
-                comment.resource_id = temp
+            comment.resource_id = el.get('id', None)
             comment.creation_info = self._creation_info(el)
             obj.append(comment)
         return obj

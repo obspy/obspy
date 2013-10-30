@@ -914,7 +914,10 @@ class Comment(__Comment):
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation info for the comment.
 
-    >>> comment = Comment("Some comment")
+    >>> comment = Comment(text="Some comment")
+    >>> print comment  # doctest:+ELLIPSIS
+    Comment(text='Some comment', resource_id=ResourceIdentifier(...))
+    >>> comment = Comment(text="Some comment", force_resource_id=False)
     >>> print comment
     Comment(text='Some comment')
     >>> comment.resource_id = "comments/obspy-comment-123456"
