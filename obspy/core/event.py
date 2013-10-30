@@ -272,7 +272,14 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 kwargs[class_attributes[_i][0]] = item
             # Set all property values to None or the kwarg value.
             for key, _ in self._properties:
-                setattr(self, key, kwargs.get(key, None))
+                value = kwargs.get(key, None)
+                # special handling for resource id
+                if key == "resource_id":
+                    if value is None:
+                        value = ResourceIdentifier()
+                    elif value is False:
+                        value = None
+                setattr(self, key, value)
             # Containers currently are simple lists.
             for name in self._containers:
                 setattr(self, name, list(kwargs.get(name, [])))
@@ -281,8 +288,6 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             for key, _ in self._properties:
                 if key.endswith("_errors") and getattr(self, key) is None:
                     setattr(self, key, QuantityError())
-            if self.get("resource_id", False) is None:
-                setattr(self, "resource_id", ResourceIdentifier())
 
         def clear(self):
             super(AbstractEventType, self).clear()
