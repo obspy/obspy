@@ -60,11 +60,10 @@ class JSONTestCase(unittest.TestCase):
     def tearDown(self):
         del self.event
 
+def suite():
+    return unittest.makeSuite(JSONTestCase, 'test')
+
 
 if __name__ == '__main__':
-
-    json_suite = unittest.TestLoader().loadTestsFromTestCase(JSONTestCase)
-    suite = unittest.TestSuite([json_suite])
-    unittest.TextTestRunner(verbosity=2).run(suite)
-
+    unittest.main(defaultTest='suite')
 
