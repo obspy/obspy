@@ -2333,6 +2333,9 @@ class Event(__Event):
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
+    def __repr__(self):
+        return 'Event(resource_id="%s")' % self.resource_id
+
     def preferred_origin(self):
         """
         Returns the preferred origin
