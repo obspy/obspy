@@ -275,10 +275,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 value = kwargs.get(key, None)
                 # special handling for resource id
                 if key == "resource_id":
-                    if value is None:
-                        value = ResourceIdentifier()
-                    elif value is False:
-                        value = None
+                    if kwargs.get("force_resource_id", False):
+                        if value is None:
+                            value = ResourceIdentifier()
                 setattr(self, key, value)
             # Containers currently are simple lists.
             for name in self._containers:
@@ -425,9 +424,20 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if name == "resource_id" and value is not None:
                 self.resource_id.setReferredObject(self)
 
+    class AbstractEventTypeWithResourceID(AbstractEventType):
+        def __init__(self, force_resource_id=True, *args, **kwargs):
+            kwargs["force_resource_id"] = force_resource_id
+            super(AbstractEventTypeWithResourceID, self).__init__(*args,
+                                                                  **kwargs)
+
+    if "resource_id" in [item[0] for item in class_attributes]:
+        base_class = AbstractEventTypeWithResourceID
+    else:
+        base_class = AbstractEventType
+
     # Set the class type name.
-    setattr(AbstractEventType, "__name__", class_name)
-    return AbstractEventType
+    setattr(base_class, "__name__", class_name)
+    return base_class
 
 
 class ResourceIdentifier(object):
