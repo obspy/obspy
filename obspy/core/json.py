@@ -19,7 +19,7 @@ into a dictionary suitable for passing to json.dumps.
 Example
 -------
 >>> import json
->>> from obspy.core.events import readEvents
+>>> from obspy.core.event import readEvents
 >>> from obspy.core.json import Default
 >>> c = readEvents()
 >>> d = Default(omit_nulls=False)
