@@ -18,14 +18,16 @@ into a dictionary suitable for passing to json.dumps.
 
 Example
 -------
->>> import json, obspy
->>> c = obspy.core.event.Catalog()
+>>> import json
+>>> from obspy.core.events import readEvents
+>>> from obspy.core.json import Default
+>>> c = readEvents()
 >>> d = Default(omit_nulls=False)
 >>> s = json.dumps(c, default=d)
 
 """
 from obspy.core.event import (AttribDict, Catalog, UTCDateTime,
-    ResourceIdentifier)
+                              ResourceIdentifier)
 
 
 class Default(object):
