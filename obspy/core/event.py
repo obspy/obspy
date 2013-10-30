@@ -2334,7 +2334,7 @@ class Event(__Event):
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
 
     def __repr__(self):
-        return 'Event(resource_id="%s")' % self.resource_id
+        return super(Event, self).__str__(force_one_line=True)
 
     def preferred_origin(self):
         """
