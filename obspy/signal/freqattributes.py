@@ -112,7 +112,7 @@ def cfrequency(data, fs, smoothie, fk):
         cfreq = np.zeros(data.shape[0])
         i = 0
         for row in data:
-            cfreq[i] = cfrequency_unwindowed(data,fs)
+            cfreq[i] = cfrequency_unwindowed(row,fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         #cfreq_add = \
