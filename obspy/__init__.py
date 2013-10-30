@@ -33,8 +33,20 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import _getVersionString
 from obspy.core.trace import Trace
 from obspy.core.stream import Stream, read
-from obspy.core.event import readEvents
+from obspy.core.event import readEvents, Catalog
 
+# insert supported read/write format plugin lists dynamically in docstrings
+from obspy.core.util.base import make_format_plugin_table
+read.__doc__ = \
+    read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
+Stream.write.im_func.func_doc = \
+    Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+                                                    numspaces=8)
+readEvents.__doc__ = \
+    readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
+Catalog.write.im_func.func_doc = \
+    Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+                                                     numspaces=8)
 
 __version__ = _getVersionString()
 
