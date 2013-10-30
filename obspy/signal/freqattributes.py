@@ -112,7 +112,7 @@ def cfrequency(data, fs, smoothie, fk):
         cfreq = np.zeros(data.shape[0])
         i = 0
         for row in data:
-            cfreq[i] = cfrequency_unwindowed(row,fs)
+            cfreq[i] = cfrequency_unwindowed(row, fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         #cfreq_add = \
@@ -129,8 +129,9 @@ def cfrequency(data, fs, smoothie, fk):
         return cfreq, dcfreq
     # for unwindowed data
     else:
-        cfreq=cfrequency_unwindowed(data, fs)
+        cfreq = cfrequency_unwindowed(data, fs)
         return cfreq
+
 
 def cfrequency_unwindowed(data, fs):
     """
@@ -148,14 +149,13 @@ def cfrequency_unwindowed(data, fs):
     :param fs: Sampling frequency in Hz.
     :return: **cfreq** - Central frequency in Hz
     """
-    nfft=util.nextpow2(len(data))
+    nfft = util.nextpow2(len(data))
     freq = np.linspace(0, fs, nfft + 1)
     freqaxis = freq[0:nfft / 2]
     Px_wm = welch(data, np.hamming(len(data)), nfft)
     Px = Px_wm[0:len(Px_wm) / 2]
     cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
     return cfreq
- 
 
 
 def bwith(data, fs, smoothie, fk):

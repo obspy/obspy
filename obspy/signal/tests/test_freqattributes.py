@@ -92,7 +92,8 @@ class FreqTraceTestCase(unittest.TestCase):
     def test_cfrequency(self):
         """
         """
-        cfreq = freqattributes.cfrequency(self.data_win_bc, self.fs, self.smoothie, self.fk)
+        cfreq = freqattributes.cfrequency(self.data_win_bc, self.fs,
+                                          self.smoothie, self.fk)
         rms = np.sqrt(np.sum((cfreq[0] - self.res[:, 18]) ** 2) /
                       np.sum(self.res[:, 18] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
@@ -101,8 +102,9 @@ class FreqTraceTestCase(unittest.TestCase):
         self.assertEqual(rms < 1.0e-5, True)
 
     def test_cfrequency_no_win(self):
-        cfreq = freqattributes.cfrequency(self.data_win_bc[0], self.fs, self.smoothie, self.fk)
-        rms = (cfreq - self.res[0,18])/self.res[0,18]
+        cfreq = freqattributes.cfrequency(self.data_win_bc[0], self.fs,
+                                          self.smoothie, self.fk)
+        rms = (cfreq - self.res[0, 18]) / self.res[0, 18]
         self.assertTrue(rms < 1.0e-5)
 
     def test_bwith(self):
