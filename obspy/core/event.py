@@ -21,6 +21,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords
 from pkg_resources import load_entry_point
 from uuid import uuid4
+import collections
 import copy
 import glob
 import inspect
@@ -605,6 +606,8 @@ class ResourceIdentifier(object):
     # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
+    # Use an additional dictionary to track all resource ids.
+    __resource_id_tracker = collections.defaultdict(int)
 
     def __init__(self, resource_id=None, prefix="smi:local",
                  referred_object=None):
@@ -620,6 +623,24 @@ class ResourceIdentifier(object):
         if referred_object is not None:
             self.setReferredObject(referred_object)
 
+        # Increment the counter for the current resource id.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] += 1
+
+    def __del__(self):
+        if self.resource_id not in ResourceIdentifier.__resource_id_tracker:
+            return
+        # Decrement the resource id counter.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] -= 1
+        # If below or equal to zero, delete it and also delete it from the weak
+        # value dictionary.
+        if ResourceIdentifier.__resource_id_tracker[self.resource_id] <= 0:
+            del ResourceIdentifier.__resource_id_tracker[self.resource_id]
+            try:
+                del ResourceIdentifier.__resource_id_weak_dict[
+                    self.resource_id]
+            except KeyError:
+                pass
+
     def getReferredObject(self):
         """
         Returns the object associated with the resource identifier.
@@ -630,7 +651,7 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            return ResourceIdentifier.__resource_id_weak_dict[self]
+            return ResourceIdentifier.__resource_id_weak_dict[self.resource_id]
         except KeyError:
             return None
 
@@ -645,24 +666,27 @@ class ResourceIdentifier(object):
         everything stays consistent.
         """
         # If it does not yet exists simply set it.
-        if not self in ResourceIdentifier.__resource_id_weak_dict:
-            ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        if self.resource_id not in ResourceIdentifier.__resource_id_weak_dict:
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+                referred_object
             return
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
+        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] is \
+                referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
               "another object: '%s'." +\
               "It will now point to the object referred to by the new " + \
               "resource identifier."
-        msg = msg % (self.resource_id,
-                     repr(ResourceIdentifier.__resource_id_weak_dict[self]))
+        msg = msg % (self.resource_id, repr(
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
-        ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+            referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
