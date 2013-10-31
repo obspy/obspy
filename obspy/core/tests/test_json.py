@@ -1,4 +1,4 @@
-from obspy.core.json import Default, get_dump_kwargs
+from obspy.core.json import Default, get_dump_kwargs, writeJSON
 from obspy.core.quakeml import readQuakeML
 import os
 import unittest
@@ -13,8 +13,8 @@ class JSONTestCase(unittest.TestCase):
     def setUp(self):
         self.path = os.path.join(os.path.dirname(__file__), 'data')
         qml_file = os.path.join(self.path, 'qml-example-1.2-RC3.xml')
-        c = readQuakeML(qml_file)
-        self.event = c.events[0]
+        self.c = readQuakeML(qml_file)
+        self.event = self.c.events[0]
 
     def verify_json(self, s):
         """Test an output is a string and is JSON"""
@@ -52,6 +52,14 @@ class JSONTestCase(unittest.TestCase):
         self.verify_json(s2)
         # Compacted version is smaller
         self.assertLess(len(s1), len(s2))
+
+    def test_write_json(self):
+        memfile = StringIO.StringIO()
+        writeJSON(c, memfile, format="json")
+        memfile.seek(0, 0)
+        # Verify json module can load
+        j = json.loads(memfile)
+        self.assertIsInstance(j, dict)
 
     def tearDown(self):
         del self.event
