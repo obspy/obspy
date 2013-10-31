@@ -617,7 +617,7 @@ class ResourceIdentifier(object):
             if prefix is not None:
                 resource_id = "%s/%s" % (prefix, resource_id)
         # Use the setter to assure only hashable ids are set.
-        self.__setResourceID(resource_id)
+        self.resource_id = resource_id
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         if referred_object is not None:
@@ -707,7 +707,7 @@ class ResourceIdentifier(object):
         quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
         if quakeml_uri == self.resource_id:
             return
-        self.__setResourceID(quakeml_uri)
+        self.resource_id = quakeml_uri
 
     def getQuakeMLURI(self, authority_id="local"):
         """
@@ -752,20 +752,22 @@ class ResourceIdentifier(object):
         """
         return ResourceIdentifier(resource_id=self.resource_id)
 
-    def __getResourceID(self):
-        return self.__dict__.get("resource_id")
+    @property
+    def resource_id(self):
+        """
+        unique identifier of the current instance
+        """
+        return self.__resource_id
 
-    def __setResourceID(self, resource_id):
+    @resource_id.setter
+    def resource_id(self, value):
         # Check if the resource id is a hashable type.
         try:
-            hash(resource_id)
+            hash(value)
         except TypeError:
             msg = "resource_id needs to be a hashable type."
             raise TypeError(msg)
-        self.__dict__["resource_id"] = resource_id
-
-    resource_id = property(__getResourceID, __setResourceID,
-                           "unique identifier of the current instance")
+        self.__resource_id = value
 
     def __str__(self):
         return self.resource_id
