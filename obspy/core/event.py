@@ -755,13 +755,6 @@ class ResourceIdentifier(object):
     def __getResourceID(self):
         return self.__dict__.get("resource_id")
 
-    def __delResourceID(self):
-        """
-        Deleting is forbidden and will not work.
-        """
-        msg = "The resource id cannot be deleted."
-        raise Exception(msg)
-
     def __setResourceID(self, resource_id):
         # Check if the resource id is a hashable type.
         try:
@@ -771,7 +764,7 @@ class ResourceIdentifier(object):
             raise TypeError(msg)
         self.__dict__["resource_id"] = resource_id
 
-    resource_id = property(__getResourceID, __setResourceID, __delResourceID,
+    resource_id = property(__getResourceID, __setResourceID,
                            "unique identifier of the current instance")
 
     def __str__(self):
