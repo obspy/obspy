@@ -56,12 +56,19 @@ class JSONTestCase(unittest.TestCase):
 
     def test_write_json(self):
         memfile = StringIO.StringIO()
-        writeJSON(self.c, memfile, format="json")
+        writeJSON(self.c, memfile)
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)
         self.assertIsInstance(j, dict)
-
+        # Test registered method call
+        memfile = StringIO.StringIO()
+        self.c.write(memfile, format="json")
+        memfile.seek(0, 0)
+        # Verify json module can load
+        j = json.load(memfile)
+        self.assertIsInstance(j, dict)
+        
     def tearDown(self):
         del self.event
 
