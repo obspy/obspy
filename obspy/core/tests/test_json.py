@@ -59,7 +59,7 @@ class JSONTestCase(unittest.TestCase):
         writeJSON(self.c, memfile, format="json")
         memfile.seek(0, 0)
         # Verify json module can load
-        j = json.loads(memfile)
+        j = json.load(memfile)
         self.assertIsInstance(j, dict)
 
     def tearDown(self):
