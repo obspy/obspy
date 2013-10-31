@@ -34,6 +34,7 @@ import cStringIO
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
+EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 ATTRIBUTE_HAS_ERRORS = True
 
 
@@ -2812,7 +2813,7 @@ class Catalog(object):
         format = format.upper()
         try:
             # get format specific entry point
-            format_ep = EVENT_ENTRY_POINTS[format]
+            format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
             writeFormat = load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),
