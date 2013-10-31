@@ -3,9 +3,41 @@ import json
 from obspy.core.json import Default
 
 
-def writeJSON(catalog, filename, omit_nulls=False, pretty_print=True,
+def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):
+    """
+    Return dict of keyword args for json.dump or json.dumps
+
+    :param bool minify: Use no spaces between separators (True)
+    :param bool no_nulls: Omit null values and empty sequences/mappings (True)
+
+    """
+    if minify:
+        kwargs["separators"] = (',', ':')
+    kwargs["default"] = Default(omit_nulls=no_nulls)
+    return kwargs
+
+
+def writeJSON(obj, filename, omit_nulls=False, pretty_print=True,
               **kwargs):
     """
+    Write object to a file in JSON format
+
+    .. note::
+        This function is registered via the
+        :meth:`~obspy.core.event.Catalog.write` method of an ObsPy
+        :class:`~obspy.core.event.Catalog` object, but is also valid for any
+        obspy event-type object (or any serializable python object that
+        contains an obspy event-type object)
+
+    :type obj: :mod:`~obspy.core.event` class object
+    :param obj: The ObsPy Event-type object to write.
+    :type filename: string or open file-like object
+    :param filename: Filename to write or open file-like object.
+    :type omit_nulls: bool
+    :param omit_nulls: Don't include empty-valued attributes
+    :type pretty_print: bool
+    :param pretty_print: Indent for readability
+
     """
     try:
         # Open filehandler or use an existing file like object.
@@ -19,7 +51,7 @@ def writeJSON(catalog, filename, omit_nulls=False, pretty_print=True,
         default = Default(omit_nulls=omit_nulls)
         if pretty_print:
             kwargs.setdefault('indent', 2)
-        json_string = json.dumps(catalog, default=default, **kwargs)
+        json_string = json.dumps(obj, default=default, **kwargs)
         fh.write(json_string)
     finally:
         # Close if a file has been opened by this function.
