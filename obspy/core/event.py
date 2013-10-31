@@ -544,12 +544,12 @@ class ResourceIdentifier(object):
     >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
     >>> res_id = ResourceIdentifier()
     >>> res_id.resource_id = [1,2]
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
@@ -611,6 +611,8 @@ class ResourceIdentifier(object):
 
     def __init__(self, resource_id=None, prefix="smi:local",
                  referred_object=None):
+        # Set a default resource id in case the resource id assignment fails.
+        self.__resource_id = None
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
@@ -761,12 +763,8 @@ class ResourceIdentifier(object):
 
     @resource_id.setter
     def resource_id(self, value):
-        # Check if the resource id is a hashable type.
-        try:
-            hash(value)
-        except TypeError:
-            msg = "resource_id needs to be a hashable type."
-            raise TypeError(msg)
+        # Raises the correct exception in case a value is not hashable..
+        hash(value)
         self.__resource_id = value
 
     def __str__(self):
