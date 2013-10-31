@@ -7,9 +7,6 @@ This module provides:
 Default : a class to create a "default" function accepted by the
 python json module Encoder classes, valid for obspy.core.event objects
 
-get_dump_kwargs : function that wraps a Default function and some other params
-into a dictionary suitable for passing to json.dumps.
-
 Example
 -------
 >>> import json
@@ -80,17 +77,3 @@ class Default(object):
             return str(obj)
         else:
             return None
-
-
-def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):
-    """
-    Return dict of keyword args for json.dump or json.dumps
-
-    :param bool minify: Use no spaces between separators (True)
-    :param bool no_nulls: Omit null values and empty sequences/mappings (True)
-
-    """
-    if minify:
-        kwargs["separators"] = (',', ':')
-    kwargs["default"] = Default(omit_nulls=no_nulls)
-    return kwargs
