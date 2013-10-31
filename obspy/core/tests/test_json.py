@@ -4,6 +4,7 @@ import os
 import unittest
 import warnings
 import json
+import StringIO
 
 warnings.filterwarnings("ignore")
 
