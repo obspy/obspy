@@ -18,9 +18,10 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
     NamedTemporaryFile, AttribDict
 from obspy.core.util.base import ENTRY_POINTS
-from obspy.core.util.decorator import deprecated_keywords
+from obspy.core.util.decorator import deprecated_keywords, deprecated
 from pkg_resources import load_entry_point
 from uuid import uuid4
+from copy import deepcopy
 import copy
 import glob
 import inspect
@@ -208,7 +209,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
     All given arguments will be converted to the right type upon setting them.
 
         >>> test_event.resource_id
-        ResourceIdentifier(resource_id="event/123456")
+        ResourceIdentifier(text="event/123456")
         >>> print test_event.creation_info
         CreationInfo(author='obspy.org', version='0.1')
 
@@ -460,9 +461,8 @@ class ResourceIdentifier(object):
     In this class it can be any hashable object, e.g. most immutable objects
     like numbers and strings.
 
-    :type resource_id: Any hashable object, e.g. numbers, strings, tuples, ...
-        optional
-    :param resource_id: A unique identifier of the element it refers to. It is
+    :type text: str, optional
+    :param text: A unique identifier of the element it refers to. It is
         not verified, that it actually is unique. The user has to take care of
         that. If no resource_id is given, uuid.uuid4() will be used to
         create one which assures uniqueness within one Python run.
@@ -479,16 +479,14 @@ class ResourceIdentifier(object):
 
     .. rubric:: General Usage
 
-    >>> res_id = ResourceIdentifier('2012-04-11--385392')
-    >>> res_id
-    ResourceIdentifier(resource_id="2012-04-11--385392")
-    >>> # If no resource_id is given it will be generated automatically.
-    >>> res_id # doctest:+ELLIPSIS
-    ResourceIdentifier(resource_id="...")
-    >>> # Supplying a prefix will simply prefix the automatically generated
-    >>> # resource_id.
-    >>> ResourceIdentifier(prefix='event') # doctest:+ELLIPSIS
-    ResourceIdentifier(resource_id="event/...")
+    >>> ResourceIdentifier('2012-04-11--385392')
+    ResourceIdentifier(text="2012-04-11--385392")
+    >>> # If 'text' is not specified it will be generated automatically.
+    >>> ResourceIdentifier()  # doctest: +ELLIPSIS
+    ResourceIdentifier(text="smi:local/...")
+    >>> # Supplying a prefix will simply prefix the automatically generated ID
+    >>> ResourceIdentifier(prefix='event')  # doctest: +ELLIPSIS
+    ResourceIdentifier(text="event/...")
 
     ResourceIdentifiers can, and oftentimes should, carry a reference to the
     object they refer to. This is a weak reference which means that if the
@@ -514,7 +512,7 @@ class ResourceIdentifier(object):
     The most powerful ability (and reason why one would want to use a resource
     identifier class in the first place) is that once a ResourceIdentifier with
     an attached referred object has been created, any other ResourceIdentifier
-    instances with the same resource_id can retrieve that object. This works
+    instances with the same ID can retrieve that object. This works
     across all ResourceIdentifiers that have been instantiated within one
     Python run.
     This enables, e.g. the resource references between the different QuakeML
@@ -536,69 +534,55 @@ class ResourceIdentifier(object):
     >>> assert(id(ref_b.getReferredObject()) == obj_id)
     >>> assert(id(ref_c.getReferredObject()) == obj_id)
 
-    Any hashable type can be used as a resource_id.
-
-    >>> res_id = ResourceIdentifier((1,3))
-    >>> # Using a non-hashable resource_id will result in an error.
-    >>> res_id = ResourceIdentifier([1,2])
-    Traceback (most recent call last):
-        ...
-    TypeError: resource_id needs to be a hashable type.
-    >>> res_id = ResourceIdentifier()
-    >>> res_id.resource_id = [1,2]
-    Traceback (most recent call last):
-        ...
-    TypeError: resource_id needs to be a hashable type.
-
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
-        smi:authority_id/prefix/resource_id
+        smi:authority_id/prefix/text
 
     >>> res_id = ResourceIdentifier(prefix='origin')
     >>> res_id.convertIDToQuakeMLURI(authority_id="obspy.org")
     >>> res_id # doctest:+ELLIPSIS
-    ResourceIdentifier(resource_id="smi:obspy.org/origin/...")
-    >>> res_id = ResourceIdentifier('foo')
+    ResourceIdentifier(text="smi:obspy.org/origin/...")
+    >>> res_id = ResourceIdentifier(text='foo')
     >>> res_id.convertIDToQuakeMLURI()
     >>> res_id
-    ResourceIdentifier(resource_id="smi:local/foo")
+    ResourceIdentifier(text="smi:local/foo")
     >>> # A good way to create a QuakeML compatibly ResourceIdentifier from
     >>> # scratch is
     >>> res_id = ResourceIdentifier(prefix='pick')
     >>> res_id.convertIDToQuakeMLURI(authority_id='obspy.org')
     >>> res_id  # doctest:+ELLIPSIS
-    ResourceIdentifier(resource_id="smi:obspy.org/pick/...")
-    >>> # If the given resource_id is already a valid QuakeML
+    ResourceIdentifier(text="smi:obspy.org/pick/...")
+    >>> # If the given ID is already a valid QuakeML
     >>> # ResourceIdentifier, nothing will happen.
     >>> res_id = ResourceIdentifier('smi:test.org/subdir/id')
     >>> res_id
-    ResourceIdentifier(resource_id="smi:test.org/subdir/id")
+    ResourceIdentifier(text="smi:test.org/subdir/id")
     >>> res_id.convertIDToQuakeMLURI()
     >>> res_id
-    ResourceIdentifier(resource_id="smi:test.org/subdir/id")
+    ResourceIdentifier(text="smi:test.org/subdir/id")
 
-    ResourceIdentifiers are considered identical if the resource_ids are
+    ResourceIdentifiers are considered identical if the IDs are
     the same.
 
-    >>> # Create two different resource_ids.
+    >>> # Create two different resource identifiers.
     >>> res_id_1 = ResourceIdentifier()
     >>> res_id_2 = ResourceIdentifier()
     >>> assert(res_id_1 != res_id_2)
-    >>> # Equalize the resource_ids. NEVER do this. This just an example.
-    >>> res_id_2.resource_id = res_id_1.resource_id = 1
+    >>> # Equalize the IDs. NEVER do this. This just an example.
+    >>> res_id_2.text = res_id_1.text = "smi:local/abcde"
     >>> assert(res_id_1 == res_id_2)
 
     ResourceIdentifier instances can be used as dictionary keys.
 
     >>> dictionary = {}
-    >>> res_id = ResourceIdentifier(resource_id="foo")
+    >>> res_id = ResourceIdentifier(text="foo")
     >>> dictionary[res_id] = "bar"
-    >>> # The same resource_id can still be used as a key.
+    >>> # The same ID can still be used as a key.
     >>> dictionary["foo"] = "bar"
     >>> items = dictionary.items()
     >>> items.sort()
     >>> print items
-    [(ResourceIdentifier(resource_id="foo"), 'bar'), ('foo', 'bar')]
+    [(ResourceIdentifier(text="foo"), 'bar'), ('foo', 'bar')]
     """
     # Class (not instance) attribute that keeps track of all resource
     # identifier throughout one Python run. Will only store weak references and
@@ -606,15 +590,16 @@ class ResourceIdentifier(object):
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
 
-    def __init__(self, resource_id=None, prefix="smi:local",
+    @deprecated_keywords({'resource_id': 'text'})
+    def __init__(self, text=None, prefix="smi:local",
                  referred_object=None):
         # Create a resource id if None is given and possibly use a prefix.
-        if resource_id is None:
-            resource_id = str(uuid4())
+        if text is None:
+            text = str(uuid4())
             if prefix is not None:
-                resource_id = "%s/%s" % (prefix, resource_id)
+                text = "%s/%s" % (prefix, text)
         # Use the setter to assure only hashable ids are set.
-        self.resource_id = resource_id
+        self.text = text
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         if referred_object is not None:
@@ -625,7 +610,7 @@ class ResourceIdentifier(object):
         Returns the object associated with the resource identifier.
 
         This works as long as at least one ResourceIdentifier with the same
-        resource_id as this instance has an associate object.
+        ID as this instance has an associate object.
 
         Will return None if no object could be found.
         """
@@ -657,7 +642,7 @@ class ResourceIdentifier(object):
               "another object: '%s'." +\
               "It will now point to the object referred to by the new " + \
               "resource identifier."
-        msg = msg % (self.resource_id,
+        msg = msg % (self.text,
                      repr(ResourceIdentifier.__resource_id_weak_dict[self]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
@@ -666,14 +651,13 @@ class ResourceIdentifier(object):
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
-        Converts the current resource_id to a valid QuakeML URI.
+        Converts the current ID to a valid QuakeML URI.
 
         Only an invalid QuakeML ResourceIdentifier string it will be converted
         to a valid one.  Otherwise nothing will happen but after calling this
-        method the user can be sure that the resource_id is a valid QuakeML
-        URI.
+        method the user can be sure that the ID is a valid QuakeML URI.
 
-        The resulting resource_id will be of the form
+        The resulting ID will be of the form
             smi:authority_id/prefix/resource_id
 
         :type authority_id: str, optional
@@ -681,39 +665,39 @@ class ResourceIdentifier(object):
             ``"local"``.
         """
         quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
-        if quakeml_uri == self.resource_id:
+        if quakeml_uri == self.text:
             return
-        self.resource_id = quakeml_uri
+        self.text = quakeml_uri
 
     def getQuakeMLURI(self, authority_id="local"):
         """
-        Returns the resource_id as a valid QuakeML URI if possible. Does not
-        change the resource_id itself.
+        Returns the ID as a valid QuakeML URI if possible. Does not
+        change the ID itself.
 
         >>> res_id = ResourceIdentifier("some_id")
         >>> print res_id.getQuakeMLURI()
         smi:local/some_id
         >>> # Did not change the actual resource id.
-        >>> print res_id.resource_id
+        >>> print res_id.text
         some_id
         """
-        resource_id = self.resource_id
-        if str(resource_id).strip() == "":
-            resource_id = str(uuid4())
+        text = self.text
+        if str(text).strip() == "":
+            text = str(uuid4())
 
         regex = r"^(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\." + \
                 r"\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*$"
-        result = re.match(regex, str(resource_id))
+        result = re.match(regex, str(text))
         if result is not None:
-            return resource_id
-        resource_id = 'smi:%s/%s' % (authority_id, str(resource_id))
+            return text
+        text = 'smi:%s/%s' % (authority_id, str(text))
         # Check once again just to be sure no weird symbols are stored in the
-        # resource_id.
-        result = re.match(regex, resource_id)
+        # ID.
+        result = re.match(regex, text)
         if result is None:
             msg = "Failed to create a valid QuakeML ResourceIdentifier."
             raise ValueError(msg)
-        return resource_id
+        return text
 
     def copy(self):
         """
@@ -726,44 +710,59 @@ class ResourceIdentifier(object):
         >>> print res_id == res_id_2
         True
         """
-        return ResourceIdentifier(resource_id=self.resource_id)
+        return deepcopy(self)
 
     @property
-    def resource_id(self):
+    def text(self):
         """
         Unique identifier of the current instance.
         """
-        return self.__dict__.get("resource_id")
+        return self.__dict__.get("text")
 
-    @resource_id.deleter
-    def resource_id(self):
+    @text.deleter
+    def text(self):
         """
         Deleting is forbidden and will not work.
         """
         msg = "The resource id cannot be deleted."
         raise Exception(msg)
 
-    @resource_id.setter
-    def resource_id(self, value):
+    @text.setter
+    def text(self, value):
         # Check if the resource id is a hashable type.
-        try:
-            hash(value)
-        except TypeError:
-            msg = "resource_id needs to be a hashable type."
+        if not isinstance(value, basestring):
+            msg = "attribute text needs to be a string."
             raise TypeError(msg)
-        self.__dict__["resource_id"] = value
+        self.__dict__["text"] = value
+
+    @property
+    @deprecated("Attribute 'resource_id' was renamed to 'text'. "
+                "Use that instead.")
+    def resource_id(self):
+        return self.text
+
+    @resource_id.deleter
+    @deprecated("Attribute 'resource_id' was renamed to 'text'. "
+                "Use that instead.")
+    def resource_id(self):
+        del self.text
+
+    @resource_id.setter
+    @deprecated("Attribute 'resource_id' was renamed to 'text'. "
+                "Use that instead.")
+    def resource_id(self, value):
+        self.text = value
 
     def __str__(self):
-        return self.resource_id
+        return self.text
 
     def __repr__(self):
-        return 'ResourceIdentifier(resource_id="%s")' % self.resource_id
+        return 'ResourceIdentifier(text="%s")' % self.text
 
     def __eq__(self, other):
-        # The type check is necessary due to the used hashing method.
-        if type(self) != type(other):
+        if not isinstance(other, ResourceIdentifier):
             return False
-        if self.resource_id == other.resource_id:
+        if self.text == other.text:
             return True
         return False
 
@@ -778,7 +777,7 @@ class ResourceIdentifier(object):
         Both the object and it's id can still be independently used as
         dictionary keys.
         """
-        return self.resource_id.__hash__()
+        return self.text.__hash__()
 
 
 __CreationInfo = _eventTypeClassFactory(
@@ -1649,7 +1648,7 @@ class Origin(__Origin):
     >>> origin.depth_type = 'from location'
     >>> print(origin)  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
     Origin
-        resource_id: ResourceIdentifier(resource_id="smi:ch.ethz.sed/...")
+        resource_id: ResourceIdentifier(text="smi:ch.ethz.sed/...")
                time: UTCDateTime(1970, 1, 1, 0, 0)
           longitude: 42.0
            latitude: 12.0 [confidence_level=95.0]
