@@ -68,7 +68,7 @@ class JSONTestCase(unittest.TestCase):
         # Verify json module can load
         j = json.load(memfile)
         self.assertIsInstance(j, dict)
-        
+
     def tearDown(self):
         del self.event
 
