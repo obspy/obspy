@@ -22,6 +22,7 @@ from obspy.core.util.decorator import deprecated_keywords, deprecated
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
+import collections
 import copy
 import glob
 import inspect
@@ -592,6 +593,8 @@ class ResourceIdentifier(object):
     # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
+    # Use an additional dictionary to track all resource ids.
+    __resource_id_tracker = collections.defaultdict(int)
 
     @deprecated_keywords({'resource_id': 'text'})
     def __init__(self, text=None, prefix="smi:local",
@@ -609,6 +612,23 @@ class ResourceIdentifier(object):
         if referred_object is not None:
             self.setReferredObject(referred_object)
 
+        # Increment the counter for the current resource id.
+        ResourceIdentifier.__resource_id_tracker[self.text] += 1
+
+    def __del__(self):
+        if self.text not in ResourceIdentifier.__resource_id_tracker:
+            return
+        # Decrement the resource id counter.
+        ResourceIdentifier.__resource_id_tracker[self.text] -= 1
+        # If below or equal to zero, delete it and also delete it from the weak
+        # value dictionary.
+        if ResourceIdentifier.__resource_id_tracker[self.text] <= 0:
+            del ResourceIdentifier.__resource_id_tracker[self.text]
+            try:
+                del ResourceIdentifier.__resource_id_weak_dict[self.text]
+            except KeyError:
+                pass
+
     def getReferredObject(self):
         """
         Returns the object associated with the resource identifier.
@@ -619,7 +639,7 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            return ResourceIdentifier.__resource_id_weak_dict[self]
+            return ResourceIdentifier.__resource_id_weak_dict[self.text]
         except KeyError:
             return None
 
@@ -634,24 +654,28 @@ class ResourceIdentifier(object):
         everything stays consistent.
         """
         # If it does not yet exists simply set it.
-        if not self in ResourceIdentifier.__resource_id_weak_dict:
-            ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        if self.text not in ResourceIdentifier.__resource_id_weak_dict:
+            ResourceIdentifier.__resource_id_weak_dict[self.text] = \
+                referred_object
             return
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
+        if ResourceIdentifier.__resource_id_weak_dict[self.text] is \
+                referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
               "another object: '%s'." +\
               "It will now point to the object referred to by the new " + \
               "resource identifier."
-        msg = msg % (self.text,
-                     repr(ResourceIdentifier.__resource_id_weak_dict[self]))
+        msg = msg % (
+            self.text,
+            repr(ResourceIdentifier.__resource_id_weak_dict[self.text]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
-        ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        ResourceIdentifier.__resource_id_weak_dict[self.text] = \
+            referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -668,10 +692,7 @@ class ResourceIdentifier(object):
         :param authority_id: The base url of the resulting string. Defaults to
             ``"local"``.
         """
-        quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
-        if quakeml_uri == self.text:
-            return
-        self.text = quakeml_uri
+        self.text = self.getQuakeMLURI(authority_id=authority_id)
 
     def getQuakeMLURI(self, authority_id="local"):
         """
@@ -732,9 +753,6 @@ class ResourceIdentifier(object):
 
     @text.deleter
     def text(self):
-        """
-        Deleting is forbidden and will not work.
-        """
         msg = "The resource id cannot be deleted."
         raise Exception(msg)
 
