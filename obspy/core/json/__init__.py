@@ -8,9 +8,9 @@ and transmitting structured data over a network connection. It is used
 primarily to transmit data between a server and web application, serving as an
 alternative to XML.
 
-See the module :mod:~obspy.core.json.default for documentation on the class.
+See the module :mod:`obspy.core.json.default` for documentation on the class.
 A write function for files and a utility for compact string serialization using
-the Default class function are located in :mod:~obspy.core.json.core
+the Default class are located in :mod:`obspy.core.json.core`.
 
 """
 from default import Default

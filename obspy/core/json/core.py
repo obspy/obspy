@@ -5,7 +5,8 @@ from obspy.core.json import Default
 
 def get_dump_kwargs(minify=True, no_nulls=True, **kwargs):
     """
-    Return dict of keyword args for json.dump or json.dumps
+    Return dict of kwargs for :py:func:`json.dump` or
+    :py:func:`json.dumps`.
 
     :param bool minify: Use no spaces between separators (True)
     :param bool no_nulls: Omit null values and empty sequences/mappings (True)

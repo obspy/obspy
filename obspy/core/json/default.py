@@ -5,7 +5,8 @@ JSON Encoder default function
 This module provides:
 ---------------------
 Default : a class to create a "default" function accepted by the
-python json module Encoder classes, valid for obspy.core.event objects
+python :py:mod:`json` module Encoder classes, valid for
+:class:`~obspy.core.event.Event` objects.
 
 Example
 -------
@@ -23,7 +24,8 @@ from obspy.core.event import (AttribDict, Catalog, UTCDateTime,
 
 class Default(object):
     """
-    Class to create a "default" function for the json.dump* functions
+    Class to create a "default" function for the
+    :py:func:`json.dump`/:py:func:`json.dumps` functions
     which is passed to the JSONEncoder.
 
     """
@@ -47,10 +49,10 @@ class Default(object):
 
     def __call__(self, obj):
         """
-        Deal with obspy event objects in JSON Encoder
+        Deal with :class:`~obspy.core.event.Event` objects in JSON Encoder
 
         This function can be passed to the json module's
-        'default' keyword parameter
+        `default` keyword parameter
 
         """
         # Most event objects have dict methods, construct a dict
