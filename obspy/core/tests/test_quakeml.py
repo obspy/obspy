@@ -105,7 +105,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[1].text, 'Another comment')
         self.assertEqual(
             c[1].resource_id,
-            ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
+            ResourceIdentifier(text="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # event descriptions
         self.assertEqual(len(event.event_descriptions), 3)
@@ -293,7 +293,7 @@ class QuakeMLTestCase(unittest.TestCase):
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[0]
         self.assertEqual(
-            stat_contrib.station_magnitude_id.resource_id,
+            stat_contrib.station_magnitude_id.text,
             "smi:ch.ethz.sed/magnitude/station/881342")
         self.assertEqual(stat_contrib.weight, 0.77)
         self.assertEqual(stat_contrib.residual, 0.02)
@@ -301,7 +301,7 @@ class QuakeMLTestCase(unittest.TestCase):
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[1]
         self.assertEqual(
-            stat_contrib.station_magnitude_id.resource_id,
+            stat_contrib.station_magnitude_id.text,
             "smi:ch.ethz.sed/magnitude/station/881334")
         self.assertEqual(stat_contrib.weight, 0.55)
         self.assertEqual(stat_contrib.residual, 0.11)
