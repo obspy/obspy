@@ -6,6 +6,7 @@ from obspy.core.quakeml import readQuakeML, Pickler, writeQuakeML
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
+from obspy.core.util.xmlwrapper import LXML_ETREE
 from xml.etree.ElementTree import tostring, fromstring
 import StringIO
 import difflib
@@ -44,6 +45,12 @@ class QuakeMLTestCase(unittest.TestCase):
         obj2 = fromstring(doc2)
         str1 = [_i.strip() for _i in tostring(obj1).split("\n")]
         str2 = [_i.strip() for _i in tostring(obj2).split("\n")]
+        # when xml is used instead of old lxml in obspy.core.util.xmlwrapper
+        # there is no pretty_print option and we get a string without line
+        # breaks, so we have to allow for that in the test
+        if not LXML_ETREE:
+            str1 = "".join(str1)
+            str2 = "".join(str2)
 
         unified_diff = difflib.unified_diff(str1, str2)
         has_error = False
