@@ -978,7 +978,8 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, major_version, service, resource_type, parameters={}):
+def build_url(base_url, major_version, service, resource_type, parameters={},
+              branch_id="fdsnws"):
     """
     URL builder for the FDSN webservices.
 
@@ -998,6 +999,14 @@ def build_url(base_url, major_version, service, resource_type, parameters={}):
             (service, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
+
+    # usually, the URL includes "fdsnws" although rarely, as in alpha-beta
+    # testing, it may be something different.
+    if not branch_id.replace('_','x').isalnum():
+        msg = ("Branch ID '%s' not allowed.  " % branch_id +
+        "The Branch ID is only specified during service beta testing")
+        raise ValueError(msg)
+
     # Special location handling.
     if "location" in parameters:
         loc = parameters["location"].replace(" ", "")
@@ -1013,8 +1022,9 @@ def build_url(base_url, major_version, service, resource_type, parameters={}):
         # Empty location in middle of list.
         loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
+        
 
-    url = "/".join((base_url, "fdsnws", service,
+    url = "/".join((base_url, branch_id, service,
                     str(major_version), resource_type))
     if parameters:
         # Strip parameters.
@@ -1035,7 +1045,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     The first one is the returned HTTP code and the second the data as
     string.
 
-    Will return a touple of Nones if the service could not be found.
+    Will return a tuple of Nones if the service could not be found.
 
     Performs a http GET if data=None, otherwise a http POST.
     """
