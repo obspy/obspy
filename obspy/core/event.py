@@ -21,6 +21,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords
 from pkg_resources import load_entry_point
 from uuid import uuid4
+import collections
 import copy
 import glob
 import inspect
@@ -543,12 +544,12 @@ class ResourceIdentifier(object):
     >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
     >>> res_id = ResourceIdentifier()
     >>> res_id.resource_id = [1,2]
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
@@ -605,20 +606,42 @@ class ResourceIdentifier(object):
     # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
+    # Use an additional dictionary to track all resource ids.
+    __resource_id_tracker = collections.defaultdict(int)
 
     def __init__(self, resource_id=None, prefix="smi:local",
                  referred_object=None):
+        # Set a default resource id in case the resource id assignment fails.
+        self.__resource_id = None
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
             if prefix is not None:
                 resource_id = "%s/%s" % (prefix, resource_id)
         # Use the setter to assure only hashable ids are set.
-        self.__setResourceID(resource_id)
+        self.resource_id = resource_id
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         if referred_object is not None:
             self.setReferredObject(referred_object)
+
+        # Increment the counter for the current resource id.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] += 1
+
+    def __del__(self):
+        if self.resource_id not in ResourceIdentifier.__resource_id_tracker:
+            return
+        # Decrement the resource id counter.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] -= 1
+        # If below or equal to zero, delete it and also delete it from the weak
+        # value dictionary.
+        if ResourceIdentifier.__resource_id_tracker[self.resource_id] <= 0:
+            del ResourceIdentifier.__resource_id_tracker[self.resource_id]
+            try:
+                del ResourceIdentifier.__resource_id_weak_dict[
+                    self.resource_id]
+            except KeyError:
+                pass
 
     def getReferredObject(self):
         """
@@ -630,7 +653,7 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            return ResourceIdentifier.__resource_id_weak_dict[self]
+            return ResourceIdentifier.__resource_id_weak_dict[self.resource_id]
         except KeyError:
             return None
 
@@ -645,24 +668,27 @@ class ResourceIdentifier(object):
         everything stays consistent.
         """
         # If it does not yet exists simply set it.
-        if not self in ResourceIdentifier.__resource_id_weak_dict:
-            ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        if self.resource_id not in ResourceIdentifier.__resource_id_weak_dict:
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+                referred_object
             return
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
+        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] is \
+                referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
               "another object: '%s'." +\
               "It will now point to the object referred to by the new " + \
               "resource identifier."
-        msg = msg % (self.resource_id,
-                     repr(ResourceIdentifier.__resource_id_weak_dict[self]))
+        msg = msg % (self.resource_id, repr(
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
-        ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+            referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -683,7 +709,7 @@ class ResourceIdentifier(object):
         quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
         if quakeml_uri == self.resource_id:
             return
-        self.__setResourceID(quakeml_uri)
+        self.resource_id = quakeml_uri
 
     def getQuakeMLURI(self, authority_id="local"):
         """
@@ -728,27 +754,18 @@ class ResourceIdentifier(object):
         """
         return ResourceIdentifier(resource_id=self.resource_id)
 
-    def __getResourceID(self):
-        return self.__dict__.get("resource_id")
-
-    def __delResourceID(self):
+    @property
+    def resource_id(self):
         """
-        Deleting is forbidden and will not work.
+        unique identifier of the current instance
         """
-        msg = "The resource id cannot be deleted."
-        raise Exception(msg)
+        return self.__resource_id
 
-    def __setResourceID(self, resource_id):
-        # Check if the resource id is a hashable type.
-        try:
-            hash(resource_id)
-        except TypeError:
-            msg = "resource_id needs to be a hashable type."
-            raise TypeError(msg)
-        self.__dict__["resource_id"] = resource_id
-
-    resource_id = property(__getResourceID, __setResourceID, __delResourceID,
-                           "unique identifier of the current instance")
+    @resource_id.setter
+    def resource_id(self, value):
+        # Raises the correct exception in case a value is not hashable..
+        hash(value)
+        self.__resource_id = value
 
     def __str__(self):
         return self.resource_id
