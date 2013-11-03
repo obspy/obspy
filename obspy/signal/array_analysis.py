@@ -335,7 +335,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     for array in (ts_wmag, ts_w1, ts_w2, ts_w3, ts_tilt, ts_dh, ts_sh, ts_s,
                   ts_pred, ts_misfit, ts_M, ts_data, ts_ptilde):
         array.fill(np.NaN)
-    ts_e = np.NaN * np.empty((nt, 3, 3))
+    ts_e = np.empty((nt, 3, 3))
+    ts_e.fill(np.NaN)
 
     # other matrices
     udif = np.empty((3, N))
