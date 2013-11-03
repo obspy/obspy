@@ -123,7 +123,6 @@ class KonnoOhmachiTestCase(unittest.TestCase):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, konnoOhmachiSmoothing, spectra,
                               frequencies)
-        warnings.filters.pop(0)
         # Correct the dtype.
         frequencies = np.require(frequencies, dtype=np.float32)
         # The first one uses the matrix method, the second one the non matrix
