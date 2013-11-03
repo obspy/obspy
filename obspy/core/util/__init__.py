@@ -32,7 +32,7 @@ from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
-    scoreatpercentile, toIntOrZero, loadtxt
+    scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
 from obspy.core.util.obspy_types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
 from obspy.core.util.version import get_git_version as _getVersionString

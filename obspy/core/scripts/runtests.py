@@ -145,6 +145,7 @@ def _getSuites(verbosity=1, names=[]):
     # need not be imported before in this case
     suites = {}
     ut = unittest.TestLoader()
+    status = True
     for name in names:
         suite = []
         if name in ALL_MODULES:
@@ -156,12 +157,13 @@ def _getSuites(verbosity=1, names=[]):
         try:
             suite.append(ut.loadTestsFromName(test, None))
         except Exception, e:
+            status = False
             if verbosity:
                 print(e)
                 print("Cannot import test suite for module obspy.%s" % name)
         else:
             suites[name] = ut.suiteClass(suite)
-    return suites
+    return suites, status
 
 
 def _createReport(ttrs, timetaken, log, server, hostname):
@@ -439,7 +441,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites = _getSuites(verbosity, tests)
+    suites, status = _getSuites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -480,6 +482,10 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             report = True
     if report:
         _createReport(ttr, total_time, log, server, hostname)
+    # make obspy-runtests exit with 1 if a test suite could not be added,
+    # indicating failure
+    if status is False:
+        errors += 1
     if errors:
         return errors
 
@@ -604,6 +610,13 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    # catch and ignore a numpy deprecation warning
+    with warnings.catch_warnings(record=True):
+        warnings.filterwarnings(
+            "ignore", 'The compiler package is deprecated and removed in '
+            'Python 3.x.', DeprecationWarning)
+        np.safe_eval('1')
+
     if '-p' in sys.argv or '--profile' in sys.argv:
         try:
             import cProfile as Profile

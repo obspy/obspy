@@ -49,11 +49,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
         object will be returned.
     :type format: string, optional
-    :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
-        ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
-        the `Supported Formats`_ section below for a full list of supported
-        formats. If format is set to ``None`` it will be automatically detected
-        which results in a slightly slower reading. If you specify a format no
+    :param format: Format of the file to read (e.g. ``"MSEED"``). See
+        the `Supported Formats`_ section below for a list of supported formats.
+        If format is set to ``None`` it will be automatically detected which
+        results in a slightly slower reading. If a format is specified, no
         further format checking is done.
     :type headonly: bool, optional
     :param headonly: If set to ``True``, read only the data header. This is
@@ -102,28 +101,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
-    ========  =====================  ========================================
-    Format    Required Module        _`Linked Function Call`
-    ========  =====================  ========================================
-    MSEED     :mod:`obspy.mseed`     :func:`obspy.mseed.core.readMSEED`
-    SAC       :mod:`obspy.sac`       :func:`obspy.sac.core.readSAC`
-    GSE2      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE2`
-    SEISAN    :mod:`obspy.seisan`    :func:`obspy.seisan.core.readSEISAN`
-    SACXY     :mod:`obspy.sac`       :func:`obspy.sac.core.readSACXY`
-    GSE1      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE1`
-    Q         :mod:`obspy.sh`        :func:`obspy.sh.core.readQ`
-    SH_ASC    :mod:`obspy.sh`        :func:`obspy.sh.core.readASC`
-    SLIST     :mod:`obspy.core`      :func:`obspy.core.ascii.readSLIST`
-    TSPAIR    :mod:`obspy.core`      :func:`obspy.core.ascii.readTSPAIR`
-    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY`
-    SEGY      :mod:`obspy.segy`      :func:`obspy.segy.core.readSEGY`
-    SU        :mod:`obspy.segy`      :func:`obspy.segy.core.readSU`
-    SEG2      :mod:`obspy.seg2`      :func:`obspy.seg2.seg2.readSEG2`
-    WAV       :mod:`obspy.wav`       :func:`obspy.wav.core.readWAV`
-    PICKLE    :mod:`obspy.core`      :func:`obspy.core.stream.readPICKLE`
-    DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK`
-    CSS       :mod:`obspy.css`       :func:`obspy.css.core.readCSS`
-    ========  =====================  ========================================
+    %s
 
     Next to the :func:`~obspy.core.stream.read` function the
     :meth:`~obspy.core.stream.Stream.write` method of the returned
@@ -1325,10 +1303,8 @@ class Stream(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            the `Supported Formats`_ section below for a full list of supported
+        :param format: The file format to use (e.g. ``"MSEED"``). See
+            the `Supported Formats`_ section below for a list of supported
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
@@ -1343,7 +1319,7 @@ class Stream(object):
         e.g. using trace.id
 
         >>> for tr in st: #doctest: +SKIP
-        ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
+        ...     tr.write(tr.id + ".MSEED", format="MSEED") #doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -1351,25 +1327,10 @@ class Stream(object):
         :meth:`~obspy.core.stream.Stream.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the *Linked Function Call* of each module for any extra
-        options available.
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
 
-        =======  ===================  ====================================
-        Format   Required Module      Linked Function Call
-        =======  ===================  ====================================
-        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
-        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
-        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
-        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
-        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
-        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
-        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
-        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.writeSLIST`
-        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
-        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
-        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.writePickle`
-        =======  ===================  ====================================
+        %s
         """
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:

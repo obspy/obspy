@@ -321,7 +321,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         format = format.upper()
         try:
             format_ep = EPS[format]
-        except IndexError:
+        except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
@@ -345,6 +345,68 @@ def getScriptDirName():
     """
     return os.path.abspath(os.path.dirname(inspect.getfile(
         inspect.currentframe())))
+
+
+def make_format_plugin_table(group="waveform", method="read", numspaces=4,
+                             unindent_first_line=True):
+    """
+    Returns a markdown formatted table with read waveform plugins to insert
+    in docstrings.
+
+    >>> table = make_format_plugin_table("event", "write", 4, True)
+    >>> print table  # doctest: +NORMALIZE_WHITESPACE
+    ======= ================= =======================================
+        Format  Required Module   _`Linked Function Call`
+        ======= ================= =======================================
+        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
+        ======= ================= =======================================
+
+    :type group: str
+    :param group: Plugin group to search (e.g. "waveform" or "event").
+    :type method: str
+    :param method: Either 'read' or 'write' to select plugins based on either
+        read or write capability.
+    :type numspaces: int
+    :param numspaces: Number of spaces prepended to each line (for indentation
+        in docstrings).
+    :type unindent_first_line: bool
+    :param unindent_first_line: Determines if first line should start with
+        prepended spaces or not.
+    """
+    method = method.lower()
+    if method not in ("read", "write"):
+        raise ValueError("no valid type: %s" % method)
+
+    method += "Format"
+    eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
+                                 WAVEFORM_PREFERRED_ORDER)
+    mod_list = []
+    for name, ep in eps.iteritems():
+        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
+        func = load_entry_point(ep.dist.key,
+                                "obspy.plugin.%s.%s" % (group, name), method)
+        func_str = ':func:`%s`' % ".".join((ep.module_name, func.func_name))
+        mod_list.append((name, module_short, func_str))
+
+    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
+               max([len(x[1]) for x in mod_list] + [len(headers[1])]),
+               max([len(x[2]) for x in mod_list] + [len(headers[2])])]
+
+    info_str = [" ".join(["=" * x for x in maxlens])]
+    info_str.append(
+        " ".join([headers[i].ljust(maxlens[i]) for i in xrange(3)]))
+    info_str.append(info_str[0])
+
+    for mod_infos in mod_list:
+        info_str.append(
+            " ".join([mod_infos[i].ljust(maxlens[i]) for i in xrange(3)]))
+    info_str.append(info_str[0])
+
+    ret = " " * numspaces + ("\n" + " " * numspaces).join(info_str)
+    if unindent_first_line:
+        ret = ret[numspaces:]
+    return ret
 
 
 if __name__ == '__main__':
