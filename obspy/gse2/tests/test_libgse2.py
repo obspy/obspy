@@ -5,7 +5,7 @@ The libgse2 test suite.
 """
 from ctypes import ArgumentError
 from obspy import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError, GSEUtiError
 from cStringIO import StringIO
@@ -188,7 +188,10 @@ class LibGSE2TestCase(unittest.TestCase):
             lines = (l for l in fin if not l.startswith('DAT2'))
             fout.write("\n".join(lines))
         fout.seek(0)
-        self.assertRaises(GSEUtiError, libgse2.read, fout)
+        with CatchOutput() as out:
+            self.assertRaises(GSEUtiError, libgse2.read, fout)
+        self.assertEqual(out.stdout,
+                         "decomp_6b: Neither DAT2 or DAT1 found!\n")
 
 
 def suite():
