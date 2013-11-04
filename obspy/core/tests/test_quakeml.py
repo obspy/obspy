@@ -737,6 +737,23 @@ class QuakeMLTestCase(unittest.TestCase):
         warnings.filters.pop(0)
         self.assertEqual(cat1, cat2)
 
+    def test_reading_twice_raises_no_warning(self):
+        """
+        Tests that reading a QuakeML file twice does not raise a warnings.
+
+        Not an extensive test but likely good enough.
+        """
+        filename = os.path.join(self.path, "qml-example-1.2-RC3.xml")
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            cat1 = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+            cat2 = readQuakeML(filename)
+            self.assertEqual(len(w), 0)
+
+        self.assertEqual(cat1, cat2)
+
 
 def suite():
     return unittest.makeSuite(QuakeMLTestCase, 'test')

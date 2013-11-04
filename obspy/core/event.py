@@ -675,7 +675,7 @@ class ResourceIdentifier(object):
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] is \
+        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] == \
                 referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
