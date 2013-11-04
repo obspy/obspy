@@ -22,6 +22,7 @@ from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords
 from pkg_resources import load_entry_point
 from uuid import uuid4
+import collections
 import copy
 import glob
 import inspect
@@ -53,9 +54,8 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         attribute is omitted, an example :class:`~obspy.core.event.Catalog`
         object will be returned.
     :type format: str, optional
-    :param format: Format of the file to read. One of ``"QUAKEML"``. See the
-        `Supported Formats`_ section below for a full list of supported
-        formats.
+    :param format: Format of the file to read (e.g. ``"QUAKEML"``). See the
+        `Supported Formats`_ section below for a list of supported formats.
     :return: A ObsPy :class:`~obspy.core.event.Catalog` object.
 
     .. rubric:: _`Supported Formats`
@@ -67,60 +67,57 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
-    =======  ===================  ======================================
-    Format   Required Module      _`Linked Function Call`
-    =======  ===================  ======================================
-    QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.readQuakeML`
-    =======  ===================  ======================================
+    %s
 
     Next to the :func:`~obspy.core.event.readEvents` function the
     :meth:`~obspy.core.event.Catalog.write` method of the returned
     :class:`~obspy.core.event.Catalog` object can be used to export the data to
     the file system.
     """
-    # create catalog
-    cat = Catalog()
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
-        cat = _createExampleCatalog()
+        return _createExampleCatalog()
     elif not isinstance(pathname_or_url, basestring):
         # not a string - we assume a file-like object
-        pathname_or_url.seek(0)
         try:
             # first try reading directly
             catalog = _read(pathname_or_url, format, **kwargs)
-            cat.extend(catalog.events)
         except TypeError:
             # if this fails, create a temporary file which is read directly
             # from the file system
             pathname_or_url.seek(0)
             with NamedTemporaryFile() as fh:
                 fh.write(pathname_or_url.read())
-                cat.extend(_read(fh.name, format, **kwargs).events)
-        pathname_or_url.seek(0)
+                catalog = _read(fh.name, format, **kwargs)
+        return catalog
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        catalog = _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
-        cat.extend(catalog.events)
+        return _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
             fh.write(urllib2.urlopen(pathname_or_url).read())
-            cat.extend(_read(fh.name, format, **kwargs).events)
+            catalog = _read(fh.name, format, **kwargs)
+        return catalog
     else:
-        # file name
         pathname = pathname_or_url
-        for file in glob.iglob(pathname):
-            cat.extend(_read(file, format, **kwargs).events)
-        if len(cat) == 0:
+        # File name(s)
+        pathnames = glob.glob(pathname)
+        if not pathnames:
             # try to give more specific information why the stream is empty
             if glob.has_magic(pathname) and not glob(pathname):
                 raise Exception("No file matching file pattern: %s" % pathname)
             elif not glob.has_magic(pathname) and not os.path.isfile(pathname):
                 raise IOError(2, "No such file or directory", pathname)
-    return cat
+
+        catalog = _read(pathnames[0], format, **kwargs)
+        if len(pathnames) == 1:
+            return catalog
+        else:
+            for filename in pathnames[1:]:
+                catalog.extend(_read(filename, format, **kwargs).events)
 
 
 @uncompressFile
@@ -147,6 +144,18 @@ class QuantityError(AttribDict):
     lower_uncertainty = None
     upper_uncertainty = None
     confidence_level = None
+
+
+def _bool(value):
+    """
+    A custom bool() implementation that returns
+    True for any value (including zero) of int and float,
+    and for (empty) strings.
+    """
+    if value == 0 or\
+       isinstance(value, basestring):
+        return True
+    return bool(value)
 
 
 def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
@@ -253,7 +262,13 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 kwargs[class_attributes[_i][0]] = item
             # Set all property values to None or the kwarg value.
             for key, _ in self._properties:
-                setattr(self, key, kwargs.get(key, None))
+                value = kwargs.get(key, None)
+                # special handling for resource id
+                if key == "resource_id":
+                    if kwargs.get("force_resource_id", False):
+                        if value is None:
+                            value = ResourceIdentifier()
+                setattr(self, key, value)
             # Containers currently are simple lists.
             for name in self._containers:
                 setattr(self, name, list(kwargs.get(name, [])))
@@ -265,9 +280,9 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
         def clear(self):
             super(AbstractEventType, self).clear()
-            self.__init__()
+            self.__init__(force_resource_id=False)
 
-        def __str__(self):
+        def __str__(self, force_one_line=False):
             """
             Fairly extensive in an attempt to cover several use cases. It is
             always possible to change it in the child class.
@@ -275,9 +290,13 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             # Get the attribute and containers that are to be printed. Only not
             # None attributes and non-error attributes are printed. The errors
             # will appear behind the actual value.
+            # We use custom _bool() for testing getattr() since we want to
+            # print int and float values that are equal to zero and empty
+            # strings.
             attributes = [_i for _i in self._property_keys if not
-                          _i.endswith("_errors") and getattr(self, _i)]
-            containers = [_i for _i in self._containers if getattr(self, _i)]
+                          _i.endswith("_errors") and _bool(getattr(self, _i))]
+            containers = [_i for _i in self._containers if
+                          _bool(getattr(self, _i))]
 
             # Get the longest attribute/container name to print all of them
             # nicely aligned.
@@ -296,7 +315,8 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 repr_str = getattr(self, key).__repr__()
                 # Print any associated errors.
                 error_key = key + "_errors"
-                if hasattr(self, error_key) and getattr(self, error_key):
+                if hasattr(self, error_key) and\
+                   _bool(getattr(self, error_key)):
                     err_items = getattr(self, error_key).items()
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join(
@@ -305,9 +325,10 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
 
             # Case 2: Short representation for small objects. Will just print a
             # single line.
-            if len(attributes) <= 3 and not containers:
+            if len(attributes) <= 3 and not containers or\
+               force_one_line:
                 att_strs = ["%s=%s" % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "(%s)" % ", ".join(att_strs)
                 return ret_str
 
@@ -315,7 +336,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if attributes:
                 format_str = "%" + str(max_length) + "s: %s"
                 att_strs = [format_str % (_i, get_value_repr(_i))
-                            for _i in attributes if getattr(self, _i)]
+                            for _i in attributes if _bool(getattr(self, _i))]
                 ret_str += "\n\t" + "\n\t".join(att_strs)
 
             # For the containers just print the number of elements in each.
@@ -334,10 +355,12 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             return copy.deepcopy(self)
 
         def __repr__(self):
-            return self.__str__()
+            return self.__str__(force_one_line=True)
 
         def __nonzero__(self):
-            if any([bool(getattr(self, _i))
+            # We use custom _bool() for testing getattr() since we want
+            # zero valued int and float and empty string attributes to be True.
+            if any([_bool(getattr(self, _i))
                     for _i in self._property_keys + self._containers]):
                 return True
             return False
@@ -392,9 +415,20 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             if name == "resource_id" and value is not None:
                 self.resource_id.setReferredObject(self)
 
+    class AbstractEventTypeWithResourceID(AbstractEventType):
+        def __init__(self, force_resource_id=True, *args, **kwargs):
+            kwargs["force_resource_id"] = force_resource_id
+            super(AbstractEventTypeWithResourceID, self).__init__(*args,
+                                                                  **kwargs)
+
+    if "resource_id" in [item[0] for item in class_attributes]:
+        base_class = AbstractEventTypeWithResourceID
+    else:
+        base_class = AbstractEventType
+
     # Set the class type name.
-    setattr(AbstractEventType, "__name__", class_name)
-    return AbstractEventType
+    setattr(base_class, "__name__", class_name)
+    return base_class
 
 
 class ResourceIdentifier(object):
@@ -503,12 +537,12 @@ class ResourceIdentifier(object):
     >>> res_id = ResourceIdentifier([1,2])
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
     >>> res_id = ResourceIdentifier()
     >>> res_id.resource_id = [1,2]
     Traceback (most recent call last):
         ...
-    TypeError: resource_id needs to be a hashable type.
+    TypeError: unhashable type: 'list'
 
     The id can be converted to a valid QuakeML ResourceIdentifier by calling
     the convertIDToQuakeMLURI() method. The resulting id will be of the form
@@ -565,20 +599,42 @@ class ResourceIdentifier(object):
     # therefore does not interfere with the garbage collection.
     # DO NOT CHANGE THIS FROM OUTSIDE THE CLASS.
     __resource_id_weak_dict = weakref.WeakValueDictionary()
+    # Use an additional dictionary to track all resource ids.
+    __resource_id_tracker = collections.defaultdict(int)
 
     def __init__(self, resource_id=None, prefix="smi:local",
                  referred_object=None):
+        # Set a default resource id in case the resource id assignment fails.
+        self.__resource_id = None
         # Create a resource id if None is given and possibly use a prefix.
         if resource_id is None:
             resource_id = str(uuid4())
             if prefix is not None:
                 resource_id = "%s/%s" % (prefix, resource_id)
         # Use the setter to assure only hashable ids are set.
-        self.__setResourceID(resource_id)
+        self.resource_id = resource_id
         # Append the referred object in case one is given to the class level
         # reference dictionary.
         if referred_object is not None:
             self.setReferredObject(referred_object)
+
+        # Increment the counter for the current resource id.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] += 1
+
+    def __del__(self):
+        if self.resource_id not in ResourceIdentifier.__resource_id_tracker:
+            return
+        # Decrement the resource id counter.
+        ResourceIdentifier.__resource_id_tracker[self.resource_id] -= 1
+        # If below or equal to zero, delete it and also delete it from the weak
+        # value dictionary.
+        if ResourceIdentifier.__resource_id_tracker[self.resource_id] <= 0:
+            del ResourceIdentifier.__resource_id_tracker[self.resource_id]
+            try:
+                del ResourceIdentifier.__resource_id_weak_dict[
+                    self.resource_id]
+            except KeyError:
+                pass
 
     def getReferredObject(self):
         """
@@ -590,7 +646,7 @@ class ResourceIdentifier(object):
         Will return None if no object could be found.
         """
         try:
-            return ResourceIdentifier.__resource_id_weak_dict[self]
+            return ResourceIdentifier.__resource_id_weak_dict[self.resource_id]
         except KeyError:
             return None
 
@@ -605,21 +661,27 @@ class ResourceIdentifier(object):
         everything stays consistent.
         """
         # If it does not yet exists simply set it.
-        if not self in ResourceIdentifier.__resource_id_weak_dict:
-            ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        if self.resource_id not in ResourceIdentifier.__resource_id_weak_dict:
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+                referred_object
             return
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self] is referred_object:
+        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] is \
+                referred_object:
             return
-        msg = "The resource identifier already exists and points to " + \
-              "another object. It will now point to the object " + \
-              "referred to by the new resource identifier."
+        msg = "The resource identifier '%s' already exists and points to " + \
+              "another object: '%s'." +\
+              "It will now point to the object referred to by the new " + \
+              "resource identifier."
+        msg = msg % (self.resource_id, repr(
+            ResourceIdentifier.__resource_id_weak_dict[self.resource_id]))
         # Always raise the warning!
         warnings.warn_explicit(msg, UserWarning, __file__,
                                inspect.currentframe().f_back.f_lineno)
-        ResourceIdentifier.__resource_id_weak_dict[self] = referred_object
+        ResourceIdentifier.__resource_id_weak_dict[self.resource_id] = \
+            referred_object
 
     def convertIDToQuakeMLURI(self, authority_id="local"):
         """
@@ -640,7 +702,7 @@ class ResourceIdentifier(object):
         quakeml_uri = self.getQuakeMLURI(authority_id=authority_id)
         if quakeml_uri == self.resource_id:
             return
-        self.__setResourceID(quakeml_uri)
+        self.resource_id = quakeml_uri
 
     def getQuakeMLURI(self, authority_id="local"):
         """
@@ -685,27 +747,18 @@ class ResourceIdentifier(object):
         """
         return ResourceIdentifier(resource_id=self.resource_id)
 
-    def __getResourceID(self):
-        return self.__dict__.get("resource_id")
-
-    def __delResourceID(self):
+    @property
+    def resource_id(self):
         """
-        Deleting is forbidden and will not work.
+        unique identifier of the current instance
         """
-        msg = "The resource id cannot be deleted."
-        raise Exception(msg)
+        return self.__resource_id
 
-    def __setResourceID(self, resource_id):
-        # Check if the resource id is a hashable type.
-        try:
-            hash(resource_id)
-        except TypeError:
-            msg = "resource_id needs to be a hashable type."
-            raise TypeError(msg)
-        self.__dict__["resource_id"] = resource_id
-
-    resource_id = property(__getResourceID, __setResourceID, __delResourceID,
-                           "unique identifier of the current instance")
+    @resource_id.setter
+    def resource_id(self, value):
+        # Raises the correct exception in case a value is not hashable..
+        hash(value)
+        self.__resource_id = value
 
     def __str__(self):
         return self.resource_id
@@ -865,10 +918,16 @@ class Comment(__Comment):
     :param text: Text of comment.
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_id: Resource identifier of comment.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type creation_info: :class:`~obspy.core.event.CreationInfo`, optional
     :param creation_info: Creation info for the comment.
 
-    >>> comment = Comment("Some comment")
+    >>> comment = Comment(text="Some comment")
+    >>> print comment  # doctest:+ELLIPSIS
+    Comment(text='Some comment', resource_id=ResourceIdentifier(...))
+    >>> comment = Comment(text="Some comment", force_resource_id=False)
     >>> print comment
     Comment(text='Some comment')
     >>> comment.resource_id = "comments/obspy-comment-123456"
@@ -926,11 +985,19 @@ class WaveformStreamID(__WaveformStreamID):
     >>> # Can be initialized with a SEED string or with individual components.
     >>> stream_id = WaveformStreamID(network_code="BW", station_code="FUR",
     ...                              location_code="", channel_code="EHZ")
-    >>> print stream_id
-    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    WaveformStreamID
+          network_code: 'BW'
+          station_code: 'FUR'
+          channel_code: 'EHZ'
+         location_code: ''
     >>> stream_id = WaveformStreamID(seed_string="BW.FUR..EHZ")
-    >>> print stream_id
-    WaveformStreamID(network_code='BW', station_code='FUR', channel_code='EHZ')
+    >>> print stream_id # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+    WaveformStreamID
+          network_code: 'BW'
+          station_code: 'FUR'
+          channel_code: 'EHZ'
+         location_code: ''
     >>> # Can also return the SEED string.
     >>> print stream_id.getSEEDString()
     BW.FUR..EHZ
@@ -997,6 +1064,9 @@ class Amplitude(__Amplitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Amplitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type generic_amplitude: float
     :param generic_amplitude: Measured amplitude value for the given
         waveformID. Note that this attribute can describe different physical
@@ -1132,6 +1202,9 @@ class Pick(__Pick):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Pick.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Observed onset time of signal (“pick time”).
     :type time_errors: :class:`~obspy.core.util.AttribDict`
@@ -1228,6 +1301,9 @@ class Arrival(__Arrival):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Arrival.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type pick_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param pick_id: Refers to the resource_id of a Pick.
     :type phase: str
@@ -1460,6 +1536,9 @@ class Origin(__Origin):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Origin.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type time: :class:`~obspy.core.UTCDateTime`
     :param time: Focal time.
     :type time_errors: :class:`~obspy.core.util.AttribDict`
@@ -1512,6 +1591,8 @@ class Origin(__Origin):
     :type earth_model_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param earth_model_id: Identifies the earth model used in method_id.
+    :type arrivals: list of :class:`~obspy.core.event.Arrival`, optional
+    :param arrivals: List of arrivals associated with the origin.
     :type composite_times: list of :class:`~obspy.core.event.CompositeTime`,
         optional
     :param composite_times: Supplementary information on time of rupture start.
@@ -1636,6 +1717,9 @@ class Magnitude(__Magnitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Magnitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type mag: float
     :param mag: Resulting magnitude value from combining values of type
         :class:`~obspy.core.event.StationMagnitude`. If no estimations are
@@ -1713,6 +1797,9 @@ class StationMagnitude(__StationMagnitude):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param resource_id: Resource identifier of StationMagnitude.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type origin_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param origin_id: Reference to an origin’s ``resource_id`` if the
         StationMagnitude has an associated :class:`~obspy.core.event.Origin`.
@@ -2011,6 +2098,9 @@ class MomentTensor(__MomentTensor):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of MomentTensor.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type derived_origin_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param derived_origin_id: Refers to the resource_id of the Origin derived
         in the moment tensor inversion.
@@ -2103,6 +2193,9 @@ class FocalMechanism(__FocalMechanism):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of FocalMechanism.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type triggering_origin_id: :class:`~obspy.core.event.ResourceIdentifier`,
         optional
     :param triggering_origin_id: Refers to the resource_id of the triggering
@@ -2178,6 +2271,9 @@ class Event(__Event):
 
     :type resource_id: :class:`~obspy.core.event.ResourceIdentifier`
     :param resource_id: Resource identifier of Event.
+    :type force_resource_id: bool, optional
+    :param force_resource_id: If set to False, the automatic initialization of
+        `resource_id` attribute in case it is not specified will be skipped.
     :type event_type: str, optional
     :param event_type: Describes the type of an event. Allowed values are the
         following:
@@ -2296,6 +2392,9 @@ class Event(__Event):
         return "Event:\t%s\n\n%s" % (
             self.short_str(),
             "\n".join(super(Event, self).__str__().split("\n")[1:]))
+
+    def __repr__(self):
+        return super(Event, self).__str__(force_one_line=True)
 
     def preferred_origin(self):
         """
@@ -2692,9 +2791,8 @@ class Catalog(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. One of
-            ``"QUAKEML"``. See the `Supported Formats`_ section below for a
-            full list of supported formats.
+        :param format: The file format to use (e.g. ``"QUAKEML"``). See the
+            `Supported Formats`_ section below for a list of supported formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
 
@@ -2708,7 +2806,7 @@ class Catalog(object):
         e.g. using event.id
 
         >>> for ev in catalog: #doctest: +SKIP
-        ...     ev.write("%s.xml" % ev.id, format="QUAKEML") #doctest: +SKIP
+        ...     ev.write(ev.id + ".xml", format="QUAKEML") #doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -2719,11 +2817,7 @@ class Catalog(object):
         Please refer to the `Linked Function Call`_ of each module for any
         extra options available.
 
-        =======  ===================  =======================================
-        Format   Required Module      _`Linked Function Call`
-        =======  ===================  =======================================
-        QUAKEML  :mod:`obspy.core`    :func:`obspy.core.quakeml.writeQuakeML`
-        =======  ===================  =======================================
+        %s
         """
         format = format.upper()
         try:
@@ -2819,6 +2913,16 @@ class Catalog(object):
         mags = []
         colors = []
         for event in self:
+            if not event.origins:
+                msg = ("Event '%s' does not have an origin and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
+                continue
+            if not event.magnitudes:
+                msg = ("Event '%s' does not have a magnitude and will not be "
+                       "plotted." % str(event.resource_id))
+                warnings.warn(msg)
+                continue
             origin = event.preferred_origin() or event.origins[0]
             lats.append(origin.latitude)
             lons.append(origin.longitude)

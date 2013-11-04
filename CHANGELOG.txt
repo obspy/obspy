@@ -5,10 +5,10 @@ dev:
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
-     Catalog.write(..., format="quakeml"), now has an optional keyword argument
-     'validate'. If True, the resulting QuakeML file will be validated against
-     the QuakeML schema before being written. An AssertionError will be raised
-     in case the validation fails.
+     Catalog.write(..., format="quakeml"), now has an optional keyword
+     argument 'validate'. If True, the resulting QuakeML file will be
+     validated against the QuakeML schema before being written. An
+     AssertionError will be raised in case the validation fails.
    * validation of QuakeML against official schema working now
    * renamed obspy.core.util.types into obspy.core.util.obspy_types (#595)
    * new parameter replace for Enums which allows definition of replaceable
@@ -27,6 +27,7 @@ dev:
      "filename" instead of the path to a local file now also can be provided
      either a file-like object with RESP information or an obspy.xseed.Parser
      object (e.g. created reading a dataless SEED file).
+   * fix a bug when merging valid data into a masked trace (see #638)
    * event.ResourceIdentifier objects are now initialized with a QuakeML
      conform string by default, i.e. if no custom prefix is provided during
      initialization.
@@ -44,6 +45,8 @@ dev:
      definition (http://www.fdsn.org/webservices/)
  - obspy.imaging:
    * more options to customize day plots
+   * dayplot now plots matching picks (station, network, location) if a list
+     of event objects is provided using the `events` kwarg.
    * obspy-scan: new option --print-gaps
    * added plotting of record sections
    * automatic merging can be disabled for obspy-plot
@@ -55,7 +58,7 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
-   * add PPSD support for segments of arbitary length
+   * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
    * fix a bug when using evalresp with RESP files with very short epochs.

@@ -333,8 +333,7 @@ def configuration(parent_package="", top_path=None):
 
     # GSE2
     path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src", "GSE_UTI")
-    files = [os.path.join(path, "buf.c"),
-             os.path.join(path, "gse_functions.c")]
+    files = [os.path.join(path, "gse_functions.c")]
     # compiler specific options
     kwargs = {}
     if IS_MSVC:

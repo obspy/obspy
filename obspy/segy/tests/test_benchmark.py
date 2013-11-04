@@ -3,41 +3,40 @@
 The obspy.segy benchmark test suite.
 """
 
-from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.segy.benchmark import plotBenchmark
 import glob
 import os
 import unittest
-
-# checking for newer matplotlib version and if nose is installed
-try:
-    from matplotlib.testing.compare import compare_images
-    HAS_COMPARE_IMAGE = True
-except ImportError:
-    HAS_COMPARE_IMAGE = False
+import warnings
+import numpy as np
 
 
 class BenchmarkTestCase(unittest.TestCase):
     """
     Test cases for benchmark plots.
     """
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_plotBenchmark(self):
         """
         Test benchmark plot.
         """
-        path = os.path.join(os.path.dirname(__file__), 'data',
-                            'seismic01_*_vz.su')
-        sufiles = glob.glob(path)
+        path = os.path.join(os.path.dirname(__file__), 'data')
+        path_images = os.path.join(os.path.dirname(__file__), "images")
+        sufiles = sorted(glob.glob(os.path.join(path, 'seismic01_*_vz.su')))
         # new temporary file with PNG extension
-        with NamedTemporaryFile(suffix='.png') as tf:
+        with ImageComparison(path_images, 'test_plotBenchmark.png') as ic:
             # generate plot
-            plotBenchmark(sufiles, outfile=tf.name, format='PNG')
-            # compare images
-            expected_image = os.path.join(os.path.dirname(__file__), 'images',
-                                          'test_plotBenchmark.png')
-            compare_images(tf.name, expected_image, 0.001)
+            with warnings.catch_warnings(record=True) as w:
+                warnings.resetwarnings()
+                np_err = np.seterr(all="warn")
+                plotBenchmark(sufiles, outfile=ic.name, format='PNG')
+                np.seterr(**np_err)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[0].category, RuntimeWarning)
+            self.assertEqual(str(w[0].message),
+                             'underflow encountered in divide')
 
 
 def suite():

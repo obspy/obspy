@@ -9,10 +9,12 @@ Various additional utilities for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import os
+import sys
 import inspect
 from subprocess import Popen, PIPE
 import warnings
 import itertools
+import tempfile
 import numpy as np
 
 
@@ -354,6 +356,74 @@ def wrap_long_string(string, line_length=79, prefix="",
         text_width = text_width_for_prefix(line_length, prefix)
     lines.append(prefix + string)
     return "\n".join(lines)
+
+
+class CatchOutput(object):
+    """
+    A context manager that catches stdout/stderr for its scope.
+
+    Always use with "with" statement. Does nothing otherwise.
+
+    Based on:
+    http://stackoverflow.com/questions/5081657/\
+    how-do-i-prevent-a-c-shared-library-to-print-on-stdout-in-python/\
+    14797594#14797594
+
+    >>> with CatchOutput() as out:  # doctest: +SKIP
+    ...    os.system('echo "mystdout"')
+    ...    os.system('echo "mystderr" >&2')
+    >>> print out.stdout  # doctest: +SKIP
+    mystdout
+    >>> print out.stderr  # doctest: +SKIP
+    mystderr
+    """
+    def __init__(self, *args, **kw):
+        pass
+
+    def __enter__(self):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        self._orig_stdout = sys.stdout
+        self._orig_stderr = sys.stderr
+        self._orig_stdout_fno = os.dup(sys.stdout.fileno())
+        self._orig_stderr_fno = os.dup(sys.stderr.fileno())
+        self._stdout, self._stdout_filename = tempfile.mkstemp(prefix="obspy-")
+        self._stderr, self._stderr_filename = tempfile.mkstemp(prefix="obspy-")
+        self._new_stdout = os.dup(1)
+        self._new_stderr = os.dup(2)
+        os.dup2(self._stdout, 1)
+        os.dup2(self._stderr, 2)
+        os.close(self._stdout)
+        os.close(self._stderr)
+        sys.stdout = os.fdopen(self._new_stdout, 'w')
+        sys.stdout = os.fdopen(self._new_stderr, 'w')
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stdout.flush()
+        sys.stderr.flush()
+        sys.stdout = self._orig_stdout
+        sys.stderr = self._orig_stderr
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.dup2(self._orig_stdout_fno, 1)
+        os.dup2(self._orig_stderr_fno, 2)
+        with open(self._stdout_filename) as fh:
+            self.stdout = fh.read()
+        with open(self._stderr_filename) as fh:
+            self.stderr = fh.read()
+        try:
+            os.remove(self._stdout_filename)
+        except OSError:
+            pass
+        try:
+            os.remove(self._stderr_filename)
+        except OSError:
+            pass
+        for key in ('_orig_stdout_fno', '_new_stderr', '_orig_stderr',
+                    '_orig_stderr_fno', '_orig_stdout', '_stdout', '_stderr',
+                    '_new_stdout'):
+            self.__dict__.pop(key)
 
 
 if __name__ == '__main__':

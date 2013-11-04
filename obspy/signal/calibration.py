@@ -89,13 +89,6 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     cross, freq, _t = \
         spectral_helper(tr1, tr2, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
 
-    # 180 Grad Phasenverschiebung
-    cross.imag *= -1.0
-
-    # Replaces the following in compact form:
-    # res = np.zeros(nfft / 2 + 1, dtype='complex128')
-    # for i in range(nwin):
-    #     res += (cross[:, i] / auto[:, i]) * gg
     res = (cross / auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
@@ -110,19 +103,21 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra = np.empty((2, len(res.real)))
         spectra[0] = res.real
         spectra[1] = res.imag
-        new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
-                                            count=1, max_memory_usage=1024,
-                                            normalize=True)
+        new_spectra = \
+            konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth, count=1,
+                                  max_memory_usage=1024, normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
     amp = np.abs(res)
-    phase = np.arctan(res.imag / res.real)
+    # include phase unwrapping
+    phase = np.unwrap(np.angle(res)) + 2.0 * np.pi
     ra = np.abs(gg)
-    rpha = np.arctan(gg.imag / gg.real)
+    rpha = np.unwrap(np.angle(gg))
 
     if save_data:
-        trans_new = st2[0].stats.station + "." + str(window_len) + ".resp"
+        trans_new = (st2[0].stats.station + "." + st2[0].stats.channel +
+                     "." + str(window_len) + ".resp")
         trans_ref = st1[0].stats.station + ".refResp"
         # Create empty array for easy saving
         temp = np.empty((len(freq), 3))

@@ -98,9 +98,7 @@ class Unpickler(object):
         for el in self._xpath('comment', element):
             comment = Comment()
             comment.text = self._xpath2obj('text', el)
-            temp = el.get('id', None)
-            if temp is not None:
-                comment.resource_id = temp
+            comment.resource_id = el.get('id', None)
             comment.creation_info = self._creation_info(el)
             obj.append(comment)
         return obj
@@ -698,7 +696,7 @@ class Unpickler(object):
         for event_el in self._xpath('event', catalog_el):
             # create new Event object
             resource_id = event_el.get('publicID')
-            event = Event(resource_id)
+            event = Event(resource_id=resource_id)
             # optional event attributes
             event.preferred_origin_id = \
                 self._xpath2obj('preferredOriginID', event_el)
@@ -1348,7 +1346,7 @@ class Pickler(object):
 
 def readQuakeML(filename):
     """
-    Reads a QuakeML file and returns a ObsPy Catalog object.
+    Reads a QuakeML file and returns an ObsPy Catalog object.
 
     .. warning::
         This function should NOT be called directly, it registers via the
@@ -1357,7 +1355,7 @@ def readQuakeML(filename):
     :type filename: str
     :param filename: QuakeML file to be read.
     :rtype: :class:`~obspy.core.event.Catalog`
-    :return: A ObsPy Catalog object.
+    :return: An ObsPy Catalog object.
 
     .. rubric:: Example
 
@@ -1413,7 +1411,7 @@ def writeQuakeML(catalog, filename, validate=False,
 
 def readSeisHubEventXML(filename):
     """
-    Reads a single SeisHub event XML file and returns a ObsPy Catalog object.
+    Reads a single SeisHub event XML file and returns an ObsPy Catalog object.
     """
     # XXX: very ugly way to add new root tags without parsing
     lines = open(filename, 'rt').readlines()

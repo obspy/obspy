@@ -210,6 +210,23 @@ def raiseIfMasked(func):
     return new_func
 
 
+def skipIfNoData(func):
+    """
+    Does nothing if the first argument (self in case of methods) is a Trace
+    with no data in it.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        if not args[0]:
+            return
+        return func(*args, **kwargs)
+
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
+
+
 def taper_API_change():
     """
     Decorator for Trace.taper() API change.
