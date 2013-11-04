@@ -601,6 +601,41 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
                 del tr2.stats._format
                 self.assertEqual(tr, tr2)
 
+    def test_full_seed_with_non_default_dataquality(self):
+        """
+        Tests the reading of full SEED files with dataqualities other then D.
+        """
+        # Test the normal one first.
+        filename = os.path.join(self.path, 'data', 'fullseed.mseed')
+        st = read(filename)
+        self.assertEqual(st[0].stats.mseed.dataquality, "D")
+
+        # Test the others. They should also have identical data.
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_M.mseed')
+        st = read(filename)
+        data_m = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "M")
+
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_R.mseed')
+        st = read(filename)
+        data_r = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "R")
+
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_Q.mseed')
+        st = read(filename)
+        data_q = st[0].data
+        self.assertEqual(len(st), 1)
+        self.assertEqual(st[0].stats.mseed.dataquality, "Q")
+
+        # Assert that the data is the same.
+        np.testing.assert_array_equal(data_m, data_r)
+        np.testing.assert_array_equal(data_m, data_q)
+
 
 def suite():
     return unittest.makeSuite(MSEEDSpecialIssueTestCase, 'test')
