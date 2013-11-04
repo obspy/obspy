@@ -225,6 +225,7 @@ ENTRY_POINTS = {
     'waveform_write': _getOrderedEntryPoints(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
+    'event_write': _getEntryPoints('obspy.plugin.event', 'writeFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
 }
 
@@ -356,6 +357,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     ======= ================= =======================================
         Format  Required Module   _`Linked Function Call`
         ======= ================= =======================================
+        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
         QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
         ======= ================= =======================================
 

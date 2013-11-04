@@ -205,11 +205,15 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'JSON = obspy.core.json.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
         'readFormat = obspy.core.quakeml:readQuakeML',
         'writeFormat = obspy.core.quakeml:writeQuakeML',
+    ],
+    'obspy.plugin.event.JSON': [
+        'writeFormat = obspy.core.json.core:writeJSON',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
