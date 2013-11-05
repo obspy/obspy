@@ -10,11 +10,13 @@ Decorator used in ObsPy.
 """
 
 from obspy.core.util.base import NamedTemporaryFile
+from obspy.core.util import getExampleFile
 import numpy as np
 import functools
 import os
 import unittest
 import warnings
+import inspect
 
 
 def deprecated(warning_msg=None):
@@ -289,6 +291,57 @@ def taper_API_change():
                                 **kwargs)
             # normal new usage, so do nothing
             return func(self, *args, **kwargs)
+
+        new_func.__name__ = func.__name__
+        new_func.__doc__ = func.__doc__
+        new_func.__dict__.update(func.__dict__)
+        return new_func
+        # reset warning filter settings
+        warnings.filters.pop(0)
+    return deprecated_
+
+
+def map_example_filename(arg_kwarg_name):
+    """
+    Decorator that replaces "/path/to/filename" patterns in the arg or kwarg
+    of the specified name with the correct file path. If the pattern is not
+    encountered nothing is done.
+
+    :type arg_kwarg_name: str
+    :param arg_kwarg_name: name of the arg/kwarg that should be (tried) to map
+    """
+    def deprecated_(func):
+        @functools.wraps(func)
+        def new_func(*args, **kwargs):
+            prefix = '/path/to/'
+            # check kwargs
+            if arg_kwarg_name in kwargs:
+                if isinstance(kwargs[arg_kwarg_name], basestring):
+                    if kwargs[arg_kwarg_name].startswith(prefix):
+                        try:
+                            kwargs[arg_kwarg_name] = \
+                                getExampleFile(kwargs[arg_kwarg_name][9:])
+                        # file not found by getExampleFile:
+                        except IOError:
+                            pass
+            # check args
+            else:
+                try:
+                    ind = inspect.getargspec(func).args.index(arg_kwarg_name)
+                except ValueError:
+                    pass
+                else:
+                    if ind < len(args) and isinstance(args[ind], basestring):
+                        # need to check length of args from inspect
+                        if args[ind].startswith(prefix):
+                            try:
+                                args = list(args)
+                                args[ind] = getExampleFile(args[ind][9:])
+                                args = tuple(args)
+                            # file not found by getExampleFile:
+                            except IOError:
+                                pass
+            return func(*args, **kwargs)
 
         new_func.__name__ = func.__name__
         new_func.__doc__ = func.__doc__
