@@ -81,6 +81,7 @@ class Client(object):
         """
         self.debug = debug
         self.user = user
+        self.opener = None
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -95,9 +96,9 @@ class Client(object):
             password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
             auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib2.build_opener(auth_handler)
+            self.opener = urllib2.build_opener(auth_handler)
             # install globally
-            urllib2.install_opener(opener)
+            #urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_version = major_version
@@ -468,7 +469,7 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
-        data_stream = self._download(url)
+        data_stream = self._download(url,opener=self.opener)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -801,10 +802,15 @@ class Client(object):
 
         print "\n".join(msg)
 
-    def _download(self, url, return_string=False, data=None):
+    def _download(self, url, return_string=False, data=None, opener=None):
+        if self.debug:
+            print "request headers...",
+            print self.request_headers
+            print "opener",
+            print opener
         code, data = download_url(
             url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data)
+            return_string=return_string, data=data, opener=opener)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -812,6 +818,11 @@ class Client(object):
             msg = "Bad request. Please contact the developers."
             raise NotImplementedError(msg)
         elif code == 401:
+            if self.debug:
+                print url
+                if data:
+                    print("401, but data exists!")
+                    print(data.size())
             raise FDSNException("Unauthorized, authentication required.")
         elif code == 403:
             raise FDSNException("Authentication failed.")
@@ -1038,7 +1049,7 @@ def build_url(base_url, major_version, service, resource_type, parameters={},
 
 
 def download_url(url, timeout=10, headers={}, debug=False,
-                 return_string=True, data=None):
+                 return_string=True, data=None, opener=None):
     """
     Returns a pair of tuples.
 
@@ -1053,18 +1064,32 @@ def download_url(url, timeout=10, headers={}, debug=False,
         print "Downloading %s" % url
 
     try:
-        url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
+        if opener:
+            if debug:
+                print(url)
+                print(headers)
+                print(timeout)
+            url_obj = opener.open(urllib2.Request(url=url, headers=headers),
                                   timeout=timeout, data=data)
+        else:
+            #password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
+            #password_mgr.add_password(None, "http://service.iris.edu", "nobody@iris.edu", "anonymous")
+            #auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
+            #opener = urllib2.build_opener(auth_handler)
+            #url_obj = opener.open(urllib2.Request(url=url, headers=headers),
+            #                            timeout=timeout, data=data)
+            url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
+                                      timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib2.HTTPError as e:
-        if debug is True:
+        if debug:
             print("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read()))
+                  (e.code, url, e.msg))
         return e.code, None
-    except Exception as e:
-        if debug is True:
-            print "Error while downloading: %s" % url
-        return None, None
+    #except Exception as e:
+    #    if debug is True:
+    #        print "Error while downloading: %s" % url
+    #    return None, None
 
     code = url_obj.getcode()
     if return_string is False:
