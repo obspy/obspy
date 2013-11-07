@@ -15,8 +15,9 @@ from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     AmplitudeCategory, AmplitudeUnit, DataUsedWaveType, MTInversionType, \
     SourceTimeFunctionType, MomentTensorCategory
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import getExampleFile, uncompressFile, _readFromPlugin, \
+from obspy.core.util import uncompressFile, _readFromPlugin, \
     NamedTemporaryFile, AttribDict
+from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords
 from pkg_resources import load_entry_point
@@ -35,9 +36,11 @@ import cStringIO
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
+EVENT_ENTRY_POINTS_WRITE = ENTRY_POINTS['event_write']
 ATTRIBUTE_HAS_ERRORS = True
 
 
+@map_example_filename("pathname_or_url")
 def readEvents(pathname_or_url=None, format=None, **kwargs):
     """
     Read event files into an ObsPy Catalog object.
@@ -72,15 +75,6 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     :class:`~obspy.core.event.Catalog` object can be used to export the data to
     the file system.
     """
-    # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
-       pathname_or_url.startswith('/path/to/'):
-        try:
-            pathname_or_url = getExampleFile(pathname_or_url[9:])
-        except:
-            # otherwise just try to read the given /path/to folder
-            pass
-
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleCatalog()
@@ -675,7 +669,7 @@ class ResourceIdentifier(object):
         # Otherwise check if the existing element the same as the new one. If
         # it is do nothing, otherwise raise a warning and set the new object as
         # the referred object.
-        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] is \
+        if ResourceIdentifier.__resource_id_weak_dict[self.resource_id] == \
                 referred_object:
             return
         msg = "The resource identifier '%s' already exists and points to " + \
@@ -2829,7 +2823,7 @@ class Catalog(object):
         format = format.upper()
         try:
             # get format specific entry point
-            format_ep = EVENT_ENTRY_POINTS[format]
+            format_ep = EVENT_ENTRY_POINTS_WRITE[format]
             # search writeFormat method for given entry point
             writeFormat = load_entry_point(
                 format_ep.dist.key, 'obspy.plugin.event.%s' % (format_ep.name),

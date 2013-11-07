@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import copy
 from obspy.core.event import readEvents, Catalog, Event, WaveformStreamID, \
     Origin, CreationInfo, ResourceIdentifier, Comment, Pick
 from obspy.core.utcdatetime import UTCDateTime
@@ -82,6 +83,36 @@ class EventTestCase(unittest.TestCase):
         self.assertEqual(p.phase_hint, None)
         self.assertFalse(hasattr(p, "test_1"))
         self.assertFalse(hasattr(p, "test_2"))
+
+    def test_event_copying_does_not_raise_duplicate_resource_id_warnings(self):
+        """
+        Tests that copying an event does not raise a duplicate resource id
+        warning.
+        """
+        ev = readEvents()[0]
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ev2 = copy.copy(ev)
+            self.assertEqual(len(w), 0)
+            ev3 = copy.deepcopy(ev)
+            self.assertEqual(len(w), 0)
+
+        # The two events should compare equal.
+        self.assertEqual(ev, ev2)
+        self.assertEqual(ev, ev3)
+
+        # A shallow copy should just use the exact same resource identifier,
+        # while a deep copy should not.
+        self.assertTrue(ev.resource_id is ev2.resource_id)
+        self.assertTrue(ev.resource_id is not ev3.resource_id)
+        self.assertTrue(ev.resource_id == ev3.resource_id)
+
+        # But all should point to the same object.
+        self.assertTrue(ev.resource_id.getReferredObject() is
+                        ev2.resource_id.getReferredObject())
+        self.assertTrue(ev.resource_id.getReferredObject() is
+                        ev3.resource_id.getReferredObject())
 
 
 class OriginTestCase(unittest.TestCase):

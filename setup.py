@@ -206,6 +206,7 @@ ENTRY_POINTS = {
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
         'MCHEDR = obspy.pde.mchedr',
+        'JSON = obspy.core.json.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
@@ -215,6 +216,9 @@ ENTRY_POINTS = {
     'obspy.plugin.event.MCHEDR': [
         'isFormat = obspy.pde.mchedr:isMchedr',
         'readFormat = obspy.pde.mchedr:readMchedr',
+    ],
+    'obspy.plugin.event.JSON': [
+        'writeFormat = obspy.core.json.core:writeJSON',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
