@@ -2,6 +2,7 @@
 import unittest
 import os
 from ctypes import CDLL
+from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
 
 
@@ -46,7 +47,7 @@ class UtilMiscTestCase(unittest.TestCase):
     def test_CatchOutput(self):
         """
         """
-        libc = CDLL("libc.so.6")
+        libc = CDLL(find_library("c"))
 
         with CatchOutput() as out:
             libc.printf("hello world stdout\n")
