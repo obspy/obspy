@@ -20,8 +20,8 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     PrincipalAxes, Axis, NodalPlane, Tensor, DataUsed, \
     ResourceIdentifier, Amplitude, QuantityError
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import getExampleFile
 from obspy.core.util.geodetics import FlinnEngdahl
+from obspy.core.util.decorator import map_example_filename
 from datetime import timedelta
 import string as s
 import StringIO
@@ -33,6 +33,7 @@ import numpy as np
 res_id_prefix = 'quakeml:us.anss.org'
 
 
+@map_example_filename('filename')
 def isMchedr(filename):
     """
     Checks whether a file format is mchedr
@@ -1092,6 +1093,7 @@ class Unpickler(object):
         return catalog
 
 
+@map_example_filename('filename')
 def readMchedr(filename):
     """
     Reads a NEIC PDE mchedr (machine-readable Earthquake Data Report) file
@@ -1114,14 +1116,6 @@ def readMchedr(filename):
     1 Event(s) in Catalog:
     2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb
     """
-    # if filename starts with /path/to/ try to search in examples
-    if isinstance(filename, basestring) and \
-       filename.startswith('/path/to/'):
-        try:
-            filename = getExampleFile(filename[9:])
-        except:
-            # otherwise just try to read the given /path/to folder
-            pass
     return Unpickler().load(filename)
 
 
