@@ -843,7 +843,8 @@ class Client(object):
             if resource_type == "dataselect" and service == "query":
                 service = "queryauth"
         return build_url(self.base_url, self.major_version, resource_type,
-                         service, parameters)
+                         service, parameters
+                         ).replace("%3A", ":").replace("%2C", ",")
 
     def _discover_services(self):
         """
