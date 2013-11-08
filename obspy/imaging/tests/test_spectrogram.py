@@ -60,7 +60,8 @@ class SpectrogramTestCase(unittest.TestCase):
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
             reltol = 3
-        with ImageComparison(self.path, 'spectrogram.png', reltol=reltol) as ic:
+        with ImageComparison(self.path, 'spectrogram.png',
+                             reltol=reltol) as ic:
             spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
