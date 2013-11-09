@@ -302,8 +302,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         verbose = 0
 
     lil = clibmseed.readMSEEDBuffer(
-        buffer, buflen, selections, unpack_data,
-        reclen, C.c_int(verbose), C.c_int(details), header_byteorder,
+        buffer, buflen, selections, C.c_int8(unpack_data),
+        reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
         allocData)
 
     # XXX: Check if the freeing works.
