@@ -670,10 +670,10 @@ clibmseed.readMSEEDBuffer.argtypes = [
     np.ctypeslib.ndpointer(dtype='b', ndim=1, flags='C_CONTIGUOUS'),
     C.c_int,
     C.POINTER(Selections),
+    C.c_int8,
     C.c_int,
-    C.c_int,
-    C.c_int,
-    C.c_int,
+    C.c_int8,
+    C.c_int8,
     C.c_int,
     C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)
 ]
