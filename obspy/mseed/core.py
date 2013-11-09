@@ -7,7 +7,6 @@ from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
     VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
-from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
@@ -165,12 +164,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         unpack_data = 1
     if reclen is None:
         reclen = -1
-    elif reclen is not None and reclen not in VALID_RECORD_LENGTHS:
+    elif reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. Autodetection will be used.'
         warnings.warn(msg)
         reclen = -1
-    else:
-        reclen = int(log(reclen, 2))
 
     # Determine the byteorder.
     if header_byteorder == "=":

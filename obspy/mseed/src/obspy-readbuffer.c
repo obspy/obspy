@@ -250,13 +250,25 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
             return -1;
         }
+        if (verbose > 1) {
+            ms_log(1, "readMSEEDBuffer(): calling msr_parse with "
+                      "mseed+offset=%d+%d, buflen=%d, reclen=%d, dataflag=%d, verbose=%d\n",
+                      mseed, offset, buflen, reclen, dataflag, verbose);
+        }
+        if (reclen != -1) {
+            if (offset + reclen > buflen) {
+                ms_log(2, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
+                msr_free(&msr);
+                break;
+            }
+        }
         retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);
         if (retcode != MS_NOERROR) {
             msr_free(&msr);
             break;
         }
         if (offset + msr->reclen > buflen) {
-            ms_log(1, "readMSEEDBuffer(): Skipping corrupt data: last msr->reclen exceeds buflen.\n");
+            ms_log(2, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
             break;
         }
