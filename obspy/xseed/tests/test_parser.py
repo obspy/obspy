@@ -441,6 +441,7 @@ class ParserTestCase(unittest.TestCase):
                   'zeros': [0j, 0j],
                   'digitizer_gain': 1677850.0}
         with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
             paz = sp.getPAZ(channel_id="BW.RJOB..EHZ",
                             datetime=UTCDateTime("2010-01-01"))
         self.assertEqual(len(w), 1)
