@@ -251,6 +251,11 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             msr_free(&msr);
             break;
         }
+        if (offset + msr->reclen > buflen) {
+            ms_log(2, "Skipping corrupt data: last msr->reclen exceeds buflen.\n");
+            msr_free(&msr);
+            break;
+        }
 
         // Test against selections if supplied
         if ( selections ) {
