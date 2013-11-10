@@ -433,7 +433,7 @@ def add_data_files(config):
     # python files are included per default, we only include data files
     # here
     EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf']
-    EXCLUDE_DIRS = ['src', 'docs', '__pycache__']
+    EXCLUDE_DIRS = ['src', '__pycache__']
     common_prefix = SETUP_DIRECTORY + os.path.sep
     for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
         root = root.replace(common_prefix, '')
