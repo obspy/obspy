@@ -89,6 +89,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     cross, freq, _t = \
         spectral_helper(tr1, tr2, NFFT=nfft, Fs=sampfreq, noverlap=noverlap)
 
+    # 180 degree phase shift
+    cross.imag *= -1.0
     res = (cross / auto).sum(axis=1) * gg
 
     # The first item might be zero. Problems with phase calculations.
@@ -111,7 +113,7 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
 
     amp = np.abs(res)
     # include phase unwrapping
-    phase = np.unwrap(np.angle(res)) + 2.0 * np.pi
+    phase = np.unwrap(np.angle(res))  # + 2.0 * np.pi
     ra = np.abs(gg)
     rpha = np.unwrap(np.angle(gg))
 

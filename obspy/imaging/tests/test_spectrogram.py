@@ -41,21 +41,13 @@ class SpectrogramTestCase(unittest.TestCase):
         st = Stream([tr])
         # 1 - using log=True
         with ImageComparison(self.path, 'spectrogram_log.png') as ic:
-            with warnings.catch_warnings(record=True) as w:
+            with warnings.catch_warnings(record=True):
                 warnings.resetwarnings()
                 np_err = np.seterr(all="warn")
                 spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
                                         samp_rate=st[0].stats.sampling_rate,
                                         show=False)
                 np.seterr(**np_err)
-            self.assertEqual(len(w), 2)
-            self.assertEqual(w[0].category, UserWarning)
-            self.assertEqual(str(w[0].message),
-                             'aspect is not supported for Axes with '
-                             'xscale=linear, yscale=log')
-            self.assertEqual(w[1].category, RuntimeWarning)
-            self.assertEqual(str(w[1].message),
-                             'underflow encountered in multiply')
         # 2 - using log=False
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
