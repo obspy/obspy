@@ -30,8 +30,8 @@ extern "C" {
 
 #include "lmplatform.h"
 
-#define LIBMSEED_VERSION "2.7"
-#define LIBMSEED_RELEASE "2012.138"
+#define LIBMSEED_VERSION "2.10"
+#define LIBMSEED_RELEASE "2013.056"
 
 #define MINRECLEN   256      /* Minimum Mini-SEED record length, 2^8 bytes */
 #define MAXRECLEN   1048576  /* Maximum Mini-SEED record length, 2^20 bytes */
@@ -79,6 +79,17 @@ extern "C" {
 
 /* Macro to test default sample rate tolerance: abs(1-sr1/sr2) < 0.0001 */
 #define MS_ISRATETOLERABLE(A,B) (ms_dabs (1.0 - (A / B)) < 0.0001)
+
+/* Macro to test for sane year and day values, used primarily to
+ * determine if byte order swapping is needed.
+ * 
+ * Year : between 1900 and 2100
+ * Day  : between 1 and 366
+ *
+ * This test is non-unique (non-deterministic) for days 1, 256 and 257
+ * in the year 2056 because the swapped values are also within range.
+ */
+#define MS_ISVALIDYEARDAY(Y,D) (Y >= 1900 && Y <= 2100 && D >= 1 && D <= 366)
 
 /* Macro to test memory for a SEED data record signature by checking
  * SEED data record header values at known byte offsets to determine
@@ -510,6 +521,10 @@ extern int unpackencodingfallback;
 extern int           msr_parse (char *record, int recbuflen, MSRecord **ppmsr, int reclen,
 				flag dataflag, flag verbose);
 
+extern int           msr_parse_selection ( char *recbuf, int recbuflen, int64_t *offset,
+					   MSRecord **ppmsr, int reclen,
+					   Selections *selections, flag dataflag, flag verbose );
+
 extern int           msr_unpack (char *record, int reclen, MSRecord **ppmsr,
 				 flag dataflag, flag verbose);
 
@@ -517,6 +532,8 @@ extern int           msr_pack (MSRecord *msr, void (*record_handler) (char *, in
 		 	       void *handlerdata, int64_t *packedsamples, flag flush, flag verbose );
 
 extern int           msr_pack_header (MSRecord *msr, flag normalize, flag verbose);
+
+extern int           msr_unpack_data (MSRecord *msr, int swapflag, flag verbose);
 
 extern MSRecord*     msr_init (MSRecord *msr);
 extern void          msr_free (MSRecord **ppmsr);

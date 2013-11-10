@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 {% set title = 'Overview' %}
 {% block body %}
-  <h1>Welcome to the ObsPy Documentation!</h1>
+  <h1>Welcome to the ObsPy Documentation! ({{ release|e }}) </h1>
 
   <p>
     <strong>A Python Toolbox for seismology/seismological observatories.</strong>
@@ -72,11 +72,13 @@
          <span class="linkdescr">it's all about consistency</span></p>
       <p class="biglink"><a class="biglink" href="pep8/index.html">PEP 8</a><br/>
          <span class="linkdescr">don't use tabs!</span></p>
+      <p class="biglink">&nbsp;<br/>
+         <span>&nbsp;</span></p>
     </td>
     <td width="50%">
       <p class="biglink"><a class="biglink" href="http://tests.obspy.org/">Buildbot</a><br/>
          <span class="linkdescr">last 20 test reports</span></p>
-      <p class="biglink"><a class="biglink" href="coverage/index.html">Coverage</a><br/>
+      <p class="biglink">Coverage <a class="biglink" href="https://coveralls.io/r/obspy/obspy?branch=master">Python</a> / <a class="biglink" href="c_coverage/index.html">C</a><br/>
          <span class="linkdescr">test coverage measurements</span></p>
     </td></tr>
   </table>

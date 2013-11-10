@@ -4,10 +4,9 @@ MSEED bindings to ObsPy core module.
 """
 
 from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
-    SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, \
-    blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
+    VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
+    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
-from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
@@ -91,7 +90,7 @@ def isMSEED(filename):
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
               sourcename=None, reclen=None, recinfo=True, details=False,
-              **kwargs):
+              header_byteorder=None, verbose=None, **kwargs):
     """
     Reads a Mini-SEED file and returns a Stream object.
 
@@ -134,6 +133,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         information: 1 == Step Calibration, 2 == Sine Calibration, 3 ==
         Pseudo-random Calibration, 4 == Generic Calibration and -2 ==
         Calibration Abort.
+    :type header_byteorder: [``0`` or ``'<'`` | ``1`` or ``'>'`` | ``'='``],
+        optional
+    :param header_byteorder: Must be either ``0`` or ``'<'`` for LSBF or
+        little-endian, ``1`` or ``'>'`` for MBF or big-endian. ``'='`` is the
+        native byteorder. Used to enforce the header byteorder. Useful in some
+        rare cases where the automatic byte order detection fails.
 
     .. rubric:: Example
 
@@ -159,12 +164,21 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         unpack_data = 1
     if reclen is None:
         reclen = -1
-    elif reclen is not None and reclen not in VALID_RECORD_LENGTHS:
+    elif reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. Autodetection will be used.'
         warnings.warn(msg)
         reclen = -1
-    else:
-        reclen = int(log(reclen, 2))
+
+    # Determine the byteorder.
+    if header_byteorder == "=":
+        header_byteorder = NATIVE_BYTEORDER
+
+    if header_byteorder is None:
+        header_byteorder = -1
+    elif header_byteorder in [0, "0", "<"]:
+        header_byteorder = 0
+    elif header_byteorder in [1, "1", ">"]:
+        header_byteorder = 1
 
     # The quality flag is no more supported. Raise a warning.
     if 'quality' in kwargs:
@@ -175,7 +189,15 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
 
     # Parse some information about the file.
     if recinfo:
-        info = util.getRecordInformation(mseed_object)
+        # Pass the byteorder if enforced.
+        if header_byteorder == 0:
+            bo = "<"
+        elif header_byteorder > 0:
+            bo = ">"
+        else:
+            bo = None
+
+        info = util.getRecordInformation(mseed_object, endian=bo)
         info['encoding'] = ENCODINGS[info['encoding']][0]
         # Only keep information relevant for the whole file.
         info = {'encoding': info['encoding'],
@@ -258,7 +280,12 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # Use a callback function to allocate the memory and keep track of the
     # data.
     def allocate_data(samplecount, sampletype):
-        data = np.empty(samplecount, dtype=DATATYPES[sampletype])
+        # Enhanced sanity checking for libmseed 2.10 can result in the
+        # sampletype not being set. Just return an empty array in this case.
+        if sampletype == "\x00":
+            data = np.empty(0)
+        else:
+            data = np.empty(samplecount, dtype=DATATYPES[sampletype])
         all_data.append(data)
         return data.ctypes.data
     # XXX: Do this properly!
@@ -266,8 +293,15 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
-    lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-                                    reclen, 0, C.c_int(details), allocData)
+    try:
+        verbose = int(verbose)
+    except:
+        verbose = 0
+
+    lil = clibmseed.readMSEEDBuffer(
+        buffer, buflen, selections, C.c_int8(unpack_data),
+        reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
+        allocData)
 
     # XXX: Check if the freeing works.
     del selections
@@ -330,8 +364,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         except ValueError:
             break
 
-    clibmseed.lil_free(lil)
-    del lil
+    clibmseed.lil_free(lil)  # NOQA
+    del lil  # NOQA
     return Stream(traces=traces)
 
 
@@ -642,42 +676,42 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # ctypes manual.
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                del msr
                 raise Exception('Error in msr_addblockette')
         # Only use Blockette 100 if necessary.
         if use_blkt_100:
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(' ')
             C.memset(C.pointer(blkt100), 0, size)
-            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
-                                                 size, 100, 0)
+            ret_val = clibmseed.msr_addblockette(
+                msr, C.pointer(blkt100), size, 100, 0)  # NOQA
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             if bool(ret_val) is False:
-                clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                clibmseed.msr_free(C.pointer(msr))  # NOQA
+                del msr  # NOQA
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
         # write method.
-        errcode = clibmseed.mst_pack(mst.mst, recHandler, None,
-            trace_attr['reclen'], trace_attr['encoding'],
-            trace_attr['byteorder'], C.byref(packedsamples), flush, verbose,
-            msr)
+        errcode = clibmseed.mst_pack(
+            mst.mst, recHandler, None, trace_attr['reclen'],
+            trace_attr['encoding'], trace_attr['byteorder'],
+            C.byref(packedsamples), flush, verbose, msr)  # NOQA
 
         if errcode == 0:
             msg = ("Did not write any data for trace '%s' even though it "
-                "contains data values.") % trace
-            raise ValueError(ms)
+                   "contains data values.") % trace
+            raise ValueError(msg)
         if errcode == -1:
-            clibmseed.msr_free(C.pointer(msr))
-            del mst, msr
+            clibmseed.msr_free(C.pointer(msr))  # NOQA
+            del mst, msr  # NOQA
             raise Exception('Error in mst_pack')
         # Deallocate any allocated memory.
-        clibmseed.msr_free(C.pointer(msr))
-        del mst, msr
+        clibmseed.msr_free(C.pointer(msr))  # NOQA
+        del mst, msr  # NOQA
     # Close if its a file handler.
     if isinstance(f, file):
         f.close()
@@ -723,7 +757,7 @@ class MST(object):
 
         self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
         C.memmove(self.mst.contents.datasamples, data.ctypes.get_data(),
-            bytecount)
+                  bytecount)
 
     def __del__(self):
         """

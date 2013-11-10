@@ -32,14 +32,14 @@ class SUTestCase(unittest.TestCase):
         # Read the original file once.
         with open(file, 'rb') as f:
             org_data = f.read()
-        outfile = NamedTemporaryFile().name
-        # Read the SU file.
-        su = readSU(file)
-        # Write it.
-        su.write(outfile)
-        with open(outfile, 'rb') as f:
-            new_data = f.read()
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            # Read the SU file.
+            su = readSU(file)
+            # Write it.
+            su.write(outfile)
+            with open(outfile, 'rb') as f:
+                new_data = f.read()
         # Should be identical!
         self.assertEqual(org_data, new_data)
 
@@ -67,30 +67,29 @@ class SUTestCase(unittest.TestCase):
         """
         # This file is little endian.
         file = os.path.join(self.path, '1.su_first_trace')
-        outfile = NamedTemporaryFile().name
-        # The following should both work.
-        su = readSU(file)
-        data = su.traces[0].data
-        # Also read the original file.
-        with open(file, 'rb') as f:
-            org_data = f.read()
-        self.assertEqual(su.endian, '<')
-        # Write it little endian.
-        su.write(outfile, endian='<')
-        with open(outfile, 'rb') as f:
-            new_data = f.read()
-        self.assertEqual(org_data, new_data)
-        su2 = readSU(outfile)
-        self.assertEqual(su2.endian, '<')
-        np.testing.assert_array_equal(data, su2.traces[0].data)
-        os.remove(outfile)
-        # Write it big endian.
-        su.write(outfile, endian='>')
-        with open(outfile, 'rb') as f:
-            new_data = f.read()
-        self.assertFalse(org_data == new_data)
-        su3 = readSU(outfile)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            # The following should both work.
+            su = readSU(file)
+            data = su.traces[0].data
+            # Also read the original file.
+            with open(file, 'rb') as f:
+                org_data = f.read()
+            self.assertEqual(su.endian, '<')
+            # Write it little endian.
+            su.write(outfile, endian='<')
+            with open(outfile, 'rb') as f:
+                new_data = f.read()
+            self.assertEqual(org_data, new_data)
+            su2 = readSU(outfile)
+            self.assertEqual(su2.endian, '<')
+            np.testing.assert_array_equal(data, su2.traces[0].data)
+            # Write it big endian.
+            su.write(outfile, endian='>')
+            with open(outfile, 'rb') as f:
+                new_data = f.read()
+            self.assertFalse(org_data == new_data)
+            su3 = readSU(outfile)
         self.assertEqual(su3.endian, '>')
         np.testing.assert_array_equal(data, su3.traces[0].data)
 

@@ -1,3 +1,44 @@
+2013.056: 2.10
+	- Add more sanity checks to msr_unpack_data() to catch bad/corrupted
+	data records and avoid crashes due to impossible pointer construction.
+
+2013.053: 2.9
+	- Extend parsing of day-of-year style time strings to allow parsing
+	of time fields separated by dashes in addition to allowing the day
+	and time fields to be separated by a 'T' or space.  Modifications 
+	were made to ms_seedtimestr2hptime().
+	- Extend parsing of year-month-day style time strings to allow parsing
+	of time fields separated by commas.  Modifications were made to
+	ms_timestr2hptime().
+
+2013.050:
+	- Add MS_ISVALIDYEARDAY() macro to test range for year and day values,
+	years between 1900 and 2100 and days between 1 and 366.
+	- Use new macro to determine when byte swapping is needed.  This test
+	leaves a non-determination of byte order for days 1, 256 and 257 in
+	the year 2056, beware future data users.
+
+2013.007: 2.8 (again)
+	- Add msr_parse_selection() to libmseed.def for Windows builds.
+	- Fix errors in pseudo code in doc/msr_parse.3.
+
+2012.363: 2.8
+	- Implement msr_parse_selection() which is a wrapper of msr_parse()
+	that searches for the first parsable miniSEED record in a memory
+	buffer and returns it.  Optionally a Selections list may be specified
+	to limit the returned data to records matching specific criteria.
+
+2012.357:
+	- Fix corruption of float sample types when opposite byte order than
+	host in certain architecture combinations.  By not addressing
+	individual float samples directly as floats prior to byte swapping
+	we avoid the values being placed into the FPU where they may be
+	corrupted.  Thanks to Moritz Beyreuther and Lion Krischer for discovery
+	and testing.
+	- Expose the msr_unpack_data() function for use by removing the static
+	declaration.  Change verbose flag type to match others and document.
+	- Fix some logging messages, typos, etc.
+
 2012.138: 2.7
 	Add define for MINGW32 to use _fstat and _stat.
 

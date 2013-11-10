@@ -65,7 +65,7 @@ def xcorr(tr1, tr2, shift_len, full_xcorr=False):
         `ObsPy-users mailing list
        <http://lists.obspy.org/pipermail/obspy-users/2011-March/000056.html>`_
        and
-       `ticket #249 <https://obspy.org/ticket/249>`_.
+       `issue #249 <https://github.com/obspy/obspy/issues/249>`_.
 
     .. rubric:: Example
 
@@ -149,7 +149,7 @@ def xcorr_3C(st1, st2, shift_len, components=["Z", "N", "E"],
                       " but got %s." % len(st.select(component=component))
                 raise ValueError(msg)
     ndat = len(streams[0].select(component=components[0])[0])
-    if False in [len(st.select(component=component)[0]) == ndat \
+    if False in [len(st.select(component=component)[0]) == ndat
                  for st in streams for component in components]:
             raise ValueError("All traces have to be the same length.")
     # everything should be ok with the input data...
@@ -210,9 +210,9 @@ def xcorr_max(fct, abs_max=True):
     return float(shift), float(value)
 
 
-def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
-        t_after, cc_maxlag, filter=None, filter_options={},
-        plot=False, filename=None):
+def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
+                        cc_maxlag, filter=None, filter_options={}, plot=False,
+                        filename=None):
     """
     Calculate the correction for the differential pick time determined by cross
     correlation of the waveforms in narrow windows around the pick times.
@@ -275,7 +275,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     # perform some checks on the traces
     if trace1.stats.sampling_rate != trace2.stats.sampling_rate:
         msg = "Sampling rates do not match: %s != %s" % \
-                (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
+            (trace1.stats.sampling_rate, trace2.stats.sampling_rate)
         raise Exception(msg)
     if trace1.id != trace2.id:
         msg = "Trace ids do not match: %s != %s" % (trace1.id, trace2.id)
@@ -322,7 +322,6 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
               "Using positive maximum: %.3f" % max(cc)
         warnings.warn(msg)
         cc_max = max(cc)
-        cc_shift = cc.argmax() - (len(cc) / 2)
     if cc_max < 0.8:
         msg = "Maximum of cross correlation lower than 0.8: %s" % cc_max
         warnings.warn(msg)
@@ -353,8 +352,9 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
               "correlation: %s" % num_samples
         warnings.warn(msg)
     # quadratic fit for small subwindow
-    coeffs, residual = scipy.polyfit(cc_t[first_sample:last_sample + 1],
-            cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
+    coeffs, residual = scipy.polyfit(
+        cc_t[first_sample:last_sample + 1],
+        cc[first_sample:last_sample + 1], deg=2, full=True)[:2]
     # check results of fit
     if coeffs[0] >= 0:
         msg = "Fitted parabola opens upwards!"
@@ -375,7 +375,7 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
     dt = -dt
     pick2_corr = dt
     # plot the results if selected
-    if plot == True:
+    if plot is True:
         import matplotlib
         if filename:
             matplotlib.use('agg')
@@ -417,6 +417,114 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before,
             plt.show()
 
     return (pick2_corr, coeff)
+
+
+def templatesMaxSimilarity(st, time, streams_templates):
+    """
+    Compares all event templates in the streams_templates list of streams
+    against the given stream around the time of the suspected event. The stream
+    that is being checked has to include all trace ids that are included in
+    template events. One component streams can be checked as well as multiple
+    components simultaneously. In case of multiple components it is made sure,
+    that all three components are shifted together.  The traces in any stream
+    need to have a reasonable common starting time.  The stream to check should
+    have some additional data to left/right of suspected event, the event
+    template streams should be cut to the portion of the event that should be
+    compared. Also see :func:`obspy.signal.trigger.coincidenceTrigger` and the
+    corresponding example in the
+    `Trigger/Picker Tutorial
+    <http://tutorial.obspy.org/code_snippets/trigger_tutorial.html>`_.
+
+    - computes cross correlation on each component (one stream serves as
+      template, one as a longer search stream)
+    - stack all three and determine best shift in stack
+    - normalization is a bit problematic so compute the correlation coefficient
+      afterwards for the best shift to make sure the result is between 0 and 1.
+
+    >>> from obspy import read, UTCDateTime
+    >>> import numpy as np
+    >>> np.random.seed(123)  # make test reproducable
+    >>> st = read()
+    >>> t = UTCDateTime(2009, 8, 24, 0, 20, 7, 700000)
+    >>> templ = st.copy().slice(t, t+5)
+    >>> for tr in templ:
+    ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
+    >>> print templatesMaxSimilarity(st, t, [templ])
+    0.922536411468
+
+    :param time: Time around which is checked for a similarity. Cross
+        correlation shifts of around template event length are checked.
+    :type time: :class:`~obspy.core.utcdatetime.UTCDateTime`
+    :param st: One or multi-component Stream to check against event templates.
+        Should have additional data left/right of suspected event (around half
+        the length of template events).
+    :type st: :class:`~obspy.core.stream.Stream`
+    :param streams_templates: List of streams with template events to check for
+        waveform similarity. Each template has to include data for all
+        channels present in stream to check.
+    :type streams_templates: list of :class:`~obspy.core.stream.Stream`s
+    :returns: Best correlation coefficient obtained by the comparison against
+        all template events (0 to 1).
+    """
+    values = []
+    for st_tmpl in streams_templates:
+        ids = [tr.id for tr in st_tmpl]
+        duration = st_tmpl[0].stats.endtime - st_tmpl[0].stats.starttime
+        st_ = st.slice(time - (duration * 0.5),
+                       time + (duration * 1.5))
+        cc = None
+        for id_ in reversed(ids):
+            if not st_.select(id=id_):
+                msg = "Skipping trace %s in template correlation " + \
+                      "(not present in stream to check)."
+                warnings.warn(msg % id_)
+                ids.remove(id_)
+        # determine best (combined) shift of multi-component data
+        for id_ in ids:
+            tr1 = st_.select(id=id_)[0]
+            tr2 = st_tmpl.select(id=id_)[0]
+            if len(tr1) > len(tr2):
+                data_short = tr2.data
+                data_long = tr1.data
+            else:
+                data_short = tr1.data
+                data_long = tr2.data
+            data_short = (data_short - data_short.mean()) / data_short.std()
+            data_long = (data_long - data_long.mean()) / data_long.std()
+            tmp = np.correlate(data_long, data_short, "valid")
+            try:
+                cc += tmp
+            except TypeError:
+                cc = tmp
+            except ValueError:
+                cc = None
+                break
+        if cc is None:
+            msg = "Skipping template(s) for station %s due to problems in " + \
+                  "three component correlation (gappy traces?)"
+            warnings.warn(msg % st_tmpl[0].stats.station)
+            break
+        ind = cc.argmax()
+        ind2 = ind + len(data_short)
+        coef = 0.0
+        # determine correlation coefficient of best shift as the mean of all
+        # components
+        for id_ in ids:
+            tr1 = st_.select(id=id_)[0]
+            tr2 = st_tmpl.select(id=id_)[0]
+            if len(tr1) > len(tr2):
+                data_short = tr2.data
+                data_long = tr1.data
+            else:
+                data_short = tr1.data
+                data_long = tr2.data
+            coef += np.corrcoef(data_short, data_long[ind:ind2])[0, 1]
+        coef /= len(ids)
+        values.append(coef)
+    if values:
+        return max(values)
+    else:
+        return 0
 
 
 if __name__ == '__main__':

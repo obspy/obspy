@@ -86,7 +86,7 @@ def isASC(filename):
 
 
 def readASC(filename, headonly=False, skip=0, delta=None, length=None,
-                                                  **kwargs):  # @UnusedVariable
+            **kwargs):  # @UnusedVariable
     """
     Reads a Seismic Handler ASCII file and returns an ObsPy Stream object.
 
@@ -637,7 +637,7 @@ def fromUTCDateTime(dt):
     pattern = "%2d-%3s-%4d_%02d:%02d:%02d.%03d"
 
     return pattern % (dt.day, MONTHS[dt.month - 1], dt.year, dt.hour,
-                        dt.minute, dt.second, dt.microsecond / 1000)
+                      dt.minute, dt.second, dt.microsecond / 1000)
 
 
 if __name__ == '__main__':

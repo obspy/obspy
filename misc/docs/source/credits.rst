@@ -1,4 +1,4 @@
-Contributers
+Contributors
 ============
 
 We would like to thank our contributors, whose efforts make this software what
@@ -12,18 +12,25 @@ libraries and applications, our build tools and our web sites.
     :columns: 3
 
     * Charles J. Ammon
+    * Ólafur St. Arnarsson
     * Robert Barsch
     * Yannik Behr
     * Felix Bernauer
     * Moritz Beyreuther
+    * Sébastien Bonaimé
+    * Peter Danecek
     * Martin van Driel
     * Fabian Engels
     * Sven Egdorf
     * Conny Hammer
     * Sebastian Heimann
+    * Gaute Hope
     * Seyed Kasra Hosseini Zad
     * Heiner Igel
     * Adolfo Inza
+    * Marius Isken
+    * David Ketchum
+    * Andreas Köhler
     * Simon Kremers
     * Victor Kress
     * Lars Krieger
@@ -31,8 +38,10 @@ libraries and applications, our build tools and our web sites.
     * Thomas Lecocq
     * Philippe Lesage
     * Anthony Lomax
+    * Alessia Maggi
     * Tobias Megies
     * Alberto Michelini
+    * Bernhard Morgenstern
     * Nathaniel C. Miller
     * Tom Richter
     * Emiliano Russo

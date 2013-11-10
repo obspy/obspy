@@ -14,7 +14,7 @@
 {% endif %}
 
 {% block rootrellink %}
-        <li><a href="{{ pathto('index') }}">ObsPy Documentation</a>
+        <li><a href="{{ pathto('index') }}">ObsPy Documentation ({{ release|e }})</a>
           &raquo;</li>
 {% endblock %}
 
@@ -32,7 +32,7 @@
       {%- endif %}
     {%- endif %}
     {%- if last_updated %}
-      {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %} ({{ release|e }}, <a href="log.txt">build log</a>)
+      {% trans last_updated=last_updated|e %}Built at {{ last_updated }}{% endtrans %} (<a href="{{ pathto('log.txt', 1) }}">build log</a>, <a href="{{ pathto('linkcheck.txt', 1) }}">link check</a>).
     {%- endif %}
     {%- if show_sphinx %}
       {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx-doc.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}

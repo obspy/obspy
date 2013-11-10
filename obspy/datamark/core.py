@@ -21,25 +21,25 @@ def isDATAMARK(filename):  # @UnusedVariable
     # file like readDATAMARK and check for errors
     try:
         fpin = open(filename, "rb")
-        pklen = fpin.read(4)
-        _truelen = np.fromstring(pklen, '>i')[0]  # equiv to Str4Int
+        fpin.read(4)
         buff = fpin.read(6)
-        yy = "%s%x" % (20, np.fromstring(buff[0], dtype='b')[0])
+        yy = "%s%02x" % (20, np.fromstring(buff[0], dtype='b')[0])
         mm = "%x" % np.fromstring(buff[1], dtype='b')[0]
         dd = "%x" % np.fromstring(buff[2], dtype='b')[0]
         hh = "%x" % np.fromstring(buff[3], dtype='b')[0]
         mi = "%x" % np.fromstring(buff[4], dtype='b')[0]
         sec = "%x" % np.fromstring(buff[5], dtype='b')[0]
 
-        _date = UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
-                           int(sec))
+        # This will raise for invalid dates.
+        UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
+                    int(sec))
         buff = fpin.read(4)
-        _flag = np.fromstring(buff[0], dtype='b')[0]
-        _chanum = np.fromstring(buff[1], dtype='b')[0]
-        _datawide = np.fromstring(buff[2], dtype='b')[0] >> 4
-        _srate = np.fromstring(buff[3], dtype='b')[0]
+        np.fromstring(buff[0], dtype='b')[0]
+        np.fromstring(buff[1], dtype='b')[0]
+        np.fromstring(buff[2], dtype='b')[0] >> 4
+        np.fromstring(buff[3], dtype='b')[0]
         idata00 = fpin.read(4)
-        _idata22 = np.fromstring(idata00, '>i')[0]
+        np.fromstring(idata00, '>i')[0]
     except:
         return False
     return True
@@ -79,7 +79,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             buff = fpin.read(6)
             leng += 6
 
-            yy = "%s%x" % (century, np.fromstring(buff[0], dtype='b')[0])
+            yy = "%s%02x" % (century, np.fromstring(buff[0], dtype='b')[0])
             mm = "%x" % np.fromstring(buff[1], dtype='b')[0]
             dd = "%x" % np.fromstring(buff[2], dtype='b')[0]
             hh = "%x" % np.fromstring(buff[3], dtype='b')[0]
@@ -95,7 +95,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
             while leng < truelen:
                 buff = fpin.read(4)
                 leng += 4
-                _flag = np.fromstring(buff[0], dtype='b')[0]
+                #_flag = np.fromstring(buff[0], dtype='b')[0]
                 chanum = np.fromstring(buff[1], dtype='b')[0]
                 datawide = np.fromstring(buff[2], dtype='b')[0] >> 4
                 srate = np.fromstring(buff[3], dtype='b')[0]

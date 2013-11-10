@@ -10,7 +10,7 @@ obspy.core.util - Various utilities for ObsPy
 
     instead of
 
-    >>> from obspy.core.util.types import OrderedDict  # bad
+    >>> from obspy.core.util.obspy_types import OrderedDict  # bad
 
 :copyright:
     The ObsPy Development Team (devs@obspy.org)
@@ -21,16 +21,18 @@ obspy.core.util - Various utilities for ObsPy
 
 # import order matters - NamedTemporaryFile must be one of the first!
 from obspy.core.util.attribdict import AttribDict
-from obspy.core.util.base import NamedTemporaryFile, add_doctests, \
-    add_unittests, ALL_MODULES, DEFAULT_MODULES, NATIVE_BYTEORDER, \
-    c_file_p, createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
-    _getVersionString, NETWORK_MODULES, _readFromPlugin
+from obspy.core.util.base import NamedTemporaryFile, \
+    ALL_MODULES, DEFAULT_MODULES, NATIVE_BYTEORDER, \
+    createEmptyDataChunk, getExampleFile, getMatplotlibVersion, \
+    NETWORK_MODULES, _readFromPlugin, getScriptDirName
+from obspy.core.util.testing import add_doctests, add_unittests
 from obspy.core.util.decorator import deprecated, deprecated_keywords, \
     skip, skipIf, uncompressFile
 from obspy.core.util.geodetics import FlinnEngdahl
 from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
     kilometer2degrees, locations2degrees
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
-    scoreatpercentile, toIntOrZero, loadtxt
-from obspy.core.util.types import OrderedDict, Enum
+    scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
+from obspy.core.util.obspy_types import OrderedDict, Enum
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
+from obspy.core.util.version import get_git_version as _getVersionString

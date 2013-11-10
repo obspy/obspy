@@ -107,34 +107,55 @@ def cfrequency(data, fs, smoothie, fk):
     :return: **cfreq[, dcfreq]** - Central frequency, Time derivative of center
         frequency (windowed only).
     """
-    nfft = util.nextpow2(data.shape[1])
-    freq = np.linspace(0, fs, nfft + 1)
-    freqaxis = freq[0:nfft / 2]
-    cfreq = np.zeros(data.shape[0])
+    # for windowed data
     if np.size(data.shape) > 1:
+        cfreq = np.zeros(data.shape[0])
         i = 0
         for row in data:
-            Px_wm = welch(row, np.hamming(len(row)), util.nextpow2(len(row)))
-            Px = Px_wm[0:len(Px_wm) / 2]
-            cfreq[i] = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+            cfreq[i] = cfrequency_unwindowed(row, fs)
             i = i + 1
         cfreq = util.smooth(cfreq, smoothie)
         #cfreq_add = \
         #        np.append(np.append([cfreq[0]] * (np.size(fk) // 2), cfreq),
         #        [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        cfreq_add = np.hstack(([cfreq[0]] * (np.size(fk) // 2), cfreq, \
-                  [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2)))
+        cfreq_add = np.hstack(
+            ([cfreq[0]] * (np.size(fk) // 2), cfreq,
+             [cfreq[np.size(cfreq) - 1]] * (np.size(fk) // 2)))
         dcfreq = signal.lfilter(fk, 1, cfreq_add)
         #dcfreq = dcfreq[np.size(fk) // 2:(np.size(dcfreq) - np.size(fk) // 2)]
         # correct start and end values of time derivative
         dcfreq = dcfreq[np.size(fk) - 1:np.size(dcfreq)]
         return cfreq, dcfreq
+    # for unwindowed data
     else:
-        Px_wm = welch(data, np.hamming(len(data)), util.nextpow2(len(data)))
-        Px = Px_wm[0:len(Px_wm) / 2]
-        cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+        cfreq = cfrequency_unwindowed(data, fs)
         return cfreq
+
+
+def cfrequency_unwindowed(data, fs):
+    """
+    Central frequency of a signal.
+
+    Computes the central frequency of the given data (a single waveform).
+    The central frequency is a measure of the frequency where the
+    power is concentrated. It corresponds to the second moment of the power
+    spectral density function.
+
+    The central frequency is returned in Hz.
+
+    :type data: :class:`~numpy.array`
+    :param data: Data to estimate central frequency from.
+    :param fs: Sampling frequency in Hz.
+    :return: **cfreq** - Central frequency in Hz
+    """
+    nfft = util.nextpow2(len(data))
+    freq = np.linspace(0, fs, nfft + 1)
+    freqaxis = freq[0:nfft / 2]
+    Px_wm = welch(data, np.hamming(len(data)), nfft)
+    Px = Px_wm[0:len(Px_wm) / 2]
+    cfreq = np.sqrt(np.sum(freqaxis ** 2 * Px) / (sum(Px)))
+    return cfreq
 
 
 def bwith(data, fs, smoothie, fk):
@@ -173,8 +194,9 @@ def bwith(data, fs, smoothie, fk):
         #        np.append(np.append([bwith[0]] * (np.size(fk) // 2), bwith),
         #        [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        bwith_add = np.hstack(([bwith[0]] * (np.size(fk) // 2), bwith, \
-                [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2)))
+        bwith_add = np.hstack(
+            ([bwith[0]] * (np.size(fk) // 2), bwith,
+             [bwith[np.size(bwith) - 1]] * (np.size(fk) // 2)))
         dbwith = signal.lfilter(fk, 1, bwith_add)
         #dbwith = dbwith[np.size(fk) // 2:(np.size(dbwith) - np.size(fk) // 2)]
         # correct start and end values of time derivative
@@ -224,8 +246,9 @@ def domperiod(data, fs, smoothie, fk):
         #dperiod_add = np.append(np.append([dperiod[0]] * (np.size(fk) // 2), \
         #    dperiod), [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2))
         # faster alternative
-        dperiod_add = np.hstack(([dperiod[0]] * (np.size(fk) // 2), dperiod, \
-                [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2)))
+        dperiod_add = np.hstack(
+            ([dperiod[0]] * (np.size(fk) // 2), dperiod,
+             [dperiod[np.size(dperiod) - 1]] * (np.size(fk) // 2)))
         ddperiod = signal.lfilter(fk, 1, dperiod_add)
         #ddperiod = ddperiod[np.size(fk) / \
         #    2:(np.size(ddperiod) - np.size(fk) // 2)]
@@ -261,8 +284,8 @@ def logbankm(p, n, fs, w):
     fl = np.floor(fs) / np.floor(n)
     fh = np.floor(fs / 2)
     lr = np.log((fh) / (fl)) / (p + 1)
-    bl = n * ((fl) * \
-        np.exp(np.array([0, 1, p, p + 1]) * float(lr)) / float(fs))
+    bl = n * ((fl) *
+              np.exp(np.array([0, 1, p, p + 1]) * float(lr)) / float(fs))
     b2 = np.ceil(bl[1])
     b3 = np.floor(bl[2])
     b1 = np.floor(bl[0]) + 1

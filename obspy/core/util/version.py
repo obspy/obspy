@@ -33,18 +33,33 @@
 
 __all__ = ("get_git_version")
 
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 import os
+import inspect
 from subprocess import Popen, PIPE
+# NO IMPORTS FROM OBSPY IN THIS FILE! (file gets used at installation time)
 
-VERSION_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__),
-        os.pardir, os.pardir, "RELEASE-VERSION"))
+script_dir = os.path.abspath(os.path.dirname(inspect.getfile(
+                                             inspect.currentframe())))
+OBSPY_ROOT = os.path.abspath(os.path.join(script_dir, os.pardir,
+                                          os.pardir, os.pardir))
+VERSION_FILE = os.path.join(OBSPY_ROOT, "obspy", "RELEASE-VERSION")
 
 
 def call_git_describe(abbrev=4):
     try:
+        p = Popen(['git', 'rev-parse', '--show-toplevel'],
+                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
+        p.stderr.close()
+        path = p.stdout.readlines()[0].strip()
+    except:
+        return None
+    if os.path.normpath(path) != OBSPY_ROOT:
+        return None
+    try:
         p = Popen(['git', 'describe', '--dirty', '--abbrev=%d' % abbrev,
                    '--always'],
-                  cwd=os.path.dirname(VERSION_FILE), stdout=PIPE, stderr=PIPE)
+                  cwd=OBSPY_ROOT, stdout=PIPE, stderr=PIPE)
         p.stderr.close()
         line = p.stdout.readlines()[0]
         # (this line prevents official releases)

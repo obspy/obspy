@@ -145,6 +145,7 @@ def _getSuites(verbosity=1, names=[]):
     # need not be imported before in this case
     suites = {}
     ut = unittest.TestLoader()
+    status = True
     for name in names:
         suite = []
         if name in ALL_MODULES:
@@ -156,12 +157,13 @@ def _getSuites(verbosity=1, names=[]):
         try:
             suite.append(ut.loadTestsFromName(test, None))
         except Exception, e:
+            status = False
             if verbosity:
                 print(e)
                 print("Cannot import test suite for module obspy.%s" % name)
         else:
             suites[name] = ut.suiteClass(suite)
-    return suites
+    return suites, status
 
 
 def _createReport(ttrs, timetaken, log, server, hostname):
@@ -439,7 +441,7 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
             except ValueError:
                 pass
     # fetch tests suites
-    suites = _getSuites(verbosity, tests)
+    suites, status = _getSuites(verbosity, tests)
     # add testsuite for all of the tutorial's rst files
     if tutorial:
         try:
@@ -474,12 +476,16 @@ def runTests(verbosity=1, tests=[], report=False, log=None,
         print
         print
     if interactive and not report:
-        msg = "Do you want to report this to tests.obspy.org? [n]: "
+        msg = "Do you want to report this to %s? [n]: " % (server)
         var = raw_input(msg).lower()
         if var in ('y', 'yes', 'yoah', 'hell yeah!'):
             report = True
     if report:
         _createReport(ttr, total_time, log, server, hostname)
+    # make obspy-runtests exit with 1 if a test suite could not be added,
+    # indicating failure
+    if status is False:
+        errors += 1
     if errors:
         return errors
 
@@ -488,7 +494,9 @@ def run(interactive=True):
     try:
         import matplotlib
         matplotlib.use("AGG")
-    except ImportError:
+        if matplotlib.get_backend().upper() != "AGG":
+            raise Exception()
+    except:
         msg = "unable to change backend to 'AGG' (to avoid windows popping up)"
         warnings.warn(msg)
     usage = "USAGE: %prog [options] module1 module2 ...\n\n"
@@ -500,8 +508,9 @@ def run(interactive=True):
                       action="store_true", dest="quiet",
                       help="quiet mode")
     # filter options
-    filter = OptionGroup(parser, "Module Filter", "Providing no modules " + \
-        "will test all ObsPy modules which don't require a " + \
+    filter = OptionGroup(
+        parser, "Module Filter", "Providing no modules " +
+        "will test all ObsPy modules which don't require a " +
         "active network connection.")
     filter.add_option("--all", default=False,
                       action="store_true", dest="all",
@@ -523,7 +532,7 @@ def run(interactive=True):
                       help="lists n slowest test cases")
     timing.add_option("-p", "--profile", default=False,
                       action="store_true", dest="profile",
-                      help="uses cProfile, saves the results to file " + \
+                      help="uses cProfile, saves the results to file " +
                            "obspy.pstats and prints some profiling numbers")
     parser.add_option_group(timing)
     # reporting options
@@ -543,6 +552,13 @@ def run(interactive=True):
     report.add_option("-l", "--log", default=None,
                       type="string", dest="log",
                       help="append log file to test report")
+    report.add_option("--keep-images", default=False,
+                      dest="keep_images", action="store_true",
+                      help="store images created during image comparison "
+                           "tests in subfolders of baseline images")
+    report.add_option("--no-flake8", default=False,
+                      dest="no_flake8", action="store_true",
+                      help="skip code formatting test")
     parser.add_option_group(report)
     (options, _) = parser.parse_args()
     # set correct verbosity level
@@ -575,7 +591,12 @@ def run(interactive=True):
     # check interactivity settings
     if interactive and options.dontask:
         interactive = False
-    return runTests(verbosity, parser.largs, report, options.log,
+    if options.keep_images:
+        os.environ['OBSPY_KEEP_IMAGES'] = ""
+    if options.no_flake8:
+        os.environ['OBSPY_NO_FLAKE8'] = ""
+    return runTests(
+        verbosity, parser.largs, report, options.log,
         options.server, options.all, options.timeit, interactive, options.n,
         exclude=options.module, tutorial=options.tutorial,
         hostname=options.hostname)
@@ -589,6 +610,13 @@ def main(interactive=True):
     If profiling is enabled we disable interactivity as it would wait for user
     input and influence the statistics. However the -r option still works.
     """
+    # catch and ignore a numpy deprecation warning
+    with warnings.catch_warnings(record=True):
+        warnings.filterwarnings(
+            "ignore", 'The compiler package is deprecated and removed in '
+            'Python 3.x.', DeprecationWarning)
+        np.safe_eval('1')
+
     if '-p' in sys.argv or '--profile' in sys.argv:
         try:
             import cProfile as Profile
@@ -613,4 +641,6 @@ if __name__ == "__main__":
     # This script is automatically installed with name obspy-runtests by
     # setup.py to the Scripts or bin directory of your Python distribution
     # setup.py needs a function to which it's scripts can be linked.
-    run(interactive=False)
+    errors = run(interactive=False)
+    if errors:
+        sys.exit(1)

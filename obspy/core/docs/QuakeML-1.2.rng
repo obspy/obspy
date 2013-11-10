@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rng:grammar ns="http://quakeml.org/xmlns/quakeml/1.2"
+             xmlns:bed="http://quakeml.org/xmlns/bed/1.2"
+             xmlns:rng="http://relaxng.org/ns/structure/1.0"
+             datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+    
+    <rng:include href="QuakeML-BED-1.2.rng"/>
+
+    <!-- wildcard definitions
+         see: Eric van der Vlist, Relax NG, O'Reilly & Associates (ISBN: 0596004214) 
+              http://books.xmlschemata.org/relaxng/
+
+         excluded namespaces: empty namespace, umbrella schema and all included schemas -->
+
+    <rng:define name="anything">
+        <rng:zeroOrMore>
+            <rng:choice>
+                <rng:element>
+                    <rng:anyName/>
+                    <rng:ref name="anything"/>
+                </rng:element>
+                <rng:attribute>
+                    <rng:anyName/>
+                </rng:attribute>
+                <rng:text/>
+            </rng:choice>
+        </rng:zeroOrMore>
+    </rng:define>
+
+    <rng:define name="foreign-elements">
+        <rng:zeroOrMore>
+            <rng:element>
+                <rng:anyName>
+                    <rng:except>
+                        <rng:nsName ns=""/>
+                        <rng:nsName ns="http://quakeml.org/xmlns/quakeml/1.2"/>
+                        <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
+                    </rng:except>
+                </rng:anyName>
+                <rng:ref name="anything"/>
+            </rng:element>
+        </rng:zeroOrMore>
+    </rng:define>
+
+    <rng:define name="foreign-attributes">
+        <rng:zeroOrMore>
+            <rng:attribute>
+                <rng:anyName>
+                    <rng:except>
+                        <rng:nsName ns=""/>
+                        <rng:nsName ns="http://quakeml.org/xmlns/quakeml/1.2"/>
+                        <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
+                    </rng:except>
+                </rng:anyName>
+            </rng:attribute>
+        </rng:zeroOrMore>
+    </rng:define>
+
+    <rng:define name="foreign-nodes">
+        <rng:zeroOrMore>
+            <rng:choice>
+                <rng:ref name="foreign-attributes"/>
+                <rng:ref name="foreign-elements"/>
+            </rng:choice>
+        </rng:zeroOrMore>
+    </rng:define>
+
+    <rng:define name="Quakeml">
+        <rng:optional>
+            <rng:element name="bed:eventParameters">
+                <rng:ref name="EventParameters"/>
+            </rng:element>
+        </rng:optional>
+        <rng:ref name="foreign-nodes"/>
+    </rng:define>
+
+    <rng:start>
+        <rng:element name="quakeml">
+            <rng:ref name="Quakeml"/>
+        </rng:element>
+    </rng:start>
+
+</rng:grammar>

@@ -95,6 +95,7 @@ MomentTensorCategory = Enum([
 ])
 
 EventType = Enum([
+    "not existing",
     "not reported",
     "earthquake",
     "anthropogenic event",
@@ -138,7 +139,7 @@ EventType = Enum([
     "rockslide",
     "meteorite",
     "volcanic eruption",
-])
+], replace={'other': 'other event'})
 
 EventTypeCertainty = Enum([
     "known",

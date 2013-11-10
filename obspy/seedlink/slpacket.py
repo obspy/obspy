@@ -109,10 +109,10 @@ class SLPacket(object):
     def getMSRecord(self):
         # following from  obspy.mseed.tests.test_libmseed.py -> test_msrParse
         msr = clibmseed.msr_init(C.POINTER(MSRecord)())
-        pyobj = np.array(self.msrecord)
+        pyobj = np.frombuffer(self.msrecord, dtype=np.uint8)
         errcode = \
-                clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
-                len(pyobj), C.pointer(msr), -1, 1, 1)
+            clibmseed.msr_parse(pyobj.ctypes.data_as(C.POINTER(C.c_char)),
+                                len(pyobj), C.pointer(msr), -1, 1, 1)
         if errcode != 0:
             msg = "failed to decode mini-seed record: msr_parse errcode: %s"
             raise SeedLinkException(msg % (errcode))

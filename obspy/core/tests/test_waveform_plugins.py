@@ -23,17 +23,17 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         Test case ensures that empty files do raise warnings.
         """
-        tmpfile = NamedTemporaryFile().name
-        # create empty file
-        open(tmpfile, 'wb').close()
-        formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
-        # using format keyword
-        for ep in formats_ep.values():
-            isFormat = load_entry_point(ep.dist.key,
-                                        'obspy.plugin.waveform.' + ep.name,
-                                        'isFormat')
-            self.assertFalse(False, isFormat(tmpfile))
-        os.remove(tmpfile)
+        with NamedTemporaryFile() as tf:
+            tmpfile = tf.name
+            # create empty file
+            open(tmpfile, 'wb').close()
+            formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
+            # using format keyword
+            for ep in formats_ep.values():
+                isFormat = load_entry_point(ep.dist.key,
+                                            'obspy.plugin.waveform.' + ep.name,
+                                            'isFormat')
+                self.assertFalse(False, isFormat(tmpfile))
 
     def test_readAndWrite(self):
         """
@@ -63,76 +63,80 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     tr.stats.delta = 0.005
                     tr.stats.starttime = start
                     # create waveform file with given format and byte order
-                    outfile = NamedTemporaryFile().name
-                    tr.write(outfile, format=format, byteorder=byteorder)
-                    if format == 'Q':
-                        outfile += '.QHD'
-                    # read in again using auto detection
-                    st = read(outfile)
-                    self.assertEquals(len(st), 1)
-                    self.assertEquals(st[0].stats._format, format)
-                    # read in using format argument
-                    st = read(outfile, format=format)
-                    self.assertEquals(len(st), 1)
-                    self.assertEquals(st[0].stats._format, format)
-                    # read in using a StringIO instances, skip Q files as it
-                    # needs multiple files
-                    if format not in ['Q']:
-                        # file handler without format
-                        temp = open(outfile, 'rb')
-                        st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # file handler with format
-                        temp = open(outfile, 'rb')
-                        st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # StringIO without format
-                        temp = StringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # StringIO with format
-                        temp = StringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # cStringIO without format
-                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
-                        # cStringIO with format
-                        temp = cStringIO.StringIO(open(outfile, 'rb').read())
-                        st = read(temp, format=format)
-                        self.assertEquals(len(st), 1)
-                        self.assertEquals(st[0].stats._format, format)
+                    with NamedTemporaryFile() as tf:
+                        outfile = tf.name
+                        tr.write(outfile, format=format, byteorder=byteorder)
+                        if format == 'Q':
+                            outfile += '.QHD'
+                        # read in again using auto detection
+                        st = read(outfile)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
+                        # read in using format argument
+                        st = read(outfile, format=format)
+                        self.assertEqual(len(st), 1)
+                        self.assertEqual(st[0].stats._format, format)
+                        # read in using a StringIO instances, skip Q files as
+                        # it needs multiple files
+                        if format not in ['Q']:
+                            # file handler without format
+                            temp = open(outfile, 'rb')
+                            st = read(temp)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                            # file handler with format
+                            temp = open(outfile, 'rb')
+                            st = read(temp, format=format)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                            # StringIO without format
+                            temp = StringIO.StringIO(
+                                open(outfile, 'rb').read())
+                            st = read(temp)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                            # StringIO with format
+                            temp = StringIO.StringIO(
+                                open(outfile, 'rb').read())
+                            st = read(temp, format=format)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                            # cStringIO without format
+                            temp = cStringIO.StringIO(
+                                open(outfile, 'rb').read())
+                            st = read(temp)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                            # cStringIO with format
+                            temp = cStringIO.StringIO(
+                                open(outfile, 'rb').read())
+                            st = read(temp, format=format)
+                            self.assertEqual(len(st), 1)
+                            self.assertEqual(st[0].stats._format, format)
+                        # Q files consist of two files - deleting additional
+                        # file
+                        if format == 'Q':
+                            os.remove(outfile[:-4] + '.QBN')
+                            os.remove(outfile[:-4] + '.QHD')
                     # check byte order
-                    self.assertEquals(st[0].data.dtype.byteorder, '=')
+                    self.assertEqual(st[0].data.dtype.byteorder, '=')
                     # check meta data
                     # some formats do not contain a calibration factor
                     if format not in ['MSEED', 'WAV', 'TSPAIR', 'SLIST']:
-                        self.assertAlmostEquals(st[0].stats.calib, 0.199999, 5)
+                        self.assertAlmostEqual(st[0].stats.calib, 0.199999, 5)
                     else:
-                        self.assertEquals(st[0].stats.calib, 1.0)
+                        self.assertEqual(st[0].stats.calib, 1.0)
                     if format not in ['WAV']:
-                        self.assertEquals(st[0].stats.starttime, start)
-                        self.assertEquals(st[0].stats.endtime, start + 9.995)
-                        self.assertEquals(st[0].stats.delta, 0.005)
-                        self.assertEquals(st[0].stats.sampling_rate, 200.0)
+                        self.assertEqual(st[0].stats.starttime, start)
+                        self.assertEqual(st[0].stats.endtime, start + 9.995)
+                        self.assertEqual(st[0].stats.delta, 0.005)
+                        self.assertEqual(st[0].stats.sampling_rate, 200.0)
                     # network/station/location/channel codes
                     if format in ['Q', 'SH_ASC', 'GSE2']:
                         # no network or location code in Q, SH_ASC, GSE2
-                        self.assertEquals(st[0].id, ".MANZ1..EHE")
+                        self.assertEqual(st[0].id, ".MANZ1..EHE")
                     elif format not in ['WAV']:
-                        self.assertEquals(st[0].id, "BW.MANZ1.00.EHE")
-                    # remove temporary files
-                    os.remove(outfile)
-                    # Q files consist of two files - deleting additional file
-                    if format == 'Q':
-                        os.remove(outfile[:-4] + '.QBN')
-                        os.remove(outfile[:-4])
+                        self.assertEqual(st[0].id, "BW.MANZ1.00.EHE")
 
     def test_isFormat(self):
         """
@@ -149,14 +153,12 @@ class WaveformPluginsTestCase(unittest.TestCase):
             isFormat = load_entry_point(format.dist.key,
                                         'obspy.plugin.waveform.' + format.name,
                                         'isFormat')
-            module_path = os.path.join(os.path.join(format.dist.location,
-                    *format.dist.key.split('.')), 'tests', 'data')
-            # Get all the test directories.
-            paths = [os.path.join(os.path.join(f.dist.location,
-                    *f.dist.key.split('.')), 'tests', 'data') for f
-                     in formats]
-            # Remove the paths from the current module.
-            paths = [path for path in paths if path != module_path]
+            # get all the test directories.
+            paths = [os.path.join(f.dist.location, 'obspy',
+                                  f.module_name.split('.')[1], 'tests', 'data')
+                     for f in formats
+                     if f.module_name.split('.')[1] !=
+                     format.module_name.split('.')[1]]
             # Remove double paths because some modules can have two file
             # formats.
             paths = set(paths)
@@ -166,20 +168,17 @@ class WaveformPluginsTestCase(unittest.TestCase):
                 filelist = []
                 # Walk every path.
                 for directory, _, files in os.walk(path):
-                    # Remove double entries from the .svn directories.
-                    if '.svn' in directory:
-                        continue
                     filelist.extend([os.path.join(directory, _i) for _i in
                                      files])
                 for file in filelist:
-                    if isFormat(file) != False:
+                    if isFormat(file) is True:  # pragma: no cover
                         false_positives.append((format.name, file))
         # Use try except to produce a meaningful error message.
         try:
             self.assertEqual(len(false_positives), 0)
-        except:
+        except:  # pragma: no cover
             msg = 'False positives for isFormat:\n'
-            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in \
+            msg += '\n'.join(['\tFormat %s: %s' % (_i[0], _i[1]) for _i in
                               false_positives])
             raise Exception(msg)
 
@@ -210,42 +209,40 @@ class WaveformPluginsTestCase(unittest.TestCase):
             tr.stats.delta = 0.005
             tr.stats.starttime = start
             # create waveform file with given format and byte order
-            outfile = NamedTemporaryFile().name
-            tr.write(outfile, format=format)
-            if format == 'Q':
-                outfile += '.QHD'
-            n_threads = 30
-            streams = []
+            with NamedTemporaryFile() as tf:
+                outfile = tf.name
+                tr.write(outfile, format=format)
+                if format == 'Q':
+                    outfile += '.QHD'
+                n_threads = 30
+                streams = []
 
-            def testFunction(streams):
-                st = read(outfile, format=format)
-                streams.append(st)
-            # Read the ten files at one and save the output in the just created
-            # class.
-            for _i in xrange(n_threads):
-                thread = threading.Thread(target=testFunction,
-                                          args=(streams,))
-                thread.start()
-            # Loop until all threads are finished.
-            start = time.time()
-            while True:
-                if threading.activeCount() == 1:
-                    break
-                # Avoid infinite loop and leave after 120 seconds
-                # such a long time is needed for debugging with valgrind
-                elif time.time() - start >= 120:
-                    msg = 'Not all threads finished!'
-                    raise Warning(msg)
-                    break
-                else:
-                    continue
-            # Compare all values which should be identical and clean up files
-            #for data in :
-            #    np.testing.assert_array_equal(values, original)
-            os.remove(outfile)
-            if format == 'Q':
-                os.remove(outfile[:-4] + '.QBN')
-                os.remove(outfile[:-4])
+                def testFunction(streams):
+                    st = read(outfile, format=format)
+                    streams.append(st)
+                # Read the ten files at one and save the output in the just
+                # created class.
+                for _i in xrange(n_threads):
+                    thread = threading.Thread(target=testFunction,
+                                              args=(streams,))
+                    thread.start()
+                # Loop until all threads are finished.
+                start = time.time()
+                while True:
+                    if threading.activeCount() == 1:
+                        break
+                    # Avoid infinite loop and leave after 120 seconds
+                    # such a long time is needed for debugging with valgrind
+                    elif time.time() - start >= 120:  # pragma: no cover
+                        msg = 'Not all threads finished!'
+                        raise Warning(msg)
+                # Compare all values which should be identical and clean up
+                # files
+                #for data in :
+                #    np.testing.assert_array_equal(values, original)
+                if format == 'Q':
+                    os.remove(outfile[:-4] + '.QBN')
+                    os.remove(outfile[:-4] + '.QHD')
 
     def test_issue193(self):
         """
@@ -268,16 +265,15 @@ class WaveformPluginsTestCase(unittest.TestCase):
             # headers.
             if format in ['SEGY', 'SU', 'SEG2']:
                 continue
-            tempfile = NamedTemporaryFile().name
-            tr.write(tempfile, format)
-            if format == "Q":
-                tempfile = tempfile + ".QHD"
-            tr_test = read(tempfile, format)[0]
-            # clean up
-            os.remove(tempfile)
-            if format == 'Q':
-                os.remove(tempfile[:-4] + '.QBN')
-                os.remove(tempfile[:-4])
+            with NamedTemporaryFile() as tf:
+                tempfile = tf.name
+                tr.write(tempfile, format)
+                if format == "Q":
+                    tempfile = tempfile + ".QHD"
+                tr_test = read(tempfile, format)[0]
+                if format == 'Q':
+                    os.remove(tempfile[:-4] + '.QBN')
+                    os.remove(tempfile[:-4] + '.QHD')
             np.testing.assert_array_equal(tr.data, tr_test.data)
 
     def test_readGzip2File(self):
@@ -295,6 +291,37 @@ class WaveformPluginsTestCase(unittest.TestCase):
         """
         path = os.path.dirname(__file__)
         st1 = read(os.path.join(path, 'data', 'slist.ascii.bz2'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+
+    def test_readTarArchive(self):
+        """
+        Tests reading tar compressed waveforms.
+        """
+        path = os.path.dirname(__file__)
+        # tar
+        st1 = read(os.path.join(path, 'data', 'test.tar'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+        # tar.gz
+        st1 = read(os.path.join(path, 'data', 'test.tar.gz'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+        # tar.bz2
+        st1 = read(os.path.join(path, 'data', 'test.tar.bz2'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+        # tgz
+        st1 = read(os.path.join(path, 'data', 'test.tgz'))
+        st2 = read(os.path.join(path, 'data', 'slist.ascii'))
+        self.assertTrue(st1 == st2)
+
+    def test_readZipArchive(self):
+        """
+        Tests reading zip compressed waveforms.
+        """
+        path = os.path.dirname(__file__)
+        st1 = read(os.path.join(path, 'data', 'test.zip'))
         st2 = read(os.path.join(path, 'data', 'slist.ascii'))
         self.assertTrue(st1 == st2)
 

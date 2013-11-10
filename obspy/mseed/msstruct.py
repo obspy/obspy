@@ -29,7 +29,7 @@ def _getMSFileInfo(f, real_name):
     rec_buffer = f.read(512)
     info['record_length'] = clibmseed.ms_detect(rec_buffer, 512)
     # Calculate Number of Records
-    info['number_of_records'] = long(info['filesize'] // \
+    info['number_of_records'] = long(info['filesize'] //
                                      info['record_length'])
     info['excess_bytes'] = info['filesize'] % info['record_length']
     f.seek(pos)

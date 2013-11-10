@@ -26,7 +26,7 @@ import wave
 
 # WAVE data format is unsigned char up to 8bit, and signed int
 # for the remaining.
-width2dtype = {
+WIDTH2DTYPE = {
     1: '<u1',  # unsigned char
     2: '<i2',  # signed short int
     4: '<i4',  # signed int (int32)
@@ -49,8 +49,11 @@ def isWAV(filename):
     """
     try:
         fh = wave.open(filename, 'rb')
-        (_nchannel, width, _rate, _len, _comptype, _compname) = fh.getparams()
-        fh.close()
+        try:
+            (_nchannel, width, _rate, _len, _comptype, _compname) = \
+                fh.getparams()
+        finally:
+            fh.close()
     except:
         return False
     if width == 1 or width == 2 or width == 4:
@@ -85,15 +88,18 @@ def readWAV(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     # read WAV file
     fh = wave.open(filename, 'rb')
-    # header information
-    (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
-    header = {'sampling_rate': rate, 'npts': length}
-    if headonly:
-        return Stream([Trace(header=header)])
-    if width not in width2dtype.keys():
-        raise TypeError("Unsupported Format Type, word width %dbytes" % width)
-    data = np.fromstring(fh.readframes(length), dtype=width2dtype[width])
-    fh.close()
+    try:
+        # header information
+        (_nchannel, width, rate, length, _comptype, _compname) = fh.getparams()
+        header = {'sampling_rate': rate, 'npts': length}
+        if headonly:
+            return Stream([Trace(header=header)])
+        if width not in WIDTH2DTYPE.keys():
+            msg = "Unsupported Format Type, word width %dbytes" % width
+            raise TypeError(msg)
+        data = np.fromstring(fh.readframes(length), dtype=WIDTH2DTYPE[width])
+    finally:
+        fh.close()
     return Stream([Trace(header=header, data=data)])
 
 
@@ -125,25 +131,29 @@ def writeWAV(stream, filename, framerate=7000, rescale=False, width=4,
     """
     i = 0
     base, ext = os.path.splitext(filename)
-    if width not in width2dtype.keys():
+    if width not in WIDTH2DTYPE.keys():
         raise TypeError("Unsupported Format Type, word width %dbytes" % width)
     for trace in stream:
         # write WAV file
         if len(stream) >= 2:
             filename = "%s%03d%s" % (base, i, ext)
         w = wave.open(filename, 'wb')
-        trace.stats.npts = len(trace.data)
-        # (nchannels, sampwidth, framerate, nframes, comptype, compname)
-        w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
-                     'not compressed'))
-        data = trace.data
-        if rescale:
-            # optimal scale, account for +/- and the zero
-            data = (2 ** (width * 8 - 1) - 1) * \
-                data.astype('f8') / abs(data).max()
-        data = np.require(data, dtype=width2dtype[width])
-        w.writeframes(data.tostring())
-        w.close()
+        try:
+            trace.stats.npts = len(trace.data)
+            # (nchannels, sampwidth, framerate, nframes, comptype, compname)
+            w.setparams((1, width, framerate, trace.stats.npts, 'NONE',
+                         'not compressed'))
+            data = trace.data
+            dtype = WIDTH2DTYPE[width]
+            if rescale:
+                # optimal scale, account for +/- and the zero
+                maxint = 2 ** (width * 8 - 1) - 1
+                data = data.astype('f8')  # upcast for following rescaling
+                data = data / abs(data).max() * maxint
+            data = np.require(data, dtype=dtype)
+            w.writeframes(data.tostring())
+        finally:
+            w.close()
         i += 1
 
 

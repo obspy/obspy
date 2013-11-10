@@ -23,6 +23,11 @@ Citations
    | **ObsPy: A Python Toolbox for Seismology**,
    | *Seismological Research Letters*, 81 (3), 530-533.
    | http://www.seismosoc.org/publications/SRL/SRL_81/srl_81-3_es/
+.. [ChassandeMottin2002]  
+   | Chassande-Mottin, E. (2002),
+   | **Testing the normality of the gravitational wave data with a low cost recursive estimate of the kurtosis**,
+   | *arXiv*, (gr-qc/0212010).
+   | http://arxiv.org/abs/gr-qc/0212010
 .. [Deichmann1992]  
    | Deichmann, N. and Garcia-Fernandez, M. (1992),
    | **Rupture geometry from high-precision relative hypocentre locations of microearthquake clusters**,
@@ -85,6 +90,10 @@ Citations
    | **Observations and Modeling of Seismic Background Noise**,
    | U.S. Geological Survey open-file report 93-322, Albuquerque, N.M.
    | http://ehp3-earthquake.wr.usgs.gov/regional/asl/pubs/files/ofr93-322.pdf
+.. [Pullan1990]  
+   | Pullan, S. (1990),
+   | **Recommended standard for seismic (/radar) data files in the personal computer environment**,
+   | *Geophysics*, 55 (9), 1260-1271.
 .. [Snoke2009]  
    | Snoke, J. A. (2009),
    | **Traveltime Tables for iasp91 and ak135**,

@@ -10,9 +10,9 @@ NERIES Web service client for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime, read, Stream
+from obspy import UTCDateTime, read, Stream, __version__
 from obspy.core.event import readEvents
-from obspy.core.util import _getVersionString, NamedTemporaryFile, guessDelta
+from obspy.core.util import NamedTemporaryFile, guessDelta
 from suds.client import Client as SudsClient
 from suds.plugin import MessagePlugin
 from suds.sax.attribute import Attribute
@@ -20,7 +20,6 @@ from suds.xsd.sxbase import SchemaObject
 import StringIO
 import functools
 import json
-import os
 import platform
 import urllib
 import urllib2
@@ -46,8 +45,7 @@ MAP_INVERSE = dict([(value, key) for key, value in MAP.iteritems()])
 # in results the "magType" key is all lowercase, so add it to..
 MAP_INVERSE['magtype'] = "magnitude_type"
 
-VERSION = _getVersionString("obspy.neries")
-DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (VERSION,
+DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.platform(),
                                                    platform.python_version())
 MAX_REQUESTS = 50
@@ -584,7 +582,7 @@ class Client(object):
                 _AttributePlugin({'ModifiedAfter': dt}))
         # add version attribute needed for instruments
         client.options.plugins.append(
-                _AttributePlugin({'Version': '1.0'}))
+            _AttributePlugin({'Version': '1.0'}))
         # request data
         response = client.service.getInventory(usertoken, stationid,
                                                spatialbounds)
@@ -638,21 +636,15 @@ class Client(object):
         NL.WIT..BHN | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         NL.WIT..BHE | 2009-04-01T00:00:00.010200Z - ... | 40.0 Hz, 1201 samples
         """
-        tf = NamedTemporaryFile()
-        self.saveWaveform(tf._fileobj, network, station, location, channel,
-                          starttime, endtime, format=format)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        try:
-            stream = read(tf.name, 'MSEED')
-        except:
-            stream = Stream()
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        with NamedTemporaryFile() as tf:
+            self.saveWaveform(tf._fileobj, network, station, location, channel,
+                              starttime, endtime, format=format)
+            # read stream using obspy.mseed
+            tf.seek(0)
+            try:
+                stream = read(tf.name, 'MSEED')
+            except:
+                stream = Stream()
         # trim stream
         stream.trim(starttime, endtime)
         return stream
@@ -730,7 +722,8 @@ class Client(object):
             (UTCDateTime(endtime) + delta).strftime("%Y-%m-%dT%H:%M:%S")
         # request data
         if format == 'MSEED':
-            client.options.plugins = [_AttributePlugin({'DataFormat':'MSEED'})]
+            client.options.plugins = \
+                [_AttributePlugin({'DataFormat': 'MSEED'})]
         # start data request
         response = client.service.dataRequest(usertoken, stationid)
         client.options.plugins = []

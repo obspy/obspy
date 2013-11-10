@@ -21,15 +21,15 @@ class StatsTestCase(unittest.TestCase):
         stats['other1'] = {'test1': '1'}
         stats['other2'] = AttribDict({'test2': '2'})
         stats['other3'] = 'test3'
-        self.assertEquals(stats.test, 'muh')
-        self.assertEquals(stats['test'], 'muh')
-        self.assertEquals(stats.other1.test1, '1')
-        self.assertEquals(stats.other1.__class__, AttribDict)
-        self.assertEquals(len(stats.other1), 1)
-        self.assertEquals(stats.other2.test2, '2')
-        self.assertEquals(stats.other2.__class__, AttribDict)
-        self.assertEquals(len(stats.other2), 1)
-        self.assertEquals(stats.other3, 'test3')
+        self.assertEqual(stats.test, 'muh')
+        self.assertEqual(stats['test'], 'muh')
+        self.assertEqual(stats.other1.test1, '1')
+        self.assertEqual(stats.other1.__class__, AttribDict)
+        self.assertEqual(len(stats.other1), 1)
+        self.assertEqual(stats.other2.test2, '2')
+        self.assertEqual(stats.other2.__class__, AttribDict)
+        self.assertEqual(len(stats.other2), 1)
+        self.assertEqual(stats.other3, 'test3')
         self.assertTrue('test' in stats)
         self.assertTrue('test' in stats.__dict__)
 
@@ -46,18 +46,18 @@ class StatsTestCase(unittest.TestCase):
         stats2 = copy.deepcopy(stats)
         stats.network = 'CZ'
         stats.station = 'RJOB'
-        self.assertEquals(stats2.__class__, Stats)
-        self.assertEquals(stats2.network, 'BW')
-        self.assertEquals(stats2.station, 'ROTZ')
-        self.assertEquals(stats2.other1.test1, '1')
-        self.assertEquals(stats2.other1.__class__, AttribDict)
-        self.assertEquals(len(stats2.other1), 1)
-        self.assertEquals(stats2.other2.test2, '2')
-        self.assertEquals(stats2.other2.__class__, AttribDict)
-        self.assertEquals(len(stats2.other2), 1)
-        self.assertEquals(stats2.other3, 'test3')
-        self.assertEquals(stats.network, 'CZ')
-        self.assertEquals(stats.station, 'RJOB')
+        self.assertEqual(stats2.__class__, Stats)
+        self.assertEqual(stats2.network, 'BW')
+        self.assertEqual(stats2.station, 'ROTZ')
+        self.assertEqual(stats2.other1.test1, '1')
+        self.assertEqual(stats2.other1.__class__, AttribDict)
+        self.assertEqual(len(stats2.other1), 1)
+        self.assertEqual(stats2.other2.test2, '2')
+        self.assertEqual(stats2.other2.__class__, AttribDict)
+        self.assertEqual(len(stats2.other2), 1)
+        self.assertEqual(stats2.other3, 'test3')
+        self.assertEqual(stats.network, 'CZ')
+        self.assertEqual(stats.station, 'RJOB')
 
     def test_update(self):
         """
@@ -78,17 +78,17 @@ class StatsTestCase(unittest.TestCase):
         """
         stats = Stats()
         stats.test = 1
-        self.assertEquals(stats.test, 1)
-        self.assertEquals(stats['test'], 1)
+        self.assertEqual(stats.test, 1)
+        self.assertEqual(stats['test'], 1)
         stats['test2'] = 2
-        self.assertEquals(stats.test2, 2)
-        self.assertEquals(stats['test2'], 2)
+        self.assertEqual(stats.test2, 2)
+        self.assertEqual(stats['test2'], 2)
         stats['test'] = 2
-        self.assertEquals(stats.test, 2)
-        self.assertEquals(stats['test'], 2)
+        self.assertEqual(stats.test, 2)
+        self.assertEqual(stats['test'], 2)
         stats.test2 = 1
-        self.assertEquals(stats.test2, 1)
-        self.assertEquals(stats['test2'], 1)
+        self.assertEqual(stats.test2, 1)
+        self.assertEqual(stats['test2'], 1)
 
     def test_nestedStats(self):
         """
@@ -98,19 +98,19 @@ class StatsTestCase(unittest.TestCase):
         stats = Stats()
         stats.test = dict()
         stats.test['test2'] = 'muh'
-        self.assertEquals(stats.test.test2, 'muh')
-        self.assertEquals(stats.test['test2'], 'muh')
-        self.assertEquals(stats['test'].test2, 'muh')
-        self.assertEquals(stats['test']['test2'], 'muh')
+        self.assertEqual(stats.test.test2, 'muh')
+        self.assertEqual(stats.test['test2'], 'muh')
+        self.assertEqual(stats['test'].test2, 'muh')
+        self.assertEqual(stats['test']['test2'], 'muh')
         stats.test['test2'] = 'maeh'
-        self.assertEquals(stats.test.test2, 'maeh')
-        self.assertEquals(stats.test['test2'], 'maeh')
-        self.assertEquals(stats['test'].test2, 'maeh')
-        self.assertEquals(stats['test']['test2'], 'maeh')
+        self.assertEqual(stats.test.test2, 'maeh')
+        self.assertEqual(stats.test['test2'], 'maeh')
+        self.assertEqual(stats['test'].test2, 'maeh')
+        self.assertEqual(stats['test']['test2'], 'maeh')
         #2 - multiple initialization
         stats = Stats({'muh': 'meah'})
         stats2 = Stats(Stats(Stats(stats)))
-        self.assertEquals(stats2.muh, 'meah')
+        self.assertEqual(stats2.muh, 'meah')
         #3 - check conversion to AttribDict
         stats = Stats()
         stats.sub1 = {'muh': 'meah'}
@@ -118,8 +118,8 @@ class StatsTestCase(unittest.TestCase):
         stats2 = Stats(stats)
         self.assertTrue(isinstance(stats.sub1, AttribDict))
         self.assertTrue(isinstance(stats.sub2, AttribDict))
-        self.assertEquals(stats2.sub1.muh, 'meah')
-        self.assertEquals(stats2.sub2.muh2, 'meah2')
+        self.assertEqual(stats2.sub1.muh, 'meah')
+        self.assertEqual(stats2.sub2.muh2, 'meah2')
 
     def test_bugfix_setStats(self):
         """
@@ -130,34 +130,34 @@ class StatsTestCase(unittest.TestCase):
         # change stats attributes
         st[0].stats.station = 'AAA'
         st[1].stats['station'] = 'BBB'
-        self.assertEquals(st[0].stats.station, 'BBB')
-        self.assertEquals(st[0].stats['station'], 'BBB')
-        self.assertEquals(st[1].stats['station'], 'BBB')
-        self.assertEquals(st[1].stats.station, 'BBB')
+        self.assertEqual(st[0].stats.station, 'BBB')
+        self.assertEqual(st[0].stats['station'], 'BBB')
+        self.assertEqual(st[1].stats['station'], 'BBB')
+        self.assertEqual(st[1].stats.station, 'BBB')
 
     def test_bugfix_setStats2(self):
         """
         Second test related to issue #4.
         """
         st = Stream([Trace(header={'station': 'BGLD'})])
-        self.assertEquals(st[0].stats.station, 'BGLD')
-        self.assertEquals(st[0].stats['station'], 'BGLD')
+        self.assertEqual(st[0].stats.station, 'BGLD')
+        self.assertEqual(st[0].stats['station'], 'BGLD')
         st[0].stats.station = 'AAA'
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEqual(st[0].stats.station, 'AAA')
+        self.assertEqual(st[0].stats['station'], 'AAA')
         st = st + st
-        self.assertEquals(st[0].stats.station, 'AAA')
-        self.assertEquals(st[0].stats['station'], 'AAA')
+        self.assertEqual(st[0].stats.station, 'AAA')
+        self.assertEqual(st[0].stats['station'], 'AAA')
         st[0].stats.station = 'BBB'
-        self.assertEquals(st[0].stats.station, 'BBB')
-        self.assertEquals(st[0].stats['station'], 'BBB')
+        self.assertEqual(st[0].stats.station, 'BBB')
+        self.assertEqual(st[0].stats['station'], 'BBB')
 
     def test_bugfix_setStats3(self):
         """
         Third test related to issue #4.
         """
         st = Stream([Trace(header={'station': 'BGLD'})])
-        self.assertEquals(st[0].stats.station, 'BGLD')
+        self.assertEqual(st[0].stats.station, 'BGLD')
         st = st + st
         st[0].stats.station = 'AAA'
         st = st + st
@@ -167,9 +167,9 @@ class StatsTestCase(unittest.TestCase):
         # (python list behavior)
         for tr in st:
             self.assertTrue(tr == st[0])
-            self.assertEquals(tr.stats.station, 'BBB')
-            self.assertEquals(tr.stats['station'], 'BBB')
-            self.assertEquals(tr.stats.get('station'), 'BBB')
+            self.assertEqual(tr.stats.station, 'BBB')
+            self.assertEqual(tr.stats['station'], 'BBB')
+            self.assertEqual(tr.stats.get('station'), 'BBB')
             self.assertTrue('BBB' in tr.stats.values())
 
     def test_pickleStats(self):
@@ -182,15 +182,15 @@ class StatsTestCase(unittest.TestCase):
         # ASCII
         temp = pickle.dumps(stats, protocol=0)
         stats2 = pickle.loads(temp)
-        self.assertEquals(stats, stats2)
+        self.assertEqual(stats, stats2)
         # old binary
         temp = pickle.dumps(stats, protocol=1)
         stats2 = pickle.loads(temp)
-        self.assertEquals(stats, stats2)
+        self.assertEqual(stats, stats2)
         # new binary
         temp = pickle.dumps(stats, protocol=2)
         stats2 = pickle.loads(temp)
-        self.assertEquals(stats, stats2)
+        self.assertEqual(stats, stats2)
 
     def test_setCalib(self):
         """
@@ -220,8 +220,8 @@ class StatsTestCase(unittest.TestCase):
             'delta': 1.0, 'calib': 1.0, 'npts': 0,
             'endtime': UTCDateTime(1970, 1, 1, 0, 0), 'channel': ''}
         ad = Stats(adict)
-        self.assertEquals(ad, adict)
-        self.assertEquals(adict, ad)
+        self.assertEqual(ad, adict)
+        self.assertEqual(adict, ad)
 
 
 def suite():

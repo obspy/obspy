@@ -1,6 +1,7 @@
 LIBRARY libmseed.dll
 EXPORTS
    msr_parse
+   msr_parse_selection
    msr_unpack
    msr_pack
    msr_pack_header

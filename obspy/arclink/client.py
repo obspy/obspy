@@ -12,10 +12,11 @@ ArcLink/WebDC client for ObsPy.
 from fnmatch import fnmatch
 from lxml import objectify, etree
 from obspy import read, UTCDateTime
-from obspy.core.util import NamedTemporaryFile, AttribDict, complexifyString
+from obspy.core.util import AttribDict, complexifyString
 from obspy.core.util.decorator import deprecated_keywords
 from telnetlib import Telnet
 import os
+import StringIO
 import time
 import warnings
 
@@ -29,6 +30,10 @@ _INVENTORY_NS_1_0 = "http://geofon.gfz-potsdam.de/ns/Inventory/1.0/"
 _INVENTORY_NS_0_2 = "http://geofon.gfz-potsdam.de/ns/inventory/0.2/"
 
 MSG_NOPAZ = "No Poles and Zeros information returned by server."
+
+MSG_USER_REQUIRED = """Initializing a ArcLink client without the user keyword
+is deprecated! Please provide a proper user identification string such as your
+email address. Defaulting to 'ObsPy client' for now."""
 
 
 class ArcLinkException(Exception):
@@ -49,11 +54,11 @@ class Client(object):
     :type timeout: int, optional
     :param timeout: Seconds before a connection timeout is raised (default is
         ``20`` seconds).
-    :type user: str, optional
+    :type user: str
     :param user: The user name is used for identification with the ArcLink
         server. This entry is also used for usage statistics within the data
-        centers, so please provide a meaningful user id (default is
-        ``'ObsPy client'``).
+        centers, so please provide a meaningful user id such as your email
+        address.
     :type password: str, optional
     :param password: A password used for authentication with the ArcLink server
         (default is an empty string).
@@ -61,7 +66,7 @@ class Client(object):
     :param institution: A string containing the name of the institution of the
         requesting person (default is an ``'Anonymous'``).
     :type dcid_keys: dict, optional
-    :param dcid_keys: Dictionary of datacenter ids (DCID) and passwords used
+    :param dcid_keys: Dictionary of data center ids (DCID) and passwords used
         for decoding encrypted waveform requests.
     :type dcid_key_file: str, optional
     :param dcid_key_file: Simple text configuration file containing lines of
@@ -78,18 +83,23 @@ class Client(object):
 
     .. rubric:: Notes
 
-    The following ArcLink servers may be accessed via ObsPy (partly restricted
-    access only):
+    The following ArcLink servers may be accessed (also see
+    http://www.orfeus-eu.org/eida/eida_advanced_users.html;
+    maybe partly restricted access only):
 
-    * WebDC servers: webdc.eu:18001, webdc.eu:18002
-    * ODC Server:  bhlsa03.knmi.nl:18001
-    * INGV Server: eida.rm.ingv.it:18001
-    * IPGP Server: geosrt2.ipgp.fr:18001
+    * WebDC: webdc.eu:18001, webdc.eu:18002
+    * ODC:   eida.knmi.nl:18002
+    * GFZ:   eida.gfz-potsdam.de:18001
+    * RESIF: eida.resif.fr:18001
+    * INGV:  --
+    * ETHZ:  eida.ethz.ch:18001
+    * BGR:   eida.bgr.de:18001
+    * IPGP:  eida.ipgp.fr:18001
     """
     #: Delay in seconds between each status request
     status_delay = 0.5
 
-    def __init__(self, host="webdc.eu", port=18002, user="ObsPy client",
+    def __init__(self, host="webdc.eu", port=18002, user=None,
                  password="", institution="Anonymous", timeout=20,
                  dcid_keys={}, dcid_key_file=None, debug=False,
                  command_delay=0):
@@ -98,7 +108,11 @@ class Client(object):
 
         See :class:`obspy.arclink.client.Client` for all parameters.
         """
-        self.user = user
+        if user is None:
+            warnings.warn(MSG_USER_REQUIRED, category=DeprecationWarning)
+            self.user = 'ObsPy client'
+        else:
+            self.user = user
         self.password = password
         self.institution = institution
         self.command_delay = command_delay
@@ -112,8 +126,8 @@ class Client(object):
         self._hello()
         self.debug = debug
         if self.debug:
-            print('\nConnected to %s:%d' % (self._client.host,
-                                            self._client.port))
+            print('\nConnected to %s:%s' % (self._client.host,
+                                            str(self._client.port)))
         # check for dcid_key_file
         if not dcid_key_file:
             # check in user directory
@@ -127,7 +141,17 @@ class Client(object):
             pass
         else:
             for line in lines:
-                key, value = line.split('=', 1)
+                line = line.strip()
+                # skip empty lines
+                if not line:
+                    continue
+                # skip comments
+                if line.startswith('#'):
+                    continue
+                if ' ' in line:
+                    key, value = line.split(' ', 1)
+                else:
+                    key, value = line.split('=', 1)
                 key = key.strip()
                 # ensure that dcid_keys set via parameters are not overwritten
                 if key not in self.dcid_keys:
@@ -196,7 +220,12 @@ class Client(object):
                     print('\nRequesting %s:%d' % (self._client.host,
                                                   self._client.port))
                 return self._fetch(request_type, request_data, route)
-            msg = 'Could not find route to %s.%s'
+            msg = 'Could not find route to %s.%s. If you think the data ' + \
+                  'should be there, you might want to retry ' + \
+                  'with manually connecting to a different ArcLink node ' + \
+                  '(see docstring of Client) to see if there is a problem ' + \
+                  'with a routing table at a specific ArcLink node (and ' + \
+                  'contact the ArcLink node operators).'
             raise ArcLinkException(msg % (request_data[2], request_data[3]))
         # we got a routing table
         for item in table:
@@ -296,22 +325,24 @@ class Client(object):
             msg = "Uncovered status message - contact a developer to fix this"
             raise ArcLinkException(msg)
         self._writeln('DOWNLOAD %d' % req_id)
-        fd = self._client.get_socket().makefile('rb+')
-        length = int(fd.readline(100).strip())
-        data = ''
-        while len(data) < length:
-            buf = fd.read(min(4096, length - len(data)))
-            data += buf
-        buf = fd.readline(100).strip()
-        if buf != "END" or len(data) != length:
-            raise Exception('Wrong length!')
-        if self.debug:
-            if data.startswith('<?xml'):
-                print(data)
-            else:
-                print("%d bytes of data read" % len(data))
-        self._writeln('PURGE %d' % req_id)
-        self._bye()
+        try:
+            fd = self._client.get_socket().makefile('rb+')
+            length = int(fd.readline(100).strip())
+            data = ''
+            while len(data) < length:
+                buf = fd.read(min(4096, length - len(data)))
+                data += buf
+            buf = fd.readline(100).strip()
+            if buf != "END" or len(data) != length:
+                raise Exception('Wrong length!')
+            if self.debug:
+                if data.startswith('<?xml'):
+                    print(data)
+                else:
+                    print("%d bytes of data read" % len(data))
+        finally:
+            self._writeln('PURGE %d' % req_id)
+            self._bye()
         # check for encryption
         if 'encrypted="true"' in xml_doc:
             # extract dcid
@@ -388,19 +419,13 @@ class Client(object):
         # handle deprecated keywords - one must be True to enable metadata
         metadata = metadata or kwargs.get('getPAZ', False) or \
             kwargs.get('getCoordinates', False)
-        tf = NamedTemporaryFile()
-        self.saveWaveform(tf._fileobj, network, station, location, channel,
+        file_stream = StringIO.StringIO()
+        self.saveWaveform(file_stream, network, station, location, channel,
                           starttime, endtime, format=format,
                           compressed=compressed, route=route)
-        # read stream using obspy.mseed
-        tf.seek(0)
-        stream = read(tf.name, 'MSEED')
-        tf.close()
-        # remove temporary file:
-        try:
-            os.remove(tf.name)
-        except:
-            pass
+        file_stream.seek(0, 0)
+        stream = read(file_stream, 'MSEED')
+        file_stream.close()
         # trim stream
         stream.trim(starttime, endtime)
         # fetching PAZ and coordinates
@@ -494,9 +519,14 @@ class Client(object):
         >>> client.saveWaveform('BW.MANZ.fullseed', 'BW', 'MANZ', '', '*',
         ...                     t, t + 20, format='FSEED')  # doctest: +SKIP
         """
+        format = format.upper()
+        if format not in ["MSEED", "FSEED"]:
+            msg = ("'%s' is not a valid format. Choose either 'MSEED' or "
+                   "'FSEED'")
+            raise ArcLinkException(msg)
         # check parameters
         is_name = isinstance(filename, basestring)
-        if not is_name and not isinstance(filename, file):
+        if not is_name and not hasattr(filename, "write"):
             msg = "Parameter filename must be either string or file handler."
             raise TypeError(msg)
         # request type
@@ -619,11 +649,11 @@ class Client(object):
         keys = []
         for key in routes:
             parts = key.split('.')
-            if parts[0] and net != '*'  and not fnmatch(parts[0], net):
+            if parts[0] and net != '*' and not fnmatch(parts[0], net):
                 continue
-            if parts[1] and sta != '*'  and not fnmatch(parts[1], sta):
+            if parts[1] and sta != '*' and not fnmatch(parts[1], sta):
                 continue
-            if parts[2] and loc != '*'  and not fnmatch(parts[2], loc):
+            if parts[2] and loc != '*' and not fnmatch(parts[2], loc):
                 continue
             if parts[3] and cha != '*' and not fnmatch(parts[3], cha):
                 continue
@@ -930,8 +960,8 @@ class Client(object):
         """
         Writes response information into a file.
 
-        :type filename: str
-        :param filename: Name of the output file.
+        :type filename: str or file like object
+        :param filename: Name of the output file or open file like object.
         :type network: str
         :param network: Network code, e.g. ``'BW'``.
         :type station: str
@@ -970,9 +1000,11 @@ class Client(object):
             data = self._fetch(rtype, rdata)
         else:
             raise ValueError("Unsupported format %s" % format)
-        fh = open(filename, "wb")
-        fh.write(data)
-        fh.close()
+        if hasattr(filename, "write") and hasattr(filename.write, "__call__"):
+            filename.write(data)
+        else:
+            with open(filename, "wb") as open_file:
+                open_file.write(data)
 
     def getInventory(self, network, station='*', location='*', channel='*',
                      starttime=UTCDateTime(), endtime=UTCDateTime(),
@@ -1126,8 +1158,8 @@ class Client(object):
                 net.end = None
             # remark
             try:
-                net.remark = network.xpath('ns:remark',
-                    namespaces={'ns': xml_ns})[0].text or ''
+                net.remark = network.xpath(
+                    'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
             except:
                 net.remark = ''
             # write network entries
@@ -1162,8 +1194,8 @@ class Client(object):
                     sta.end = None
                 # remark
                 try:
-                    sta.remark = station.xpath('ns:remark',
-                        namespaces={'ns': xml_ns})[0].text or ''
+                    sta.remark = station.xpath(
+                        'ns:remark', namespaces={'ns': xml_ns})[0].text or ''
                 except:
                     sta.remark = ''
                 # write station entry
@@ -1171,23 +1203,23 @@ class Client(object):
                 # instruments
                 for stream in station.xpath('ns:' + stream_ns,
                                             namespaces={'ns': xml_ns}):
-                    # date / times
-                    try:
-                        start = UTCDateTime(stream.get('start'))
-                    except:
-                        start = None
-                    try:
-                        end = UTCDateTime(stream.get('end'))
-                    except:
-                        end = None
-                    # check date/time boundaries
-                    if start > endtime:
-                        continue
-                    if end and starttime > end:
-                        continue
                     # fetch component
                     for comp in stream.xpath('ns:' + component_ns,
                                              namespaces={'ns': xml_ns}):
+                        # date / times
+                        try:
+                            start = UTCDateTime(comp.get('start'))
+                        except:
+                            start = None
+                        try:
+                            end = UTCDateTime(comp.get('end'))
+                        except:
+                            end = None
+                        # check date/time boundaries
+                        if start > endtime:
+                            continue
+                        if end and starttime > end:
+                            continue
                         if xml_ns == _INVENTORY_NS_0_2:
                             seismometer_id = stream.get(seismometer_ns, None)
                         else:
@@ -1197,7 +1229,7 @@ class Client(object):
                             # channel code is split into two attributes
                             id = '.'.join([net.code, sta.code,
                                            stream.get('loc_code', ''),
-                                           stream.get('code', '  ') + \
+                                           stream.get('code', '  ') +
                                            comp.get('code', ' ')])
                         else:
                             id = '.'.join([net.code, sta.code,
@@ -1238,8 +1270,8 @@ class Client(object):
                         if not instruments or not seismometer_id:
                             continue
                         # PAZ
-                        paz_id = xml_doc.xpath('ns:' + seismometer_ns + \
-                                               '[@' + name_ns + '="' + \
+                        paz_id = xml_doc.xpath('ns:' + seismometer_ns +
+                                               '[@' + name_ns + '="' +
                                                seismometer_id + '"]/@response',
                                                namespaces={'ns': xml_ns})
                         if not paz_id:
@@ -1248,7 +1280,7 @@ class Client(object):
                         # hack for 0.2 schema
                         if paz_id.startswith('paz:'):
                             paz_id = paz_id[4:]
-                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' + \
+                        xml_paz = xml_doc.xpath('ns:' + resp_paz_ns + '[@' +
                                                 name_ns + '="' + paz_id + '"]',
                                                 namespaces={'ns': xml_ns})
                         if not xml_paz:
@@ -1309,8 +1341,8 @@ class Client(object):
         """
         data = self.getInventory(network=network, starttime=starttime,
                                  endtime=endtime)
-        stations = [value for key, value in data.items() \
-                    if key.startswith(network + '.') \
+        stations = [value for key, value in data.items()
+                    if key.startswith(network + '.')
                     and "code" in value]
         return stations
 

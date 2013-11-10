@@ -1,0 +1,29 @@
+Test data for css support of obspy:
+
+'201101311155.10.w':
+
+- Waveform data in CSS style (S4 decoding: 4-byte integer, swapped byte order)
+- three streams (Z,N,E) each 1 min long with 80 Hz sampling rate = 4800 samples each
+
+'201101311155.10.ascii':
+
+- corresponding ascii data
+- Note that Z,N,E appear one after another without any separation character
+
+'css2ascii.c':
+
+- a C code used to convert css binary into ascci
+
+'test.wfdisc':
+
+- css header file (not used by c code)
+- each line corresponds to an individual stream or component
+- Field 1: Station Name
+- Field 2: Component/Channel
+- Field 3: Epoch time of first sample
+- Field 8: Number of samples
+- Field 9: Sampling Frequency
+- Field 14: Datatype (s4 or t4)
+- Field 16: waveform directory name
+- Field 17: waveform file name
+- for meaning of other field see page 12 (15 in pdf) in http://www.iris.edu/data/reports/CentralAsianBulletinCatalog/SchemaReferenceMan.pdf
