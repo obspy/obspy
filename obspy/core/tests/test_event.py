@@ -159,7 +159,7 @@ class OriginTestCase(unittest.TestCase):
         origin.depth_type = 'from location'
         self.assertEqual(
             origin.resource_id,
-            ResourceIdentifier(text='smi:ch.ethz.sed/origin/37465'))
+            ResourceIdentifier(id='smi:ch.ethz.sed/origin/37465'))
         self.assertEqual(origin.latitude, 12)
         self.assertEqual(origin.latitude_errors.confidence_level, 95)
         self.assertEqual(origin.latitude_errors.uncertainty, None)
@@ -477,20 +477,20 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         object_a = UTCDateTime()
         object_b = UTCDateTime()
         self.assertEqual(object_a is object_b, False)
-        text = 'obspy.org/tests/test_resource'
-        res_a = ResourceIdentifier(text=text,
+        id = 'obspy.org/tests/test_resource'
+        res_a = ResourceIdentifier(id=id,
                                    referred_object=object_a)
         # Now create a new resource with the same id but a different object.
         # This will raise a warning.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, ResourceIdentifier,
-                              text=text,
+                              id=id,
                               referred_object=object_b)
             # Now ignore the warning and actually create the new
             # ResourceIdentifier.
             warnings.simplefilter('ignore', UserWarning)
-            res_b = ResourceIdentifier(text=text,
+            res_b = ResourceIdentifier(id=id,
                                        referred_object=object_b)
         # Object b was the last to added, thus all resource identifiers will
         # now point to it.
@@ -611,7 +611,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.text, rid.getQuakeMLURI())
+        self.assertEqual(rid.id, rid.getQuakeMLURI())
 
     def test_resource_id_init_deprecation(self):
         """
@@ -620,7 +620,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         with warnings.catch_warnings(record=True) as w:
             rid = ResourceIdentifier(resource_id="blablup")
-        self.assertEqual(rid.text, "blablup")
+        self.assertEqual(rid.id, "blablup")
         self.assertEqual(len(w), 1)
         w = w[0]
         self.assertEqual(w.category, DeprecationWarning)

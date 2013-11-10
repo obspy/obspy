@@ -854,7 +854,7 @@ class Pickler(object):
         for contrib in stat_contrib:
             contrib_el = etree.Element('stationMagnitudeContribution')
             etree.SubElement(contrib_el, 'stationMagnitudeID').text = \
-                contrib.station_magnitude_id.text
+                contrib.station_magnitude_id.id
             if contrib.weight:
                 etree.SubElement(contrib_el, 'weight').text = \
                     str(contrib.weight)
