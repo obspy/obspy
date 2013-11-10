@@ -34,15 +34,14 @@ from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
 import glob
-import inspect
+import fnmatch
 import os
 import platform
 import sys
 
 
-# Directory of the current file in the (hopefully) most reliable way possible.
-SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
-    inspect.currentframe())))
+# Directory of the current file
+SETUP_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 
 # Import the version string.
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
@@ -429,34 +428,22 @@ def configuration(parent_package="", top_path=None):
 
 def add_data_files(config):
     """
-    Function adding all necessary data files.
+    Recursively include all non python files
     """
-    # Add all test data files
-    for data_folder in glob.iglob(os.path.join(
-            SETUP_DIRECTORY, "obspy", "*", "tests", "data")):
-        path = os.path.join(*data_folder.split(os.path.sep)[-4:])
-        config.add_data_dir(path)
-    # Add all data files
-    for data_folder in glob.iglob(os.path.join(
-            SETUP_DIRECTORY, "obspy", "*", "data")):
-        path = os.path.join(*data_folder.split(os.path.sep)[-3:])
-        config.add_data_dir(path)
-    # Add all docs files
-    for data_folder in glob.iglob(os.path.join(
-            SETUP_DIRECTORY, "obspy", "*", "docs")):
-        path = os.path.join(*data_folder.split(os.path.sep)[-3:])
-        config.add_data_dir(path)
-    # image directories
-    config.add_data_dir(os.path.join("obspy", "core", "tests", "images"))
-    config.add_data_dir(os.path.join("obspy", "imaging", "tests", "images"))
-    config.add_data_dir(os.path.join("obspy", "segy", "tests", "images"))
-    # Add the taup models.
-    config.add_data_dir(os.path.join("obspy", "taup", "tables"))
-    # Adding the Flinn-Engdahl names files
-    config.add_data_dir(os.path.join("obspy", "core", "util", "geodetics",
-                                     "data"))
-    # Adding the version information file
-    config.add_data_files(os.path.join("obspy", "RELEASE-VERSION"))
+    # python files are included per default, we only include data files
+    # here
+    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf']
+    EXCLUDE_DIRS = ['src', 'docs', '__pycache__']
+    common_prefix = SETUP_DIRECTORY + os.path.sep
+    for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
+        root = root.replace(common_prefix, '')
+        for name in files:
+            if any(fnmatch.fnmatch(name, w) for w in EXCLUDE_WILDCARDS):
+                continue
+            config.add_data_files(os.path.join(root, name))
+        for folder in EXCLUDE_DIRS:
+            if folder in dirs:
+                dirs.remove(folder)
 
 
 def setupPackage():
