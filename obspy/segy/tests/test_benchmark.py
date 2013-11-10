@@ -9,6 +9,8 @@ from obspy.segy.benchmark import plotBenchmark
 import glob
 import os
 import unittest
+import warnings
+import numpy as np
 
 
 class BenchmarkTestCase(unittest.TestCase):
@@ -26,7 +28,15 @@ class BenchmarkTestCase(unittest.TestCase):
         # new temporary file with PNG extension
         with ImageComparison(path_images, 'test_plotBenchmark.png') as ic:
             # generate plot
-            plotBenchmark(sufiles, outfile=ic.name, format='PNG')
+            with warnings.catch_warnings(record=True) as w:
+                warnings.resetwarnings()
+                np_err = np.seterr(all="warn")
+                plotBenchmark(sufiles, outfile=ic.name, format='PNG')
+                np.seterr(**np_err)
+            self.assertEqual(len(w), 1)
+            self.assertEqual(w[0].category, RuntimeWarning)
+            self.assertEqual(str(w[0].message),
+                             'underflow encountered in divide')
 
 
 def suite():

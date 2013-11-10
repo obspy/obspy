@@ -70,6 +70,7 @@ import numpy as np
 import os
 import os.path
 import sys
+import warnings
 
 
 MOPAD_VERSION = 0.7
@@ -400,11 +401,17 @@ class MomentTensor:
         a2 = eigenv[:, 1]
         a3 = eigenv[:, 2]
 
-        F = -eigenw_devi[0] / eigenw_devi[2]
+        # eigen values can be zero in some cases. this is handled in the
+        # following try/except.
+        with warnings.catch_warnings(record=True):
+            np_err = np.seterr(all="warn")
+            F = -eigenw_devi[0] / eigenw_devi[2]
 
-        M_DC = eigenw[2] * (1 - 2 * F) * (np.outer(a3, a3) - np.outer(a2, a2))
-        M_CLVD = eigenw[2] * F * (2 * np.outer(a3, a3) - np.outer(a2, a2) -
-                                  np.outer(a1, a1))
+            M_DC = \
+                eigenw[2] * (1 - 2 * F) * (np.outer(a3, a3) - np.outer(a2, a2))
+            M_CLVD = eigenw[2] * F * (2 * np.outer(a3, a3) - np.outer(a2, a2) -
+                                      np.outer(a1, a1))
+            np.seterr(**np_err)
 
         try:
             M_DC_percentage = int(round((1 - 2 * abs(F)) * 100, 6))
@@ -2739,7 +2746,11 @@ class BeachBall:
             EWn = 0
         norm_factor = max(np.abs([EWh, EWn, EWs]))
 
-        [EWh, EWn, EWs] = [xx / norm_factor for xx in [EWh, EWn, EWs]]
+        # norm_factor is be zero in some cases
+        with warnings.catch_warnings(record=True):
+            np_err = np.seterr(all="warn")
+            [EWh, EWn, EWs] = [xx / norm_factor for xx in [EWh, EWn, EWs]]
+            np.seterr(**np_err)
 
         RHS = -EWs / (EWn * np.cos(phi) ** 2 + EWh * np.sin(phi) ** 2)
 

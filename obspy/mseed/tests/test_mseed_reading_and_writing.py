@@ -2,6 +2,7 @@
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.misc import CatchOutput
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -934,6 +935,29 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # timing quality must be inside the range of 0 to 100 [%]
         self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
         self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
+
+    def test_corruptFileLength(self):
+        """
+        Checks that mseed reading utility is explicitly checking
+        for file length. fullseed_dataquality_M.mseed is corrupt,
+        it has file length 4097 and record length 4096. See #678.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'fullseed_dataquality_M.mseed')
+        with CatchOutput() as out:
+            st = read(filename, reclen=4096, verbose=1)
+        self.assertIn("Last reclen exceeds buflen, skipping", out.stdout)
+        self.assertEqual(st[0].stats.station, 'APE')
+
+    def test_verbosity(self):
+        filename = os.path.join(self.path, 'data',
+                                'BW.UH3.__.EHZ.D.2010.171.first_record')
+        with CatchOutput() as out:
+            st = read(filename, verbose=2)
+        self.assertIn("calling msr_parse with", out.stdout)
+        self.assertIn("buflen=512, reclen=-1, dataflag=0, verbose=2",
+                      out.stdout)
+        self.assertEqual(st[0].stats.station, 'UH3')
 
 
 def suite():

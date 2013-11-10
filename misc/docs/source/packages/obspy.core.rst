@@ -31,6 +31,7 @@
        quakeml
        util
        preview
+       json
 
     .. comment to end block
 

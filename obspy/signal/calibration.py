@@ -103,8 +103,9 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
         spectra = np.empty((2, len(res.real)))
         spectra[0] = res.real
         spectra[1] = res.imag
-        new_spectra = konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth,
-                count=1, max_memory_usage=1024, normalize=True)
+        new_spectra = \
+            konnoOhmachiSmoothing(spectra, freq, bandwidth=smooth, count=1,
+                                  max_memory_usage=1024, normalize=True)
         res.real = new_spectra[0]
         res.imag = new_spectra[1]
 
@@ -115,7 +116,8 @@ def relcalstack(st1, st2, calib_file, window_len, overlap_frac=0.5, smooth=0,
     rpha = np.unwrap(np.angle(gg))
 
     if save_data:
-        trans_new = st2[0].stats.station + "." + st2[0].stats.channel + "." + str(window_len) + ".resp"
+        trans_new = (st2[0].stats.station + "." + st2[0].stats.channel +
+                     "." + str(window_len) + ".resp")
         trans_ref = st1[0].stats.station + ".refResp"
         # Create empty array for easy saving
         temp = np.empty((len(freq), 3))

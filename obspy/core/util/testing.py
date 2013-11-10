@@ -222,7 +222,12 @@ class ImageComparison(NamedTemporaryFile):
         environment variable is set.
         """
         try:
-            self.compare()
+            # only compare images if no exception occured in the with
+            # statement. this avoids masking previously occured exceptions (as
+            # an exception may occur in compare()). otherwise we only clean up
+            # and the exception gets re-raised at the end of __exit__.
+            if exc_type is None:
+                self.compare()
         finally:
             import matplotlib.pyplot as plt
             self.close()
@@ -240,6 +245,9 @@ class ImageComparison(NamedTemporaryFile):
         matplotlib if the comparison exceeds the allowed tolerance.
         """
         from matplotlib.testing.compare import compare_images
+        if os.stat(self.name).st_size == 0:
+            msg = "Empty output image file."
+            raise ImageComparisonException(msg)
         msg = compare_images(self.baseline_image, self.name, tol=self.tol)
         if msg:
             raise ImageComparisonException(msg)

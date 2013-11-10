@@ -358,10 +358,17 @@ class TriggerTestCase(unittest.TestCase):
                      "BW.UH3..SHZ": 1,
                      "BW.UH4..EHZ": 1}
         similarity_thresholds = {"UH1": 0.8, "UH3": 0.7}
-        trig = coincidenceTrigger("classicstalta", 5, 1, st.copy(), 4, sta=0.5,
-                                  lta=10, trace_ids=trace_ids,
-                                  event_templates=templ,
-                                  similarity_threshold=similarity_thresholds)
+        with warnings.catch_warnings(record=True) as w:
+            # avoid getting influenced by the warning filters getting set up
+            # differently in obspy-runtests.
+            # (e.g. depending on options "-v" and "-q")
+            warnings.resetwarnings()
+            trig = coincidenceTrigger(
+                "classicstalta", 5, 1, st.copy(), 4, sta=0.5, lta=10,
+                trace_ids=trace_ids, event_templates=templ,
+                similarity_threshold=similarity_thresholds)
+            # two warnings get raised
+            self.assertEqual(len(w), 2)
         # check floats in resulting dictionary separately
         self.assertAlmostEqual(trig[0].pop('duration'), 3.9600000381469727)
         self.assertAlmostEqual(trig[1].pop('duration'), 1.9900000095367432)

@@ -12,7 +12,8 @@ Main module containing XML-SEED parser.
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import getExampleFile, deprecated_keywords
+from obspy.core.util import deprecated_keywords
+from obspy.core.util.decorator import map_example_filename
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils, blockette
 from obspy.xseed.utils import SEEDParserException
 import copy
@@ -130,6 +131,7 @@ class Parser(object):
                  channel["latitude"], channel["longitude"])
         return ret_str.strip()
 
+    @map_example_filename("data")
     def read(self, data):
         """
         General parser method for XML-SEED and Dataless SEED files.
@@ -143,13 +145,6 @@ class Parser(object):
             self.__init__()
         # try to transform everything into StringIO object
         if isinstance(data, basestring):
-            # if it starts with /path/to/ try to search in examples
-            if data.startswith('/path/to/'):
-                try:
-                    data = getExampleFile(data[9:])
-                except:
-                    # otherwise just try to read the given /path/to folder
-                    pass
             if "://" in data:
                 # some URL
                 data = urllib2.urlopen(data).read()
