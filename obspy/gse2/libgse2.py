@@ -175,6 +175,18 @@ def readHeader(fh):
     date = dict((k, header.pop(k)) for k in
                 "year month day hour minute second microsecond".split())
     header['starttime'] = UTCDateTime(**date)
+    # search for STA2 line (mandatory but often omitted in practice)
+    # according to manual this has to follow immediately after WID2
+    pos = fh.tell()
+    line = fh.readline()
+    if line.startswith('STA2'):
+        header2 = parse_STA2(line)
+        header['network'] = header2.pop("network")
+        header['gse2'].update(header2)
+    # in case no STA2 line is encountered we need to rewind the file pointer,
+    # otherwise we might miss the DAT2 line afterwards.
+    else:
+        fh.seek(pos)
     return header
 
 
@@ -216,6 +228,22 @@ def writeHeader(f, headdict):
             headdict['gse2']['hang'],
             headdict['gse2']['vang'])
             )
+    fmt = "STA2 %-9s %9.5f %10.5f %-12s %5.3f %5.3f\n"
+    try:
+        line = fmt % (
+            headdict['network'],
+            headdict['gse2']['lat'],
+            headdict['gse2']['lon'],
+            headdict['gse2']['coordsys'],
+            headdict['gse2']['elev'],
+            headdict['gse2']['edepth'])
+        if any([headdict['gse2'][key] < 0
+                for key in ('lat', 'lon', 'elev', 'edepth')]):
+            raise NotImplementedError()
+    except:
+        pass
+    else:
+        f.write(line)
 
 
 def uncompress_CM6(f, n_samps):
@@ -394,6 +422,73 @@ def write(headdict, data, f, inplace=False):
     for line in data_cm6:
         f.write("%s\n" % line)
     f.write("CHK2 %8ld\n\n" % chksum)
+
+
+def parse_STA2(line):
+    """
+    Parses a string with a GSE2 STA2 header line.
+
+    Official Definition::
+
+        Position Name     Format    Description
+           1-4   "STA2"   a4        Must be "STA2"
+          6-14   Network  a9        Network identifier
+         16-34   Lat      f9.5      Latitude (degrees, S is negative)
+         36-45   Lon      f10.5     Longitude (degrees, W is negative)
+         47-58   Coordsys a12       Reference coordinate system (e.g., WGS-84)
+         60-64   Elev     f5.3      Elevation (km)
+         66-70   Edepth   f5.3      Emplacement depth (km)
+
+    Corrected Definition (end column of "Lat" field wrong)::
+
+        Position Name     Format    Description
+           1-4   "STA2"   a4        Must be "STA2"
+          6-14   Network  a9        Network identifier
+         16-24   Lat      f9.5      Latitude (degrees, S is negative)
+         26-35   Lon      f10.5     Longitude (degrees, W is negative)
+         37-48   Coordsys a12       Reference coordinate system (e.g., WGS-84)
+         50-54   Elev     f5.3      Elevation (km)
+         56-60   Edepth   f5.3      Emplacement depth (km)
+
+    However, many files in practice do not adhere to these defined fixed
+    positions. Here are some real-world examples:
+
+    >>> from pprint import pprint
+    >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
+    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
+    {'coordsys': '',
+     'edepth': -0.999,
+     'elev': -0.999,
+     'lat': -999.0,
+     'lon': -999.0,
+     'network': ''}
+    >>> l = "STA2 ABCD       12.34567    1.23456 WGS-84       -123.456 1.234"
+    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
+    {'coordsys': 'WGS-84',
+     'edepth': 1.234,
+     'elev': -123.456,
+     'lat': 12.34567,
+     'lon': 1.23456,
+     'network': 'ABCD'}
+    """
+    header = {}
+    try:
+        header['network'] = line[5:14].strip()
+        parts = line[14:].strip().split()
+        header['lat'] = float(parts[0])
+        header['lon'] = float(parts[1])
+        header['elev'] = float(parts[-2])
+        header['edepth'] = float(parts[-1])
+        if len(parts) == 5:
+            header['coordsys'] = parts[2].strip()
+        elif len(parts) == 4:
+            header['coordsys'] = ""
+        else:
+            raise
+    except:
+        raise Exception('GSE2: Invalid STA2 header')
+    return header
+
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)
