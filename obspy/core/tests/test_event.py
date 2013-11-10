@@ -619,6 +619,7 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         "resource_id" gets initialized correctly and that a warning is shown.
         """
         with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
             rid = ResourceIdentifier(resource_id="blablup")
         self.assertEqual(rid.id, "blablup")
         self.assertEqual(len(w), 1)

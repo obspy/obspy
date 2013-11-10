@@ -112,7 +112,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[1].text, 'Another comment')
         self.assertEqual(
             c[1].resource_id,
-            ResourceIdentifier(text="smi:some/comment/id/number_3"))
+            ResourceIdentifier(id="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # event descriptions
         self.assertEqual(len(event.event_descriptions), 3)
