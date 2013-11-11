@@ -395,13 +395,13 @@ class CatchOutput(object):
         os.dup2(self._stderr, 2)
         os.close(self._stdout)
         os.close(self._stderr)
-        sys.stdout = os.fdopen(self._new_stdout, 'w')
-        sys.stdout = os.fdopen(self._new_stderr, 'w')
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         sys.stdout.flush()
         sys.stderr.flush()
+        os.fsync(sys.stdout.fileno())
+        os.fsync(sys.stderr.fileno())
         sys.stdout = self._orig_stdout
         sys.stderr = self._orig_stderr
         sys.stdout.flush()
