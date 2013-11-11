@@ -81,6 +81,7 @@ class Client(object):
         """
         self.debug = debug
         self.user = user
+        self.opener = None
 
         if base_url.upper() in URL_MAPPINGS:
             base_url = URL_MAPPINGS[base_url.upper()]
@@ -95,14 +96,14 @@ class Client(object):
             password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
             password_mgr.add_password(None, base_url, user, password)
             auth_handler = urllib2.HTTPDigestAuthHandler(password_mgr)
-            opener = urllib2.build_opener(auth_handler)
+            self.opener = urllib2.build_opener(auth_handler)
             # install globally
-            urllib2.install_opener(opener)
+            #urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
         self.major_version = major_version
 
-        if self.debug is True:
+        if self.debug:
             print "Base URL: %s" % self.base_url
             print "Request Headers: %s" % str(self.request_headers)
 
@@ -468,7 +469,7 @@ class Client(object):
         url = self._create_url_from_parameters(
             "dataselect", DEFAULT_PARAMETERS['dataselect'], kwargs)
 
-        data_stream = self._download(url)
+        data_stream = self._download(url, opener=self.opener)
         data_stream.seek(0, 0)
         if filename:
             self._write_to_file_object(filename, data_stream)
@@ -531,7 +532,7 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: #SKIP
+        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -801,10 +802,10 @@ class Client(object):
 
         print "\n".join(msg)
 
-    def _download(self, url, return_string=False, data=None):
+    def _download(self, url, return_string=False, data=None, opener=None):
         code, data = download_url(
             url, headers=self.request_headers, debug=self.debug,
-            return_string=return_string, data=data)
+            return_string=return_string, data=data, opener=opener)
         # No data.
         if code == 204:
             raise FDSNException("No data available for request.")
@@ -842,7 +843,8 @@ class Client(object):
             if resource_type == "dataselect" and service == "query":
                 service = "queryauth"
         return build_url(self.base_url, self.major_version, resource_type,
-                         service, parameters)
+                         service, parameters
+                         ).replace("%3A", ":").replace("%2C", ",")
 
     def _discover_services(self):
         """
@@ -851,13 +853,17 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
-        dataselect_url = self._build_url("dataselect", "application.wadl")
-        station_url = self._build_url("station", "application.wadl")
-        event_url = self._build_url("event", "application.wadl")
-        catalog_url = self._build_url("event", "catalogs")
-        contributor_url = self._build_url("event", "contributors")
-        urls = (dataselect_url, station_url, event_url, catalog_url,
-                contributor_url)
+        # Used to build url's and then determining what was retrieved
+        discoverable_services = {
+            'available_event_catalogs': ['event', 'catalogs'],
+            'available_event_contributors': ['event', 'contributors'],
+            'dataselect': ['dataselect', 'application.wadl'],
+            'event': ['event', 'application.wadl'],
+            'station': ['station', 'application.wadl']}
+
+        urls = [self._build_url(*keywords) for
+                keywords in discoverable_services.values()]
+        print urls
 
         # Request all in parallel.
         wadl_queue = Queue.Queue()
@@ -876,6 +882,12 @@ class Client(object):
                         wadl_queue.put((url, None))
             return ThreadURL()
 
+        def get_parsed(url, wadl):
+            if "application.wadl" in url:
+                return WADLParser(wadl).parameters
+            else:
+                return parse_simple_xml(wadl)
+
         threads = map(get_download_thread, urls)
         for thread in threads:
             thread.start()
@@ -883,38 +895,22 @@ class Client(object):
             thread.join(15)
 
         self.services = {}
+
         for _ in range(wadl_queue.qsize()):
-            item = wadl_queue.get()
-            url, wadl = item
+            url, wadl = wadl_queue.get()
             if wadl is None:
                 continue
-            if "dataselect" in url:
-                self.services["dataselect"] = WADLParser(wadl).parameters
-                if self.debug is True:
-                    print "Discovered dataselect service"
-            elif "event" in url and "application.wadl" in url:
-                self.services["event"] = WADLParser(wadl).parameters
-                if self.debug is True:
-                    print "Discovered event service"
-            elif "station" in url:
-                self.services["station"] = WADLParser(wadl).parameters
-                if self.debug is True:
-                    print "Discovered station service"
-            elif "event" in url and "catalogs" in url:
-                try:
-                    self.services["available_event_catalogs"] = \
-                        parse_simple_xml(wadl)["catalogs"]
-                except ValueError:
-                    msg = "Could not parse the catalogs at '%s'."
-                    warnings.warn(msg)
+            for service, words in discoverable_services.items():
+                if all(word in url for word in words):
+                    if self.debug:
+                        print ("Discovered %s service" % service)
+                    try:
+                        self.services[service] = get_parsed(url, wadl)
+                    except ValueError:
+                        msg = ("Could not parse the %s" %
+                               service.replace("_", " ") + " at '%s'.")
+                        warnings.warn(msg)
 
-            elif "event" in url and "contributors" in url:
-                try:
-                    self.services["available_event_contributors"] = \
-                        parse_simple_xml(wadl)["contributors"]
-                except ValueError:
-                    msg = "Could not parse the contributors at '%s'."
-                    warnings.warn(msg)
         if not self.services:
             msg = ("No FDSN services could be discoverd at '%s'. This could "
                    "be due to a temporary service outage or an invalid FDSN "
@@ -978,7 +974,8 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, major_version, service, resource_type, parameters={}):
+def build_url(base_url, major_version, service, resource_type, parameters={},
+              branch_id="fdsnws"):
     """
     URL builder for the FDSN webservices.
 
@@ -998,6 +995,13 @@ def build_url(base_url, major_version, service, resource_type, parameters={}):
             (service, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
+    # usually, the URL includes "fdsnws" although rarely, as in alpha and beta
+    # testing, it may be something different.
+    if not branch_id.replace('_', 'x').isalnum():
+        msg = ("Branch ID '%s' not allowed.  " % branch_id +
+               "The Branch ID is only specified during service beta testing")
+        raise ValueError(msg)
+
     # Special location handling.
     if "location" in parameters:
         loc = parameters["location"].replace(" ", "")
@@ -1014,7 +1018,7 @@ def build_url(base_url, major_version, service, resource_type, parameters={}):
         loc = loc.replace(",,", ",--,")
         parameters["location"] = loc
 
-    url = "/".join((base_url, "fdsnws", service,
+    url = "/".join((base_url, branch_id, service,
                     str(major_version), resource_type))
     if parameters:
         # Strip parameters.
@@ -1028,33 +1032,38 @@ def build_url(base_url, major_version, service, resource_type, parameters={}):
 
 
 def download_url(url, timeout=10, headers={}, debug=False,
-                 return_string=True, data=None):
+                 return_string=True, data=None, opener=None):
     """
     Returns a pair of tuples.
 
     The first one is the returned HTTP code and the second the data as
     string.
 
-    Will return a touple of Nones if the service could not be found.
+    Will return a tuple of Nones if the service could not be found.
 
     Performs a http GET if data=None, otherwise a http POST.
     """
-    if debug is True:
+    if debug:
         print "Downloading %s" % url
 
     try:
-        url_obj = urllib2.urlopen(urllib2.Request(url=url, headers=headers),
+        if opener:
+            url_obj = opener.open(urllib2.Request(url=url, headers=headers),
                                   timeout=timeout, data=data)
+        else:
+            url_obj = urllib2.urlopen(urllib2.Request(url=url,
+                                                      headers=headers),
+                                      timeout=timeout, data=data)
     # Catch HTTP errors.
     except urllib2.HTTPError as e:
-        if debug is True:
+        if debug:
             print("HTTP error %i while downloading '%s': %s" %
-                  (e.code, url, e.read()))
+                  (e.code, url, e.msg))
         return e.code, None
-    except Exception as e:
-        if debug is True:
-            print "Error while downloading: %s" % url
-        return None, None
+    #except Exception as e:
+    #    if debug:
+    #        print "Error while downloading: %s" % url
+    #    return None, None
 
     code = url_obj.getcode()
     if return_string is False:
@@ -1062,7 +1071,7 @@ def download_url(url, timeout=10, headers={}, debug=False,
     else:
         data = url_obj.read()
 
-    if debug is True:
+    if debug:
         print "Downloaded %s with HTTP code: %i" % (url, code)
 
     return code, data
