@@ -17,6 +17,14 @@ import util
 import warnings
 
 
+class InternalMSEEDReadingError(Exception):
+    pass
+
+
+class InternalMSEEDReadingWarning(UserWarning):
+    pass
+
+
 def isMSEED(filename):
     """
     Checks whether a file is Mini-SEED/full SEED or not.
@@ -293,6 +301,17 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
+    def log_error_or_warning(msg):
+        if msg.startswith("ERROR: "):
+            raise InternalMSEEDReadingError(msg[7:].strip())
+        if msg.startswith("INFO: "):
+            warnings.warn(msg[6:].strip(), InternalMSEEDReadingWarning)
+    diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
+
+    def log_message(msg):
+        print msg[6:].strip()
+    log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
+
     try:
         verbose = int(verbose)
     except:
@@ -301,7 +320,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     lil = clibmseed.readMSEEDBuffer(
         buffer, buflen, selections, C.c_int8(unpack_data),
         reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
-        allocData)
+        allocData, diag_print, log_print)
 
     # XXX: Check if the freeing works.
     del selections
