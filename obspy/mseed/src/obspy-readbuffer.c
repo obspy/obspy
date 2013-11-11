@@ -271,7 +271,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             if (offset + 256 > buflen) {
                 ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
                           "is not enough to constitute a full SEED record. Corrupt data? "
-                          "Record will be skipped.", buflen - offset);
+                          "Record will be skipped.\n", buflen - offset);
                 msr_free(&msr);
                 break;
             }
