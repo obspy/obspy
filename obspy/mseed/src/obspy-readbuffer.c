@@ -260,7 +260,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // If the record length is given, make sure at least that amount of data is available.
         if (reclen != -1) {
             if (offset + reclen > buflen) {
-                ms_log(2, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
+                ms_log(1, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
                 msr_free(&msr);
                 break;
             }
@@ -269,7 +269,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         // data is present.
         else {
             if (offset + 256 > buflen) {
-                ms_log(2, "readMSEEDBuffer(): Last record only has %i byte(s) which "
+                ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
                           "is not enough to constitute a full SEED record. Corrupt data? "
                           "Record will be skipped.", buflen - offset);
                 msr_free(&msr);
@@ -285,7 +285,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             break;
         }
         if (offset + msr->reclen > buflen) {
-            ms_log(2, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
+            ms_log(1, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
             break;
         }
