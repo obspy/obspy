@@ -675,7 +675,9 @@ clibmseed.readMSEEDBuffer.argtypes = [
     C.c_int8,
     C.c_int8,
     C.c_int,
-    C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)
+    C.CFUNCTYPE(C.c_long, C.c_int, C.c_char),
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p),
+    C.CFUNCTYPE(C.c_void_p, C.c_char_p)
 ]
 
 clibmseed.readMSEEDBuffer.restype = C.POINTER(LinkedIDList)

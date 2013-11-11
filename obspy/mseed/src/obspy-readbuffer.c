@@ -185,7 +185,8 @@ void empty_print(char *string) {}
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long (*allocData) (int, char))
+                 int header_byteorder, long (*allocData) (int, char),
+                 void (*log_err) (char*), void (*log_warn) (char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -224,7 +225,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
     }
     else {
-        ms_loginit((void*)&printf, NULL, (void*)&printf, "error: ");
+        ms_loginit(log_warn, "", log_err, "");
     }
 
     if (header_byteorder >= 0) {
