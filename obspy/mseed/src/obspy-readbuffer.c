@@ -252,7 +252,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
             return -1;
         }
         if (verbose > 1) {
-            ms_log(1, "readMSEEDBuffer(): calling msr_parse with "
+            ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
                       "mseed+offset=%d+%d, buflen=%d, reclen=%d, dataflag=%d, verbose=%d\n",
                       mseed, offset, buflen, reclen, dataflag, verbose);
         }
