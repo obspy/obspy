@@ -186,7 +186,7 @@ LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
                  int header_byteorder, long (*allocData) (int, char),
-                 void (*log_err) (char*), void (*log_warn) (char*))
+                 void (*diag_print) (char*), void (*log_print) (char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -225,7 +225,7 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
     }
     else {
-        ms_loginit(log_warn, "", log_err, "");
+        ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
     }
 
     if (header_byteorder >= 0) {
