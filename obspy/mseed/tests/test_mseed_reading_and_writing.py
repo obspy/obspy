@@ -2,7 +2,6 @@
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
-from obspy.core.util.misc import CatchOutput
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
 from obspy.mseed.headers import clibmseed, ENCODINGS
@@ -10,6 +9,8 @@ from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
+from StringIO import StringIO
+import sys
 import unittest
 import warnings
 
@@ -949,19 +950,34 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'corrupt_one_extra_byte_at_end.mseed')
-        with CatchOutput() as out:
-            st = read(filename, reclen=512, verbose=1)
-        self.assertIn("Last reclen exceeds buflen, skipping", out.stdout)
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            st = read(filename, reclen=512)
+
+        self.assertEqual(len(w), 1)
+        self.assertIn("Last reclen exceeds buflen, skipping",
+                      str(w[-1].message))
         self.assertEqual(st[0].stats.station, 'BGLD')
 
     def test_verbosity(self):
         filename = os.path.join(self.path, 'data',
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
-        with CatchOutput() as out:
-            st = read(filename, verbose=2)
-        self.assertIn("calling msr_parse with", out.stdout)
+
+        # Catch output.
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+        st = read(filename, verbose=2)
+        sys.stdout.seek(0, 0)
+        stdout = sys.stdout.read()
+        sys.stdout.close()
+        sys.stderr.close()
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        self.assertIn("calling msr_parse with", stdout)
         self.assertIn("buflen=512, reclen=-1, dataflag=0, verbose=2",
-                      out.stdout)
+                      stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
 
