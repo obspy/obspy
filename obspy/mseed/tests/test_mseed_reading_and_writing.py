@@ -939,15 +939,20 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
     def test_corruptFileLength(self):
         """
         Checks that mseed reading utility is explicitly checking
-        for file length. fullseed_dataquality_M.mseed is corrupt,
-        it has file length 4097 and record length 4096. See #678.
+        for file length.
+
+        The original unintentionally corrupt file has been replaced with an
+        intentionally corrupt test file. It has a record length of 512 with one
+        additional byte at the end.
+
+        See #678 for the original detection of the bug.
         """
         filename = os.path.join(self.path, 'data',
-                                'fullseed_dataquality_M.mseed')
+                                'corrupt_one_extra_byte_at_end.mseed')
         with CatchOutput() as out:
-            st = read(filename, reclen=4096, verbose=1)
+            st = read(filename, reclen=512, verbose=1)
         self.assertIn("Last reclen exceeds buflen, skipping", out.stdout)
-        self.assertEqual(st[0].stats.station, 'APE')
+        self.assertEqual(st[0].stats.station, 'BGLD')
 
     def test_verbosity(self):
         filename = os.path.join(self.path, 'data',
