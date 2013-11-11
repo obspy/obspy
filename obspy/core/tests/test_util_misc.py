@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import unittest
 import os
+import sys
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
@@ -50,11 +51,15 @@ class UtilMiscTestCase(unittest.TestCase):
         libc = CDLL(find_library("c"))
 
         with CatchOutput() as out:
-            libc.printf("hello world stdout\n")
-            os.system('echo "mystderr" 1>&2')
+            os.system('echo "abc"')
+            libc.printf("def\n")
+            print "ghi"
+            print >> sys.stdout, "jkl"
+            os.system('echo "123" 1>&2')
+            print >> sys.stderr, "456"
 
-        self.assertEqual(out.stdout, "hello world stdout\n")
-        self.assertEqual(out.stderr, "mystderr\n")
+        self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
+        self.assertEqual(out.stderr, "123\n456\n")
 
 
 def suite():
