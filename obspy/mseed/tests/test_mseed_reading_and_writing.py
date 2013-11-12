@@ -956,8 +956,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             st = read(filename, reclen=512)
 
         self.assertEqual(len(w), 1)
-        self.assertIn("Last reclen exceeds buflen, skipping",
-                      str(w[-1].message))
+        self.assertTrue("Last reclen exceeds buflen, skipping" in
+                        str(w[-1].message))
         self.assertEqual(st[0].stats.station, 'BGLD')
 
     def test_verbosity(self):
@@ -975,9 +975,9 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         sys.stdout = sys.__stdout__
         sys.stderr = sys.__stderr__
 
-        self.assertIn("calling msr_parse with", stdout)
-        self.assertIn("buflen=512, reclen=-1, dataflag=0, verbose=2",
-                      stdout)
+        self.assertTrue("calling msr_parse with" in stdout)
+        self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
+                        stdout)
         self.assertEqual(st[0].stats.station, 'UH3')
 
 
