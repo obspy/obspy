@@ -474,17 +474,12 @@ def parse_STA2(line):
     header = {}
     try:
         header['network'] = line[5:14].strip()
-        parts = line[14:].strip().split()
-        header['lat'] = float(parts[0])
-        header['lon'] = float(parts[1])
-        header['elev'] = float(parts[-2])
-        header['edepth'] = float(parts[-1])
-        if len(parts) == 5:
-            header['coordsys'] = parts[2].strip()
-        elif len(parts) == 4:
-            header['coordsys'] = ""
-        else:
-            raise
+        header['lat'] = float(line[15:24])
+        header['lon'] = float(line[25:35])
+        header['coordsys'] = line[36:48].strip()
+        elev, edepth = line[48:].strip().split()
+        header['elev'] = float(elev)
+        header['edepth'] = float(edepth)
     except:
         raise Exception('GSE2: Invalid STA2 header')
     return header
