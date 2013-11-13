@@ -223,9 +223,9 @@ class LibGSE2TestCase(unittest.TestCase):
             {'network': 'ABCD', 'lon': 1.12345, 'edepth': 1.234,
              'elev': -123.456, 'lat': 12.12345, 'coordsys': 'WGS-84'},
             {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
-             'lat': -999.0, 'coordsys': ''},
+             'lat': -99.0, 'coordsys': ''},
             {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
-             'lat': -999.0, 'coordsys': ''}]
+             'lat': -99.0, 'coordsys': ''}]
         with open(filename) as fh:
             lines = fh.readlines()
         with open(filename2) as fh:

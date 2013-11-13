@@ -60,7 +60,7 @@ attributes:
                               'datatype': 'CM6', 'hang': -1.0, 'lon': -999.0,
                               'edepth': -0.999, 'auxid': 'RJOB',
                               'vang': -1.0, 'calper': 1.0,
-                              'lat': -999.0, 'coordsys': ''})
+                              'lat': -99.0, 'coordsys': ''})
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.
