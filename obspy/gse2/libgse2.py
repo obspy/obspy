@@ -228,22 +228,13 @@ def writeHeader(f, headdict):
             headdict['gse2']['hang'],
             headdict['gse2']['vang'])
             )
-    fmt = "STA2 %-9s %9.5f %10.5f %-12s %5.3f %5.3f\n"
     try:
-        line = fmt % (
-            headdict['network'],
-            headdict['gse2']['lat'],
-            headdict['gse2']['lon'],
-            headdict['gse2']['coordsys'],
-            headdict['gse2']['elev'],
-            headdict['gse2']['edepth'])
-        if any([headdict['gse2'][key] < 0
-                for key in ('lat', 'lon', 'elev', 'edepth')]):
-            raise NotImplementedError()
+        sta2_line = compile_STA2(headdict)
     except:
-        pass
+        msg = "GSE2: Error while compiling the STA2 header line, omitting it."
+        warnings.warn(msg)
     else:
-        f.write(line)
+        f.write(sta2_line)
 
 
 def uncompress_CM6(f, n_samps):
@@ -481,8 +472,46 @@ def parse_STA2(line):
         header['elev'] = float(elev)
         header['edepth'] = float(edepth)
     except:
-        raise Exception('GSE2: Invalid STA2 header')
-    return header
+        msg = 'GSE2: Invalid STA2 header, ignoring.'
+        warnings.warn(msg)
+        return {}
+    else:
+        return header
+
+
+def compile_STA2(stats):
+    """
+    Returns a STA2 line as a string (including newline at end) from a
+    :class:`~obspy.core.stats.Stats` object.
+    """
+    fmt1 = "STA2 %-9s %9.5f %10.5f %-12s "
+    fmt2 = "%5.3f %5.3f\n"
+    # compile first part, problems can only arise with invalid lat/lon values
+    # or if coordsys has more than 12 characters. raise in case of problems.
+    line = fmt1 % (
+        stats['network'],
+        stats['gse2']['lat'],
+        stats['gse2']['lon'],
+        stats['gse2']['coordsys'])
+    if len(line) != 49:
+        msg = ("GSE2: Invalid header values, unable to compile valid "
+               "STA2 line. Omitting STA2 line in output")
+        warnings.warn(msg)
+        raise Exception()
+    # compile second part, in many cases it is impossible to adhere to manual.
+    # follow common practice, just not adhere to fixed format strictly.
+    line = line + fmt2 % (
+        stats['gse2']['elev'],
+        stats['gse2']['edepth'])
+    for key in ('elev', 'edepth'):
+        if len('%5.3f' % stats['gse2'][key]) > 5:
+            msg = ("Bad value in GSE2 '%s' header field detected. "
+                   "The last two header fields of the STA2 line in the "
+                   "output file will deviate from the official fixed "
+                   "column format description (because they can not be "
+                   "represented as '%%f5.3' properly).") % key
+            warnings.warn(msg)
+    return line
 
 
 if __name__ == '__main__':
