@@ -848,7 +848,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
                      etime, prewhiten, verbose=False, coordsys='lonlat',
                      timestamp='mlabday', method=0, store=None):
     """
-    Method for Seismic-Array-Beamforming/FK-Analysis/Capon
+    Method for FK-Analysis/Capon
 
     :param stream: Stream object, the trace.stats dict like class must
         contain an :class:`~obspy.core.util.attribdict.AttribDict` with
@@ -1022,6 +1022,121 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         msg = "Option timestamp must be one of 'julsec', or 'mlabday'"
         raise ValueError(msg)
     return np.array(res)
+
+def beamforming(stream, sll_x, slm_x, sll_y, slm_y,
+                     sl_s, stime, etime, verbose=False, coordsys='lonlat',
+                     timestamp='mlabday', method="DLS", nthroot=1 ,store=None):
+    """
+    Method for Delay and Sum/Phase Weighted Stack/Whitened Slowness Power
+
+    :param stream: Stream object, the trace.stats dict like class must
+        contain a obspy.core.util.AttribDict with 'latitude', 'longitude' (in
+        degrees) and 'elevation' (in km), or 'x', 'y', 'elevation' (in km)
+        items/attributes. See param coordsys
+    :type win_len: Float
+    :param win_len: Sliding window length in seconds
+    :type win_frac: Float
+    :param win_frac: Fraction of sliding window to use for step
+    :type sll_x: Float
+    :param sll_x: slowness x min (lower)
+    :type slm_x: Float
+    :param slm_x: slowness x max
+    :type sll_y: Float
+    :param sll_y: slowness y min (lower)
+    :type slm_y: Float
+    :param slm_y: slowness y max
+    :type sl_s: Float
+    :param sl_s: slowness step
+    :type stime: UTCDateTime
+    :param stime: Starttime of interest
+    :type etime: UTCDateTime
+    :param etime: Endtime of interest
+    :param coordsys: valid values: 'lonlat' and 'xy', choose which stream
+        attributes to use for coordinates
+    :type timestamp: string
+    :param timestamp: valid values: 'julsec' and 'mlabday'; 'julsec' returns
+        the timestamp in secons since 1970-01-01T00:00:00, 'mlabday'
+        returns the timestamp in days (decimals represent hours, minutes
+        and seconds) since '0001-01-01T00:00:00' as needed for matplotlib
+        date plotting (see e.g. matplotlibs num2date)
+    :type method: string
+    :param method: the method to use "DLS" delay and sum; "PWS" phase weigted stack;
+        "SWP" slowness weightend power spectrum 
+    :type nthroot: Float
+    :param nthroot: nth-root processing; nth gives the root (1,2,3,4), default 1 (no
+        nth-root
+    :type store: function
+    :param store: A custom function which gets called on each iteration. It is
+        called with the relative power map and the time offset as first and
+        second arguments and the iteration number as third argument. Useful for
+        storing or plotting the map for each iteration. For this purpose the
+        dump function of this module can be used.
+    :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
+        backazimut, slowness, maximum beam (for DLS)
+    """
+    res = []
+    eotr = True
+
+    spoint, _epoint = get_spoint(stream, stime, etime)
+    # check that sampling rates do not vary
+    fs = stream[0].stats.sampling_rate
+    if len(stream) != len(stream.select(sampling_rate=fs)):
+        msg = 'in sonic sampling rates of traces in stream are not equal'
+        raise ValueError(msg)
+
+    nsamp = (epoint - spoint)*fs
+
+    grdpts_x = int(((slm_x - sll_x) / sl_s + 0.5) + 1)
+    grdpts_y = int(((slm_y - sll_y) / sl_s + 0.5) + 1)
+
+    abspow_map = np.empty((grdpts_x, grdpts_y), dtype='f8')
+    beam = np.empty(grdpts_x*grdpts_y, dtype='f8')
+    geometry = get_geometry(stream, coordsys=coordsys, verbose=verbose)
+
+    if verbose:
+        print("geometry:")
+        print(geometry)
+        print("stream contains following traces:")
+        print(stream)
+        print("stime = " + str(stime) + ", etime = " + str(etime))
+
+    time_shift_table = get_timeshift(geometry, sll_x, sll_y,
+                                     sl_s, grdpts_x, grdpts_y)
+
+    mini = np.minimum(time_shift_table[:,:,:]
+    maxi = np.maximum(time_shift_table[:,:,:]
+    dat = np.empty((nstat, (ndat+mini+maxi)*fs), dtype='c16')
+
+    #cutting the corresponding time window
+    try:
+        for i, tr in enumerate(stream):
+            dat[i] = tr.data[spoint[i]-mini*fs:
+                          spoint[i] + nsamp+maxi*fs]
+            dat[i] = (dat[i] - dat[i].mean()) 
+    except IndexError:
+        break
+
+    max_beam = 0.
+    if method == 'DLS':
+        for x in xrange(grdpts_x):
+           for y in xrange(grdpts_y):
+              beam = np.zeros(grdpts_x*grdpts_y,dtype='f8')
+              for i in xrange(nstat):
+                  shifted = dat[i][time_shift_table[i,x,y]*fs:time_shift_table[i,x,y]*fs+ndat]
+                  beam += np.pow(np.abs(shifted,1./nthroot) * shifted/np.abs(shifted)
+              beam = np.pow(np.abs(beam),nthroot) * beam/np.abs(beam)
+              abspow_map[x,y] = beam.sum()
+              if abspow_map[x,y] > max_beam:
+                   beam_max = beam
+                   slow_x = sll_x + ix * sl_s
+                   slow_y = sll_y + iy * sl_s
+
+                   slow = np.sqrt(slow_x ** 2 + slow_y ** 2)
+                   if slow < 1e-8:
+                       slow = 1e-8
+                   azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
+                   baz = azimut % -360 + 180
+    return(baz,slow,abspow_map,beams)
 
 if __name__ == '__main__':
     import doctest
