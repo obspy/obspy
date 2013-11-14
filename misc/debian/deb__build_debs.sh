@@ -104,6 +104,8 @@ elif [ $CODENAME = "squeeze" ]
     echo "8" > ./debian/compat
 fi
 # build the package
+export FFLAGS="$FFLAGS -fPIC"  # needed for gfortran
+export LDFLAGS="$LDFLAGS -shared"  # needed for gfortran
 fakeroot ./debian/rules clean build binary
 # generate changes file
 DEBARCH=`dpkg-architecture -qDEB_HOST_ARCH`

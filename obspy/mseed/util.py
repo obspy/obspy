@@ -312,7 +312,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6] != 'D':
+        while file_object.read(7)[6] not in ['D', 'R', 'Q', 'M']:
             record_start += rec_len
             file_object.seek(record_start, 0)
 

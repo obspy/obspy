@@ -44,6 +44,7 @@ The functionality is provided through the following packages:
    obspy.arclink
    obspy.db
    obspy.earthworm
+   obspy.fdsn
    obspy.iris
    obspy.neic
    obspy.neries

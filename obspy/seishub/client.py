@@ -99,15 +99,14 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()
     >>>
-    >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
+    >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    BW.RTPI..EHZ | 2009-09-03T00:00:00.000000Z - ... | 250.0 Hz, 5001 samples
+    BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10, debug=False,
@@ -304,8 +303,8 @@ class _BaseRESTClient(object):
 
         >>> c = Client()
         >>> xseed_file = "dataless.seed.BW_UH1.xml"
-        >>> xml_str = open(xseed_file).read()
-        >>> c.station.putResource(xseed_file, xml_str)
+        >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
+        >>> c.station.putResource(xseed_file, xml_str)  # doctest: +SKIP
         (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,

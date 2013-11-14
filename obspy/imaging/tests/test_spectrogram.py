@@ -1,16 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-The obspy.imaging.spectogram test suite.
+The obspy.imaging.spectrogram test suite.
 """
 
 from obspy import UTCDateTime, Stream, Trace
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE, \
-    getMatplotlibVersion
+from obspy.core.util.base import getMatplotlibVersion
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging import spectrogram
 import numpy as np
 import os
 import unittest
+import warnings
 
 
 MATPLOTLIB_VERSION = getMatplotlibVersion()
@@ -24,10 +25,10 @@ class SpectrogramTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
-    def test_spectogram(self):
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
+    def test_spectrogram(self):
         """
-        Create spectogram plotting examples in tests/output directory.
+        Create spectrogram plotting examples in tests/output directory.
         """
         # Create dynamic test_files to avoid dependencies of other modules.
         # set specific seed value such that random numbers are reproduceable
@@ -39,15 +40,24 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        with ImageComparison(self.path, 'spectogram_log.png') as ic:
-            spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
-                                    samp_rate=st[0].stats.sampling_rate,
-                                    show=False)
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 2000
+        with ImageComparison(self.path, 'spectrogram_log.png',
+                             reltol=reltol) as ic:
+            with warnings.catch_warnings(record=True):
+                warnings.resetwarnings()
+                np_err = np.seterr(all="warn")
+                spectrogram.spectrogram(st[0].data, log=True, outfile=ic.name,
+                                        samp_rate=st[0].stats.sampling_rate,
+                                        show=False)
+                np.seterr(**np_err)
         # 2 - using log=False
         reltol = 1
         if MATPLOTLIB_VERSION < [1, 3, 0]:
             reltol = 3
-        with ImageComparison(self.path, 'spectogram.png', reltol=reltol) as ic:
+        with ImageComparison(self.path, 'spectrogram.png',
+                             reltol=reltol) as ic:
             spectrogram.spectrogram(st[0].data, log=False, outfile=ic.name,
                                     samp_rate=st[0].stats.sampling_rate,
                                     show=False)
