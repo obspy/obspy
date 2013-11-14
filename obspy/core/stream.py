@@ -1590,27 +1590,33 @@ class Stream(object):
             # skip trace if any given criterion is not matched
             if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
-            if network and not fnmatch.fnmatch(trace.stats.network.upper(),
-                                               network.upper()):
+            if network is not None:
+                if not fnmatch.fnmatch(trace.stats.network.upper(),
+                                       network.upper()):
+                    continue
+            if station is not None:
+                if not fnmatch.fnmatch(trace.stats.station.upper(),
+                                       station.upper()):
+                    continue
+            if location is not None:
+                if not fnmatch.fnmatch(trace.stats.location.upper(),
+                                       location.upper()):
+                    continue
+            if channel is not None:
+                if not fnmatch.fnmatch(trace.stats.channel.upper(),
+                                       channel.upper()):
+                    continue
+            if sampling_rate is not None:
+                if float(sampling_rate) != trace.stats.sampling_rate:
+                    continue
+            if npts is not None and int(npts) != trace.stats.npts:
                 continue
-            if station and not fnmatch.fnmatch(trace.stats.station.upper(),
-                                               station.upper()):
-                continue
-            if location and not fnmatch.fnmatch(trace.stats.location.upper(),
-                                                location.upper()):
-                continue
-            if channel and not fnmatch.fnmatch(trace.stats.channel.upper(),
-                                               channel.upper()):
-                continue
-            if sampling_rate and \
-               float(sampling_rate) != trace.stats.sampling_rate:
-                continue
-            if npts and int(npts) != trace.stats.npts:
-                continue
-            if component and \
-                    not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
-                                        component.upper()):
-                continue
+            if component is not None:
+                if len(trace.stats.channel) < 3:
+                    continue
+                if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                                       component.upper()):
+                    continue
             traces.append(trace)
         return self.__class__(traces=traces)
 
