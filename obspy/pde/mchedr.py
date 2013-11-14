@@ -153,46 +153,17 @@ class Unpickler(object):
         Converts tensor from 'x,y,z' system to 'r,t,p'
         and translates 'f' code to 'p'
         """
-        if code == 'xx':
-            return 'tt', 1
-        if code == 'yy':
-            return 'pp', 1
-        if code == 'zz':
-            return 'rr', 1
-        if code == 'xy':
-            return 'tp', -1
-        if code == 'xz':
-            return 'rt', 1
-        if code == 'yz':
-            return 'rp', -1
-        if code == 'ff':
-            return 'pp', 1
-        if code == 'rf':
-            return 'rp', 1
-        if code == 'tf':
-            return 'tp', 1
-        return code, 1
+        system = {'xx': ('tt', 1), 'yy': ('pp', 1), 'zz': ('rr', 1),
+                  'xy': ('tp', -1), 'xz': ('rt', 1), 'yz': ('rp', -1),
+                  'ff': ('pp', 1), 'rf': ('rp', 1), 'tf': ('tp', 1)}
+        return system.get(code, (code, 1))
 
     def _tensorStore(self, tensor, code, value, error):
         code, sign = self._tensorCodeSign(code)
-        if code == 'rr':
-            tensor.m_rr = value * sign
-            self._storeUncertainty(tensor.m_rr_errors, error)
-        if code == 'tt':
-            tensor.m_tt = value * sign
-            self._storeUncertainty(tensor.m_tt_errors, error)
-        if code == 'pp':
-            tensor.m_pp = value * sign
-            self._storeUncertainty(tensor.m_pp_errors, error)
-        if code == 'rt':
-            tensor.m_rt = value * sign
-            self._storeUncertainty(tensor.m_rt_errors, error)
-        if code == 'rp':
-            tensor.m_rp = value * sign
-            self._storeUncertainty(tensor.m_rp_errors, error)
-        if code == 'tp':
-            tensor.m_tp = value * sign
-            self._storeUncertainty(tensor.m_tp_errors, error)
+        if code in ('rr', 'tt', 'pp', 'rt', 'rp', 'tp'):
+            setattr(tensor, "m_%s" % code, value * sign)
+            self._storeUncertainty(getattr(tensor, "m_%s_errors" % code),
+                                   error)
 
     def _decodeFERegionNumber(self, number):
         """
@@ -734,30 +705,11 @@ class Unpickler(object):
         tensor = Tensor()
         exponent = self._intZero(line[3:5])
         scale = math.pow(10, exponent)
-        code = line[6:8]
-        value = self._floatWithFormat(line[8:12], '4.2', scale)
-        error = self._floatWithFormat(line[12:15], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
-        code = line[15:17]
-        value = self._floatWithFormat(line[17:21], '4.2', scale)
-        error = self._floatWithFormat(line[21:24], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
-        code = line[24:26]
-        value = self._floatWithFormat(line[26:30], '4.2', scale)
-        error = self._floatWithFormat(line[30:33], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
-        code = line[33:35]
-        value = self._floatWithFormat(line[35:39], '4.2', scale)
-        error = self._floatWithFormat(line[39:42], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
-        code = line[42:44]
-        value = self._floatWithFormat(line[44:48], '4.2', scale)
-        error = self._floatWithFormat(line[48:51], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
-        code = line[51:53]
-        value = self._floatWithFormat(line[53:57], '4.2', scale)
-        error = self._floatWithFormat(line[57:60], '3.2', scale)
-        self._tensorStore(tensor, code, value, error)
+        for i in xrange(6, 51 + 1, 9):
+            code = line[i:i + 2]
+            value = self._floatWithFormat(line[i + 2:i + 6], '4.2', scale)
+            error = self._floatWithFormat(line[i + 6:i + 9], '3.2', scale)
+            self._tensorStore(tensor, code, value, error)
         focal_mechanism.moment_tensor.tensor = tensor
 
     def _parseRecordDa(self, line, focal_mechanism):
