@@ -40,7 +40,11 @@ class SpectrogramTestCase(unittest.TestCase):
         tr = Trace(data=np.random.randint(0, 1000, 824), header=head)
         st = Stream([tr])
         # 1 - using log=True
-        with ImageComparison(self.path, 'spectrogram_log.png') as ic:
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 2000
+        with ImageComparison(self.path, 'spectrogram_log.png',
+                             reltol=reltol) as ic:
             with warnings.catch_warnings(record=True):
                 warnings.resetwarnings()
                 np_err = np.seterr(all="warn")

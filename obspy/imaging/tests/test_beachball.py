@@ -192,6 +192,9 @@ class BeachballTestCase(unittest.TestCase):
         test_Beachball unit test. See that test for more information about
         the parameters.
         """
+        reltol = 1
+        if MATPLOTLIB_VERSION < [1, 2, 0]:
+            reltol = 20
         mt = [[0.91, -0.89, -0.02, 1.78, -1.55, 0.47],
               [274, 13, 55],
               [130, 79, 98],
@@ -235,7 +238,8 @@ class BeachballTestCase(unittest.TestCase):
         # set the x and y limits and save the output
         ax.axis([-120, 120, -120, 120])
         # create and compare image
-        with ImageComparison(self.path, 'bb_collection.png') as ic:
+        with ImageComparison(self.path, 'bb_collection.png',
+                             reltol=reltol) as ic:
             fig.savefig(ic.name)
 
 
