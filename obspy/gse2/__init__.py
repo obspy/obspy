@@ -56,9 +56,11 @@ attributes:
             npts: 12000
            calib: 0.0949
          _format: GSE2
-            gse2: AttribDict({'instype': '', 'datatype': 'CM6',
-                              'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
-                              'calper': 1.0})
+            gse2: AttribDict({'instype': '', 'elev': -0.999,
+                              'datatype': 'CM6', 'hang': -1.0, 'lon': -999.0,
+                              'edepth': -0.999, 'auxid': 'RJOB',
+                              'vang': -1.0, 'calper': 1.0,
+                              'lat': -99.0, 'coordsys': ''})
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.

@@ -7,7 +7,8 @@ from ctypes import ArgumentError
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.gse2 import libgse2
-from obspy.gse2.libgse2 import ChksumError, GSEUtiError
+from obspy.gse2.libgse2 import ChksumError, GSEUtiError, parse_STA2, \
+    compile_STA2
 from cStringIO import StringIO
 import numpy as np
 import os
@@ -192,6 +193,53 @@ class LibGSE2TestCase(unittest.TestCase):
             self.assertRaises(GSEUtiError, libgse2.read, fout)
         self.assertEqual(out.stdout,
                          "decomp_6b: Neither DAT2 or DAT1 found!\n")
+
+    def test_parse_STA2(self):
+        """
+        Tests parsing of STA2 lines on a collection of (modified) real world
+        examples.
+        """
+        filename = os.path.join(self.path,
+                                'STA2.testlines')
+        filename2 = os.path.join(self.path,
+                                 'STA2.testlines_out')
+        results = [
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0, 'elev': -290.0,
+             'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0, 'elev': -50.0,
+             'lat': -37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.12345, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': 7.1234, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.1234, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.123, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': -7.1234, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': -12.12345, 'edepth': 0.0, 'elev': 1.816,
+             'lat': 36.12345, 'coordsys': 'WGS-84'},
+            {'network': 'abcdef', 'lon': -112.12345, 'edepth': 0.002,
+             'elev': 0.254, 'lat': 37.12345, 'coordsys': 'WGS84'},
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0,
+             'elev': -240000.0, 'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 1.12345, 'edepth': 1.234,
+             'elev': -123.456, 'lat': 12.12345, 'coordsys': 'WGS-84'},
+            {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
+             'lat': -99.0, 'coordsys': ''},
+            {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
+             'lat': -99.0, 'coordsys': ''}]
+        with open(filename) as fh:
+            lines = fh.readlines()
+        with open(filename2) as fh:
+            lines2 = fh.readlines()
+        for line, line2, expected in zip(lines, lines2, results):
+            # test parsing a given STA2 line
+            got = parse_STA2(line)
+            self.assertEqual(got, expected)
+            # test that compiling it again gives expected result
+            header = {}
+            header['network'] = got.pop("network")
+            header['gse2'] = got
+            got = compile_STA2(header)
+            self.assertEqual(got, line2)
 
 
 def suite():
