@@ -58,6 +58,9 @@ dev:
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
+ - obspy.segy:
+   * fixes handling of files in IEEE floating point format with Rev 0
+     binary header table codes (see #610)
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
