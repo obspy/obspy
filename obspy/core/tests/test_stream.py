@@ -2060,6 +2060,22 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(st.select(channel=""), st2)
         self.assertEqual(st.select(npts=0), st2)
 
+    def test_select_short_channel_code(self):
+        """
+        Test that select by component only checks channel codes longer than two
+        characters.
+        """
+        st = Stream([Trace(), Trace(), Trace(), Trace(), Trace(), Trace()])
+        st[0].stats.channel = "EHZ"
+        st[1].stats.channel = "HZ"
+        st[2].stats.channel = "Z"
+        st[3].stats.channel = "E"
+        st[4].stats.channel = "N"
+        st[5].stats.channel = "EHN"
+        self.assertEqual(len(st.select(component="Z")), 1)
+        self.assertEqual(len(st.select(component="N")), 1)
+        self.assertEqual(len(st.select(component="E")), 0)
+
 
 def suite():
     return unittest.makeSuite(StreamTestCase, 'test')

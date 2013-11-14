@@ -1611,10 +1611,12 @@ class Stream(object):
                     continue
             if npts is not None and int(npts) != trace.stats.npts:
                 continue
-            if component is not None and \
-                    not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
-                                        component.upper()):
-                continue
+            if component is not None:
+                if len(trace.stats.channel) < 3:
+                    continue
+                if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                                       component.upper()):
+                    continue
             traces.append(trace)
         return self.__class__(traces=traces)
 
