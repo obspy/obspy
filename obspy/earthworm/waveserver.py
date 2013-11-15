@@ -121,12 +121,13 @@ class tracebuf2:
         return Trace(data=self.data, header=stat)
 
 
-def sendSockReq(server, port, reqStr):
+def sendSockReq(server, port, reqStr, timeout=None):
     """
     Sets up socket to server and port, sends reqStr
     to socket and returns open socket
     """
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(timeout)
     s.connect((server, port))
     if reqStr[-1] == '\n':
         s.send(reqStr)
@@ -163,8 +164,7 @@ def getSockBytes(sock, nbytes, timeout=None):
     Listens for nbytes from open socket.
     Returns byte array as python string or None if timeout
     """
-    if timeout:
-        sock.settimeout(timeout)
+    sock.settimeout(timeout)
     chunks = []
     btoread = nbytes
     try:
@@ -182,7 +182,7 @@ def getSockBytes(sock, nbytes, timeout=None):
         return None
 
 
-def getMenu(server, port, scnl=None):
+def getMenu(server, port, scnl=None, timeout=None):
     """
     Return list of tanks on server
     """
@@ -194,8 +194,8 @@ def getMenu(server, port, scnl=None):
     else:
         # added SCNL not documented but required
         getstr = 'MENU: %s SCNL\n' % rid
-    sock = sendSockReq(server, port, getstr)
-    r = getSockCharLine(sock, 2.)
+    sock = sendSockReq(server, port, getstr, timeout=timeout)
+    r = getSockCharLine(sock, timeout=timeout)
     sock.close()
     if r:
         tokens = r.split()
@@ -225,7 +225,7 @@ def getMenu(server, port, scnl=None):
     return []
 
 
-def readWaveServerV(server, port, scnl, start, end):
+def readWaveServerV(server, port, scnl, start, end, timeout=None):
     """
     Reads data for specified time interval and scnl on specified waveserverV.
 
@@ -234,8 +234,8 @@ def readWaveServerV(server, port, scnl, start, end):
     rid = 'rwserv'
     scnlstr = '%s %s %s %s' % scnl
     reqstr = 'GETSCNLRAW: %s %s %f %f\n' % (rid, scnlstr, start, end)
-    sock = sendSockReq(server, port, reqstr)
-    r = getSockCharLine(sock, 10.)
+    sock = sendSockReq(server, port, reqstr, timeout=timeout)
+    r = getSockCharLine(sock, timeout=timeout)
     if not r:
         return []
     tokens = r.split()
@@ -245,7 +245,7 @@ def readWaveServerV(server, port, scnl, start, end):
         print msg % (flag, RETURNFLAG_KEY[flag])
         return []
     nbytes = int(tokens[-1])
-    dat = getSockBytes(sock, nbytes)
+    dat = getSockBytes(sock, nbytes, timeout=timeout)
     sock.close()
     tbl = []
     new = tracebuf2()  # empty..filled below
