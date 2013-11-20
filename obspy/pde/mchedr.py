@@ -612,7 +612,7 @@ class Unpickler(object):
             self._storeUncertainty(origin.time_errors, orig_time_stderr)
             origin.latitude = centroid_latitude
             origin.longitude = centroid_longitude
-            origin.depth = centroid_depth
+            origin.depth = centroid_depth * 1000
             if lat_stderr == 'Fixed' and lon_stderr == 'Fixed':
                 origin.epicenter_fixed = True
             else:
