@@ -714,30 +714,21 @@ def get_spoint(stream, stime, etime):
         if tr.stats.endtime <= eearliest:
             eearliest = tr.stats.endtime
 
-    nostat = len(stream)
-    spoint = np.empty(nostat, dtype="int32", order="C")
-    epoint = np.empty(nostat, dtype="int32", order="C")
-    # now we have to adjust to the beginning of real start time
     if slatest > stime:
         msg = "Specified start-time is smaller than starttime in stream"
         raise ValueError(msg)
     if eearliest < etime:
         msg = "Specified end-time bigger is than endtime in stream"
         raise ValueError(msg)
-    for i in xrange(nostat):
-        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
-        diffstart = slatest - stream[i].stats.starttime
-        frac, ddummy = math.modf(diffstart)
-        spoint[i] = int(ddummy)
-        if frac > stream[i].stats.delta * 0.25:
-            msg = "Difference in start times exceeds 25% of samp rate"
-            warnings.warn(msg)
-        spoint[i] += offset
-        diffend = stream[i].stats.endtime - eearliest
-        frac, ddummy = math.modf(diffend)
-        epoint[i] = int(ddummy)
-        epoint[i] += negoffset
+
+    spoint = np.empty(len(stream), dtype="int32", order="C")
+    epoint = np.empty(len(stream), dtype="int32", order="C")
+    # now we have to adjust to the beginning of real start time
+    for i, tr in enumerate(stream):
+        spoint[i] = int((stime - tr.stats.starttime) *
+                        tr.stats.sampling_rate + 1)
+        epoint[i] = int((tr.stats.endtime - etime) *
+                        tr.stats.sampling_rate + 1)
 
     return spoint, epoint
 
