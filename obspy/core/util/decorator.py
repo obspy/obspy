@@ -17,6 +17,7 @@ import os
 import unittest
 import warnings
 import inspect
+import socket
 
 
 def deprecated(warning_msg=None):
@@ -105,6 +106,32 @@ def skipIf(condition, reason):
         return obj
 
     return _id
+
+
+def skip_on_network_error(func):
+    """
+    Decorator for unittest to mark test routines that fail with certain network
+    errors (e.g. timeouts) as "skipped" rather than "Error".
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        ###################################################
+        ## add more except clauses like this to add other
+        ## network errors that should be skipped
+        except socket.timeout as e:
+            if str(e) == "timed out":
+                raise unittest.SkipTest(str(e))
+        ###################################################
+        except socket.error as e:
+            if str(e) == "[Errno 110] Connection timed out":
+                raise unittest.SkipTest(str(e))
+        # general except to be able to generally reraise
+        except Exception as e:
+            pass
+        raise
+    return new_func
 
 
 def uncompressFile(func):
