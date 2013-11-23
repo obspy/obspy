@@ -640,10 +640,10 @@ class Response(ComparingObject):
             for blockette in all_stages[stage_number]:
                 blkt = ew.blkt()
                 if isinstance(blockette, PolesZerosResponseStage):
-                    blkt.type = ew.ENUM_STAGE_TYPES["PZ_TYPE"]
+                    blkt.type = ew.ENUM_FILT_TYPES["LAPLACE_PZ"]
                     pz = ew.pole_zeroType()
-                    blkt.blkt_info = C.pointer(ew.blkt_info_union())
-                    blkt.blkt_info.contents.pole_zero = C.pointer(pz)
+                    blkt.blkt_info = pz
+                    #blkt.blkt_info.contents.pole_zero = C.pointer(pz)
                     pz.nzeros = len(blockette.zeros)
                     pz.npoles = len(blockette.poles)
                     pz.a0 = blockette.normalization_factor
@@ -671,7 +671,7 @@ class Response(ComparingObject):
 
         chan = ew.channel()
         chan.first_stage = C.pointer(st)
-        chan.n_stages = 1
+        chan.nstages = 1
         chan.calc_sensit = 0
         chan.sensit = 1
 
@@ -687,12 +687,14 @@ class Response(ComparingObject):
 
         # start at zero to get zero for offset/ DC of fft
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+        print freqs
 
         output = np.empty(len(freqs), dtype="complex128")
+        output[:] = 1.0 + 2j
         out_units = C.c_char_p("VEL")
 
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
-                             out_units, 0, 0, 0)
+                             out_units, 1, 0, 1)
 
         return output
 

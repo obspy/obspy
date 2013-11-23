@@ -62,9 +62,49 @@ class pole_zeroType(C.Structure):
     ]
 
 
+class coeffType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class firType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class listType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class genericType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class decimationType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class decimationType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class gainType(C.Structure):
+    _fields_ = [
+    ]
+
+
+class referType(C.Structure):
+    _fields_ = [
+    ]
+
+
 class blkt_info_union(C.Union):
     _fields_ = [
-        ("pole_zero", C.POINTER(pole_zeroType))
+        ("pole_zero", pole_zeroType)
     ]
 
 
@@ -73,7 +113,8 @@ class blkt(C.Structure):
 
 blkt._fields_ = [
     ("type", C.c_int),
-    ("blkt_info", C.POINTER(blkt_info_union)),
+    #("blkt_info", C.POINTER(blkt_info_union)),
+    ("blkt_info", pole_zeroType),
     ("next_blkt", C.POINTER(blkt))
 ]
 

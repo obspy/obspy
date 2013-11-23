@@ -17,7 +17,7 @@ import numpy as np
 import os
 import unittest
 
-path = "/home/moritz/code/obspy/obspy/signal/tests/data"
+path = "../../tests/data"
 
 evalrespf = os.path.join(path, 'CRLZ.HHZ.10.NZ.SAC_resp')
 rawf = os.path.join(path, 'CRLZ.HHZ.10.NZ.SAC')
