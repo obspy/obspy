@@ -88,7 +88,7 @@ channel._fields_ = [
     ("estim_delay", C.c_double),
     ("applied_corr", C.c_double),
     ("sint", C.c_double),
-    ("sint", C.c_int),
+    ("nstages", C.c_int),
     ("first_stage", C.POINTER(channel)),
 ]
 
