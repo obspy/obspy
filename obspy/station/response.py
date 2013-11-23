@@ -631,6 +631,8 @@ class Response(ComparingObject):
 
         stage_list = sorted(all_stages.keys())
 
+        stage_objects = []
+
         for stage_number in stage_list:
             st = ew.stage()
             st.sequence_no = stage_number
@@ -677,8 +679,8 @@ class Response(ComparingObject):
                 else:
                     raise NotImplementedError
                 stage_blkts.append(blkt)
-                break
 
+            print stage_blkts
             if not stage_blkts:
                 msg = "At least one blockette is needed for the stage."
                 raise ValueError(msg)
@@ -687,11 +689,22 @@ class Response(ComparingObject):
             st.first_blkt = C.pointer(stage_blkts[0])
             for _i in xrange(1, len(stage_blkts)):
                 stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
-            break
+
+            stage_objects.append(st)
 
         chan = ew.channel()
-        chan.first_stage = C.pointer(st)
-        chan.nstages = 1
+        print stage_objects
+        if not stage_objects:
+            msg = "At least one stage is needed."
+            raise ValueError(msg)
+
+        # Attach the stage chain to the channel.
+        chan.first_stage = C.pointer(stage_objects[0])
+        for _i in xrange(1, len(stage_objects)):
+            stage_objects[_i - 1].next_stage = C.pointer(stage_objects[_i])
+
+        chan.nstages = len(stage_objects)
+
         chan.calc_sensit = 0
         chan.sensit = 1
 
