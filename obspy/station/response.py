@@ -637,21 +637,29 @@ class Response(ComparingObject):
             st.input_units = 0
             st.output_units = 0
 
-            for blockette in all_stages[stage_number]:
+            stage_blkts = []
 
+            for blockette in all_stages[stage_number]:
                 blkt = ew.blkt()
 
                 if isinstance(blockette, PolesZerosResponseStage):
+                    # Map the transfer function type.
+                    transfer_fct_mapping = {
+                        "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
+                        "LAPLACE (HERTZ)": "ANALOG_PZ",
+                        "DIGITAL (Z-TRANSFORM)": "IIR_PZ"}
+                    blkt.type = ew.ENUM_FILT_TYPES[transfer_fct_mapping[
+                        blockette.pz_transfer_function_type]]
 
-                    blkt.type = ew.ENUM_FILT_TYPES["LAPLACE_PZ"]
+                    # The blockette is a pole zero blockette.
                     pz = blkt.blkt_info.pole_zero
 
-                    #blkt.blkt_info.contents.pole_zero = C.pointer(pz)
                     pz.nzeros = len(blockette.zeros)
                     pz.npoles = len(blockette.poles)
                     pz.a0 = blockette.normalization_factor
                     pz.a0_freq = blockette.normalization_frequency
 
+                    # XXX: Find a better way to do this.
                     poles = (ew.complex_number * len(blockette.poles))()
                     for i, value in enumerate(blockette.poles):
                         poles[i].real = value.real
@@ -667,9 +675,18 @@ class Response(ComparingObject):
                     pz.zeros = C.cast(C.pointer(zeros),
                                       C.POINTER(ew.complex_number))
                 else:
-                    pass
-                st.first_blkt = C.pointer(blkt)
+                    raise NotImplementedError
+                stage_blkts.append(blkt)
                 break
+
+            if not stage_blkts:
+                msg = "At least one blockette is needed for the stage."
+                raise ValueError(msg)
+
+            # Attach the blockette chain to the stage.
+            st.first_blkt = C.pointer(stage_blkts[0])
+            for _i in xrange(1, len(stage_blkts)):
+                stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
             break
 
         chan = ew.channel()
