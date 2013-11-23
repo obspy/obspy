@@ -19,12 +19,12 @@ class ResponseStage(ComparingObject):
         blockettes 53 to 56.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, input_units_description=None,
-            output_units_description=None, description=None,
-            decimation_input_sample_rate=None, decimation_factor=None,
-            decimation_offset=None, decimation_delay=None,
-            decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, input_units_description=None,
+                 output_units_description=None, description=None,
+                 decimation_input_sample_rate=None, decimation_factor=None,
+                 decimation_offset=None, decimation_delay=None,
+                 decimation_correction=None):
         """
         :type stage_sequence_number: integer greater or equal to zero
         :param stage_sequence_number: Stage sequence number. This is used in
@@ -121,28 +121,29 @@ class ResponseStage(ComparingObject):
             "\tFrom {input_units}{input_desc} to {output_units}{output_desc}\n"
             "\tStage gain: {gain_value}, defined at {gain_freq:.2f} Hz\n"
             "{decimation}").format(
-                response_type=self.__class__.__name__,
-                response_stage=self.stage_sequence_number,
-                name_desc="\t%s %s\n" % (self.name, "(%s)" % self.description
+            response_type=self.__class__.__name__,
+            response_stage=self.stage_sequence_number,
+            name_desc="\t%s %s\n" % (
+                self.name, "(%s)" % self.description
                 if self.description else "") if self.name else "",
-                resource_id="\tResource Id: %s" % self.resource_id
-                if self.resource_id else "",
-                input_units=self.input_units_name,
-                input_desc=" (%s)" % self.input_units_description
-                if self.input_units_description else "",
-                output_units=self.output_units_name,
-                output_desc=" (%s)" % self.output_units_description
-                if self.output_units_description else "",
-                gain_value=self.stage_gain_value,
-                gain_freq=self.stage_gain_frequency,
-                decimation=
-                "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
-                "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
-                "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
+            resource_id="\tResource Id: %s" % self.resource_id
+            if self.resource_id else "",
+            input_units=self.input_units_name,
+            input_desc=" (%s)" % self.input_units_description
+            if self.input_units_description else "",
+            output_units=self.output_units_name,
+            output_desc=" (%s)" % self.output_units_description
+            if self.output_units_description else "",
+            gain_value=self.stage_gain_value,
+            gain_freq=self.stage_gain_frequency,
+            decimation=
+            "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
+            "Decimation Factor: %i\n\t\tDecimation Offset: %i\n\t\t"
+            "Decimation Delay: %.2f\n\t\tDecimation Correction: %.2f" % (
                 self.decimation_input_sample_rate, self.decimation_factor,
                 self.decimation_offset, self.decimation_delay,
                 self.decimation_correction)
-                if self.decimation_input_sample_rate is not None else "")
+            if self.decimation_input_sample_rate is not None else "")
         return ret.strip()
 
 
@@ -175,13 +176,14 @@ class PolesZerosResponseStage(ResponseStage):
     :param normalization_factor:
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, pz_transfer_function_type,
-            normalization_frequency, zeros, poles, normalization_factor=1.0,
-            input_units_description=None, output_units_description=None,
-            description=None, decimation_input_sample_rate=None,
-            decimation_factor=None, decimation_offset=None,
-            decimation_delay=None, decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, pz_transfer_function_type,
+                 normalization_frequency, zeros, poles,
+                 normalization_factor=1.0, input_units_description=None,
+                 output_units_description=None, description=None,
+                 decimation_input_sample_rate=None, decimation_factor=None,
+                 decimation_offset=None, decimation_delay=None,
+                 decimation_correction=None):
         # Set the Poles and Zeros specific attributes. Special cases are
         # handled by properties.
         self.pz_transfer_function_type = pz_transfer_function_type
@@ -213,11 +215,11 @@ class PolesZerosResponseStage(ResponseStage):
             "Normalization frequency: {norm_freq:.2f} Hz\n"
             "\tPoles: {poles}\n"
             "\tZeros: {zeros}").format(
-                transfer_fct_type=self.pz_transfer_function_type,
-                norm_fact=self.normalization_factor,
-                norm_freq=self.normalization_frequency,
-                poles=", ".join(map(str, self.poles)),
-                zeros=", ".join(map(str, self.zeros)),
+            transfer_fct_type=self.pz_transfer_function_type,
+            norm_fact=self.normalization_factor,
+            norm_freq=self.normalization_frequency,
+            poles=", ".join(map(str, self.poles)),
+            zeros=", ".join(map(str, self.zeros)),
             )
         return ret
 
@@ -249,10 +251,10 @@ class PolesZerosResponseStage(ResponseStage):
         Rather permissive but should make it less awkward to use.
         """
         msg = ("'%s' is not a valid value for 'pz_transfer_function_type'. "
-            "Valid one are:\n"
-            "\tLAPLACE (RADIANS/SECOND)\n"
-            "\tLAPLACE (HERTZ)\n"
-            "\tDIGITAL (Z-TRANSFORM)") % value
+               "Valid one are:\n"
+               "\tLAPLACE (RADIANS/SECOND)\n"
+               "\tLAPLACE (HERTZ)\n"
+               "\tDIGITAL (Z-TRANSFORM)") % value
         value = value.lower()
         if "laplace" in value:
             if "radian" in value:
@@ -290,13 +292,13 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :param denominator:
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, cf_transfer_function_type, numerator=None,
-            denominator=None, input_units_description=None,
-            output_units_description=None, description=None,
-            decimation_input_sample_rate=None, decimation_factor=None,
-            decimation_offset=None, decimation_delay=None,
-            decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, cf_transfer_function_type, numerator=None,
+                 denominator=None, input_units_description=None,
+                 output_units_description=None, description=None,
+                 decimation_input_sample_rate=None, decimation_factor=None,
+                 decimation_offset=None, decimation_delay=None,
+                 decimation_correction=None):
         # Set the Coefficients type specific attributes. Special cases are
         # handled by properties.
         self.cf_transfer_function_type = cf_transfer_function_type
@@ -362,10 +364,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
         Rather permissive but should make it less awkward to use.
         """
         msg = ("'%s' is not a valid value for 'cf_transfer_function_type'. "
-            "Valid one are:\n"
-            "\tANALOG (RADIANS/SECOND)\n"
-            "\tANALOG (HERTZ)\n"
-            "\tDIGITAL") % value
+               "Valid one are:\n"
+               "\tANALOG (RADIANS/SECOND)\n"
+               "\tANALOG (HERTZ)\n"
+               "\tDIGITAL") % value
         value = value.lower()
         if "analog" in value:
             if "radian" in value:
@@ -394,12 +396,12 @@ class ResponseListResponseStage(ResponseStage):
         amplitude and phase response values.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, response_list_elements=[],
-            input_units_description=None, output_units_description=None,
-            description=None, decimation_input_sample_rate=None,
-            decimation_factor=None, decimation_offset=None,
-            decimation_delay=None, decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, response_list_elements=[],
+                 input_units_description=None, output_units_description=None,
+                 description=None, decimation_input_sample_rate=None,
+                 decimation_factor=None, decimation_offset=None,
+                 decimation_delay=None, decimation_correction=None):
         self.response_list_elements = response_list_elements
         super(ResponseListResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
@@ -452,12 +454,12 @@ class FIRResponseStage(ResponseStage):
     """
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, input_units_description=None,
-            output_units_description=None, description=None,
-            decimation_input_sample_rate=None, decimation_factor=None,
-            decimation_offset=None, decimation_delay=None,
-            decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, input_units_description=None,
+                 output_units_description=None, description=None,
+                 decimation_input_sample_rate=None, decimation_factor=None,
+                 decimation_offset=None, decimation_delay=None,
+                 decimation_correction=None):
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -478,12 +480,12 @@ class PolynomialResponseStage(ResponseStage):
     """
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-            stage_gain_frequency, input_units_name, output_units_name,
-            resource_id, name, input_units_description=None,
-            output_units_description=None, description=None,
-            decimation_input_sample_rate=None, decimation_factor=None,
-            decimation_offset=None, decimation_delay=None,
-            decimation_correction=None):
+                 stage_gain_frequency, input_units_name, output_units_name,
+                 resource_id, name, input_units_description=None,
+                 output_units_description=None, description=None,
+                 decimation_input_sample_rate=None, decimation_factor=None,
+                 decimation_offset=None, decimation_delay=None,
+                 decimation_correction=None):
         super(PolynomialResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -505,7 +507,7 @@ class Response(ComparingObject):
     The root response object.
     """
     def __init__(self, resource_id=None, instrument_sensitivity=None,
-            response_stages=None):
+                 response_stages=None):
         """
         :type resource_id: string
         :param resource_id: This field contains a string that should serve as a
@@ -541,19 +543,22 @@ class Response(ComparingObject):
             "{output_units} ({output_units_description})\n"
             "\tOverall Sensitivity: {sensitivity:g} defined at {freq:.3f} Hz\n"
             "\t{stages} stages:\n{stage_desc}").format(
-                input_units=self.instrument_sensitivity.input_units_name,
-                input_units_description=self.instrument_sensitivity.
-                input_units_description,
-                output_units=self.instrument_sensitivity.output_units_name,
-                output_units_description=self.instrument_sensitivity.
-                output_units_description,
-                sensitivity=self.instrument_sensitivity.value,
-                freq=self.instrument_sensitivity.frequency,
-                stages=len(self.response_stages),
-                stage_desc="\n".join(["\t\tStage %i: %s from %s to %s,"
-                " gain: %.2f" % (i.stage_sequence_number, i.__class__.__name__,
-                i.input_units_name, i.output_units_name, i.stage_gain_value)
-                for i in self.response_stages]))
+            input_units=self.instrument_sensitivity.input_units_name,
+            input_units_description=self.instrument_sensitivity.
+            input_units_description,
+            output_units=self.instrument_sensitivity.output_units_name,
+            output_units_description=self.instrument_sensitivity.
+            output_units_description,
+            sensitivity=self.instrument_sensitivity.value,
+            freq=self.instrument_sensitivity.frequency,
+            stages=len(self.response_stages),
+            stage_desc="\n".join(
+                ["\t\tStage %i: %s from %s to %s,"
+                 " gain: %.2f" % (
+                     i.stage_sequence_number, i.__class__.__name__,
+                     i.input_units_name, i.output_units_name,
+                     i.stage_gain_value)
+                 for i in self.response_stages]))
         return ret
 
 
@@ -570,9 +575,9 @@ class InstrumentSensitivity(ComparingObject):
     decibels specified in FrequencyDBVariation.
     """
     def __init__(self, value, frequency, input_units_name,
-            output_units_name, input_units_description=None,
-            output_units_description=None, frequency_range_start=None,
-            frequency_range_end=None, frequency_range_DB_variation=None):
+                 output_units_name, input_units_description=None,
+                 output_units_description=None, frequency_range_start=None,
+                 frequency_range_end=None, frequency_range_DB_variation=None):
         """
         :type value: float
         :param value: Complex type for sensitivity and frequency ranges.
