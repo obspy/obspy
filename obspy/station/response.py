@@ -537,16 +537,18 @@ class Response(ComparingObject):
             raise ValueError(msg)
 
     def get_evalresp_response(self):
-        from obspy.signal.headers import clibevresp
+        import ctypes as C
+        import numpy as np
         import obspy.signal.evrespwrapper as ew
         from collections import defaultdict
+        from obspy.signal.headers import clibevresp
 
         all_stages = defaultdict(list)
 
         for stage in self.response_stages:
             all_stages[stage.stage_sequence_number].append(stage)
 
-        stage_list = sorted(all_stages.keys)
+        stage_list = sorted(all_stages.keys())
 
         for stage_number in stage_list:
             st = ew.stage()
@@ -557,7 +559,61 @@ class Response(ComparingObject):
             for blockette in all_stages[stage_number]:
                 blkt = ew.blkt()
                 if isinstance(blockette, PolesZerosResponseStage):
-                    blkt.type = clibevresp.PZ_TYPE
+                    blkt.type = ew.ENUM_STAGE_TYPES["PZ_TYPE"]
+                    pz = ew.pole_zeroType()
+                    blkt.blkt_info = C.pointer(ew.blkt_info_union())
+                    blkt.blkt_info.contents.pole_zero = C.pointer(pz)
+                    pz.nzeros = len(blockette.zeros)
+                    pz.npoles = len(blockette.poles)
+                    pz.a0 = blockette.normalization_factor
+                    pz.a0_freq = blockette.normalization_frequency
+
+                    poles = (ew.complex_number * len(blockette.poles))()
+                    for i, value in enumerate(blockette.poles):
+                        poles[i].real = value.real
+                        poles[i].imag = value.imag
+
+                    zeros = (ew.complex_number * len(blockette.zeros))()
+                    for i, value in enumerate(blockette.zeros):
+                        zeros[i].real = value.real
+                        zeros[i].imag = value.imag
+
+                    pz.poles = C.cast(C.pointer(poles),
+                                      C.POINTER(ew.complex_number))
+                    pz.zeros = C.cast(C.pointer(zeros),
+                                      C.POINTER(ew.complex_number))
+                else:
+                    pass
+                st.first_blkt = C.pointer(blkt)
+                break
+            break
+
+        chan = ew.channel()
+        chan.first_stage = C.pointer(st)
+        chan.n_stages = 1
+        chan.calc_sensit = 0
+        chan.sensit = 1
+
+        t_samp = 100
+        ndat = 1000
+
+        fy = 1 / (t_samp * 2.0)
+
+        if ndat & 0x1:  # check if uneven
+            nfft = 2 * (ndat + 1)
+        else:
+            nfft = 2 * ndat
+
+        # start at zero to get zero for offset/ DC of fft
+        freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
+
+        output = np.empty(len(freqs), dtype="complex128")
+        out_units = C.c_char_p("VEL")
+
+        clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
+                             out_units, 0, 0, 0)
+
+        return output
 
     def __str__(self):
         ret = (

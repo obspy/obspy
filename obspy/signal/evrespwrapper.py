@@ -125,12 +125,10 @@ channel._fields_ = [
     ("calc_sensit", C.c_double),
     ("calc_delay", C.c_double),
     ("estim_delay", C.c_double),
-    ("calc_delay", C.c_double),
-    ("estim_delay", C.c_double),
     ("applied_corr", C.c_double),
     ("sint", C.c_double),
     ("nstages", C.c_int),
-    ("first_stage", C.POINTER(channel)),
+    ("first_stage", C.POINTER(stage)),
 ]
 
 
@@ -140,7 +138,9 @@ channel._fields_ = [
 #                int useTotalSensitivityFlag)
 clibevresp.calc_resp.argtypes = [
     C.POINTER(channel),
-    C.POINTER(C.c_double),
+    np.ctypeslib.ndpointer(dtype='float64',  # freqs
+                           ndim=1,
+                           flags='C_CONTIGUOUS'),
     C.c_int,
     np.ctypeslib.ndpointer(dtype='complex128',  # output
                            ndim=1,
