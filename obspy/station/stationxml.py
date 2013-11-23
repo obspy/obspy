@@ -350,17 +350,25 @@ def _read_response_stage(stage_elem, _ns):
 
     # Handle the response list response stage type.
     elif elem is response_list_elem:
-        msg = "Coefficients Response Type not yet implemented."
+        msg = "Response List Response Type not yet implemented."
         raise NotImplementedError(msg)
+        rlist_elems = []
+        for item in elem.findall(_ns("ResponseListElement")):
+            # XXX parse frequency/amplitude/phase of individual elements
+            x = obspy.station.response.ResponseListElement()
+            rlist_elems.append(x)
+        return obspy.station.ResponseListResponseStage(
+            response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
     elif elem is FIR_elem:
-        msg = "Coefficients Response Type not yet implemented."
+        msg = "FIR Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
-        msg = "Coefficients Response Type not yet implemented."
+        # XXX coefficient number from attribute has to be respected!
+        msg = "Polynomial Response Type not yet implemented."
         raise NotImplementedError(msg)
 
 
@@ -387,6 +395,8 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
 
 
 def _read_instrument_polynomial(polynomial_element, _ns):
+    # XXX both occurences of polynomial response are of same type and should be
+    # XXX handled in the same way
     pass
 
 

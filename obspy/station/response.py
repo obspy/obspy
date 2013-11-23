@@ -436,30 +436,47 @@ class ResponseListElement(ComparingObject):
         """
         self.frequency = frequency
         self.amplitude = amplitude
-        self.phase = phase
+        self._phase = phase
 
     @property
     def phase(self):
-        return self.__phase
+        return self._phase
 
     @phase.setter
     def phase(self, value):
         value = float(value)
         if not -360 <= value <= 360:
             raise ValueError("Phase angle out of allowed range.")
-        self.__phase = value
+        self._phase = value
 
 
 class FIRResponseStage(ResponseStage):
     """
+    From the StationXML Definition:
+        Response: FIR filter. Corresponds to SEED blockette 61. FIR filters are
+        also commonly documented using the CoefficientsType element.
+
+    Has all the arguments of the parent class
+    :class:`~obspy.station.response.ResponseStage` and the following:
+
+    :type symmetry: String
+    :param symmetry: A string describing the symmetry. Can be one of:
+            * ``NONE``
+            * ``EVEN``
+            * ``ODD``
+    :type numerator_coefficients: list of floats
+    :param numerator_coefficients: List of numerator coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
                  stage_gain_frequency, input_units_name, output_units_name,
-                 resource_id, name, input_units_description=None,
+                 resource_id, name, symmetry="NONE", numerator_coefficients=[],
+                 input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
+        self._symmetry = symmetry
+        self.numerator_coefficients = numerator_coefficients
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -475,17 +492,66 @@ class FIRResponseStage(ResponseStage):
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
 
+    @property
+    def symmetry(self):
+        return self._symmetry
+
+    @symmetry.setter
+    def symmetry(self, value):
+        value = str(value).upper()
+        allowed = ("NONE", "EVEN", "ODD")
+        if value not in allowed:
+            msg = ("Value '%s' for FIR Response symmetry not allowed. "
+                   "Possible values are: '%s'")
+            msg = msg % (value, "', '".join(allowed))
+            raise ValueError(msg)
+        self._symmetry = value
+
 
 class PolynomialResponseStage(ResponseStage):
     """
+    From the StationXML Definition:
+        Response: expressed as a polynomial (allows non-linear sensors to be
+        described). Corresponds to SEED blockette 62. Can be used to describe a
+        stage of acquisition or a complete system.
+
+    Has all the arguments of the parent class
+    :class:`~obspy.station.response.ResponseStage` and the following:
+
+    :type approximation_type: str
+    :param approximation_type: Approximation type. Currently restricted to
+        'MACLAURIN' by StationXML definition.
+    :type frequency_lower_bound: float
+    :param frequency_lower_bound: Lower frequency bound.
+    :type frequency_upper_bound: float
+    :param frequency_upper_bound: Upper frequency bound.
+    :type approximation_lower_bound: float
+    :param approximation_lower_bound: Lower bound of approximation.
+    :type approximation_upper_bound: float
+    :param approximation_upper_bound: Upper bound of approximation.
+    :type maximum_error: float
+    :param maximum_error: Maximum error.
+    :type coefficients: list of floats
+    :param coefficients: List of polynomial coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
                  stage_gain_frequency, input_units_name, output_units_name,
-                 resource_id, name, input_units_description=None,
+                 resource_id, name, frequency_lower_bound,
+                 frequency_upper_bound, approximation_lower_bound,
+                 approximation_upper_bound, maximum_error, coefficients,
+                 approximation_type='MACLAURIN',
+                 input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
+        self._approximation_type = approximation_type
+        self.frequency_lower_bound = frequency_lower_bound
+        self.frequency_upper_bound = frequency_upper_bound
+        self.approximation_lower_bound = approximation_lower_bound
+        self.approximation_upper_bound = approximation_upper_bound
+        self.maximum_error = maximum_error
+        self.coefficients = coefficients
         super(PolynomialResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units_name=input_units_name,
@@ -500,6 +566,21 @@ class PolynomialResponseStage(ResponseStage):
             decimation_offset=decimation_offset,
             decimation_delay=decimation_delay,
             decimation_correction=decimation_correction)
+
+    @property
+    def approximation_type(self):
+        return self._approximation_type
+
+    @approximation_type.setter
+    def approximation_type(self, value):
+        value = str(value).upper()
+        allowed = ("MACLAURIN",)
+        if value not in allowed:
+            msg = ("Value '%s' for polynomial response approximation type not "
+                   "allowed. Possible values are: '%s'")
+            msg = msg % (value, "', '".join(allowed))
+            raise ValueError(msg)
+        self._approximation_type = value
 
 
 class Response(ComparingObject):
