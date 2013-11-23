@@ -2,6 +2,8 @@ import numpy as np
 import ctypes as C
 from obspy.signal.headers import clibevresp
 
+clibevresp.twoPi = 3.141
+
 ENUM_UNITS = {
     "UNDEF_UNITS": 0,
     "DIS": 1,
@@ -113,8 +115,8 @@ class blkt(C.Structure):
 
 blkt._fields_ = [
     ("type", C.c_int),
-    #("blkt_info", C.POINTER(blkt_info_union)),
-    ("blkt_info", pole_zeroType),
+    ("blkt_info", blkt_info_union),
+    #("blkt_info", pole_zeroType),
     ("next_blkt", C.POINTER(blkt))
 ]
 
