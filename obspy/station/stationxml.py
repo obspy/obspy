@@ -279,9 +279,9 @@ def _read_response_stage(stage_elem, _ns):
     type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
                   FIR_elem, polynomial_elem]
 
+    # iterate and check for an response element and create alias
     for elem in type_elems:
         if elem is not None:
-            type_elem = elem
             break
     else:
         # Raise if none of the previous ones has been found.
@@ -289,15 +289,15 @@ def _read_response_stage(stage_elem, _ns):
         raise ValueError(msg)
 
     # Now parse all elements the different stages share.
-    input_units = type_elem.find(_ns("InputUnits"))
+    input_units = elem.find(_ns("InputUnits"))
     input_units_name = _tag2obj(input_units, _ns("Name"), str)
     input_units_description = _tag2obj(input_units, _ns("Description"), str)
-    output_units = type_elem.find(_ns("OutputUnits"))
+    output_units = elem.find(_ns("OutputUnits"))
     output_units_name = _tag2obj(output_units, _ns("Name"), str)
     output_units_description = _tag2obj(output_units, _ns("Description"), str)
-    description = _tag2obj(type_elem, _ns("Description"), str)
-    resource_id = _tag2obj(type_elem, _ns("resourceId"), str)
-    name = _tag2obj(type_elem, _ns("name"), str)
+    description = _tag2obj(elem, _ns("Description"), str)
+    resource_id = _tag2obj(elem, _ns("resourceId"), str)
+    name = _tag2obj(elem, _ns("name"), str)
 
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
@@ -316,20 +316,20 @@ def _read_response_stage(stage_elem, _ns):
               "decimation_correction": decimation_correction}
 
     # Handle Poles and Zeros Response Stage Type.
-    if poles_zeros_elem is not None:
+    if elem is poles_zeros_elem:
         pz_transfer_function_type = \
-            _tag2obj(poles_zeros_elem, _ns("PzTransferFunctionType"), str)
+            _tag2obj(elem, _ns("PzTransferFunctionType"), str)
         normalization_factor = \
-            _tag2obj(poles_zeros_elem, _ns("NormalizationFactor"), float)
+            _tag2obj(elem, _ns("NormalizationFactor"), float)
         normalization_frequency = \
-            _tag2obj(poles_zeros_elem, _ns("NormalizationFrequency"), float)
+            _tag2obj(elem, _ns("NormalizationFrequency"), float)
         # Read poles and zeros to list of imaginary numbers.
         zeros = [_tag2obj(i, _ns("Real"), float) +
                  _tag2obj(i, _ns("Imaginary"), float) * 1j
-                 for i in poles_zeros_elem.findall(_ns("Zero"))]
+                 for i in elem.findall(_ns("Zero"))]
         poles = [_tag2obj(i, _ns("Real"), float) +
                  _tag2obj(i, _ns("Imaginary"), float) * 1j
-                 for i in poles_zeros_elem.findall(_ns("Pole"))]
+                 for i in elem.findall(_ns("Pole"))]
         return obspy.station.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
@@ -337,29 +337,29 @@ def _read_response_stage(stage_elem, _ns):
             poles=poles, **kwargs)
 
     # Handle the coefficients Response Stage Type.
-    elif coefficients_elem is not None:
+    elif elem is coefficients_elem:
         cf_transfer_function_type = \
-            _tag2obj(coefficients_elem, _ns("CfTransferFunctionType"), str)
+            _tag2obj(elem, _ns("CfTransferFunctionType"), str)
         numerator = [float(_i.text) for _i in
-                     coefficients_elem.findall(_ns("Numerator"))]
+                     elem.findall(_ns("Numerator"))]
         denominator = [float(_i.text) for _i in
-                       coefficients_elem.findall(_ns("Denominator"))]
+                       elem.findall(_ns("Denominator"))]
         return obspy.station.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
     # Handle the response list response stage type.
-    elif response_list_elem is not None:
+    elif elem is response_list_elem:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle the FIR response stage type.
-    elif FIR_elem is not None:
+    elif elem is FIR_elem:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle polynomial instrument responses.
-    elif polynomial_elem is not None:
+    elif elem is polynomial_elem:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
