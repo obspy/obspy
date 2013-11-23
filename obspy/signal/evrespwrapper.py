@@ -1,6 +1,47 @@
 import numpy as np
 import ctypes as C
-from obspy.signal.headers import clibevresp  # , C_COMPLEX, RESPONSE
+from obspy.signal.headers import clibevresp
+
+ENUM_UNITS = {
+    "UNDEF_UNITS": 0,
+    "DIS": 1,
+    "VEL": 2,
+    "ACC": 3,
+    "COUNTS": 4,
+    "VOLTS": 5,
+    "DEFAULT": 6,
+    "PRESSURE": 7,
+    "TESLA": 8
+}
+
+ENUM_FILT_TYPES = {
+    "UNDEF_FILT": 0,
+    "LAPLACE_PZ": 1,
+    "ANALOG_PZ": 2,
+    "IIR_PZ": 3,
+    "FIR_SYM_1": 4,
+    "FIR_SYM_2": 5,
+    "FIR_ASYM": 6,
+    "LIST": 7,
+    "GENERIC": 8,
+    "DECIMATION": 9,
+    "GAIN": 10,
+    "REFERENCE": 11,
+    "FIR_COEFFS": 12,
+    "IIR_COEFFS": 13
+}
+
+
+ENUM_STAGE_TYPES = {
+    "UNDEF_STAGE": 0,
+    "PZ_TYPE": 1,
+    "IIR_TYPE": 2,
+    "FIR_TYPE": 3,
+    "GAIN_TYPE": 4,
+    "LIST_TYPE": 5,
+    "IIR_COEFFS_TYPE": 6,
+    "GENERIC_TYPE": 7
+}
 
 
 class complex_number(C.Structure):

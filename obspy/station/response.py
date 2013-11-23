@@ -536,6 +536,29 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
+    def get_evalresp_response(self):
+        from obspy.signal.headers import clibevresp
+        import obspy.signal.evrespwrapper as ew
+        from collections import defaultdict
+
+        all_stages = defaultdict(list)
+
+        for stage in self.response_stages:
+            all_stages[stage.stage_sequence_number].append(stage)
+
+        stage_list = sorted(all_stages.keys)
+
+        for stage_number in stage_list:
+            st = ew.stage()
+            st.sequence_no = stage_number
+            st.input_units = 0
+            st.output_units = 0
+
+            for blockette in all_stages[stage_number]:
+                blkt = ew.blkt()
+                if isinstance(blockette, PolesZerosResponseStage):
+                    blkt.type = clibevresp.PZ_TYPE
+
     def __str__(self):
         ret = (
             "Channel Response\n"
