@@ -66,6 +66,11 @@ class pole_zeroType(C.Structure):
 
 class coeffType(C.Structure):
     _fields_ = [
+        ("nnumer", C.c_int),
+        ("ndenom", C.c_int),
+        ("numer", C.POINTER(C.c_double)),
+        ("denom", C.POINTER(C.c_double)),
+        ("h0", C.c_double),
     ]
 
 
@@ -80,11 +85,6 @@ class listType(C.Structure):
 
 
 class genericType(C.Structure):
-    _fields_ = [
-    ]
-
-
-class decimationType(C.Structure):
     _fields_ = [
     ]
 
