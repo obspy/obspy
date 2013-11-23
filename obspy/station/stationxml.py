@@ -49,7 +49,7 @@ def validate_StationXML(path_or_object):
     # Get the schema location.
     schema_location = os.path.dirname(inspect.getfile(inspect.currentframe()))
     schema_location = os.path.join(schema_location, "docs",
-        "fdsn-station-1.0.xsd")
+                                   "fdsn-station-1.0.xsd")
 
     xmlschema = etree.XMLSchema(etree.parse(schema_location))
 
@@ -94,7 +94,8 @@ def read_StationXML(path_or_file_object):
         networks.append(_read_network(network, _ns))
 
     inv = obspy.station.Inventory(networks=networks, source=source,
-        sender=sender, created=created, module=module, module_uri=module_uri)
+                                  sender=sender, created=created,
+                                  module=module, module_uri=module_uri)
     return inv
 
 
@@ -125,10 +126,10 @@ def _read_base_node(element, object_to_write_to, _ns):
 def _read_network(net_element, _ns):
     network = obspy.station.Network(net_element.get("code"))
     _read_base_node(net_element, network, _ns)
-    network.total_number_of_stations = _tag2obj(net_element,
-        _ns("TotalNumberStations"), int)
-    network.selected_number_of_stations = _tag2obj(net_element,
-        _ns("SelectedNumberStations"), int)
+    network.total_number_of_stations = \
+        _tag2obj(net_element, _ns("TotalNumberStations"), int)
+    network.selected_number_of_stations = \
+        _tag2obj(net_element, _ns("SelectedNumberStations"), int)
     stations = []
     for station in net_element.findall(_ns("Station")):
         stations.append(_read_station(station, _ns))
@@ -141,7 +142,8 @@ def _read_station(sta_element, _ns):
     longitude = _tag2obj(sta_element, _ns("Longitude"), float)
     elevation = _tag2obj(sta_element, _ns("Elevation"), float)
     station = obspy.station.Station(code=sta_element.get("code"),
-        latitude=latitude, longitude=longitude, elevation=elevation)
+                                    latitude=latitude, longitude=longitude,
+                                    elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
     station.vault = _tag2obj(sta_element, _ns("Vault"), str)
@@ -150,14 +152,14 @@ def _read_station(sta_element, _ns):
         station.equipments.append(_read_equipment(equipment, _ns))
     for operator in sta_element.findall(_ns("Operator")):
         station.operators.append(_read_operator(operator, _ns))
-    station.creation_date = _tag2obj(sta_element, _ns("CreationDate"),
-        obspy.UTCDateTime)
-    station.termination_date = _tag2obj(sta_element, _ns("TerminationDate"),
-        obspy.UTCDateTime)
-    station.selected_number_of_channels = _tag2obj(sta_element,
-        _ns("SelectedNumberChannels"), int)
-    station.total_number_of_channels = _tag2obj(sta_element,
-        _ns("TotalNumberChannels"), int)
+    station.creation_date = \
+        _tag2obj(sta_element, _ns("CreationDate"), obspy.UTCDateTime)
+    station.termination_date = \
+        _tag2obj(sta_element, _ns("TerminationDate"), obspy.UTCDateTime)
+    station.selected_number_of_channels = \
+        _tag2obj(sta_element, _ns("SelectedNumberChannels"), int)
+    station.total_number_of_channels = \
+        _tag2obj(sta_element, _ns("TotalNumberChannels"), int)
     for ref in sta_element.findall(_ns("ExternalReference")):
         station.external_references.append(_read_external_reference(ref, _ns))
     channels = []
@@ -174,8 +176,8 @@ def _read_channel(cha_element, _ns):
     depth = _tag2obj(cha_element, _ns("Depth"), float)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
-    channel = obspy.station.Channel(code=code,
-        location_code=location_code, latitude=latitude,
+    channel = obspy.station.Channel(
+        code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
     channel.azimuth = _tag2obj(cha_element, _ns("Azimuth"), float)
@@ -198,8 +200,8 @@ def _read_channel(cha_element, _ns):
     channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"), str)
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
-    channel.clock_drift_in_seconds_per_sample = _tag2obj(cha_element,
-        _ns("ClockDrift"), float)
+    channel.clock_drift_in_seconds_per_sample = \
+        _tag2obj(cha_element, _ns("ClockDrift"), float)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
     if sensor is not None:
@@ -253,8 +255,8 @@ def _read_response_stage(stage_elem, _ns):
     # Parse the decimation.
     decim_elem = stage_elem.find(_ns("Decimation"))
     if decim_elem is not None:
-        decimation_input_sample_rate = _tag2obj(decim_elem,
-            _ns("InputSampleRate"), float)
+        decimation_input_sample_rate = \
+            _tag2obj(decim_elem, _ns("InputSampleRate"), float)
         decimation_factor = _tag2obj(decim_elem, _ns("Factor"), int)
         decimation_offset = _tag2obj(decim_elem, _ns("Offset"), int)
         decimation_delay = _tag2obj(decim_elem, _ns("Delay"), float)
@@ -275,12 +277,13 @@ def _read_response_stage(stage_elem, _ns):
     polynomial_elem = stage_elem.find(_ns("Polynomial"))
 
     type_elems = [poles_zeros_elem, coefficients_elem, response_list_elem,
-        FIR_elem, polynomial_elem]
-    type_elem = None
-    for i in type_elems:
-        if i is not None:
-            type_elem = i
-    if type_elem is None:
+                  FIR_elem, polynomial_elem]
+
+    for elem in type_elems:
+        if elem is not None:
+            type_elem = elem
+            break
+    else:
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
@@ -299,35 +302,34 @@ def _read_response_stage(stage_elem, _ns):
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
     kwargs = {"stage_sequence_number": stage_sequence_number,
-        "input_units_name": input_units_name,
-        "output_units_name": output_units_name,
-        "input_units_description": input_units_description,
-        "output_units_description": output_units_description,
-        "resource_id": resource_id, "stage_gain_value": stage_gain_value,
-        "stage_gain_frequency": stage_gain_frequency, "name": name,
-        "description": description,
-        "decimation_input_sample_rate": decimation_input_sample_rate,
-        "decimation_factor": decimation_factor,
-        "decimation_offset": decimation_offset,
-        "decimation_delay": decimation_delay,
-        "decimation_correction": decimation_correction}
-
+              "input_units_name": input_units_name,
+              "output_units_name": output_units_name,
+              "input_units_description": input_units_description,
+              "output_units_description": output_units_description,
+              "resource_id": resource_id, "stage_gain_value": stage_gain_value,
+              "stage_gain_frequency": stage_gain_frequency, "name": name,
+              "description": description,
+              "decimation_input_sample_rate": decimation_input_sample_rate,
+              "decimation_factor": decimation_factor,
+              "decimation_offset": decimation_offset,
+              "decimation_delay": decimation_delay,
+              "decimation_correction": decimation_correction}
 
     # Handle Poles and Zeros Response Stage Type.
     if poles_zeros_elem is not None:
-        pz_transfer_function_type = _tag2obj(poles_zeros_elem,
-            _ns("PzTransferFunctionType"), str)
-        normalization_factor = _tag2obj(poles_zeros_elem,
-            _ns("NormalizationFactor"), float)
-        normalization_frequency = _tag2obj(poles_zeros_elem,
-            _ns("NormalizationFrequency"), float)
+        pz_transfer_function_type = \
+            _tag2obj(poles_zeros_elem, _ns("PzTransferFunctionType"), str)
+        normalization_factor = \
+            _tag2obj(poles_zeros_elem, _ns("NormalizationFactor"), float)
+        normalization_frequency = \
+            _tag2obj(poles_zeros_elem, _ns("NormalizationFrequency"), float)
         # Read poles and zeros to list of imaginary numbers.
         zeros = [_tag2obj(i, _ns("Real"), float) +
-            _tag2obj(i, _ns("Imaginary"), float) * 1j
-            for i in poles_zeros_elem.findall(_ns("Zero"))]
+                 _tag2obj(i, _ns("Imaginary"), float) * 1j
+                 for i in poles_zeros_elem.findall(_ns("Zero"))]
         poles = [_tag2obj(i, _ns("Real"), float) +
-            _tag2obj(i, _ns("Imaginary"), float) * 1j
-            for i in poles_zeros_elem.findall(_ns("Pole"))]
+                 _tag2obj(i, _ns("Imaginary"), float) * 1j
+                 for i in poles_zeros_elem.findall(_ns("Pole"))]
         return obspy.station.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
@@ -335,29 +337,29 @@ def _read_response_stage(stage_elem, _ns):
             poles=poles, **kwargs)
 
     # Handle the coefficients Response Stage Type.
-    if coefficients_elem is not None:
-        cf_transfer_function_type = _tag2obj(coefficients_elem,
-            _ns("CfTransferFunctionType"), str)
+    elif coefficients_elem is not None:
+        cf_transfer_function_type = \
+            _tag2obj(coefficients_elem, _ns("CfTransferFunctionType"), str)
         numerator = [float(_i.text) for _i in
-            coefficients_elem.findall(_ns("Numerator"))]
+                     coefficients_elem.findall(_ns("Numerator"))]
         denominator = [float(_i.text) for _i in
-            coefficients_elem.findall(_ns("Denominator"))]
+                       coefficients_elem.findall(_ns("Denominator"))]
         return obspy.station.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
     # Handle the response list response stage type.
-    if response_list_elem is not None:
+    elif response_list_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle the FIR response stage type.
-    if FIR_elem is not None:
+    elif FIR_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
     # Handle polynomial instrument responses.
-    if polynomial_elem is not None:
+    elif polynomial_elem is not None:
         msg = "Coefficients Response Type not yet implemented."
         raise NotImplementedError(msg)
 
@@ -367,20 +369,20 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
     frequency = _tag2obj(sensitivity_element, _ns("Frequency"), float)
     input_units = sensitivity_element.find(_ns("InputUnits"))
     output_units = sensitivity_element.find(_ns("OutputUnits"))
-    sensitivity = obspy.station.response.InstrumentSensitivity(value=value,
-        frequency=frequency,
+    sensitivity = obspy.station.response.InstrumentSensitivity(
+        value=value, frequency=frequency,
         input_units_name=_tag2obj(input_units, _ns("Name"), str),
         output_units_name=_tag2obj(output_units, _ns("Name"), str))
-    sensitivity.input_units_description = _tag2obj(input_units,
-        _ns("Description"), str)
-    sensitivity.output_units_description = _tag2obj(output_units,
-        _ns("Description"), str)
-    sensitivity.frequency_range_start = _tag2obj(sensitivity_element,
-        _ns("FrequencyStart"), float)
-    sensitivity.frequency_range_end = _tag2obj(sensitivity_element,
-        _ns("FrequencyEnd"), float)
-    sensitivity.frequency_range_DB_variation = _tag2obj(sensitivity_element,
-        _ns("FrequencyDBVariation"), float)
+    sensitivity.input_units_description = \
+        _tag2obj(input_units, _ns("Description"), str)
+    sensitivity.output_units_description = \
+        _tag2obj(output_units, _ns("Description"), str)
+    sensitivity.frequency_range_start = \
+        _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
+    sensitivity.frequency_range_end = \
+        _tag2obj(sensitivity_element, _ns("FrequencyEnd"), float)
+    sensitivity.frequency_range_DB_variation = \
+        _tag2obj(sensitivity_element, _ns("FrequencyDBVariation"), float)
     return sensitivity
 
 
@@ -401,7 +403,7 @@ def _read_operator(operator_element, _ns):
         contacts.append(_read_person(contact, _ns))
     website = _tag2obj(operator_element, _ns("WebSite"), str)
     return obspy.station.Operator(agencies=agencies, contacts=contacts,
-        website=website)
+                                  website=website)
 
 
 def _read_equipment(equip_element, _ns):
@@ -412,17 +414,18 @@ def _read_equipment(equip_element, _ns):
     vendor = _tag2obj(equip_element, _ns("Vendor"), str)
     model = _tag2obj(equip_element, _ns("Model"), str)
     serial_number = _tag2obj(equip_element, _ns("SerialNumber"), str)
-    installation_date = _tag2obj(equip_element, _ns("InstallationDate"),
-        obspy.UTCDateTime)
-    removal_date = _tag2obj(equip_element, _ns("RemovalDate"),
-        obspy.UTCDateTime)
-    calibration_dates = [obspy.core.UTCDateTime(_i.text)
-        for _i in equip_element.findall(_ns("CalibrationDate"))]
-    return obspy.station.Equipment(resource_id=resource_id, type=type,
-        description=description, manufacturer=manufacturer, vendor=vendor,
-        model=model, serial_number=serial_number,
-        installation_date=installation_date, removal_date=removal_date,
-        calibration_dates=calibration_dates)
+    installation_date = \
+        _tag2obj(equip_element, _ns("InstallationDate"), obspy.UTCDateTime)
+    removal_date = \
+        _tag2obj(equip_element, _ns("RemovalDate"), obspy.UTCDateTime)
+    calibration_dates = \
+        [obspy.core.UTCDateTime(_i.text)
+         for _i in equip_element.findall(_ns("CalibrationDate"))]
+    return obspy.station.Equipment(
+        resource_id=resource_id, type=type, description=description,
+        manufacturer=manufacturer, vendor=vendor, model=model,
+        serial_number=serial_number, installation_date=installation_date,
+        removal_date=removal_date, calibration_dates=calibration_dates)
 
 
 def _read_site(site_element, _ns):
@@ -433,22 +436,21 @@ def _read_site(site_element, _ns):
     region = _tag2obj(site_element, _ns("Region"), str)
     country = _tag2obj(site_element, _ns("Country"), str)
     return obspy.station.Site(name=name, description=description, town=town,
-        county=county, region=region, country=country)
+                              county=county, region=region, country=country)
 
 
 def _read_comment(comment_element, _ns):
     value = _tag2obj(comment_element, _ns("Value"), str)
-    begin_effective_time = _tag2obj(comment_element, _ns("BeginEffectiveTime"),
-        obspy.UTCDateTime)
-    end_effective_time = _tag2obj(comment_element, _ns("EndEffectiveTime"),
-        obspy.UTCDateTime)
+    begin_effective_time = \
+        _tag2obj(comment_element, _ns("BeginEffectiveTime"), obspy.UTCDateTime)
+    end_effective_time = \
+        _tag2obj(comment_element, _ns("EndEffectiveTime"), obspy.UTCDateTime)
     authors = []
     for author in comment_element.findall(_ns("Author")):
         authors.append(_read_person(author, _ns))
-    return obspy.station.Comment(value=value,
-        begin_effective_time=begin_effective_time,
-        end_effective_time=end_effective_time,
-        authors=authors)
+    return obspy.station.Comment(
+        value=value, begin_effective_time=begin_effective_time,
+        end_effective_time=end_effective_time, authors=authors)
 
 
 def _read_person(person_element, _ns):
@@ -459,7 +461,7 @@ def _read_person(person_element, _ns):
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
     return obspy.station.Person(names=names, agencies=agencies, emails=emails,
-        phones=phones)
+                                phones=phones)
 
 
 def _read_phone(phone_element, _ns):
@@ -467,9 +469,9 @@ def _read_phone(phone_element, _ns):
     area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
     phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
     description = phone_element.get("description")
-    return obspy.station.PhoneNumber(country_code=country_code,
-        area_code=area_code, phone_number=phone_number,
-        description=description)
+    return obspy.station.PhoneNumber(
+        country_code=country_code, area_code=area_code,
+        phone_number=phone_number, description=description)
 
 
 def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
@@ -506,7 +508,7 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
         _write_network(root, network)
 
     str_repr = etree.tostring(root, pretty_print=True, xml_declaration=True,
-        encoding="UTF-8")
+                              encoding="UTF-8")
 
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
@@ -605,9 +607,9 @@ def _write_station(parent, station):
             _format_time(station.termination_date)
     # The next two tags are optional.
     _obj2tag(station_elem, "TotalNumberChannels",
-        station.total_number_of_channels)
+             station.total_number_of_channels)
     _obj2tag(station_elem, "SelectedNumberChannels",
-        station.selected_number_of_channels)
+             station.selected_number_of_channels)
 
     for ref in station.external_references:
         _write_external_reference(station_elem, ref)
