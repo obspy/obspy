@@ -206,6 +206,14 @@ ENTRY_POINTS = {
         'readFormat = obspy.core.quakeml:readQuakeML',
         'writeFormat = obspy.core.quakeml:writeQuakeML',
     ],
+    'obspy.plugin.inventory': [
+        'STATIONXML = obspy.station.stationxml',
+    ],
+    'obspy.plugin.inventory.STATIONXML': [
+        'isFormat = obspy.station.stationxml:is_StationXML',
+        'readFormat = obspy.station.stationxml:read_StationXML',
+        'writeFormat = obspy.station.stationxml:write_StationXML',
+    ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
         'constant = scipy.signal:detrend',

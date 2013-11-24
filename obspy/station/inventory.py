@@ -9,21 +9,13 @@ Provides the Inventory class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from pkg_resources import load_entry_point
 import obspy
 from obspy.core.util.base import ComparingObject
-from obspy.station import stationxml
+from obspy.core.util import getExampleFile
+from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
 from obspy.station.network import Network
 import textwrap
-
-
-# Manual "plug-in" system. Likely sufficient for the limited number of
-# available formats.
-FORMAT_FCTS = {
-    "stationxml": {
-        "is_fct": stationxml.is_StationXML,
-        "read_fct": stationxml.read_StationXML,
-        "write_fct": stationxml.write_StationXML}
-}
 
 
 def read_inventory(path_or_file_object, format=None):
@@ -32,23 +24,15 @@ def read_inventory(path_or_file_object, format=None):
 
     :param path_or_file_object: Filename or file like object.
     """
-    if format:
-        fileformat = format.lower()
-        if fileformat not in FORMAT_FCTS.keys():
-            msg = "Unsupported format '%s'.\nSupported formats: %s" % (
-                format, ", ".join(sorted(FORMAT_FCTS.keys())))
-            raise ValueError(msg)
-    else:
-        found_format = False
-        for fileformat, value in FORMAT_FCTS.iteritems():
-            if value["is_fct"](path_or_file_object):
-                found_format = True
-                break
-        if found_format is not True:
-            msg = "Unsupported fileformat.\nSupported formats: %s" % (
-                ", ".join(sorted(FORMAT_FCTS.keys())))
-            raise ValueError(msg)
-    return FORMAT_FCTS[fileformat]["read_fct"](path_or_file_object)
+    # if pathname starts with /path/to/ try to search in examples
+    if isinstance(path_or_file_object, basestring) and \
+       path_or_file_object.startswith('/path/to/'):
+        try:
+            path_or_file_object = getExampleFile(path_or_file_object[9:])
+        except:
+            # otherwise just try to read the given /path/to folder
+            pass
+    return _readFromPlugin("inventory", path_or_file_object, format=format)[0]
 
 
 class Inventory(ComparingObject):
@@ -149,16 +133,19 @@ class Inventory(ComparingObject):
             to.
         :param format: The format of the written file.
         """
-        available_write_formats = [key for key, value in
-            FORMAT_FCTS.iteritems() if "write_fct" in value]
-
-        fileformat = format.lower()
-        if fileformat not in available_write_formats:
-            msg = "Unsupported format '%s'.\nSupported formats: %s" % (
-                format, ", ".join(sorted(available_write_formats)))
-            raise ValueError(msg)
-        return FORMAT_FCTS[fileformat]["write_fct"](self, path_or_file_object,
-            **kwargs)
+        format = format.upper()
+        try:
+            # get format specific entry point
+            format_ep = ENTRY_POINTS['inventory_write'][format]
+            # search writeFormat method for given entry point
+            writeFormat = load_entry_point(
+                format_ep.dist.key,
+                'obspy.plugin.inventory.%s' % (format_ep.name), 'writeFormat')
+        except (IndexError, ImportError, KeyError):
+            msg = "Writing format \"%s\" is not supported. Supported types: %s"
+            raise TypeError(msg % (format,
+                                   ', '.join(ENTRY_POINTS['inventory_write'])))
+        return writeFormat(self, path_or_file_object, **kwargs)
 
     @property
     def networks(self):
