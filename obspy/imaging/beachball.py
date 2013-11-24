@@ -609,8 +609,8 @@ def plotDC(np1, size=200, xy=(0, 0), width=200):
         Y2 = Y2[::-1]
         th2 = np.arange(S2, S1, inc)
     (Xs2, Ys2) = Pol2Cart(th2 * D2R, 90 * np.ones((1, len(th2))))
-    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]), 1)
-    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]), 1)
+    X = np.concatenate((X1, Xs1[0], X2, Xs2[0]))
+    Y = np.concatenate((Y1, Ys1[0], Y2, Ys2[0]))
 
     X = X * D / 90
     Y = Y * D / 90
@@ -735,7 +735,10 @@ def MT2Plane(mt):
     AER = np.sqrt(np.power(AE[0], 2) + np.power(AE[1], 2) + np.power(AE[2], 2))
     ANR = np.sqrt(np.power(AN[0], 2) + np.power(AN[1], 2) + np.power(AN[2], 2))
     AE = AE / AER
-    AN = AN / ANR
+    if not ANR:
+        AN = np.array([np.nan, np.nan, np.nan])
+    else:
+        AN = AN / ANR
     if AN[2] <= 0.:
         AN1 = AN
         AE1 = AE

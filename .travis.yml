@@ -9,6 +9,7 @@ before_install:
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
   - pip install --use-mirrors matplotlib==1.3.0
+  - pip install --use-mirrors flake8
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
@@ -18,6 +19,11 @@ install:
   - pip install --use-mirrors .
   - git status
 script:
+  # We change directories to make sure that python won't find the copy
+  # of obspy in the source directory, see 
+  # https://github.com/numpy/numpy/blob/master/.travis.yml#L44
+  - mkdir empty
+  - cd empty
   - MODULELIST=`python -c "from obspy.core.util import DEFAULT_MODULES as MODULES; print 'obspy.' + ',obspy.'.join(MODULES)"`
   - coverage run --source=$MODULELIST -m obspy.core.scripts.runtests -n travis-ci -r --keep-images
 after_success:
@@ -28,4 +34,4 @@ notifications:
 after_failure:
   - cd
   - wget "http://imgur.com/tools/imgurbash.sh"
-  - "find . -regex '.*/tests/images/testrun/.*png' | xargs -I % bash imgurbash.sh %"
+  - for FILE in `find . -regex '.*/tests/images/testrun/.*png' | sort`; do echo $FILE; bash imgurbash.sh $FILE; done

@@ -7,7 +7,6 @@ from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
     VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
-from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
@@ -16,6 +15,14 @@ import numpy as np
 import os
 import util
 import warnings
+
+
+class InternalMSEEDReadingError(Exception):
+    pass
+
+
+class InternalMSEEDReadingWarning(UserWarning):
+    pass
 
 
 def isMSEED(filename):
@@ -165,12 +172,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         unpack_data = 1
     if reclen is None:
         reclen = -1
-    elif reclen is not None and reclen not in VALID_RECORD_LENGTHS:
+    elif reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. Autodetection will be used.'
         warnings.warn(msg)
         reclen = -1
-    else:
-        reclen = int(log(reclen, 2))
 
     # Determine the byteorder.
     if header_byteorder == "=":
@@ -296,15 +301,26 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
+    def log_error_or_warning(msg):
+        if msg.startswith("ERROR: "):
+            raise InternalMSEEDReadingError(msg[7:].strip())
+        if msg.startswith("INFO: "):
+            warnings.warn(msg[6:].strip(), InternalMSEEDReadingWarning)
+    diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
+
+    def log_message(msg):
+        print msg[6:].strip()
+    log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
+
     try:
         verbose = int(verbose)
     except:
         verbose = 0
 
     lil = clibmseed.readMSEEDBuffer(
-        buffer, buflen, selections, unpack_data,
-        reclen, C.c_int(verbose), C.c_int(details), header_byteorder,
-        allocData)
+        buffer, buflen, selections, C.c_int8(unpack_data),
+        reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
+        allocData, diag_print, log_print)
 
     # XXX: Check if the freeing works.
     del selections
@@ -367,8 +383,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         except ValueError:
             break
 
-    clibmseed.lil_free(lil)
-    del lil
+    clibmseed.lil_free(lil)  # NOQA
+    del lil  # NOQA
     return Stream(traces=traces)
 
 
@@ -686,15 +702,15 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(' ')
             C.memset(C.pointer(blkt100), 0, size)
-            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
-                                                 size, 100, 0)
+            ret_val = clibmseed.msr_addblockette(
+                msr, C.pointer(blkt100), size, 100, 0)  # NOQA
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             if bool(ret_val) is False:
-                clibmseed.msr_free(C.pointer(msr))
-                del msr
+                clibmseed.msr_free(C.pointer(msr))  # NOQA
+                del msr  # NOQA
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
@@ -702,19 +718,19 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         errcode = clibmseed.mst_pack(
             mst.mst, recHandler, None, trace_attr['reclen'],
             trace_attr['encoding'], trace_attr['byteorder'],
-            C.byref(packedsamples), flush, verbose, msr)
+            C.byref(packedsamples), flush, verbose, msr)  # NOQA
 
         if errcode == 0:
             msg = ("Did not write any data for trace '%s' even though it "
                    "contains data values.") % trace
             raise ValueError(msg)
         if errcode == -1:
-            clibmseed.msr_free(C.pointer(msr))
-            del mst, msr
+            clibmseed.msr_free(C.pointer(msr))  # NOQA
+            del mst, msr  # NOQA
             raise Exception('Error in mst_pack')
         # Deallocate any allocated memory.
-        clibmseed.msr_free(C.pointer(msr))
-        del mst, msr
+        clibmseed.msr_free(C.pointer(msr))  # NOQA
+        del mst, msr  # NOQA
     # Close if its a file handler.
     if isinstance(f, file):
         f.close()

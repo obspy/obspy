@@ -5,10 +5,10 @@ dev:
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
-     Catalog.write(..., format="quakeml"), now has an optional keyword argument
-     'validate'. If True, the resulting QuakeML file will be validated against
-     the QuakeML schema before being written. An AssertionError will be raised
-     in case the validation fails.
+     Catalog.write(..., format="quakeml"), now has an optional keyword
+     argument 'validate'. If True, the resulting QuakeML file will be
+     validated against the QuakeML schema before being written. An
+     AssertionError will be raised in case the validation fails.
    * validation of QuakeML against official schema working now
    * renamed obspy.core.util.types into obspy.core.util.obspy_types (#595)
    * new parameter replace for Enums which allows definition of replaceable
@@ -18,8 +18,25 @@ dev:
    * trim(pad=True, fill_value=xxx) will return a NumPy ndarray as stated in
      the API documentation (#540)
    * read() supports now tar und zip archives and variants (tar.gz, tar.bz2)
-   * new option "side" for Stream/Trace.taper() to perform one-sided tapering
+   * new options for Stream/Trace.taper() to control the length of the
+     tapering for all windowing functions and perform one-sided tapering
    * Many Stream and Trace methods are now chainable, e.g. st.taper().plot()
+   * when using Stream/Trace.simulate(seedresp={...})) parameter "date" can
+     now be omitted, start time of each trace is used for response lookup then
+   * when using Stream/Trace.simulate(seedresp={...})) for parameter
+     "filename" instead of the path to a local file now also can be provided
+     either a file-like object with RESP information or an obspy.xseed.Parser
+     object (e.g. created reading a dataless SEED file).
+   * fix Stream.select() when using values like "" or 0, e.g.
+     Stream.select(location="") or when filtering by component with a channel
+     code less than 3 characters long (now these traces will be omitted from
+     the result when filtering by component).
+   * fix a bug when merging valid data into a masked trace (see #638)
+   * event.ResourceIdentifier objects are now initialized with a QuakeML
+     conform string by default, i.e. if no custom prefix is provided during
+     initialization.
+   * added a new test that asserts that the whole codebase is valid according
+     to the flake8 tool.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -27,8 +44,16 @@ dev:
    * obspy-indexer script uses from now on hash symbols (#) instead
      of pipe (|) for features because pipe has a special meaning on
      most operating systems
+ - obspy.fdsn:
+   * new client module to access servers based on the FDSN web service
+     definition (http://www.fdsn.org/webservices/)
+ - obspy.gse2:
+   * read/write STA2 header line which is officialy mandatory but in pratice
+     often not used
  - obspy.imaging:
    * more options to customize day plots
+   * dayplot now plots matching picks (station, network, location) if a list
+     of event objects is provided using the `events` kwarg.
    * obspy-scan: new option --print-gaps
    * added plotting of record sections
    * automatic merging can be disabled for obspy-plot
@@ -40,11 +65,15 @@ dev:
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
-   * add PPSD support for segments of arbitary length
+   * add PPSD support for segments of arbitrary length
    * default bin width of PPSD is changed to 1dB. This is the value used by
      McNamara and Buland 2004.
    * fix a bug when using evalresp with RESP files with very short epochs.
      see #631.
+   * for seisSim(seedresp={...})) for parameter "filename" instead of the
+     path to a local file now also can be provided either a file-like
+     object with RESP information or an obspy.xseed.Parser object
+     (e.g. created reading a dataless SEED file).
  - obspy.station:
    * adding support for FDSN StationXML
  - obspy.mseed:

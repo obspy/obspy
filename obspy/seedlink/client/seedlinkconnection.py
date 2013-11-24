@@ -633,7 +633,7 @@ class SeedLinkConnection(object):
                 logger.error(msg % (self.statefile))
             else:
                 msg = "recovered state for %s streams in %s"
-                logger.debug(msg % (stacount,  self.statefile))
+                logger.debug(msg % (stacount, self.statefile))
         except IOError as e:
             msg = "%s: reading state file: %s" % (e, self.statefile)
             logger.critical(msg)

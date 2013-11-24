@@ -35,7 +35,7 @@ behavior of reading the file:
 <obspy.core.stream.Stream object at 0x...>
 >>> print(st) #doctest: +NORMALIZE_WHITESPACE
 1 Trace(s) in Stream:
-.RJOB..Z | 2005-08-31T02:33:49.849998Z - 2005-08-31T02:34:49.844998Z
+.RJOB..Z | 2005-08-31T02:33:49.850000Z - 2005-08-31T02:34:49.845000Z
 | 200.0 Hz, 12000 samples
 
 The format will be determined automatically. Each trace (multiple 'WID2'
@@ -49,16 +49,18 @@ attributes:
          station: RJOB
         location:
          channel: Z
-       starttime: 2005-08-31T02:33:49.849998Z
-         endtime: 2005-08-31T02:34:49.844998Z
+       starttime: 2005-08-31T02:33:49.850000Z
+         endtime: 2005-08-31T02:34:49.845000Z
    sampling_rate: 200.0
            delta: 0.005
             npts: 12000
-           calib: 0.0948999971151
+           calib: 0.0949
          _format: GSE2
-            gse2: AttribDict({'instype': '      ', 'datatype': 'CM6',
-                              'hang': -1.0, 'auxid': 'RJOB', 'vang': -1.0,
-                              'calper': 1.0})
+            gse2: AttribDict({'instype': '', 'elev': -0.999,
+                              'datatype': 'CM6', 'hang': -1.0, 'lon': -999.0,
+                              'edepth': -0.999, 'auxid': 'RJOB',
+                              'vang': -1.0, 'calper': 1.0,
+                              'lat': -99.0, 'coordsys': ''})
 
 The actual data is stored as :class:`~numpy.ndarray` in the ``data`` attribute
 of each trace.

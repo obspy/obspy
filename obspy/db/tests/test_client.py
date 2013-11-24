@@ -245,7 +245,7 @@ class ClientTestCase(unittest.TestCase):
 
 def suite():
     try:
-        import sqlite3  # @UnusedImport
+        import sqlite3  # @UnusedImport # NOQA
     except ImportError:
         # skip the whole test suite if module sqlite3 is missing
         return unittest.makeSuite(object, 'test')

@@ -6,7 +6,7 @@ import inspect
 import numpy as np
 import os
 
-from obspy.lib import libtau
+from obspy.lib import libtau_ttimes
 
 # Directory of obspy.taup.
 _taup_dir = \
@@ -66,7 +66,7 @@ def getTravelTimes(delta, depth, model='iasp91'):
     # modnam is a string with 500 chars.
     modnam = os.path.join(_taup_dir, 'tables', model).ljust(500)
 
-    phase_names, tt, toang, dtdd, dtdh, dddp = libtau.ttimes(delta, depth,
+    phase_names, tt, toang, dtdd, dtdh, dddp = libtau_ttimes(delta, depth,
                                                              modnam)
 
     phases = []

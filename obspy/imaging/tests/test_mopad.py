@@ -2,8 +2,7 @@
 """
 The obspy.imaging.mopad test suite.
 """
-
-from obspy.core.util.base import ImageComparison, HAS_COMPARE_IMAGE
+from obspy.core.util.testing import ImageComparison, HAS_COMPARE_IMAGE
 from obspy.core.util.decorator import skipIf
 from obspy.imaging.mopad_wrapper import Beach
 import matplotlib.pyplot as plt
@@ -20,7 +19,7 @@ class MopadTestCase(unittest.TestCase):
         # directory where the test files are located
         self.path = os.path.join(os.path.dirname(__file__), 'images')
 
-    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib to old')
+    @skipIf(not HAS_COMPARE_IMAGE, 'nose not installed or matplotlib too old')
     def test_collection(self):
         """
         Tests to plot mopad beachballs as collection into an existing axis

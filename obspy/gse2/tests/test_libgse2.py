@@ -5,9 +5,11 @@ The libgse2 test suite.
 """
 from ctypes import ArgumentError
 from obspy import UTCDateTime
-from obspy.core.util import NamedTemporaryFile
+from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.gse2 import libgse2
-from obspy.gse2.libgse2 import ChksumError
+from obspy.gse2.libgse2 import ChksumError, GSEUtiError, parse_STA2, \
+    compile_STA2
+from cStringIO import StringIO
 import numpy as np
 import os
 import unittest
@@ -34,20 +36,15 @@ class LibGSE2TestCase(unittest.TestCase):
         datalist = [12, -10, 16, 33, 9, 26, 16, 7, 17, 6, 1, 3, -2]
         f = open(gse2file, 'rb')
         header, data = libgse2.read(f, verify_chksum=True)
-        self.assertEqual('RJOB ', header['station'])
-        self.assertEqual('  Z', header['channel'])
-        self.assertEqual(200.0, header['samp_rate'])
-        self.assertEqual('20050831023349.850', "%04d%02d%02d%02d%02d%06.3f" % (
-            header['d_year'],
-            header['d_mon'],
-            header['d_day'],
-            header['t_hour'],
-            header['t_min'],
-            header['t_sec']))
+        self.assertEqual('RJOB', header['station'])
+        self.assertEqual('Z', header['channel'])
+        self.assertEqual(200.0, header['sampling_rate'])
+        self.assertEqual(UTCDateTime(2005, 8, 31, 2, 33, 49, 850000),
+                         header['starttime'])
         self.assertAlmostEqual(9.49e-02, header['calib'])
-        self.assertEqual(1.0, header['calper'])
-        self.assertEqual(-1.0, header['vang'])
-        self.assertEqual(-1.0, header['hang'])
+        self.assertEqual(1.0, header['gse2']['calper'])
+        self.assertEqual(-1.0, header['gse2']['vang'])
+        self.assertEqual(-1.0, header['gse2']['hang'])
         self.assertEqual(data[0:13].tolist(), datalist)
         f.close()
 
@@ -70,47 +67,48 @@ class LibGSE2TestCase(unittest.TestCase):
         Writes, reads and compares files created via libgse2.
         """
         gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        f = open(gse2file, 'rb')
-        header, data = libgse2.read(f)
-        f.close()
-        with NamedTemporaryFile() as tf:
-            tmp_file = tf.name
-            with open(tmp_file, 'wb') as f:
-                libgse2.write(header, data, f)
-            newheader, newdata = libgse2.read(open(tmp_file, 'rb'))
+        with open(gse2file, 'rb') as f:
+            header, data = libgse2.read(f)
+        with NamedTemporaryFile() as f:
+            libgse2.write(header, data, f)
+            f.flush()
+            newheader, newdata = libgse2.read(open(f.name, 'rb'))
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 
-    def test_readHeaderInfo(self):
+    def test_stringIO(self):
+        """
+        Checks that reading and writing works via StringIO
+        """
+        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
+        with open(gse2file, 'rb') as f:
+            fin = StringIO(f.read())
+        header, data = libgse2.read(fin)
+        # be sure something es actually read
+        self.assertEqual(12000, header['npts'])
+        self.assertEqual(1, data[-1])
+        fout = StringIO()
+        libgse2.write(header, data, fout)
+        fout.seek(0)
+        newheader, newdata = libgse2.read(fout)
+        self.assertEqual(header, newheader)
+        np.testing.assert_equal(data, newdata)
+
+    def test_readHeader(self):
         """
         Reads and compares header info from the first record.
 
         The values can be read from the filename.
         """
-        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        header = libgse2.readHead(open(gse2file, 'rb'))
-        self.assertEqual('RNON ', header['station'])
-        self.assertEqual('  Z', header['channel'])
-        self.assertEqual(200, header['samp_rate'])
-        self.assertEqual('20040609200559.850', "%04d%02d%02d%02d%02d%06.3f" % (
-            header['d_year'],
-            header['d_mon'],
-            header['d_day'],
-            header['t_hour'],
-            header['t_min'],
-            header['t_sec']))
-
-    def test_getStartAndEndTime(self):
-        """
-        Tests getting the start- and end time of a file.
-        """
-        gse2file = os.path.join(self.path, 'loc_RNON20040609200559.z')
-        # get the start- and end time
-        times = libgse2.getStartAndEndTime(open(gse2file, 'rb'))
-        self.assertEqual(UTCDateTime(2004, 6, 9, 20, 5, 59, 849998), times[0])
-        self.assertEqual(UTCDateTime(2004, 6, 9, 20, 6, 59, 849998), times[1])
-        self.assertEqual(1086811559.849998, times[2])
-        self.assertEqual(1086811619.849998, times[3])
+        gse2file = os.path.join(self.path, 'twiceCHK2.gse2')
+        header = libgse2.readHeader(open(gse2file, 'rb'))
+        self.assertEqual('RNHA', header['station'])
+        self.assertEqual('EHN', header['channel'])
+        self.assertEqual(200, header['sampling_rate'])
+        self.assertEqual(750, header['npts'])
+        self.assertEqual('M24', header['gse2']['instype'])
+        self.assertEqual(UTCDateTime(2009, 5, 18, 6, 47, 20, 255000),
+                         header['starttime'])
 
     def test_isWidi2(self):
         """
@@ -166,7 +164,7 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         f = open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb')
         header, data = libgse2.read(f, verify_chksum=True)
-        self.assertEqual(header['n_samps'], 750)
+        self.assertEqual(header['npts'], 750)
         np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
 
@@ -177,6 +175,71 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         f = open(os.path.join(self.path, 'broken_head.gse2'), 'rb')
         self.assertRaises(ChksumError, libgse2.read, f)
+
+    def test_noDAT2NullPointer(self):
+        """
+        Checks that null pointers are returned correctly by read83 function
+        of read. Error "decomp_6b: Neither DAT2 or DAT1 found!" is on
+        purpose.
+        """
+        filename = os.path.join(self.path,
+                                'loc_RJOB20050831023349_first100_dos.z')
+        fout = StringIO()
+        with open(filename, 'rb') as fin:
+            lines = (l for l in fin if not l.startswith('DAT2'))
+            fout.write("\n".join(lines))
+        fout.seek(0)
+        with CatchOutput() as out:
+            self.assertRaises(GSEUtiError, libgse2.read, fout)
+        self.assertEqual(out.stdout,
+                         "decomp_6b: Neither DAT2 or DAT1 found!\n")
+
+    def test_parse_STA2(self):
+        """
+        Tests parsing of STA2 lines on a collection of (modified) real world
+        examples.
+        """
+        filename = os.path.join(self.path,
+                                'STA2.testlines')
+        filename2 = os.path.join(self.path,
+                                 'STA2.testlines_out')
+        results = [
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0, 'elev': -290.0,
+             'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0, 'elev': -50.0,
+             'lat': -37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.12345, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': 7.1234, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.1234, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 2.123, 'edepth': 0.0, 'elev': -2480.0,
+             'lat': -7.1234, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': -12.12345, 'edepth': 0.0, 'elev': 1.816,
+             'lat': 36.12345, 'coordsys': 'WGS-84'},
+            {'network': 'abcdef', 'lon': -112.12345, 'edepth': 0.002,
+             'elev': 0.254, 'lat': 37.12345, 'coordsys': 'WGS84'},
+            {'network': 'ABCD', 'lon': 12.12345, 'edepth': 0.0,
+             'elev': -240000.0, 'lat': 37.12345, 'coordsys': 'WGS-84'},
+            {'network': 'ABCD', 'lon': 1.12345, 'edepth': 1.234,
+             'elev': -123.456, 'lat': 12.12345, 'coordsys': 'WGS-84'},
+            {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
+             'lat': -99.0, 'coordsys': ''},
+            {'network': '', 'lon': -999.0, 'edepth': -0.999, 'elev': -0.999,
+             'lat': -99.0, 'coordsys': ''}]
+        with open(filename) as fh:
+            lines = fh.readlines()
+        with open(filename2) as fh:
+            lines2 = fh.readlines()
+        for line, line2, expected in zip(lines, lines2, results):
+            # test parsing a given STA2 line
+            got = parse_STA2(line)
+            self.assertEqual(got, expected)
+            # test that compiling it again gives expected result
+            header = {}
+            header['network'] = got.pop("network")
+            header['gse2'] = got
+            got = compile_STA2(header)
+            self.assertEqual(got, line2)
 
 
 def suite():

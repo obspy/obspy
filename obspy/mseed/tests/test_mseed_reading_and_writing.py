@@ -9,6 +9,8 @@ from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
+from StringIO import StringIO
+import sys
 import unittest
 import warnings
 
@@ -934,6 +936,49 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # timing quality must be inside the range of 0 to 100 [%]
         self.assertEqual((res[:]['qual'] >= 0).sum(), res.shape[0])
         self.assertEqual((res[:]['qual'] <= 100).sum(), res.shape[0])
+
+    def test_corruptFileLength(self):
+        """
+        Checks that mseed reading utility is explicitly checking
+        for file length.
+
+        The original unintentionally corrupt file has been replaced with an
+        intentionally corrupt test file. It has a record length of 512 with one
+        additional byte at the end.
+
+        See #678 for the original detection of the bug.
+        """
+        filename = os.path.join(self.path, 'data',
+                                'corrupt_one_extra_byte_at_end.mseed')
+
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter('always', UserWarning)
+            st = read(filename, reclen=512)
+
+        self.assertEqual(len(w), 1)
+        self.assertTrue("Last reclen exceeds buflen, skipping" in
+                        str(w[-1].message))
+        self.assertEqual(st[0].stats.station, 'BGLD')
+
+    def test_verbosity(self):
+        filename = os.path.join(self.path, 'data',
+                                'BW.UH3.__.EHZ.D.2010.171.first_record')
+
+        # Catch output.
+        sys.stdout = StringIO()
+        sys.stderr = StringIO()
+        st = read(filename, verbose=2)
+        sys.stdout.seek(0, 0)
+        stdout = sys.stdout.read()
+        sys.stdout.close()
+        sys.stderr.close()
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
+
+        self.assertTrue("calling msr_parse with" in stdout)
+        self.assertTrue("buflen=512, reclen=-1, dataflag=0, verbose=2" in
+                        stdout)
+        self.assertEqual(st[0].stats.station, 'UH3')
 
 
 def suite():

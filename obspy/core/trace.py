@@ -13,7 +13,8 @@ from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
 from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
-from obspy.core.util.decorator import raiseIfMasked
+from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
+    taper_API_change
 import math
 import numpy as np
 import warnings
@@ -539,6 +540,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA
                     Trace 2:     FF
                     1 + 2  : AAAA--AAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         1       Discard data of the previous trace assuming the following trace
                 contains data with a more correct time value. The parameter
                 ``interpolation_samples`` specifies the number of samples used
@@ -571,6 +578,12 @@ class Trace(object):
                     Trace 1: AAAAAAAAAAAA (contained trace)
                     Trace 2:     FF
                     1 + 2  : AAAAAAAAAAAA
+
+                Missing data can be merged in from a different trace::
+
+                    Trace 1: AAAA--AAAAAA (contained trace, missing samples)
+                    Trace 2:     FF
+                    1 + 2  : AAAAFFAAAAAA
         ======  ===============================================================
 
         .. rubric:: _`Handling gaps`
@@ -674,9 +687,25 @@ class Trace(object):
             lenrt = len(rt)
             t1 = len(lt) - delta
             t2 = t1 + lenrt
-            if np.all(lt.data[t1:t2] == rt.data):
-                # check if data are the same
-                data = [lt.data]
+            # check if data are the same
+            data_equal = (lt.data[t1:t2] == rt.data)
+            # force a masked array and fill it for check of equality of valid
+            # data points
+            if np.all(np.ma.masked_array(data_equal).filled()):
+                # if all (unmasked) data are equal,
+                if isinstance(data_equal, np.ma.masked_array):
+                    x = np.ma.masked_array(lt.data[t1:t2])
+                    y = np.ma.masked_array(rt.data)
+                    data_same = np.choose(x.mask, [x, y])
+                    data = np.choose(x.mask & y.mask, [data_same, np.nan])
+                    if np.any(np.isnan(data)):
+                        data = np.ma.masked_invalid(data)
+                    # convert back to maximum dtype of original data
+                    dtype = np.max((x.dtype, y.dtype))
+                    data = data.astype(dtype)
+                    data = [lt.data[:t1], data, lt.data[t2:]]
+                else:
+                    data = [lt.data]
             elif method == 0:
                 gap = createEmptyDataChunk(lenrt, lt.data.dtype, fill_value)
                 data = [lt.data[:t1], gap, lt.data[t2:]]
@@ -698,6 +727,10 @@ class Trace(object):
         else:
             data = np.concatenate(data)
             data = np.require(data, dtype=lt.data.dtype)
+        # Check if we can downgrade to normal ndarray
+        if isinstance(data, np.ma.masked_array) and \
+           np.ma.count_masked(data) == 0:
+            data = data.compressed()
         out.data = data
         return out
 
@@ -1104,6 +1137,15 @@ class Trace(object):
 
         .. note::
 
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
+
+        .. note::
+
             This operation is performed in place on the actual data arrays. The
             raw data is not accessible anymore afterwards. To keep your
             original data, use :meth:`~obspy.core.trace.Trace.copy` to create
@@ -1152,6 +1194,29 @@ class Trace(object):
         # XXX accepting string "self" and using attached PAZ then
         if paz_remove == 'self':
             paz_remove = self.stats.paz
+
+        # some convenience handling for evalresp type instrument correction
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # if date is missing use trace's starttime
+            seedresp.setdefault("date", self.stats.starttime)
+            # if a Parser object is provided, get corresponding RESP
+            # information
+            from obspy.xseed import Parser
+            if isinstance(seedresp['filename'], Parser):
+                seedresp = deepcopy(seedresp)
+                kwargs['seedresp'] = seedresp
+                resp_key = ".".join(("RESP", self.stats.network,
+                                     self.stats.station, self.stats.location,
+                                     self.stats.channel))
+                for key, stringio in seedresp['filename'].getRESP():
+                    if key == resp_key:
+                        stringio.seek(0, 0)
+                        seedresp['filename'] = stringio
+                        break
+                else:
+                    msg = "Response for %s not found in Parser" % self.id
+                    raise ValueError(msg)
 
         from obspy.signal import seisSim
         self.data = seisSim(
@@ -1332,6 +1397,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1525,6 +1591,7 @@ class Trace(object):
         """
         return self.data.std()
 
+    @skipIfNoData
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1561,6 +1628,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1616,6 +1684,7 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
+    @skipIfNoData
     @raiseIfMasked
     def detrend(self, type='simple', **options):
         """
@@ -1664,22 +1733,41 @@ class Trace(object):
         self._addProcessingInfo(proc_info)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    @skipIfNoData
+    @taper_API_change()
+    def taper(self, max_percentage, type='hann', max_length=None,
+              side='both', **kwargs):
         """
         Method to taper the trace.
 
         Optional (and sometimes necessary) options to the tapering function can
-        be provided as args and kwargs. See respective function definitions in
+        be provided as kwargs. See respective function definitions in
         `Supported Methods`_ section below.
 
         :type type: str
         :param type: Type of taper to use for detrending. Defaults to
             ``'cosine'``.  See the `Supported Methods`_ section below for
             further details.
+        :type max_percentage: None, float
+        :param max_percentage: Decimal percentage of taper at one end (ranging
+            from 0. to 0.5). Default is 0.05 (5%).
+        :type max_length: None, float
+        :param max_length: Length of taper at one end in seconds.
         :type side: str
         :param side: Specify if both sides should be tapered (default, "both")
             or if only the left half ("left") or right half ("right") should be
             tapered.
+
+        .. note::
+
+            To get the same results as the default taper in SAC, use
+            `max_percentage=0.05` and leave `type` as `hann`.
+
+        .. note::
+
+            If both `max_percentage` and `max_length` are set to a float, the
+            shorter tape length is used. If both `max_percentage` and
+            `max_length` are set to `None`, the whole trace will be tapered.
 
         .. note::
 
@@ -1739,22 +1827,49 @@ class Trace(object):
         type = type.lower()
         side = side.lower()
         side_valid = ['both', 'left', 'right']
+        npts = self.stats.npts
         if side not in side_valid:
             raise ValueError("'side' has to be one of: %s" % side_valid)
         # retrieve function call from entry points
         func = _getFunctionFromEntryPoint('taper', type)
+        # store all constraints for maximum taper length
+        max_half_lenghts = []
+        if max_percentage is not None:
+            max_half_lenghts.append(int(max_percentage * npts))
+        if max_length is not None:
+            max_half_lenghts.append(int(max_length * self.stats.sampling_rate))
+        if np.all([2 * mhl > npts for mhl in max_half_lenghts]):
+            msg = "The requested taper is longer than the trace. " \
+                  "The taper will be shortened to trace length."
+            warnings.warn(msg)
+        # add full trace length to constraints
+        max_half_lenghts.append(int(npts / 2))
+        # select shortest acceptable window half-length
+        wlen = min(max_half_lenghts)
+        # obspy.signal.cosTaper has a default value for taper percentage,
+        # we need to override is as we control percentage completely via npts
+        # of taper function and insert ones in the middle afterwards
+        if type == "cosine":
+            kwargs['p'] = 1.0
         # tapering. tapering functions are expected to accept the number of
         # samples as first argument and return an array of values between 0 and
         # 1 with the same length as the data
-        taper = func(self.stats.npts, *args, **kwargs)
-        half_length = int(len(taper) / 2)
-        if side == "left":
-            taper[half_length:] = 1.0
-        elif side == "right":
-            taper[:half_length] = 1.0
+        if 2 * wlen == npts:
+            taper_sides = func(2 * wlen, **kwargs)
+        else:
+            taper_sides = func(2 * wlen + 1, **kwargs)
+        if side == 'left':
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - wlen)))
+        elif side == 'right':
+            taper = np.hstack((np.ones(npts - wlen),
+                               taper_sides[len(taper_sides) - wlen:]))
+        else:
+            taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
+                               taper_sides[len(taper_sides) - wlen:]))
         self.data = self.data * taper
         # add processing information to the stats dictionary
-        proc_info = "taper:%s:%s:%s" % (type, args, kwargs)
+        proc_info = "taper:%s:%s:%s:%s:%s" % (type, str(max_percentage),
+                                              str(max_length), side, kwargs)
         self._addProcessingInfo(proc_info)
         return self
 

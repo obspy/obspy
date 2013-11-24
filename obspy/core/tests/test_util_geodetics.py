@@ -8,7 +8,7 @@ import warnings
 
 # checking for geographiclib
 try:
-    import geographiclib  # @UnusedImport
+    import geographiclib  # @UnusedImport # NOQA
     HAS_GEOGRAPHICLIB = True
 except ImportError:
     HAS_GEOGRAPHICLIB = False

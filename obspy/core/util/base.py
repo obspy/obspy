@@ -12,17 +12,12 @@ Base utilities and constants for ObsPy.
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
-import ctypes as C
 import doctest
-import glob
 import inspect
 import numpy as np
 import os
 import sys
 import tempfile
-import shutil
-import warnings
-from unittest import TestCase
 
 
 # defining ObsPy modules currently used by runtests and the path function
@@ -30,7 +25,7 @@ DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
                    'realtime', 'datamark', 'css', 'y', 'station']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
-                   'seedlink', 'neic']
+                   'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
 
 # default order of automatic format detection
@@ -40,15 +35,6 @@ WAVEFORM_PREFERRED_ORDER = ['MSEED', 'SAC', 'GSE2', 'SEISAN', 'SACXY', 'GSE1',
 
 _sys_is_le = sys.byteorder == 'little'
 NATIVE_BYTEORDER = _sys_is_le and '<' or '>'
-
-
-# C file pointer/ descriptor class
-class FILE(C.Structure):  # Never directly used
-    """
-    C file pointer class for type checking with argtypes
-    """
-    pass
-c_file_p = C.POINTER(FILE)
 
 
 class NamedTemporaryFile(object):
@@ -181,87 +167,6 @@ def getExampleFile(filename):
     raise IOError(msg)
 
 
-def add_doctests(testsuite, module_name):
-    """
-    Function to add all available doctests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the module's root directory are added.
-    Occurring errors are shown as warnings.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_doctests(suite, "obspy.core")
-    """
-    MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist="obspy")
-    MODULE_PATH = MODULE.__path__[0]
-    MODULE_PATH_LEN = len(MODULE_PATH)
-
-    for root, _dirs, files in os.walk(MODULE_PATH):
-        # skip directories without __init__.py
-        if not '__init__.py' in files:
-            continue
-        # skip tests directories
-        if root.endswith('tests'):
-            continue
-        # skip scripts directories
-        if root.endswith('scripts'):
-            continue
-        # skip lib directories
-        if root.endswith('lib'):
-            continue
-        # loop over all files
-        for file in files:
-            # skip if not python source file
-            if not file.endswith('.py'):
-                continue
-            # get module name
-            parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
-            module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
-            try:
-                module = __import__(module_name, fromlist="obspy")
-                testsuite.addTest(doctest.DocTestSuite(module))
-            except ValueError:
-                pass
-
-
-def add_unittests(testsuite, module_name):
-    """
-    Function to add all available unittests of the module with given name
-    (e.g. "obspy.core") to the given unittest TestSuite.
-    All submodules in the "tests" directory whose names are starting with
-    ``test_`` are added.
-
-    :type testsuite: unittest.TestSuite
-    :param testsuite: testsuite to which the tests should be added
-    :type module_name: str
-    :param module_name: name of the module of which the tests should be added
-
-    .. rubric:: Example
-
-    >>> import unittest
-    >>> suite = unittest.TestSuite()
-    >>> add_unittests(suite, "obspy.core")
-    """
-    MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
-
-    filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
-    files = glob.glob(filename_pattern)
-    names = (os.path.basename(file).split(".")[0] for file in files)
-    module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
-    for module_name in module_names:
-        module = __import__(module_name, fromlist="obspy")
-        testsuite.addTest(module.suite())
-
-
 def _getEntryPoints(group, subgroup=None):
     """
     Gets a dictionary of all available plug-ins of a group or subgroup.
@@ -320,6 +225,7 @@ ENTRY_POINTS = {
     'waveform_write': _getOrderedEntryPoints(
         'obspy.plugin.waveform', 'writeFormat', WAVEFORM_PREFERRED_ORDER),
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
+    'event_write': _getEntryPoints('obspy.plugin.event', 'writeFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
     'inventory': _getEntryPoints('obspy.plugin.inventory', 'readFormat'),
     'inventory_write': _getEntryPoints('obspy.plugin.inventory',
@@ -417,7 +323,7 @@ def _readFromPlugin(plugin_type, filename, format=None, **kwargs):
         format = format.upper()
         try:
             format_ep = EPS[format]
-        except IndexError:
+        except (KeyError, IndexError):
             msg = "Format \"%s\" is not supported. Supported types: %s"
             raise TypeError(msg % (format, ', '.join(EPS)))
     # file format should be known by now
@@ -443,166 +349,67 @@ def getScriptDirName():
         inspect.currentframe())))
 
 
-def checkForMatplotlibCompareImages():
-    try:
-        from matplotlib.testing.compare import compare_images  # @UnusedImport
-    except:
-        return False
-    return True
-
-
-HAS_COMPARE_IMAGE = checkForMatplotlibCompareImages()
-
-
-class ImageComparisonException(TestCase.failureException):
-    pass
-
-
-class ImageComparison(NamedTemporaryFile):
+def make_format_plugin_table(group="waveform", method="read", numspaces=4,
+                             unindent_first_line=True):
     """
-    Handles the comparison against a baseline image in an image test.
+    Returns a markdown formatted table with read waveform plugins to insert
+    in docstrings.
 
-    :type image_path: str
-    :param image_path: Path to directory where the baseline image is located
-    :type image_name: str
-    :param image_name: Filename (with suffix, without directory path) of the
-        baseline image
-    :type reltol: float (optional)
-    :param reltol: Multiplier that is applied to the default tolerance
-        value (i.e. 10 means a 10 times harder to pass test tolerance).
+    >>> table = make_format_plugin_table("event", "write", 4, True)
+    >>> print table  # doctest: +NORMALIZE_WHITESPACE
+    ======= ================= =======================================
+        Format  Required Module   _`Linked Function Call`
+        ======= ================= =======================================
+        JSON    :mod:`obspy.core` :func:`obspy.core.json.core.writeJSON`
+        QUAKEML :mod:`obspy.core` :func:`obspy.core.quakeml.writeQuakeML`
+        ======= ================= =======================================
 
-    The class should be used with Python's "with" statement. When setting up,
-    the matplotlib rcdefaults are set to ensure consistent image testing. After
-    the plotting is completed, the .compare() method can be used to return the
-    message string from :func:`matplotlib.testing.compare.compare_images`
-    comparing against the previously specified baseline image. At the end of
-    the "with" block all temporary files are deleted.
-
-    .. note::
-        If images created during the testrun should be kept after the test, set
-        environment variable `OBSPY_KEEP_IMAGES` to any value before executing
-        the test (e.g. with `$ OBSPY_KEEP_IMAGES= obspy-runtests` or `$
-        OBSPY_KEEP_IMAGES= python test_sometest.py`). For `obspy-runtests` the
-        option "--keep-images" can also be used instead of setting an
-        environment variable. Created images and diffs for failing tests are
-        then stored in a subfolder "testrun" under the baseline image's
-        directory.
-
-    .. rubric:: Example
-
-    >>> from obspy import read
-    >>> with ImageComparison("/my/baseline/folder", 'plot.png') as ic:
-    ...     st = read()  # doctest: +SKIP
-    ...     st.plot(outfile=ic.name)  # doctest: +SKIP
-    ...     # compare images (inside unit test use self.assert(...))
-    ...     assert(not ic.compare())  # doctest: +SKIP
+    :type group: str
+    :param group: Plugin group to search (e.g. "waveform" or "event").
+    :type method: str
+    :param method: Either 'read' or 'write' to select plugins based on either
+        read or write capability.
+    :type numspaces: int
+    :param numspaces: Number of spaces prepended to each line (for indentation
+        in docstrings).
+    :type unindent_first_line: bool
+    :param unindent_first_line: Determines if first line should start with
+        prepended spaces or not.
     """
-    def __init__(self, image_path, image_name, reltol=1, *args, **kwargs):
-        self.suffix = "." + image_name.split(".")[-1]
-        super(ImageComparison, self).__init__(suffix=self.suffix, *args,
-                                              **kwargs)
-        self.image_name = image_name
-        self.baseline_image = os.path.join(image_path, image_name)
-        self.keep_output = "OBSPY_KEEP_IMAGES" in os.environ
-        self.output_path = os.path.join(image_path, "testrun")
-        self.diff_filename = "-failed-diff.".join(self.name.rsplit(".", 1))
-        self.tol = get_matplotlib_defaul_tolerance() * reltol
+    method = method.lower()
+    if method not in ("read", "write"):
+        raise ValueError("no valid type: %s" % method)
 
-    def __enter__(self):
-        """
-        Set matplotlib defaults.
-        """
-        from matplotlib import get_backend, rcParams, rcdefaults
-        import locale
+    method += "Format"
+    eps = _getOrderedEntryPoints("obspy.plugin.%s" % group, method,
+                                 WAVEFORM_PREFERRED_ORDER)
+    mod_list = []
+    for name, ep in eps.iteritems():
+        module_short = ":mod:`%s`" % ".".join(ep.module_name.split(".")[:2])
+        func = load_entry_point(ep.dist.key,
+                                "obspy.plugin.%s.%s" % (group, name), method)
+        func_str = ':func:`%s`' % ".".join((ep.module_name, func.func_name))
+        mod_list.append((name, module_short, func_str))
 
-        try:
-            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
-        except:
-            try:
-                locale.setlocale(locale.LC_ALL,
-                                 str('English_United States.1252'))
-            except:
-                msg = "Could not set locale to English/United States. " + \
-                      "Some date-related tests may fail"
-                warnings.warn(msg)
+    headers = ["Format", "Required Module", "_`Linked Function Call`"]
+    maxlens = [max([len(x[0]) for x in mod_list] + [len(headers[0])]),
+               max([len(x[1]) for x in mod_list] + [len(headers[1])]),
+               max([len(x[2]) for x in mod_list] + [len(headers[2])])]
 
-        if get_backend().upper() != 'AGG':
-            import matplotlib
-            try:
-                matplotlib.use('AGG', warn=False)
-            except TypeError:
-                msg = "Image comparison requires matplotlib backend 'AGG'"
-                warnings.warn(msg)
+    info_str = [" ".join(["=" * x for x in maxlens])]
+    info_str.append(
+        " ".join([headers[i].ljust(maxlens[i]) for i in xrange(3)]))
+    info_str.append(info_str[0])
 
-        # set matplotlib builtin default settings for testing
-        rcdefaults()
-        rcParams['font.family'] = 'Bitstream Vera Sans'
-        rcParams['text.hinting'] = False
-        try:
-            rcParams['text.hinting_factor'] = 8
-        except KeyError:
-            warnings.warn("could not set rcParams['text.hinting_factor']")
-        return self
+    for mod_infos in mod_list:
+        info_str.append(
+            " ".join([mod_infos[i].ljust(maxlens[i]) for i in xrange(3)]))
+    info_str.append(info_str[0])
 
-    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
-        """
-        Remove tempfiles and store created images if OBSPY_KEEP_IMAGES
-        environment variable is set.
-        """
-        try:
-            self.compare()
-        finally:
-            import matplotlib.pyplot as plt
-            self.close()
-            plt.close()
-            if self.keep_output:
-                self._copy_tempfiles()
-            os.remove(self.name)
-            if os.path.exists(self.diff_filename):
-                os.remove(self.diff_filename)
-
-    def compare(self, reltol=1):
-        """
-        Run :func:`matplotlib.testing.compare.compare_images` and raise an
-        unittest.TestCase.failureException with the message string given by
-        matplotlib if the comparison exceeds the allowed tolerance.
-        """
-        from matplotlib.testing.compare import compare_images
-        msg = compare_images(self.baseline_image, self.name, tol=self.tol)
-        if msg:
-            raise ImageComparisonException(msg)
-
-    def _copy_tempfiles(self):
-        """
-        Copies created images from tempfiles to a subfolder of baseline images.
-        """
-        directory = self.output_path
-        if os.path.exists(directory) and not os.path.isdir(directory):
-            msg = "Could not keep output image, target directory exists:" + \
-                  directory
-            warnings.warn(msg)
-            return
-        if not os.path.exists(directory):
-            os.mkdir(directory)
-        if os.path.isfile(self.diff_filename):
-            diff_filename_new = \
-                "-failed-diff.".join(self.image_name.rsplit(".", 1))
-            shutil.copy(self.diff_filename, os.path.join(directory,
-                                                         diff_filename_new))
-        shutil.copy(self.name, os.path.join(directory, self.image_name))
-
-
-def get_matplotlib_defaul_tolerance():
-    """
-    The two test images ("ok", "fail") result in the following rms values:
-    matplotlib v1.3.x (git rev. 26b18e2): 0.8 and 9.0
-    matplotlib v1.2.1: 1.7e-3 and 3.6e-3
-    """
-    version = getMatplotlibVersion()
-    if version < [1, 3, 0]:
-        return 2e-3
-    else:
-        return 1
+    ret = " " * numspaces + ("\n" + " " * numspaces).join(info_str)
+    if unindent_first_line:
+        ret = ret[numspaces:]
+    return ret
 
 
 class ComparingObject(object):

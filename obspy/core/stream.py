@@ -11,7 +11,8 @@ Module for handling ObsPy Stream objects.
 from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
-from obspy.core.util import NamedTemporaryFile, getExampleFile
+from obspy.core.util import NamedTemporaryFile
+from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
@@ -26,6 +27,7 @@ import urllib2
 import warnings
 
 
+@map_example_filename("pathname_or_url")
 def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
          endtime=None, nearest_sample=True, dtype=None, apply_calib=False,
          **kwargs):
@@ -49,11 +51,10 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         attribute is omitted, an example :class:`~obspy.core.stream.Stream`
         object will be returned.
     :type format: string, optional
-    :param format: Format of the file to read, e.g. ``"GSE2"``, ``"MSEED"``,
-        ``"SAC"``, ``"SEISAN"``, ``"WAV"``, ``"Q"``, ``"SH_ASC"``, etc. See
-        the `Supported Formats`_ section below for a full list of supported
-        formats. If format is set to ``None`` it will be automatically detected
-        which results in a slightly slower reading. If you specify a format no
+    :param format: Format of the file to read (e.g. ``"MSEED"``). See
+        the `Supported Formats`_ section below for a list of supported formats.
+        If format is set to ``None`` it will be automatically detected which
+        results in a slightly slower reading. If a format is specified, no
         further format checking is done.
     :type headonly: bool, optional
     :param headonly: If set to ``True``, read only the data header. This is
@@ -102,28 +103,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     Please refer to the `Linked Function Call`_ of each module for any extra
     options available at the import stage.
 
-    ========  =====================  ========================================
-    Format    Required Module        _`Linked Function Call`
-    ========  =====================  ========================================
-    MSEED     :mod:`obspy.mseed`     :func:`obspy.mseed.core.readMSEED`
-    SAC       :mod:`obspy.sac`       :func:`obspy.sac.core.readSAC`
-    GSE2      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE2`
-    SEISAN    :mod:`obspy.seisan`    :func:`obspy.seisan.core.readSEISAN`
-    SACXY     :mod:`obspy.sac`       :func:`obspy.sac.core.readSACXY`
-    GSE1      :mod:`obspy.gse2`      :func:`obspy.gse2.core.readGSE1`
-    Q         :mod:`obspy.sh`        :func:`obspy.sh.core.readQ`
-    SH_ASC    :mod:`obspy.sh`        :func:`obspy.sh.core.readASC`
-    SLIST     :mod:`obspy.core`      :func:`obspy.core.ascii.readSLIST`
-    TSPAIR    :mod:`obspy.core`      :func:`obspy.core.ascii.readTSPAIR`
-    Y         :mod:`obspy.y`         :func:`obspy.y.core.readY`
-    SEGY      :mod:`obspy.segy`      :func:`obspy.segy.core.readSEGY`
-    SU        :mod:`obspy.segy`      :func:`obspy.segy.core.readSU`
-    SEG2      :mod:`obspy.seg2`      :func:`obspy.seg2.seg2.readSEG2`
-    WAV       :mod:`obspy.wav`       :func:`obspy.wav.core.readWAV`
-    PICKLE    :mod:`obspy.core`      :func:`obspy.core.stream.readPICKLE`
-    DATAMARK  :mod:`obspy.datamark`  :func:`obspy.datamark.core.readDATAMARK`
-    CSS       :mod:`obspy.css`       :func:`obspy.css.core.readCSS`
-    ========  =====================  ========================================
+    %s
 
     Next to the :func:`~obspy.core.stream.read` function the
     :meth:`~obspy.core.stream.Stream.write` method of the returned
@@ -144,8 +124,8 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("/path/to/loc_R*.z")  # doctest: +SKIP
         >>> print(st)  # doctest: +SKIP
         2 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
-        .RNON..Z | 2004-06-09T20:05:59.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
+        .RNON..Z | 2004-06-09T20:05:59.850000Z - ... | 200.0 Hz, 12000 samples
 
     (2) Reading a local file without format detection.
 
@@ -156,7 +136,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("/path/to/loc_RJOB20050831023349.z", format="GSE2")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (3) Reading a remote file via HTTP protocol.
 
@@ -164,7 +144,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z")
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (4) Reading a compressed files.
 
@@ -188,30 +168,22 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:49.849998Z - ... | 200.0 Hz, 12000 samples
+        .RJOB..Z | 2005-08-31T02:33:49.850000Z - ... | 200.0 Hz, 12000 samples
 
     (6) Using 'starttime' and 'endtime' parameters
 
-        >>> from obspy import read, UTCDateTime
+        >>> from obspy import read
         >>> dt = UTCDateTime("2005-08-31T02:34:00")
         >>> st = read("http://examples.obspy.org/loc_RJOB20050831023349.z",
         ...           starttime=dt, endtime=dt+10)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:
-        .RJOB..Z | 2005-08-31T02:33:59.999999Z - ... | 200.0 Hz, 2001 samples
+        .RJOB..Z | 2005-08-31T02:34:00.000000Z - ... | 200.0 Hz, 2001 samples
     """
     # add default parameters to kwargs so sub-modules may handle them
     kwargs['starttime'] = starttime
     kwargs['endtime'] = endtime
     kwargs['nearest_sample'] = nearest_sample
-    # if pathname starts with /path/to/ try to search in examples
-    if isinstance(pathname_or_url, basestring) and \
-       pathname_or_url.startswith('/path/to/'):
-        try:
-            pathname_or_url = getExampleFile(pathname_or_url[9:])
-        except:
-            # otherwise just try to read the given /path/to folder
-            pass
     # create stream
     st = Stream()
     if pathname_or_url is None:
@@ -1325,10 +1297,8 @@ class Stream(object):
         :type filename: string
         :param filename: The name of the file to write.
         :type format: string
-        :param format: The format to write must be specified. One of
-            ``"MSEED"``, ``"GSE2"``, ``"SAC"``, ``"SACXY"``, ``"Q"``,
-            ``"SH_ASC"``, ``"SEGY"``, ``"SU"``, ``"WAV"``, ``"PICKLE"``. See
-            the `Supported Formats`_ section below for a full list of supported
+        :param format: The file format to use (e.g. ``"MSEED"``). See
+            the `Supported Formats`_ section below for a list of supported
             formats.
         :param kwargs: Additional keyword arguments passed to the underlying
             waveform writer method.
@@ -1343,7 +1313,7 @@ class Stream(object):
         e.g. using trace.id
 
         >>> for tr in st: #doctest: +SKIP
-        ...     tr.write("%s.MSEED" % tr.id, format="MSEED") #doctest: +SKIP
+        ...     tr.write(tr.id + ".MSEED", format="MSEED") #doctest: +SKIP
 
         .. rubric:: _`Supported Formats`
 
@@ -1351,25 +1321,10 @@ class Stream(object):
         :meth:`~obspy.core.stream.Stream.write` method. The following
         table summarizes all known formats currently available for ObsPy.
 
-        Please refer to the *Linked Function Call* of each module for any extra
-        options available.
+        Please refer to the `Linked Function Call`_ of each module for any
+        extra options available.
 
-        =======  ===================  ====================================
-        Format   Required Module      Linked Function Call
-        =======  ===================  ====================================
-        MSEED    :mod:`obspy.mseed`   :func:`obspy.mseed.core.writeMSEED`
-        GSE2     :mod:`obspy.gse2`    :func:`obspy.gse2.core.writeGSE2`
-        SAC      :mod:`obspy.sac`     :func:`obspy.sac.core.writeSAC`
-        SACXY    :mod:`obspy.sac`     :func:`obspy.sac.core.writeSACXY`
-        Q        :mod:`obspy.sh`      :func:`obspy.sh.core.writeQ`
-        SH_ASC   :mod:`obspy.sh`      :func:`obspy.sh.core.writeASC`
-        SEGY     :mod:`obspy.segy`    :func:`obspy.segy.core.writeSEGY`
-        SLIST    :mod:`obspy.core`    :func:`obspy.core.ascii.writeSLIST`
-        SU       :mod:`obspy.segy`    :func:`obspy.segy.core.writeSU`
-        TSPAIR   :mod:`obspy.core`    :func:`obspy.core.ascii.writeTSPAIR`
-        WAV      :mod:`obspy.wav`     :func:`obspy.wav.core.writeWAV`
-        PICKLE   :mod:`obspy.core`    :func:`obspy.core.stream.writePickle`
-        =======  ===================  ====================================
+        %s
         """
         # Check all traces for masked arrays and raise exception.
         for trace in self.traces:
@@ -1635,27 +1590,33 @@ class Stream(object):
             # skip trace if any given criterion is not matched
             if id and not fnmatch.fnmatch(trace.id.upper(), id.upper()):
                 continue
-            if network and not fnmatch.fnmatch(trace.stats.network.upper(),
-                                               network.upper()):
+            if network is not None:
+                if not fnmatch.fnmatch(trace.stats.network.upper(),
+                                       network.upper()):
+                    continue
+            if station is not None:
+                if not fnmatch.fnmatch(trace.stats.station.upper(),
+                                       station.upper()):
+                    continue
+            if location is not None:
+                if not fnmatch.fnmatch(trace.stats.location.upper(),
+                                       location.upper()):
+                    continue
+            if channel is not None:
+                if not fnmatch.fnmatch(trace.stats.channel.upper(),
+                                       channel.upper()):
+                    continue
+            if sampling_rate is not None:
+                if float(sampling_rate) != trace.stats.sampling_rate:
+                    continue
+            if npts is not None and int(npts) != trace.stats.npts:
                 continue
-            if station and not fnmatch.fnmatch(trace.stats.station.upper(),
-                                               station.upper()):
-                continue
-            if location and not fnmatch.fnmatch(trace.stats.location.upper(),
-                                                location.upper()):
-                continue
-            if channel and not fnmatch.fnmatch(trace.stats.channel.upper(),
-                                               channel.upper()):
-                continue
-            if sampling_rate and \
-               float(sampling_rate) != trace.stats.sampling_rate:
-                continue
-            if npts and int(npts) != trace.stats.npts:
-                continue
-            if component and \
-                    not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
-                                        component.upper()):
-                continue
+            if component is not None:
+                if len(trace.stats.channel) < 3:
+                    continue
+                if not fnmatch.fnmatch(trace.stats.channel[-1].upper(),
+                                       component.upper()):
+                    continue
             traces.append(trace)
         return self.__class__(traces=traces)
 
@@ -1840,6 +1801,15 @@ class Stream(object):
         If both ``paz_remove`` and ``paz_simulate`` are specified, both steps
         are performed in one go in the frequency domain, otherwise only the
         specified step is performed.
+
+        .. note::
+
+            Instead of the builtin deconvolution based on Poles and Zeros
+            information, the deconvolution can be performed using evalresp
+            instead by using the option `seedresp` (see documentation of
+            :func:`~obspy.signal.invsim.seisSim` and the `ObsPy Tutorial
+            <http://docs.obspy.org/master/tutorial/code_snippets/\
+seismometer_correction_simulation.html#using-a-resp-file>`_.
 
         .. note::
 
@@ -2246,7 +2216,7 @@ class Stream(object):
             tr.detrend(type=type)
         return self
 
-    def taper(self, type='cosine', side='both', *args, **kwargs):
+    def taper(self, *args, **kwargs):
         """
         Method to taper all Traces in Stream.
 
@@ -2261,7 +2231,7 @@ class Stream(object):
             a copy of your stream object.
         """
         for tr in self:
-            tr.taper(type=type, side=side, *args, **kwargs)
+            tr.taper(*args, **kwargs)
         return self
 
     def std(self):
