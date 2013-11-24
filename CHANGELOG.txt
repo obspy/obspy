@@ -45,6 +45,8 @@ dev:
      McNamara and Buland 2004.
    * fix a bug when using evalresp with RESP files with very short epochs.
      see #631.
+ - obspy.station:
+   * adding support for FDSN StationXML
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
@@ -56,8 +58,6 @@ dev:
  - scripts:
    * obspy-plot: new option "-o" to output plot to file instead of opening
      a window
- - obspy.station:
-   * adding support for FDSN StationXML
 
 0.8.4
  - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases
