@@ -9,7 +9,7 @@
        :toctree: autogen
        :nosignatures:
 
-       stationxml.read_StationXML
+       inventory.read_inventory
 
     .. comment to end block
 
@@ -19,6 +19,12 @@
        :toctree: autogen
        :nosignatures:
 
+       inventory
+       network
+       station
+       channel
+       response
+       util
        stationxml
 
     .. comment to end block

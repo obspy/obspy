@@ -23,8 +23,8 @@ class BaseNode(ComparingObject):
     The parent class for the network, station and channel classes.
     """
     def __init__(self, code, description=None, comments=[], start_date=None,
-            end_date=None, restricted_status=None, alternate_code=None,
-            historical_code=None):
+                 end_date=None, restricted_status=None, alternate_code=None,
+                 historical_code=None):
         """
         :type code: String
         :param code: The SEED network, station, or channel code
@@ -194,7 +194,7 @@ class Operator(ComparingObject):
     def agencies(self, value):
         if not hasattr(value, "__iter__") or len(value) < 1:
             msg = ("agencies needs to iterable, e.g. a list and contain at "
-                "least one entry.")
+                   "least one entry.")
             raise ValueError(msg)
         self.__agencies = value
 
@@ -337,7 +337,7 @@ class Comment(ComparingObject):
         31, 51 and 59.
     """
     def __init__(self, value, begin_effective_time=None,
-            end_effective_time=None, authors=[]):
+                 end_effective_time=None, authors=[]):
         """
         :type value: String
         :param value: The actual comment string
@@ -403,7 +403,7 @@ class Site(ComparingObject):
         boundaries (country, city, etc.).
     """
     def __init__(self, name, description=None, town=None, county=None,
-            region=None, country=None):
+                 region=None, country=None):
         """
         :type name: String
         :param name: The commonly used name of this station, equivalent to the
@@ -434,8 +434,14 @@ class Site(ComparingObject):
                "\tTown:    {town}\n"
                "\tCounty:  {county}\n"
                "\tRegion:  {region}\n"
-               "\tCountry: {country}")\
-               .format(
-               name=self.name, description=self.description, town=self.town,
-               county=self.county, region=self.region, country=self.country)
+               "\tCountry: {country}")
+        ret = ret.format(
+            name=self.name, description=self.description,
+            town=self.town, county=self.county, region=self.region,
+            country=self.country)
         return ret
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

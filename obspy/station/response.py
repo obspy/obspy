@@ -694,7 +694,6 @@ class Response(ComparingObject):
         output = np.empty(len(freqs), dtype="complex128")
         out_units = C.c_char_p("VEL")
 
-
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, 1, 0, 1)
 
@@ -811,3 +810,8 @@ class InstrumentPolynomial(Response):
     """
     def __init__(self):
         super(InstrumentPolynomial, self).__init__()
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

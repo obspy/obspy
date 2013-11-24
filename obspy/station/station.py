@@ -22,11 +22,13 @@ class Station(BaseNode):
         as the epoch start and end dates.
     """
     def __init__(self, code, latitude, longitude, elevation, channels=[],
-            site=None, vault=None, geology=None, equipments=[], operators=[],
-            creation_date=None, termination_date=None,
-            total_number_of_channels=None, selected_number_of_channels=None,
-            description=None, comments=[], start_date=None, end_date=None,
-            restricted_status=None, alternate_code=None, historical_code=None):
+                 site=None, vault=None, geology=None, equipments=[],
+                 operators=[], creation_date=None, termination_date=None,
+                 total_number_of_channels=None,
+                 selected_number_of_channels=None, description=None,
+                 comments=[], start_date=None, end_date=None,
+                 restricted_status=None, alternate_code=None,
+                 historical_code=None):
         """
         :type channels: A list of :class:`obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
@@ -95,21 +97,22 @@ class Station(BaseNode):
         self.total_number_of_channels = total_number_of_channels
         self.selected_number_of_channels = selected_number_of_channels
         self.external_references = []
-        super(Station, self).__init__(code=code,
-            description=description, comments=comments, start_date=start_date,
-            end_date=end_date, restricted_status=restricted_status,
-            alternate_code=alternate_code, historical_code=historical_code)
+        super(Station, self).__init__(
+            code=code, description=description, comments=comments,
+            start_date=start_date, end_date=end_date,
+            restricted_status=restricted_status, alternate_code=alternate_code,
+            historical_code=historical_code)
 
     def __str__(self):
         contents = self.get_contents()
         ret = ("Station {station_name}\n"
-            "\tStation Code: {station_code}\n"
-            "\tChannel Count: {selected}/{total} (Selected/Total)\n"
-            "\t{start_date} - {end_date}\n"
-            "\tAccess: {restricted} {alternate_code}{historical_code}\n"
-            "\tLatitude: {lat:.2f}, Longitude: {lng:.2f}, "
-            "Elevation: {elevation:.1f} m\n")\
-            .format(
+               "\tStation Code: {station_code}\n"
+               "\tChannel Count: {selected}/{total} (Selected/Total)\n"
+               "\t{start_date} - {end_date}\n"
+               "\tAccess: {restricted} {alternate_code}{historical_code}\n"
+               "\tLatitude: {lat:.2f}, Longitude: {lng:.2f}, "
+               "Elevation: {elevation:.1f} m\n")
+        ret = ret.format(
             station_name=contents["stations"][0],
             station_code=self.code,
             selected=self.selected_number_of_channels,
@@ -119,13 +122,13 @@ class Station(BaseNode):
             restricted=self.restricted_status,
             lat=self.latitude, lng=self.longitude, elevation=self.elevation,
             alternate_code="Alternate Code: %s " % self.alternate_code if
-                self.alternate_code else "",
+            self.alternate_code else "",
             historical_code="historical Code: %s " % self.historical_code if
-                self.historical_code else "")
+            self.historical_code else "")
         ret += "\tAvailable Channels:\n"
-        ret += "\n".join(textwrap.wrap(", ".join(contents["channels"]),
-                initial_indent="\t\t", subsequent_indent="\t\t",
-                expand_tabs=False))
+        ret += "\n".join(textwrap.wrap(
+            ", ".join(contents["channels"]), initial_indent="\t\t",
+            subsequent_indent="\t\t", expand_tabs=False))
         return ret
 
     def __getitem__(self, index):
@@ -147,8 +150,8 @@ class Station(BaseNode):
         content_dict = {"stations": [desc], "channels": []}
 
         for channel in self.channels:
-            content_dict["channels"].append("%s.%s.%s" %
-                (self.code, channel.location_code, channel.code))
+            content_dict["channels"].append(
+                "%s.%s.%s" % (self.code, channel.location_code, channel.code))
         return content_dict
 
     @property
@@ -221,3 +224,8 @@ class Station(BaseNode):
             msg = "external_references needs to be iterable, e.g. a list."
             raise ValueError(msg)
         self.__external_references = value
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

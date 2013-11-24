@@ -58,7 +58,7 @@ class Inventory(ComparingObject):
     In essence just a container for one or more networks.
     """
     def __init__(self, networks, source, sender=None, created=None,
-            module=None, module_uri=None):
+                 module=None, module_uri=None):
         """
         :type networks: List of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
@@ -96,16 +96,19 @@ class Inventory(ComparingObject):
         Returns a dictionary containing the contents of the object.
 
         Example
-        >>> inventory_object.get_contents()  # doctest: +SKIP
-        {"networks": ["BW", "WB"],
-         "stations": ["BW.A", "WB.B"],
-         "channels": ["BW.A..EHE", "BW.A..EHN", ...]}
+        >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
+        >>> inventory = read_inventory(example_filename)
+        >>> inventory.get_contents()  # doctest: +NORMALIZE_WHITESPACE
+        {'channels': ['IU.ANMO.10.BHZ'],
+         'networks': ['IU'],
+         'stations': ['IU.ANMO (Albuquerque, New Mexico, USA)']}
         """
         content_dict = {
             "networks": [],
             "stations": [],
             "channels": []}
         for network in self.networks:
+            content_dict['networks'].append(network.code)
             for key, value in network.get_contents().iteritems():
                 content_dict.setdefault(key, [])
                 content_dict[key].extend(value)
@@ -118,10 +121,11 @@ class Inventory(ComparingObject):
             module_uri = self.module_uri
             if module_uri and len(module_uri) > 70:
                 module_uri = textwrap.wrap(module_uri, width=67)[0] + "..."
-            ret_str += "\tCreated by: %s%s\n" % (self.module, "\n\t\t    %s"
-                % (module_uri if module_uri else ""))
-        ret_str += "\tSending institution: %s%s\n" % (self.source,
-            " (%s)" % self.sender if self.sender else "")
+            ret_str += ("\tCreated by: %s%s\n" % (
+                self.module,
+                "\n\t\t    %s" % (module_uri if module_uri else "")))
+        ret_str += "\tSending institution: %s%s\n" % (
+            self.source, " (%s)" % self.sender if self.sender else "")
         contents = self.get_contents()
         ret_str += "\tContains:\n"
         ret_str += "\t\tNetworks (%i):\n" % len(contents["networks"])
@@ -131,9 +135,9 @@ class Inventory(ComparingObject):
         ret_str += "\n".join(["\t\t\t%s" % _i for _i in contents["stations"]])
         ret_str += "\n"
         ret_str += "\t\tChannels (%i):\n" % len(contents["channels"])
-        ret_str += "\n".join(textwrap.wrap(", ".join(contents["channels"]),
-                initial_indent="\t\t\t", subsequent_indent="\t\t\t",
-                expand_tabs=False))
+        ret_str += "\n".join(textwrap.wrap(
+            ", ".join(contents["channels"]), initial_indent="\t\t\t",
+            subsequent_indent="\t\t\t", expand_tabs=False))
         return ret_str
 
     def write(self, path_or_file_object, format, **kwargs):
@@ -169,3 +173,8 @@ class Inventory(ComparingObject):
             msg = "networks can only contain Network objects."
             raise ValueError(msg)
         self.__networks = value
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

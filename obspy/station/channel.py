@@ -19,16 +19,17 @@ class Channel(BaseNode):
         response blockettes.
     """
     def __init__(self, code, location_code, latitude, longitude,
-            elevation, depth, azimuth=None, dip=None, types=None,
-            external_references=None, sample_rate=None,
-            sample_rate_ratio_number_samples=None,
-            sample_rate_ratio_number_seconds=None, storage_format=None,
-            clock_drift_in_seconds_per_sample=None, calibration_units=None,
-            calibration_units_description=None, sensor=None,
-            pre_amplifier=None, data_logger=None, equipment=None,
-            response=None, description=None, comments=None, start_date=None,
-            end_date=None, restricted_status=None, alternate_code=None,
-            historical_code=None):
+                 elevation, depth, azimuth=None, dip=None, types=None,
+                 external_references=None, sample_rate=None,
+                 sample_rate_ratio_number_samples=None,
+                 sample_rate_ratio_number_seconds=None, storage_format=None,
+                 clock_drift_in_seconds_per_sample=None,
+                 calibration_units=None, calibration_units_description=None,
+                 sensor=None, pre_amplifier=None, data_logger=None,
+                 equipment=None, response=None, description=None,
+                 comments=None, start_date=None, end_date=None,
+                 restricted_status=None, alternate_code=None,
+                 historical_code=None):
         """
         :type code: String
         :param code: The SEED channel code for this channel
@@ -142,10 +143,11 @@ class Channel(BaseNode):
         self.response = response
         if comments is None:
             comments = []
-        super(Channel, self).__init__(code=code,
-            description=description, comments=comments, start_date=start_date,
-            end_date=end_date, restricted_status=restricted_status,
-            alternate_code=alternate_code, historical_code=historical_code)
+        super(Channel, self).__init__(
+            code=code, description=description, comments=comments,
+            start_date=start_date, end_date=end_date,
+            restricted_status=restricted_status, alternate_code=alternate_code,
+            historical_code=historical_code)
 
     def __str__(self):
         ret = (
@@ -174,3 +176,8 @@ class Channel(BaseNode):
                 response="\tResponse information available"
                     if self.response else "")
         return ret
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)

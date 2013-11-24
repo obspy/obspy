@@ -186,9 +186,9 @@ def _read_channel(cha_element, _ns):
     for type_element in cha_element.findall(_ns("Type")):
         channel.types.append(type_element.text)
     # Add all external references.
-    for ext_ref in cha_element.findall(_ns("ExternalReference")):
-        channel.external_references.append(
-            _read_external_reference(ext_ref, _ns))
+    channel.external_references = \
+        [_read_external_reference(ext_ref, _ns)
+         for ext_ref in cha_element.findall(_ns("ExternalReference"))]
     channel.sample_rate = _tag2obj(cha_element, _ns("SampleRate"), float)
     # Parse the optional sample rate ratio.
     sample_rate_ratio = cha_element.find(_ns("SampleRateRation"))
@@ -740,3 +740,8 @@ def _obj2tag(parent, tag_name, tag_value):
 
 def _format_time(value):
     return value.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod(exclude_empty=True)
