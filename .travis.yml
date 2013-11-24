@@ -26,7 +26,7 @@ before_install:
   - git add *
   - git commit -m "Uploading new wheels"
   - git push --quiet origin master || ( git pull --rebase && git push --quiet origin master)
-  - exit 1
+  - exit 0
   ### wheel building/upload end
   - cd /tmp
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -xzf -
@@ -46,7 +46,7 @@ install:
   - git status
 env:
   global:
-    - secure: VhLru1uitLIShCw6vo56yC2be8TEgmTUqW/nDozieeNJmW7U8vZX7sWEmmjchDbpp6dvRql5nYleeYwV6Ke8Ia9bJzNu8ga0fLxi8Ru5nvXldsvq2QMqU4JSNEIGJs+xpXDJuOdCLEQ/VBYXMfXot+Nck58zZgUqDrsmshVD6Jc=
+    secure: JiBG/vFGw/23q6Y/Sbel35EtqLSl+ehuKBGjrLJtUZFBFxRnbcZvqgDXjC+UpyoPhECMfin/boxvT0nG2p0n3x5Gtp2RyN2ue+U2G5c0ECxe+MTDntBYn2lC6quoIh568uj+gcdLc4Dq2Px9aM0cfQSEBd4TO+ENMgg4MRnEMg0=
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see 
