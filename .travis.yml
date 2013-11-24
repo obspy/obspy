@@ -24,7 +24,8 @@ before_install:
   - cd /tmp/wheelhouse/
   - git config --local user.email "travis@travis-ci.org"
   - git config --local user.name "travis-ci"
-  - git commit -a -m "Uploading new wheels"
+  - git add *
+  - git commit -m "Uploading new wheels"
   - git push origin master || ( git pull --rebase && git push origin master)
   ### wheel building/upload end
   - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto; else pip install --use-wheel --no-index --find-links=/tmp/obspy-wheelhouse scipy suds lxml sqlalchemy m2crypto; fi
