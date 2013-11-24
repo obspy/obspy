@@ -28,6 +28,24 @@ install:
   - git status
   - pip install --no-deps --use-mirrors .
   - git status
+# build wheels and upload them
+before_script:
+    #- pip install --upgrade pip
+    #- pip install --upgrade setuptools
+    #- pip install wheel
+  - mkdir wheelhouse-build
+  - sudo apt-get build-dep --ignore-missing -qq -y python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
+  - pip wheel --use-mirrors --wheel-dir=/tmp/wheelhouse numpy scipy matplotlib lxml suds sqlalchemy m2crypto
+  - git clone https://${GH_TOKEN}@github.com/obspy/wheelhouse.git /tmp/wheelhouse
+  - mv -n /tmp/wheelhouse-build/* /tmp/wheelhouse/
+  - cd /tmp/wheelhouse/
+  - git config --local user.email "travis@travis-ci.org"
+  - git config --local user.name "travis-ci"
+  - git commit -a -m "Uploading new wheels"
+  - git push origin master
+env:
+  global:
+    secure: "d58TRMIt5kivmnRG4np/jyA1jFTo4gXpaW0xLlPaOlTS9W9SoylNZQP21Dy7LbFB7aLtrxKbKY7vwjMnDBRFXaMbZTKoO8YUTDPOvAz61MDjqfGAjnHESd1lSU+0EJU2h1y6AWWD0pJQCWBbAbT9ePkEiSgBNVzbavqHNHJNoHw="
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see 
