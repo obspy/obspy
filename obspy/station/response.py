@@ -801,15 +801,101 @@ class InstrumentSensitivity(ComparingObject):
         self.frequency_range_DB_variation = frequency_range_DB_variation
 
 
-class InstrumentPolynomial(Response):
+# XXX duplicated code, PolynomialResponseStage could probably be implemented by
+# XXX inheriting from both InstrumentPolynomial and ResponseStage
+class InstrumentPolynomial(ComparingObject):
     """
     From the StationXML Definition:
         The total sensitivity for a channel, representing the complete
         acquisition system expressed as a polynomial. Equivalent to SEED stage
         0 polynomial (blockette 62).
+
+    :type approximation_type: str
+    :param approximation_type: Approximation type. Currently restricted to
+        'MACLAURIN' by StationXML definition.
+    :type frequency_lower_bound: float
+    :param frequency_lower_bound: Lower frequency bound.
+    :type frequency_upper_bound: float
+    :param frequency_upper_bound: Upper frequency bound.
+    :type approximation_lower_bound: float
+    :param approximation_lower_bound: Lower bound of approximation.
+    :type approximation_upper_bound: float
+    :param approximation_upper_bound: Upper bound of approximation.
+    :type maximum_error: float
+    :param maximum_error: Maximum error.
+    :type coefficients: list of floats
+    :param coefficients: List of polynomial coefficients.
+    :param input_units_name: string
+    :param input_units_name: The units of the data as input from the
+        perspective of data acquisition. After correcting data for this
+        response, these would be the resulting units.
+        Name of units, e.g. "M/S", "V", "PA".
+    :param output_units_name: string
+    :param output_units_name: The units of the data as output from the
+        perspective of data acquisition. These would be the units of the
+        data prior to correcting for this response.
+        Name of units, e.g. "M/S", "V", "PA".
+    :type resource_id: string
+    :param resource_id: This field contains a string that should serve as a
+        unique resource identifier. This identifier can be interpreted
+        differently depending on the datacenter/software that generated the
+        document. Also, we recommend to use something like
+        GENERATOR:Meaningful ID. As a common behaviour equipment with the
+        same ID should contains the same information/be derived from the
+        same base instruments.
+    :type name: string
+    :param name: A name given to the filter stage.
+    :param input_units_description: string, optional
+    :param input_units_description: The units of the data as input from the
+        perspective of data acquisition. After correcting data for this
+        response, these would be the resulting units.
+        Description of units, e.g. "Velocity in meters per second",
+        "Volts", "Pascals".
+    :type output_units_description: string, optional
+    :param output_units_description: The units of the data as output from
+        the perspective of data acquisition. These would be the units of
+        the data prior to correcting for this response.
+        Description of units, e.g. "Velocity in meters per second",
+        "Volts", "Pascals".
+    :type description: string, optional
+    :param description: A short description of of the filter.
     """
-    def __init__(self):
-        super(InstrumentPolynomial, self).__init__()
+    def __init__(self, input_units_name, output_units_name,
+                 resource_id, name, frequency_lower_bound,
+                 frequency_upper_bound, approximation_lower_bound,
+                 approximation_upper_bound, maximum_error, coefficients,
+                 approximation_type='MACLAURIN',
+                 input_units_description=None,
+                 output_units_description=None, description=None):
+        self.input_units_name = input_units_name
+        self.output_units_name = output_units_name
+        self.input_units_description = input_units_description
+        self.output_units_description = output_units_description
+        self.resource_id = resource_id
+        self.name = name
+        self.description = description
+        self._approximation_type = approximation_type
+        self.frequency_lower_bound = frequency_lower_bound
+        self.frequency_upper_bound = frequency_upper_bound
+        self.approximation_lower_bound = approximation_lower_bound
+        self.approximation_upper_bound = approximation_upper_bound
+        self.maximum_error = maximum_error
+        self.coefficients = coefficients
+
+    @property
+    def approximation_type(self):
+        return self._approximation_type
+
+    @approximation_type.setter
+    def approximation_type(self, value):
+        value = str(value).upper()
+        allowed = ("MACLAURIN",)
+        if value not in allowed:
+            msg = ("Value '%s' for polynomial response approximation type not "
+                   "allowed. Possible values are: '%s'")
+            msg = msg % (value, "', '".join(allowed))
+            raise ValueError(msg)
+        self._approximation_type = value
 
 
 if __name__ == '__main__':

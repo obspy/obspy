@@ -340,36 +340,46 @@ def _read_response_stage(stage_elem, _ns):
     elif elem is coefficients_elem:
         cf_transfer_function_type = \
             _tag2obj(elem, _ns("CfTransferFunctionType"), str)
-        numerator = [float(_i.text) for _i in
-                     elem.findall(_ns("Numerator"))]
-        denominator = [float(_i.text) for _i in
-                       elem.findall(_ns("Denominator"))]
+        numerator = _tags2obj(elem, _ns("Numerator"), float)
+        denominator = _tags2obj(elem, _ns("Denominator"), float)
         return obspy.station.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
 
     # Handle the response list response stage type.
     elif elem is response_list_elem:
-        msg = "Response List Response Type not yet implemented."
-        raise NotImplementedError(msg)
         rlist_elems = []
         for item in elem.findall(_ns("ResponseListElement")):
-            # XXX parse frequency/amplitude/phase of individual elements
-            x = obspy.station.response.ResponseListElement()
+            freq = _tag2obj(item, _ns("Frequency"), float)
+            amp = _tag2obj(item, _ns("Amplitude"), float)
+            phase = _tag2obj(item, _ns("Phase"), float)
+            x = obspy.station.response.ResponseListElement(
+                frequency=freq, amplitude=amp, phase=phase)
             rlist_elems.append(x)
         return obspy.station.ResponseListResponseStage(
             response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
     elif elem is FIR_elem:
-        msg = "FIR Response Type not yet implemented."
-        raise NotImplementedError(msg)
+        symmetry = _tag2obj(elem, _ns("Symmetry"), str)
+        coeffs = _tags2obj(elem, _ns("NumeratorCoefficient"), float)
+        return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
+                                              symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
-        # XXX coefficient number from attribute has to be respected!
-        msg = "Polynomial Response Type not yet implemented."
-        raise NotImplementedError(msg)
+        appr_type = _tag2obj(elem, _ns("ApproximationType"), str)
+        f_low = _tag2obj(elem, _ns("FrequencyLowerBound"), float)
+        f_high = _tag2obj(elem, _ns("FrequencyUpperBound"), float)
+        appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), float)
+        appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), float)
+        max_err = _tag2obj(elem, _ns("MaximumError"), float)
+        coeffs = _tags2obj(elem, _ns("Coefficient"), float)
+        return obspy.station.PolynomialResponseStage(
+            approximation_type=appr_type, frequency_lower_bound=f_low,
+            frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
+            approximation_upper_bound=appr_high, maximum_error=max_err,
+            coefficients=coeffs, **kwargs)
 
 
 def _read_instrument_sensitivity(sensitivity_element, _ns):
@@ -394,10 +404,33 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
     return sensitivity
 
 
-def _read_instrument_polynomial(polynomial_element, _ns):
-    # XXX both occurences of polynomial response are of same type and should be
-    # XXX handled in the same way
-    pass
+def _read_instrument_polynomial(element, _ns):
+    # XXX duplicated code, see reading of PolynomialResponseStage
+    input_units = element.find(_ns("InputUnits"))
+    input_units_name = _tag2obj(input_units, _ns("Name"), str)
+    input_units_description = _tag2obj(input_units, _ns("Description"), str)
+    output_units = element.find(_ns("OutputUnits"))
+    output_units_name = _tag2obj(output_units, _ns("Name"), str)
+    output_units_description = _tag2obj(output_units, _ns("Description"), str)
+    description = _tag2obj(element, _ns("Description"), str)
+    resource_id = _tag2obj(element, _ns("resourceId"), str)
+    name = _tag2obj(element, _ns("name"), str)
+    appr_type = _tag2obj(element, _ns("ApproximationType"), str)
+    f_low = _tag2obj(element, _ns("FrequencyLowerBound"), float)
+    f_high = _tag2obj(element, _ns("FrequencyUpperBound"), float)
+    appr_low = _tag2obj(element, _ns("ApproximationLowerBound"), float)
+    appr_high = _tag2obj(element, _ns("ApproximationUpperBound"), float)
+    max_err = _tag2obj(element, _ns("MaximumError"), float)
+    coeffs = _tags2obj(element, _ns("Coefficient"), float)
+    return obspy.station.response.InstrumentPolynomial(
+        approximation_type=appr_type, frequency_lower_bound=f_low,
+        frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
+        approximation_upper_bound=appr_high, maximum_error=max_err,
+        coefficients=coeffs, input_units_name=input_units_name,
+        input_units_description=input_units_description,
+        output_units_name=output_units_name,
+        output_units_description=output_units_description,
+        description=description, resource_id=resource_id, name=name)
 
 
 def _read_external_reference(ref_element, _ns):
