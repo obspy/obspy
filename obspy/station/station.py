@@ -139,9 +139,13 @@ class Station(BaseNode):
         Returns a dictionary containing the contents of the object.
 
         Example
-        >>> station_object.get_contents()  # doctest: +SKIP
-        {"stations": ["A"],
-         "channels": ["A..EHE", "A..EHN", ...]}
+        >>> from obspy import read_inventory
+        >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
+        >>> inventory = read_inventory(example_filename)
+        >>> station = inventory.networks[0].stations[0]
+        >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE
+        {'channels': ['ANMO.10.BHZ'],
+         'stations': ['ANMO (Albuquerque, New Mexico, USA)']}
         """
         site_name = None
         if self.site and self.site.name:

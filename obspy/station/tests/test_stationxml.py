@@ -101,6 +101,28 @@ class StationXMLTestCase(unittest.TestCase):
         self._assert_station_xml_equality(file_buffer,
                                           expected_xml_file_buffer)
 
+    def test_read_and_write_full_file(self):
+        """
+        Test that reading and writing of a full StationXML document with all
+        possible tags works.
+        """
+        filename = os.path.join(self.data_dir, "full_random_stationxml.xml.gz")
+        inv = obspy.station.read_inventory(filename)
+
+        # Write it again. Also validate it to get more confidence. Suppress the
+        # writing of the ObsPy related tags to ease testing.
+        file_buffer = BytesIO()
+        inv.write(file_buffer, format="StationXML", validate=True,
+                  _suppress_module_tags=True)
+        file_buffer.seek(0, 0)
+
+        with open(filename, "rb") as open_file:
+            expected_xml_file_buffer = BytesIO(open_file.read())
+        expected_xml_file_buffer.seek(0, 0)
+
+        self._assert_station_xml_equality(file_buffer,
+                                          expected_xml_file_buffer)
+
     def test_writing_module_tags(self):
         """
         Tests the writing of ObsPy related tags.

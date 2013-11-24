@@ -103,9 +103,13 @@ class Network(BaseNode):
         Returns a dictionary containing the contents of the object.
 
         Example
-        >>> network_object.get_contents()  # doctest: +SKIP
-        {"stations": ["BW.A", "BW.B"],
-         "channels": ["BW.A..EHE", "BW.A..EHN", ...]}
+        >>> from obspy import read_inventory
+        >>> example_filename = "/path/to/IRIS_single_channel_with_response.xml"
+        >>> inventory = read_inventory(example_filename)
+        >>> network = inventory.networks[0]
+        >>> network.get_contents()  # doctest: +NORMALIZE_WHITESPACE
+        {'channels': ['IU.ANMO.10.BHZ'],
+         'stations': ['IU.ANMO (Albuquerque, New Mexico, USA)']}
         """
         content_dict = {"stations": [], "channels": []}
 
