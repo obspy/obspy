@@ -10,7 +10,6 @@ before_install:
   - sudo apt-get install -qq gfortran
   # numpy is installed anyway, even on py!=2.7 where system site-packages are never available. keep it here for completeness
   - sudo apt-get install -qq python-numpy
-  - git clone --depth=1 git://github.com/obspy/wheelhouse /tmp/obspy-wheelhouse
   - pip install --upgrade pip
   - pip install --upgrade setuptools
   - pip install wheel
@@ -26,12 +25,15 @@ before_install:
   - git config --local user.name "travis-ci"
   - git add *
   - git commit -m "Uploading new wheels"
-  - git push origin master || ( git pull --rebase && git push origin master)
+  - git push --quiet origin master || ( git pull --rebase && git push --quiet origin master)
+  - exit 1
   ### wheel building/upload end
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto; else pip install --use-wheel --no-index --find-links=/tmp/obspy-wheelhouse scipy suds lxml sqlalchemy m2crypto; fi
+  - cd /tmp
+  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -xzf -
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; fi
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
-  - pip install --use-wheel --no-index --find-links=/tmp/obspy-wheelhouse matplotlib
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
   - pip install --use-mirrors flake8
   - pip freeze
 install:
@@ -44,7 +46,7 @@ install:
   - git status
 env:
   global:
-    secure: "d58TRMIt5kivmnRG4np/jyA1jFTo4gXpaW0xLlPaOlTS9W9SoylNZQP21Dy7LbFB7aLtrxKbKY7vwjMnDBRFXaMbZTKoO8YUTDPOvAz61MDjqfGAjnHESd1lSU+0EJU2h1y6AWWD0pJQCWBbAbT9ePkEiSgBNVzbavqHNHJNoHw="
+    - secure: VhLru1uitLIShCw6vo56yC2be8TEgmTUqW/nDozieeNJmW7U8vZX7sWEmmjchDbpp6dvRql5nYleeYwV6Ke8Ia9bJzNu8ga0fLxi8Ru5nvXldsvq2QMqU4JSNEIGJs+xpXDJuOdCLEQ/VBYXMfXot+Nck58zZgUqDrsmshVD6Jc=
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see 
