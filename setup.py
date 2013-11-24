@@ -213,6 +213,7 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
+    ],
     'obspy.plugin.inventory': [
         'STATIONXML = obspy.station.stationxml',
     ],
@@ -337,8 +338,8 @@ if IS_MSVC:
             taupargs = ["-m64"]
         # ignoring all f2py objects
         objects = objects[2:]
-        self.spawn(['gfortran.exe'] + \
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
+        self.spawn(['gfortran.exe'] +
+                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
                    taupargs + objects + ["-o", output_filename])
 
     MSVCCompiler.original_link = MSVCCompiler.link
