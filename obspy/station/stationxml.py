@@ -13,6 +13,7 @@ import inspect
 from io import BytesIO
 from lxml import etree
 import os
+import warnings
 
 import obspy
 
@@ -85,9 +86,9 @@ def read_StationXML(path_or_file_object):
     created = obspy.UTCDateTime(root.find(_ns("Created")).text)
 
     # These are optional
-    sender = _tag2obj(root, _ns("Sender"), str)
-    module = _tag2obj(root, _ns("Module"), str)
-    module_uri = _tag2obj(root, _ns("ModuleURI"), str)
+    sender = _tag2obj(root, _ns("Sender"), unicode)
+    module = _tag2obj(root, _ns("Module"), unicode)
+    module_uri = _tag2obj(root, _ns("ModuleURI"), unicode)
 
     networks = []
     for network in root.findall(_ns("Network")):
@@ -111,13 +112,13 @@ def _read_base_node(element, object_to_write_to, _ns):
     object_to_write_to.end_date = \
         _attr2obj(element, "endDate", obspy.UTCDateTime)
     object_to_write_to.restricted_status = \
-        _attr2obj(element, "restrictedStatus", str)
+        _attr2obj(element, "restrictedStatus", unicode)
     object_to_write_to.alternate_code = \
-        _attr2obj(element, "alternateCode", str)
+        _attr2obj(element, "alternateCode", unicode)
     object_to_write_to.historical_code = \
-        _attr2obj(element, "historicalCode", str)
+        _attr2obj(element, "historicalCode", unicode)
     object_to_write_to.description = \
-        _tag2obj(element, _ns("Description"), str)
+        _tag2obj(element, _ns("Description"), unicode)
     object_to_write_to.comments = []
     for comment in element.findall(_ns("Comment")):
         object_to_write_to.comments.append(_read_comment(comment, _ns))
@@ -146,8 +147,8 @@ def _read_station(sta_element, _ns):
                                     elevation=elevation)
     station.site = _read_site(sta_element.find(_ns("Site")), _ns)
     _read_base_node(sta_element, station, _ns)
-    station.vault = _tag2obj(sta_element, _ns("Vault"), str)
-    station.geology = _tag2obj(sta_element, _ns("Geology"), str)
+    station.vault = _tag2obj(sta_element, _ns("Vault"), unicode)
+    station.geology = _tag2obj(sta_element, _ns("Geology"), unicode)
     for equipment in sta_element.findall(_ns("Equipment")):
         station.equipments.append(_read_equipment(equipment, _ns))
     for operator in sta_element.findall(_ns("Operator")):
@@ -197,7 +198,8 @@ def _read_channel(cha_element, _ns):
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
         channel.sample_rate_ratio_number_seconds = \
             _tag2obj(sample_rate_ratio, _ns("NumberSeconds"), int)
-    channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"), str)
+    channel.storage_format = _tag2obj(cha_element, _ns("StorageFormat"),
+                                      unicode)
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
@@ -290,14 +292,16 @@ def _read_response_stage(stage_elem, _ns):
 
     # Now parse all elements the different stages share.
     input_units = elem.find(_ns("InputUnits"))
-    input_units_name = _tag2obj(input_units, _ns("Name"), str)
-    input_units_description = _tag2obj(input_units, _ns("Description"), str)
+    input_units_name = _tag2obj(input_units, _ns("Name"), unicode)
+    input_units_description = _tag2obj(input_units, _ns("Description"),
+                                       unicode)
     output_units = elem.find(_ns("OutputUnits"))
-    output_units_name = _tag2obj(output_units, _ns("Name"), str)
-    output_units_description = _tag2obj(output_units, _ns("Description"), str)
-    description = _tag2obj(elem, _ns("Description"), str)
-    resource_id = _tag2obj(elem, _ns("resourceId"), str)
-    name = _tag2obj(elem, _ns("name"), str)
+    output_units_name = _tag2obj(output_units, _ns("Name"), unicode)
+    output_units_description = _tag2obj(output_units, _ns("Description"),
+                                        unicode)
+    description = _tag2obj(elem, _ns("Description"), unicode)
+    resource_id = _tag2obj(elem, _ns("resourceId"), unicode)
+    name = _tag2obj(elem, _ns("name"), unicode)
 
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
@@ -318,7 +322,7 @@ def _read_response_stage(stage_elem, _ns):
     # Handle Poles and Zeros Response Stage Type.
     if elem is poles_zeros_elem:
         pz_transfer_function_type = \
-            _tag2obj(elem, _ns("PzTransferFunctionType"), str)
+            _tag2obj(elem, _ns("PzTransferFunctionType"), unicode)
         normalization_factor = \
             _tag2obj(elem, _ns("NormalizationFactor"), float)
         normalization_frequency = \
@@ -339,7 +343,7 @@ def _read_response_stage(stage_elem, _ns):
     # Handle the coefficients Response Stage Type.
     elif elem is coefficients_elem:
         cf_transfer_function_type = \
-            _tag2obj(elem, _ns("CfTransferFunctionType"), str)
+            _tag2obj(elem, _ns("CfTransferFunctionType"), unicode)
         numerator = _tags2obj(elem, _ns("Numerator"), float)
         denominator = _tags2obj(elem, _ns("Denominator"), float)
         return obspy.station.CoefficientsTypeResponseStage(
@@ -361,14 +365,14 @@ def _read_response_stage(stage_elem, _ns):
 
     # Handle the FIR response stage type.
     elif elem is FIR_elem:
-        symmetry = _tag2obj(elem, _ns("Symmetry"), str)
+        symmetry = _tag2obj(elem, _ns("Symmetry"), unicode)
         coeffs = _tags2obj(elem, _ns("NumeratorCoefficient"), float)
         return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
                                               symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
-        appr_type = _tag2obj(elem, _ns("ApproximationType"), str)
+        appr_type = _tag2obj(elem, _ns("ApproximationType"), unicode)
         f_low = _tag2obj(elem, _ns("FrequencyLowerBound"), float)
         f_high = _tag2obj(elem, _ns("FrequencyUpperBound"), float)
         appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), float)
@@ -389,12 +393,12 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
     output_units = sensitivity_element.find(_ns("OutputUnits"))
     sensitivity = obspy.station.response.InstrumentSensitivity(
         value=value, frequency=frequency,
-        input_units_name=_tag2obj(input_units, _ns("Name"), str),
-        output_units_name=_tag2obj(output_units, _ns("Name"), str))
+        input_units_name=_tag2obj(input_units, _ns("Name"), unicode),
+        output_units_name=_tag2obj(output_units, _ns("Name"), unicode))
     sensitivity.input_units_description = \
-        _tag2obj(input_units, _ns("Description"), str)
+        _tag2obj(input_units, _ns("Description"), unicode)
     sensitivity.output_units_description = \
-        _tag2obj(output_units, _ns("Description"), str)
+        _tag2obj(output_units, _ns("Description"), unicode)
     sensitivity.frequency_range_start = \
         _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
     sensitivity.frequency_range_end = \
@@ -407,15 +411,17 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
 def _read_instrument_polynomial(element, _ns):
     # XXX duplicated code, see reading of PolynomialResponseStage
     input_units = element.find(_ns("InputUnits"))
-    input_units_name = _tag2obj(input_units, _ns("Name"), str)
-    input_units_description = _tag2obj(input_units, _ns("Description"), str)
+    input_units_name = _tag2obj(input_units, _ns("Name"), unicode)
+    input_units_description = _tag2obj(input_units, _ns("Description"),
+                                       unicode)
     output_units = element.find(_ns("OutputUnits"))
-    output_units_name = _tag2obj(output_units, _ns("Name"), str)
-    output_units_description = _tag2obj(output_units, _ns("Description"), str)
-    description = _tag2obj(element, _ns("Description"), str)
-    resource_id = _tag2obj(element, _ns("resourceId"), str)
-    name = _tag2obj(element, _ns("name"), str)
-    appr_type = _tag2obj(element, _ns("ApproximationType"), str)
+    output_units_name = _tag2obj(output_units, _ns("Name"), unicode)
+    output_units_description = _tag2obj(output_units, _ns("Description"),
+                                        unicode)
+    description = _tag2obj(element, _ns("Description"), unicode)
+    resource_id = _tag2obj(element, _ns("resourceId"), unicode)
+    name = _tag2obj(element, _ns("name"), unicode)
+    appr_type = _tag2obj(element, _ns("ApproximationType"), unicode)
     f_low = _tag2obj(element, _ns("FrequencyLowerBound"), float)
     f_high = _tag2obj(element, _ns("FrequencyUpperBound"), float)
     appr_low = _tag2obj(element, _ns("ApproximationLowerBound"), float)
@@ -434,8 +440,8 @@ def _read_instrument_polynomial(element, _ns):
 
 
 def _read_external_reference(ref_element, _ns):
-    uri = _tag2obj(ref_element, _ns("URI"), str)
-    description = _tag2obj(ref_element, _ns("Description"), str)
+    uri = _tag2obj(ref_element, _ns("URI"), unicode)
+    description = _tag2obj(ref_element, _ns("Description"), unicode)
     return obspy.station.ExternalReference(uri=uri, description=description)
 
 
@@ -444,19 +450,19 @@ def _read_operator(operator_element, _ns):
     contacts = []
     for contact in operator_element.findall(_ns("Contact")):
         contacts.append(_read_person(contact, _ns))
-    website = _tag2obj(operator_element, _ns("WebSite"), str)
+    website = _tag2obj(operator_element, _ns("WebSite"), unicode)
     return obspy.station.Operator(agencies=agencies, contacts=contacts,
                                   website=website)
 
 
 def _read_equipment(equip_element, _ns):
     resource_id = equip_element.get("resourceId")
-    type = _tag2obj(equip_element, _ns("Type"), str)
-    description = _tag2obj(equip_element, _ns("Description"), str)
-    manufacturer = _tag2obj(equip_element, _ns("Manufacturer"), str)
-    vendor = _tag2obj(equip_element, _ns("Vendor"), str)
-    model = _tag2obj(equip_element, _ns("Model"), str)
-    serial_number = _tag2obj(equip_element, _ns("SerialNumber"), str)
+    type = _tag2obj(equip_element, _ns("Type"), unicode)
+    description = _tag2obj(equip_element, _ns("Description"), unicode)
+    manufacturer = _tag2obj(equip_element, _ns("Manufacturer"), unicode)
+    vendor = _tag2obj(equip_element, _ns("Vendor"), unicode)
+    model = _tag2obj(equip_element, _ns("Model"), unicode)
+    serial_number = _tag2obj(equip_element, _ns("SerialNumber"), unicode)
     installation_date = \
         _tag2obj(equip_element, _ns("InstallationDate"), obspy.UTCDateTime)
     removal_date = \
@@ -472,18 +478,18 @@ def _read_equipment(equip_element, _ns):
 
 
 def _read_site(site_element, _ns):
-    name = _tag2obj(site_element, _ns("Name"), str)
-    description = _tag2obj(site_element, _ns("Description"), str)
-    town = _tag2obj(site_element, _ns("Town"), str)
-    county = _tag2obj(site_element, _ns("County"), str)
-    region = _tag2obj(site_element, _ns("Region"), str)
-    country = _tag2obj(site_element, _ns("Country"), str)
+    name = _tag2obj(site_element, _ns("Name"), unicode)
+    description = _tag2obj(site_element, _ns("Description"), unicode)
+    town = _tag2obj(site_element, _ns("Town"), unicode)
+    county = _tag2obj(site_element, _ns("County"), unicode)
+    region = _tag2obj(site_element, _ns("Region"), unicode)
+    country = _tag2obj(site_element, _ns("Country"), unicode)
     return obspy.station.Site(name=name, description=description, town=town,
                               county=county, region=region, country=country)
 
 
 def _read_comment(comment_element, _ns):
-    value = _tag2obj(comment_element, _ns("Value"), str)
+    value = _tag2obj(comment_element, _ns("Value"), unicode)
     begin_effective_time = \
         _tag2obj(comment_element, _ns("BeginEffectiveTime"), obspy.UTCDateTime)
     end_effective_time = \
@@ -497,9 +503,9 @@ def _read_comment(comment_element, _ns):
 
 
 def _read_person(person_element, _ns):
-    names = _tags2obj(person_element, _ns("Name"), str)
-    agencies = _tags2obj(person_element, _ns("Agency"), str)
-    emails = _tags2obj(person_element, _ns("Email"), str)
+    names = _tags2obj(person_element, _ns("Name"), unicode)
+    agencies = _tags2obj(person_element, _ns("Agency"), unicode)
+    emails = _tags2obj(person_element, _ns("Email"), unicode)
     phones = []
     for phone in person_element.findall(_ns("Phone")):
         phones.append(_read_phone(phone, _ns))
@@ -510,7 +516,7 @@ def _read_person(person_element, _ns):
 def _read_phone(phone_element, _ns):
     country_code = _tag2obj(phone_element, _ns("CountryCode"), int)
     area_code = _tag2obj(phone_element, _ns("AreaCode"), int)
-    phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), str)
+    phone_number = _tag2obj(phone_element, _ns("PhoneNumber"), unicode)
     description = phone_element.get("description")
     return obspy.station.PhoneNumber(
         country_code=country_code, area_code=area_code,
@@ -550,13 +556,14 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
     for network in inventory.networks:
         _write_network(root, network)
 
-    str_repr = etree.tostring(root, pretty_print=True, xml_declaration=True,
-                              encoding="UTF-8")
+    tree = root.getroottree()
 
     # The validation has to be done after parsing once again so that the
     # namespaces are correctly assembled.
     if validate is True:
-        buf = BytesIO(str_repr)
+        buf = BytesIO()
+        tree.write(buf)
+        buf.seek(0)
         validates, errors = validate_StationXML(buf)
         buf.close()
         if validates is False:
@@ -565,12 +572,8 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
                 msg += "\t%s\n" % err
             raise Exception(msg)
 
-    if hasattr(file_or_file_object, "write") and \
-            hasattr(file_or_file_object.write, "__call__"):
-        file_or_file_object.write(str_repr)
-        return
-    with open(file_or_file_object, "wt") as fh:
-        fh.write(str_repr)
+    tree.write(file_or_file_object, pretty_print=True, xml_declaration=True,
+               encoding="UTF-8")
 
 
 def _get_base_node_attributes(element):
@@ -738,6 +741,10 @@ def _write_phone(parent, phone):
 
 
 def _tag2obj(element, tag, convert):
+    # make sure, only unicode
+    if convert is str:
+        warnings.warn("overriding 'str' with 'unicode'.")
+        convert = unicode
     try:
         return convert(element.find(tag).text)
     except:
@@ -746,6 +753,10 @@ def _tag2obj(element, tag, convert):
 
 def _tags2obj(element, tag, convert):
     values = []
+    # make sure, only unicode
+    if convert is str:
+        warnings.warn("overriding 'str' with 'unicode'.")
+        convert = unicode
     for elem in element.findall(tag):
         values.append(convert(elem.text))
     return values

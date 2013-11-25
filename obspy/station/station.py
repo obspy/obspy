@@ -145,7 +145,7 @@ class Station(BaseNode):
         >>> station = inventory.networks[0].stations[0]
         >>> station.get_contents()  # doctest: +NORMALIZE_WHITESPACE
         {'channels': ['ANMO.10.BHZ'],
-         'stations': ['ANMO (Albuquerque, New Mexico, USA)']}
+         'stations': [u'ANMO (Albuquerque, New Mexico, USA)']}
         """
         site_name = None
         if self.site and self.site.name:

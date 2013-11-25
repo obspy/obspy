@@ -109,7 +109,7 @@ class Network(BaseNode):
         >>> network = inventory.networks[0]
         >>> network.get_contents()  # doctest: +NORMALIZE_WHITESPACE
         {'channels': ['IU.ANMO.10.BHZ'],
-         'stations': ['IU.ANMO (Albuquerque, New Mexico, USA)']}
+         'stations': [u'IU.ANMO (Albuquerque, New Mexico, USA)']}
         """
         content_dict = {"stations": [], "channels": []}
 

@@ -85,7 +85,7 @@ class Inventory(ComparingObject):
         >>> inventory.get_contents()  # doctest: +NORMALIZE_WHITESPACE
         {'channels': ['IU.ANMO.10.BHZ'],
          'networks': ['IU'],
-         'stations': ['IU.ANMO (Albuquerque, New Mexico, USA)']}
+         'stations': [u'IU.ANMO (Albuquerque, New Mexico, USA)']}
         """
         content_dict = {
             "networks": [],
