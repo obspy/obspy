@@ -10,7 +10,6 @@ Test suite for the StationXML reader and writer.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import fnmatch
-import gzip
 from io import BytesIO
 import inspect
 from itertools import izip
@@ -46,11 +45,11 @@ class StationXMLTestCase(unittest.TestCase):
 
         for new_line, org_line in izip(new_lines, org_lines):
             try:
-                self.assertEqual(new_line, org_line)
+                self.assertEqual(org_line, new_line)
             except:
                 # Attributes have no fixed order but should all exists.
-                self.assertEqual(sorted(new_line[1:-1].split()),
-                                 sorted(org_line[1:-1].split()))
+                self.assertEqual(sorted(org_line[1:-1].split()),
+                                 sorted(new_line[1:-1].split()))
 
         # Assert the line length at the end to find trailing non-equal lines.
         # If it is done before the line comparision it is oftentimes not very
@@ -108,7 +107,7 @@ class StationXMLTestCase(unittest.TestCase):
         Test that reading and writing of a full StationXML document with all
         possible tags works.
         """
-        filename = os.path.join(self.data_dir, "full_random_stationxml.xml.gz")
+        filename = os.path.join(self.data_dir, "full_random_stationxml.xml")
         inv = obspy.station.read_inventory(filename)
 
         # Write it again. Also validate it to get more confidence. Suppress the
@@ -118,7 +117,7 @@ class StationXMLTestCase(unittest.TestCase):
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
-        with gzip.open(filename, "rb") as open_file:
+        with open(filename, "rb") as open_file:
             expected_xml_file_buffer = BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
