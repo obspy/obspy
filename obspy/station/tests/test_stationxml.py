@@ -10,6 +10,7 @@ Test suite for the StationXML reader and writer.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import fnmatch
+import gzip
 from io import BytesIO
 import inspect
 from itertools import izip
@@ -34,8 +35,9 @@ class StationXMLTestCase(unittest.TestCase):
         Helper function comparing two BytesIO buffers contain Station XML
         files.
         """
-        new_lines = [_i.strip() for _i in xml_file_buffer.read().splitlines()]
-        org_lines = [_i.strip()
+        new_lines = [_i.strip().replace("'", '"')
+                     for _i in xml_file_buffer.read().splitlines()]
+        org_lines = [_i.strip().replace("'", '"')
                      for _i in expected_xml_file_buffer.read().splitlines()]
 
         # Remove the module lines from the original file.
@@ -116,7 +118,7 @@ class StationXMLTestCase(unittest.TestCase):
                   _suppress_module_tags=True)
         file_buffer.seek(0, 0)
 
-        with open(filename, "rb") as open_file:
+        with gzip.open(filename, "rb") as open_file:
             expected_xml_file_buffer = BytesIO(open_file.read())
         expected_xml_file_buffer.seek(0, 0)
 
