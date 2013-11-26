@@ -340,11 +340,13 @@ class Comment(ComparingObject):
         Container for a comment or log entry. Corresponds to SEED blockettes
         31, 51 and 59.
     """
-    def __init__(self, value, begin_effective_time=None,
+    def __init__(self, value, id, begin_effective_time=None,
                  end_effective_time=None, authors=None):
         """
         :type value: String
         :param value: The actual comment string
+        :type id: int
+        :param id: ID of comment, must be 0 or greater.
         :type begin_effective_time:
             :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param begin_effective_time: The effective start date, Optional.
@@ -357,6 +359,18 @@ class Comment(ComparingObject):
         self.begin_effective_time = begin_effective_time
         self.end_effective_time = end_effective_time
         self.authors = authors or []
+        self.id = id
+
+    @property
+    def id(self):
+        return self._id
+
+    @id.setter
+    def id(self, value):
+        if not int(value) >= 0:
+            msg = "ID must be 0 or positive integer."
+            raise ValueError(msg)
+        self._id = value
 
     @property
     def value(self):
