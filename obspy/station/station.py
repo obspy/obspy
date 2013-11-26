@@ -21,12 +21,12 @@ class Station(BaseNode):
         single station epoch with the station's creation and termination dates
         as the epoch start and end dates.
     """
-    def __init__(self, code, latitude, longitude, elevation, channels=[],
-                 site=None, vault=None, geology=None, equipments=[],
-                 operators=[], creation_date=None, termination_date=None,
+    def __init__(self, code, latitude, longitude, elevation, channels=None,
+                 site=None, vault=None, geology=None, equipments=None,
+                 operators=None, creation_date=None, termination_date=None,
                  total_number_of_channels=None,
                  selected_number_of_channels=None, description=None,
-                 comments=[], start_date=None, end_date=None,
+                 comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
@@ -86,12 +86,12 @@ class Station(BaseNode):
         self.latitude = latitude
         self.longitude = longitude
         self.elevation = elevation
-        self.channels = channels
+        self.channels = channels or []
         self.site = site
         self.vault = vault
         self.geology = geology
-        self.equipments = equipments
-        self.operators = operators
+        self.equipments = equipments or []
+        self.operators = operators or []
         self.creation_date = creation_date
         self.termination_date = termination_date
         self.total_number_of_channels = total_number_of_channels
@@ -160,7 +160,7 @@ class Station(BaseNode):
 
     @property
     def operators(self):
-        return self.__operators
+        return self._operators
 
     @operators.setter
     def operators(self, value):
@@ -170,11 +170,11 @@ class Station(BaseNode):
         if any([not isinstance(x, Operator) for x in value]):
             msg = "Operators can only contain Operator objects."
             raise ValueError(msg)
-        self.__operators = value
+        self._operators = value
 
     @property
     def equipments(self):
-        return self.__equipments
+        return self._equipments
 
     @equipments.setter
     def equipments(self, value):
@@ -184,11 +184,11 @@ class Station(BaseNode):
         if any([not isinstance(x, Equipment) for x in value]):
             msg = "Equipments can only contain Equipment objects."
             raise ValueError(msg)
-        self.__equipments = value
+        self._equipments = value
         #if value is None or isinstance(value, Equipment):
-        #    self.__equipment = value
+        #    self._equipment = value
         #elif isinstance(value, dict):
-        #    self.__equipment = Equipment(**value)
+        #    self._equipment = Equipment(**value)
         #else:
         #    msg = ("equipment needs to be be of type obspy.station.Equipment "
         #        "or contain a dictionary with values suitable for "
@@ -197,37 +197,37 @@ class Station(BaseNode):
 
     @property
     def creation_date(self):
-        return self.__creation_date
+        return self._creation_date
 
     @creation_date.setter
     def creation_date(self, value):
         if value is None:
-            self.__creation_date = None
+            self._creation_date = None
             return
         if not isinstance(value, UTCDateTime):
             value = UTCDateTime(value)
-        self.__creation_date = value
+        self._creation_date = value
 
     @property
     def termination_date(self):
-        return self.__termination_date
+        return self._termination_date
 
     @termination_date.setter
     def termination_date(self, value):
         if value is not None and not isinstance(value, UTCDateTime):
             value = UTCDateTime(value)
-        self.__termination_date = value
+        self._termination_date = value
 
     @property
     def external_references(self):
-        return self.__external_references
+        return self._external_references
 
     @external_references.setter
     def external_references(self, value):
         if not hasattr(value, "__iter__"):
             msg = "external_references needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__external_references = value
+        self._external_references = value
 
 
 if __name__ == '__main__':

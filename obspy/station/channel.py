@@ -123,10 +123,8 @@ class Channel(BaseNode):
         self.depth = depth
         self.azimuth = azimuth
         self.dip = dip
-        if types is None:
-            self.types = []
-        if external_references is None:
-            self.external_references = external_references
+        self.types = types or []
+        self.external_references = external_references or []
         self.sample_rate = sample_rate
         self.sample_rate_ratio_number_samples = \
             sample_rate_ratio_number_samples
@@ -141,8 +139,6 @@ class Channel(BaseNode):
         self.data_logger = data_logger
         self.equipment = equipment
         self.response = response
-        if comments is None:
-            comments = []
         super(Channel, self).__init__(
             code=code, description=description, comments=comments,
             start_date=start_date, end_date=end_date,

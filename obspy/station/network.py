@@ -22,9 +22,9 @@ class Network(BaseNode):
         other descriptive information can be included in the Description
         element. The Network can contain 0 or more Stations.
     """
-    def __init__(self, code, stations=[], total_number_of_stations=None,
+    def __init__(self, code, stations=None, total_number_of_stations=None,
                  selected_number_of_stations=None, description=None,
-                 comments=[], start_date=None, end_date=None,
+                 comments=None, start_date=None, end_date=None,
                  restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
@@ -57,7 +57,7 @@ class Network(BaseNode):
         :param historical_code: A previously used code if different from the
             current code.
         """
-        self.stations = stations
+        self.stations = stations or []
         self.total_number_of_stations = total_number_of_stations
         self.selected_number_of_stations = selected_number_of_stations
 

@@ -22,7 +22,7 @@ class BaseNode(ComparingObject):
 
     The parent class for the network, station and channel classes.
     """
-    def __init__(self, code, description=None, comments=[], start_date=None,
+    def __init__(self, code, description=None, comments=None, start_date=None,
                  end_date=None, restricted_status=None, alternate_code=None,
                  historical_code=None):
         """
@@ -47,7 +47,7 @@ class BaseNode(ComparingObject):
             current code.
         """
         self.code = code
-        self.comments = comments
+        self.comments = comments or []
         self.description = description
         self.start_date = start_date
         self.end_date = end_date
@@ -57,14 +57,14 @@ class BaseNode(ComparingObject):
 
     @property
     def code(self):
-        return self.__code
+        return self._code
 
     @code.setter
     def code(self, value):
         if not value:
             msg = "A Code is required"
             raise ValueError(msg)
-        self.__code = str(value)
+        self._code = str(value)
 
     @property
     def alternate_code(self):
@@ -73,14 +73,14 @@ class BaseNode(ComparingObject):
             A code used for display or association, alternate to the
             SEED-compliant code.
         """
-        return self.__alternate_code
+        return self._alternate_code
 
     @alternate_code.setter
     def alternate_code(self, value):
         if value:
-            self.__alternate_code = value
+            self._alternate_code = value
         else:
-            self.__alternate_code = None
+            self._alternate_code = None
 
     @property
     def historical_code(self):
@@ -88,28 +88,31 @@ class BaseNode(ComparingObject):
         From the StationXML definition:
             A previously used code if different from the current code.
         """
-        return self.__historical_code
+        return self._historical_code
 
     @historical_code.setter
     def historical_code(self, value):
         if value:
-            self.__historical_code = value
+            self._historical_code = value
         else:
-            self.__historical_code = None
+            self._historical_code = None
 
 
 class Equipment(ComparingObject):
     """
     An object containing a detailed description of an equipment.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, type=None, description=None, manufacturer=None,
+                 vendor=None, model=None, serial_number=None,
+                 installation_date=None, removal_date=None,
+                 calibration_dates=None, resource_id=None):
         """
         :type type: String
         :param type: The equipment type
         :type description: String
         :param description: Description of the equipment
         :type manufacturer: String
-        :param manufacturer: The manufactorer of the equipment
+        :param manufacturer: The manufacturer of the equipment
         :type vendor: String
         :param vendor: The vendor of the equipment
         :type model: String
@@ -132,38 +135,38 @@ class Equipment(ComparingObject):
             same ID should contains the same information/be derived from the
             same base instruments.
         """
-        self.type = kwargs.get("type", None)
-        self.description = kwargs.get("description", None)
-        self.manufacturer = kwargs.get("manufacturer", None)
-        self.vendor = kwargs.get("vendor", None)
-        self.model = kwargs.get("model", None)
-        self.serial_number = kwargs.get("serial_number", None)
-        self.installation_date = kwargs.get("installation_date", None)
-        self.removal_date = kwargs.get("removal_date", None)
-        self.calibration_dates = kwargs.get("calibration_dates", [])
-        self.resource_id = kwargs.get("resource_id", None)
+        self.type = type
+        self.description = description
+        self.manufacturer = manufacturer
+        self.vendor = vendor
+        self.model = model
+        self.serial_number = serial_number
+        self.installation_date = installation_date
+        self.removal_date = removal_date
+        self.calibration_dates = calibration_dates or []
+        self.resource_id = resource_id
 
         @property
         def installation_date(self):
-            return self.__installation_date
+            return self._installation_date
 
         @installation_date.setter
         def installation_date(self, value):
             if value is None or isinstance(value, UTCDateTime):
-                self.__installation_date = value
+                self._installation_date = value
                 return
-            self.__installation_date = UTCDateTime(value)
+            self._installation_date = UTCDateTime(value)
 
         @property
         def removal_date(self):
-            return self.__removal_date
+            return self._removal_date
 
         @removal_date.setter
         def removal_date(self, value):
             if value is None or isinstance(value, UTCDateTime):
-                self.__removal_date = value
+                self._removal_date = value
                 return
-            self.__removal_date = UTCDateTime(value)
+            self._removal_date = UTCDateTime(value)
 
 
 class Operator(ComparingObject):
@@ -173,22 +176,22 @@ class Operator(ComparingObject):
     the Contact element is a generic type that represents any contact person,
     it also has its own optional Agency element.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, agencies, contacts=None, website=None):
         """
-        :type agency: A list of strings.
-        :param agency: The agency of the operator.
-        :type contact: A list of `obspy.station.Person`
-        :param contact: One or more contact persons, optional
-        :type website: String
+        :type agencies: A list of strings.
+        :param agencies: The agencies of the operator.
+        :type contacts: A list of `obspy.station.Person`
+        :param contacts: One or more contact persons, optional
+        :type website: str
         :param website: The website, optional
         """
-        self.agencies = kwargs.get("agencies")
-        self.contacts = kwargs.get("contacts", [])
-        self.website = kwargs.get("website", None)
+        self.agencies = agencies
+        self.contacts = contacts or []
+        self.website = website
 
     @property
     def agencies(self):
-        return self.__agencies
+        return self._agencies
 
     @agencies.setter
     def agencies(self, value):
@@ -196,18 +199,18 @@ class Operator(ComparingObject):
             msg = ("agencies needs to iterable, e.g. a list and contain at "
                    "least one entry.")
             raise ValueError(msg)
-        self.__agencies = value
+        self._agencies = value
 
     @property
     def contacts(self):
-        return self.__contacts
+        return self._contacts
 
     @contacts.setter
     def contacts(self, value):
         if not hasattr(value, "__iter__"):
             msg = ("contacts needs to iterable, e.g. a list.")
             raise ValueError(msg)
-        self.__contacts = value
+        self._contacts = value
 
 
 class Person(ComparingObject):
@@ -217,66 +220,66 @@ class Person(ComparingObject):
         to multiple agencies and have multiple email addresses and phone
         numbers.
     """
-    def __init__(self, **kwargs):
+    def __init__(self, names=None, agencies=None, emails=None, phones=None):
         """
         :type names: list of strings
         :param names: Self-explanatory. Multiple names allowed. Optional.
-        :type agencies list of strings
-        :param agencies Self-explanatory. Multiple agencies allowed. Optional.
+        :type agencies: list of strings
+        :param agencies: Self-explanatory. Multiple agencies allowed. Optional.
         :type emails: list of strings
         :param emails: Self-explanatory. Multiple emails allowed. Optional.
         :type phones: list of `obspy.stations.PhoneNumber`
         :param phones: Self-explanatory. Multiple phone numbers allowed.
-            Optional.
+        Optional.
         """
-        self.names = kwargs.get("names", [])
-        self.agencies = kwargs.get("agencies", [])
-        self.emails = kwargs.get("emails", [])
-        self.phones = kwargs.get("phones", [])
+        self.names = names or []
+        self.agencies = agencies or []
+        self.emails = emails or []
+        self.phones = phones or []
 
     @property
     def names(self):
-        return self.__names
+        return self._names
 
     @names.setter
     def names(self, value):
         if not hasattr(value, "__iter__"):
             msg = "names needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__names = value
+        self._names = value
 
     @property
     def agencies(self):
-        return self.__agencies
+        return self._agencies
 
     @agencies.setter
     def agencies(self, value):
         if not hasattr(value, "__iter__"):
             msg = "agencies needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__agencies = value
+        self._agencies = value
 
     @property
     def emails(self):
-        return self.__emails
+        return self._emails
 
     @emails.setter
     def emails(self, values):
         if not hasattr(values, "__iter__"):
             msg = "emails needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__emails = values
+        self._emails = values
 
     @property
     def phones(self):
-        return self.__phones
+        return self._phones
 
     @phones.setter
     def phones(self, values):
         if not hasattr(values, "__iter__"):
             msg = "phones needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__phones = values
+        self._phones = values
 
 
 class PhoneNumber(ComparingObject):
@@ -285,32 +288,33 @@ class PhoneNumber(ComparingObject):
     """
     phone_pattern = re.compile("^[0-9]+-[0-9]+$")
 
-    def __init__(self, **kwargs):
+    def __init__(self, area_code, phone_number, country_code=None,
+                 description=None):
         """
-        :type country_code: Integer
-        :param country_code: The country code, optional
         :type area_code: Integer
         :param area_code: The area code
         :type phone_number: String in the form "[0-9]+-[0-9]+", e.g. 1234-5678.
         :param phone_number: The phone number minus the country and area code.
+        :type country_code: Integer
+        :param country_code: The country code, optional
         :type description: String
         :param description: Any additional information, optional.
         """
-        self.country_code = kwargs.get("country_code", None)
-        self.area_code = kwargs.get("area_code")
-        self.phone_number = kwargs.get("phone_number")
-        self.description = kwargs.get("description", None)
+        self.country_code = country_code
+        self.area_code = area_code
+        self.phone_number = phone_number
+        self.description = description
 
     @property
     def phone_number(self):
-        return self.__phone_number
+        return self._phone_number
 
     @phone_number.setter
     def phone_number(self, value):
         if re.match(self.phone_pattern, value) is None:
             msg = "phone_number needs to match the pattern '[0-9]+-[0-9]+'"
             raise ValueError(msg)
-        self.__phone_number = value
+        self._phone_number = value
 
 
 class ExternalReference(ComparingObject):
@@ -337,7 +341,7 @@ class Comment(ComparingObject):
         31, 51 and 59.
     """
     def __init__(self, value, begin_effective_time=None,
-                 end_effective_time=None, authors=[]):
+                 end_effective_time=None, authors=None):
         """
         :type value: String
         :param value: The actual comment string
@@ -352,48 +356,48 @@ class Comment(ComparingObject):
         self.value = value
         self.begin_effective_time = begin_effective_time
         self.end_effective_time = end_effective_time
-        self.authors = authors
+        self.authors = authors or []
 
     @property
     def value(self):
-        return self.__value
+        return self._value
 
     @value.setter
     def value(self, value):
-        self.__value = str(value)
+        self._value = str(value)
 
     @property
     def begin_effective_time(self):
-        return self.__begin_effective_time
+        return self._begin_effective_time
 
     @begin_effective_time.setter
     def begin_effective_time(self, value):
         if value is None:
-            self.__begin_effective_time = None
+            self._begin_effective_time = None
             return
-        self.__begin_effective_time = UTCDateTime(value)
+        self._begin_effective_time = UTCDateTime(value)
 
     @property
     def end_effective_time(self):
-        return self.__end_effective_time
+        return self._end_effective_time
 
     @end_effective_time.setter
     def end_effective_time(self, value):
         if value is None:
-            self.__end_effective_time = None
+            self._end_effective_time = None
             return
-        self.__end_effective_time = UTCDateTime(value)
+        self._end_effective_time = UTCDateTime(value)
 
     @property
     def authors(self):
-        return self.__authors
+        return self._authors
 
     @authors.setter
     def authors(self, values):
         if not hasattr(values, "__iter__"):
             msg = "authors needs to be iterable, e.g. a list."
             raise ValueError(msg)
-        self.__authors = values
+        self._authors = values
 
 
 class Site(ComparingObject):
