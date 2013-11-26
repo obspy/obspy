@@ -14,6 +14,7 @@ import obspy
 from obspy.core.util.base import ComparingObject
 from obspy.core.util import getExampleFile
 from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
+from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 from obspy.station.network import Network
 import textwrap
 
@@ -42,7 +43,7 @@ class Inventory(ComparingObject):
     In essence just a container for one or more networks.
     """
     def __init__(self, networks, source, sender=None, created=None,
-                 module=None, module_uri=None):
+                 module=SOFTWARE_MODULE, module_uri=SOFTWARE_URI):
         """
         :type networks: List of :class:`~obspy.station.network.Network`
         :param networks: A list of networks part of this inventory.
@@ -55,11 +56,11 @@ class Inventory(ComparingObject):
             the current time if not given. Optional.
         :type module: String
         :param module: Name of the software module that generated this
-            document.
+            document, defaults to ObsPy related information.
         :type module_uri: String
         :param module_uri: This is the address of the query that generated the
             document, or, if applicable, the address of the software that
-            generated this document.
+            generated this document, defaults to ObsPy related information.
         """
         self.networks = networks
         self.source = source

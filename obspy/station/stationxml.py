@@ -548,9 +548,11 @@ def write_StationXML(inventory, file_or_file_object, validate=False, **kwargs):
 
     # Undocumented flag that does not write the module flags. Useful for
     # testing. It is undocumented because it should not be used publicly.
-    if not kwargs.get("_suppress_module_tags", False):
-        etree.SubElement(root, "Module").text = SOFTWARE_MODULE
-        etree.SubElement(root, "ModuleURI").text = SOFTWARE_URI
+    if kwargs.get("_suppress_module_tags", False):
+        pass
+    else:
+        etree.SubElement(root, "Module").text = inventory.module
+        etree.SubElement(root, "ModuleURI").text = inventory.module_uri
 
     etree.SubElement(root, "Created").text = _format_time(inventory.created)
 
