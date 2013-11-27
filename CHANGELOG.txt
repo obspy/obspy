@@ -1,4 +1,6 @@
 dev:
+-  general:
+   * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
@@ -37,6 +39,8 @@ dev:
      initialization.
    * added a new test that asserts that the whole codebase is valid according
      to the flake8 tool.
+   * bugfix: Trace.simulate() now passes the SEED network, station, location,
+     and channel identifiers to evalresp.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -74,6 +78,8 @@ dev:
      path to a local file now also can be provided either a file-like
      object with RESP information or an obspy.xseed.Parser object
      (e.g. created reading a dataless SEED file).
+   * seisSim(seedresp={...}): the seedresp dictionary now required network,
+	 station, location, and channel keys.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
