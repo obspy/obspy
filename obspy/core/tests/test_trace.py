@@ -1379,7 +1379,7 @@ class TraceTestCase(unittest.TestCase):
         # function.
         for key in ["network", "station", "location", "channel"]:
             self.assertEqual(
-                kwargs[key], tr.stats[key],
+                kwargs[key if key != "location" else "locid"], tr.stats[key],
                 msg="'%s' did not get passed on to evalresp" % key)
 
     def test_issue540(self):

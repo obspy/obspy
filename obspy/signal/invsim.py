@@ -479,7 +479,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
                                         units=seedresp['units'], freq=True,
                                         network=seedresp['network'],
                                         station=seedresp['station'],
-                                        location=seedresp['location'],
+                                        locid=seedresp['location'],
                                         channel=seedresp['channel'])
         if not remove_sensitivity:
             msg = "remove_sensitivity is set to False, but since seedresp " + \
