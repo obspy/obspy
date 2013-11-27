@@ -1135,13 +1135,14 @@ class TraceTestCase(unittest.TestCase):
             pass
 
         self.assertEqual(patch.call_count, 1)
-        args, kwargs = patch.call_args
+        _, kwargs = patch.call_args
 
         # Make sure that every item of the trace is passed to the evalresp
         # function.
         for key in ["network", "station", "location", "channel"]:
-            value = tr.stats[key]
-            self.assertTrue(value in args or value in kwargs.keys())
+            self.assertEqual(
+                kwargs[key], tr.stats[key],
+                msg="'%s' did not get passed on to evalresp" % key)
 
 
 def suite():
