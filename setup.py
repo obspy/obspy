@@ -54,6 +54,8 @@ INSTALL_REQUIRES = [
     'lxml',
     'sqlalchemy',
     'suds>=0.4.0']
+EXTRAS_REQUIRE = {
+    'tests': ['mock']}
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
