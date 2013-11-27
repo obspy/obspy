@@ -7,6 +7,7 @@ from obspy.core import Stats
 from obspy.core.util.base import getMatplotlibVersion
 from obspy.core.util.decorator import skipIf
 import math
+import mock
 import numpy as np
 import unittest
 import warnings
@@ -1354,6 +1355,31 @@ class TraceTestCase(unittest.TestCase):
         # check if have no masked arrays
         self.assertFalse(isinstance(st[0].data, np.ma.masked_array))
         self.assertFalse(isinstance(st[1].data, np.ma.masked_array))
+
+    def test_simulate_evalresp(self):
+        """
+        Tests that trace.simulate calls evalresp with the correct network,
+        station, location and channel information.
+        """
+        tr = read()[0]
+
+        # Wrap in try/except as it of course will fail because the mocked
+        # function returns None.
+        try:
+            with mock.patch("obspy.signal.invsim.evalresp") as patch:
+                tr.simulate(seedresp={"filename": "RESP.dummy",
+                                      "units": "VEL"})
+        except:
+            pass
+
+        self.assertEqual(patch.call_count, 1)
+        args, kwargs = patch.call_args
+
+        # Make sure that every item of the trace is passed to the evalresp
+        # function.
+        for key in ["network", "station", "location", "channel"]:
+            value = tr.stats[key]
+            self.assertTrue(value in args or value in kwargs.keys())
 
     def test_issue540(self):
         """
