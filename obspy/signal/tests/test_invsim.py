@@ -257,7 +257,9 @@ class InvSimTestCase(unittest.TestCase):
         tr = read(rawf)[0]
         trtest = read(evalrespf)[0]
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
+        seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
+                    'network': 'NZ', 'station': 'CRLZ', 'location': '10',
+                    'channel': 'HHZ'}
         tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
                           pre_filt=(fl1, fl2, fl3, fl4),
                           seedresp=seedresp, taper_fraction=0.1,
