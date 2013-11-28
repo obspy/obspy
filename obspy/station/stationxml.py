@@ -16,6 +16,7 @@ import os
 import warnings
 
 import obspy
+from obspy.station.util import Longitude, Latitude
 
 
 # Define some constants for writing StationXML files.
@@ -139,8 +140,7 @@ def _read_network(net_element, _ns):
 
 
 def _read_station(sta_element, _ns):
-    latitude = _tag2obj(sta_element, _ns("Latitude"), float)
-    longitude = _tag2obj(sta_element, _ns("Longitude"), float)
+    longitude, latitude = _read_lonlat(sta_element, _ns)
     elevation = _tag2obj(sta_element, _ns("Elevation"), float)
     station = obspy.station.Station(code=sta_element.get("code"),
                                     latitude=latitude, longitude=longitude,
@@ -170,9 +170,21 @@ def _read_station(sta_element, _ns):
     return station
 
 
+def _read_lonlat(parent, _ns):
+    lon_elem = parent.find(_ns("Longitude"))
+    lat_elem = parent.find(_ns("Latitude"))
+    lon = Longitude(_tag2obj(parent, _ns("Longitude"), float))
+    lat = Latitude(_tag2obj(parent, _ns("Latitude"), float))
+    for obj_, elem_ in zip((lon, lat), (lon_elem, lat_elem)):
+        obj_.unit = elem_.attrib.get("unit")
+        obj_.datum = elem_.attrib.get("datum")
+        obj_.lower_uncertainty = elem_.attrib.get("minusError")
+        obj_.upper_uncertainty = elem_.attrib.get("plusError")
+    return lon, lat
+
+
 def _read_channel(cha_element, _ns):
-    latitude = _tag2obj(cha_element, _ns("Latitude"), float)
-    longitude = _tag2obj(cha_element, _ns("Longitude"), float)
+    longitude, latitude = _read_lonlat(cha_element, _ns)
     elevation = _tag2obj(cha_element, _ns("Elevation"), float)
     depth = _tag2obj(cha_element, _ns("Depth"), float)
     code = cha_element.get("code")
@@ -622,14 +634,32 @@ def _write_network(parent, network):
         _write_station(network_elem, station)
 
 
+def _write_lonlat(parent, obj):
+    attribs = {}
+    attribs["datum"] = obj.latitude.datum
+    attribs["unit"] = obj.latitude.unit
+    attribs["plusError"] = obj.latitude.lower_uncertainty
+    attribs["minusError"] = obj.latitude.upper_uncertainty
+    attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
+    etree.SubElement(parent, "Latitude", attribs).text = \
+        str(obj.latitude.value)
+    attribs = {}
+    attribs["datum"] = obj.longitude.datum
+    attribs["unit"] = obj.longitude.unit
+    attribs["plusError"] = obj.longitude.lower_uncertainty
+    attribs["minusError"] = obj.longitude.upper_uncertainty
+    attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
+    etree.SubElement(parent, "Longitude", attribs).text = \
+        str(obj.longitude.value)
+
+
 def _write_station(parent, station):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
     _write_base_node(station_elem, station)
 
-    etree.SubElement(station_elem, "Latitude").text = str(station.latitude)
-    etree.SubElement(station_elem, "Longitude").text = str(station.longitude)
+    _write_lonlat(station_elem, station)
     etree.SubElement(station_elem, "Elevation").text = str(station.elevation)
 
     _write_site(station_elem, station.site)

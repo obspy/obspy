@@ -460,6 +460,63 @@ class Site(ComparingObject):
         return ret
 
 
+class FloatWithUncertainties(object):
+    """
+    """
+    value_minimum = float("-inf")
+    value_maximum = float("inf")
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+        """
+        """
+        self.value = value
+        self.lower_uncertainty = lower_uncertainty
+        self.upper_uncertainty = upper_uncertainty
+
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        value = float(value)
+        if not self.value_minimum <= value <= self.value_maximum:
+            raise ValueError()
+        self._value = value
+
+
+class Longitude(FloatWithUncertainties):
+    """
+    """
+    value_minimum = -180
+    value_maximum = 180
+
+    def __init__(self, value, unit=None, datum=None, lower_uncertainty=None,
+                 upper_uncertainty=None):
+        """
+        """
+        super(Longitude, self).__init__(value, lower_uncertainty,
+                                        upper_uncertainty)
+        self.unit = unit
+        self.datum = datum
+
+
+class Latitude(FloatWithUncertainties):
+    """
+    """
+    value_minimum = -90
+    value_maximum = 90
+
+    def __init__(self, value, unit=None, datum=None, lower_uncertainty=None,
+                 upper_uncertainty=None):
+        """
+        """
+        super(Latitude, self).__init__(value, lower_uncertainty,
+                                       upper_uncertainty)
+        self.unit = unit
+        self.datum = datum
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
