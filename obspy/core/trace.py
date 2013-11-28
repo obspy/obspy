@@ -1136,6 +1136,12 @@ class Trace(object):
         if paz_remove == 'self':
             paz_remove = self.stats.paz
 
+        if "seedresp" in kwargs:
+            seedresp = kwargs["seedresp"]
+            # Set the SEED identifiers!
+            for item in ["network", "station", "location", "channel"]:
+                seedresp[item] = self.stats[item]
+
         from obspy.signal import seisSim
         self.data = seisSim(self.data, self.stats.sampling_rate,
                 paz_remove=paz_remove, paz_simulate=paz_simulate,

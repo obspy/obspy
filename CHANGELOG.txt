@@ -1,7 +1,14 @@
 dev:
+-  general:
+   * Added mock testing library.
+ - obspy.core:
+   * bugfix: Trace.simulate() now passes the SEED network, station, location,
+     and channel identifiers to evalresp.
  - obspy.signal:
    * fix a bug when using evalresp with RESP files with very short epochs.
      see #631.
+   * seisSim(seedresp={...}): the seedresp dictionary now requires network,
+     station, location, and channel keys.
 
 0.8.4
  - bugfixes to make ObsPy work with the latest Python 2.x and NumPy releases

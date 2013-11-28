@@ -257,7 +257,9 @@ class InvSimTestCase(unittest.TestCase):
         tr = read(rawf)[0]
         trtest = read(evalrespf)[0]
         date = UTCDateTime(2003, 11, 1, 0, 0, 0)
-        seedresp = {'filename': respf, 'date': date, 'units': 'VEL'}
+        seedresp = {'filename': respf, 'date': date, 'units': 'VEL',
+                    'network': 'NZ', 'station': 'CRLZ', 'location': '10',
+                    'channel': 'HHZ'}
         tr.data = seisSim(tr.data, tr.stats.sampling_rate, paz_remove=None,
                           pre_filt=(fl1, fl2, fl3, fl4),
                           seedresp=seedresp, taper_fraction=0.1,
@@ -342,6 +344,34 @@ class InvSimTestCase(unittest.TestCase):
         _h, f = evalresp(*args, **kwargs)
         self.assertEquals(len(f), nfft // 2 + 1)
         os.unlink(tmpfile)
+
+    def test_evalresp_seed_identifiers_work(self):
+        """
+        Asserts that the network, station, location and channel identifiers can
+        be used to select difference responses.
+        """
+        kwargs = {"filename": os.path.join(self.path, "RESP.OB.AAA..BH_"),
+                  "t_samp": 0.1, "nfft": 1024, "units": "VEL",
+                  "date": UTCDateTime(2013, 1, 1), "network": "OP",
+                  "station": "AAA", "locid": "", "freq": False, "debug": False}
+
+        # Get the response for the first channel
+        kwargs["channel"] = "BHE"
+        response_1 = evalresp(**kwargs)
+
+        # Get the second one. Should be different.
+        kwargs["channel"] = "BHN"
+        response_2 = evalresp(**kwargs)
+
+        # The only thing that changed was the channel code. This should change
+        # the response.
+        rel_diff = np.abs(response_2 - response_1).ptp() / \
+            max(np.abs(response_1).ptp(), np.abs(response_2).ptp())
+        self.assertTrue(rel_diff > 1E-3)
+
+        # The RESP file only contains two channels.
+        kwargs["channel"] = "BHZ"
+        self.assertRaises(ValueError, evalresp, **kwargs)
 
 
 def suite():

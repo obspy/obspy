@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
+import mock
 import numpy as np
 from numpy.ma import is_masked
 from obspy import UTCDateTime, Trace, read
@@ -1116,6 +1117,33 @@ class TraceTestCase(unittest.TestCase):
         tr = Trace(data=np.arange(25))
         tr.stats.sampling_rate = 20
         tr.spectrogram(show=False)
+
+    def test_simulate_evalresp(self):
+        """
+        Tests that trace.simulate calls evalresp with the correct network,
+        station, location and channel information.
+        """
+        tr = read()[0]
+
+        # Wrap in try/except as it of course will fail because the mocked
+        # function returns None.
+        try:
+            with mock.patch("obspy.signal.invsim.evalresp") as patch:
+                tr.simulate(seedresp={"filename": "RESP.dummy",
+                                      "units": "VEL",
+                                      "date": tr.stats.starttime})
+        except:
+            pass
+
+        self.assertEqual(patch.call_count, 1)
+        _, kwargs = patch.call_args
+
+        # Make sure that every item of the trace is passed to the evalresp
+        # function.
+        for key in ["network", "station", "location", "channel"]:
+            self.assertEqual(
+                kwargs[key if key != "location" else "locid"], tr.stats[key],
+                msg="'%s' did not get passed on to evalresp" % key)
 
 
 def suite():
