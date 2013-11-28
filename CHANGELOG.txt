@@ -1,5 +1,5 @@
 dev:
--  general:
+ -  general:
    * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
@@ -79,7 +79,7 @@ dev:
      object with RESP information or an obspy.xseed.Parser object
      (e.g. created reading a dataless SEED file).
    * seisSim(seedresp={...}): the seedresp dictionary now required network,
-	 station, location, and channel keys.
+     station, location, and channel keys.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose

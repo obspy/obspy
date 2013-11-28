@@ -14,7 +14,7 @@ before_install:
   - pip install --upgrade setuptools
   - pip install wheel
   - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
-  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; pip install mock; fi
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
