@@ -1130,7 +1130,8 @@ class TraceTestCase(unittest.TestCase):
         try:
             with mock.patch("obspy.signal.invsim.evalresp") as patch:
                 tr.simulate(seedresp={"filename": "RESP.dummy",
-                                      "units": "VEL"})
+                                      "units": "VEL",
+                                      "date": tr.stats.starttime})
         except:
             pass
 
