@@ -259,6 +259,84 @@ class Enum(object):
         return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
 
 
+class FloatWithUncertainties(float):
+    """
+    Helper class to inherit from and which stores a float with a given valid
+    range, upper/lower uncertainties and eventual additional attributes.
+    """
+    _minimum = float("-inf")
+    _maximum = float("inf")
+
+    def __new__(cls, value, **kwargs):
+        if not cls._minimum <= float(value) <= cls._maximum:
+            msg = "value %s out of bounds (%s, %s)"
+            msg = msg % (value, cls._minimum, cls._maximum)
+            raise ValueError(msg)
+        return super(FloatWithUncertainties, cls).__new__(cls, value)
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+        self.lower_uncertainty = lower_uncertainty
+        self.upper_uncertainty = upper_uncertainty
+
+    @property
+    def unit(self):
+        return self._unit
+
+    def __add__(self, other):
+        return self.__class__(float(self) + other, **self.__dict__)
+
+    def __iadd__(self, other):
+        self = self.__class__(float(self) + other, **self.__dict__)
+
+    def __mul__(self, other):
+        return self.__class__(float(self) * other, **self.__dict__)
+
+    def __imul__(self, other):
+        self = self.__class__(float(self) * other, **self.__dict__)
+
+
+class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
+    """
+    Helper class to inherit from, set fixed unit in derived class as class
+    attribute.
+    """
+    _unit = ""
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+        super(FloatWithUncertaintiesFixedUnit, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        msg = "Unit is fixed for this object class."
+        raise ValueError(msg)
+
+
+class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
+    """
+    Helper class to inherit from.
+    """
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 unit=None):
+        super(FloatWithUncertaintiesAndUnit, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+        self._unit = unit
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        self._unit = value
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
