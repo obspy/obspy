@@ -720,6 +720,7 @@ class Response(ComparingObject):
                         raise ValueError(msg)
                 else:
                     blkt = ew.blkt()
+                    blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                     decimation_blkt = blkt.blkt_info.decimation
                     decimation_blkt.sample_int = \
                         blockette.decimation_input_sample_rate
@@ -732,6 +733,7 @@ class Response(ComparingObject):
 
                 # Always add the gain.
                 blkt = ew.blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
                 gain_blkt = blkt.blkt_info.gain
                 gain_blkt.gain = blockette.stage_gain_value
                 gain_blkt.gain_freq = blockette.stage_gain_frequency
