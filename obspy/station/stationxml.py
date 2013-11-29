@@ -16,6 +16,8 @@ import os
 import warnings
 
 import obspy
+from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
+    ClockDrift, SampleRate
 
 
 # Define some constants for writing StationXML files.
@@ -139,9 +141,12 @@ def _read_network(net_element, _ns):
 
 
 def _read_station(sta_element, _ns):
-    latitude = _tag2obj(sta_element, _ns("Latitude"), float)
-    longitude = _tag2obj(sta_element, _ns("Longitude"), float)
-    elevation = _tag2obj(sta_element, _ns("Elevation"), float)
+    longitude = _read_floattype(sta_element, _ns("Longitude"), Longitude,
+                                datum=True)
+    latitude = _read_floattype(sta_element, _ns("Latitude"), Latitude,
+                               datum=True)
+    elevation = _read_floattype(sta_element, _ns("Elevation"), Distance,
+                                unit=True)
     station = obspy.station.Station(code=sta_element.get("code"),
                                     latitude=latitude, longitude=longitude,
                                     elevation=elevation)
@@ -170,19 +175,34 @@ def _read_station(sta_element, _ns):
     return station
 
 
+def _read_floattype(parent, tag, cls, unit=False, datum=False):
+    elem = parent.find(tag)
+    obj = cls(_tag2obj(parent, tag, float))
+    if unit:
+        obj.unit = elem.attrib.get("unit")
+    if datum:
+        obj.datum = elem.attrib.get("datum")
+    obj.lower_uncertainty = elem.attrib.get("minusError")
+    obj.upper_uncertainty = elem.attrib.get("plusError")
+    return obj
+
+
 def _read_channel(cha_element, _ns):
-    latitude = _tag2obj(cha_element, _ns("Latitude"), float)
-    longitude = _tag2obj(cha_element, _ns("Longitude"), float)
-    elevation = _tag2obj(cha_element, _ns("Elevation"), float)
-    depth = _tag2obj(cha_element, _ns("Depth"), float)
+    longitude = _read_floattype(cha_element, _ns("Longitude"), Longitude,
+                                datum=True)
+    latitude = _read_floattype(cha_element, _ns("Latitude"), Latitude,
+                               datum=True)
+    elevation = _read_floattype(cha_element, _ns("Elevation"), Distance,
+                                unit=True)
+    depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
     channel = obspy.station.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
-    channel.azimuth = _tag2obj(cha_element, _ns("Azimuth"), float)
-    channel.dip = _tag2obj(cha_element, _ns("Dip"), float)
+    channel.azimuth = _read_floattype(cha_element, _ns("Azimuth"), Azimuth)
+    channel.dip = _read_floattype(cha_element, _ns("Dip"), Dip)
     # Add all types.
     for type_element in cha_element.findall(_ns("Type")):
         channel.types.append(type_element.text)
@@ -190,9 +210,10 @@ def _read_channel(cha_element, _ns):
     channel.external_references = \
         [_read_external_reference(ext_ref, _ns)
          for ext_ref in cha_element.findall(_ns("ExternalReference"))]
-    channel.sample_rate = _tag2obj(cha_element, _ns("SampleRate"), float)
+    channel.sample_rate = _read_floattype(cha_element, _ns("SampleRate"),
+                                          SampleRate)
     # Parse the optional sample rate ratio.
-    sample_rate_ratio = cha_element.find(_ns("SampleRateRation"))
+    sample_rate_ratio = cha_element.find(_ns("SampleRateRatio"))
     if sample_rate_ratio:
         channel.sample_rate_ratio_number_samples = \
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
@@ -203,7 +224,13 @@ def _read_channel(cha_element, _ns):
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
-        _tag2obj(cha_element, _ns("ClockDrift"), float)
+        _read_floattype(cha_element, _ns("ClockDrift"), ClockDrift)
+    # The sensor.
+    calibunits = cha_element.find(_ns("CalibrationUnits"))
+    if calibunits is not None:
+        channel.calibration_unit = _tag2obj(calibunits, _ns("Name"), unicode)
+        channel.calibration_unit_description = \
+            _tag2obj(calibunits, _ns("Description"), unicode)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
     if sensor is not None:
@@ -622,15 +649,27 @@ def _write_network(parent, network):
         _write_station(network_elem, station)
 
 
+def _write_floattype(parent, obj, attr_name, tag):
+    attribs = {}
+    obj_ = getattr(obj, attr_name)
+    attribs["datum"] = obj_.__dict__.get("datum")
+    attribs["unit"] = obj_.unit
+    attribs["minusError"] = obj_.lower_uncertainty
+    attribs["plusError"] = obj_.upper_uncertainty
+    attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
+    etree.SubElement(parent, tag, attribs).text = \
+        ("%20f" % obj_).rstrip("0").lstrip()
+
+
 def _write_station(parent, station):
     # Write the base node type fields.
     attribs = _get_base_node_attributes(station)
     station_elem = etree.SubElement(parent, "Station", attribs)
     _write_base_node(station_elem, station)
 
-    etree.SubElement(station_elem, "Latitude").text = str(station.latitude)
-    etree.SubElement(station_elem, "Longitude").text = str(station.longitude)
-    etree.SubElement(station_elem, "Elevation").text = str(station.elevation)
+    _write_floattype(station_elem, station, "latitude", "Latitude")
+    _write_floattype(station_elem, station, "longitude", "Longitude")
+    _write_floattype(station_elem, station, "elevation", "Elevation")
 
     _write_site(station_elem, station.site)
 
@@ -663,6 +702,57 @@ def _write_station(parent, station):
     for ref in station.external_references:
         _write_external_reference(station_elem, ref)
 
+    for channel in station.channels:
+        _write_channel(station_elem, channel)
+
+
+def _write_channel(parent, channel):
+    # Write the base node type fields.
+    attribs = _get_base_node_attributes(channel)
+    attribs['locationCode'] = channel.location_code
+    channel_elem = etree.SubElement(parent, "Channel", attribs)
+    _write_base_node(channel_elem, channel)
+
+    for ref in channel.external_references:
+        _write_external_reference(channel_elem, ref)
+
+    _write_floattype(channel_elem, channel, "latitude", "Latitude")
+    _write_floattype(channel_elem, channel, "longitude", "Longitude")
+    _write_floattype(channel_elem, channel, "elevation", "Elevation")
+    _write_floattype(channel_elem, channel, "depth", "Depth")
+
+    # Optional tags.
+    _write_floattype(channel_elem, channel, "azimuth", "Azimuth")
+    _write_floattype(channel_elem, channel, "dip", "Dip")
+
+    for type_ in channel.types:
+        etree.SubElement(channel_elem, "Type").text = type_
+
+    _write_floattype(channel_elem, channel, "sample_rate", "SampleRate")
+    if channel.sample_rate_ratio_number_samples and \
+            channel.sample_rate_ratio_number_seconds:
+        srr = etree.SubElement(channel_elem, "SampleRateRatio")
+        etree.SubElement(srr, "NumberSamples").text = \
+            str(channel.sample_rate_ratio_number_samples)
+        etree.SubElement(srr, "NumberSeconds").text = \
+            str(channel.sample_rate_ratio_number_seconds)
+
+    _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
+    _write_floattype(channel_elem, channel,
+                     "clock_drift_in_seconds_per_sample", "ClockDrift")
+
+    if channel.calibration_unit:
+        cu = etree.SubElement(channel_elem, "CalibrationUnits")
+        etree.SubElement(cu, "Name").text = \
+            str(channel.calibration_unit)
+        if channel.calibration_unit_description:
+            etree.SubElement(cu, "Description").text = \
+                str(channel.calibration_unit_description)
+    _write_equipment(channel_elem, channel.sensor, "Sensor")
+    _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
+    _write_equipment(channel_elem, channel.data_logger, "DataLogger")
+    _write_equipment(channel_elem, channel.equipment, "Equipment")
+
 
 def _write_external_reference(parent, ref):
     ref_elem = etree.SubElement(parent, "ExternalReference")
@@ -670,12 +760,12 @@ def _write_external_reference(parent, ref):
     etree.SubElement(ref_elem, "Description").text = ref.description
 
 
-def _write_equipment(parent, equipment):
+def _write_equipment(parent, equipment, tag="Equipment"):
     if equipment.resource_id is None:
         attr = {}
     else:
         attr = {"resourceId": equipment.resource_id}
-    equipment_elem = etree.SubElement(parent, "Equipment", attr)
+    equipment_elem = etree.SubElement(parent, tag, attr)
 
     # All tags are optional.
     _obj2tag(equipment_elem, "Type", equipment.type)

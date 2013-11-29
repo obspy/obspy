@@ -11,6 +11,8 @@ Utility objects.
 """
 from obspy import UTCDateTime
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
+    FloatWithUncertaintiesFixedUnit
 import re
 
 
@@ -458,6 +460,142 @@ class Site(ComparingObject):
             town=self.town, county=self.county, region=self.region,
             country=self.country)
         return ret
+
+
+class Latitude(FloatWithUncertaintiesFixedUnit):
+    """
+    Latitude object
+
+    :type value: float
+    :param value: Latitude value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type datum: str
+    :param datum: Datum for latitude coordinate
+    """
+    _minimum = -180
+    _maximum = 180
+    _unit = "DEGREES"
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 datum=None):
+        """
+        """
+        self.datum = datum
+        super(Latitude, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+
+
+class Longitude(FloatWithUncertaintiesFixedUnit):
+    """
+    Longitude object
+
+    :type value: float
+    :param value: Longitude value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type datum: str
+    :param datum: Datum for longitude coordinate
+    """
+    _minimum = -180
+    _maximum = 180
+    unit = "DEGREES"
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 datum=None):
+        """
+        """
+        self.datum = datum
+        super(Longitude, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+
+
+class Distance(FloatWithUncertaintiesAndUnit):
+    """
+    Distance object
+
+    :type value: float
+    :param value: Distance value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type unit: str
+    :param unit: Unit for distance measure.
+    """
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 unit="METERS"):
+        super(Distance, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+        self._unit = unit
+
+
+class Azimuth(FloatWithUncertaintiesFixedUnit):
+    """
+    Azimuth object
+
+    :type value: float
+    :param value: Azimuth value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    _minimum = 0
+    _maximum = 360
+    unit = "DEGREES"
+
+
+class Dip(FloatWithUncertaintiesFixedUnit):
+    """
+    Dip object
+
+    :type value: float
+    :param value: Dip value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    _minimum = -90
+    _maximum = 90
+    unit = "DEGREES"
+
+
+class ClockDrift(FloatWithUncertaintiesFixedUnit):
+    """
+    ClockDrift object
+
+    :type value: float
+    :param value: ClockDrift value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    _minimum = 0
+    unit = "SECONDS/SAMPLE"
+
+
+class SampleRate(FloatWithUncertaintiesFixedUnit):
+    """
+    SampleRate object
+
+    :type value: float
+    :param value: ClockDrift value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    unit = "SAMPLES/S"
 
 
 if __name__ == '__main__':

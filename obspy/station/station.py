@@ -11,6 +11,7 @@ Provides the Station class.
 """
 from obspy import UTCDateTime
 from obspy.station import BaseNode, Equipment, Operator
+from obspy.station.util import Longitude, Latitude
 import textwrap
 
 
@@ -32,7 +33,9 @@ class Station(BaseNode):
         """
         :type channels: A list of :class:`obspy.station.channel.Channel`
         :param channels: All channels belonging to this station.
+        :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: The latitude of the station
+        :type longitude: :class:`~obspy.station.util.Longitude`
         :param longitude: The longitude of the station
         :param elevation: The elevation of the station in meter.
         :param site: These fields describe the location of the station using
@@ -228,6 +231,28 @@ class Station(BaseNode):
             msg = "external_references needs to be iterable, e.g. a list."
             raise ValueError(msg)
         self._external_references = value
+
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, value):
+        if isinstance(value, Longitude):
+            self._longitude = value
+        else:
+            self._longitude = Longitude(value)
+
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, value):
+        if isinstance(value, Latitude):
+            self._latitude = value
+        else:
+            self._latitude = Latitude(value)
 
 
 if __name__ == '__main__':

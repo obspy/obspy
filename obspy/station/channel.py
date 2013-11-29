@@ -10,6 +10,7 @@ Provides the Channel class.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.station import BaseNode
+from obspy.station.util import Longitude, Latitude
 
 
 class Channel(BaseNode):
@@ -35,9 +36,9 @@ class Channel(BaseNode):
         :param code: The SEED channel code for this channel
         :type location_code: String
         :param location_code: The SEED location code for this channel
-        :type latitude: float
+        :type latitude: :class:`~obspy.station.util.Latitude`
         :param latitude: Latitude coordinate of this channel's sensor.
-        :type longitude: float
+        :type longitude: :class:`~obspy.station.util.Longitude`
         :param longitude: Longitude coordinate of this channel's sensor.
         :type elevation: float
         :param elevation: Elevation of the sensor.
@@ -172,6 +173,28 @@ class Channel(BaseNode):
                 response="\tResponse information available"
                     if self.response else "")
         return ret
+
+    @property
+    def longitude(self):
+        return self._longitude
+
+    @longitude.setter
+    def longitude(self, value):
+        if isinstance(value, Longitude):
+            self._longitude = value
+        else:
+            self._longitude = Longitude(value)
+
+    @property
+    def latitude(self):
+        return self._latitude
+
+    @latitude.setter
+    def latitude(self, value):
+        if isinstance(value, Latitude):
+            self._latitude = value
+        else:
+            self._latitude = Latitude(value)
 
 
 if __name__ == '__main__':
