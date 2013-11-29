@@ -624,10 +624,51 @@ class Response(ComparingObject):
         from collections import defaultdict
         from obspy.signal.headers import clibevresp
 
+        # Whacky. Evalresp uses a global variable and uses that to scale the
+        # response if it encounters any unit that is not SI.
+        scale_factor = [1.0]
+
+        def get_unit_mapping(key):
+            units_mapping = {
+                "M": ew.ENUM_UNITS["DIS"],
+                "NM": ew.ENUM_UNITS["DIS"],
+                "CM": ew.ENUM_UNITS["DIS"],
+                "MM": ew.ENUM_UNITS["DIS"],
+                "M/S*2": ew.ENUM_UNITS["VEL"],
+                "NM/S*2": ew.ENUM_UNITS["VEL"],
+                "CM/S*2": ew.ENUM_UNITS["VEL"],
+                "MM/S*2": ew.ENUM_UNITS["VEL"],
+                "M/S**2": ew.ENUM_UNITS["ACC"],
+                "NM/S**2": ew.ENUM_UNITS["ACC"],
+                "CM/S**2": ew.ENUM_UNITS["ACC"],
+                "MM/S**2": ew.ENUM_UNITS["ACC"],
+                "V": ew.ENUM_UNITS["VOLTS"],
+                "COUNTS": ew.ENUM_UNITS["COUNTS"],
+                "PA": ew.ENUM_UNITS["PRESSURE"]}
+            if key not in units_mapping:
+                value = ew.ENUM_UNITS["UNDEF_UNITS"]
+            else:
+                value = units_mapping[key]
+
+            # Scale factor with the same logic as evalresp.
+            if key in ["CM/S**2", "CM/S*2"]:
+                scale_factor[0] = 1.0E2
+            elif key in ["MM/S**2", "MM/S*2"]:
+                scale_factor[0] = 1.0E3
+            elif key in ["NM/S**2", "NM/S*2"]:
+                scale_factor[0] = 1.0E9
+
+            return value
+
         all_stages = defaultdict(list)
 
         for stage in self.response_stages:
             all_stages[stage.stage_sequence_number].append(stage)
+
+        stage_lengths = set(map(len, all_stages.values()))
+        if len(stage_lengths) != 1 or stage_lengths.pop() != 1:
+            msg = "Each stage can only appear once."
+            raise ValueError(msg)
 
         stage_list = sorted(all_stages.keys())
 
@@ -641,103 +682,105 @@ class Response(ComparingObject):
 
             stage_blkts = []
 
-            for blockette in all_stages[stage_number]:
-                blkt = ew.blkt()
+            blkt = ew.blkt()
 
-                if isinstance(blockette, PolesZerosResponseStage):
-                    # Map the transfer function type.
-                    transfer_fct_mapping = {
-                        "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
-                        "LAPLACE (HERTZ)": "ANALOG_PZ",
-                        "DIGITAL (Z-TRANSFORM)": "IIR_PZ"}
-                    blkt.type = ew.ENUM_FILT_TYPES[transfer_fct_mapping[
-                        blockette.pz_transfer_function_type]]
+            blockette = all_stages[stage_number][0]
 
-                    # The blockette is a pole zero blockette.
-                    pz = blkt.blkt_info.pole_zero
+            # Write the input and output units.
+            if isinstance(blockette, PolesZerosResponseStage):
+                # Map the transfer function type.
+                transfer_fct_mapping = {
+                    "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
+                    "LAPLACE (HERTZ)": "ANALOG_PZ",
+                    "DIGITAL (Z-TRANSFORM)": "IIR_PZ"}
+                blkt.type = ew.ENUM_FILT_TYPES[transfer_fct_mapping[
+                    blockette.pz_transfer_function_type]]
 
-                    pz.nzeros = len(blockette.zeros)
-                    pz.npoles = len(blockette.poles)
-                    pz.a0 = blockette.normalization_factor
-                    pz.a0_freq = blockette.normalization_frequency
+                # The blockette is a pole zero blockette.
+                pz = blkt.blkt_info.pole_zero
 
-                    # XXX: Find a better way to do this.
-                    poles = (ew.complex_number * len(blockette.poles))()
-                    for i, value in enumerate(blockette.poles):
-                        poles[i].real = value.real
-                        poles[i].imag = value.imag
+                pz.nzeros = len(blockette.zeros)
+                pz.npoles = len(blockette.poles)
+                pz.a0 = blockette.normalization_factor
+                pz.a0_freq = blockette.normalization_frequency
 
-                    zeros = (ew.complex_number * len(blockette.zeros))()
-                    for i, value in enumerate(blockette.zeros):
-                        zeros[i].real = value.real
-                        zeros[i].imag = value.imag
+                # XXX: Find a better way to do this.
+                poles = (ew.complex_number * len(blockette.poles))()
+                for i, value in enumerate(blockette.poles):
+                    poles[i].real = value.real
+                    poles[i].imag = value.imag
 
-                    pz.poles = C.cast(C.pointer(poles),
-                                      C.POINTER(ew.complex_number))
-                    pz.zeros = C.cast(C.pointer(zeros),
-                                      C.POINTER(ew.complex_number))
-                elif isinstance(blockette, CoefficientsTypeResponseStage):
-                    # This type can have either an FIR or an IIR response. If
-                    # the number of denominators is 0, it is a FIR. Otherwise
-                    # an IIR.
+                zeros = (ew.complex_number * len(blockette.zeros))()
+                for i, value in enumerate(blockette.zeros):
+                    zeros[i].real = value.real
+                    zeros[i].imag = value.imag
 
-                    # FIR
-                    if len(blockette.denominator) == 0:
-                        if blockette.cf_transfer_function_type.lower() \
-                                != "digital":
-                            msg = ("When no denominators are given it must "
-                                   "be a digital FIR filter.")
-                            raise ValueError(msg)
-                        # Set the type to an assymetric FIR blockette.
-                        blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
-                        fir = blkt.blkt_info.fir
-                        fir.ncoeffs = len(blockette.numerator)
-                        # XXX: Find a better way to do this.
-                        coeffs = (C.c_double * len(blockette.numerator))()
-                        for i, value in enumerate(blockette.numerator):
-                            coeffs[i] = float(value)
-                        fir.coeffs = C.cast(C.pointer(coeffs),
-                                            C.POINTER(C.c_double))
-                    # IIR
-                    else:
-                        raise NotImplementedError
-                else:
-                    msg = "Type: %s." % str(type(blockette))
-                    raise NotImplementedError(msg)
+                pz.poles = C.cast(C.pointer(poles),
+                                  C.POINTER(ew.complex_number))
+                pz.zeros = C.cast(C.pointer(zeros),
+                                  C.POINTER(ew.complex_number))
+            elif isinstance(blockette, CoefficientsTypeResponseStage):
+                # This type can have either an FIR or an IIR response. If
+                # the number of denominators is 0, it is a FIR. Otherwise
+                # an IIR.
 
-                stage_blkts.append(blkt)
-
-                # Parse the decimation if is given.
-                decimation_values = set([
-                    blockette.decimation_correction,
-                    blockette.decimation_delay, blockette.decimation_factor,
-                    blockette.decimation_input_sample_rate,
-                    blockette.decimation_offset])
-                if None in decimation_values:
-                    if len(decimation_values) != 1:
-                        msg = ("If a decimation is given, all values must "
-                               "be specified.")
+                # FIR
+                if len(blockette.denominator) == 0:
+                    if blockette.cf_transfer_function_type.lower() \
+                            != "digital":
+                        msg = ("When no denominators are given it must "
+                               "be a digital FIR filter.")
                         raise ValueError(msg)
+                    # Set the type to an assymetric FIR blockette.
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                    fir = blkt.blkt_info.fir
+                    fir.ncoeffs = len(blockette.numerator)
+                    # XXX: Find a better way to do this.
+                    coeffs = (C.c_double * len(blockette.numerator))()
+                    for i, value in enumerate(blockette.numerator):
+                        coeffs[i] = float(value)
+                    fir.coeffs = C.cast(C.pointer(coeffs),
+                                        C.POINTER(C.c_double))
+                # IIR
                 else:
-                    blkt = ew.blkt()
-                    blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
-                    decimation_blkt = blkt.blkt_info.decimation
-                    decimation_blkt.sample_int = \
-                        blockette.decimation_input_sample_rate
-                    decimation_blkt.deci_fact = blockette.decimation_factor
-                    decimation_blkt.deci_offset = blockette.decimation_offset
-                    decimation_blkt.estim_delay = blockette.decimation_delay
-                    decimation_blkt.applied_corr = \
-                        blockette.decimation_correction
-                    stage_blkts.append(blkt)
+                    raise NotImplementedError
+            else:
+                msg = "Type: %s." % str(type(blockette))
+                raise NotImplementedError(msg)
 
-                # Always add the gain.
+            stage_blkts.append(blkt)
+
+            # Parse the decimation if is given.
+            decimation_values = set([
+                blockette.decimation_correction,
+                blockette.decimation_delay, blockette.decimation_factor,
+                blockette.decimation_input_sample_rate,
+                blockette.decimation_offset])
+            if None in decimation_values:
+                if len(decimation_values) != 1:
+                    msg = ("If a decimation is given, all values must "
+                           "be specified.")
+                    raise ValueError(msg)
+            else:
                 blkt = ew.blkt()
-                blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
-                gain_blkt = blkt.blkt_info.gain
-                gain_blkt.gain = blockette.stage_gain_value
-                gain_blkt.gain_freq = blockette.stage_gain_frequency
+                blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
+                decimation_blkt = blkt.blkt_info.decimation
+                decimation_blkt.sample_int = \
+                    blockette.decimation_input_sample_rate
+                decimation_blkt.deci_fact = blockette.decimation_factor
+                decimation_blkt.deci_offset = blockette.decimation_offset
+                decimation_blkt.estim_delay = blockette.decimation_delay
+                decimation_blkt.applied_corr = \
+                    blockette.decimation_correction
                 stage_blkts.append(blkt)
+
+            # Always add the gain.
+            blkt = ew.blkt()
+            blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+            gain_blkt = blkt.blkt_info.gain
+            gain_blkt.gain = blockette.stage_gain_value
+            gain_blkt.gain_freq = blockette.stage_gain_frequency
+            stage_blkts.append(blkt)
 
             if not stage_blkts:
                 msg = "At least one blockette is needed for the stage."
@@ -771,10 +814,11 @@ class Response(ComparingObject):
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
         output = np.empty(len(freqs), dtype="complex128")
+        output *= scale_factor[0]
         out_units = C.c_char_p("VEL")
 
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
-                             out_units, 1, 0, 1)
+                             out_units, -1, 0, 1)
 
         return output, freqs
 
