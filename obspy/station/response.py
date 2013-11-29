@@ -677,8 +677,6 @@ class Response(ComparingObject):
         for stage_number in stage_list:
             st = ew.stage()
             st.sequence_no = stage_number
-            st.input_units = 0
-            st.output_units = 0
 
             stage_blkts = []
 
@@ -687,6 +685,9 @@ class Response(ComparingObject):
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
+            st.input_units = get_unit_mapping(blockette.input_units_name)
+            st.output_units = get_unit_mapping(blockette.output_units_name)
+
             if isinstance(blockette, PolesZerosResponseStage):
                 # Map the transfer function type.
                 transfer_fct_mapping = {
