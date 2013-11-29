@@ -76,6 +76,9 @@ class coeffType(C.Structure):
 
 class firType(C.Structure):
     _fields_ = [
+        ("ncoeffs", C.c_int),
+        ("coeffs", C.POINTER(C.c_double)),
+        ("h0", C.c_double)
     ]
 
 
@@ -106,7 +109,8 @@ class referType(C.Structure):
 
 class blkt_info_union(C.Union):
     _fields_ = [
-        ("pole_zero", pole_zeroType)
+        ("pole_zero", pole_zeroType),
+        ("fir", firType)
     ]
 
 

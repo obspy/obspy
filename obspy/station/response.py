@@ -676,8 +676,34 @@ class Response(ComparingObject):
                                       C.POINTER(ew.complex_number))
                     pz.zeros = C.cast(C.pointer(zeros),
                                       C.POINTER(ew.complex_number))
+                elif isinstance(blockette, CoefficientsTypeResponseStage):
+                    # This type can have either an FIR or an IIR response. If
+                    # the number of denominators is 0, it is a FIR. Otherwise
+                    # an IIR.
+
+                    # FIR
+                    if len(blockette.denominator) == 0:
+                        if blockette.cf_transfer_function_type.lower() \
+                                != "digital":
+                            msg = ("When no denominators are given it must "
+                                   "be a digital FIR filter.")
+                            raise ValueError(msg)
+                        # Set the type to an assymetric FIR blockette.
+                        blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                        fir = blkt.blkt_info.fir
+                        fir.ncoeffs = len(blockette.numerator)
+                        # XXX: Find a better way to do this.
+                        coeffs = (C.c_double * len(blockette.numerator))()
+                        for i, value in enumerate(blockette.numerator):
+                            coeffs[i] = float(value)
+                        fir.coeffs = C.cast(C.pointer(coeffs),
+                                            C.POINTER(C.c_double))
+                    # IIR
+                    else:
+                        raise NotImplementedError
                 else:
-                    raise NotImplementedError
+                    msg = "Type: %s." % str(type(blockette))
+                    raise NotImplementedError(msg)
                 stage_blkts.append(blkt)
 
             print stage_blkts
