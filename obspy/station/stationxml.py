@@ -638,16 +638,16 @@ def _write_lonlat(parent, obj):
     attribs = {}
     attribs["datum"] = obj.latitude.datum
     attribs["unit"] = obj.latitude.unit
-    attribs["plusError"] = obj.latitude.lower_uncertainty
-    attribs["minusError"] = obj.latitude.upper_uncertainty
+    attribs["plusError"] = obj.latitude.upper_uncertainty
+    attribs["minusError"] = obj.latitude.lower_uncertainty
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
     etree.SubElement(parent, "Latitude", attribs).text = \
         str(obj.latitude)
     attribs = {}
     attribs["datum"] = obj.longitude.datum
     attribs["unit"] = obj.longitude.unit
-    attribs["plusError"] = obj.longitude.lower_uncertainty
-    attribs["minusError"] = obj.longitude.upper_uncertainty
+    attribs["minusError"] = obj.longitude.lower_uncertainty
+    attribs["plusError"] = obj.longitude.upper_uncertainty
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
     etree.SubElement(parent, "Longitude", attribs).text = \
         str(obj.longitude)

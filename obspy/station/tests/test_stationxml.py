@@ -15,6 +15,7 @@ import inspect
 from itertools import izip
 import os
 import unittest
+import re
 
 import obspy
 import obspy.station
@@ -44,12 +45,16 @@ class StationXMLTestCase(unittest.TestCase):
                      if not _i.strip().startswith("<Module")]
 
         for new_line, org_line in izip(new_lines, org_lines):
-            try:
-                self.assertEqual(org_line, new_line)
-            except:
-                # Attributes have no fixed order but should all exists.
-                self.assertEqual(sorted(org_line[1:-1].split()),
-                                 sorted(new_line[1:-1].split()))
+            regex = "<(.*?) (.*?)>"
+
+            def callback(pattern):
+                part2 = " ".join(sorted(pattern.group(2).split(" ")))
+                return "<%s %s>" % (pattern.group(1), part2)
+
+            # resort attributes alphabetically
+            org_line = re.sub(regex, callback, org_line, count=1)
+            new_line = re.sub(regex, callback, new_line, count=1)
+            self.assertEqual(org_line, new_line)
 
         # Assert the line length at the end to find trailing non-equal lines.
         # If it is done before the line comparision it is oftentimes not very
