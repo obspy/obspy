@@ -568,10 +568,10 @@ class StationXMLTestCase(unittest.TestCase):
         sensitivity = response.instrument_sensitivity
         self.assertEqual(sensitivity.value, 3.31283E10)
         self.assertEqual(sensitivity.frequency, 0.02)
-        self.assertEqual(sensitivity.input_units_name, "M/S")
+        self.assertEqual(sensitivity.input_units, "M/S")
         self.assertEqual(sensitivity.input_units_description,
                          "Velocity in Meters Per Second")
-        self.assertEqual(sensitivity.output_units_name, "COUNTS")
+        self.assertEqual(sensitivity.output_units, "COUNTS")
         self.assertEqual(sensitivity.output_units_description,
                          "Digital Counts")
         # Assert that there are three stages.

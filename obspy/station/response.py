@@ -19,7 +19,7 @@ class ResponseStage(ComparingObject):
         blockettes 53 to 56.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
@@ -40,13 +40,13 @@ class ResponseStage(ComparingObject):
             ranges. This complex type can be used to represent both overall
             sensitivities and individual stage gains. The frequency (in Hertz)
             at which the Value is valid.
-        :param input_units_name: string
-        :param input_units_name: The units of the data as input from the
+        :param input_units: string
+        :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param output_units_name: string
-        :param output_units_name: The units of the data as output from the
+        :param output_units: string
+        :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
@@ -97,8 +97,8 @@ class ResponseStage(ComparingObject):
             should be specified in the InstrumentSensitivity element.
         """
         self.stage_sequence_number = stage_sequence_number
-        self.input_units_name = input_units_name
-        self.output_units_name = output_units_name
+        self.input_units = input_units
+        self.output_units = output_units
         self.input_units_description = input_units_description
         self.output_units_description = output_units_description
         self.resource_id = resource_id
@@ -128,10 +128,10 @@ class ResponseStage(ComparingObject):
                 if self.description else "") if self.name else "",
             resource_id="\tResource Id: %s" % self.resource_id
             if self.resource_id else "",
-            input_units=self.input_units_name,
+            input_units=self.input_units,
             input_desc=" (%s)" % self.input_units_description
             if self.input_units_description else "",
-            output_units=self.output_units_name,
+            output_units=self.output_units,
             output_desc=" (%s)" % self.output_units_description
             if self.output_units_description else "",
             gain_value=self.stage_gain_value,
@@ -176,7 +176,7 @@ class PolesZerosResponseStage(ResponseStage):
     :param normalization_factor:
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, pz_transfer_function_type,
                  normalization_frequency, zeros, poles,
                  normalization_factor=1.0, input_units_description=None,
@@ -193,8 +193,8 @@ class PolesZerosResponseStage(ResponseStage):
         self.poles = poles
         super(PolesZerosResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
-            input_units_name=input_units_name,
-            output_units_name=output_units_name,
+            input_units=input_units,
+            output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
             resource_id=resource_id, stage_gain_value=stage_gain_value,
@@ -292,7 +292,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :param denominator:
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, cf_transfer_function_type, numerator=None,
                  denominator=None, input_units_description=None,
                  output_units_description=None, description=None,
@@ -306,8 +306,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
         self.denominator = denominator
         super(CoefficientsTypeResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
-            input_units_name=input_units_name,
-            output_units_name=output_units_name,
+            input_units=input_units,
+            output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
             resource_id=resource_id, stage_gain_value=stage_gain_value,
@@ -396,7 +396,7 @@ class ResponseListResponseStage(ResponseStage):
         amplitude and phase response values.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, response_list_elements=None,
                  input_units_description=None, output_units_description=None,
                  description=None, decimation_input_sample_rate=None,
@@ -405,8 +405,8 @@ class ResponseListResponseStage(ResponseStage):
         self.response_list_elements = response_list_elements or []
         super(ResponseListResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
-            input_units_name=input_units_name,
-            output_units_name=output_units_name,
+            input_units=input_units,
+            output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
             resource_id=resource_id, stage_gain_value=stage_gain_value,
@@ -468,7 +468,7 @@ class FIRResponseStage(ResponseStage):
     :param numerator_coefficients: List of numerator coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, symmetry="NONE",
                  numerator_coefficients=None, input_units_description=None,
                  output_units_description=None, description=None,
@@ -479,8 +479,8 @@ class FIRResponseStage(ResponseStage):
         self.numerator_coefficients = numerator_coefficients or []
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
-            input_units_name=input_units_name,
-            output_units_name=output_units_name,
+            input_units=input_units,
+            output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
             resource_id=resource_id, stage_gain_value=stage_gain_value,
@@ -535,7 +535,7 @@ class PolynomialResponseStage(ResponseStage):
     :param coefficients: List of polynomial coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain_value,
-                 stage_gain_frequency, input_units_name, output_units_name,
+                 stage_gain_frequency, input_units, output_units,
                  resource_id, name, frequency_lower_bound,
                  frequency_upper_bound, approximation_lower_bound,
                  approximation_upper_bound, maximum_error, coefficients,
@@ -554,8 +554,8 @@ class PolynomialResponseStage(ResponseStage):
         self.coefficients = coefficients
         super(PolynomialResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
-            input_units_name=input_units_name,
-            output_units_name=output_units_name,
+            input_units=input_units,
+            output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
             resource_id=resource_id, stage_gain_value=stage_gain_value,
@@ -685,8 +685,8 @@ class Response(ComparingObject):
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
-            st.input_units = get_unit_mapping(blockette.input_units_name)
-            st.output_units = get_unit_mapping(blockette.output_units_name)
+            st.input_units = get_unit_mapping(blockette.input_units)
+            st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
                 # Map the transfer function type.
@@ -831,10 +831,10 @@ class Response(ComparingObject):
             "{output_units} ({output_units_description})\n"
             "\tOverall Sensitivity: {sensitivity:g} defined at {freq:.3f} Hz\n"
             "\t{stages} stages:\n{stage_desc}").format(
-            input_units=self.instrument_sensitivity.input_units_name,
+            input_units=self.instrument_sensitivity.input_units,
             input_units_description=self.instrument_sensitivity.
             input_units_description,
-            output_units=self.instrument_sensitivity.output_units_name,
+            output_units=self.instrument_sensitivity.output_units,
             output_units_description=self.instrument_sensitivity.
             output_units_description,
             sensitivity=self.instrument_sensitivity.value,
@@ -844,7 +844,7 @@ class Response(ComparingObject):
                 ["\t\tStage %i: %s from %s to %s,"
                  " gain: %.2f" % (
                      i.stage_sequence_number, i.__class__.__name__,
-                     i.input_units_name, i.output_units_name,
+                     i.input_units, i.output_units,
                      i.stage_gain_value)
                  for i in self.response_stages]))
         return ret
@@ -862,8 +862,8 @@ class InstrumentSensitivity(ComparingObject):
     FrequencyEnd) in which the SensitivityValue is valid within the number of
     decibels specified in FrequencyDBVariation.
     """
-    def __init__(self, value, frequency, input_units_name,
-                 output_units_name, input_units_description=None,
+    def __init__(self, value, frequency, input_units,
+                 output_units, input_units_description=None,
                  output_units_description=None, frequency_range_start=None,
                  frequency_range_end=None, frequency_range_DB_variation=None):
         """
@@ -883,8 +883,8 @@ class InstrumentSensitivity(ComparingObject):
             FrequencyStart and FrequencyEnd) in which the SensitivityValue is
             valid within the number of decibels specified in
             FrequencyDBVariation.
-        :param input_units_name: string
-        :param input_units_name: The units of the data as input from the
+        :param input_units: string
+        :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
@@ -894,8 +894,8 @@ class InstrumentSensitivity(ComparingObject):
             response, these would be the resulting units.
             Description of units, e.g. "Velocity in meters per second",
             "Volts", "Pascals".
-        :param output_units_name: string
-        :param output_units_name: The units of the data as output from the
+        :param output_units: string
+        :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
@@ -917,9 +917,9 @@ class InstrumentSensitivity(ComparingObject):
         """
         self.value = value
         self.frequency = frequency
-        self.input_units_name = input_units_name
+        self.input_units = input_units
         self.input_units_description = input_units_description
-        self.output_units_name = output_units_name
+        self.output_units = output_units
         self.output_units_description = output_units_description
         self.frequency_range_start = frequency_range_start
         self.frequency_range_end = frequency_range_end
@@ -935,7 +935,7 @@ class InstrumentPolynomial(ComparingObject):
         acquisition system expressed as a polynomial. Equivalent to SEED stage
         0 polynomial (blockette 62).
     """
-    def __init__(self, input_units_name, output_units_name,
+    def __init__(self, input_units, output_units,
                  resource_id, name, frequency_lower_bound,
                  frequency_upper_bound, approximation_lower_bound,
                  approximation_upper_bound, maximum_error, coefficients,
@@ -958,13 +958,13 @@ class InstrumentPolynomial(ComparingObject):
         :param maximum_error: Maximum error.
         :type coefficients: list of floats
         :param coefficients: List of polynomial coefficients.
-        :param input_units_name: string
-        :param input_units_name: The units of the data as input from the
+        :param input_units: string
+        :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
             response, these would be the resulting units.
             Name of units, e.g. "M/S", "V", "PA".
-        :param output_units_name: string
-        :param output_units_name: The units of the data as output from the
+        :param output_units: string
+        :param output_units: The units of the data as output from the
             perspective of data acquisition. These would be the units of the
             data prior to correcting for this response.
             Name of units, e.g. "M/S", "V", "PA".
@@ -993,8 +993,8 @@ class InstrumentPolynomial(ComparingObject):
         :type description: string, optional
         :param description: A short description of of the filter.
         """
-        self.input_units_name = input_units_name
-        self.output_units_name = output_units_name
+        self.input_units = input_units
+        self.output_units = output_units
         self.input_units_description = input_units_description
         self.output_units_description = output_units_description
         self.resource_id = resource_id

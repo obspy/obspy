@@ -318,13 +318,13 @@ def _read_response_stage(stage_elem, _ns):
         raise ValueError(msg)
 
     # Now parse all elements the different stages share.
-    input_units = elem.find(_ns("InputUnits"))
-    input_units_name = _tag2obj(input_units, _ns("Name"), unicode)
-    input_units_description = _tag2obj(input_units, _ns("Description"),
+    input_units_ = elem.find(_ns("InputUnits"))
+    input_units = _tag2obj(input_units_, _ns("Name"), unicode)
+    input_units_description = _tag2obj(input_units_, _ns("Description"),
                                        unicode)
-    output_units = elem.find(_ns("OutputUnits"))
-    output_units_name = _tag2obj(output_units, _ns("Name"), unicode)
-    output_units_description = _tag2obj(output_units, _ns("Description"),
+    output_units_ = elem.find(_ns("OutputUnits"))
+    output_units = _tag2obj(output_units_, _ns("Name"), unicode)
+    output_units_description = _tag2obj(output_units_, _ns("Description"),
                                         unicode)
     description = _tag2obj(elem, _ns("Description"), unicode)
     resource_id = _tag2obj(elem, _ns("resourceId"), unicode)
@@ -333,8 +333,8 @@ def _read_response_stage(stage_elem, _ns):
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
     kwargs = {"stage_sequence_number": stage_sequence_number,
-              "input_units_name": input_units_name,
-              "output_units_name": output_units_name,
+              "input_units": input_units,
+              "output_units": output_units,
               "input_units_description": input_units_description,
               "output_units_description": output_units_description,
               "resource_id": resource_id, "stage_gain_value": stage_gain_value,
@@ -416,16 +416,16 @@ def _read_response_stage(stage_elem, _ns):
 def _read_instrument_sensitivity(sensitivity_element, _ns):
     value = _tag2obj(sensitivity_element, _ns("Value"), float)
     frequency = _tag2obj(sensitivity_element, _ns("Frequency"), float)
-    input_units = sensitivity_element.find(_ns("InputUnits"))
-    output_units = sensitivity_element.find(_ns("OutputUnits"))
+    input_units_ = sensitivity_element.find(_ns("InputUnits"))
+    output_units_ = sensitivity_element.find(_ns("OutputUnits"))
     sensitivity = obspy.station.response.InstrumentSensitivity(
         value=value, frequency=frequency,
-        input_units_name=_tag2obj(input_units, _ns("Name"), unicode),
-        output_units_name=_tag2obj(output_units, _ns("Name"), unicode))
+        input_units=_tag2obj(input_units_, _ns("Name"), unicode),
+        output_units=_tag2obj(output_units_, _ns("Name"), unicode))
     sensitivity.input_units_description = \
-        _tag2obj(input_units, _ns("Description"), unicode)
+        _tag2obj(input_units_, _ns("Description"), unicode)
     sensitivity.output_units_description = \
-        _tag2obj(output_units, _ns("Description"), unicode)
+        _tag2obj(output_units_, _ns("Description"), unicode)
     sensitivity.frequency_range_start = \
         _tag2obj(sensitivity_element, _ns("FrequencyStart"), float)
     sensitivity.frequency_range_end = \
@@ -437,13 +437,13 @@ def _read_instrument_sensitivity(sensitivity_element, _ns):
 
 def _read_instrument_polynomial(element, _ns):
     # XXX duplicated code, see reading of PolynomialResponseStage
-    input_units = element.find(_ns("InputUnits"))
-    input_units_name = _tag2obj(input_units, _ns("Name"), unicode)
-    input_units_description = _tag2obj(input_units, _ns("Description"),
+    input_units_ = element.find(_ns("InputUnits"))
+    input_units = _tag2obj(input_units_, _ns("Name"), unicode)
+    input_units_description = _tag2obj(input_units_, _ns("Description"),
                                        unicode)
-    output_units = element.find(_ns("OutputUnits"))
-    output_units_name = _tag2obj(output_units, _ns("Name"), unicode)
-    output_units_description = _tag2obj(output_units, _ns("Description"),
+    output_units_ = element.find(_ns("OutputUnits"))
+    output_units = _tag2obj(output_units_, _ns("Name"), unicode)
+    output_units_description = _tag2obj(output_units_, _ns("Description"),
                                         unicode)
     description = _tag2obj(element, _ns("Description"), unicode)
     resource_id = _tag2obj(element, _ns("resourceId"), unicode)
@@ -459,9 +459,9 @@ def _read_instrument_polynomial(element, _ns):
         approximation_type=appr_type, frequency_lower_bound=f_low,
         frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
         approximation_upper_bound=appr_high, maximum_error=max_err,
-        coefficients=coeffs, input_units_name=input_units_name,
+        coefficients=coeffs, input_units=input_units,
         input_units_description=input_units_description,
-        output_units_name=output_units_name,
+        output_units=output_units,
         output_units_description=output_units_description,
         description=description, resource_id=resource_id, name=name)
 
