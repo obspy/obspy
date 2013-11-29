@@ -66,7 +66,7 @@ class BaseNode(ComparingObject):
         if not value:
             msg = "A Code is required"
             raise ValueError(msg)
-        self._code = str(value)
+        self._code = str(value).strip()
 
     @property
     def alternate_code(self):
@@ -80,7 +80,7 @@ class BaseNode(ComparingObject):
     @alternate_code.setter
     def alternate_code(self, value):
         if value:
-            self._alternate_code = value
+            self._alternate_code = value.strip()
         else:
             self._alternate_code = None
 
@@ -95,7 +95,7 @@ class BaseNode(ComparingObject):
     @historical_code.setter
     def historical_code(self, value):
         if value:
-            self._historical_code = value
+            self._historical_code = value.strip()
         else:
             self._historical_code = None
 
@@ -342,7 +342,7 @@ class Comment(ComparingObject):
         Container for a comment or log entry. Corresponds to SEED blockettes
         31, 51 and 59.
     """
-    def __init__(self, value, id, begin_effective_time=None,
+    def __init__(self, value, id=None, begin_effective_time=None,
                  end_effective_time=None, authors=None):
         """
         :type value: String
@@ -369,6 +369,9 @@ class Comment(ComparingObject):
 
     @id.setter
     def id(self, value):
+        if value is None:
+            self._id = value
+            return
         if not int(value) >= 0:
             msg = "ID must be 0 or positive integer."
             raise ValueError(msg)

@@ -175,6 +175,14 @@ class Channel(BaseNode):
         return ret
 
     @property
+    def location_code(self):
+        return self._location_code
+
+    @location_code.setter
+    def location_code(self, value):
+        self._location_code = value.strip()
+
+    @property
     def longitude(self):
         return self._longitude
 
