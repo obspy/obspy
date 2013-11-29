@@ -692,6 +692,40 @@ def _write_station(parent, station):
     for ref in station.external_references:
         _write_external_reference(station_elem, ref)
 
+    for channel in station.channels:
+        _write_channel(station_elem, channel)
+
+
+def _write_channel(parent, channel):
+    # Write the base node type fields.
+    attribs = _get_base_node_attributes(channel)
+    attribs['locationCode'] = channel.location_code
+    channel_elem = etree.SubElement(parent, "Channel", attribs)
+    _write_base_node(channel_elem, channel)
+
+    for ref in channel.external_references:
+        _write_external_reference(channel_elem, ref)
+
+    _write_floattype(channel_elem, channel, "latitude", "Latitude")
+    _write_floattype(channel_elem, channel, "longitude", "Longitude")
+    _write_floattype(channel_elem, channel, "elevation", "Elevation")
+    _write_floattype(channel_elem, channel, "depth", "Depth")
+
+    # Optional tags.
+    _write_floattype(channel_elem, channel, "azimuth", "Azimuth")
+    _write_floattype(channel_elem, channel, "dip", "Dip")
+    _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
+    _write_floattype(channel_elem, channel,
+                     "clock_drift_in_seconds_per_sample", "ClockDrift")
+
+    for type_ in channel.types:
+        etree.SubElement(channel_elem, "Type").text = type_
+
+    _write_equipment(channel_elem, channel.sensor, "Sensor")
+    _write_equipment(channel_elem, channel.sensor, "PreAmplifier")
+    _write_equipment(channel_elem, channel.sensor, "DataLogger")
+    _write_equipment(channel_elem, channel.sensor, "Equipment")
+
 
 def _write_external_reference(parent, ref):
     ref_elem = etree.SubElement(parent, "ExternalReference")
