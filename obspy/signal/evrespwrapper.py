@@ -94,6 +94,11 @@ class genericType(C.Structure):
 
 class decimationType(C.Structure):
     _fields_ = [
+        ("sample_int", C.c_double),
+        ("deci_fact", C.c_int),
+        ("deci_offset", C.c_int),
+        ("estim_delay", C.c_double),
+        ("applied_corr", C.c_double)
     ]
 
 
@@ -110,7 +115,8 @@ class referType(C.Structure):
 class blkt_info_union(C.Union):
     _fields_ = [
         ("pole_zero", pole_zeroType),
-        ("fir", firType)
+        ("fir", firType),
+        ("decimation", decimationType)
     ]
 
 

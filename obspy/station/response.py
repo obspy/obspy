@@ -704,7 +704,31 @@ class Response(ComparingObject):
                 else:
                     msg = "Type: %s." % str(type(blockette))
                     raise NotImplementedError(msg)
+
                 stage_blkts.append(blkt)
+
+                # Parse the decimation if is given.
+                decimation_values = set([
+                    blockette.decimation_correction,
+                    blockette.decimation_delay, blockette.decimation_factor,
+                    blockette.decimation_input_sample_rate,
+                    blockette.decimation_offset])
+                if None in decimation_values:
+                    if len(decimation_values) != 1:
+                        msg = ("If a decimation is given, all values must "
+                               "be specified.")
+                        raise ValueError(msg)
+                else:
+                    blkt = ew.blkt()
+                    decimation_blkt = blkt.blkt_info.decimation
+                    decimation_blkt.sample_int = \
+                        blockette.decimation_input_sample_rate
+                    decimation_blkt.deci_fact = blockette.decimation_factor
+                    decimation_blkt.deci_offset = blockette.decimation_offset
+                    decimation_blkt.estim_delay = blockette.decimation_delay
+                    decimation_blkt.applied_corr = \
+                        blockette.decimation_correction
+                    stage_blkts.append(blkt)
 
             print stage_blkts
             if not stage_blkts:
