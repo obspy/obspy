@@ -735,6 +735,7 @@ class Response(ComparingObject):
                     # Set the type to an assymetric FIR blockette.
                     blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
                     fir = blkt.blkt_info.fir
+                    fir.h0 = 1.0
                     fir.ncoeffs = len(blockette.numerator)
                     # XXX: Find a better way to do this.
                     coeffs = (C.c_double * len(blockette.numerator))()
@@ -767,7 +768,7 @@ class Response(ComparingObject):
                 blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                 decimation_blkt = blkt.blkt_info.decimation
                 decimation_blkt.sample_int = \
-                    blockette.decimation_input_sample_rate
+                    1.0 / blockette.decimation_input_sample_rate
                 decimation_blkt.deci_fact = blockette.decimation_factor
                 decimation_blkt.deci_offset = blockette.decimation_offset
                 decimation_blkt.estim_delay = blockette.decimation_delay
@@ -806,7 +807,7 @@ class Response(ComparingObject):
 
         chan.nstages = len(stage_objects)
 
-        chan.calc_sensit = 1
+        chan.calc_sensit = 0
         chan.sensit = self.instrument_sensitivity.value
         chan.sensfreq = self.instrument_sensitivity.frequency
 
@@ -819,7 +820,7 @@ class Response(ComparingObject):
 
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 1)
-        output *= scale_factor[0]
+        #output *= scale_factor[0]
 
         return output, freqs
 
