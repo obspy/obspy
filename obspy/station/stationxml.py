@@ -648,7 +648,8 @@ def _write_floattype(parent, obj, attr_name, tag):
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
-    etree.SubElement(parent, tag, attribs).text = str(obj_)
+    etree.SubElement(parent, tag, attribs).text = \
+        ("%20f" % obj_).rstrip("0").lstrip()
 
 
 def _write_station(parent, station):
