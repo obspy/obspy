@@ -226,6 +226,12 @@ def _read_channel(cha_element, _ns):
     channel.clock_drift_in_seconds_per_sample = \
         _read_floattype(cha_element, _ns("ClockDrift"), ClockDrift)
     # The sensor.
+    calibunits = cha_element.find(_ns("CalibrationUnits"))
+    if calibunits is not None:
+        channel.calibration_unit = _tag2obj(calibunits, _ns("Name"), unicode)
+        channel.calibration_unit_description = \
+            _tag2obj(calibunits, _ns("Description"), unicode)
+    # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
     if sensor is not None:
         channel.sensor = _read_equipment(sensor, _ns)
@@ -735,10 +741,17 @@ def _write_channel(parent, channel):
     _write_floattype(channel_elem, channel,
                      "clock_drift_in_seconds_per_sample", "ClockDrift")
 
+    if channel.calibration_unit:
+        cu = etree.SubElement(channel_elem, "CalibrationUnits")
+        etree.SubElement(cu, "Name").text = \
+            str(channel.calibration_unit)
+        if channel.calibration_unit_description:
+            etree.SubElement(cu, "Description").text = \
+                str(channel.calibration_unit_description)
     _write_equipment(channel_elem, channel.sensor, "Sensor")
-    _write_equipment(channel_elem, channel.sensor, "PreAmplifier")
-    _write_equipment(channel_elem, channel.sensor, "DataLogger")
-    _write_equipment(channel_elem, channel.sensor, "Equipment")
+    _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
+    _write_equipment(channel_elem, channel.data_logger, "DataLogger")
+    _write_equipment(channel_elem, channel.equipment, "Equipment")
 
 
 def _write_external_reference(parent, ref):
