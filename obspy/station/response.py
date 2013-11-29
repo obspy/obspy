@@ -814,11 +814,11 @@ class Response(ComparingObject):
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
         output = np.empty(len(freqs), dtype="complex128")
-        output *= scale_factor[0]
         out_units = C.c_char_p("VEL")
 
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 1)
+        output *= scale_factor[0]
 
         return output, freqs
 
