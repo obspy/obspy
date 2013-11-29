@@ -730,7 +730,13 @@ class Response(ComparingObject):
                         blockette.decimation_correction
                     stage_blkts.append(blkt)
 
-            print stage_blkts
+                # Always add the gain.
+                blkt = ew.blkt()
+                gain_blkt = blkt.blkt_info.gain
+                gain_blkt.gain = blockette.stage_gain_value
+                gain_blkt.gain_freq = blockette.stage_gain_frequency
+                stage_blkts.append(blkt)
+
             if not stage_blkts:
                 msg = "At least one blockette is needed for the stage."
                 raise ValueError(msg)

@@ -104,6 +104,8 @@ class decimationType(C.Structure):
 
 class gainType(C.Structure):
     _fields_ = [
+        ("gain", C.c_double),
+        ("gain_freq", C.c_double)
     ]
 
 
@@ -116,7 +118,8 @@ class blkt_info_union(C.Union):
     _fields_ = [
         ("pole_zero", pole_zeroType),
         ("fir", firType),
-        ("decimation", decimationType)
+        ("decimation", decimationType),
+        ("gain", gainType)
     ]
 
 
