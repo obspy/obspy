@@ -17,7 +17,8 @@ import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift, SampleRate
+    ClockDrift, SampleRate, Frequency
+from obspy.core.util.obspy_types import FloatWithUncertainties
 
 
 # Define some constants for writing StationXML files.
@@ -187,6 +188,21 @@ def _read_floattype(parent, tag, cls, unit=False, datum=False):
     return obj
 
 
+def _read_floattype_list(parent, tag, cls, unit=False, datum=False):
+    elems = parent.findall(tag)
+    objs = []
+    for elem in elems:
+        obj = cls(_tag2obj(parent, tag, float))
+        if unit:
+            obj.unit = elem.attrib.get("unit")
+        if datum:
+            obj.datum = elem.attrib.get("datum")
+        obj.lower_uncertainty = elem.attrib.get("minusError")
+        obj.upper_uncertainty = elem.attrib.get("plusError")
+        objs.append(obj)
+    return objs
+
+
 def _read_channel(cha_element, _ns):
     longitude = _read_floattype(cha_element, _ns("Longitude"), Longitude,
                                 datum=True)
@@ -256,6 +272,7 @@ def _read_channel(cha_element, _ns):
 
 def _read_response(resp_element, _ns):
     response = obspy.station.response.Response()
+    response.resource_id = resp_element.attrib['resourceId']
     instrument_sensitivity = resp_element.find(_ns("InstrumentSensitivity"))
     if instrument_sensitivity is not None:
         response.instrument_sensitivity = \
@@ -446,15 +463,16 @@ def _read_instrument_polynomial(element, _ns):
     output_units_description = _tag2obj(output_units_, _ns("Description"),
                                         unicode)
     description = _tag2obj(element, _ns("Description"), unicode)
-    resource_id = _tag2obj(element, _ns("resourceId"), unicode)
-    name = _tag2obj(element, _ns("name"), unicode)
+    resource_id = element.attrib.get("resourceId", None)
+    name = element.attrib.get("name", None)
     appr_type = _tag2obj(element, _ns("ApproximationType"), unicode)
-    f_low = _tag2obj(element, _ns("FrequencyLowerBound"), float)
-    f_high = _tag2obj(element, _ns("FrequencyUpperBound"), float)
+    f_low = _read_floattype(element, _ns("FrequencyLowerBound"), Frequency)
+    f_high = _read_floattype(element, _ns("FrequencyUpperBound"), Frequency)
     appr_low = _tag2obj(element, _ns("ApproximationLowerBound"), float)
     appr_high = _tag2obj(element, _ns("ApproximationUpperBound"), float)
     max_err = _tag2obj(element, _ns("MaximumError"), float)
-    coeffs = _tags2obj(element, _ns("Coefficient"), float)
+    coeffs = _read_floattype_list(element, _ns("Coefficient"),
+                                  FloatWithUncertainties)
     return obspy.station.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,
         frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
@@ -653,12 +671,27 @@ def _write_floattype(parent, obj, attr_name, tag):
     attribs = {}
     obj_ = getattr(obj, attr_name)
     attribs["datum"] = obj_.__dict__.get("datum")
-    attribs["unit"] = obj_.unit
+    if hasattr(obj_, "unit"):
+        attribs["unit"] = obj_.unit
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
     etree.SubElement(parent, tag, attribs).text = \
         ("%20f" % obj_).rstrip("0").lstrip()
+
+
+def _write_floattype_list(parent, obj, attr_list_name, tag):
+    for obj_ in getattr(obj, attr_list_name):
+        attribs = {}
+        attribs["datum"] = obj_.__dict__.get("datum")
+        if hasattr(obj_, "unit"):
+            attribs["unit"] = obj_.unit
+        attribs["minusError"] = obj_.lower_uncertainty
+        attribs["plusError"] = obj_.upper_uncertainty
+        attribs = dict([(k, v) for k, v in attribs.iteritems()
+                        if v is not None])
+        etree.SubElement(parent, tag, attribs).text = \
+            ("%20f" % obj_).rstrip("0").lstrip()
 
 
 def _write_station(parent, station):
@@ -752,6 +785,65 @@ def _write_channel(parent, channel):
     _write_equipment(channel_elem, channel.pre_amplifier, "PreAmplifier")
     _write_equipment(channel_elem, channel.data_logger, "DataLogger")
     _write_equipment(channel_elem, channel.equipment, "Equipment")
+    if channel.response is not None:
+        _write_response(channel_elem, channel.response)
+
+
+def _write_io_units(parent, obj):
+    sub = etree.SubElement(parent, "InputUnits")
+    etree.SubElement(sub, "Name").text = \
+        str(obj.input_units)
+    etree.SubElement(sub, "Description").text = \
+        str(obj.input_units_description)
+    sub = etree.SubElement(parent, "OutputUnits")
+    etree.SubElement(sub, "Name").text = \
+        str(obj.output_units)
+    etree.SubElement(sub, "Description").text = \
+        str(obj.output_units_description)
+
+
+def _write_response(parent, resp):
+    parent = etree.SubElement(parent, "Response",
+                              {'resourceId': resp.resource_id})
+    # write instrument sensitivity
+    if resp.instrument_sensitivity is not None:
+        sub = etree.SubElement(parent, "InstrumentSensitivity")
+        etree.SubElement(sub, "Value").text = \
+            str(resp.instrument_sensitivity.value)
+        etree.SubElement(sub, "Frequency").text = \
+            str(resp.instrument_sensitivity.frequency)
+        _write_io_units(sub, resp.instrument_sensitivity)
+        etree.SubElement(sub, "FrequencyStart").text = \
+            str(resp.instrument_sensitivity.frequency_range_start)
+        etree.SubElement(sub, "FrequencyEnd").text = \
+            str(resp.instrument_sensitivity.frequency_range_end)
+        etree.SubElement(sub, "FrequencyDBVariation").text = \
+            str(resp.instrument_sensitivity.frequency_range_DB_variation)
+    # write instrument polynomial
+    if resp.instrument_polynomial is not None:
+        attribs = {}
+        if resp.instrument_polynomial.name is not None:
+            attribs['name'] = resp.instrument_polynomial.name
+        if resp.instrument_polynomial.resource_id is not None:
+            attribs['resourceId'] = resp.instrument_polynomial.resource_id
+        sub = etree.SubElement(parent, "InstrumentPolynomial", attribs)
+        etree.SubElement(sub, "Description").text = \
+            str(resp.instrument_polynomial.description)
+        _write_io_units(sub, resp.instrument_polynomial)
+        etree.SubElement(sub, "ApproximationType").text = \
+            str(resp.instrument_polynomial.approximation_type)
+        _write_floattype(sub, resp.instrument_polynomial,
+                         "frequency_lower_bound", "FrequencyLowerBound")
+        _write_floattype(sub, resp.instrument_polynomial,
+                         "frequency_upper_bound", "FrequencyUpperBound")
+        etree.SubElement(sub, "ApproximationLowerBound").text = \
+            str(resp.instrument_polynomial.approximation_lower_bound)
+        etree.SubElement(sub, "ApproximationUpperBound").text = \
+            str(resp.instrument_polynomial.approximation_upper_bound)
+        etree.SubElement(sub, "MaximumError").text = \
+            str(resp.instrument_polynomial.maximum_error)
+        _write_floattype_list(sub, resp.instrument_polynomial,
+                              "coefficients", "Coefficient")
 
 
 def _write_external_reference(parent, ref):

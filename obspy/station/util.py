@@ -601,6 +601,20 @@ class SampleRate(FloatWithUncertaintiesFixedUnit):
     unit = "SAMPLES/S"
 
 
+class Frequency(FloatWithUncertaintiesFixedUnit):
+    """
+    Frequency object
+
+    :type value: float
+    :param value: Frequency value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    unit = "HERTZ"
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)

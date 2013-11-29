@@ -278,10 +278,6 @@ class FloatWithUncertainties(float):
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
 
-    @property
-    def unit(self):
-        return self._unit
-
     def __add__(self, other):
         return self.__class__(float(self) + other, **self.__dict__)
 

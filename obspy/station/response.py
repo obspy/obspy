@@ -588,7 +588,7 @@ class Response(ComparingObject):
     The root response object.
     """
     def __init__(self, resource_id=None, instrument_sensitivity=None,
-                 response_stages=None):
+                 instrument_polynomial=None, response_stages=None):
         """
         :type resource_id: string
         :param resource_id: This field contains a string that should serve as a
@@ -601,7 +601,13 @@ class Response(ComparingObject):
         :type instrument_sensitivity:
             :class:`~obspy.station.response.InstrumentSensitivity`
         :param instrument_sensitivity: The total sensitivity for the given
-            channel.
+            channel, representing the complete acquisition system expressed as
+            a scalar.
+        :type instrument_polynomial:
+            :class:`~obspy.station.response.InstrumentPolynomial`
+        :param instrument_polynomial: The total sensitivity for the given
+            channel, representing the complete acquisition system expressed as
+            a polynomial.
         :type response_stages: List of
             :class:`~obspy.station.response.ResponseStage` objects
         :param response_stages: A list of the response stages. Covers SEED
@@ -609,6 +615,7 @@ class Response(ComparingObject):
         """
         self.resource_id = resource_id
         self.instrument_sensitivity = instrument_sensitivity
+        self.instrument_polynomial = instrument_polynomial
         if response_stages is None:
             self.response_stages = []
         elif hasattr(response_stages, "__iter__"):
