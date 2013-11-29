@@ -16,7 +16,8 @@ import os
 import warnings
 
 import obspy
-from obspy.station.util import Longitude, Latitude
+from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
+    ClockDrift
 
 
 # Define some constants for writing StationXML files.
@@ -140,8 +141,11 @@ def _read_network(net_element, _ns):
 
 
 def _read_station(sta_element, _ns):
-    longitude, latitude = _read_lonlat(sta_element, _ns)
-    elevation = _tag2obj(sta_element, _ns("Elevation"), float)
+    longitude = _read_floattype(sta_element, _ns("Longitude"), Longitude,
+                                datum=True)
+    latitude = _read_floattype(sta_element, _ns("Latitude"), Latitude,
+                               datum=True)
+    elevation = _read_floattype(sta_element, _ns("Elevation"), Distance)
     station = obspy.station.Station(code=sta_element.get("code"),
                                     latitude=latitude, longitude=longitude,
                                     elevation=elevation)
@@ -170,31 +174,33 @@ def _read_station(sta_element, _ns):
     return station
 
 
-def _read_lonlat(parent, _ns):
-    lon_elem = parent.find(_ns("Longitude"))
-    lat_elem = parent.find(_ns("Latitude"))
-    lon = Longitude(_tag2obj(parent, _ns("Longitude"), float))
-    lat = Latitude(_tag2obj(parent, _ns("Latitude"), float))
-    for obj_, elem_ in zip((lon, lat), (lon_elem, lat_elem)):
-        obj_.unit = elem_.attrib.get("unit")
-        obj_.datum = elem_.attrib.get("datum")
-        obj_.lower_uncertainty = elem_.attrib.get("minusError")
-        obj_.upper_uncertainty = elem_.attrib.get("plusError")
-    return lon, lat
+def _read_floattype(parent, tag, cls, unit=True, datum=False):
+    elem = parent.find(tag)
+    obj = cls(_tag2obj(parent, tag, float))
+    if unit:
+        obj.unit = elem.attrib.get("unit")
+    if datum:
+        obj.datum = elem.attrib.get("datum")
+    obj.lower_uncertainty = elem.attrib.get("minusError")
+    obj.upper_uncertainty = elem.attrib.get("plusError")
+    return obj
 
 
 def _read_channel(cha_element, _ns):
-    longitude, latitude = _read_lonlat(cha_element, _ns)
-    elevation = _tag2obj(cha_element, _ns("Elevation"), float)
-    depth = _tag2obj(cha_element, _ns("Depth"), float)
+    longitude = _read_floattype(cha_element, _ns("Longitude"), Longitude,
+                                datum=True)
+    latitude = _read_floattype(cha_element, _ns("Latitude"), Latitude,
+                               datum=True)
+    elevation = _read_floattype(cha_element, _ns("Elevation"), Distance)
+    depth = _read_floattype(cha_element, _ns("Depth"), Distance)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
     channel = obspy.station.Channel(
         code=code, location_code=location_code, latitude=latitude,
         longitude=longitude, elevation=elevation, depth=depth)
     _read_base_node(cha_element, channel, _ns)
-    channel.azimuth = _tag2obj(cha_element, _ns("Azimuth"), float)
-    channel.dip = _tag2obj(cha_element, _ns("Dip"), float)
+    channel.azimuth = _read_floattype(cha_element, _ns("Azimuth"), Azimuth)
+    channel.dip = _read_floattype(cha_element, _ns("Dip"), Dip)
     # Add all types.
     for type_element in cha_element.findall(_ns("Type")):
         channel.types.append(type_element.text)
@@ -215,7 +221,7 @@ def _read_channel(cha_element, _ns):
     # The clock drift is one of the few examples where the attribute name is
     # different from the tag name. This improves clarity.
     channel.clock_drift_in_seconds_per_sample = \
-        _tag2obj(cha_element, _ns("ClockDrift"), float)
+        _read_floattype(cha_element, _ns("ClockDrift"), ClockDrift)
     # The sensor.
     sensor = cha_element.find(_ns("Sensor"))
     if sensor is not None:
@@ -634,23 +640,15 @@ def _write_network(parent, network):
         _write_station(network_elem, station)
 
 
-def _write_lonlat(parent, obj):
+def _write_floattype(parent, obj, attr_name, tag):
     attribs = {}
-    attribs["datum"] = obj.latitude.datum
-    attribs["unit"] = obj.latitude.unit
-    attribs["plusError"] = obj.latitude.upper_uncertainty
-    attribs["minusError"] = obj.latitude.lower_uncertainty
+    obj_ = getattr(obj, attr_name)
+    attribs["datum"] = obj_.__dict__.get("datum")
+    attribs["unit"] = obj_.unit
+    attribs["minusError"] = obj_.lower_uncertainty
+    attribs["plusError"] = obj_.upper_uncertainty
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
-    etree.SubElement(parent, "Latitude", attribs).text = \
-        str(obj.latitude)
-    attribs = {}
-    attribs["datum"] = obj.longitude.datum
-    attribs["unit"] = obj.longitude.unit
-    attribs["minusError"] = obj.longitude.lower_uncertainty
-    attribs["plusError"] = obj.longitude.upper_uncertainty
-    attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
-    etree.SubElement(parent, "Longitude", attribs).text = \
-        str(obj.longitude)
+    etree.SubElement(parent, tag, attribs).text = str(obj_)
 
 
 def _write_station(parent, station):
@@ -659,8 +657,9 @@ def _write_station(parent, station):
     station_elem = etree.SubElement(parent, "Station", attribs)
     _write_base_node(station_elem, station)
 
-    _write_lonlat(station_elem, station)
-    etree.SubElement(station_elem, "Elevation").text = str(station.elevation)
+    _write_floattype(station_elem, station, "latitude", "Latitude")
+    _write_floattype(station_elem, station, "longitude", "Longitude")
+    _write_floattype(station_elem, station, "elevation", "Elevation")
 
     _write_site(station_elem, station.site)
 
@@ -700,12 +699,12 @@ def _write_external_reference(parent, ref):
     etree.SubElement(ref_elem, "Description").text = ref.description
 
 
-def _write_equipment(parent, equipment):
+def _write_equipment(parent, equipment, tag="Equipment"):
     if equipment.resource_id is None:
         attr = {}
     else:
         attr = {"resourceId": equipment.resource_id}
-    equipment_elem = etree.SubElement(parent, "Equipment", attr)
+    equipment_elem = etree.SubElement(parent, tag, attr)
 
     # All tags are optional.
     _obj2tag(equipment_elem, "Type", equipment.type)
