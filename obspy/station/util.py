@@ -479,6 +479,10 @@ class FloatWithUncertainties(float):
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
 
+    @property
+    def unit(self):
+        return self._unit
+
     def __add__(self, other):
         return self.__class__(float(self) + other, **self.__dict__)
 
@@ -492,7 +496,49 @@ class FloatWithUncertainties(float):
         self = self.__class__(float(self) * other, **self.__dict__)
 
 
-class Latitude(FloatWithUncertainties):
+class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
+    """
+    Helper class to inherit from, set fixed unit in derived class as class
+    attribute.
+    """
+    _unit = ""
+
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+        super(FloatWithUncertaintiesFixedUnit, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        msg = "Unit is fixed by StationXML for this object class."
+        raise ValueError(msg)
+
+
+class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
+    """
+    Helper class to inherit from.
+    """
+    def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
+                 unit=None):
+        super(FloatWithUncertaintiesAndUnit, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+        self._unit = unit
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @unit.setter
+    def unit(self, value):
+        self._unit = value
+
+
+class Latitude(FloatWithUncertaintiesFixedUnit):
     """
     Latitude object
 
@@ -504,12 +550,10 @@ class Latitude(FloatWithUncertainties):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for latitude coordinate
-    :type unit: str
-    :param unit: Fixed value 'DEGREES'. Unit for latitude coordinate
     """
     _minimum = -180
     _maximum = 180
-    unit = "DEGREES"
+    _unit = "DEGREES"
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  datum=None):
@@ -521,7 +565,7 @@ class Latitude(FloatWithUncertainties):
             upper_uncertainty=upper_uncertainty)
 
 
-class Longitude(FloatWithUncertainties):
+class Longitude(FloatWithUncertaintiesFixedUnit):
     """
     Longitude object
 
@@ -533,8 +577,6 @@ class Longitude(FloatWithUncertainties):
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type datum: str
     :param datum: Datum for longitude coordinate
-    :type unit: str
-    :param unit: Fixed value 'DEGREES'. Unit for longitude coordinate
     """
     _minimum = -180
     _maximum = 180
@@ -550,7 +592,7 @@ class Longitude(FloatWithUncertainties):
             upper_uncertainty=upper_uncertainty)
 
 
-class Distance(FloatWithUncertainties):
+class Distance(FloatWithUncertaintiesAndUnit):
     """
     Distance object
 
@@ -561,19 +603,17 @@ class Distance(FloatWithUncertainties):
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
     :type unit: str
-    :param unit: Unit for longitude coordinate
+    :param unit: Unit for distance measure.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
-                 unit=None):
-        """
-        """
-        self.unit = unit
+                 unit="METERS"):
         super(Distance, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
+        self._unit = unit
 
 
-class Azimuth(FloatWithUncertainties):
+class Azimuth(FloatWithUncertaintiesFixedUnit):
     """
     Azimuth object
 
@@ -583,16 +623,13 @@ class Azimuth(FloatWithUncertainties):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
-    :type unit: str
-    :param unit: Unit for longitude coordinate
-    :param unit: Fixed value 'DEGREES'. Unit for azimuth.
     """
     _minimum = 0
     _maximum = 360
     unit = "DEGREES"
 
 
-class Dip(FloatWithUncertainties):
+class Dip(FloatWithUncertaintiesFixedUnit):
     """
     Dip object
 
@@ -602,15 +639,13 @@ class Dip(FloatWithUncertainties):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
-    :type unit: str
-    :param unit: Fixed value 'DEGREES'. Unit for dip.
     """
     _minimum = -90
     _maximum = 90
     unit = "DEGREES"
 
 
-class ClockDrift(FloatWithUncertainties):
+class ClockDrift(FloatWithUncertaintiesFixedUnit):
     """
     ClockDrift object
 
@@ -620,12 +655,23 @@ class ClockDrift(FloatWithUncertainties):
     :param lower_uncertainty: Lower uncertainty (aka minusError)
     :type upper_uncertainty: float
     :param upper_uncertainty: Upper uncertainty (aka plusError)
-    :type unit: str
-    :param unit: Unit for longitude coordinate
-    :param unit: Fixed value 'SECONDS/SAMPLE'. Unit for clock drift.
     """
     _minimum = 0
     unit = "SECONDS/SAMPLE"
+
+
+class SampleRate(FloatWithUncertaintiesFixedUnit):
+    """
+    SampleRate object
+
+    :type value: float
+    :param value: ClockDrift value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    unit = "SAMPLES/S"
 
 
 if __name__ == '__main__':

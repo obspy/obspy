@@ -17,7 +17,7 @@ import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift
+    ClockDrift, SampleRate
 
 
 # Define some constants for writing StationXML files.
@@ -145,7 +145,8 @@ def _read_station(sta_element, _ns):
                                 datum=True)
     latitude = _read_floattype(sta_element, _ns("Latitude"), Latitude,
                                datum=True)
-    elevation = _read_floattype(sta_element, _ns("Elevation"), Distance)
+    elevation = _read_floattype(sta_element, _ns("Elevation"), Distance,
+                                unit=True)
     station = obspy.station.Station(code=sta_element.get("code"),
                                     latitude=latitude, longitude=longitude,
                                     elevation=elevation)
@@ -174,7 +175,7 @@ def _read_station(sta_element, _ns):
     return station
 
 
-def _read_floattype(parent, tag, cls, unit=True, datum=False):
+def _read_floattype(parent, tag, cls, unit=False, datum=False):
     elem = parent.find(tag)
     obj = cls(_tag2obj(parent, tag, float))
     if unit:
@@ -191,8 +192,9 @@ def _read_channel(cha_element, _ns):
                                 datum=True)
     latitude = _read_floattype(cha_element, _ns("Latitude"), Latitude,
                                datum=True)
-    elevation = _read_floattype(cha_element, _ns("Elevation"), Distance)
-    depth = _read_floattype(cha_element, _ns("Depth"), Distance)
+    elevation = _read_floattype(cha_element, _ns("Elevation"), Distance,
+                                unit=True)
+    depth = _read_floattype(cha_element, _ns("Depth"), Distance, unit=True)
     code = cha_element.get("code")
     location_code = cha_element.get("locationCode")
     channel = obspy.station.Channel(
@@ -208,9 +210,10 @@ def _read_channel(cha_element, _ns):
     channel.external_references = \
         [_read_external_reference(ext_ref, _ns)
          for ext_ref in cha_element.findall(_ns("ExternalReference"))]
-    channel.sample_rate = _tag2obj(cha_element, _ns("SampleRate"), float)
+    channel.sample_rate = _read_floattype(cha_element, _ns("SampleRate"),
+                                          SampleRate)
     # Parse the optional sample rate ratio.
-    sample_rate_ratio = cha_element.find(_ns("SampleRateRation"))
+    sample_rate_ratio = cha_element.find(_ns("SampleRateRatio"))
     if sample_rate_ratio:
         channel.sample_rate_ratio_number_samples = \
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
@@ -715,12 +718,22 @@ def _write_channel(parent, channel):
     # Optional tags.
     _write_floattype(channel_elem, channel, "azimuth", "Azimuth")
     _write_floattype(channel_elem, channel, "dip", "Dip")
-    _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
-    _write_floattype(channel_elem, channel,
-                     "clock_drift_in_seconds_per_sample", "ClockDrift")
 
     for type_ in channel.types:
         etree.SubElement(channel_elem, "Type").text = type_
+
+    _write_floattype(channel_elem, channel, "sample_rate", "SampleRate")
+    if channel.sample_rate_ratio_number_samples and \
+            channel.sample_rate_ratio_number_seconds:
+        srr = etree.SubElement(channel_elem, "SampleRateRatio")
+        etree.SubElement(srr, "NumberSamples").text = \
+            str(channel.sample_rate_ratio_number_samples)
+        etree.SubElement(srr, "NumberSeconds").text = \
+            str(channel.sample_rate_ratio_number_seconds)
+
+    _obj2tag(channel_elem, "StorageFormat", channel.storage_format)
+    _write_floattype(channel_elem, channel,
+                     "clock_drift_in_seconds_per_sample", "ClockDrift")
 
     _write_equipment(channel_elem, channel.sensor, "Sensor")
     _write_equipment(channel_elem, channel.sensor, "PreAmplifier")
