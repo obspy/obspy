@@ -793,8 +793,14 @@ class Response(ComparingObject):
                 blkt = ew.blkt()
                 blkt.type = ew.ENUM_FILT_TYPES["DECIMATION"]
                 decimation_blkt = blkt.blkt_info.decimation
-                decimation_blkt.sample_int = \
-                    1.0 / blockette.decimation_input_sample_rate
+
+                # Evalresp does the same!
+                if blockette.decimation_input_sample_rate == 0:
+                    decimation_blkt.sample_int = 0.0
+                else:
+                    decimation_blkt.sample_int = \
+                        1.0 / blockette.decimation_input_sample_rate
+
                 decimation_blkt.deci_fact = blockette.decimation_factor
                 decimation_blkt.deci_offset = blockette.decimation_offset
                 decimation_blkt.estim_delay = blockette.decimation_delay
