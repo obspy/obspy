@@ -350,8 +350,8 @@ class StationXMLTestCase(unittest.TestCase):
             self.assertEqual(author.phones[0].area_code, 123)
             self.assertEqual(author.phones[0].phone_number, "456-7890")
 
-        self.assertEqual(station.latitude.value, 10.0)
-        self.assertEqual(station.longitude.value, 20.0)
+        self.assertEqual(station.latitude, 10.0)
+        self.assertEqual(station.longitude, 20.0)
         self.assertEqual(station.elevation, 100.0)
 
         self.assertEqual(station.site.name, "Some site")
@@ -535,8 +535,8 @@ class StationXMLTestCase(unittest.TestCase):
         # Assert a few fields of the station. This is extensively tested
         # elsewhere.
         self.assertEqual(station.code, "ANMO")
-        self.assertEqual(station.latitude.value, 34.94591)
-        self.assertEqual(station.longitude.value, -106.4572)
+        self.assertEqual(station.latitude, 34.94591)
+        self.assertEqual(station.longitude, -106.4572)
         self.assertEqual(station.elevation, 1820.0)
         self.assertEqual(station.site.name, "Albuquerque, New Mexico, USA")
         # Start to assert the channel reading.
@@ -547,8 +547,8 @@ class StationXMLTestCase(unittest.TestCase):
         self.assertEqual(channel.end_date,
                          obspy.UTCDateTime("2599-12-31T23:59:59"))
         self.assertEqual(channel.restricted_status, "open")
-        self.assertEqual(channel.latitude.value, 34.945913)
-        self.assertEqual(channel.longitude.value, -106.457122)
+        self.assertEqual(channel.latitude, 34.945913)
+        self.assertEqual(channel.longitude, -106.457122)
         self.assertEqual(channel.elevation, 1759.0)
         self.assertEqual(channel.depth, 57.0)
         self.assertEqual(channel.azimuth, 0.0)

@@ -460,61 +460,55 @@ class Site(ComparingObject):
         return ret
 
 
-class FloatWithUncertainties(object):
+class FloatWithUncertainties(float):
     """
     """
-    value_minimum = float("-inf")
-    value_maximum = float("inf")
+    _minimum = float("-inf")
+    _maximum = float("inf")
+
+    def __new__(cls, value, **kwargs):
+        if not cls._minimum <= float(value) <= cls._maximum:
+            raise ValueError()
+        return super(FloatWithUncertainties, cls).__new__(cls, value)
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
         """
         """
-        self.value = value
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
 
-    @property
-    def value(self):
-        return self._value
 
-    @value.setter
-    def value(self, value):
-        value = float(value)
-        if not self.value_minimum <= value <= self.value_maximum:
-            raise ValueError()
-        self._value = value
+doc = "\n".join(["Latitude object", "",
+                 ":type value: float",
+                 ":param value: Latitude value",
+                 ":type lower_uncertainty: float",
+                 (":param lower_uncertainty: Lower uncertainty "
+                  "(aka minusError)"),
+                 ":type upper_uncertainty: float",
+                 ":param upper_uncertainty: Upper uncertainty (aka plusError)",
+                 ":type datum: str",
+                 ":param datum: Datum for latitude coordinate",
+                 ":type unit: str",
+                 ":param unit: Unit for latitude coordinate"])
+attr = {'_minimum': -90, '_maximum': 90, 'datum': None, 'unit': None,
+        '__doc__': doc}
+Latitude = type("Latitude", (FloatWithUncertainties,), attr)
 
-
-class Longitude(FloatWithUncertainties):
-    """
-    """
-    value_minimum = -180
-    value_maximum = 180
-
-    def __init__(self, value, unit=None, datum=None, lower_uncertainty=None,
-                 upper_uncertainty=None):
-        """
-        """
-        super(Longitude, self).__init__(value, lower_uncertainty,
-                                        upper_uncertainty)
-        self.unit = unit
-        self.datum = datum
-
-
-class Latitude(FloatWithUncertainties):
-    """
-    """
-    value_minimum = -90
-    value_maximum = 90
-
-    def __init__(self, value, unit=None, datum=None, lower_uncertainty=None,
-                 upper_uncertainty=None):
-        """
-        """
-        super(Latitude, self).__init__(value, lower_uncertainty,
-                                       upper_uncertainty)
-        self.unit = unit
-        self.datum = datum
+doc = "\n".join(["Longitude object", "",
+                 ":type value: float",
+                 ":param value: Longitude value",
+                 ":type lower_uncertainty: float",
+                 (":param lower_uncertainty: Lower uncertainty "
+                  "(aka minusError)"),
+                 ":type upper_uncertainty: float",
+                 ":param upper_uncertainty: Upper uncertainty (aka plusError)",
+                 ":type datum: str",
+                 ":param datum: Datum for longitude coordinate",
+                 ":type unit: str",
+                 ":param unit: Unit for longitude coordinate"])
+attr = {'_minimum': -180, '_maximum': 180, 'datum': None, 'unit': None,
+        '__doc__': doc}
+Longitude = type("Longitude", (FloatWithUncertainties,), attr)
 
 
 if __name__ == '__main__':
