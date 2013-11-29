@@ -10,6 +10,8 @@ Test suite for the response handling.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import inspect
+import obspy
+from obspy.station import read_inventory
 import os
 import unittest
 
@@ -25,17 +27,68 @@ class ResponseTest(unittest.TestCase):
         self.data_dir = os.path.join(os.path.dirname(os.path.abspath(
             inspect.getfile(inspect.currentframe()))), "data")
 
+    def test_evalresp_with_output_from_seed(self):
+        """
+        The StationXML file has been converted to SEED with the help of a tool
+        provided by IRIS:
+
+        https://seiscode.iris.washington.edu/projects/stationxml-converter
+        """
+        from obspy.xseed import Parser
+        from obspy.signal.invsim import evalresp
+        import matplotlib.pylab as plt
+
+        t_samp = 0.05
+        nfft = 16384
+        date = obspy.UTCDateTime(2013, 1, 1)
+        network = "IU"
+        station = "ANMO"
+        locid = "10"
+        channel = "BHZ"
+        units = "VEL"
+
+        seed_file = os.path.join(self.data_dir,
+                                 "IRIS_single_channel_with_response.seed")
+        p = Parser(seed_file)
+
+        filename = p.getRESP()[0][-1]
+        filename.seek(0, 0)
+
+        seed_response, seed_freq = evalresp(t_samp, nfft, filename, date=date,
+                                            station=station, channel=channel,
+                                            network=network, locid=locid,
+                                            units=units, freq=True)
+
+        plt.subplot(211)
+        plt.semilogx(seed_freq, np.abs(seed_response), label="SEED")
+        plt.subplot(212)
+        phase = np.unwrap(np.arctan2(-seed_response.imag, seed_response.real))
+        plt.semilogx(seed_freq, phase)
+
+        inv = read_inventory(os.path.join(
+            self.data_dir, "IRIS_single_channel_with_response.xml"))
+        xml_response, xml_freq = \
+            inv[0][0][0].response.get_evalresp_response(t_samp, nfft)
+
+        plt.subplot(211)
+        plt.semilogx(xml_freq, np.abs(xml_response), label="XML")
+
+        plt.legend(loc="lower right")
+        plt.subplot(212)
+        phase = np.unwrap(np.arctan2(-xml_response.imag, xml_response.real))
+        plt.semilogx(xml_freq, phase)
+        plt.show()
+
     def test_some_output(self):
         """
         Some simple sanity tests.
         """
-        from obspy.station import read_inventory
-
         inv = read_inventory(os.path.join(
             self.data_dir, "IRIS_single_channel_with_response.xml"))
-        output, freqs = inv[0][0][0].response.get_evalresp_response()
+        output, freqs = inv[0][0][0].response.get_evalresp_response(
+            0.005, 16384)
 
-        #is_output = output[::len(output)/20]
+       #is_output = output[::len(output)/20]
 
         #should_output = np.array([
             #0.00000000+0.j,  0.99940241-0.19369858j,
@@ -52,7 +105,7 @@ class ResponseTest(unittest.TestCase):
 
         #np.testing.assert_array_almost_equal(is_output, should_output)
 
-        if True:
+        if False:
             import matplotlib.pylab as plt
 
             plt.subplot(211)

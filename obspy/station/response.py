@@ -617,7 +617,7 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_response(self):
+    def get_evalresp_response(self, t_samp, nfft):
         import ctypes as C
         import numpy as np
         import obspy.signal.evrespwrapper as ew
@@ -751,7 +751,6 @@ class Response(ComparingObject):
             stage_objects.append(st)
 
         chan = ew.channel()
-        print stage_objects
         if not stage_objects:
             msg = "At least one stage is needed."
             raise ValueError(msg)
@@ -763,19 +762,11 @@ class Response(ComparingObject):
 
         chan.nstages = len(stage_objects)
 
-        chan.calc_sensit = 0
-        chan.sensit = 1
-
-        t_samp = 0.005
-        ndat = 16384
+        chan.calc_sensit = 1
+        chan.sensit = self.instrument_sensitivity.value
+        chan.sensfreq = self.instrument_sensitivity.frequency
 
         fy = 1 / (t_samp * 2.0)
-
-        if ndat & 0x1:  # check if uneven
-            nfft = 2 * (ndat + 1)
-        else:
-            nfft = 2 * ndat
-
         # start at zero to get zero for offset/ DC of fft
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
