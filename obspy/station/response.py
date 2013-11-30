@@ -839,12 +839,6 @@ class Response(ComparingObject):
 
         chan.nstages = len(stage_objects)
 
-        chan.calc_sensit = 0.0
-        chan.calc_delay = 0.0
-        chan.estim_delay = 0.0
-        chan.applied_corr = 0.0
-        chan.sint = 0.0
-
         chan.sensit = self.instrument_sensitivity.value
         chan.sensfreq = self.instrument_sensitivity.frequency
 
@@ -856,7 +850,7 @@ class Response(ComparingObject):
         out_units = C.c_char_p("VEL")
 
         clibevresp.check_channel(C.pointer(chan))
-
+        clibevresp.norm_resp(C.pointer(chan), -1, 0)
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
         #output *= scale_factor[0]
