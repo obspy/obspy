@@ -9,6 +9,8 @@ Classes related to instrument responses.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+import warnings
+
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex
 
@@ -672,6 +674,10 @@ class Response(ComparingObject):
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "PA": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
+                msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
+                       "would refuse to calculate a response for this channel."
+                       " Proceed with caution.") % key
+                warnings.warn(msg)
                 value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
@@ -853,7 +859,7 @@ class Response(ComparingObject):
         clibevresp.norm_resp(C.pointer(chan), -1, 0)
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
-        #output *= scale_factor[0]
+        output *= scale_factor[0]
 
         return output, freqs
 
