@@ -206,3 +206,8 @@ clibevresp.calc_resp.argtypes = [
     C.c_int,
     C.c_int]
 clibevresp.calc_resp.restype = C.c_void_p
+
+
+#void check_channel(struct channel *chan)
+clibevresp.check_channel.argtypes = [C.POINTER(channel)]
+clibevresp.check_channel.restype = C.c_void_p
