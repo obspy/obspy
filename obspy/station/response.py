@@ -18,9 +18,10 @@ class ResponseStage(ComparingObject):
         This complex type represents channel response and covers SEED
         blockettes 53 to 56.
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, input_units_description=None,
+                 resource_id=None, resource_id2=None, name=None,
+                 input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
@@ -29,17 +30,10 @@ class ResponseStage(ComparingObject):
         :type stage_sequence_number: integer greater or equal to zero
         :param stage_sequence_number: Stage sequence number. This is used in
             all the response SEED blockettes.
-        :type stage_gain_value: float
-        :param stage_gain_value: Complex type for sensitivity and frequency
-            ranges. This complex type can be used to represent both overall
-            sensitivities and individual stage gains.  A scalar that, when
-            applied to the data values, converts the data to different units
-            (e.g. Earth units).
+        :type stage_gain: float
+        :param stage_gain: Value of stage gain.
         :type stage_gain_frequency: float
-        :param stage_gain_frequency: Complex type for sensitivity and frequency
-            ranges. This complex type can be used to represent both overall
-            sensitivities and individual stage gains. The frequency (in Hertz)
-            at which the Value is valid.
+        :param stage_gain_frequency: Frequency of stage gain.
         :param input_units: string
         :param input_units: The units of the data as input from the
             perspective of data acquisition. After correcting data for this
@@ -58,6 +52,11 @@ class ResponseStage(ComparingObject):
             GENERATOR:Meaningful ID. As a common behaviour equipment with the
             same ID should contains the same information/be derived from the
             same base instruments.
+        :type resource_id2: string
+        :param resource_id2: This field contains a string that should serve as
+            a unique resource identifier. Resource identifier of the subgroup
+            of the response stage that varies across different response stage
+            types (e.g. the poles and zeros part or the FIR part).
         :type name: string
         :param name: A name given to the filter stage.
         :param input_units_description: string, optional
@@ -102,7 +101,8 @@ class ResponseStage(ComparingObject):
         self.input_units_description = input_units_description
         self.output_units_description = output_units_description
         self.resource_id = resource_id
-        self.stage_gain_value = stage_gain_value
+        self.resource_id2 = resource_id2
+        self.stage_gain = stage_gain
         self.stage_gain_frequency = stage_gain_frequency
         self.name = name
         self.description = description
@@ -119,7 +119,7 @@ class ResponseStage(ComparingObject):
             "{name_desc}"
             "{resource_id}"
             "\tFrom {input_units}{input_desc} to {output_units}{output_desc}\n"
-            "\tStage gain: {gain_value}, defined at {gain_freq:.2f} Hz\n"
+            "\tStage gain: {gain}, defined at {gain_freq:.2f} Hz\n"
             "{decimation}").format(
             response_type=self.__class__.__name__,
             response_stage=self.stage_sequence_number,
@@ -134,7 +134,7 @@ class ResponseStage(ComparingObject):
             output_units=self.output_units,
             output_desc=" (%s)" % self.output_units_description
             if self.output_units_description else "",
-            gain_value=self.stage_gain_value,
+            gain=self.stage_gain,
             gain_freq=self.stage_gain_frequency,
             decimation=
             "\tDecimation:\n\t\tInput Sample Rate: %.2f Hz\n\t\t"
@@ -175,11 +175,12 @@ class PolesZerosResponseStage(ResponseStage):
     :type normalization_factor: float, optional
     :param normalization_factor:
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, pz_transfer_function_type,
+                 pz_transfer_function_type,
                  normalization_frequency, zeros, poles,
-                 normalization_factor=1.0, input_units_description=None,
+                 normalization_factor=1.0, resource_id=None, resource_id2=None,
+                 name=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
@@ -197,7 +198,8 @@ class PolesZerosResponseStage(ResponseStage):
             output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
-            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            resource_id=resource_id, resource_id2=resource_id2,
+            stage_gain=stage_gain,
             stage_gain_frequency=stage_gain_frequency, name=name,
             description=description,
             decimation_input_sample_rate=decimation_input_sample_rate,
@@ -291,9 +293,10 @@ class CoefficientsTypeResponseStage(ResponseStage):
     :type denominator: list of float
     :param denominator:
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, cf_transfer_function_type, numerator=None,
+                 cf_transfer_function_type, resource_id=None,
+                 resource_id2=None, name=None, numerator=None,
                  denominator=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
@@ -310,7 +313,8 @@ class CoefficientsTypeResponseStage(ResponseStage):
             output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
-            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            resource_id=resource_id, resource_id2=resource_id2,
+            stage_gain=stage_gain,
             stage_gain_frequency=stage_gain_frequency, name=name,
             description=description,
             decimation_input_sample_rate=decimation_input_sample_rate,
@@ -395,9 +399,10 @@ class ResponseListResponseStage(ResponseStage):
     :param response_list_elements: A list of single discrete frequency,
         amplitude and phase response values.
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, response_list_elements=None,
+                 resource_id=None, resource_id2=None, name=None,
+                 response_list_elements=None,
                  input_units_description=None, output_units_description=None,
                  description=None, decimation_input_sample_rate=None,
                  decimation_factor=None, decimation_offset=None,
@@ -409,7 +414,8 @@ class ResponseListResponseStage(ResponseStage):
             output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
-            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            resource_id=resource_id, resource_id2=resource_id2,
+            stage_gain=stage_gain,
             stage_gain_frequency=stage_gain_frequency, name=name,
             description=description,
             decimation_input_sample_rate=decimation_input_sample_rate,
@@ -467,9 +473,10 @@ class FIRResponseStage(ResponseStage):
     :type numerator_coefficients: list of floats
     :param numerator_coefficients: List of numerator coefficients.
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, symmetry="NONE",
+                 symmetry="NONE", resource_id=None, resource_id2=None,
+                 name=None,
                  numerator_coefficients=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
@@ -483,7 +490,8 @@ class FIRResponseStage(ResponseStage):
             output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
-            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            resource_id=resource_id, resource_id2=resource_id2,
+            stage_gain=stage_gain,
             stage_gain_frequency=stage_gain_frequency, name=name,
             description=description,
             decimation_input_sample_rate=decimation_input_sample_rate,
@@ -534,12 +542,13 @@ class PolynomialResponseStage(ResponseStage):
     :type coefficients: list of floats
     :param coefficients: List of polynomial coefficients.
     """
-    def __init__(self, stage_sequence_number, stage_gain_value,
+    def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
-                 resource_id, name, frequency_lower_bound,
+                 frequency_lower_bound,
                  frequency_upper_bound, approximation_lower_bound,
                  approximation_upper_bound, maximum_error, coefficients,
-                 approximation_type='MACLAURIN',
+                 approximation_type='MACLAURIN', resource_id=None,
+                 resource_id2=None, name=None,
                  input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
@@ -558,7 +567,8 @@ class PolynomialResponseStage(ResponseStage):
             output_units=output_units,
             input_units_description=input_units_description,
             output_units_description=output_units_description,
-            resource_id=resource_id, stage_gain_value=stage_gain_value,
+            resource_id=resource_id, resource_id2=resource_id2,
+            stage_gain=stage_gain,
             stage_gain_frequency=stage_gain_frequency, name=name,
             description=description,
             decimation_input_sample_rate=decimation_input_sample_rate,
@@ -787,7 +797,7 @@ class Response(ComparingObject):
             blkt = ew.blkt()
             blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
             gain_blkt = blkt.blkt_info.gain
-            gain_blkt.gain = blockette.stage_gain_value
+            gain_blkt.gain = blockette.stage_gain
             gain_blkt.gain_freq = blockette.stage_gain_frequency
             stage_blkts.append(blkt)
 
@@ -852,7 +862,7 @@ class Response(ComparingObject):
                  " gain: %.2f" % (
                      i.stage_sequence_number, i.__class__.__name__,
                      i.input_units, i.output_units,
-                     i.stage_gain_value)
+                     i.stage_gain)
                  for i in self.response_stages]))
         return ret
 
@@ -943,10 +953,10 @@ class InstrumentPolynomial(ComparingObject):
         0 polynomial (blockette 62).
     """
     def __init__(self, input_units, output_units,
-                 resource_id, name, frequency_lower_bound,
+                 frequency_lower_bound,
                  frequency_upper_bound, approximation_lower_bound,
                  approximation_upper_bound, maximum_error, coefficients,
-                 approximation_type='MACLAURIN',
+                 approximation_type='MACLAURIN', resource_id=None, name=None,
                  input_units_description=None,
                  output_units_description=None, description=None):
         """

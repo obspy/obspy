@@ -278,7 +278,9 @@ def _read_channel(cha_element, _ns):
 
 def _read_response(resp_element, _ns):
     response = obspy.station.response.Response()
-    response.resource_id = resp_element.attrib['resourceId']
+    response.resource_id = resp_element.attrib.get('resourceId')
+    if response.resource_id is not None:
+        response.resource_id = unicode(response.resource_id)
     instrument_sensitivity = resp_element.find(_ns("InstrumentSensitivity"))
     if instrument_sensitivity is not None:
         response.instrument_sensitivity = \
@@ -300,9 +302,12 @@ def _read_response_stage(stage_elem, _ns):
     """
     # The stage sequence number is required!
     stage_sequence_number = int(stage_elem.get("number"))
+    resource_id = stage_elem.attrib.get('resourceId')
+    if resource_id is not None:
+        resource_id = unicode(resource_id)
     # All stages contain a stage gain and potentially a decimation.
     gain_elem = stage_elem.find(_ns("StageGain"))
-    stage_gain_value = _tag2obj(gain_elem, _ns("Value"), float)
+    stage_gain = _tag2obj(gain_elem, _ns("Value"), float)
     stage_gain_frequency = _tag2obj(gain_elem, _ns("Frequency"), float)
     # Parse the decimation.
     decim_elem = stage_elem.find(_ns("Decimation"))
@@ -350,8 +355,12 @@ def _read_response_stage(stage_elem, _ns):
     output_units_description = _tag2obj(output_units_, _ns("Description"),
                                         unicode)
     description = _tag2obj(elem, _ns("Description"), unicode)
-    resource_id = _tag2obj(elem, _ns("resourceId"), unicode)
-    name = _tag2obj(elem, _ns("name"), unicode)
+    name = elem.attrib.get("name")
+    if name is not None:
+        name = unicode(name)
+    resource_id2 = elem.attrib.get('resourceId')
+    if resource_id2 is not None:
+        resource_id2 = unicode(resource_id2)
 
     # Now collect all shared kwargs to be able to pass them to the different
     # constructors..
@@ -360,7 +369,8 @@ def _read_response_stage(stage_elem, _ns):
               "output_units": output_units,
               "input_units_description": input_units_description,
               "output_units_description": output_units_description,
-              "resource_id": resource_id, "stage_gain_value": stage_gain_value,
+              "resource_id": resource_id, "resource_id2": resource_id2,
+              "stage_gain": stage_gain,
               "stage_gain_frequency": stage_gain_frequency, "name": name,
               "description": description,
               "decimation_input_sample_rate": decimation_input_sample_rate,
