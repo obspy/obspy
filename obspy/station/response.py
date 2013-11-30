@@ -10,6 +10,7 @@ Classes related to instrument responses.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy.core.util.base import ComparingObject
+from obspy.core.util.obspy_types import CustomComplex
 
 
 class ResponseStage(ComparingObject):
@@ -188,7 +189,7 @@ class PolesZerosResponseStage(ResponseStage):
         # Set the Poles and Zeros specific attributes. Special cases are
         # handled by properties.
         self.pz_transfer_function_type = pz_transfer_function_type
-        self.normalization_frequency = float(normalization_frequency)
+        self.normalization_frequency = normalization_frequency
         self.normalization_factor = float(normalization_factor)
         self.zeros = zeros
         self.poles = poles
@@ -231,7 +232,11 @@ class PolesZerosResponseStage(ResponseStage):
 
     @zeros.setter
     def zeros(self, value):
-        self.__zeros = map(complex, value)
+        for x in value:
+            if not isinstance(x, CustomComplex):
+                msg = "Zeros must be of CustomComplex type."
+                raise ValueError(msg)
+        self.__zeros = value
 
     @property
     def poles(self):
@@ -239,7 +244,11 @@ class PolesZerosResponseStage(ResponseStage):
 
     @poles.setter
     def poles(self, value):
-        self.__poles = map(complex, value)
+        for x in value:
+            if not isinstance(x, CustomComplex):
+                msg = "Poles must be of CustomComplex type."
+                raise ValueError(msg)
+        self.__poles = value
 
     @property
     def pz_transfer_function_type(self):

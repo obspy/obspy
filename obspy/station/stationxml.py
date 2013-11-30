@@ -18,7 +18,11 @@ import warnings
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency
-from obspy.core.util.obspy_types import FloatWithUncertainties
+from obspy.station.response import PolesZerosResponseStage, \
+    CoefficientsTypeResponseStage, ResponseListResponseStage, \
+    FIRResponseStage, PolynomialResponseStage
+from obspy.core.util.obspy_types import FloatWithUncertainties, \
+    FloatWithUncertaintiesAndUnit, CustomComplex
 
 
 # Define some constants for writing StationXML files.
@@ -313,11 +317,15 @@ def _read_response_stage(stage_elem, _ns):
     decim_elem = stage_elem.find(_ns("Decimation"))
     if decim_elem is not None:
         decimation_input_sample_rate = \
-            _tag2obj(decim_elem, _ns("InputSampleRate"), float)
+            _read_floattype(decim_elem, _ns("InputSampleRate"), Frequency)
         decimation_factor = _tag2obj(decim_elem, _ns("Factor"), int)
         decimation_offset = _tag2obj(decim_elem, _ns("Offset"), int)
-        decimation_delay = _tag2obj(decim_elem, _ns("Delay"), float)
-        decimation_correction = _tag2obj(decim_elem, _ns("Correction"), float)
+        decimation_delay = _read_floattype(decim_elem, _ns("Delay"),
+                                           FloatWithUncertaintiesAndUnit,
+                                           unit=True)
+        decimation_correction = \
+            _read_floattype(decim_elem, _ns("Correction"),
+                            FloatWithUncertaintiesAndUnit, unit=True)
     else:
         decimation_input_sample_rate = None
         decimation_factor = None
@@ -386,14 +394,20 @@ def _read_response_stage(stage_elem, _ns):
         normalization_factor = \
             _tag2obj(elem, _ns("NormalizationFactor"), float)
         normalization_frequency = \
-            _tag2obj(elem, _ns("NormalizationFrequency"), float)
+            _read_floattype(elem, _ns("NormalizationFrequency"), Frequency)
         # Read poles and zeros to list of imaginary numbers.
-        zeros = [_tag2obj(i, _ns("Real"), float) +
-                 _tag2obj(i, _ns("Imaginary"), float) * 1j
-                 for i in elem.findall(_ns("Zero"))]
-        poles = [_tag2obj(i, _ns("Real"), float) +
-                 _tag2obj(i, _ns("Imaginary"), float) * 1j
-                 for i in elem.findall(_ns("Pole"))]
+        zeros = []
+        for elem_ in elem.findall(_ns("Zero")):
+            x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
+                              _tag2obj(elem_, _ns("Imaginary"), float) * 1j)
+            x.number = elem_.attrib.get("number")
+            zeros.append(x)
+        poles = []
+        for elem_ in elem.findall(_ns("Pole")):
+            x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
+                              _tag2obj(elem_, _ns("Imaginary"), float) * 1j)
+            x.number = elem_.attrib.get("number")
+            poles.append(x)
         return obspy.station.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
@@ -695,8 +709,7 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     for key1, key2 in additional_mapping.iteritems():
         attribs[key1] = getattr(obj_, key2)
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
-    etree.SubElement(parent, tag, attribs).text = \
-        ("%20f" % obj_).rstrip("0").lstrip()
+    etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
 
 def _write_floattype_list(parent, obj, attr_list_name, tag,
@@ -712,8 +725,35 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
             attribs[key1] = getattr(obj_, key2)
         attribs = dict([(k, v) for k, v in attribs.iteritems()
                         if v is not None])
-        etree.SubElement(parent, tag, attribs).text = \
-            ("%20f" % obj_).rstrip("0").lstrip()
+        etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
+
+
+def _float_to_str(x):
+    """
+    Converts a float to str making sure no precision is lost in the string
+    representation.
+    """
+    text = ("%20f" % x).rstrip("0").lstrip()
+    if text.endswith("."):
+        text += "0"
+    return text
+
+
+def _write_polezero_list(parent, obj):
+    for obj_ in obj.zeros:
+        attribs = {}
+        if hasattr(obj_, "number") and obj_.number is not None:
+            attribs["number"] = obj_.number
+        sub = etree.SubElement(parent, "Zero", attribs)
+        etree.SubElement(sub, "Real").text = _float_to_str(obj_.real)
+        etree.SubElement(sub, "Imaginary").text = _float_to_str(obj_.imag)
+    for obj_ in obj.poles:
+        attribs = {}
+        if hasattr(obj_, "number") and obj_.number is not None:
+            attribs["number"] = obj_.number
+        sub = etree.SubElement(parent, "Pole", attribs)
+        etree.SubElement(sub, "Real").text = _float_to_str(obj_.real)
+        etree.SubElement(sub, "Imaginary").text = _float_to_str(obj_.imag)
 
 
 def _write_station(parent, station):
@@ -867,6 +907,63 @@ def _write_response(parent, resp):
         _write_floattype_list(sub, resp.instrument_polynomial,
                               "coefficients", "Coefficient",
                               additional_mapping={"number": "number"})
+    # write response stages
+    for stage in resp.response_stages:
+        _write_response_stage(parent, stage)
+
+
+def _write_response_stage(parent, stage):
+    sub = etree.SubElement(parent, "Stage",
+                           {'number': str(stage.stage_sequence_number),
+                            'resourceId': stage.resource_id})
+    # create tag for stage type
+    tagname_map = {PolesZerosResponseStage: "PolesZeros",
+                   CoefficientsTypeResponseStage: "Coefficients",
+                   ResponseListResponseStage: "ResponseList",
+                   FIRResponseStage: "FIR",
+                   PolynomialResponseStage: "Polynomial"}
+    sub_ = etree.SubElement(sub, tagname_map[type(stage)],
+                            {'name': str(stage.name),
+                             'resourceId': stage.resource_id2})
+    # write operations common to all stage types
+    _obj2tag(sub_, "Description", stage.description)
+    sub__ = etree.SubElement(sub_, "InputUnits")
+    _obj2tag(sub__, "Name", stage.input_units)
+    _obj2tag(sub__, "Description", stage.input_units_description)
+    sub__ = etree.SubElement(sub_, "OutputUnits")
+    _obj2tag(sub__, "Name", stage.output_units)
+    _obj2tag(sub__, "Description", stage.output_units_description)
+
+    # write custom fields of respective stage type
+    if isinstance(stage, PolesZerosResponseStage):
+        _obj2tag(sub_, "PzTransferFunctionType",
+                 stage.pz_transfer_function_type)
+        _obj2tag(sub_, "NormalizationFactor",
+                 stage.normalization_factor)
+        _write_floattype(sub_, stage, "normalization_frequency",
+                         "NormalizationFrequency")
+        _write_polezero_list(sub_, stage)
+    elif isinstance(stage, CoefficientsTypeResponseStage):
+        pass
+    elif isinstance(stage, ResponseListResponseStage):
+        pass
+    elif isinstance(stage, FIRResponseStage):
+        pass
+    elif isinstance(stage, PolynomialResponseStage):
+        pass
+
+    # write decimation
+    sub_ = etree.SubElement(sub, "Decimation")
+    _write_floattype(sub_, stage, "decimation_input_sample_rate",
+                     "InputSampleRate")
+    _obj2tag(sub_, "Factor", stage.decimation_factor)
+    _obj2tag(sub_, "Offset", stage.decimation_offset)
+    _write_floattype(sub_, stage, "decimation_delay", "Delay")
+    _write_floattype(sub_, stage, "decimation_correction", "Correction")
+    # write gain
+    sub_ = etree.SubElement(sub, "StageGain")
+    _obj2tag(sub_, "Value", stage.stage_gain)
+    _obj2tag(sub_, "Frequency", stage.stage_gain_frequency)
 
 
 def _write_external_reference(parent, ref):
@@ -991,7 +1088,7 @@ def _obj2tag(parent, tag_name, tag_value):
     if tag_value is None:
         return
     if isinstance(tag_value, float):
-        text = ("%20f" % tag_value).rstrip("0").lstrip()
+        text = _float_to_str(tag_value)
     else:
         text = str(tag_value)
     etree.SubElement(parent, tag_name).text = text

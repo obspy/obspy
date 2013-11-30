@@ -497,7 +497,7 @@
                                 <Description>dbbugkobSs8W238sLO.Win6vbXIUe</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="319491633.227" minusError="-815247494.851">822303443.336</NormalizationFrequency>
                             <Zero number="1318118000">
                                 <Real plusError="-1302784845.318" minusError="-573682549.904">1752038279.834</Real>
