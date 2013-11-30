@@ -176,29 +176,35 @@ def _read_station(sta_element, _ns):
     return station
 
 
-def _read_floattype(parent, tag, cls, unit=False, datum=False):
+def _read_floattype(parent, tag, cls, unit=False, datum=False,
+                    additional_mapping={}):
     elem = parent.find(tag)
-    obj = cls(_tag2obj(parent, tag, float))
+    obj = cls(float(elem.text))
     if unit:
         obj.unit = elem.attrib.get("unit")
     if datum:
         obj.datum = elem.attrib.get("datum")
     obj.lower_uncertainty = elem.attrib.get("minusError")
     obj.upper_uncertainty = elem.attrib.get("plusError")
+    for key1, key2 in additional_mapping.iteritems():
+        setattr(obj, key1, elem.attrib.get(key2))
     return obj
 
 
-def _read_floattype_list(parent, tag, cls, unit=False, datum=False):
+def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
+                         additional_mapping={}):
     elems = parent.findall(tag)
     objs = []
     for elem in elems:
-        obj = cls(_tag2obj(parent, tag, float))
+        obj = cls(float(elem.text))
         if unit:
             obj.unit = elem.attrib.get("unit")
         if datum:
             obj.datum = elem.attrib.get("datum")
         obj.lower_uncertainty = elem.attrib.get("minusError")
         obj.upper_uncertainty = elem.attrib.get("plusError")
+        for key1, key2 in additional_mapping.iteritems():
+            setattr(obj, key1, elem.attrib.get(key2))
         objs.append(obj)
     return objs
 
@@ -472,7 +478,8 @@ def _read_instrument_polynomial(element, _ns):
     appr_high = _tag2obj(element, _ns("ApproximationUpperBound"), float)
     max_err = _tag2obj(element, _ns("MaximumError"), float)
     coeffs = _read_floattype_list(element, _ns("Coefficient"),
-                                  FloatWithUncertainties)
+                                  FloatWithUncertainties,
+                                  additional_mapping={"number": "number"})
     return obspy.station.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,
         frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
@@ -667,7 +674,7 @@ def _write_network(parent, network):
         _write_station(network_elem, station)
 
 
-def _write_floattype(parent, obj, attr_name, tag):
+def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs = {}
     obj_ = getattr(obj, attr_name)
     attribs["datum"] = obj_.__dict__.get("datum")
@@ -675,12 +682,15 @@ def _write_floattype(parent, obj, attr_name, tag):
         attribs["unit"] = obj_.unit
     attribs["minusError"] = obj_.lower_uncertainty
     attribs["plusError"] = obj_.upper_uncertainty
+    for key1, key2 in additional_mapping.iteritems():
+        attribs[key1] = getattr(obj_, key2)
     attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
     etree.SubElement(parent, tag, attribs).text = \
         ("%20f" % obj_).rstrip("0").lstrip()
 
 
-def _write_floattype_list(parent, obj, attr_list_name, tag):
+def _write_floattype_list(parent, obj, attr_list_name, tag,
+                          additional_mapping={}):
     for obj_ in getattr(obj, attr_list_name):
         attribs = {}
         attribs["datum"] = obj_.__dict__.get("datum")
@@ -688,6 +698,8 @@ def _write_floattype_list(parent, obj, attr_list_name, tag):
             attribs["unit"] = obj_.unit
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
+        for key1, key2 in additional_mapping.iteritems():
+            attribs[key1] = getattr(obj_, key2)
         attribs = dict([(k, v) for k, v in attribs.iteritems()
                         if v is not None])
         etree.SubElement(parent, tag, attribs).text = \
@@ -843,7 +855,8 @@ def _write_response(parent, resp):
         etree.SubElement(sub, "MaximumError").text = \
             str(resp.instrument_polynomial.maximum_error)
         _write_floattype_list(sub, resp.instrument_polynomial,
-                              "coefficients", "Coefficient")
+                              "coefficients", "Coefficient",
+                              additional_mapping={"number": "number"})
 
 
 def _write_external_reference(parent, ref):
