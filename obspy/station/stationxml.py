@@ -980,7 +980,11 @@ def _obj2tag(parent, tag_name, tag_value):
     """
     if tag_value is None:
         return
-    etree.SubElement(parent, tag_name).text = str(tag_value)
+    if isinstance(tag_value, float):
+        text = ("%20f" % tag_value).rstrip("0").lstrip()
+    else:
+        text = str(tag_value)
+    etree.SubElement(parent, tag_name).text = text
 
 
 def _format_time(value):
