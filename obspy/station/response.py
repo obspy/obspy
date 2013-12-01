@@ -13,7 +13,8 @@ import warnings
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit
+    FloatWithUncertaintiesAndUnit, CustomFloat
+from obspy.station.util import Frequency, Angle
 
 
 class ResponseStage(ComparingObject):
@@ -460,7 +461,27 @@ class ResponseListElement(ComparingObject):
         """
         self.frequency = frequency
         self.amplitude = amplitude
-        self._phase = phase
+        self.phase = phase
+
+    @property
+    def frequency(self):
+        return self._frequency
+
+    @frequency.setter
+    def frequency(self, value):
+        if not isinstance(value, Frequency):
+            value = Frequency(value)
+        self._frequency = value
+
+    @property
+    def amplitude(self):
+        return self._amplitude
+
+    @amplitude.setter
+    def amplitude(self, value):
+        if not isinstance(value, FloatWithUncertaintiesAndUnit):
+            value = FloatWithUncertaintiesAndUnit(value)
+        self._amplitude = value
 
     @property
     def phase(self):
@@ -468,9 +489,8 @@ class ResponseListElement(ComparingObject):
 
     @phase.setter
     def phase(self, value):
-        value = float(value)
-        if not -360 <= value <= 360:
-            raise ValueError("Phase angle out of allowed range.")
+        if not isinstance(value, Angle):
+            value = Angle(value)
         self._phase = value
 
 
@@ -532,6 +552,19 @@ class FIRResponseStage(ResponseStage):
             msg = msg % (value, "', '".join(allowed))
             raise ValueError(msg)
         self._symmetry = value
+
+    @property
+    def numerator_coefficients(self):
+        return self._numerator_coefficients
+
+    @numerator_coefficients.setter
+    def numerator_coefficients(self, value):
+        new_values = []
+        for x in value:
+            if not isinstance(x, CustomFloat):
+                x = CustomFloat(x)
+            new_values.append(x)
+        self._numerator_coefficients = new_values
 
 
 class PolynomialResponseStage(ResponseStage):

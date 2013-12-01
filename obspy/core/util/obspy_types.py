@@ -291,6 +291,38 @@ class CustomComplex(complex):
         self = new
 
 
+class CustomFloat(float):
+    """
+    Helper class to inherit from and which stores a float number that is
+    extendable.
+    """
+    def __new__(cls, *args):
+        return super(CustomFloat, cls).__new__(cls, *args)
+
+    def __init__(self, *args):
+        pass
+
+    def __add__(self, other):
+        new = self.__class__(float(self) + other)
+        new.__dict__.update(**self.__dict__)
+        return new
+
+    def __iadd__(self, other):
+        new = self.__class__(float(self) + other)
+        new.__dict__.update(**self.__dict__)
+        self = new
+
+    def __mul__(self, other):
+        new = self.__class__(float(self) * other)
+        new.__dict__.update(**self.__dict__)
+        return new
+
+    def __imul__(self, other):
+        new = self.__class__(float(self) * other)
+        new.__dict__.update(**self.__dict__)
+        self = new
+
+
 class FloatWithUncertainties(float):
     """
     Helper class to inherit from and which stores a float with a given valid

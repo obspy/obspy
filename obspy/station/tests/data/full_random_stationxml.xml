@@ -843,7 +843,7 @@
                                 <Description>URDVA</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>DIGITAL (Z-TRANSFORM)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="-1171610573.318" minusError="1424367503.395">-1457050647.858</NormalizationFrequency>
                             <Zero number="-368355701">
                                 <Real plusError="-810395682.181" minusError="1193502448.456">-880317870.036</Real>
@@ -886,7 +886,7 @@
                                 <Description>HBYlBDrNX8WLBM</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>DIGITAL (Z-TRANSFORM)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="849218574.132" minusError="704270474.674">-405251406.479</NormalizationFrequency>
                             <Zero number="509662998">
                                 <Real plusError="-216488308.155" minusError="-124109269.197">-681528410.732</Real>
@@ -1322,7 +1322,7 @@
                                 <Description>sxWQmTOghF6</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (HERTZ)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="349700327.081" minusError="-364780866.536">1308323977.231</NormalizationFrequency>
                             <Zero number="-980362735">
                                 <Real plusError="1125520113.777" minusError="681700942.762">354855331.13</Real>
@@ -1365,7 +1365,7 @@
                                 <Description>sHigPB.S8T</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="-1011875591.218" minusError="691474350.616">-2086026528.334</NormalizationFrequency>
                             <Zero number="-749977057">
                                 <Real plusError="-788289012.659" minusError="286716459.22">-1004943816.602</Real>
@@ -1585,7 +1585,7 @@
                                 <Description>Q.24RvIe8g5XQ</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (HERTZ)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="-2002378707.818" minusError="714190032.296">-1991223728.475</NormalizationFrequency>
                             <Zero number="-2143940496">
                                 <Real plusError="-1275117250.291" minusError="1877167452.431">-1219958667.892</Real>
@@ -2415,7 +2415,7 @@
                                 <Description>ayZmSZQ-J251x</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="1923041075.427" minusError="1552462676.459">507461422.056</NormalizationFrequency>
                             <Zero number="-538594186">
                                 <Real plusError="-888823575.369" minusError="1036537243.533">-213514784.875</Real>
@@ -2851,7 +2851,7 @@
                                 <Description>B2DPgvCZ17D</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (HERTZ)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="-1428188505.699" minusError="-1220344329.189">-1414729860.523</NormalizationFrequency>
                             <Zero number="175954903">
                                 <Real plusError="-480320196.72" minusError="-1556445056.184">-1768442379.377</Real>
@@ -2894,7 +2894,7 @@
                                 <Description>agdF3fL9MlJO.8V7Oa5</Description>
                             </OutputUnits>
                             <PzTransferFunctionType>LAPLACE (HERTZ)</PzTransferFunctionType>
-                            <NormalizationFactor>1.0E0</NormalizationFactor>
+                            <NormalizationFactor>1.0</NormalizationFactor>
                             <NormalizationFrequency unit="HERTZ" plusError="-1539043994.661" minusError="1456160625.4">-571856023.939</NormalizationFrequency>
                             <Zero number="-1240123921">
                                 <Real plusError="-1742447155.935" minusError="-1186373315.764">-1021141246.512</Real>

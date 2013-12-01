@@ -17,12 +17,12 @@ import warnings
 
 import obspy
 from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
-    ClockDrift, SampleRate, Frequency
+    ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
     CoefficientsTypeResponseStage, ResponseListResponseStage, \
     FIRResponseStage, PolynomialResponseStage
 from obspy.core.util.obspy_types import FloatWithUncertainties, \
-    FloatWithUncertaintiesAndUnit, CustomComplex
+    FloatWithUncertaintiesAndUnit, CustomComplex, CustomFloat
 
 
 # Define some constants for writing StationXML files.
@@ -208,7 +208,7 @@ def _read_floattype_list(parent, tag, cls, unit=False, datum=False,
         obj.lower_uncertainty = elem.attrib.get("minusError")
         obj.upper_uncertainty = elem.attrib.get("plusError")
         for key1, key2 in additional_mapping.iteritems():
-            setattr(obj, key1, elem.attrib.get(key2))
+            setattr(obj, key2, elem.attrib.get(key1))
         objs.append(obj)
     return objs
 
@@ -399,13 +399,13 @@ def _read_response_stage(stage_elem, _ns):
         zeros = []
         for elem_ in elem.findall(_ns("Zero")):
             x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
-                              _tag2obj(elem_, _ns("Imaginary"), float) * 1j)
+                              _tag2obj(elem_, _ns("Imaginary"), float))
             x.number = elem_.attrib.get("number")
             zeros.append(x)
         poles = []
         for elem_ in elem.findall(_ns("Pole")):
             x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
-                              _tag2obj(elem_, _ns("Imaginary"), float) * 1j)
+                              _tag2obj(elem_, _ns("Imaginary"), float))
             x.number = elem_.attrib.get("number")
             poles.append(x)
         return obspy.station.PolesZerosResponseStage(
@@ -432,31 +432,35 @@ def _read_response_stage(stage_elem, _ns):
     elif elem is response_list_elem:
         rlist_elems = []
         for item in elem.findall(_ns("ResponseListElement")):
-            freq = _tag2obj(item, _ns("Frequency"), float)
-            amp = _tag2obj(item, _ns("Amplitude"), float)
-            phase = _tag2obj(item, _ns("Phase"), float)
-            x = obspy.station.response.ResponseListElement(
-                frequency=freq, amplitude=amp, phase=phase)
-            rlist_elems.append(x)
+            freq = _read_floattype(item, _ns("Frequency"), Frequency)
+            amp = _read_floattype(item, _ns("Amplitude"),
+                                  FloatWithUncertaintiesAndUnit, unit=True)
+            phase = _read_floattype(item, _ns("Phase"), Angle)
+            rlist_elems.append(obspy.station.response.ResponseListElement(
+                frequency=freq, amplitude=amp, phase=phase))
         return obspy.station.ResponseListResponseStage(
             response_list_elements=rlist_elems, **kwargs)
 
     # Handle the FIR response stage type.
     elif elem is FIR_elem:
         symmetry = _tag2obj(elem, _ns("Symmetry"), unicode)
-        coeffs = _tags2obj(elem, _ns("NumeratorCoefficient"), float)
+        coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
+                                      CustomFloat,
+                                      additional_mapping={'i': "number"})
         return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
                                               symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
     elif elem is polynomial_elem:
         appr_type = _tag2obj(elem, _ns("ApproximationType"), unicode)
-        f_low = _tag2obj(elem, _ns("FrequencyLowerBound"), float)
-        f_high = _tag2obj(elem, _ns("FrequencyUpperBound"), float)
+        f_low = _read_floattype(elem, _ns("FrequencyLowerBound"), Frequency)
+        f_high = _read_floattype(elem, _ns("FrequencyUpperBound"), Frequency)
         appr_low = _tag2obj(elem, _ns("ApproximationLowerBound"), float)
         appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), float)
         max_err = _tag2obj(elem, _ns("MaximumError"), float)
-        coeffs = _tags2obj(elem, _ns("Coefficient"), float)
+        coeffs = _read_floattype_list(elem, _ns("Coefficient"),
+                                      FloatWithUncertainties,
+                                      additional_mapping={"number": "number"})
         return obspy.station.PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
             frequency_upper_bound=f_high, approximation_lower_bound=appr_low,
@@ -726,7 +730,7 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
         attribs["minusError"] = obj_.lower_uncertainty
         attribs["plusError"] = obj_.upper_uncertainty
         for key1, key2 in additional_mapping.iteritems():
-            attribs[key1] = getattr(obj_, key2)
+            attribs[key2] = getattr(obj_, key1)
         attribs = dict([(k, v) for k, v in attribs.iteritems()
                         if v is not None])
         etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
@@ -868,23 +872,42 @@ def _write_io_units(parent, obj):
         str(obj.output_units_description)
 
 
+def _write_polynomial_common_fields(element, polynomial):
+    etree.SubElement(element, "ApproximationType").text = \
+        str(polynomial.approximation_type)
+    _write_floattype(element, polynomial,
+                     "frequency_lower_bound", "FrequencyLowerBound")
+    _write_floattype(element, polynomial,
+                     "frequency_upper_bound", "FrequencyUpperBound")
+    etree.SubElement(element, "ApproximationLowerBound").text = \
+        _float_to_str(polynomial.approximation_lower_bound)
+    etree.SubElement(element, "ApproximationUpperBound").text = \
+        _float_to_str(polynomial.approximation_upper_bound)
+    etree.SubElement(element, "MaximumError").text = \
+        _float_to_str(polynomial.maximum_error)
+    _write_floattype_list(element, polynomial,
+                          "coefficients", "Coefficient",
+                          additional_mapping={"number": "number"})
+
+
 def _write_response(parent, resp):
     parent = etree.SubElement(parent, "Response",
                               {'resourceId': resp.resource_id})
     # write instrument sensitivity
     if resp.instrument_sensitivity is not None:
+        ins_sens = resp.instrument_sensitivity
         sub = etree.SubElement(parent, "InstrumentSensitivity")
         etree.SubElement(sub, "Value").text = \
-            str(resp.instrument_sensitivity.value)
+            _float_to_str(ins_sens.value)
         etree.SubElement(sub, "Frequency").text = \
-            str(resp.instrument_sensitivity.frequency)
-        _write_io_units(sub, resp.instrument_sensitivity)
+            _float_to_str(ins_sens.frequency)
+        _write_io_units(sub, ins_sens)
         etree.SubElement(sub, "FrequencyStart").text = \
-            str(resp.instrument_sensitivity.frequency_range_start)
+            _float_to_str(ins_sens.frequency_range_start)
         etree.SubElement(sub, "FrequencyEnd").text = \
-            str(resp.instrument_sensitivity.frequency_range_end)
+            _float_to_str(ins_sens.frequency_range_end)
         etree.SubElement(sub, "FrequencyDBVariation").text = \
-            str(resp.instrument_sensitivity.frequency_range_DB_variation)
+            _float_to_str(ins_sens.frequency_range_DB_variation)
     # write instrument polynomial
     if resp.instrument_polynomial is not None:
         attribs = {}
@@ -896,21 +919,7 @@ def _write_response(parent, resp):
         etree.SubElement(sub, "Description").text = \
             str(resp.instrument_polynomial.description)
         _write_io_units(sub, resp.instrument_polynomial)
-        etree.SubElement(sub, "ApproximationType").text = \
-            str(resp.instrument_polynomial.approximation_type)
-        _write_floattype(sub, resp.instrument_polynomial,
-                         "frequency_lower_bound", "FrequencyLowerBound")
-        _write_floattype(sub, resp.instrument_polynomial,
-                         "frequency_upper_bound", "FrequencyUpperBound")
-        etree.SubElement(sub, "ApproximationLowerBound").text = \
-            str(resp.instrument_polynomial.approximation_lower_bound)
-        etree.SubElement(sub, "ApproximationUpperBound").text = \
-            str(resp.instrument_polynomial.approximation_upper_bound)
-        etree.SubElement(sub, "MaximumError").text = \
-            str(resp.instrument_polynomial.maximum_error)
-        _write_floattype_list(sub, resp.instrument_polynomial,
-                              "coefficients", "Coefficient",
-                              additional_mapping={"number": "number"})
+        _write_polynomial_common_fields(sub, resp.instrument_polynomial)
     # write response stages
     for stage in resp.response_stages:
         _write_response_stage(parent, stage)
@@ -955,11 +964,18 @@ def _write_response_stage(parent, stage):
         _write_floattype_list(sub_, stage,
                               "denominator", "Denominator")
     elif isinstance(stage, ResponseListResponseStage):
-        pass
+        for rlelem in stage.response_list_elements:
+            sub__ = etree.SubElement(sub_, "ResponseListElement")
+            _write_floattype(sub__, rlelem, "frequency", "Frequency")
+            _write_floattype(sub__, rlelem, "amplitude", "Amplitude")
+            _write_floattype(sub__, rlelem, "phase", "Phase")
     elif isinstance(stage, FIRResponseStage):
-        pass
+        _obj2tag(sub_, "Symmetry", stage.symmetry)
+        _write_floattype_list(sub_, stage, "numerator_coefficients",
+                              "NumeratorCoefficient",
+                              additional_mapping={'number': 'i'})
     elif isinstance(stage, PolynomialResponseStage):
-        pass
+        _write_polynomial_common_fields(sub_, stage)
 
     # write decimation
     sub_ = etree.SubElement(sub, "Decimation")

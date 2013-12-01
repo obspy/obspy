@@ -615,6 +615,22 @@ class Frequency(FloatWithUncertaintiesFixedUnit):
     unit = "HERTZ"
 
 
+class Angle(FloatWithUncertaintiesFixedUnit):
+    """
+    Angle object
+
+    :type value: float
+    :param value: Angle value
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    """
+    _minimum = -360
+    _maximum = 360
+    unit = "DEGREES"
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
