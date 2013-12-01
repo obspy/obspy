@@ -12,7 +12,8 @@ Classes related to instrument responses.
 import warnings
 
 from obspy.core.util.base import ComparingObject
-from obspy.core.util.obspy_types import CustomComplex
+from obspy.core.util.obspy_types import CustomComplex, \
+    FloatWithUncertaintiesAndUnit
 
 
 class ResponseStage(ComparingObject):
@@ -237,7 +238,7 @@ class PolesZerosResponseStage(ResponseStage):
         for x in value:
             if not isinstance(x, CustomComplex):
                 msg = "Zeros must be of CustomComplex type."
-                raise ValueError(msg)
+                raise TypeError(msg)
         self.__zeros = value
 
     @property
@@ -249,7 +250,7 @@ class PolesZerosResponseStage(ResponseStage):
         for x in value:
             if not isinstance(x, CustomComplex):
                 msg = "Poles must be of CustomComplex type."
-                raise ValueError(msg)
+                raise TypeError(msg)
         self.__poles = value
 
     @property
@@ -299,10 +300,12 @@ class CoefficientsTypeResponseStage(ResponseStage):
             * ``ANALOG (HERTZ)``
             * ``DIGITAL``
         The function tries to match inputs to one of three types if it can.
-    :type numerator: list of float
-    :param numerator:
-    :type denominator: list of float
-    :param denominator:
+    :type numerator: list of
+        :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
+    :param numerator: Numerator of the coefficient response stage.
+    :type denominator: list of
+        :class:`~obspy.core.util.obspy_types.FloatWithUncertaintiesAndUnit`
+    :param denominator: Denominator of the coefficient response stage.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
@@ -351,10 +354,12 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @numerator.setter
     def numerator(self, value):
-        if value is None:
-            self.__numerator = []
-            return
-        self.__numerator = map(float, value)
+        for x in value:
+            if not isinstance(x, FloatWithUncertaintiesAndUnit):
+                msg = ("Numerator elements must be of "
+                       "FloatWithUncertaintiesAndUnit type.")
+                raise TypeError(msg)
+        self.__numerator = value
 
     @property
     def denominator(self):
@@ -362,10 +367,12 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @denominator.setter
     def denominator(self, value):
-        if value is None:
-            self.__denominator = []
-            return
-        self.__denominator = map(float, value)
+        for x in value:
+            if not isinstance(x, FloatWithUncertaintiesAndUnit):
+                msg = ("Denominator elements must be of "
+                       "FloatWithUncertaintiesAndUnit type.")
+                raise TypeError(msg)
+        self.__denominator = value
 
     @property
     def cf_transfer_function_type(self):

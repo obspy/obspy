@@ -418,8 +418,12 @@ def _read_response_stage(stage_elem, _ns):
     elif elem is coefficients_elem:
         cf_transfer_function_type = \
             _tag2obj(elem, _ns("CfTransferFunctionType"), unicode)
-        numerator = _tags2obj(elem, _ns("Numerator"), float)
-        denominator = _tags2obj(elem, _ns("Denominator"), float)
+        numerator = \
+            _read_floattype_list(elem, _ns("Numerator"),
+                                 FloatWithUncertaintiesAndUnit, unit=True)
+        denominator = \
+            _read_floattype_list(elem, _ns("Denominator"),
+                                 FloatWithUncertaintiesAndUnit, unit=True)
         return obspy.station.CoefficientsTypeResponseStage(
             cf_transfer_function_type=cf_transfer_function_type,
             numerator=numerator, denominator=denominator, **kwargs)
@@ -944,7 +948,12 @@ def _write_response_stage(parent, stage):
                          "NormalizationFrequency")
         _write_polezero_list(sub_, stage)
     elif isinstance(stage, CoefficientsTypeResponseStage):
-        pass
+        _obj2tag(sub_, "CfTransferFunctionType",
+                 stage.cf_transfer_function_type)
+        _write_floattype_list(sub_, stage,
+                              "numerator", "Numerator")
+        _write_floattype_list(sub_, stage,
+                              "denominator", "Denominator")
     elif isinstance(stage, ResponseListResponseStage):
         pass
     elif isinstance(stage, FIRResponseStage):
