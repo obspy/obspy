@@ -307,6 +307,13 @@ class FloatWithUncertainties(float):
         return super(FloatWithUncertainties, cls).__new__(cls, value)
 
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None):
+        # set uncertainties, if initialized with similar type
+        if isinstance(value, FloatWithUncertainties):
+            if lower_uncertainty is None:
+                lower_uncertainty = value.lower_uncertainty
+            if upper_uncertainty is None:
+                upper_uncertainty = value.upper_uncertainty
+        # set/override uncertainties, if explicitly specified
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
 
