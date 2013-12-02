@@ -12,6 +12,7 @@ import threading
 import time
 import unittest
 import warnings
+from copy import deepcopy
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
@@ -309,6 +310,32 @@ class WaveformPluginsTestCase(unittest.TestCase):
         self.assertRaises(TypeError, read, tmpfile)
         # cleanup
         os.remove(tmpfile)
+
+    def test_deepcopy(self):
+        """
+        Test for issue #689: deepcopy did not work for segy. In order to
+        avoid complicated code to find test data for each waveform pluging,
+        which read OK and have no errors we simply test by first writing
+        the waveform and then reading it in. Thus test is limited to
+        formats which we can also write.
+        """
+        # find all plugins with both read and write method
+        formats_write = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'writeFormat'))
+        formats_read = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
+        formats = set.intersection(formats_write, formats_read)
+        stream = read()
+        for tr in stream:
+            tr.data = (tr.data * 1e9).astype('f4')
+        stream.sort()
+        for format in formats:
+            tmpfile = NamedTemporaryFile().name
+            stream.write(format=format, filename=tmpfile)
+            st = read(tmpfile)
+            st_copy = deepcopy(st)
+            st_copy.sort()
+            self.assertEquals(str(stream), str(st_copy))
 
 
 def suite():
