@@ -325,17 +325,29 @@ class WaveformPluginsTestCase(unittest.TestCase):
         formats_read = \
             set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
         formats = set.intersection(formats_write, formats_read)
-        stream = read()
-        for tr in stream:
-            tr.data = (tr.data * 1e9).astype('f4')
-        stream.sort()
+        stream_orig = read()
         for format in formats:
+            # TODO: these formats error in read and writing, not in
+            # deepcopy
+            if format in ('SAC', 'SACXY', 'SEG2', 'Q', 'WAV'):
+                continue
+            stream = deepcopy(stream_orig)
+            # set some data
+            dt = 'f4'
+            if format in ('GSE2', 'MSEED'):
+                dt = 'i4'
+            for tr in stream:
+                tr.data = np.arange(tr.stats.npts).astype(dt)
             tmpfile = NamedTemporaryFile().name
-            stream.write(format=format, filename=tmpfile)
-            st = read(tmpfile)
-            st_copy = deepcopy(st)
-            st_copy.sort()
-            self.assertEquals(str(stream), str(st_copy))
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                stream.write(format=format, filename=tmpfile)
+            st = read(tmpfile, format=format)
+            st.sort()
+            st_deepcopy = deepcopy(st)
+            st_deepcopy.sort()
+            self.assertEquals(str(st), str(st_deepcopy))
+            os.remove(tmpfile)
 
 
 def suite():
