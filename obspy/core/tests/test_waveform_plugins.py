@@ -19,6 +19,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
     """
     Test suite for all waveform plug-ins.
     """
+    longMessage = True
 
     def test_raiseOnEmptyFile(self):
         """
@@ -346,7 +347,8 @@ class WaveformPluginsTestCase(unittest.TestCase):
             st.sort()
             st_deepcopy = deepcopy(st)
             st_deepcopy.sort()
-            self.assertEquals(str(st), str(st_deepcopy))
+            msg = "Error in wavform format=%s" % format
+            self.assertEquals(str(st), str(st_deepcopy), msg=msg)
             os.remove(tmpfile)
 
 
