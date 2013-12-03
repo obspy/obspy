@@ -956,7 +956,11 @@ class Unpickler(object):
         for phase, arrival_time in arrivals:
             if phase[0:2] == 'D=':
                 #unused: depth = self._float(phase[2:7])
-                depth_usage_flag = phase[7]
+                try:
+                    depth_usage_flag = phase[7]
+                except IndexError:
+                    #usage flag is not defined
+                    depth_usage_flag = None
                 #FIXME: I'm not sure that 'X' actually
                 #means 'used'
                 if depth_usage_flag == 'X':
