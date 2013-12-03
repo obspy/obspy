@@ -88,11 +88,11 @@ class FlinnEngdahl(object):
             FE_csv = csv.reader(csvfile, delimiter=';',
                                 quotechar='#', skipinitialspace=True)
             self.by_number = \
-                {int(row[0]): row[1] for row in FE_csv if len(row) > 1}
+                dict((int(row[0]), row[1]) for row in FE_csv if len(row) > 1)
 
     def get_quadrant(self, longitude, latitude):
         """
-        Return quadrat from given coordinate
+        Return quadrant from given coordinate
 
         :param longitude: WGS84 longitude
         :type longitude: int or float
