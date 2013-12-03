@@ -22,6 +22,8 @@ from obspy.segy.util import unpack_header_value
 
 import numpy as np
 from struct import unpack
+from copy import deepcopy
+import warnings
 
 
 # Valid data format codes as specified in the SEGY rev1 manual.
@@ -384,11 +386,11 @@ def writeSEGY(stream, filename, data_encoding=None, byteorder=None,
         new_trace.data = trace.data
         # Create empty trace header if none is there.
         if not hasattr(trace.stats, 'segy'):
-            print "CREATING TRACE HEADER"
+            warnings.warn("CREATING TRACE HEADER")
             trace.stats.segy = {}
             trace.stats.segy.trace_header = SEGYTraceHeader(endian=byteorder)
         elif not hasattr(trace.stats.segy, 'trace_header'):
-            print "CREATING TRACE HEADER"
+            warnings.warn("CREATING TRACE HEADER")
             trace.stats.segy.trace_header = SEGYTraceHeader()
         this_trace_header = trace.stats.segy.trace_header
         new_trace_header = new_trace.header
@@ -726,6 +728,13 @@ class LazyTraceHeaderAttribDict(AttribDict):
 
     __getattr__ = __getitem__
 
+    def __deepcopy__(self, *args, **kwargs):  # @UnusedVariable, see #689
+        ad = self.__class__(
+            unpacked_header=deepcopy(self.__dict__['unpacked_header']),
+            unpacked_header_endian=deepcopy(self.__dict__['endian']),
+            data=dict((k, deepcopy(v)) for k, v in self.__dict__.iteritems()
+                      if k not in ('unpacked_data', 'endian')))
+        return ad
 
 if __name__ == '__main__':
     import doctest
