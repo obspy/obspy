@@ -327,7 +327,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertAlmostEqual(mt.tensor.m_rt, -1.9e+18)
         self.assertAlmostEqual(mt.tensor.m_rp, -1.77e+19)
         self.assertAlmostEqual(mt.tensor.m_tp, -4.2e+18)
-        self.assertAlmostEqual(mt.clvd, None)
+        self.assertEqual(mt.clvd, None)
 
     def test_writeQuakeML(self):
         """
