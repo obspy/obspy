@@ -34,14 +34,17 @@ from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
 import glob
+import inspect
 import fnmatch
 import os
 import platform
 import sys
 
 
-# Directory of the current file
-SETUP_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+# Directory of the current file in the (hopefully) most reliable way
+# possible, according to krischer
+SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
+    inspect.currentframe())))
 
 # Import the version string.
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
@@ -331,8 +334,8 @@ if IS_MSVC:
             taupargs = ["-m64"]
         # ignoring all f2py objects
         objects = objects[2:]
-        self.spawn(['gfortran.exe'] + \
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
+        self.spawn(['gfortran.exe'] +
+                   ["-static-libgcc", "-static-libgfortran", "-shared"] +
                    taupargs + objects + ["-o", output_filename])
 
     MSVCCompiler.original_link = MSVCCompiler.link
