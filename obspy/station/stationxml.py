@@ -448,7 +448,7 @@ def _read_response_stage(stage_elem, _ns):
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
                                       FilterCoefficient,
                                       additional_mapping={'i': "number"})
-        return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
+        return obspy.station.FIRResponseStage(coefficients=coeffs,
                                               symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
@@ -972,7 +972,7 @@ def _write_response_stage(parent, stage):
             _write_floattype(sub__, rlelem, "phase", "Phase")
     elif isinstance(stage, FIRResponseStage):
         _obj2tag(sub_, "Symmetry", stage.symmetry)
-        _write_floattype_list(sub_, stage, "numerator_coefficients",
+        _write_floattype_list(sub_, stage, "coefficients",
                               "NumeratorCoefficient",
                               additional_mapping={'number': 'i'})
     elif isinstance(stage, PolynomialResponseStage):

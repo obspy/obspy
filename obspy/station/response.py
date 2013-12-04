@@ -508,20 +508,20 @@ class FIRResponseStage(ResponseStage):
             * ``NONE``
             * ``EVEN``
             * ``ODD``
-    :type numerator_coefficients: list of floats
-    :param numerator_coefficients: List of numerator coefficients.
+    :type coefficients: list of floats
+    :param coefficients: List of FIR coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
                  symmetry="NONE", resource_id=None, resource_id2=None,
                  name=None,
-                 numerator_coefficients=None, input_units_description=None,
+                 coefficients=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         self._symmetry = symmetry
-        self.numerator_coefficients = numerator_coefficients or []
+        self.coefficients = coefficients or []
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
@@ -554,17 +554,17 @@ class FIRResponseStage(ResponseStage):
         self._symmetry = value
 
     @property
-    def numerator_coefficients(self):
-        return self._numerator_coefficients
+    def coefficients(self):
+        return self._coefficients
 
-    @numerator_coefficients.setter
-    def numerator_coefficients(self, value):
+    @coefficients.setter
+    def coefficients(self, value):
         new_values = []
         for x in value:
             if not isinstance(x, FilterCoefficient):
                 x = FilterCoefficient(x)
             new_values.append(x)
-        self._numerator_coefficients = new_values
+        self._coefficients = new_values
 
 
 class PolynomialResponseStage(ResponseStage):
