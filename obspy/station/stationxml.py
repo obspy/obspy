@@ -20,9 +20,10 @@ from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
     CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage
-from obspy.core.util.obspy_types import FloatWithUncertainties, \
-    FloatWithUncertaintiesAndUnit, CustomComplex, CustomFloat
+    FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
+    CoefficientWithUncertainties
+from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
+    CustomComplex
 
 
 # Define some constants for writing StationXML files.
@@ -445,7 +446,7 @@ def _read_response_stage(stage_elem, _ns):
     elif elem is FIR_elem:
         symmetry = _tag2obj(elem, _ns("Symmetry"), unicode)
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
-                                      CustomFloat,
+                                      FilterCoefficient,
                                       additional_mapping={'i': "number"})
         return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
                                               symmetry=symmetry, **kwargs)
@@ -459,7 +460,7 @@ def _read_response_stage(stage_elem, _ns):
         appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), float)
         max_err = _tag2obj(elem, _ns("MaximumError"), float)
         coeffs = _read_floattype_list(elem, _ns("Coefficient"),
-                                      FloatWithUncertainties,
+                                      CoefficientWithUncertainties,
                                       additional_mapping={"number": "number"})
         return obspy.station.PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
@@ -510,7 +511,7 @@ def _read_instrument_polynomial(element, _ns):
     appr_high = _tag2obj(element, _ns("ApproximationUpperBound"), float)
     max_err = _tag2obj(element, _ns("MaximumError"), float)
     coeffs = _read_floattype_list(element, _ns("Coefficient"),
-                                  FloatWithUncertainties,
+                                  CoefficientWithUncertainties,
                                   additional_mapping={"number": "number"})
     return obspy.station.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,

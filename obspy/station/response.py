@@ -13,7 +13,7 @@ import warnings
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat
+    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
 from obspy.station.util import Frequency, Angle
 
 
@@ -561,8 +561,8 @@ class FIRResponseStage(ResponseStage):
     def numerator_coefficients(self, value):
         new_values = []
         for x in value:
-            if not isinstance(x, CustomFloat):
-                x = CustomFloat(x)
+            if not isinstance(x, FilterCoefficient):
+                x = FilterCoefficient(x)
             new_values.append(x)
         self._numerator_coefficients = new_values
 
@@ -642,6 +642,19 @@ class PolynomialResponseStage(ResponseStage):
             msg = msg % (value, "', '".join(allowed))
             raise ValueError(msg)
         self._approximation_type = value
+
+    @property
+    def coefficients(self):
+        return self._coefficients
+
+    @coefficients.setter
+    def coefficients(self, value):
+        new_values = []
+        for x in value:
+            if not isinstance(x, CoefficientWithUncertainties):
+                x = CoefficientWithUncertainties(x)
+            new_values.append(x)
+        self._coefficients = new_values
 
 
 class Response(ComparingObject):
@@ -1101,6 +1114,65 @@ class InstrumentPolynomial(ComparingObject):
             msg = msg % (value, "', '".join(allowed))
             raise ValueError(msg)
         self._approximation_type = value
+
+
+class FilterCoefficient(CustomFloat):
+    """
+    A filter coefficient.
+    """
+    def __init__(self, value, number=None):
+        """
+        :type value: float
+        :param value: The actual value of the coefficient
+        :type number: int, optional
+        :param number: Number to indicate the position of the coefficient.
+        """
+        super(FilterCoefficient, self).__init__(value)
+        self.number = number
+
+    @property
+    def number(self):
+        return self._number
+
+    @number.setter
+    def number(self, value):
+        if not isinstance(value, int):
+            msg = "Coefficient number must be an integer."
+            raise TypeError(msg)
+        self._number = value
+
+
+class CoefficientWithUncertainties(FloatWithUncertainties):
+    """
+    A coefficient with optional uncertainties.
+    """
+    def __init__(self, value, number=None, lower_uncertainty=None,
+                 upper_uncertainty=None):
+        """
+        :type value: float
+        :param value: The actual value of the coefficient
+        :type number: int, optional
+        :param number: Number to indicate the position of the coefficient.
+        :type lower_uncertainty: float
+        :param lower_uncertainty: Lower uncertainty (aka minusError)
+        :type upper_uncertainty: float
+        :param upper_uncertainty: Upper uncertainty (aka plusError)
+        """
+        super(CoefficientWithUncertainties, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+        self.number = number
+
+    @property
+    def number(self):
+        return self._number
+
+    @number.setter
+    def number(self, value):
+        if not isinstance(value, int):
+            msg = "Coefficient number must be an integer."
+            raise TypeError(msg)
+        self._number = value
 
 
 if __name__ == '__main__':
