@@ -232,7 +232,7 @@ class PolesZerosResponseStage(ResponseStage):
 
     @property
     def zeros(self):
-        return self.__zeros
+        return self._zeros
 
     @zeros.setter
     def zeros(self, value):
@@ -240,11 +240,11 @@ class PolesZerosResponseStage(ResponseStage):
             if not isinstance(x, CustomComplex):
                 msg = "Zeros must be of CustomComplex type."
                 raise TypeError(msg)
-        self.__zeros = value
+        self._zeros = value
 
     @property
     def poles(self):
-        return self.__poles
+        return self._poles
 
     @poles.setter
     def poles(self, value):
@@ -252,11 +252,11 @@ class PolesZerosResponseStage(ResponseStage):
             if not isinstance(x, CustomComplex):
                 msg = "Poles must be of CustomComplex type."
                 raise TypeError(msg)
-        self.__poles = value
+        self._poles = value
 
     @property
     def pz_transfer_function_type(self):
-        return self.__pz_transfer_function_type
+        return self._pz_transfer_function_type
 
     @pz_transfer_function_type.setter
     def pz_transfer_function_type(self, value):
@@ -273,13 +273,13 @@ class PolesZerosResponseStage(ResponseStage):
         value = value.lower()
         if "laplace" in value:
             if "radian" in value:
-                self.__pz_transfer_function_type = "LAPLACE (RADIANS/SECOND)"
+                self._pz_transfer_function_type = "LAPLACE (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
-                self.__pz_transfer_function_type = "LAPLACE (HERTZ)"
+                self._pz_transfer_function_type = "LAPLACE (HERTZ)"
             else:
                 raise ValueError(msg)
         elif "digital" in value:
-            self.__pz_transfer_function_type = "DIGITAL (Z-TRANSFORM)"
+            self._pz_transfer_function_type = "DIGITAL (Z-TRANSFORM)"
         else:
             raise ValueError(msg)
 
@@ -351,7 +351,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @property
     def numerator(self):
-        return self.__numerator
+        return self._numerator
 
     @numerator.setter
     def numerator(self, value):
@@ -360,11 +360,11 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 msg = ("Numerator elements must be of "
                        "FloatWithUncertaintiesAndUnit type.")
                 raise TypeError(msg)
-        self.__numerator = value
+        self._numerator = value
 
     @property
     def denominator(self):
-        return self.__denominator
+        return self._denominator
 
     @denominator.setter
     def denominator(self, value):
@@ -373,11 +373,11 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 msg = ("Denominator elements must be of "
                        "FloatWithUncertaintiesAndUnit type.")
                 raise TypeError(msg)
-        self.__denominator = value
+        self._denominator = value
 
     @property
     def cf_transfer_function_type(self):
-        return self.__cf_transfer_function_type
+        return self._cf_transfer_function_type
 
     @cf_transfer_function_type.setter
     def cf_transfer_function_type(self, value):
@@ -394,13 +394,13 @@ class CoefficientsTypeResponseStage(ResponseStage):
         value = value.lower()
         if "analog" in value:
             if "radian" in value:
-                self.__cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
+                self._cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
-                self.__cf_transfer_function_type = "ANALOG (HERTZ)"
+                self._cf_transfer_function_type = "ANALOG (HERTZ)"
             else:
                 raise ValueError(msg)
         elif "digital" in value:
-            self.__cf_transfer_function_type = "DIGITAL"
+            self._cf_transfer_function_type = "DIGITAL"
         else:
             raise ValueError(msg)
 

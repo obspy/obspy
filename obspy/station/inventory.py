@@ -150,7 +150,7 @@ class Inventory(ComparingObject):
 
     @property
     def networks(self):
-        return self.__networks
+        return self._networks
 
     @networks.setter
     def networks(self, value):
@@ -160,7 +160,7 @@ class Inventory(ComparingObject):
         if any([not isinstance(x, Network) for x in value]):
             msg = "networks can only contain Network objects."
             raise ValueError(msg)
-        self.__networks = value
+        self._networks = value
 
 
 if __name__ == '__main__':
