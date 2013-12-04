@@ -4,6 +4,8 @@ dev:
  - obspy.core:
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
+ - obspy.segy:
+   * fix a bug in plotting (see #689)
  - obspy.signal:
    * fix a bug when using evalresp with RESP files with very short epochs.
      see #631.
