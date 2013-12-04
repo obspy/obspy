@@ -66,6 +66,8 @@ dev:
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
+ - obspy.segy:
+   * fix a bug in plotting (see #689)
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
