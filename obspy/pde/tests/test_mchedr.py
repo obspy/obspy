@@ -38,7 +38,7 @@ class mchedrTestCase(unittest.TestCase):
         self.assertEqual(
             catalog[0].resource_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/event/20120101052755.98'))
+                id='quakeml:us.anss.org/event/20120101052755.98'))
         self.assertEqual(
             str(catalog),
             '''1 Event(s) in Catalog:
@@ -56,7 +56,7 @@ class mchedrTestCase(unittest.TestCase):
         self.assertEqual(
             event.resource_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/event/20120101052755.98'))
+                id='quakeml:us.anss.org/event/20120101052755.98'))
         # enums
         self.assertEqual(event.event_type, None)
         self.assertEqual(event.event_type_certainty, None)
@@ -90,7 +90,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             origin.resource_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/origin/20120101052755.98'))
+                id='quakeml:us.anss.org/origin/20120101052755.98'))
         self.assertEqual(origin.type, 'hypocenter')
         self.assertEqual(
             origin.time,
@@ -110,7 +110,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             origin.earth_model_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/earthmodel/ak135'))
+                id='quakeml:us.anss.org/earthmodel/ak135'))
         self.assertEqual(origin.evaluation_mode, None)
         self.assertEqual(origin.evaluation_status, None)
         self.assertEqual(origin.origin_type, None)
@@ -166,7 +166,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             mag.resource_id,
             ResourceIdentifier(
-                resource_id=
+                id=
                 'quakeml:us.anss.org/magnitude/20120101052755.98/mb'))
         self.assertEqual(mag.mag, 6.2)
         self.assertEqual(mag.mag_errors.uncertainty, None)
@@ -271,7 +271,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             fm.resource_id,
             ResourceIdentifier(
-                resource_id=
+                id=
                 'quakeml:us.anss.org/focalmechanism/'
                 '20120101052755.98/ucmt/mwc'))
         # general
@@ -284,7 +284,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             fm.method_id,
             ResourceIdentifier(
-                resource_id='quakeml:us.anss.org/methodID=CMT'))
+                id='quakeml:us.anss.org/methodID=CMT'))
         # comments
         self.assertEqual(len(fm.comments), 0)
         # creation info
@@ -317,7 +317,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(
             mt.resource_id,
             ResourceIdentifier(
-                resource_id=
+                id=
                 'quakeml:us.anss.org/momenttensor/'
                 '20120101052755.98/ucmt/mwc'))
         self.assertAlmostEqual(mt.scalar_moment, 1.9e+19)
