@@ -67,6 +67,10 @@ dev:
    * obspy-scan: new option --print-gaps
    * added plotting of record sections
    * automatic merging can be disabled for obspy-plot
+ - obspy.pde:
+   * new module for reading NEIC PDE bulletin files into an obspy catalog
+     object. Only the "mchedr" format (file format revision of February 24,
+     2004) is supported.
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
