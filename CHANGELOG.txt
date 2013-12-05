@@ -31,6 +31,12 @@ dev:
    * event.ResourceIdentifier objects are now initialized with a QuakeML
      conform string by default, i.e. if no custom prefix is provided during
      initialization.
+   * event.ResourceIdentifier.resource_id attribute was renamed to
+     event.ResourceIdentifier.id
+   * event.ResourceIdentifier now was has a method regenerate_uuid() that
+     allows the random hash part to be regenerated for resource identifiers
+     with no fixed id string (can be useful to generate a new hash if the
+     referred object changes).
    * added a new test that asserts that the whole codebase is valid according
      to the flake8 tool.
  - obspy.css:
