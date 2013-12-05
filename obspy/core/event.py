@@ -2637,7 +2637,7 @@ class Catalog(object):
         """
         self.events = []
 
-    def filter(self, *args):
+    def filter(self, *args, **kwargs):
         """
         Returns a new Catalog object only containing Events which match the
         specified filter rules.
@@ -2690,8 +2690,10 @@ class Catalog(object):
                         ">": __is_greater,
                         ">=": __is_greater_or_equal}
 
-        inverse = "inverse" in args
-        args = [a for a in args if a != "inverse"]
+        try:
+            inverse = kwargs["inverse"]
+        except KeyError:
+            inverse = False
 
         events = list(self.events)
         for arg in args:
