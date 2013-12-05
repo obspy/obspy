@@ -27,6 +27,9 @@ import warnings
 import os
 
 
+DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
+
+
 class Client(object):
     """
     FDSN Web service request client.
@@ -45,7 +48,7 @@ class Client(object):
 
     For details see :meth:`__init__`.
     """
-    def __init__(self, base_url="IRIS", major_version=1, user=None,
+    def __init__(self, base_url="IRIS", major_versions={}, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False):
         """
         Initializes an FDSN Web Service client.
@@ -66,8 +69,11 @@ class Client(object):
         :param base_url: Base URL of FDSN web service compatible server
             (e.g. "http://service.iris.edu") or key string for recognized
             server (currently "IRIS", "USGS", "RESIF", "NCEDC")
-        :type major_version: int
-        :param major_version: Major version number of server to access.
+        :type major_versions: dict
+        :param major_versions: Allows to specify custom major version numbers
+            for individual services (e.g.
+            `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
+            latest version at time of implementation will be used.
         :type user: str
         :param user: User name of HTTP Digest Authentication for access to
             restricted data.
@@ -100,7 +106,8 @@ class Client(object):
             urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
-        self.major_version = major_version
+        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        self.major_versions.update(major_versions)
 
         if self.debug is True:
             print "Base URL: %s" % self.base_url
@@ -861,7 +868,7 @@ class Client(object):
             raise FDSNException("Service temporarily unavailable")
         return data
 
-    def _build_url(self, resource_type, service, parameters={}):
+    def _build_url(self, service, resource_type, parameters={}):
         """
         Builds the correct URL.
 
@@ -870,10 +877,10 @@ class Client(object):
         """
         # authenticated dataselect queries have different target URL
         if self.user is not None:
-            if resource_type == "dataselect" and service == "query":
-                service = "queryauth"
-        return build_url(self.base_url, self.major_version, resource_type,
-                         service, parameters)
+            if service == "dataselect" and resource_type == "query":
+                resource_type = "queryauth"
+        return build_url(self.base_url, service, self.major_versions[service],
+                         resource_type, parameters)
 
     def _discover_services(self):
         """
@@ -882,13 +889,10 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
-        dataselect_url = self._build_url("dataselect", "application.wadl")
-        station_url = self._build_url("station", "application.wadl")
-        event_url = self._build_url("event", "application.wadl")
-        catalog_url = self._build_url("event", "catalogs")
-        contributor_url = self._build_url("event", "contributors")
-        urls = (dataselect_url, station_url, event_url, catalog_url,
-                contributor_url)
+        urls = [self._build_url(service, "application.wadl")
+                for service in ("dataselect", "event", "station")]
+        urls.append(self._build_url("event", "catalogs"))
+        urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
         wadl_queue = Queue.Queue()
@@ -1009,17 +1013,17 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, major_version, service, resource_type, parameters={}):
+def build_url(base_url, service, major_version, resource_type, parameters={}):
     """
     URL builder for the FDSN webservices.
 
     Built as a separate function to enhance testability.
 
-    >>> build_url("http://service.iris.edu", 1, "dataselect", \
+    >>> build_url("http://service.iris.edu", "dataselect", 1, \
                   "application.wadl")
     'http://service.iris.edu/fdsnws/dataselect/1/application.wadl'
 
-    >>> build_url("http://service.iris.edu", 1, "dataselect", \
+    >>> build_url("http://service.iris.edu", "dataselect", 1, \
                   "query", {"cha": "EHE"})
     'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
     """

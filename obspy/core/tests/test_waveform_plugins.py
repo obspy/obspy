@@ -12,12 +12,14 @@ import threading
 import time
 import unittest
 import warnings
+from copy import deepcopy
 
 
 class WaveformPluginsTestCase(unittest.TestCase):
     """
     Test suite for all waveform plug-ins.
     """
+    longMessage = True
 
     def test_raiseOnEmptyFile(self):
         """
@@ -336,6 +338,45 @@ class WaveformPluginsTestCase(unittest.TestCase):
         self.assertRaises(TypeError, read, tmpfile)
         # cleanup
         os.remove(tmpfile)
+
+    def test_deepcopy(self):
+        """
+        Test for issue #689: deepcopy did not work for segy. In order to
+        avoid complicated code to find test data for each waveform pluging,
+        which read OK and have no errors we simply test by first writing
+        the waveform and then reading it in. Thus test is limited to
+        formats which we can also write.
+        """
+        # find all plugins with both read and write method
+        formats_write = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'writeFormat'))
+        formats_read = \
+            set(_getEntryPoints('obspy.plugin.waveform', 'readFormat'))
+        formats = set.intersection(formats_write, formats_read)
+        stream_orig = read()
+        for format in formats:
+            # TODO: these formats error in read and writing, not in
+            # deepcopy
+            if format in ('SAC', 'SACXY', 'SEG2', 'Q', 'WAV'):
+                continue
+            stream = deepcopy(stream_orig)
+            # set some data
+            dt = 'f4'
+            if format in ('GSE2', 'MSEED'):
+                dt = 'i4'
+            for tr in stream:
+                tr.data = np.arange(tr.stats.npts).astype(dt)
+            tmpfile = NamedTemporaryFile().name
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                stream.write(format=format, filename=tmpfile)
+            st = read(tmpfile, format=format)
+            st.sort()
+            st_deepcopy = deepcopy(st)
+            st_deepcopy.sort()
+            msg = "Error in wavform format=%s" % format
+            self.assertEquals(str(st), str(st_deepcopy), msg=msg)
+            os.remove(tmpfile)
 
 
 def suite():
