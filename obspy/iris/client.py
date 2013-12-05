@@ -30,6 +30,9 @@ DEPR_WARN = ("This service was shut down on the server side in december "
 DEPR_WARNS = dict([(new, DEPR_WARN % "obspy.fdsn.client.Client.%s" % new)
                    for new in ["get_waveform", "get_events", "get_stations",
                                "get_waveform_bulk"]])
+DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
+                            "evalresp": 1, "traveltime": 1, "flinnengdahl": 2,
+                            "distaz": 1}
 
 
 class Client(object):
@@ -56,9 +59,11 @@ class Client(object):
         current module version and basic information about the used
         operation system, e.g.
         ``'ObsPy 0.4.7.dev-r2432 (Windows-7-6.1.7601-SP1, Python 2.7.1)'``.
-    :type major_version: int
-    :param major_version: Default major version number of services to access.
-        Can be overridden in each individual service call.
+    :type major_versions: dict
+    :param major_versions: Allows to specify custom major version numbers
+        for individual services (e.g.
+        `major_versions={'evalresp': 2, 'sacpz': 3}`), otherwise the
+        latest version at time of implementation will be used.
 
     .. rubric:: Example
 
@@ -75,7 +80,7 @@ class Client(object):
     """
     def __init__(self, base_url="http://service.iris.edu/irisws",
                  user="", password="", timeout=20, debug=False,
-                 user_agent=DEFAULT_USER_AGENT, major_version=1):
+                 user_agent=DEFAULT_USER_AGENT, major_versions={}):
         """
         Initializes the IRIS Web service client.
 
@@ -85,7 +90,8 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
         self.user_agent = user_agent
-        self.major_version = major_version
+        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -94,29 +100,21 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
-    def _fetch(self, service, major_version=None, data=None, headers={},
-               param_list=[], **params):
+    def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
         Send a HTTP request via urllib2.
 
         :type service: str
         :param service: Name of service
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for this
-            request.
         :type data: str
         :param data: Channel list as returned by `availability` Web service
         :type headers: dict, optional
         :param headers: Additional header information for request
         """
         headers['User-Agent'] = self.user_agent
-        major_version = major_version or self.major_version
-        # flinnengdahl has no major_version 1, use 2 as minimum
-        if service == "flinnengdahl" and major_version < 2:
-            major_version = 2
         # replace special characters
         remoteaddr = "/".join([self.base_url.rstrip("/"), service,
-                               str(major_version), "query"])
+                               str(self.major_versions[service]), "query"])
         options = '&'.join(param_list)
         if params:
             if options:
@@ -226,7 +224,7 @@ class Client(object):
 
     def timeseries(self, network, station, location, channel,
                    starttime, endtime, filter=[], filename=None,
-                   output='miniseed', major_version=None, **kwargs):
+                   output='miniseed', **kwargs):
         """
         Low-level interface for `timeseries` Web service of IRIS
         (http://www.iris.edu/ws/timeseries/)- release 1.3.5 (2012-06-07).
@@ -252,9 +250,6 @@ class Client(object):
         :param starttime: Start date and time.
         :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
         :param endtime: End date and time.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
 
         **Filter Options**
 
@@ -391,8 +386,7 @@ class Client(object):
             kwargs['output'] = 'miniseed'
         # build up query
         try:
-            data = self._fetch("timeseries", param_list=filter,
-                               major_version=major_version, **kwargs)
+            data = self._fetch("timeseries", param_list=filter, **kwargs)
         except HTTPError, e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -412,8 +406,7 @@ class Client(object):
         return stream
 
     def resp(self, network, station, location="*", channel="*",
-             starttime=None, endtime=None, filename=None,
-             major_version=None, **kwargs):
+             starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `resp` Web service of IRIS
         (http://www.iris.edu/ws/resp/) - 1.4.1 (2011-04-14).
@@ -433,9 +426,6 @@ class Client(object):
         :type channel: str, optional
         :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
             Defaults to ``'*'``.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
 
         **Temporal constraints**
 
@@ -499,7 +489,7 @@ class Client(object):
                 pass
         # build up query
         try:
-            data = self._fetch("resp", major_version=major_version,  **kwargs)
+            data = self._fetch("resp", **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -569,8 +559,7 @@ class Client(object):
         raise Exception(DEPR_WARNS['get_stations'])
 
     def sacpz(self, network, station, location="*", channel="*",
-              starttime=None, endtime=None, filename=None,
-              major_version=None, **kwargs):
+              starttime=None, endtime=None, filename=None, **kwargs):
         """
         Low-level interface for `sacpz` Web service of IRIS
         (http://www.iris.edu/ws/sacpz/) - release 1.1.1 (2012-1-9).
@@ -597,9 +586,6 @@ class Client(object):
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
         :rtype: str or ``None``
         :return: String with SAC poles and zeros information if no ``filename``
             is given.
@@ -674,11 +660,10 @@ class Client(object):
                 kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
             except:
                 kwargs['time'] = starttime
-        data = self._fetch("sacpz", major_version=major_version, **kwargs)
+        data = self._fetch("sacpz", **kwargs)
         return self._toFileOrData(filename, data)
 
-    def distaz(self, stalat, stalon, evtlat, evtlon,
-               major_version=None):
+    def distaz(self, stalat, stalon, evtlat, evtlon):
         """
         Low-level interface for `distaz` Web service of IRIS
         (http://www.iris.edu/ws/distaz/) - release 1.0.1 (2010).
@@ -696,9 +681,6 @@ class Client(object):
         :param evtlat: Event latitude.
         :type evtlon: float
         :param evtlon: Event longitude.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
         :rtype: dict
         :return: Dictionary containing values for azimuth, backazimuth and
             distance.
@@ -727,8 +709,7 @@ class Client(object):
         # build up query
         try:
             data = self._fetch("distaz", headers=headers, stalat=stalat,
-                               stalon=stalon, evtlat=evtlat, evtlon=evtlon,
-                               major_version=major_version)
+                               stalon=stalon, evtlat=evtlat, evtlon=evtlon)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -740,7 +721,7 @@ class Client(object):
         results['azimuth'] = data['azimuth']
         return results
 
-    def flinnengdahl(self, lat, lon, rtype="both", major_version=None):
+    def flinnengdahl(self, lat, lon, rtype="both"):
         """
         Low-level interface for `flinnengdahl` Web service of IRIS
         (http://www.iris.edu/ws/flinnengdahl/) - release 1.1 (2011-06-08).
@@ -755,9 +736,6 @@ class Client(object):
         :param lon: Longitude of interest.
         :type rtype: ``'code'``, ``'region'`` or ``'both'``
         :param rtype: Return type. Defaults to ``'both'``.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
         :rtype: int, str, or tuple
         :returns: Returns Flinn-Engdahl region code or name or both, depending
             on the request type parameter ``rtype``.
@@ -781,22 +759,18 @@ class Client(object):
             if rtype == 'code':
                 param_list = ["output=%s" % rtype, "lat=%s" % lat,
                               "lon=%s" % lon]
-                return int(self._fetch(service, major_version=major_version,
-                                       param_list=param_list))
+                return int(self._fetch(service, param_list=param_list))
             elif rtype == 'region':
                 param_list = ["output=%s" % rtype, "lat=%s" % lat,
                               "lon=%s" % lon]
-                return self._fetch(service, major_version=major_version,
-                                   param_list=param_list).strip()
+                return self._fetch(service, param_list=param_list).strip()
             else:
                 param_list = ["output=code", "lat=%s" % lat,
                               "lon=%s" % lon]
-                code = int(self._fetch(service, major_version=major_version,
-                                       param_list=param_list))
+                code = int(self._fetch(service, param_list=param_list))
                 param_list = ["output=region", "lat=%s" % lat,
                               "lon=%s" % lon]
-                region = self._fetch(service, major_version=major_version,
-                                     param_list=param_list).strip()
+                region = self._fetch(service, param_list=param_list).strip()
                 return (code, region)
         except HTTPError, e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
@@ -806,7 +780,7 @@ class Client(object):
     def traveltime(self, model='iasp91', phases=DEFAULT_PHASES, evdepth=0.0,
                    distdeg=None, distkm=None, evloc=None, staloc=None,
                    noheader=False, traveltimeonly=False, rayparamonly=False,
-                   mintimeonly=False, filename=None, major_version=None):
+                   mintimeonly=False, filename=None):
         """
         Low-level interface for `traveltime` Web service of IRIS
         (http://www.iris.edu/ws/traveltime/) - release 1.1.1 (2012-05-15).
@@ -834,9 +808,6 @@ class Client(object):
         :type evdepth: float, optional
         :param evdepth: The depth of the event, in kilometers. Default is ``0``
             km.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
 
         **Geographical Parameters - required**
 
@@ -940,8 +911,7 @@ class Client(object):
             kwargs['mintimeonly'] = 1
         # build up query
         try:
-            data = self._fetch("traveltime", major_version=major_version,
-                               **kwargs)
+            data = self._fetch("traveltime", **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -951,7 +921,7 @@ class Client(object):
     def evalresp(self, network, station, location, channel, time=UTCDateTime(),
                  minfreq=0.00001, maxfreq=None, nfreq=200, units='def',
                  width=800, height=600, annotate=True, output='plot',
-                 filename=None, major_version=None, **kwargs):
+                 filename=None, **kwargs):
         """
         Low-level interface for `evalresp` Web service of IRIS
         (http://www.iris.edu/ws/evalresp/) - release 1.0.0 (2011-08-11).
@@ -1043,9 +1013,6 @@ class Client(object):
         :type filename: str, optional
         :param filename: Name of a output file. If this parameter is given
             nothing will be returned. Default is ``None``.
-        :type major_version: int, optional
-        :param major_version: Override client's major version number for the
-            request.
         :rtype: numpy.ndarray, str or `None`
         :returns: Returns either a NumPy :class:`~numpy.ndarray`, image string
             or nothing, depending on the ``output`` parameter.
@@ -1105,7 +1072,7 @@ class Client(object):
             kwargs['width'] = int(width)
             kwargs['height'] = int(height)
             kwargs['annotate'] = bool(annotate)
-        data = self._fetch("evalresp", major_version=major_version, **kwargs)
+        data = self._fetch("evalresp", **kwargs)
         # check output
         if 'plot' in output:
             # image
