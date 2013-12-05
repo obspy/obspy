@@ -1,0 +1,1528 @@
+<?xml version="1.0"?>
+<rng:grammar xmlns:rng="http://relaxng.org/ns/structure/1.0" xmlns:bed="http://quakeml.org/xmlns/bed/1.2" xmlns="http://quakeml.org/xmlns/bed/1.2" ns="http://quakeml.org/xmlns/bed/1.2" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <rng:define name="eventParameters_anything">
+    <rng:zeroOrMore>
+      <rng:choice>
+        <rng:element>
+          <rng:anyName/>
+          <rng:ref name="eventParameters_anything"/>
+        </rng:element>
+        <rng:attribute>
+          <rng:anyName/>
+        </rng:attribute>
+        <rng:text/>
+      </rng:choice>
+    </rng:zeroOrMore>
+  </rng:define>
+  <rng:define name="eventParameters_foreign-elements">
+    <rng:zeroOrMore>
+      <rng:element>
+        <rng:anyName>
+          <rng:except>
+            <rng:nsName ns=""/>
+            <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
+          </rng:except>
+        </rng:anyName>
+        <rng:ref name="eventParameters_anything"/>
+      </rng:element>
+    </rng:zeroOrMore>
+  </rng:define>
+  <rng:define name="eventParameters_foreign-attributes">
+    <rng:zeroOrMore>
+      <rng:attribute>
+        <rng:anyName>
+          <rng:except>
+            <rng:nsName ns=""/>
+            <rng:nsName ns="http://quakeml.org/xmlns/bed/1.2"/>
+          </rng:except>
+        </rng:anyName>
+      </rng:attribute>
+    </rng:zeroOrMore>
+  </rng:define>
+  <rng:define name="eventParameters_foreign-nodes">
+    <rng:zeroOrMore>
+      <rng:choice>
+        <rng:ref name="eventParameters_foreign-attributes"/>
+        <rng:ref name="eventParameters_foreign-elements"/>
+      </rng:choice>
+    </rng:zeroOrMore>
+  </rng:define>
+  <rng:define name="ResourceIdentifier">
+    <rng:data type="anyURI">
+      <rng:param name="pattern">(smi|quakeml):[\w\d][\w\d\-\.\*\(\)_~']{2,}/[\w\d\-\.\*\(\)_~'][\w\d\-\.\*\(\)\+\?_~'=,;#/&amp;]*</rng:param>
+    </rng:data>
+  </rng:define>
+  <rng:define name="OriginUncertaintyDescription">
+    <rng:choice>
+      <rng:value type="string">horizontal uncertainty</rng:value>
+      <rng:value type="string">uncertainty ellipse</rng:value>
+      <rng:value type="string">confidence ellipsoid</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="AmplitudeCategory">
+    <rng:choice>
+      <rng:value type="string">point</rng:value>
+      <rng:value type="string">mean</rng:value>
+      <rng:value type="string">duration</rng:value>
+      <rng:value type="string">period</rng:value>
+      <rng:value type="string">integral</rng:value>
+      <rng:value type="string">other</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="OriginDepthType">
+    <rng:choice>
+      <rng:value type="string">from location</rng:value>
+      <rng:value type="string">from moment tensor inversion</rng:value>
+      <rng:value type="string">from modeling of broad-band P waveforms</rng:value>
+      <rng:value type="string">constrained by depth phases</rng:value>
+      <rng:value type="string">constrained by direct phases</rng:value>
+      <rng:value type="string">constrained by depth and direct phases</rng:value>
+      <rng:value type="string">operator assigned</rng:value>
+      <rng:value type="string">other</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="OriginType">
+    <rng:choice>
+      <rng:value type="string">hypocenter</rng:value>
+      <rng:value type="string">centroid</rng:value>
+      <rng:value type="string">amplitude</rng:value>
+      <rng:value type="string">macroseismic</rng:value>
+      <rng:value type="string">rupture start</rng:value>
+      <rng:value type="string">rupture end</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="MTInversionType">
+    <rng:choice>
+      <rng:value type="string">general</rng:value>
+      <rng:value type="string">zero trace</rng:value>
+      <rng:value type="string">double couple</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="EvaluationMode">
+    <rng:choice>
+      <rng:value type="string">manual</rng:value>
+      <rng:value type="string">automatic</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="EvaluationStatus">
+    <rng:choice>
+      <rng:value type="string">preliminary</rng:value>
+      <rng:value type="string">confirmed</rng:value>
+      <rng:value type="string">reviewed</rng:value>
+      <rng:value type="string">final</rng:value>
+      <rng:value type="string">rejected</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="PickOnset">
+    <rng:choice>
+      <rng:value type="string">emergent</rng:value>
+      <rng:value type="string">impulsive</rng:value>
+      <rng:value type="string">questionable</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="EventType">
+    <rng:choice>
+      <rng:value type="string">not existing</rng:value>
+      <rng:value type="string">not reported</rng:value>
+      <rng:value type="string">earthquake</rng:value>
+      <rng:value type="string">anthropogenic event</rng:value>
+      <rng:value type="string">collapse</rng:value>
+      <rng:value type="string">cavity collapse</rng:value>
+      <rng:value type="string">mine collapse</rng:value>
+      <rng:value type="string">building collapse</rng:value>
+      <rng:value type="string">explosion</rng:value>
+      <rng:value type="string">accidental explosion</rng:value>
+      <rng:value type="string">chemical explosion</rng:value>
+      <rng:value type="string">controlled explosion</rng:value>
+      <rng:value type="string">experimental explosion</rng:value>
+      <rng:value type="string">industrial explosion</rng:value>
+      <rng:value type="string">mining explosion</rng:value>
+      <rng:value type="string">quarry blast</rng:value>
+      <rng:value type="string">road cut</rng:value>
+      <rng:value type="string">blasting levee</rng:value>
+      <rng:value type="string">nuclear explosion</rng:value>
+      <rng:value type="string">induced or triggered event</rng:value>
+      <rng:value type="string">rock burst</rng:value>
+      <rng:value type="string">reservoir loading</rng:value>
+      <rng:value type="string">fluid injection</rng:value>
+      <rng:value type="string">fluid extraction</rng:value>
+      <rng:value type="string">crash</rng:value>
+      <rng:value type="string">plane crash</rng:value>
+      <rng:value type="string">train crash</rng:value>
+      <rng:value type="string">boat crash</rng:value>
+      <rng:value type="string">other event</rng:value>
+      <rng:value type="string">atmospheric event</rng:value>
+      <rng:value type="string">sonic boom</rng:value>
+      <rng:value type="string">sonic blast</rng:value>
+      <rng:value type="string">acoustic noise</rng:value>
+      <rng:value type="string">thunder</rng:value>
+      <rng:value type="string">avalanche</rng:value>
+      <rng:value type="string">snow avalanche</rng:value>
+      <rng:value type="string">debris avalanche</rng:value>
+      <rng:value type="string">hydroacoustic event</rng:value>
+      <rng:value type="string">ice quake</rng:value>
+      <rng:value type="string">slide</rng:value>
+      <rng:value type="string">landslide</rng:value>
+      <rng:value type="string">rockslide</rng:value>
+      <rng:value type="string">meteorite</rng:value>
+      <rng:value type="string">volcanic eruption</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="DataUsedWaveType">
+    <rng:choice>
+      <rng:value type="string">P waves</rng:value>
+      <rng:value type="string">body waves</rng:value>
+      <rng:value type="string">surface waves</rng:value>
+      <rng:value type="string">mantle waves</rng:value>
+      <rng:value type="string">combined</rng:value>
+      <rng:value type="string">unknown</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="AmplitudeUnit">
+    <rng:choice>
+      <rng:value type="string">m</rng:value>
+      <rng:value type="string">s</rng:value>
+      <rng:value type="string">m/s</rng:value>
+      <rng:value type="string">m/(s*s)</rng:value>
+      <rng:value type="string">m*s</rng:value>
+      <rng:value type="string">dimensionless</rng:value>
+      <rng:value type="string">other</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="EventDescriptionType">
+    <rng:choice>
+      <rng:value type="string">felt report</rng:value>
+      <rng:value type="string">Flinn-Engdahl region</rng:value>
+      <rng:value type="string">local time</rng:value>
+      <rng:value type="string">tectonic summary</rng:value>
+      <rng:value type="string">nearest cities</rng:value>
+      <rng:value type="string">earthquake name</rng:value>
+      <rng:value type="string">region name</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="MomentTensorCategory">
+    <rng:choice>
+      <rng:value type="string">teleseismic</rng:value>
+      <rng:value type="string">regional</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="EventTypeCertainty">
+    <rng:choice>
+      <rng:value type="string">known</rng:value>
+      <rng:value type="string">suspected</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="SourceTimeFunctionType">
+    <rng:choice>
+      <rng:value type="string">box car</rng:value>
+      <rng:value type="string">triangle</rng:value>
+      <rng:value type="string">trapezoid</rng:value>
+      <rng:value type="string">unknown</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="PickPolarity">
+    <rng:choice>
+      <rng:value type="string">positive</rng:value>
+      <rng:value type="string">negative</rng:value>
+      <rng:value type="string">undecidable</rng:value>
+    </rng:choice>
+  </rng:define>
+  <rng:define name="TimeQuantity">
+    <rng:interleave>
+      <rng:element name="value">
+        <rng:data type="dateTime"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="uncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="lowerUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="upperUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="confidenceLevel">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="ResourceReference">
+    <rng:ref name="ResourceIdentifier"/>
+  </rng:define>
+  <rng:define name="CreationInfo">
+    <rng:interleave>
+      <rng:optional>
+        <rng:element name="agencyID">
+          <rng:data type="string">
+            <rng:param name="maxLength">64</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="agencyURI">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="author">
+          <rng:data type="string">
+            <rng:param name="maxLength">128</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="authorURI">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationTime">
+          <rng:data type="dateTime"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="version">
+          <rng:data type="string">
+            <rng:param name="maxLength">64</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="EventDescription">
+    <rng:interleave>
+      <rng:element name="text">
+        <rng:data type="string"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:ref name="EventDescriptionType"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Phase">
+    <rng:data type="string">
+      <rng:param name="maxLength">32</rng:param>
+    </rng:data>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Comment">
+    <rng:interleave>
+      <rng:element name="text">
+        <rng:data type="string"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:optional>
+      <rng:attribute name="id">
+        <rng:ref name="ResourceReference"/>
+      </rng:attribute>
+    </rng:optional>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Axis">
+    <rng:interleave>
+      <rng:element name="azimuth">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="plunge">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="length">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="PrincipalAxes">
+    <rng:interleave>
+      <rng:element name="tAxis">
+        <rng:ref name="Axis"/>
+      </rng:element>
+      <rng:element name="pAxis">
+        <rng:ref name="Axis"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="nAxis">
+          <rng:ref name="Axis"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="DataUsed">
+    <rng:interleave>
+      <rng:element name="waveType">
+        <rng:ref name="DataUsedWaveType"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="stationCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="componentCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="shortestPeriod">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="longestPeriod">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="CompositeTime">
+    <rng:interleave>
+      <rng:optional>
+        <rng:element name="year">
+          <rng:ref name="IntegerQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="month">
+          <rng:ref name="IntegerQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="day">
+          <rng:ref name="IntegerQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="hour">
+          <rng:ref name="IntegerQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="minute">
+          <rng:ref name="IntegerQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="second">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Tensor">
+    <rng:interleave>
+      <rng:element name="Mrr">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="Mtt">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="Mpp">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="Mrt">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="Mrp">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="Mtp">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="OriginQuality">
+    <rng:interleave>
+      <rng:optional>
+        <rng:element name="associatedPhaseCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="usedPhaseCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="associatedStationCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="usedStationCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="depthPhaseCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="standardError">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="azimuthalGap">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="secondaryAzimuthalGap">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="groundTruthLevel">
+          <rng:data type="string">
+            <rng:param name="maxLength">32</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="maximumDistance">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="minimumDistance">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="medianDistance">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="RealQuantity">
+    <rng:interleave>
+      <rng:element name="value">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="uncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="lowerUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="upperUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="confidenceLevel">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="NodalPlane">
+    <rng:interleave>
+      <rng:element name="strike">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="dip">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="rake">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="TimeWindow">
+    <rng:interleave>
+      <rng:element name="begin">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="end">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="reference">
+        <rng:data type="dateTime"/>
+      </rng:element>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="WaveformStreamID">
+    <rng:optional>
+      <rng:ref name="ResourceReference"/>
+    </rng:optional>
+    <rng:attribute name="networkCode">
+      <rng:data type="string">
+        <rng:param name="maxLength">8</rng:param>
+      </rng:data>
+    </rng:attribute>
+    <rng:attribute name="stationCode">
+      <rng:data type="string">
+        <rng:param name="maxLength">8</rng:param>
+      </rng:data>
+    </rng:attribute>
+    <rng:optional>
+      <rng:attribute name="channelCode">
+        <rng:data type="string">
+          <rng:param name="maxLength">8</rng:param>
+        </rng:data>
+      </rng:attribute>
+    </rng:optional>
+    <rng:optional>
+      <rng:attribute name="locationCode">
+        <rng:data type="string">
+          <rng:param name="maxLength">8</rng:param>
+        </rng:data>
+      </rng:attribute>
+    </rng:optional>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="IntegerQuantity">
+    <rng:interleave>
+      <rng:element name="value">
+        <rng:data type="integer"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="uncertainty">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="lowerUncertainty">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="upperUncertainty">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="confidenceLevel">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="SourceTimeFunction">
+    <rng:interleave>
+      <rng:element name="type">
+        <rng:ref name="SourceTimeFunctionType"/>
+      </rng:element>
+      <rng:element name="duration">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="riseTime">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="decayTime">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="NodalPlanes">
+    <rng:interleave>
+      <rng:optional>
+        <rng:element name="nodalPlane1">
+          <rng:ref name="NodalPlane"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="nodalPlane2">
+          <rng:ref name="NodalPlane"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:optional>
+      <rng:attribute name="preferredPlane">
+        <rng:data type="integer"/>
+      </rng:attribute>
+    </rng:optional>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="ConfidenceEllipsoid">
+    <rng:interleave>
+      <rng:element name="semiMajorAxisLength">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="semiMinorAxisLength">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="semiIntermediateAxisLength">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="majorAxisPlunge">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="majorAxisAzimuth">
+        <rng:data type="double"/>
+      </rng:element>
+      <rng:element name="majorAxisRotation">
+        <rng:data type="double"/>
+      </rng:element>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="MomentTensor">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="dataUsed">
+          <rng:ref name="DataUsed"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="derivedOriginID">
+        <rng:ref name="ResourceReference"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="momentMagnitudeID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="scalarMoment">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="tensor">
+          <rng:ref name="Tensor"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="variance">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="varianceReduction">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="doubleCouple">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="clvd">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="iso">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="greensFunctionID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="filterID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="sourceTimeFunction">
+          <rng:ref name="SourceTimeFunction"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="category">
+          <rng:ref name="MomentTensorCategory"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="inversionType">
+          <rng:ref name="MTInversionType"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="FocalMechanism">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="waveformID">
+          <rng:ref name="WaveformStreamID"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="momentTensor">
+          <rng:ref name="MomentTensor"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:optional>
+        <rng:element name="triggeringOriginID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="nodalPlanes">
+          <rng:ref name="NodalPlanes"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="principalAxes">
+          <rng:ref name="PrincipalAxes"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="azimuthalGap">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="stationPolarityCount">
+          <rng:data type="int"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="misfit">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="stationDistributionRatio">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationMode">
+          <rng:ref name="EvaluationMode"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationStatus">
+          <rng:ref name="EvaluationStatus"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Amplitude">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="genericAmplitude">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:data type="string">
+            <rng:param name="maxLength">32</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="category">
+          <rng:ref name="AmplitudeCategory"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="unit">
+          <rng:ref name="AmplitudeUnit"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="period">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="snr">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="timeWindow">
+          <rng:ref name="TimeWindow"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="pickID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="waveformID">
+          <rng:ref name="WaveformStreamID"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="filterID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="scalingTime">
+          <rng:ref name="TimeQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="magnitudeHint">
+          <rng:data type="string">
+            <rng:param name="maxLength">32</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationMode">
+          <rng:ref name="EvaluationMode"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationStatus">
+          <rng:ref name="EvaluationStatus"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="StationMagnitudeContribution">
+    <rng:interleave>
+      <rng:element name="stationMagnitudeID">
+        <rng:ref name="ResourceReference"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="residual">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="weight">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Magnitude">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="stationMagnitudeContribution">
+          <rng:ref name="StationMagnitudeContribution"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="mag">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:data type="string">
+            <rng:param name="maxLength">32</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="originID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="stationCount">
+          <rng:data type="integer"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="azimuthalGap">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationMode">
+          <rng:ref name="EvaluationMode"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationStatus">
+          <rng:ref name="EvaluationStatus"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="StationMagnitude">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="originID">
+        <rng:ref name="ResourceReference"/>
+      </rng:element>
+      <rng:element name="mag">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:data type="string">
+            <rng:param name="maxLength">32</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="amplitudeID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="waveformID">
+          <rng:ref name="WaveformStreamID"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="OriginUncertainty">
+    <rng:interleave>
+      <rng:optional>
+        <rng:element name="horizontalUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="minHorizontalUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="maxHorizontalUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="azimuthMaxHorizontalUncertainty">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="confidenceEllipsoid">
+          <rng:ref name="ConfidenceEllipsoid"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="preferredDescription">
+          <rng:ref name="OriginUncertaintyDescription"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="confidenceLevel">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Arrival">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="pickID">
+        <rng:ref name="ResourceReference"/>
+      </rng:element>
+      <rng:element name="phase">
+        <rng:ref name="Phase"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="timeCorrection">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="azimuth">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="distance">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="takeoffAngle">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="timeResidual">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="horizontalSlownessResidual">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="backazimuthResidual">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="timeWeight">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="horizontalSlownessWeight">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="backazimuthWeight">
+          <rng:data type="double"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="earthModelID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Origin">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="compositeTime">
+          <rng:ref name="CompositeTime"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="originUncertainty">
+          <rng:ref name="OriginUncertainty"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="arrival">
+          <rng:ref name="Arrival"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="time">
+        <rng:ref name="TimeQuantity"/>
+      </rng:element>
+      <rng:element name="longitude">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:element name="latitude">
+        <rng:ref name="RealQuantity"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="depth">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="depthType">
+          <rng:ref name="OriginDepthType"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="timeFixed">
+          <rng:data type="boolean"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="epicenterFixed">
+          <rng:data type="boolean"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="referenceSystemID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="earthModelID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="quality">
+          <rng:ref name="OriginQuality"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:ref name="OriginType"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="region">
+          <rng:data type="string">
+            <rng:param name="maxLength">128</rng:param>
+          </rng:data>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationMode">
+          <rng:ref name="EvaluationMode"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationStatus">
+          <rng:ref name="EvaluationStatus"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Pick">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:element name="time">
+        <rng:ref name="TimeQuantity"/>
+      </rng:element>
+      <rng:element name="waveformID">
+        <rng:ref name="WaveformStreamID"/>
+      </rng:element>
+      <rng:optional>
+        <rng:element name="filterID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="methodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="horizontalSlowness">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="backazimuth">
+          <rng:ref name="RealQuantity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="slownessMethodID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="onset">
+          <rng:ref name="PickOnset"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="phaseHint">
+          <rng:ref name="Phase"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="polarity">
+          <rng:ref name="PickPolarity"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationMode">
+          <rng:ref name="EvaluationMode"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="evaluationStatus">
+          <rng:ref name="EvaluationStatus"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="Event">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="description">
+          <rng:ref name="EventDescription"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="focalMechanism">
+          <rng:ref name="FocalMechanism"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="amplitude">
+          <rng:ref name="Amplitude"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="magnitude">
+          <rng:ref name="Magnitude"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="stationMagnitude">
+          <rng:ref name="StationMagnitude"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="origin">
+          <rng:ref name="Origin"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="pick">
+          <rng:ref name="Pick"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:optional>
+        <rng:element name="preferredOriginID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="preferredMagnitudeID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="preferredFocalMechanismID">
+          <rng:ref name="ResourceReference"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="type">
+          <rng:ref name="EventType"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="typeCertainty">
+          <rng:ref name="EventTypeCertainty"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+  <rng:define name="EventParameters">
+    <rng:interleave>
+      <rng:zeroOrMore>
+        <rng:element name="comment">
+          <rng:ref name="Comment"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:zeroOrMore>
+        <rng:element name="event">
+          <rng:ref name="Event"/>
+        </rng:element>
+      </rng:zeroOrMore>
+      <rng:optional>
+        <rng:element name="description">
+          <rng:data type="string"/>
+        </rng:element>
+      </rng:optional>
+      <rng:optional>
+        <rng:element name="creationInfo">
+          <rng:ref name="CreationInfo"/>
+        </rng:element>
+      </rng:optional>
+    </rng:interleave>
+    <rng:ref name="eventParameters_foreign-elements"/>
+    <rng:attribute name="publicID">
+      <rng:ref name="ResourceReference"/>
+    </rng:attribute>
+    <rng:ref name="eventParameters_foreign-attributes"/>
+  </rng:define>
+</rng:grammar>

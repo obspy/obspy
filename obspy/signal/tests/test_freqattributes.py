@@ -101,6 +101,12 @@ class FreqTraceTestCase(unittest.TestCase):
                       np.sum(self.res[:, 19] ** 2))
         self.assertEqual(rms < 1.0e-5, True)
 
+    def test_cfrequency_no_win(self):
+        cfreq = freqattributes.cfrequency(self.data_win_bc[0], self.fs,
+                                          self.smoothie, self.fk)
+        rms = (cfreq - self.res[0, 18]) / self.res[0, 18]
+        self.assertTrue(rms < 1.0e-5)
+
     def test_bwith(self):
         """
         """

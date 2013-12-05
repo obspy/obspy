@@ -16,6 +16,13 @@
 #include "libmseed/libmseed.h"
 #include "libmseed/unpackdata.h"
 
+
+// Dummy wrapper around malloc.
+void * allocate_bytes(int count) {
+    return malloc(count);
+}
+
+
 // Linkable container of MSRecords
 typedef struct LinkedRecordList_s {
     struct MSRecord_s      *record;       // This record
@@ -178,7 +185,8 @@ void empty_print(char *string) {}
 LinkedIDList *
 readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
                  unpack_data, int reclen, flag verbose, flag details,
-                 int header_byteorder, long (*allocData) (int, char))
+                 int header_byteorder, long (*allocData) (int, char),
+                 void (*diag_print) (char*), void (*log_print) (char*))
 {
     int retcode = 0;
     int retval = 0;
@@ -196,12 +204,28 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
     // the calibration type, availability of BLK 300, 310, 320, 390, 395
     int8_t calibration_type = -1;
 
+    // Init all the pointers to NULL. Most compilers should do this anyway.
+    LinkedIDList * idListHead = NULL;
+    LinkedIDList * idListCurrent = NULL;
+    LinkedIDList * idListLast = NULL;
+    MSRecord *msr = NULL;
+    ContinuousSegment * segmentCurrent = NULL;
+    hptime_t lastgap = 0;
+    hptime_t hptimetol = 0;
+    hptime_t nhptimetol = 0;
+    long data_offset;
+    LinkedRecordList *recordHead = NULL;
+    LinkedRecordList *recordPrevious = NULL;
+    LinkedRecordList *recordCurrent = NULL;
+    int datasize;
+    int record_count = 0;
+
     // A negative verbosity suppressed as much as possible.
     if (verbose < 0) {
         ms_loginit(&empty_print, NULL, &empty_print, NULL);
     }
     else {
-        ms_loginit((void*)&printf, NULL, (void*)&printf, "error: ");
+        ms_loginit(log_print, "INFO: ", diag_print, "ERROR: ");
     }
 
     if (header_byteorder >= 0) {
@@ -218,31 +242,50 @@ readMSEEDBuffer (char *mseed, int buflen, Selections *selections, flag
         MS_UNPACKHEADERBYTEORDER(-1);
     }
 
-
-    // Init all the pointers to NULL. Most compilers should do this anyway.
-    LinkedIDList * idListHead = NULL;
-    LinkedIDList * idListCurrent = NULL;
-    LinkedIDList * idListLast = NULL;
-    MSRecord *msr = NULL;
-    ContinuousSegment * segmentCurrent = NULL;
-    hptime_t lastgap = 0;
-    hptime_t hptimetol = 0;
-    hptime_t nhptimetol = 0;
-    long data_offset;
-    LinkedRecordList *recordHead = NULL;
-    LinkedRecordList *recordPrevious = NULL;
-    LinkedRecordList *recordCurrent = NULL;
-    int datasize;
-
-
     //
     // Read all records and save them in a linked list.
     //
-    int record_count = 0;
     while (offset < buflen) {
         msr = msr_init(NULL);
-        retcode = msr_parse ( (mseed+offset), buflen, &msr, reclen, dataflag, verbose);
-        if ( ! (retcode == MS_NOERROR)) {
+        if ( msr == NULL ) {
+            ms_log (2, "readMSEEDBuffer(): Error initializing msr\n");
+            return -1;
+        }
+        if (verbose > 1) {
+            ms_log(0, "readMSEEDBuffer(): calling msr_parse with "
+                      "mseed+offset=%d+%d, buflen=%d, reclen=%d, dataflag=%d, verbose=%d\n",
+                      mseed, offset, buflen, reclen, dataflag, verbose);
+        }
+
+        // If the record length is given, make sure at least that amount of data is available.
+        if (reclen != -1) {
+            if (offset + reclen > buflen) {
+                ms_log(1, "readMSEEDBuffer(): Last reclen exceeds buflen, skipping.\n");
+                msr_free(&msr);
+                break;
+            }
+        }
+        // Otherwise assume the smallest possible record length and assure that enough
+        // data is present.
+        else {
+            if (offset + 256 > buflen) {
+                ms_log(1, "readMSEEDBuffer(): Last record only has %i byte(s) which "
+                          "is not enough to constitute a full SEED record. Corrupt data? "
+                          "Record will be skipped.\n", buflen - offset);
+                msr_free(&msr);
+                break;
+            }
+        }
+
+        // Pass (buflen - offset) because msr_parse() expects only a single record. This
+        // way libmseed can take care to not overstep bounds.
+        retcode = msr_parse ( (mseed+offset), buflen - offset, &msr, reclen, dataflag, verbose);
+        if (retcode != MS_NOERROR) {
+            msr_free(&msr);
+            break;
+        }
+        if (offset + msr->reclen > buflen) {
+            ms_log(1, "readMSEEDBuffer(): Last msr->reclen exceeds buflen, skipping.\n");
             msr_free(&msr);
             break;
         }

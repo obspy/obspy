@@ -20,27 +20,53 @@ For more information visit http://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+# Importing setuptools monkeypatches some of distutils commands so things like
+# 'python setup.py develop' work. Wrap in try/except so it is not an actual
+# dependency. Inplace installation with pip works also without importing
+# setuptools.
+try:
+    import setuptools  # @UnusedImport # NOQA
+except:
+    pass
 
-from distutils.ccompiler import get_default_compiler
-from distutils.ccompiler import CCompiler
-from distutils.errors import DistutilsExecError, CompileError
-from distutils.unixccompiler import UnixCCompiler
-from setuptools import find_packages, setup
-from setuptools.extension import Extension
-import distribute_setup
+from numpy.distutils.core import setup
+from numpy.distutils.misc_util import Configuration
+from numpy.distutils.ccompiler import get_default_compiler
+
 import glob
+import fnmatch
 import os
 import platform
-import shutil
 import sys
 
 
+# Directory of the current file
+SETUP_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+
+# Import the version string.
+UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
+sys.path.insert(0, UTIL_PATH)
+from version import get_git_version  # @UnresolvedImport
+sys.path.pop(0)
+
+LOCAL_PATH = os.path.join(SETUP_DIRECTORY, "setup.py")
+DOCSTRING = __doc__.split("\n")
+
+# check for MSVC
+if platform.system() == "Windows" and (
+        'msvc' in sys.argv or '-c' not in sys.argv and get_default_compiler()
+        == 'msvc'):
+    IS_MSVC = True
+else:
+    IS_MSVC = False
+
 # package specific settings
-KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
+KEYWORDS = [
+    'ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'beamforming', 'cross correlation', 'database', 'dataless',
     'Dataless SEED', 'datamark', 'earthquakes', 'Earthworm', 'EIDA',
-    'envelope', 'events', 'features', 'filter', 'focal mechanism', 'GSE1',
-    'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
+    'envelope', 'events', 'FDSN', 'features', 'filter', 'focal mechanism',
+    'GSE1', 'GSE2', 'hob', 'iapsei-tau', 'imaging', 'instrument correction',
     'instrument simulation', 'IRIS', 'magnitude', 'MiniSEED', 'misfit',
     'mopad', 'MSEED', 'NERA', 'NERIES', 'observatory', 'ORFEUS', 'picker',
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
@@ -48,7 +74,7 @@ KEYWORDS = ['ArcLink', 'array', 'array analysis', 'ASC', 'beachball',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
     'seismograms', 'signal', 'slink', 'spectrogram', 'taper', 'taup',
     'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
-    'WaveServerV', 'WebDC', 'Winston', 'XML-SEED', 'XSEED']
+    'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
     'scipy',
@@ -56,9 +82,11 @@ INSTALL_REQUIRES = [
     'lxml',
     'sqlalchemy',
     'suds>=0.4.0']
+EXTRAS_REQUIRE = {
+    'tests': ['flake8>=2',
+              'nose']}
 ENTRY_POINTS = {
     'console_scripts': [
-        'obspy-flinn-engdahl = obspy.core.scripts.flinnengdahl:main',
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
@@ -81,6 +109,7 @@ ENTRY_POINTS = {
         'MSEED = obspy.mseed.core',
         'SAC = obspy.sac.core',
         'SACXY = obspy.sac.core',
+        'Y = obspy.y.core',
         'SEG2 = obspy.seg2.seg2',
         'SEGY = obspy.segy.core',
         'SU = obspy.segy.core',
@@ -139,7 +168,6 @@ ENTRY_POINTS = {
     'obspy.plugin.waveform.SEG2': [
         'isFormat = obspy.seg2.seg2:isSEG2',
         'readFormat = obspy.seg2.seg2:readSEG2',
-        'writeFormat = obspy.seg2.seg2:writeSEG2',
     ],
     'obspy.plugin.waveform.SEGY': [
         'isFormat = obspy.segy.core:isSEGY',
@@ -170,13 +198,21 @@ ENTRY_POINTS = {
         'readFormat = obspy.wav.core:readWAV',
         'writeFormat = obspy.wav.core:writeWAV',
     ],
+    'obspy.plugin.waveform.Y': [
+        'isFormat = obspy.y.core:isY',
+        'readFormat = obspy.y.core:readY',
+    ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'JSON = obspy.core.json.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
         'readFormat = obspy.core.quakeml:readQuakeML',
         'writeFormat = obspy.core.quakeml:writeQuakeML',
+    ],
+    'obspy.plugin.event.JSON': [
+        'writeFormat = obspy.core.json.core:writeJSON',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
@@ -243,412 +279,178 @@ ENTRY_POINTS = {
     ],
 }
 
-# Here be dragons - beware!
 
-UTIL_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "obspy",
-                                         "core", "util"))
-sys.path.insert(0, UTIL_PATH)
-from version import get_git_version as _getVersionString
-sys.path.pop(0)
-
-LOCAL_PATH = os.path.abspath(os.path.dirname(__file__))
-DOCSTRING = __doc__.split("\n")
-IS_WINDOWS = platform.system() == "Windows"
-IS_DEVELOP = 'develop' in sys.argv
-
-NO_GFORTRAN_MSG = """
-
-###############################################################################
-
-ERROR: gfortran compiler not found! Retrying now without FORTRAN support.
-
-All FORTRAN extensions in the following modules will *not* work:
-  * obspy.taup
-
-###############################################################################
-
-"""
-
-NO_CCOMPILER_MSG = """
-
-###############################################################################
-
-ERROR: C compiler not found! Retrying now without C support.
-
-All C-extensions in following modules will *not* work:
-  * obspy.gse2
-  * obspy.mseed
-  * obspy.segy
-  * obspy.signal
-
-###############################################################################
-
-"""
-
-
-if IS_WINDOWS:
-    # ugly Monkey patch for MSVCCompiler & Mingw32CCompiler for Windows
-    # using MinGW64 (http://mingw-w64.sourceforge.net/)
-    from distutils.msvccompiler import MSVCCompiler
-    from distutils.cygwinccompiler import Mingw32CCompiler
-    MSVCCompiler._c_extensions.append(".f")
-
-    def compile(self, sources, output_dir=None, **kwargs):  # @UnusedVariable
-        # we check if 'taup' is in sources
-        IS_FORTRAN = False
-        for source in sources:
-            if 'taup' in source:
-                IS_FORTRAN = True
-        if not IS_FORTRAN:
-            # otherwise we just use the original compile method
-            return self.original_compile(sources, output_dir=None, **kwargs)
-        if output_dir:
-            try:
-                os.makedirs(output_dir)
-            except OSError:
-                pass
-        if '32' in platform.architecture()[0]:
-            # 32 bit gfortran compiler
-            self.compiler_so = ["mingw32-gfortran.exe"]
-        else:
-            # 64 bit gfortran compiler
-            self.compiler_so = ["x86_64-w64-mingw32-gfortran.exe"]
-        objects = []
-        for src in sources:
-            file = os.path.splitext(src)[0]
-            if output_dir:
-                obj = os.path.join(output_dir, os.path.basename(file) + ".o")
-            else:
-                obj = file + ".o"
-            try:
-                self.spawn(self.compiler_so + \
-                           ["-fno-underscoring", "-c"] + [src, '-o', obj])
-            except DistutilsExecError:
-                _, msg, _ = sys.exc_info()
-                raise CompileError(msg)
-            objects.append(obj)
-        return objects
-
-    def link(self, _target_desc, objects, output_filename,
-             *args, **kwargs):  # @UnusedVariable
-        # we check if 'taup' is in output_filename
-        if 'taup' not in output_filename:
-            # otherwise we just use the original link method
-            return self.original_link(_target_desc, objects, output_filename,
-                                      *args, **kwargs)
-        try:
-            os.makedirs(os.path.dirname(output_filename))
-        except OSError:
-            pass
-        self.spawn(self.compiler_so + \
-                   ["-static-libgcc", "-static-libgfortran", "-shared"] + \
-                   objects + ["-o", output_filename])
-
-    MSVCCompiler.original_compile = MSVCCompiler.compile
-    MSVCCompiler.compile = compile
-    MSVCCompiler.original_link = MSVCCompiler.link
-    MSVCCompiler.link = link
-    Mingw32CCompiler.original_compile = Mingw32CCompiler.compile
-    Mingw32CCompiler.compile = compile
-    Mingw32CCompiler.original_link = Mingw32CCompiler.link
-    Mingw32CCompiler.link = link
-else:
-    # Monkey patch CCompiler for Unix, Linux and Mac
-    # Pretend .f is a C extension and change corresponding compilation call
-    CCompiler.language_map['.f'] = "c"
-    UnixCCompiler.src_extensions.append(".f")
-
-    def _compile(self, obj, src, ext, cc_args, extra_postargs, pp_opts): \
-            # @UnusedVariable
-        # FORTRAN if 'taup' is in sources
-        if 'taup' in src:
-            self.linker_so[0] = "gfortran"
-            self.compiler_so[0] = "gfortran"
-            cc_args = list(cc_args)  # copy
-            cc_args.append('-fno-underscoring')
-            try:
-                self.compiler_so.remove("-Wstrict-prototypes")
-            except ValueError:
-                pass
-        return self._original_compile(obj, src, ext, cc_args, extra_postargs,
-            pp_opts)
-    UnixCCompiler._original_compile = UnixCCompiler._compile
-    UnixCCompiler._compile = _compile
-
-
-def convert2to3():
+def find_packages():
     """
-    Convert source to Python 3.x syntax using lib2to3.
+    Simple function to find all modules under the current folder.
     """
-    # create a new 2to3 directory for converted source files
-    dst_path = os.path.join(LOCAL_PATH, '2to3')
-    shutil.rmtree(dst_path, ignore_errors=True)
-
-    # copy original tree into 2to3 folder ignoring some unneeded files
-    def ignored_files(adir, filenames):  # @UnusedVariable
-        return ['.svn', '2to3', 'debian', 'build', 'dist'] + \
-               ['.git', '.gitignore'] + \
-               [fn for fn in filenames if fn.startswith('distribute')] + \
-               [fn for fn in filenames if fn.endswith('.egg-info')]
-    shutil.copytree(LOCAL_PATH, dst_path, ignore=ignored_files)
-    os.chdir(dst_path)
-    sys.path.insert(0, dst_path)
-    # run lib2to3 script on duplicated source
-    from lib2to3.main import main
-    print("Converting to Python3 via lib2to3...")
-    main("lib2to3.fixes", ["-w", "-n", "--no-diffs", "obspy"])
+    modules = []
+    for dirpath, _, filenames in os.walk(os.path.join(SETUP_DIRECTORY,
+                                                      "obspy")):
+        if "__init__.py" in filenames:
+            modules.append(os.path.relpath(dirpath, SETUP_DIRECTORY))
+    return [_i.replace(os.sep, ".") for _i in modules]
 
 
-# hack to prevent build_ext to append __init__ to the export symbols
-class finallist(list):
-    def append(self, object):
-        return
-
-
-class MyExtension(Extension):
-    def __init__(self, *args, **kwargs):
-        Extension.__init__(self, *args, **kwargs)
-        self.export_symbols = finallist(self.export_symbols)
-
-
-def setupLibMSEED():
+def _get_lib_name(lib):
     """
-    Prepare building of C extension libmseed.
+    Helper function to get an architecture and Python version specific library
+    filename.
     """
-    macros = []
-    extra_link_args = []
-    extra_compile_args = []
-    src_obspy = os.path.join('obspy', 'mseed', 'src') + os.sep
-    src = os.path.join('obspy', 'mseed', 'src', 'libmseed') + os.sep
-    # get symbols for libmseed
-    lines = open(src + 'libmseed.def', 'r').readlines()[2:]
-    symbols = [s.strip() for s in lines if s.strip() != '']
-    # get symbols for obspy-readbuffer.c
-    lines = open(src_obspy + 'obspy-readbuffer.def', 'r').readlines()[2:]
-    symbols += [s.strip() for s in lines if s.strip() != '']
+    return "lib%s_%s_%s_py%s" % (
+        lib, platform.system(), platform.architecture()[0], "".join(
+            [str(i) for i in platform.python_version_tuple()[:2]]))
 
-    # system specific settings
-    if IS_WINDOWS:
-        # needed by libmseed lmplatform.h
-        macros.append(('WIN32', '1'))
-        # disable some warnings for MSVC
-        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-        if 'msvc' in sys.argv or \
-            ('-c' not in sys.argv and get_default_compiler() == 'msvc'):
-            if platform.architecture()[0] == '32bit':
-                # Workaround Win32 and MSVC - see issue #64
-                extra_compile_args.append("/fp:strict")
+# monkey patches for MS Visual Studio
+if IS_MSVC:
+    # support library paths containing spaces
+    def _library_dir_option(self, dir):
+        return '"/LIBPATH:%s"' % (dir)
 
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libmseed-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libmseed'
+    from distutils.msvc9compiler import MSVCCompiler
+    MSVCCompiler.library_dir_option = _library_dir_option
 
-    # setup C extension
-    lib = MyExtension(lib_name,
-                      define_macros=macros,
-                      libraries=[],
-                      sources=[src + 'fileutils.c', src + 'genutils.c',
-                               src + 'gswap.c', src + 'lmplatform.c',
-                               src + 'lookup.c', src + 'msrutils.c',
-                               src + 'pack.c', src + 'packdata.c',
-                               src + 'traceutils.c', src + 'tracelist.c',
-                               src + 'unpack.c', src + 'unpackdata.c',
-                               src + 'selection.c', src + 'logging.c',
-                               src + 'parseutils.c',
-                               src_obspy + 'obspy-readbuffer.c'],
-                      export_symbols=symbols,
-                      extra_link_args=extra_link_args,
-                      extra_compile_args=extra_compile_args)
-    return lib
+    # remove 'init' entry in exported symbols
+    def _get_export_symbols(self, ext):
+        return ext.export_symbols
+    from distutils.command.build_ext import build_ext
+    build_ext.get_export_symbols = _get_export_symbols
+
+    # add "x86_64-w64-mingw32-gfortran.exe" to executables
+    from numpy.distutils.fcompiler.gnu import Gnu95FCompiler
+    Gnu95FCompiler.possible_executables = ["x86_64-w64-mingw32-gfortran.exe",
+                                           'gfortran', 'f95']
 
 
-def setupLibGSE2():
+# helper function for collecting export symbols from .def files
+def export_symbols(*path):
+    lines = open(os.path.join(*path), 'r').readlines()[2:]
+    return [s.strip() for s in lines if s.strip() != '']
+
+
+def configuration(parent_package="", top_path=None):
     """
-    Prepare building of C extension libgse2.
+    Config function mainly used to compile C and Fortran code.
     """
-    macros = []
-    src = os.path.join('obspy', 'gse2', 'src', 'GSE_UTI') + os.sep
-    symbols = [s.strip()
-               for s in open(src + 'gse_functions.def').readlines()[2:]
-               if s.strip() != '']
-    # system specific settings
-    if IS_WINDOWS:
-        # disable some warnings for MSVC
-        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libgse2-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libgse2'
-    # setup C extension
-    lib = MyExtension(lib_name,
-                      define_macros=macros,
-                      libraries=[],
-                      sources=[src + 'buf.c', src + 'gse_functions.c'],
-                      export_symbols=symbols,
-                      extra_link_args=[])
-    return lib
+    config = Configuration("", parent_package, top_path)
 
-
-def setupLibSignal():
-    """
-    Prepare building of C extension libsignal.
-    """
-    macros = []
-    src = os.path.join('obspy', 'signal', 'src') + os.sep
-    symbols = [s.strip() for s in open(src + 'libsignal.def').readlines()[2:]
-               if s.strip() != '']
-    # system specific settings
-    if IS_WINDOWS:
-        # disable some warnings for MSVC
-        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libsignal-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libsignal'
-    # setup C extension
-    lib = MyExtension(lib_name,
-                      define_macros=macros,
-                      sources=[src + 'recstalta.c', src + 'xcorr.c',
-                               src + 'coordtrans.c', src + 'pk_mbaer.c',
-                               src + 'filt_util.c', src + 'arpicker.c',
-                               src + 'bbfk.c', src + 'stalta.c'],
-                      export_symbols=symbols)
-    return lib
-
-
-def setupLibEvalResp():
-    """
-    Prepare building of evalresp extension library.
-    """
-    macros = []
-    src = os.path.join('obspy', 'signal', 'src') + os.sep
-    src_evresp = os.path.join('obspy', 'signal', 'src', 'evalresp') + os.sep
-    evresp_include_dir = src_evresp
-    symbols = [s.strip() for s in open(src + 'libevresp.def').readlines()[2:]
-               if s.strip() != '']
-    # system specific settings
-    if IS_WINDOWS:
-        # needed by evalresp evresp.h
-        macros.append(('WIN32', '1'))
-        # disable some warnings for MSVC
-        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libevresp-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libevresp'
-    # setup C extension
-    lib = MyExtension(lib_name,
-                      define_macros=macros,
-                      include_dirs=[evresp_include_dir],
-                      sources=glob.glob(os.path.join(src_evresp, '*.c')),
-                      export_symbols=symbols)
-    return lib
-
-
-def setupLibSEGY():
-    """
-    Prepare building of C extension libsegy.
-    """
-    macros = []
-    src = os.path.join('obspy', 'segy', 'src') + os.sep
-    symbols = [s.strip() for s in open(src + 'libsegy.def').readlines()[2:]
-               if s.strip() != '']
-    # system specific settings
-    if IS_WINDOWS:
-        # disable some warnings for MSVC
-        macros.append(('_CRT_SECURE_NO_WARNINGS', '1'))
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libsegy-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libsegy'
-    # setup C extension
-    lib = MyExtension(lib_name,
-                      define_macros=macros,
-                      include_dirs=[],
-                      sources=[src + 'ibm2ieee.c'],
-                      # The following two lines are needed for OpenMP which is
-                      # currently not working.
-                      #extra_compile_args = ['-fopenmp'],
-                      #extra_link_args=['-lgomp'],
-                      export_symbols=symbols)
-    return lib
-
-
-def setupLibTauP():
-    """
-    Prepare building of Fortran extensions.
-    """
-    # create library name
-    if IS_DEVELOP:
-        lib_name = 'libtaup-%s-%s-py%s' % (
-            platform.system(), platform.architecture()[0],
-            ''.join([str(i) for i in platform.python_version_tuple()[:2]]))
-    else:
-        lib_name = 'libtaup'
-    # setup Fortran extension
-    src = os.path.join('obspy', 'taup', 'src') + os.sep
-    lib = MyExtension(lib_name,
-                      libraries=['gfortran'],
-                      sources=[src + 'emdlv.f', src + 'libtau.f',
-                               src + 'ttimes_subrout.f'])
-    return lib
-
-
-def setupPackage(gfortran=True, ccompiler=True):
-    # automatically install distribute if the user does not have it installed
-    distribute_setup.use_setuptools()
-    # use lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        convert2to3()
-    # external modules
-    ext_modules = []
-    if ccompiler:
-        ext_modules += [setupLibMSEED(), setupLibGSE2(), setupLibSignal(),
-                        setupLibEvalResp(), setupLibSEGY()]
-    if gfortran:
-        ext_modules.append(setupLibTauP())
+    # GSE2
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "gse2", "src", "GSE_UTI")
+    files = [os.path.join(path, "gse_functions.c")]
+    # compiler specific options
     kwargs = {}
-    if ext_modules:
-        kwargs['ext_package'] = 'obspy.lib'
-        kwargs['ext_modules'] = ext_modules
-    # remove clean from second call of this function so nothing gets rebuild
-    if not gfortran or not ccompiler:
-        argvs = sys.argv[1:]
-        if 'clean' in argvs:
-            # get index of clean command
-            i0 = argvs.index('clean')
-            # backup everything in front of clean
-            temp = argvs[:i0]
-            # search and remove options after clean starting with a dash
-            rest = argvs[(i0 + 1):]
-            for i, arg in enumerate(rest):
-                if arg.startswith('-'):
-                    continue
-                # append everything after clean at its options to backup
-                temp += rest[i:]
-                break
-            # set setup command line arguments
-            kwargs['script_args'] = temp
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'gse_functions.def')
+    config.add_extension(_get_lib_name("gse2"), files, **kwargs)
+
+    # LIBMSEED
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "mseed", "src")
+    files = glob.glob(os.path.join(path, "libmseed", "*.c"))
+    files.append(os.path.join(path, "obspy-readbuffer.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # needed by libmseed lmplatform.h
+        kwargs['define_macros'] = [('WIN32', '1')]
+        # get export symbols
+        kwargs['export_symbols'] = \
+            export_symbols(path, 'libmseed', 'libmseed.def')
+        kwargs['export_symbols'] += \
+            export_symbols(path, 'obspy-readbuffer.def')
+        # workaround Win32 and MSVC - see issue #64
+        if '32' in platform.architecture()[0]:
+            kwargs['extra_compile_args'] = ["/fp:strict"]
+    config.add_extension(_get_lib_name("mseed"), files, **kwargs)
+
+    # SEGY
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "segy", "src")
+    files = [os.path.join(path, "ibm2ieee.c")]
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libsegy.def')
+    config.add_extension(_get_lib_name("segy"), files, **kwargs)
+
+    # SIGNAL
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    files = glob.glob(os.path.join(path, "*.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libsignal.def')
+    config.add_extension(_get_lib_name("signal"), files, **kwargs)
+
+    # EVALRESP
+    path = os.path.join(SETUP_DIRECTORY, "obspy", "signal", "src")
+    files = glob.glob(os.path.join(path, "evalresp", "*.c"))
+    # compiler specific options
+    kwargs = {}
+    if IS_MSVC:
+        # needed by evalresp evresp.h
+        kwargs['define_macros'] = [('WIN32', '1')]
+        # get export symbols
+        kwargs['export_symbols'] = export_symbols(path, 'libevresp.def')
+    config.add_extension(_get_lib_name("evresp"), files, **kwargs)
+
+    # Add obspy.taup source files.
+    obspy_taup_dir = os.path.join(SETUP_DIRECTORY, "obspy", "taup")
+    # Hack to get a architecture specific taup library filename.
+    libname = _get_lib_name("tau")
+    # XXX: The build subdirectory is more difficult to determine if installed
+    # via pypi or other means. I could not find a reliable way of doing it.
+    new_interface_path = os.path.join("build", libname + os.extsep + "pyf")
+    interface_file = os.path.join(obspy_taup_dir, "src", "_libtau.pyf")
+    with open(interface_file, "r") as open_file:
+        interface_file = open_file.read()
+    # In the original .pyf file the library is called _libtau.
+    interface_file = interface_file.replace("_libtau", libname)
+    if not os.path.exists("build"):
+        os.mkdir("build")
+    with open(new_interface_path, "w") as open_file:
+        open_file.write(interface_file)
+    # Proceed normally.
+    taup_files = glob.glob(os.path.join(obspy_taup_dir, "src", "*.f"))
+    taup_files.insert(0, new_interface_path)
+    libraries = []
+    # we do not need this when linking with gcc, only when linking with
+    # gfortran the option -lgcov is required
+    if os.environ.get('OBSPY_C_COVERAGE', ""):
+        libraries.append('gcov')
+    config.add_extension(libname, taup_files, libraries=libraries)
+
+    add_data_files(config)
+
+    return config
+
+
+def add_data_files(config):
+    """
+    Recursively include all non python files
+    """
+    # python files are included per default, we only include data files
+    # here
+    EXCLUDE_WILDCARDS = ['*.py', '*.pyc', '*.pyo', '*.pdf']
+    EXCLUDE_DIRS = ['src', '__pycache__']
+    common_prefix = SETUP_DIRECTORY + os.path.sep
+    for root, dirs, files in os.walk(os.path.join(SETUP_DIRECTORY, 'obspy')):
+        root = root.replace(common_prefix, '')
+        for name in files:
+            if any(fnmatch.fnmatch(name, w) for w in EXCLUDE_WILDCARDS):
+                continue
+            config.add_data_files(os.path.join(root, name))
+        for folder in EXCLUDE_DIRS:
+            if folder in dirs:
+                dirs.remove(folder)
+
+
+def setupPackage():
     # setup package
     setup(
         name='obspy',
-        version=_getVersionString(),
+        version=get_git_version(),
         description=DOCSTRING[1],
         long_description="\n".join(DOCSTRING[3:]),
         url="http://www.obspy.org",
@@ -661,74 +463,25 @@ def setupPackage(gfortran=True, ccompiler=True):
             'Environment :: Console',
             'Intended Audience :: Science/Research',
             'Intended Audience :: Developers',
-            'License :: OSI Approved :: GNU Library or ' + \
+            'License :: OSI Approved :: GNU Library or ' +
                 'Lesser General Public License (LGPL)',
             'Operating System :: OS Independent',
             'Programming Language :: Python',
             'Topic :: Scientific/Engineering',
             'Topic :: Scientific/Engineering :: Physics'],
         keywords=KEYWORDS,
-        packages=find_packages(exclude=['distribute_setup']),
+        packages=find_packages(),
         namespace_packages=[],
         zip_safe=False,
         install_requires=INSTALL_REQUIRES,
-        download_url="https://github.com/obspy/obspy/zipball/master" + \
-            "#egg=obspy=dev",  # this is needed for "easy_install obspy==dev"
+        extras_require=EXTRAS_REQUIRE,
+        # this is needed for "easy_install obspy==dev"
+        download_url=("https://github.com/obspy/obspy/zipball/master"
+                      "#egg=obspy=dev"),
         include_package_data=True,
         entry_points=ENTRY_POINTS,
-        use_2to3=True,
-        **kwargs
-    )
-    # cleanup after using lib2to3 for Python 3.x
-    if sys.version_info[0] == 3:
-        os.chdir(LOCAL_PATH)
-
+        ext_package='obspy.lib',
+        configuration=configuration)
 
 if __name__ == '__main__':
-    gfortran = True
-    ccompiler = True
-    # the following construct will retry building even if the C or gfortran
-    # compilers are missing - it will warn the user if something went wrong
-    while True:
-        try:
-            setupPackage(gfortran=gfortran, ccompiler=ccompiler)
-        except SystemExit, e:
-            if 'gfortran' in str(e):
-                if not gfortran:
-                    break
-                # retry
-                print NO_GFORTRAN_MSG
-                gfortran = False
-                continue
-            elif 'gcc' in str(e):
-                if not ccompiler:
-                    break
-                # retry
-                print NO_CCOMPILER_MSG
-                ccompiler = False
-                # gcc is also needed for gfortran on non windows system
-                if not IS_WINDOWS:
-                    print NO_GFORTRAN_MSG
-                    gfortran = False
-                continue
-            else:
-                raise
-        except ValueError, e:
-            # Windows specific exception if MSVC compiler is missing
-            if IS_WINDOWS and 'path' in str(e):
-                if not ccompiler:
-                    break
-                # retry
-                print NO_CCOMPILER_MSG
-                ccompiler = False
-                continue
-            else:
-                raise
-        else:
-            # no exception - everything seems to be fine - exit
-            break
-    # print any error message again for better visibility
-    if not gfortran:
-        print NO_GFORTRAN_MSG
-    if not ccompiler:
-        print NO_CCOMPILER_MSG
+    setupPackage()

@@ -4,10 +4,9 @@ MSEED bindings to ObsPy core module.
 """
 
 from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
-    SAMPLESIZES, VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, \
-    blkt_1001_s, VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
+    VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
+    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
 from itertools import izip
-from math import log
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
@@ -16,6 +15,14 @@ import numpy as np
 import os
 import util
 import warnings
+
+
+class InternalMSEEDReadingError(Exception):
+    pass
+
+
+class InternalMSEEDReadingWarning(UserWarning):
+    pass
 
 
 def isMSEED(filename):
@@ -165,12 +172,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         unpack_data = 1
     if reclen is None:
         reclen = -1
-    elif reclen is not None and reclen not in VALID_RECORD_LENGTHS:
+    elif reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. Autodetection will be used.'
         warnings.warn(msg)
         reclen = -1
-    else:
-        reclen = int(log(reclen, 2))
 
     # Determine the byteorder.
     if header_byteorder == "=":
@@ -186,8 +191,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # The quality flag is no more supported. Raise a warning.
     if 'quality' in kwargs:
         msg = 'The quality flag is no more supported in this version of ' + \
-        'obspy.mseed. obspy.mseed.util has some functions with similar ' + \
-        'behaviour.'
+            'obspy.mseed. obspy.mseed.util has some functions with similar' + \
+            ' behaviour.'
         warnings.warn(msg, category=DeprecationWarning)
 
     # Parse some information about the file.
@@ -210,7 +215,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
-    if isinstance(mseed_object,  basestring):
+    if isinstance(mseed_object, basestring):
         # Read to NumPy array which is used as a buffer.
         buffer = np.fromfile(mseed_object, dtype='b')
     elif hasattr(mseed_object, 'read'):
@@ -233,7 +238,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     while True:
         # This should never happen
         if (isdigit(buffer[offset:offset + 6]) is False) or \
-            (buffer[offset + 6] not in VALID_CONTROL_HEADERS):
+                (buffer[offset + 6] not in VALID_CONTROL_HEADERS):
             msg = 'Not a valid (Mini-)SEED file'
             raise Exception(msg)
         elif buffer[offset + 6] in SEED_CONTROL_HEADERS:
@@ -296,14 +301,26 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     # it hopefully works on 32 and 64 bit systems.
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
+    def log_error_or_warning(msg):
+        if msg.startswith("ERROR: "):
+            raise InternalMSEEDReadingError(msg[7:].strip())
+        if msg.startswith("INFO: "):
+            warnings.warn(msg[6:].strip(), InternalMSEEDReadingWarning)
+    diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
+
+    def log_message(msg):
+        print msg[6:].strip()
+    log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
+
     try:
         verbose = int(verbose)
     except:
         verbose = 0
 
-    lil = clibmseed.readMSEEDBuffer(buffer, buflen, selections, unpack_data,
-        reclen, C.c_int(verbose), C.c_int(details), header_byteorder,
-        allocData)
+    lil = clibmseed.readMSEEDBuffer(
+        buffer, buflen, selections, C.c_int8(unpack_data),
+        reclen, C.c_int8(verbose), C.c_int8(details), header_byteorder,
+        allocData, diag_print, log_print)
 
     # XXX: Check if the freeing works.
     del selections
@@ -340,7 +357,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                     timing_quality = -1
                 header['mseed']['timing_quality'] = timing_quality
                 header['mseed']['calibration_type'] = \
-                        currentSegment.calibration_type
+                    currentSegment.calibration_type
 
             if headonly is False:
                 # The data always will be in sequential order.
@@ -366,8 +383,8 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
         except ValueError:
             break
 
-    clibmseed.lil_free(lil)
-    del lil
+    clibmseed.lil_free(lil)  # NOQA
+    del lil  # NOQA
     return Stream(traces=traces)
 
 
@@ -423,7 +440,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
     # Some sanity checks for the keyword arguments.
     if reclen is not None and reclen not in VALID_RECORD_LENGTHS:
         msg = 'Invalid record length. The record length must be a value\n' + \
-                'of 2 to the power of X where 8 <= X <= 20.'
+            'of 2 to the power of X where 8 <= X <= 20.'
         raise ValueError(msg)
     if byteorder is not None and byteorder not in [0, 1, -1]:
         if byteorder == '=':
@@ -545,8 +562,8 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
                 trace_attr['byteorder'] = 1
             else:
                 msg = "Invalid byteorder in Stream[%i].stats." % _i + \
-                       "mseed.byteorder. It must be either '<', '>', '='," + \
-                       " 0, 1 or -1"
+                    "mseed.byteorder. It must be either '<', '>', '='," + \
+                    " 0, 1 or -1"
                 raise ValueError(msg)
         else:
             trace_attr['byteorder'] = 1
@@ -639,8 +656,13 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Loop over every trace and finally write it to the filehandler.
     for trace, data, trace_attr in izip(stream, trace_data, trace_attributes):
-        # Create C struct MSTraceGroup.
-        mstg = MSTG(trace, data, dataquality=trace_attr['dataquality'])
+        if not len(data):
+            msg = 'Skipping empty trace "%s".' % (trace)
+            warnings.warn(msg)
+            continue
+        # Create C struct MSTrace.
+        mst = MST(trace, data, dataquality=trace_attr['dataquality'])
+
         # Initialize packedsamples pointer for the mst_pack function
         packedsamples = C.c_int()
 
@@ -673,123 +695,96 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # ctypes manual.
             if bool(ret_val) is False:
                 clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                del msr
                 raise Exception('Error in msr_addblockette')
         # Only use Blockette 100 if necessary.
         if use_blkt_100:
             size = C.sizeof(blkt_100_s)
             blkt100 = C.c_char(' ')
             C.memset(C.pointer(blkt100), 0, size)
-            ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt100),
-                                                 size, 100, 0)
+            ret_val = clibmseed.msr_addblockette(
+                msr, C.pointer(blkt100), size, 100, 0)  # NOQA
             # Usually returns a pointer to the added blockette in the
             # blockette link chain and a NULL pointer if it fails.
             # NULL pointers have a false boolean value according to the
             # ctypes manual.
             if bool(ret_val) is False:
-                clibmseed.msr_free(C.pointer(msr))
-                del mstg, msr
+                clibmseed.msr_free(C.pointer(msr))  # NOQA
+                del msr  # NOQA
                 raise Exception('Error in msr_addblockette')
 
         # Pack mstg into a MSEED file using the callback record_handler as
         # write method.
-        errcode = clibmseed.mst_packgroup(mstg.getMstg(), recHandler, None,
-                          trace_attr['reclen'], trace_attr['encoding'],
-                          trace_attr['byteorder'], C.byref(packedsamples),
-                          flush, verbose, msr)
+        errcode = clibmseed.mst_pack(
+            mst.mst, recHandler, None, trace_attr['reclen'],
+            trace_attr['encoding'], trace_attr['byteorder'],
+            C.byref(packedsamples), flush, verbose, msr)  # NOQA
+
         if errcode == 0:
-            msg = 'Skipping empty trace "%s".' % (trace)
-            warnings.warn(msg)
+            msg = ("Did not write any data for trace '%s' even though it "
+                   "contains data values.") % trace
+            raise ValueError(msg)
         if errcode == -1:
-            clibmseed.msr_free(C.pointer(msr))
-            del mstg, msr
-            raise Exception('Error in mst_packgroup')
+            clibmseed.msr_free(C.pointer(msr))  # NOQA
+            del mst, msr  # NOQA
+            raise Exception('Error in mst_pack')
         # Deallocate any allocated memory.
-        clibmseed.msr_free(C.pointer(msr))
-        del mstg, msr
+        clibmseed.msr_free(C.pointer(msr))  # NOQA
+        del mst, msr  # NOQA
     # Close if its a file handler.
     if isinstance(f, file):
         f.close()
 
 
-class MSTG(object):
+class MST(object):
     """
-    Class that transforms a ObsPy Trace object to a libmseed internal
-    MSTraceGroup struct.
-
-    The class works on a Trace instead of a Stream because that way it is
-    possible to write Mini-SEED files with a different encoding per Trace.
-
-    The class is mainly used to achieve a clean memory management.
+    Class that transforms a ObsPy Trace object to a libmseed internal MSTrace
+    struct.
     """
     def __init__(self, trace, data, dataquality):
         """
         The init function requires a ObsPy Trace object which will be used to
         fill self.mstg.
         """
-        # Initialize MSTraceGroup
-        mstg = clibmseed.mst_initgroup(None)
-        self.mstg = mstg
-        # Set numtraces.
-        mstg.contents.numtraces = 1
-        # Initialize MSTrace object and connect with group
-        mstg.contents.traces = clibmseed.mst_init(None)
-        chain = mstg.contents.traces
-
+        self.mst = clibmseed.mst_init(None)
         # Figure out the datatypes.
         sampletype = SAMPLETYPE[data.dtype.type]
-        c_dtype = DATATYPES[sampletype]
 
         # Set the header values.
-        chain.contents.network = trace.stats.network
-        chain.contents.station = trace.stats.station
-        chain.contents.location = trace.stats.location
-        chain.contents.channel = trace.stats.channel
-        chain.contents.dataquality = dataquality
-        chain.contents.type = '\x00'
-        chain.contents.starttime = \
-                util._convertDatetimeToMSTime(trace.stats.starttime)
-        chain.contents.endtime = \
-                util._convertDatetimeToMSTime(trace.stats.endtime)
-        chain.contents.samprate = trace.stats.sampling_rate
-        chain.contents.samplecnt = trace.stats.npts
-        chain.contents.numsamples = trace.stats.npts
-        chain.contents.sampletype = sampletype
+        self.mst.contents.network = trace.stats.network
+        self.mst.contents.station = trace.stats.station
+        self.mst.contents.location = trace.stats.location
+        self.mst.contents.channel = trace.stats.channel
+        self.mst.contents.dataquality = dataquality
+        self.mst.contents.type = '\x00'
+        self.mst.contents.starttime = \
+            util._convertDatetimeToMSTime(trace.stats.starttime)
+        self.mst.contents.endtime = \
+            util._convertDatetimeToMSTime(trace.stats.endtime)
+        self.mst.contents.samprate = trace.stats.sampling_rate
+        self.mst.contents.samplecnt = trace.stats.npts
+        self.mst.contents.numsamples = trace.stats.npts
+        self.mst.contents.sampletype = sampletype
 
-        # Create a single datapoint and resize its memory to be able to
-        # hold all datapoints.
-        tempdatpoint = c_dtype()
-        datasize = SAMPLESIZES[sampletype] * trace.stats.npts
-        # XXX: Ugly workaround for traces with less than 17 data points
-        if datasize < 17:
-            datasize = 17
-        C.resize(tempdatpoint, datasize)
-        # The datapoints in the MSTG structure are a pointer to the memory
-        # area reserved for tempdatpoint.
-        chain.contents.datasamples = C.cast(C.pointer(tempdatpoint),
-                                            C.c_void_p)
-        # Swap if wrong byte order because libmseed expects native byteorder.
+        # libmseed expects data in the native byteorder.
         if data.dtype.byteorder != "=":
             data = data.byteswap()
-        # Pointer to the NumPy data buffer.
-        datptr = data.ctypes.get_data()
-        # Manually move the contents of the NumPy data buffer to the
-        # address of the previously created memory area.
-        C.memmove(chain.contents.datasamples, datptr, datasize)
+
+        # Copy the data. The copy appears to be necessary so that Python's
+        # garbage collection does not interfere it.
+        bytecount = data.itemsize * data.size
+
+        self.mst.contents.datasamples = clibmseed.allocate_bytes(bytecount)
+        C.memmove(self.mst.contents.datasamples, data.ctypes.get_data(),
+                  bytecount)
 
     def __del__(self):
         """
-        Frees the MSTraceGroup struct. Therefore Python garbage collection can
-        work with this class.
+        Frees all allocated memory.
         """
-        clibmseed.mst_freegroup(C.pointer(self.mstg))
-        del self.mstg
-
-    def getMstg(self):
-        """
-        Simply returns the mstg.
-        """
-        return self.mstg
+        # This also frees the data of the associated datasamples pointer.
+        clibmseed.mst_free(C.pointer(self.mst))
+        del self.mst
 
 
 if __name__ == '__main__':

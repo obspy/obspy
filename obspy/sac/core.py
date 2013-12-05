@@ -29,24 +29,57 @@ def isSAC(filename):
     >>> isSAC('/path/to/test.sac')  #doctest: +SKIP
     """
     try:
-        f = open(filename, 'rb')
-        # 70 header floats, 9 position in header integers
-        f.seek(4 * 70 + 4 * 9)
-        data = f.read(4)
-        f.close()
-        npts = struct.unpack('<i', data)[0]
+        with open(filename, 'rb') as f:
+            # read delta (first header float)
+            delta_bin = f.read(4)
+            delta = struct.unpack('<f', delta_bin)[0]
+            # read nvhdr (70 header floats, 6 position in header integers)
+            f.seek(4 * 70 + 4 * 6)
+            nvhdr_bin = f.read(4)
+            nvhdr = struct.unpack('<i', nvhdr_bin)[0]
+            # read leven (70 header floats, 35 header integers, 0 position in
+            # header bool)
+            f.seek(4 * 70 + 4 * 35)
+            leven_bin = f.read(4)
+            leven = struct.unpack('<i', leven_bin)[0]
+            # read lpspol (70 header floats, 35 header integers, 1 position in
+            # header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 1)
+            lpspol_bin = f.read(4)
+            lpspol = struct.unpack('<i', lpspol_bin)[0]
+            # read lovrok (70 header floats, 35 header integers, 2 position in
+            # header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 2)
+            lovrok_bin = f.read(4)
+            lovrok = struct.unpack('<i', lovrok_bin)[0]
+            # read lcalda (70 header floats, 35 header integers, 3 position in
+            # header bool)
+            f.seek(4 * 70 + 4 * 35 + 4 * 3)
+            lcalda_bin = f.read(4)
+            lcalda = struct.unpack('<i', lcalda_bin)[0]
+            # check if file is big-endian
+            if nvhdr < 0 or nvhdr > 20:
+                nvhdr = struct.unpack('>i', nvhdr_bin)[0]
+                delta = struct.unpack('>f', delta_bin)[0]
+                leven = struct.unpack('>i', leven_bin)[0]
+                lpspol = struct.unpack('>i', lpspol_bin)[0]
+                lovrok = struct.unpack('>i', lovrok_bin)[0]
+                lcalda = struct.unpack('>i', lcalda_bin)[0]
+            # check again nvhdr
+            if nvhdr < 1 or nvhdr > 20:
+                return False
+            if delta <= 0:
+                return False
+            if leven != 0 and leven != 1:
+                return False
+            if lpspol != 0 and lpspol != 1 and lpspol != -12345:
+                return False
+            if lovrok != 0 and lovrok != 1 and lovrok != -12345:
+                return False
+            if lcalda != 0 and lcalda != 1 and lcalda != -12345:
+                return False
     except:
         return False
-    # check file size
-    st = os.stat(filename)
-    sizecheck = st.st_size - (632 + 4 * npts)
-    if sizecheck != 0:
-        # check if file is big-endian
-        npts = struct.unpack('>i', data)[0]
-        sizecheck = st.st_size - (632 + 4 * npts)
-        if sizecheck != 0:
-            # File-size and theoretical size inconsistent!
-            return False
     return True
 
 
@@ -160,7 +193,7 @@ def writeSACXY(stream, filename, **kwargs):  # @UnusedVariable
     return
 
 
-def readSAC(filename, headonly=False, debug_headers=False,
+def readSAC(filename, headonly=False, debug_headers=False, fsize=True,
             **kwargs):  # @UnusedVariable
     """
     Reads an SAC file and returns an ObsPy Stream object.
@@ -181,6 +214,9 @@ def readSAC(filename, headonly=False, debug_headers=False,
         :class:`~obspy.core.stream.Stream` object if set to ``True``. Those
         values are not synchronized with the Stream object itself and won't
         be used during writing of a SAC file! Defaults to ``False``.
+    :type fsize: bool, optional
+    :param fsize: Check if file size is consistent with theoretical size
+        from header. Defaults to ``True``.
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
 
@@ -194,7 +230,7 @@ def readSAC(filename, headonly=False, debug_headers=False,
     if headonly:
         t.ReadSacHeader(filename)
     else:
-        t.ReadSacFile(filename)
+        t.ReadSacFile(filename, fsize)
     # assign all header entries to a new dictionary compatible with an ObsPy
     header = t.get_obspy_header()
 

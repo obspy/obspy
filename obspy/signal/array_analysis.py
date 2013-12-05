@@ -266,9 +266,10 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     # fill up A
     for i in xrange(N):
         ss = subarraycoords[(i + 1), :] - subarraycoords[0, :]
-        A[(3 * i):(3 * i + 3), :] = np.c_[np.r_[ss, z3t], np.r_[z3t, ss], \
-            np.array([-eta * ss[2], \
-            0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
+        A[(3 * i):(3 * i + 3), :] = np.c_[
+            np.r_[ss, z3t], np.r_[z3t, ss],
+            np.array([-eta * ss[2],
+                     0., -ss[0], 0., -eta * ss[2], -ss[1]])].transpose()
 
     #------------------------------------------------------
     # define data covariance matrix Cd.
@@ -296,8 +297,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
         junk = (np.c_[sigmau, sigmau, sigmau]) ** 2  # matrix of variances
         Cu = np.diag(np.reshape(junk[subarray, :], (3 * Nplus1)))
     elif sigmau.shape == (Na, 3):
-        Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(), \
-                (3 * Nplus1)))
+        Cu = np.diag(np.reshape(((sigmau[subarray, :]) ** 2).transpose(),
+                     (3 * Nplus1)))
     else:
         raise ValueError('sigmau has the wrong dimensions')
 
@@ -334,7 +335,8 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     for array in (ts_wmag, ts_w1, ts_w2, ts_w3, ts_tilt, ts_dh, ts_sh, ts_s,
                   ts_pred, ts_misfit, ts_M, ts_data, ts_ptilde):
         array.fill(np.NaN)
-    ts_e = np.NaN * np.empty((nt, 3, 3))
+    ts_e = np.empty((nt, 3, 3))
+    ts_e.fill(np.NaN)
 
     # other matrices
     udif = np.empty((3, N))
@@ -587,17 +589,17 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-@deprecated
+@deprecated()
 def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
           semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
           verbose=False, coordsys='lonlat', timestamp='mlabday'):
     """
-    DEPRECATED: Please use ``obspy.signal.array_processing()``
+    DEPRECATED: Please use :func:`obspy.signal.array_analysis.array_processing`
     """
-    return array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y,
-        slm_y, sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime,
-        prewhiten, verbose=False, coordsys='lonlat', timestamp='mlabday',
-        method=0)
+    return array_processing(
+        stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
+        semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
+        verbose=False, coordsys='lonlat', timestamp='mlabday', method=0)
 
 
 def get_geometry(stream, coordsys='lonlat', return_center=False,
@@ -693,8 +695,8 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
     # optimized version
     mx = np.outer(geometry[:, 0], sll_x + np.arange(grdpts_x) * sl_s)
     my = np.outer(geometry[:, 1], sll_y + np.arange(grdpts_y) * sl_s)
-    return np.require( \
-        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) + \
+    return np.require(
+        mx[:, :, np.newaxis].repeat(grdpts_y, axis=2) +
         my[:, np.newaxis, :].repeat(grdpts_x, axis=1),
         dtype='float32')
 
@@ -778,7 +780,7 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
             _sum = 0j
             for k in xrange(len(coords)):
                 _sum += np.exp(complex(0.,
-                        coords[k, 0] * kx + coords[k, 1] * ky))
+                               coords[k, 0] * kx + coords[k, 1] * ky))
             transff[i, j] = abs(_sum) ** 2
 
     transff /= transff.max()
@@ -833,8 +835,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
             for k, f in enumerate(np.arange(fmin, fmax + fstep / 10., fstep)):
                 _sum = 0j
                 for l in np.arange(len(coords)):
-                    _sum += np.exp(complex(0., (coords[l, 0] * sx
-                        + coords[l, 1] * sy) * 2 * np.pi * f))
+                    _sum += np.exp(
+                        complex(0., (coords[l, 0] * sx + coords[l, 1] * sy) *
+                                2 * np.pi * f))
                 buff[k] = abs(_sum) ** 2
             transff[i, j] = cumtrapz(buff, dx=fstep)[-1]
 
@@ -852,9 +855,9 @@ def dump(pow_map, apow_map, i):
 
 
 def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
-    sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-    verbose=False, coordsys='lonlat', timestamp='mlabday', method=0,
-    store=None):
+                     sl_s, semb_thres, vel_thres, frqlow, frqhigh, stime,
+                     etime, prewhiten, verbose=False, coordsys='lonlat',
+                     timestamp='mlabday', method=0, store=None):
     """
     Method for Seismic-Array-Beamforming/FK-Analysis/Capon
 
@@ -954,7 +957,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     # to spead up the routine a bit we estimate all steering vectors in advance
     steer = np.empty((nf, grdpts_x, grdpts_y, nstat), dtype='c16')
     clibsignal.calcSteer(nstat, grdpts_x, grdpts_y, nf, nlow,
-        deltaf, time_shift_table, steer)
+                         deltaf, time_shift_table, steer)
     R = np.empty((nf, nstat, nstat), dtype='c16')
     ft = np.empty((nstat, nf), dtype='c16')
     newstart = stime
@@ -966,7 +969,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         try:
             for i, tr in enumerate(stream):
                 dat = tr.data[spoint[i] + offset:
-                    spoint[i] + offset + nsamp]
+                              spoint[i] + offset + nsamp]
                 dat = (dat - dat.mean()) * tap
                 ft[i, :] = np.fft.rfft(dat, nfft)[nlow:nlow + nf]
         except IndexError:
@@ -991,9 +994,9 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
             for n in xrange(nf):
                 R[n, :, :] = np.linalg.pinv(R[n, :, :], rcond=1e-6)
 
-        errcode = clibsignal.generalizedBeamformer(relpow_map, abspow_map,
-            steer, R, nsamp, nstat, prewhiten, grdpts_x, grdpts_y, nfft, nf,
-            dpow, method)
+        errcode = clibsignal.generalizedBeamformer(
+            relpow_map, abspow_map, steer, R, nsamp, nstat, prewhiten,
+            grdpts_x, grdpts_y, nfft, nf, dpow, method)
         if errcode != 0:
             msg = 'generalizedBeamforming exited with error %d'
             raise Exception(msg % errcode)
@@ -1009,7 +1012,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
         if slow < 1e-8:
             slow = 1e-8
         azimut = 180 * math.atan2(slow_x, slow_y) / math.pi
-        baz = azimut - np.sign(azimut) * 180
+        baz = azimut % -360 + 180
         if relpow > semb_thres and 1. / slow > vel_thres:
             res.append(np.array([newstart.timestamp, relpow, abspow, baz,
                                  slow]))

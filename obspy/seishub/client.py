@@ -28,7 +28,7 @@ import functools
 HTTP_ACCEPTED_DATA_METHODS = ["PUT", "POST"]
 HTTP_ACCEPTED_NODATA_METHODS = ["HEAD", "GET", "DELETE"]
 HTTP_ACCEPTED_METHODS = HTTP_ACCEPTED_DATA_METHODS + \
-                        HTTP_ACCEPTED_NODATA_METHODS
+    HTTP_ACCEPTED_NODATA_METHODS
 
 
 KEYWORDS = {'network': 'network_id', 'station': 'station_id',
@@ -99,15 +99,14 @@ class Client(object):
     .. rubric:: Example
 
     >>> from obspy.seishub import Client
-    >>> from obspy import UTCDateTime
     >>>
     >>> t = UTCDateTime("2009-09-03 00:00:00")
     >>> client = Client()
     >>>
-    >>> st = client.waveform.getWaveform("BW", "RTPI", "", "EHZ", t, t + 20)
+    >>> st = client.waveform.getWaveform("BW", "RTBE", "", "EHZ", t, t + 20)
     >>> print(st)  # doctest: +ELLIPSIS
     1 Trace(s) in Stream:
-    BW.RTPI..EHZ | 2009-09-03T00:00:00.000000Z - ... | 250.0 Hz, 5001 samples
+    BW.RTBE..EHZ | 2009-09-03T00:00:00.000000Z - ... | 200.0 Hz, 4001 samples
     """
     def __init__(self, base_url="http://teide.geophysik.uni-muenchen.de:8080",
                  user="admin", password="admin", timeout=10, debug=False,
@@ -169,7 +168,7 @@ class Client(object):
         :return: ``True`` if OK, ``False`` if invalid.
         """
         (code, _msg) = self._HTTP_request(self.base_url + "/xml/",
-                                         method="HEAD")
+                                          method="HEAD")
         if code == 200:
             return True
         elif code == 401:
@@ -230,7 +229,7 @@ class Client(object):
         :param xml_string: XML for a send request (PUT/POST)
         """
         if method not in HTTP_ACCEPTED_METHODS:
-            raise ValueError("Method must be one of %s" % \
+            raise ValueError("Method must be one of %s" %
                              HTTP_ACCEPTED_METHODS)
         if method in HTTP_ACCEPTED_DATA_METHODS and not xml_string:
             raise TypeError("Missing data for %s request." % method)
@@ -299,11 +298,19 @@ class _BaseRESTClient(object):
         :param xml_string: XML for a send request (PUT/POST)
         :rtype: tuple
         :return: (HTTP status code, HTTP status message)
+
+        .. rubric:: Example
+
+        >>> c = Client()
+        >>> xseed_file = "dataless.seed.BW_UH1.xml"
+        >>> xml_str = open(xseed_file).read()  # doctest: +SKIP
+        >>> c.station.putResource(xseed_file, xml_str)  # doctest: +SKIP
+        (201, 'OK')
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(url, method="PUT",
-                xml_string=xml_string, headers=headers)
+        return self.client._HTTP_request(
+            url, method="PUT", xml_string=xml_string, headers=headers)
 
     def deleteResource(self, resource_name, headers={}):
         """
@@ -318,8 +325,8 @@ class _BaseRESTClient(object):
         """
         url = '/'.join([self.client.base_url, 'xml', self.package,
                         self.resourcetype, resource_name])
-        return self.client._HTTP_request(url, method="DELETE",
-                headers=headers)
+        return self.client._HTTP_request(
+            url, method="DELETE", headers=headers)
 
 
 class _WaveformMapperClient(object):
@@ -427,7 +434,7 @@ master/seishub/plugins/seismology/waveform.py
                 kwargs[key] = value
         url = '/seismology/waveform/getLatency'
         root = self.client._objectify(url, **kwargs)
-        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems()))
                 for node in root.getchildren()]
 
     def getWaveform(self, network, station, location=None, channel=None,
@@ -516,13 +523,13 @@ master/seishub/plugins/seismology/waveform.py
                 tr.stats['paz'] = paz
 
         if getCoordinates:
-            coords = self.client.station.getCoordinates(network=network,
-                    station=station, location=location,
-                    datetime=starttime)
+            coords = self.client.station.getCoordinates(
+                network=network, station=station, location=location,
+                datetime=starttime)
             if metadata_timecheck:
                 coords_check = self.client.station.getCoordinates(
-                        network=network, station=station,
-                        location=location, datetime=endtime)
+                    network=network, station=station,
+                    location=location, datetime=endtime)
                 if coords != coords_check:
                     msg = "Coordinate information changing from start " + \
                           "time to end time."
@@ -627,7 +634,7 @@ master/seishub/plugins/seismology/waveform.py
                 kwargs[key] = value
         url = '/seismology/station/getList'
         root = self.client._objectify(url, **kwargs)
-        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        return [dict(((k, v.pyval) for k, v in node.__dict__.iteritems()))
                 for node in root.getchildren()]
 
     def getCoordinates(self, network, station, datetime, location=''):
@@ -676,7 +683,7 @@ master/seishub/plugins/seismology/waveform.py
         metadata = self.getList(**kwargs)
         if not metadata:
             msg = "No coordinates for station %s.%s at %s" % \
-                    (network, station, datetime)
+                (network, station, datetime)
             raise Exception(msg)
         stalist = self.client.station_list.setdefault(netsta, [])
         for data in metadata:
@@ -797,10 +804,10 @@ master/seishub/plugins/seismology/event.py
                 kwargs[key] = value
         url = '/seismology/event/getList'
         root = self.client._objectify(url, **kwargs)
-        results = [dict(((k, v.pyval) for k, v in node.__dict__.iteritems())) \
+        results = [dict(((k, v.pyval) for k, v in node.__dict__.iteritems()))
                    for node in root.getchildren()]
         if limit == len(results) or \
-           limit == None and len(results) == 50 or \
+           limit is None and len(results) == 50 or \
            len(results) == 2500:
             msg = "List of results might be incomplete due to option 'limit'."
             warnings.warn(msg)
@@ -857,7 +864,7 @@ master/seishub/plugins/seismology/event.py
         descrip_str = "Fetched from: %s" % self.client.base_url
         descrip_str += "\nFetched at: %s" % timestamp
         descrip_str += "\n\nSearch options:\n"
-        descrip_str += "\n".join(["=".join((str(k), str(v))) \
+        descrip_str += "\n".join(["=".join((str(k), str(v)))
                                   for k, v in kwargs.items()])
         SubElement(folder, "description").text = descrip_str
 
@@ -898,8 +905,9 @@ master/seishub/plugins/seismology/event.py
             liststyle = SubElement(style, "ListStyle")
             SubElement(liststyle, "maxSnippetLines").text = "5"
             SubElement(icon_style, "scale").text = str(icon_size)
-            point = SubElement(placemark, "Point")
-            SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
+            if event_dict['longitude'] and event_dict['latitude']:
+                point = SubElement(placemark, "Point")
+                SubElement(point, "coordinates").text = "%.10f,%.10f,0" % \
                     (event_dict['longitude'], event_dict['latitude'])
 
             # detailed information on the event for the description

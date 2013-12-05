@@ -22,6 +22,8 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include "gse_header.h"
+#include "gse_types.h"
 #include "buf.h"
 #include "buf_intern.h"
 /*
@@ -79,7 +81,8 @@ int buf_putchar(char C)
 		return (buf_putchar(C));
 	/* Pufferzeile fehlt */
 	default:
-		buf_err(FATAL,"buf_putchar","kein Schreibpuffer vohanden ----- Initialisierung fehlt wahrscheinlich"); return(-1);
+		buf_err(FATAL,"buf_putchar","kein Schreibpuffer vohanden ----- Initialisierung fehlt wahrscheinlich");
+		return(-1);
 	}
 }
 /*****************************************************************
@@ -215,8 +218,22 @@ void buf_err(int mode, char *func_name, char *message)
 		break;
 	default:
 		printf ("whoooops\n");
+		break;
 	}
 }
+
+int compress_6b(int32_t *data, int n_of_samples) {
+    return compress_6b_buffer(data, n_of_samples, &buf_putchar);
+}
+
+char * get_line_83(char * cbuf, void * fop) {
+    return fgets (cbuf,83,fop);
+}
+
+int decomp_6b(FILE *fop, int n_of_samples, int32_t *dta) {
+    return decomp_6b_buffer (n_of_samples, dta, &get_line_83,(void *) fop);
+}
+
 /******************************************************************
 *
 *	Testprogramm

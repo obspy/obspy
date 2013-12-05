@@ -94,6 +94,35 @@ setting the ``type`` parameter to ``'dayplot'``:
 
 .. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_4.py
 
+Event information can be included in the plot as well (experimental feature, syntax might change):
+
+    >>> from obspy import read
+    >>> st = read("/tmp/GR.BFO..LHZ.2012.108")
+    >>> st.filter("lowpass", freq=0.1, corners=2)
+    >>> st.plot(type="dayplot", interval=60, right_vertical_labels=False,
+    ...         vertical_scaling_range=5e3, one_tick_per_line=True,
+    ...         color=['k', 'r', 'b', 'g'], show_y_UTC_label=False,
+    ...         events={'min_magnitude': 6.5})
+
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_5.py
+
+-------------------------
+Plotting a Record Section
+-------------------------
+
+A record section can be plotted from a :class:`~obspy.core.stream.Stream` object
+by setting parameter ``type`` to ``'section'``:
+
+    >>> stream.plot(type='section')
+
+To plot a record section the ObsPy header ``trace.stats.distance`` (Offset) must be 
+defined in meters. Or a geographical location ``trace.stats.coordinates.latitude`` & 
+``trace.stats.coordinates.longitude`` must be defined if the section is plotted in 
+great circle distances (``dist_degree=True``) along with parameter ``ev_coord``. 
+For further information please see :meth:`~obspy.core.stream.Stream.plot`
+
+.. plot:: source/tutorial/code_snippets/waveform_plotting_tutorial_6.py
+
 --------------------
 Plot & Color Options
 --------------------

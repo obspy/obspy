@@ -30,8 +30,8 @@ def readPaz(paz_file):
     Read GSE PAZ / Calibration file format and returns poles, zeros and the
     seismometer_gain.
 
-    Do not use this function in connection with the obspy the instrument
-    simulation the A0_normalization_factor might be set wrongly, use
+    Do not use this function in connection with the obspy instrument
+    simulation, the A0_normalization_factor might be set wrongly. Use
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
     >>> import StringIO
@@ -120,15 +120,13 @@ def attach_paz(tr, paz_file):
     671140000.0
     '''
     poles, zeros, seismometer_gain = readPaz(paz_file)
-    found_zero = False
 
     # remove zero at 0,0j to undo integration in GSE PAZ
     for i, zero in enumerate(list(zeros)):
         if zero == complex(0, 0j):
             zeros.pop(i)
-            found_zero = True
             break
-    if not found_zero:
+    else:
         raise Exception("Could not remove (0,0j) zero to undo GSE integration")
 
     # ftp://www.orfeus-eu.org/pub/software/conversion/GSE_UTI/gse2001.pdf
@@ -144,7 +142,7 @@ def attach_paz(tr, paz_file):
     tr.stats.paz.poles = poles
     tr.stats.paz.zeros = zeros
     tr.stats.paz.sensitivity = tr.stats.paz.digitizer_gain * \
-            tr.stats.paz.seismometer_gain
+        tr.stats.paz.seismometer_gain
     # A0_normalization_factor convention for gse2 paz in Observatory in FFB
     tr.stats.paz.gain = 1.0
 

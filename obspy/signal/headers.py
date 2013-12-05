@@ -13,24 +13,23 @@ import platform
 # Import shared libsignal depending on the platform.
 # create library names
 lib_names = [
-     # platform specific library name
-    'libsignal-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    # platform specific library name
+    'libsignal_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libsignal']
 # get default file extension for shared objects
 lib_extension, = sysconfig.get_config_vars('SO')
 # initialize library
-clibsignal = None
 for lib_name in lib_names:
     try:
         clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', lib_name + lib_extension))
+        break
     except Exception, e:
         pass
-    else:
-        break
-if not clibsignal:
+else:
     msg = 'Could not load shared library for obspy.signal.\n\n %s' % (e)
     raise ImportError(msg)
 
@@ -38,21 +37,20 @@ if not clibsignal:
 # create library names
 erlib_names = [
     # platform specific library name
-    'libevresp-%s-%s-py%s' % (platform.system(), platform.architecture()[0],
+    'libevresp_%s_%s_py%s' % (
+        platform.system(), platform.architecture()[0],
         ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
-     # fallback for pre-packaged libraries
+    # fallback for pre-packaged libraries
     'libevresp']
 # initialize library
-clibevresp = None
 for erlib_name in erlib_names:
     try:
         clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', erlib_name + lib_extension))
+        break
     except Exception, e:
         pass
-    else:
-        break
-if not clibevresp:
+else:
     msg = 'Could not load shared library for ' + \
           'obspy.signal.invsim.evalresp\n\n %s' % (e)
     raise ImportError(msg)
@@ -110,9 +108,9 @@ clibsignal.utl_geo_km.argtypes = [C.c_double, C.c_double, C.c_double,
 clibsignal.utl_geo_km.restype = C.c_void_p
 
 head_stalta_t = np.dtype([
-   ('N', 'u4', 1),
-   ('nsta', 'u4', 1),
-   ('nlta', 'u4', 1),
+    ('N', 'u4', 1),
+    ('nsta', 'u4', 1),
+    ('nlta', 'u4', 1),
 ], align=True)
 
 clibsignal.stalta.argtypes = [

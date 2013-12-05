@@ -21,15 +21,15 @@ class UtilTestCase(unittest.TestCase):
                 "# comment",
                 "BW...EHE GE.ROTZ..EHZ"]
         results = parseMappingData(data)
-        self.assertEquals(len(results['.MANZ.00.EHE']), 1)
-        self.assertEquals(results['.MANZ.00.EHE'][0]['network'], 'GE')
-        self.assertEquals(results['.MANZ.00.EHE'][0]['station'], 'ROTZ')
-        self.assertEquals(results['.MANZ.00.EHE'][0]['location'], '')
-        self.assertEquals(results['.MANZ.00.EHE'][0]['channel'], 'EHZ')
-        self.assertEquals(results['.MANZ.00.EHE'][0]['starttime'], None)
-        self.assertEquals(results['.MANZ.00.EHE'][0]['endtime'], None)
-        self.assertEquals(len(results['BW.MANZ.00.EHE']), 2)
-        self.assertEquals(len(results['BW...EHE']), 1)
+        self.assertEqual(len(results['.MANZ.00.EHE']), 1)
+        self.assertEqual(results['.MANZ.00.EHE'][0]['network'], 'GE')
+        self.assertEqual(results['.MANZ.00.EHE'][0]['station'], 'ROTZ')
+        self.assertEqual(results['.MANZ.00.EHE'][0]['location'], '')
+        self.assertEqual(results['.MANZ.00.EHE'][0]['channel'], 'EHZ')
+        self.assertEqual(results['.MANZ.00.EHE'][0]['starttime'], None)
+        self.assertEqual(results['.MANZ.00.EHE'][0]['endtime'], None)
+        self.assertEqual(len(results['BW.MANZ.00.EHE']), 2)
+        self.assertEqual(len(results['BW...EHE']), 1)
         #2 invalid ids
         data = ["BWMANZ00EHE GE.ROTZ..EHZ"]
         self.assertRaises(Exception, parseMappingData, data)

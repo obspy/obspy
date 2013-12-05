@@ -88,7 +88,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
-        self.assertTrue(st1.stats.textual_file_header[3:21] \
+        self.assertTrue(st1.stats.textual_file_header[3:21]
                         == 'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
@@ -96,8 +96,8 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Reading again with ASCII should yield bad results. Lowercase keyword
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
-        self.assertFalse(st2.stats.textual_file_header[3:21] \
-                        == 'CLIENT: LITHOPROBE')
+        self.assertFalse(st2.stats.textual_file_header[3:21]
+                         == 'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
         # Autodection should also write the textual file header encoding to the
@@ -115,21 +115,19 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st1 = readSEGY(file)
         # First write should be big endian.
-        out_file = NamedTemporaryFile().name
-        writeSEGY(st1, out_file)
-        st2 = readSEGY(out_file)
-        os.remove(out_file)
-        self.assertEqual(st2.stats.endian, '>')
-        # Do once again to enforce big endian.
-        writeSEGY(st1, out_file, byteorder='>')
-        st3 = readSEGY(out_file)
-        os.remove(out_file)
-        self.assertEqual(st3.stats.endian, '>')
-        # Enforce little endian.
-        writeSEGY(st1, out_file, byteorder='<')
-        st4 = readSEGY(out_file)
-        os.remove(out_file)
-        self.assertEqual(st4.stats.endian, '<')
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            writeSEGY(st1, out_file)
+            st2 = readSEGY(out_file)
+            self.assertEqual(st2.stats.endian, '>')
+            # Do once again to enforce big endian.
+            writeSEGY(st1, out_file, byteorder='>')
+            st3 = readSEGY(out_file)
+            self.assertEqual(st3.stats.endian, '>')
+            # Enforce little endian.
+            writeSEGY(st1, out_file, byteorder='<')
+            st4 = readSEGY(out_file)
+            self.assertEqual(st4.stats.endian, '<')
 
     def test_settingDataEncodingWorks(self):
         """
@@ -140,24 +138,22 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st = readSEGY(file)
         # First test if it even works.
-        out_file = NamedTemporaryFile().name
-        writeSEGY(st, out_file)
-        with open(out_file, 'rb') as f:
-            data1 = f.read()
-        os.remove(out_file)
-        # Write again and enforce encoding one which should yield the same
-        # result.
-        writeSEGY(st, out_file, data_encoding=1)
-        with open(out_file, 'rb') as f:
-            data2 = f.read()
-        os.remove(out_file)
-        self.assertTrue(data1 == data2)
-        # Writing IEEE floats which should not require any dtype changes.
-        writeSEGY(st, out_file, data_encoding=5)
-        with open(out_file, 'rb') as f:
-            data3 = f.read()
-        os.remove(out_file)
-        self.assertFalse(data1 == data3)
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            writeSEGY(st, out_file)
+            with open(out_file, 'rb') as f:
+                data1 = f.read()
+            # Write again and enforce encoding one which should yield the same
+            # result.
+            writeSEGY(st, out_file, data_encoding=1)
+            with open(out_file, 'rb') as f:
+                data2 = f.read()
+            self.assertTrue(data1 == data2)
+            # Writing IEEE floats which should not require any dtype changes.
+            writeSEGY(st, out_file, data_encoding=5)
+            with open(out_file, 'rb') as f:
+                data3 = f.read()
+            self.assertFalse(data1 == data3)
 
     def test_readingAndWritingDifferentDataEncodings(self):
         """
@@ -173,20 +169,20 @@ class SEGYCoreTestCase(unittest.TestCase):
                      2: 'int32',
                      3: 'int16',
                      5: 'float32'}
-        out_file = NamedTemporaryFile().name
-        # Loop over all encodings.
-        for data_encoding, dtype in encodings.iteritems():
-            this_data = np.require(data.copy(), dtype)
-            st[0].data = this_data
-            writeSEGY(st, out_file, data_encoding=data_encoding)
-            # Read again and compare data.
-            this_stream = readSEGY(out_file)
-            os.remove(out_file)
-            # Both should now be equal. Usually converting from IBM to IEEE
-            # floating point numbers might result in small rouning errors but
-            # in this case it seems to work. Might be different on different
-            # computers.
-            np.testing.assert_array_equal(this_data, this_stream[0].data)
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            # Loop over all encodings.
+            for data_encoding, dtype in encodings.iteritems():
+                this_data = np.require(data.copy(), dtype)
+                st[0].data = this_data
+                writeSEGY(st, out_file, data_encoding=data_encoding)
+                # Read again and compare data.
+                this_stream = readSEGY(out_file)
+                # Both should now be equal. Usually converting from IBM to IEEE
+                # floating point numbers might result in small rouning errors
+                # but in this case it seems to work. Might be different on
+                # different computers.
+                np.testing.assert_array_equal(this_data, this_stream[0].data)
 
     def test_notMatchingDataEncodingAndDtypeRaises(self):
         """
@@ -198,12 +194,12 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = readSEGY(file)
         # Use float64 as the wrong encoding in every case.
         st[0].data = np.require(st[0].data, 'float64')
-        out_file = NamedTemporaryFile().name
-        # Loop over all encodings.
-        for data_encoding in encodings:
-            self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
-                              data_encoding=data_encoding)
-        os.remove(out_file)
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            # Loop over all encodings.
+            for data_encoding in encodings:
+                self.assertRaises(SEGYCoreWritingError, writeSEGY, st,
+                                  out_file, data_encoding=data_encoding)
 
     def test_invalidDataEncodingRaises(self):
         """
@@ -211,12 +207,12 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         st = readSEGY(file)
-        out_file = NamedTemporaryFile().name
-        self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
-                          data_encoding=0)
-        self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
-                          data_encoding='')
-        os.remove(out_file)
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
+                              data_encoding=0)
+            self.assertRaises(SEGYCoreWritingError, writeSEGY, st, out_file,
+                              data_encoding='')
 
     def test_enforcingTextualHeaderEncodingWhileWriting(self):
         """
@@ -230,14 +226,14 @@ class SEGYCoreTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             header = f.read(3200)
         # First write should remain EBCDIC.
-        out_file = NamedTemporaryFile().name
-        writeSEGY(st1, out_file)
-        st2 = readSEGY(out_file)
-        # Compare header.
-        with open(out_file, 'rb') as f:
-            new_header = f.read(3200)
+        with NamedTemporaryFile() as tf:
+            out_file = tf.name
+            writeSEGY(st1, out_file)
+            st2 = readSEGY(out_file)
+            # Compare header.
+            with open(out_file, 'rb') as f:
+                new_header = f.read(3200)
         self.assertTrue(header == new_header)
-        os.remove(out_file)
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'EBCDIC')
         # Do once again to enforce EBCDIC.
@@ -335,18 +331,18 @@ class SEGYCoreTestCase(unittest.TestCase):
             # Read again using core.
             st = readSEGY(file)
             # Create two temporary files to write to.
-            out_file1 = NamedTemporaryFile().name
-            out_file2 = NamedTemporaryFile().name
-            # Write twice.
-            segy_file.write(out_file1)
-            writeSEGY(st, out_file2)
-            # Read and delete files.
-            with open(out_file1, 'rb') as f1:
-                data1 = f1.read()
-            with open(out_file2, 'rb') as f2:
-                data2 = f2.read()
-            os.remove(out_file1)
-            os.remove(out_file2)
+            with NamedTemporaryFile() as tf1:
+                out_file1 = tf1.name
+                with NamedTemporaryFile() as tf2:
+                    out_file2 = tf2.name
+                    # Write twice.
+                    segy_file.write(out_file1)
+                    writeSEGY(st, out_file2)
+                    # Read and delete files.
+                    with open(out_file1, 'rb') as f1:
+                        data1 = f1.read()
+                    with open(out_file2, 'rb') as f2:
+                        data2 = f2.read()
             # Test if they are equal.
             self.assertEqual(data1[3200:3600], data2[3200:3600])
 
@@ -380,14 +376,14 @@ class SEGYCoreTestCase(unittest.TestCase):
         file = os.path.join(self.path, '1.sgy_first_trace')
         segy = readSEGY(file)
         segy[0].stats.sampling_rate = 20
-        outfile = NamedTemporaryFile().name
-        writeSEGY(segy, outfile)
-        new_segy = readSEGY(outfile)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            writeSEGY(segy, outfile)
+            new_segy = readSEGY(outfile)
         self.assertEqual(new_segy[0].stats.sampling_rate, 20)
         # The same with the Seismic Unix file.
         file = os.path.join(self.path, '1.su_first_trace')
-        _su = readSU(file)
+        readSU(file)
 
     def test_readingDate(self):
         """
@@ -411,24 +407,24 @@ class SEGYCoreTestCase(unittest.TestCase):
         definition of the SEG Y format. Therefore the smallest possible
         sampling rate is ~ 15.26 Hz.
         """
-        outfile = NamedTemporaryFile().name
-        # Test for SEG Y.
-        file = os.path.join(self.path, '1.sgy_first_trace')
-        segy = readSEGY(file)
-        # Set the largest possible delta value which should just work.
-        segy[0].stats.delta = 0.065535
-        writeSEGY(segy, outfile)
-        os.remove(outfile)
-        # Slightly larger should raise.
-        segy[0].stats.delta = 0.065536
-        self.assertRaises(SEGYSampleIntervalError, writeSEGY, segy, outfile)
-        # Same for SU.
-        file = os.path.join(self.path, '1.su_first_trace')
-        su = readSU(file)
-        # Set the largest possible delta value which should just work.
-        su[0].stats.delta = 0.065535
-        writeSU(su, outfile)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            # Test for SEG Y.
+            file = os.path.join(self.path, '1.sgy_first_trace')
+            segy = readSEGY(file)
+            # Set the largest possible delta value which should just work.
+            segy[0].stats.delta = 0.065535
+            writeSEGY(segy, outfile)
+            # Slightly larger should raise.
+            segy[0].stats.delta = 0.065536
+            self.assertRaises(SEGYSampleIntervalError, writeSEGY, segy,
+                              outfile)
+            # Same for SU.
+            file = os.path.join(self.path, '1.su_first_trace')
+            su = readSU(file)
+            # Set the largest possible delta value which should just work.
+            su[0].stats.delta = 0.065535
+            writeSU(su, outfile)
         # Slightly larger should raise.
         su[0].stats.delta = 0.065536
         self.assertRaises(SEGYSampleIntervalError, writeSU, su, outfile)
@@ -444,21 +440,21 @@ class SEGYCoreTestCase(unittest.TestCase):
         st = read()
         del st[1:]
         st[0].data = np.require(st[0].data, 'float32')
-        outfile = NamedTemporaryFile().name
-        st.write(outfile, format='SU')
-        st2 = read(outfile)
-        os.remove(outfile)
-        # Compare new and old stream objects. All the other header attributes
-        # will not be set.
-        np.testing.assert_array_equal(st[0].data, st2[0].data)
-        self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
-        self.assertEqual(st[0].stats.endtime, st2[0].stats.endtime)
-        self.assertEqual(st[0].stats.sampling_rate, st2[0].stats.sampling_rate)
-        # Writing and reading this new stream object should not change
-        # anything.
-        st2.write(outfile, format='SU')
-        st3 = read(outfile)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            st.write(outfile, format='SU')
+            st2 = read(outfile)
+            # Compare new and old stream objects. All the other header
+            # attributes will not be set.
+            np.testing.assert_array_equal(st[0].data, st2[0].data)
+            self.assertEqual(st[0].stats.starttime, st2[0].stats.starttime)
+            self.assertEqual(st[0].stats.endtime, st2[0].stats.endtime)
+            self.assertEqual(st[0].stats.sampling_rate,
+                             st2[0].stats.sampling_rate)
+            # Writing and reading this new stream object should not change
+            # anything.
+            st2.write(outfile, format='SU')
+            st3 = read(outfile)
         np.testing.assert_array_equal(st2[0].data, st3[0].data)
         # Remove the su attributes because they will not be equal due to lazy
         # header attributes.
@@ -473,22 +469,21 @@ class SEGYCoreTestCase(unittest.TestCase):
         """
         # Define new date!
         new_date = UTCDateTime(2010, 7, 7, 2, 2, 2)
-        outfile = NamedTemporaryFile().name
-        # Test for SEGY.
-        file = os.path.join(self.path, 'example.y_first_trace')
-        segy = readSEGY(file)
-        segy[0].stats.starttime = new_date
-        writeSEGY(segy, outfile)
-        segy_new = readSEGY(outfile)
-        os.remove(outfile)
-        self.assertEqual(new_date, segy_new[0].stats.starttime)
-        # Test for SU.
-        file = os.path.join(self.path, '1.su_first_trace')
-        su = readSU(file)
-        su[0].stats.starttime = new_date
-        writeSU(su, outfile)
-        su_new = readSU(outfile)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            # Test for SEGY.
+            file = os.path.join(self.path, 'example.y_first_trace')
+            segy = readSEGY(file)
+            segy[0].stats.starttime = new_date
+            writeSEGY(segy, outfile)
+            segy_new = readSEGY(outfile)
+            self.assertEqual(new_date, segy_new[0].stats.starttime)
+            # Test for SU.
+            file = os.path.join(self.path, '1.su_first_trace')
+            su = readSU(file)
+            su[0].stats.starttime = new_date
+            writeSU(su, outfile)
+            su_new = readSU(outfile)
         self.assertEqual(new_date, su_new[0].stats.starttime)
 
     def test_writingStarttimeTimestamp0(self):
@@ -507,13 +502,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Read and set zero time.
         segy = readSEGY(file)
         segy[0].stats.starttime = UTCDateTime(0)
-        outfile = NamedTemporaryFile().name
-        writeSEGY(segy, outfile)
-        # Check the new date.
-        with open(outfile, 'rb') as f:
-            f.seek(3600 + 156, 0)
-            date_time = f.read(10)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            writeSEGY(segy, outfile)
+            # Check the new date.
+            with open(outfile, 'rb') as f:
+                f.seek(3600 + 156, 0)
+                date_time = f.read(10)
         year, julday, hour, minute, second = unpack('>5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
@@ -529,13 +524,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Read and set zero time.
         su = readSU(file)
         su[0].stats.starttime = UTCDateTime(0)
-        outfile = NamedTemporaryFile().name
-        writeSU(su, outfile)
-        # Check the new date.
-        with open(outfile, 'rb') as f:
-            f.seek(156, 0)
-            date_time = f.read(10)
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            writeSU(su, outfile)
+            # Check the new date.
+            with open(outfile, 'rb') as f:
+                f.seek(156, 0)
+                date_time = f.read(10)
         year, julday, hour, minute, second = unpack('<5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
@@ -576,9 +571,9 @@ class SEGYCoreTestCase(unittest.TestCase):
         filename = os.path.join(self.path, 'one_trace_year_11.sgy')
         st = readSEGY(filename)
         st[0].stats.segy.trace_header['source_coordinate_x'] = -1
-        outfile = NamedTemporaryFile().name
-        st.write(outfile, format='SEGY')
-        os.remove(outfile)
+        with NamedTemporaryFile() as tf:
+            outfile = tf.name
+            st.write(outfile, format='SEGY')
 
 
 def suite():

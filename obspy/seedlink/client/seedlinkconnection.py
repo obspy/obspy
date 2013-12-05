@@ -633,7 +633,7 @@ class SeedLinkConnection(object):
                 logger.error(msg % (self.statefile))
             else:
                 msg = "recovered state for %s streams in %s"
-                logger.debug(msg % (stacount,  self.statefile))
+                logger.debug(msg % (stacount, self.statefile))
         except IOError as e:
             msg = "%s: reading state file: %s" % (e, self.statefile)
             logger.critical(msg)
@@ -674,8 +674,9 @@ class SeedLinkConnection(object):
                 #print "DEBUG: curstream:", curstream.net, curstream.station,
                 #print curstream.btime
                 if curstream.btime is not None:
-                    statefile_file.write(curstream.net + " " + \
-                        curstream.station + " " + str(curstream.seqnum) + \
+                    statefile_file.write(
+                        curstream.net + " " +
+                        curstream.station + " " + str(curstream.seqnum) +
                         " " + curstream.btime.formatSeedLink() + "\n")
         except IOError as e:
             msg = "%s: writing state file: %s" % (e, self.statefile)
@@ -868,7 +869,8 @@ class SeedLinkConnection(object):
                                SLState.KEEP_ALIVE_QUERY:
                                 sendpacket = False
                                 if not terminator:
-                                    logger.error("non-terminated " + \
+                                    logger.error(
+                                        "non-terminated " +
                                         "keep-alive packet received!?!")
                                 else:
                                     logger.debug("keepalive packet received")
@@ -976,7 +978,7 @@ class SeedLinkConnection(object):
                         self.state.netto_time = now
                         self.state.netto_trig = 0
                     elif self.state.netto_trig == 0 and \
-                         now - self.state.netto_time > self.netto:
+                            now - self.state.netto_time > self.netto:
                         self.state.netto_trig = 1
                 #print "DEBUG: self.keepalive:", self.keepalive
 
@@ -991,7 +993,7 @@ class SeedLinkConnection(object):
                         self.state.keepalive_time = now
                         self.state.keepalive_trig = 0
                     elif self.state.keepalive_trig == 0 and \
-                         now - self.state.keepalive_time > self.keepalive:
+                            now - self.state.keepalive_time > self.keepalive:
                         self.state.keepalive_trig = 1
 
                 # Network delay timing logic
@@ -1000,7 +1002,7 @@ class SeedLinkConnection(object):
                         self.state.netdly_time = now
                         self.state.netdly_trig = 1
                     elif self.state.netdly_trig == 1 and \
-                         now - self.state.netdly_time > self.netdly:
+                            now - self.state.netdly_time > self.netdly:
                         self.state.netdly_trig = 0
         # End of primary loop
 
@@ -1388,8 +1390,8 @@ class SeedLinkConnection(object):
                     curstream.getSLTimeStamp()
                 msg = "requesting resume data from 0x%s (decimal: %s) at %s"
                 logger.info(msg % (hex(curstream.seqnum + 1).upper(),
-                                   curstream.seqnum + 1),
-                                   curstream.getSLTimeStamp())
+                            curstream.seqnum + 1),
+                            curstream.getSLTimeStamp())
             else:
                 # Increment sequence number by 1
                 sendStr += " " + hex(curstream.seqnum + 1)

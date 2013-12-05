@@ -73,8 +73,9 @@ def getStartAndEndTime(file_or_file_object):
     info = getRecordInformation(file_or_file_object)
     starttime = info['starttime']
     # Get the endtime of the last record.
-    info = getRecordInformation(file_or_file_object,
-               (info['number_of_records'] - 1) * info['record_length'])
+    info = getRecordInformation(
+        file_or_file_object,
+        (info['number_of_records'] - 1) * info['record_length'])
     endtime = info['endtime']
     return starttime, endtime
 
@@ -249,7 +250,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
             info = _getRecordInformation(f, offset=offset, endian=endian)
     else:
         info = _getRecordInformation(file_or_file_object, offset=offset,
-            endian=endian)
+                                     endian=endian)
     return info
 
 
@@ -311,7 +312,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6] != 'D':
+        while file_object.read(7)[6] not in ['D', 'R', 'Q', 'M']:
             record_start += rec_len
             file_object.seek(record_start, 0)
 
@@ -323,24 +324,27 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         try:
             endian = ">"
             values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
-            starttime = UTCDateTime(year=values[0], julday=values[1],
+            starttime = UTCDateTime(
+                year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
             endian = "<"
             values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
-            starttime = UTCDateTime(year=values[0], julday=values[1],
+            starttime = UTCDateTime(
+                year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
     else:
         values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
         try:
-            starttime = UTCDateTime(year=values[0], julday=values[1],
+            starttime = UTCDateTime(
+                year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
             msg = ("Invalid starttime found. The passed byteorder is likely "
-                "wrong.")
+                   "wrong.")
             raise ValueError(msg)
     npts = values[6]
     info['npts'] = npts
@@ -366,8 +370,8 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         blkt_type, blkt_offset = unpack('%sHH' % endian, file_object.read(4))
         # Parse in order of likeliness.
         if blkt_type == 1000:
-            encoding, word_order, record_length = unpack('%sBBB' % endian,
-                                                  file_object.read(3))
+            encoding, word_order, record_length = \
+                unpack('%sBBB' % endian, file_object.read(3))
             if ENDIAN[word_order] != endian:
                 msg = 'Inconsistent word order.'
                 warnings.warn(msg, UserWarning)
@@ -484,9 +488,9 @@ def _unpackSteim1(data_string, npts, swapflag=0, verbose=0):
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim1(
-            C.cast(dbuf, C.POINTER(FRAME)), datasize,
-            samplecnt, samplecnt, datasamples, diffbuff,
-            C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(FRAME)), datasize,
+        samplecnt, samplecnt, datasamples, diffbuff,
+        C.byref(x0), C.byref(xn), swapflag, verbose)
     if nsamples != npts:
         raise Exception("Error in unpack_steim1")
     return datasamples
@@ -509,9 +513,9 @@ def _unpackSteim2(data_string, npts, swapflag=0, verbose=0):
     x0 = C.c_int32()
     xn = C.c_int32()
     nsamples = clibmseed.msr_unpack_steim2(
-            C.cast(dbuf, C.POINTER(FRAME)), datasize,
-            samplecnt, samplecnt, datasamples, diffbuff,
-            C.byref(x0), C.byref(xn), swapflag, verbose)
+        C.cast(dbuf, C.POINTER(FRAME)), datasize,
+        samplecnt, samplecnt, datasamples, diffbuff,
+        C.byref(x0), C.byref(xn), swapflag, verbose)
     if nsamples != npts:
         raise Exception("Error in unpack_steim2")
     return datasamples
@@ -638,8 +642,8 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
                 julday = julday.byteswap(False)
                 msecs = msecs.byteswap(False)
             dtime = UTCDateTime(year=year[0], julday=julday[0], hour=hour[0],
-                               minute=minute[0], second=second[0],
-                               microsecond=msecs[0] * 100)
+                                minute=minute[0], second=second[0],
+                                microsecond=msecs[0] * 100)
             dtime += (float(timeshift) / 10000)
             year[0] = dtime.year
             julday[0] = dtime.julday

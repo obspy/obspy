@@ -43,8 +43,8 @@ class SEGYTestCase(unittest.TestCase):
                 # Jump to the beginning of the data.
                 f.seek(3840)
                 # Unpack the data.
-                data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](f,
-                                count, endian)
+                data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[data_format](
+                    f, count, endian)
             # Check the dtype of the data.
             self.assertEqual(data.dtype, self.dtypes[data_format])
             # Proven data values, read with Madagascar.
@@ -136,7 +136,7 @@ class SEGYTestCase(unittest.TestCase):
                 new_packed_data_copy.dtype = 'int32'
                 # Equalize the non normalized parts.
                 packed_data_copy[non_normalized] = \
-                        new_packed_data_copy[non_normalized]
+                    new_packed_data_copy[non_normalized]
                 np.testing.assert_array_equal(packed_data_copy,
                                               new_packed_data_copy)
 
@@ -150,8 +150,8 @@ class SEGYTestCase(unittest.TestCase):
                 f = StringIO()
                 f.write(new_packed_data.tostring())
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        length, endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, length, endian)
                 f.close()
                 packed_data.dtype = 'int32'
                 packed_data = packed_data[non_normalized]
@@ -159,8 +159,8 @@ class SEGYTestCase(unittest.TestCase):
                 f = StringIO()
                 f.write(packed_data.tostring())
                 f.seek(0, 0)
-                old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        length, endian)
+                old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, length, endian)
                 f.close()
                 # This works because the normalized and the non normalized IBM
                 # floating point numbers will be close enough for the internal
@@ -192,8 +192,8 @@ class SEGYTestCase(unittest.TestCase):
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        len(data), endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, len(data), endian)
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
@@ -222,8 +222,8 @@ class SEGYTestCase(unittest.TestCase):
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
-                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                        len(data), endian)
+                new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                    f, len(data), endian)
                 f.close()
                 # A relative tolerance of 1E-6 is considered good enough.
                 rms1 = rms(data, new_data)
@@ -251,8 +251,8 @@ class SEGYTestCase(unittest.TestCase):
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
             # Jump to beginning and read again.
             f.seek(0, 0)
-            new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](f,
-                                    len(data), endian)
+            new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
+                f, len(data), endian)
             f.close()
             # Test both.
             np.testing.assert_array_equal(new_data, data)
@@ -345,12 +345,12 @@ class SEGYTestCase(unittest.TestCase):
             with open(file, 'rb') as f:
                 org_data = f.read()
             segy_file = readSEGY(file, headonly=headonly)
-            out_file = NamedTemporaryFile().name
-            segy_file.write(out_file)
-            # Read the new file again.
-            with open(out_file, 'rb') as f:
-                new_data = f.read()
-            os.remove(out_file)
+            with NamedTemporaryFile() as tf:
+                out_file = tf.name
+                segy_file.write(out_file)
+                # Read the new file again.
+                with open(out_file, 'rb') as f:
+                    new_data = f.read()
             # The two files should have the same length.
             self.assertEqual(len(org_data), len(new_data))
             # Replace the not normalized samples. The not normalized
@@ -363,7 +363,7 @@ class SEGYTestCase(unittest.TestCase):
                 # Skip the header (4*960 bytes) and replace the non normalized
                 # data samples.
                 org_data[960:][non_normalized_samples] = \
-                        new_data[960:][non_normalized_samples]
+                    new_data[960:][non_normalized_samples]
                 # Create strings again.
                 org_data = org_data.tostring()
                 new_data = new_data.tostring()
@@ -394,13 +394,14 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.number_of_data_traces_per_ensemble, 24)
         self.assertEqual(header.number_of_auxiliary_traces_per_ensemble, 0)
         self.assertEqual(header.sample_interval_in_microseconds, 250)
-        self.assertEqual( \
+        self.assertEqual(
             header.sample_interval_in_microseconds_of_original_field_recording,
-                         250)
+            250)
         self.assertEqual(header.number_of_samples_per_data_trace, 8000)
-        self.assertEqual( \
-          header.number_of_samples_per_data_trace_for_original_field_recording,
-                         8000)
+        self.assertEqual(
+            header.
+            number_of_samples_per_data_trace_for_original_field_recording,
+            8000)
         self.assertEqual(header.data_sample_format_code, 2)
         self.assertEqual(header.ensemble_fold, 0)
         self.assertEqual(header.trace_sorting_code, 1)
@@ -419,9 +420,9 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.measurement_system, 0)
         self.assertEqual(header.impulse_signal_polarity, 0)
         self.assertEqual(header.vibratory_polarity_code, 0)
-        self.assertEqual( \
-             header.number_of_3200_byte_ext_file_header_records_following,
-                         0)
+        self.assertEqual(
+            header.number_of_3200_byte_ext_file_header_records_following,
+            0)
 
     def test_unpackTraceHeader(self):
         """
@@ -436,19 +437,20 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.trace_sequence_number_within_segy_file, 0)
         self.assertEqual(header.original_field_record_number, 1)
         self.assertEqual(header.trace_number_within_the_original_field_record,
-                        1)
+                         1)
         self.assertEqual(header.energy_source_point_number, 0)
         self.assertEqual(header.ensemble_number, 0)
         self.assertEqual(header.trace_number_within_the_ensemble, 0)
         self.assertEqual(header.trace_identification_code, 1)
-        self.assertEqual( \
+        self.assertEqual(
             header.number_of_vertically_summed_traces_yielding_this_trace,
-                         5)
-        self.assertEqual( \
+            5)
+        self.assertEqual(
             header.number_of_horizontally_stacked_traces_yielding_this_trace,
-                         0)
+            0)
         self.assertEqual(header.data_use, 0)
-        self.assertEqual(getattr(header, 'distance_from_center_of_the_' + \
+        self.assertEqual(getattr(
+            header, 'distance_from_center_of_the_' +
             'source_point_to_the_center_of_the_receiver_group'), 0)
         self.assertEqual(header.receiver_group_elevation, 0)
         self.assertEqual(header.surface_elevation_at_source, 0)
@@ -457,7 +459,7 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.datum_elevation_at_source, 0)
         self.assertEqual(header.water_depth_at_source, 0)
         self.assertEqual(header.water_depth_at_group, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.scalar_to_be_applied_to_all_elevations_and_depths, -100)
         self.assertEqual(header.scalar_to_be_applied_to_all_coordinates, -100)
         self.assertEqual(header.source_coordinate_x, 0)
@@ -505,23 +507,23 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.second_of_minute, 54)
         self.assertEqual(header.time_basis_code, 0)
         self.assertEqual(header.trace_weighting_factor, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.geophone_group_number_of_roll_switch_position_one, 2)
         self.assertEqual(header.geophone_group_number_of_trace_number_one, 2)
         self.assertEqual(header.geophone_group_number_of_last_trace, 0)
         self.assertEqual(header.gap_size, 0)
         self.assertEqual(header.over_travel_associated_with_taper, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.x_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.y_coordinate_of_ensemble_position_of_this_trace, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.for_3d_poststack_data_this_field_is_for_in_line_number, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.for_3d_poststack_data_this_field_is_for_cross_line_number,
-                         0)
+            0)
         self.assertEqual(header.shotpoint_number, 0)
-        self.assertEqual( \
+        self.assertEqual(
             header.scalar_to_be_applied_to_the_shotpoint_number, 0)
         self.assertEqual(header.trace_value_measurement_unit, 0)
         self.assertEqual(header.transduction_constant_mantissa, 0)

@@ -5,7 +5,9 @@ try:
     # try using lxml as it is faster
     from lxml import etree
     from lxml.etree import register_namespace
+    LXML_ETREE = True
 except ImportError:
+    LXML_ETREE = False
     from xml.etree import ElementTree as etree  # @UnusedImport
     try:
         from xml.etree import register_namespace  # @UnusedImport
@@ -35,8 +37,8 @@ def tostring(element, xml_declaration=True, encoding="utf-8",
     try:
         # use lxml
         return __etree.tostring(element, xml_declaration=xml_declaration,
-                              method="xml", encoding=encoding,
-                              pretty_print=pretty_print)
+                                method="xml", encoding=encoding,
+                                pretty_print=pretty_print)
     except:
         pass
     # use xml
@@ -189,7 +191,7 @@ class XMLParser:
         if element is None:
             element = self.xml_root
         try:
-            element = element.getchildren()[0]
+            element = element[0]
         except:
             return None
         return self._getElementNamespace(element)
