@@ -1136,9 +1136,8 @@ class FilterCoefficient(CustomFloat):
 
     @number.setter
     def number(self, value):
-        if not isinstance(value, int):
-            msg = "Coefficient number must be an integer."
-            raise TypeError(msg)
+        if value is not None:
+            value = int(value)
         self._number = value
 
 
@@ -1169,9 +1168,8 @@ class CoefficientWithUncertainties(FloatWithUncertainties):
 
     @number.setter
     def number(self, value):
-        if not isinstance(value, int):
-            msg = "Coefficient number must be an integer."
-            raise TypeError(msg)
+        if value is not None:
+            value = int(value)
         self._number = value
 
 

@@ -323,7 +323,7 @@ class CustomFloat(float):
         self = new
 
 
-class FloatWithUncertainties(float):
+class FloatWithUncertainties(CustomFloat):
     """
     Helper class to inherit from and which stores a float with a given valid
     range, upper/lower uncertainties and eventual additional attributes.
@@ -349,23 +349,21 @@ class FloatWithUncertainties(float):
         self.lower_uncertainty = lower_uncertainty
         self.upper_uncertainty = upper_uncertainty
 
-    def __add__(self, other):
-        return self.__class__(float(self) + other, **self.__dict__)
-
-    def __iadd__(self, other):
-        self = self.__class__(float(self) + other, **self.__dict__)
-
-    def __mul__(self, other):
-        return self.__class__(float(self) * other, **self.__dict__)
-
-    def __imul__(self, other):
-        self = self.__class__(float(self) * other, **self.__dict__)
-
 
 class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
     """
-    Helper class to inherit from, set fixed unit in derived class as class
-    attribute.
+    Float value that has lower and upper uncertainties and a fixed unit
+    associated with it. Helper class to inherit from setting a custom value for
+    the fixed unit (set unit in derived class as class attribute).
+
+    :type value: float
+    :param value: Actual float value.
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type unit: str (read only)
+    :param unit: Unit for physical interpretation of the float value.
     """
     _unit = ""
 
@@ -386,14 +384,24 @@ class FloatWithUncertaintiesFixedUnit(FloatWithUncertainties):
 
 class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
     """
-    Helper class to inherit from.
+    Float value that has lower and upper uncertainties and a unit associated
+    with it.
+
+    :type value: float
+    :param value: Actual float value.
+    :type lower_uncertainty: float
+    :param lower_uncertainty: Lower uncertainty (aka minusError)
+    :type upper_uncertainty: float
+    :param upper_uncertainty: Upper uncertainty (aka plusError)
+    :type unit: str
+    :param unit: Unit for physical interpretation of the float value.
     """
     def __init__(self, value, lower_uncertainty=None, upper_uncertainty=None,
                  unit=None):
         super(FloatWithUncertaintiesAndUnit, self).__init__(
             value, lower_uncertainty=lower_uncertainty,
             upper_uncertainty=upper_uncertainty)
-        self._unit = unit
+        self.unit = unit
 
     @property
     def unit(self):
