@@ -1217,6 +1217,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 else:
                     msg = "Response for %s not found in Parser" % self.id
                     raise ValueError(msg)
+            # Set the SEED identifiers!
+            for item in ["network", "station", "location", "channel"]:
+                seedresp[item] = self.stats[item]
 
         from obspy.signal import seisSim
         self.data = seisSim(

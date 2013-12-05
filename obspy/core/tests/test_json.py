@@ -19,9 +19,9 @@ class JSONTestCase(unittest.TestCase):
 
     def verify_json(self, s):
         """Test an output is a string and is JSON"""
-        self.assertIsInstance(s, str)
+        self.assertTrue(isinstance(s, str))
         j = json.loads(s)
-        self.assertIsInstance(j, dict)
+        self.assertTrue(isinstance(j, dict))
 
     def test_default(self):
         """Test Default function class"""
@@ -39,7 +39,7 @@ class JSONTestCase(unittest.TestCase):
         kw = get_dump_kwargs()
         self.assertTrue('default' in kw)
         self.assertTrue('separators' in kw)
-        self.assertIsInstance(kw['default'], Default)
+        self.assertTrue(isinstance(kw['default'], Default))
         self.assertTrue(kw['default'].OMIT_NULLS)
         self.assertEqual(kw['separators'], (',', ':'))
         s1 = json.dumps(self.event, **kw)
@@ -47,12 +47,12 @@ class JSONTestCase(unittest.TestCase):
         kw = get_dump_kwargs(minify=False, no_nulls=False)
         self.assertTrue('default' in kw)
         self.assertTrue('separators' not in kw)
-        self.assertIsInstance(kw['default'], Default)
+        self.assertTrue(isinstance(kw['default'], Default))
         self.assertFalse(kw['default'].OMIT_NULLS)
         s2 = json.dumps(self.event, **kw)
         self.verify_json(s2)
         # Compacted version is smaller
-        self.assertLess(len(s1), len(s2))
+        self.assertTrue(len(s1) < len(s2))
 
     def test_write_json(self):
         memfile = StringIO.StringIO()
@@ -60,14 +60,14 @@ class JSONTestCase(unittest.TestCase):
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)
-        self.assertIsInstance(j, dict)
+        self.assertTrue(isinstance(j, dict))
         # Test registered method call
         memfile = StringIO.StringIO()
         self.c.write(memfile, format="json")
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)
-        self.assertIsInstance(j, dict)
+        self.assertTrue(isinstance(j, dict))
 
     def tearDown(self):
         del self.event

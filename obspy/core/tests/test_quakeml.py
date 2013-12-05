@@ -112,7 +112,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[1].text, 'Another comment')
         self.assertEqual(
             c[1].resource_id,
-            ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
+            ResourceIdentifier(id="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # event descriptions
         self.assertEqual(len(event.event_descriptions), 3)
@@ -164,15 +164,15 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(origin.depth_type, "from location")
         self.assertEqual(
             origin.method_id,
-            ResourceIdentifier(resource_id="smi:some/method/NA"))
+            ResourceIdentifier(id="smi:some/method/NA"))
         self.assertEqual(origin.time_fixed, None)
         self.assertEqual(origin.epicenter_fixed, False)
         self.assertEqual(
             origin.reference_system_id,
-            ResourceIdentifier(resource_id="smi:some/reference/muh"))
+            ResourceIdentifier(id="smi:some/reference/muh"))
         self.assertEqual(
             origin.earth_model_id,
-            ResourceIdentifier(resource_id="smi:same/model/maeh"))
+            ResourceIdentifier(id="smi:same/model/maeh"))
         self.assertEqual(origin.evaluation_mode, "manual")
         self.assertEqual(origin.evaluation_status, "preliminary")
         self.assertEqual(origin.origin_type, "hypocenter")
@@ -209,7 +209,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[0].text, 'Some comment')
         self.assertEqual(
             c[0].resource_id,
-            ResourceIdentifier(resource_id="smi:some/comment/reference"))
+            ResourceIdentifier(id="smi:some/comment/reference"))
         self.assertEqual(c[0].creation_info.author, 'EMSC')
         self.assertEqual(c[1].resource_id, None)
         self.assertEqual(c[1].creation_info, None)
@@ -268,7 +268,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[0].text, 'Some comment')
         self.assertEqual(
             c[0].resource_id,
-            ResourceIdentifier(resource_id="smi:some/comment/id/muh"))
+            ResourceIdentifier(id="smi:some/comment/id/muh"))
         self.assertEqual(c[0].creation_info.author, 'EMSC')
         self.assertEqual(c[1].creation_info, None)
         self.assertEqual(c[1].text, 'Another comment')
@@ -300,7 +300,7 @@ class QuakeMLTestCase(unittest.TestCase):
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[0]
         self.assertEqual(
-            stat_contrib.station_magnitude_id.resource_id,
+            stat_contrib.station_magnitude_id.id,
             "smi:ch.ethz.sed/magnitude/station/881342")
         self.assertEqual(stat_contrib.weight, 0.77)
         self.assertEqual(stat_contrib.residual, 0.02)
@@ -308,7 +308,7 @@ class QuakeMLTestCase(unittest.TestCase):
         stat_contrib = \
             catalog[0].magnitudes[0].station_magnitude_contributions[1]
         self.assertEqual(
-            stat_contrib.station_magnitude_id.resource_id,
+            stat_contrib.station_magnitude_id.id,
             "smi:ch.ethz.sed/magnitude/station/881334")
         self.assertEqual(stat_contrib.weight, 0.55)
         self.assertEqual(stat_contrib.residual, 0.11)
@@ -444,7 +444,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(fm.waveform_id.station_code, 'FUR')
         self.assertEqual(
             fm.waveform_id.resource_uri,
-            ResourceIdentifier(resource_id="smi:ch.ethz.sed/waveform/201754"))
+            ResourceIdentifier(id="smi:ch.ethz.sed/waveform/201754"))
         self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
         self.assertEqual(
             fm.triggering_origin_id,
@@ -465,7 +465,7 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(c[1].text, 'Another MUH')
         self.assertEqual(
             c[1].resource_id,
-            ResourceIdentifier(resource_id="smi:some/comment/id/number_3"))
+            ResourceIdentifier(id="smi:some/comment/id/number_3"))
         self.assertEqual(c[1].creation_info, None)
         # creation info
         self.assertEqual(fm.creation_info.author, "Erika Mustermann")

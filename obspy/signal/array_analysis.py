@@ -703,42 +703,27 @@ def get_timeshift(geometry, sll_x, sll_y, sl_s, grdpts_x, grdpts_y):
 
 def get_spoint(stream, stime, etime):
     """
+    Calculates start and end offsets relative to stime and etime for each
+    trace in stream in samples.
+
     :param stime: UTCDateTime to start
     :param etime: UTCDateTime to end
+    :returns: start and end sample offset arrays
     """
-    slatest = stream[0].stats.starttime
-    eearliest = stream[0].stats.endtime
-    for tr in stream:
-        if tr.stats.starttime >= slatest:
-            slatest = tr.stats.starttime
-        if tr.stats.endtime <= eearliest:
-            eearliest = tr.stats.endtime
-
-    nostat = len(stream)
-    spoint = np.empty(nostat, dtype="int32", order="C")
-    epoint = np.empty(nostat, dtype="int32", order="C")
-    # now we have to adjust to the beginning of real start time
-    if slatest > stime:
-        msg = "Specified start-time is smaller than starttime in stream"
-        raise ValueError(msg)
-    if eearliest < etime:
-        msg = "Specified end-time bigger is than endtime in stream"
-        raise ValueError(msg)
-    for i in xrange(nostat):
-        offset = int(((stime - slatest) / stream[i].stats.delta + 1.))
-        negoffset = int(((eearliest - etime) / stream[i].stats.delta + 1.))
-        diffstart = slatest - stream[i].stats.starttime
-        frac, ddummy = math.modf(diffstart)
-        spoint[i] = int(ddummy)
-        if frac > stream[i].stats.delta * 0.25:
-            msg = "Difference in start times exceeds 25% of samp rate"
-            warnings.warn(msg)
-        spoint[i] += offset
-        diffend = stream[i].stats.endtime - eearliest
-        frac, ddummy = math.modf(diffend)
-        epoint[i] = int(ddummy)
-        epoint[i] += negoffset
-
+    spoint = np.empty(len(stream), dtype="int32", order="C")
+    epoint = np.empty(len(stream), dtype="int32", order="C")
+    for i, tr in enumerate(stream):
+        if tr.stats.starttime > stime:
+            msg = "Specified stime %s is smaller than starttime %s in stream"
+            raise ValueError(msg % (stime, tr.stats.starttime))
+        if tr.stats.endtime < etime:
+            msg = "Specified etime %s is bigger than endtime %s in stream"
+            raise ValueError(msg % (etime, tr.stats.endtime))
+        # now we have to adjust to the beginning of real start time
+        spoint[i] = int((stime - tr.stats.starttime) *
+                        tr.stats.sampling_rate + .5)
+        epoint[i] = int((tr.stats.endtime - etime) *
+                        tr.stats.sampling_rate + .5)
     return spoint, epoint
 
 
@@ -770,8 +755,8 @@ def array_transff_wavenumber(coords, klim, kstep, coordsys='lonlat'):
     else:
         raise TypeError('klim must either be a float or a tuple of length 4')
 
-    nkx = np.ceil((kxmax + kstep / 10. - kxmin) / kstep)
-    nky = np.ceil((kymax + kstep / 10. - kymin) / kstep)
+    nkx = int(np.ceil((kxmax + kstep / 10. - kxmin) / kstep))
+    nky = int(np.ceil((kymax + kstep / 10. - kymin) / kstep))
 
     transff = np.empty((nkx, nky))
 
@@ -823,9 +808,9 @@ def array_transff_freqslowness(coords, slim, sstep, fmin, fmax, fstep,
     else:
         raise TypeError('slim must either be a float or a tuple of length 4')
 
-    nsx = np.ceil((sxmax + sstep / 10. - sxmin) / sstep)
-    nsy = np.ceil((symax + sstep / 10. - symin) / sstep)
-    nf = np.ceil((fmax + fstep / 10. - fmin) / fstep)
+    nsx = int(np.ceil((sxmax + sstep / 10. - sxmin) / sstep))
+    nsy = int(np.ceil((symax + sstep / 10. - symin) / sstep))
+    nf = int(np.ceil((fmax + fstep / 10. - fmin) / fstep))
 
     transff = np.empty((nsx, nsy))
     buff = np.zeros(nf)
