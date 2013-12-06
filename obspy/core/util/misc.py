@@ -72,7 +72,7 @@ def guessDelta(channel):
     return 0
 
 
-def scoreatpercentile(a, per, limit=(), issorted=True):
+def scoreatpercentile(values, per, limit=(), issorted=True):
     """
     Calculates the score at the given per percentile of the sequence a.
 
@@ -107,12 +107,11 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
 
     Copyright (c) Gary Strangman
     """
+    if limit:
+        values = [v for v in values if limit[0] < v < limit[1]]
+
     if issorted:
-        values = sorted(a)
-        if limit:
-            values = [v for v in values if limit[0] < v < limit[1]]
-    else:
-        values = a
+        values = sorted(values)
 
     def _interpolate(a, b, fraction):
         return a + (b - a) * fraction
