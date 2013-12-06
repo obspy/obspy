@@ -413,6 +413,10 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
 
 
 class _ComplexUncertainty(complex):
+    """
+    Complex class which can accept a python None as an argument and map it to
+    a float value for storage.
+    """
     _none = float("-inf")
 
     @classmethod
@@ -447,7 +451,13 @@ class _ComplexUncertainty(complex):
         return self._decode(_imag)
 
 
-class ComplexWithUncertainties(complex):
+class ComplexWithUncertainties(CustomComplex):
+    """
+    Complex class which can store uncertainties.
+
+    Accepts FloatWithUncertainties and returns FloatWithUncertainties from
+    property methods.
+    """
     _lower_uncertainty = None
     _upper_uncertainty = None
 
@@ -488,6 +498,15 @@ class ComplexWithUncertainties(complex):
         return super(ComplexWithUncertainties, cls).__new__(cls, *args)
 
     def __init__(self, *args, **kwargs):
+        """
+        Complex type with optional keywords:
+        
+        :type lower_uncertainty: complex
+        :param lower_uncertainty: Lower uncertainty (aka minusError)
+        :type upper_uncertainty: complex
+        :param upper_uncertainty: Upper uncertainty (aka plusError)
+
+        """
         real_upper = None
         imag_upper = None
         real_lower = None
