@@ -46,14 +46,14 @@ class UtilTypesTestCase(unittest.TestCase):
         """
         Check for six equalities for a ComplexWithUncertainties
         """
-        self.assertTrue(isinstance(c1.real, FloatWithUncertainties)
-        self.assertTrue(isinstance(c1.imag, FloatWithUncertainties)
-        self.assertEqual(c1.real, real)
-        self.assertEqual(c1.imag, imag)
-        self.assertEqual(c1.real.upper_uncertainty, r_up)
-        self.assertEqual(c1.real.lower_uncertainty, r_lo)
-        self.assertEqual(c1.imag.upper_uncertainty, i_up)
-        self.assertEqual(c1.imag.lower_uncertainty, r_lo)
+        self.assertTrue(isinstance(c.real, FloatWithUncertainties))
+        self.assertTrue(isinstance(c.imag, FloatWithUncertainties))
+        self.assertEqual(c.real, real)
+        self.assertEqual(c.imag, imag)
+        self.assertEqual(c.real.upper_uncertainty, r_up)
+        self.assertEqual(c.real.lower_uncertainty, r_lo)
+        self.assertEqual(c.imag.upper_uncertainty, i_up)
+        self.assertEqual(c.imag.lower_uncertainty, i_lo)
 
     def test_complex(self):
         """
@@ -65,13 +65,15 @@ class UtilTypesTestCase(unittest.TestCase):
         uu1 = 2
         lu2 = 4.1
         uu2 = 7.2
-        fu1 = FloatWithUncertainties(f1, lu1, uu1)
-        fu2 = FloatWithUncertainties(f2, lu2, uu2)
+        fu1 = FloatWithUncertainties(f1, lower_uncertainty=lu1, \
+            upper_uncertainty=uu1)
+        fu2 = FloatWithUncertainties(f2, lower_uncertainty=lu2, \
+            upper_uncertainty=uu2)
         c1 = ComplexWithUncertainties()
         c2 = ComplexWithUncertainties(f1, f2)
         c3 = ComplexWithUncertainties(f1,f2, \
             lower_uncertainty=complex(lu1,lu2), upper_uncertainty=complex(uu1, uu2))
-        c4 = ComplexWithUncertainty(fu1, fu2)
+        c4 = ComplexWithUncertainties(fu1, fu2)
         # c1 should be 0+0j with uncertanties of None
         self._check_complex_with_u(c1, 0, None, None, 0, None, None)
         # c2 should return the floats
