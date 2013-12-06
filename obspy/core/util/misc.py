@@ -95,12 +95,12 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
     >>> scoreatpercentile(a, 75)
     3.25
 
-    >>> a = [6, 47, 49, 15, 42, 41, 7, 39, 43, 40, 36]
-    >>> scoreatpercentile(a, 25)
+    >>> a = [6, 47, 49, 15, 42, 41, 7, 255, 39, 43, 40, 36, 500]
+    >>> scoreatpercentile(a, 25, limit=(0, 100))
     25.5
-    >>> scoreatpercentile(a, 50)
+    >>> scoreatpercentile(a, 50, limit=(0, 100))
     40
-    >>> scoreatpercentile(a, 75)
+    >>> scoreatpercentile(a, 75, limit=(0, 100))
     42.5
 
     This function is taken from :func:`scipy.stats.scoreatpercentile`.
@@ -110,7 +110,7 @@ def scoreatpercentile(a, per, limit=(), issorted=True):
     if issorted:
         values = sorted(a)
         if limit:
-            values = values[(limit[0] < a) & (a < limit[1])]
+            values = [v for v in values if limit[0] < v < limit[1]]
     else:
         values = a
 
