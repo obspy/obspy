@@ -412,6 +412,141 @@ class FloatWithUncertaintiesAndUnit(FloatWithUncertainties):
         self._unit = value
 
 
+class _ComplexUncertainty(complex):
+    """
+    Complex class which can accept a python None as an argument and map it to
+    a float value for storage.
+    """
+    _none = float("-inf")
+
+    @classmethod
+    def _encode(cls, arg):
+        if arg is None:
+            return cls._none
+        return arg
+
+    @classmethod
+    def _decode(cls, arg):
+        if arg == cls._none:
+            return None
+        return arg
+
+    def __new__(cls, *args):
+        cargs = [cls._encode(a) for a in args]
+        if len(cargs) < 1:
+            cargs.append(cls._none)
+        if len(cargs) < 2 and (isinstance(cargs[0], float)
+                               or isinstance(cargs[0], int)):
+            cargs.append(cls._none)
+        return super(_ComplexUncertainty, cls).__new__(cls, *cargs)
+
+    @property
+    def real(self):
+        _real = super(_ComplexUncertainty, self).real
+        return self._decode(_real)
+
+    @property
+    def imag(self):
+        _imag = super(_ComplexUncertainty, self).imag
+        return self._decode(_imag)
+
+
+class ComplexWithUncertainties(CustomComplex):
+    """
+    Complex class which can store uncertainties.
+
+    Accepts FloatWithUncertainties and returns FloatWithUncertainties from
+    property methods.
+    """
+    _lower_uncertainty = None
+    _upper_uncertainty = None
+
+    @staticmethod
+    def _attr(obj, attr):
+        try:
+            return getattr(obj, attr)
+        except AttributeError:
+            return None
+
+    @staticmethod
+    def _uncertainty(value):
+        if isinstance(value, tuple) or isinstance(value, list):
+            u = _ComplexUncertainty(*value)
+        else:
+            u = _ComplexUncertainty(value)
+        if u.real is None and u.imag is None:
+            return None
+        return u
+
+    @property
+    def lower_uncertainty(self):
+        return self._lower_uncertainty
+
+    @lower_uncertainty.setter
+    def lower_uncertainty(self, value):
+        self._lower_uncertainty = self._uncertainty(value)
+
+    @property
+    def upper_uncertainty(self):
+        return self._upper_uncertainty
+
+    @upper_uncertainty.setter
+    def upper_uncertainty(self, value):
+        self._upper_uncertainty = self._uncertainty(value)
+
+    def __new__(cls, *args, **kwargs):
+        return super(ComplexWithUncertainties, cls).__new__(cls, *args)
+
+    def __init__(self, *args, **kwargs):
+        """
+        Complex type with optional keywords:
+        
+        :type lower_uncertainty: complex
+        :param lower_uncertainty: Lower uncertainty (aka minusError)
+        :type upper_uncertainty: complex
+        :param upper_uncertainty: Upper uncertainty (aka plusError)
+
+        """
+        real_upper = None
+        imag_upper = None
+        real_lower = None
+        imag_lower = None
+        if len(args) >= 1:
+            if isinstance(args[0], self.__class__):
+                self.upper_uncertainty = args[0].upper_uncertainty
+                self.lower_uncertainty = args[0].lower_uncertainty
+            elif isinstance(args[0], FloatWithUncertainties):
+                real_upper = args[0].upper_uncertainty
+                real_lower = args[0].lower_uncertainty
+        if len(args) >= 2 and isinstance(args[1], FloatWithUncertainties):
+            imag_upper = args[1].upper_uncertainty
+            imag_lower = args[1].lower_uncertainty
+        if self.upper_uncertainty is None:
+            self.upper_uncertainty = real_upper, imag_upper
+        if self.lower_uncertainty is None:
+            self.lower_uncertainty = real_lower, imag_lower
+        if "lower_uncertainty" in kwargs:
+            self.lower_uncertainty = kwargs['lower_uncertainty']
+        if "upper_uncertainty" in kwargs:
+            self.upper_uncertainty = kwargs['upper_uncertainty']
+
+    @property
+    def real(self):
+        _real = super(ComplexWithUncertainties, self).real
+        _lower = self._attr(self.lower_uncertainty, 'real')
+        _upper = self._attr(self.upper_uncertainty, 'real')
+        return FloatWithUncertainties(_real, lower_uncertainty=_lower,
+                                      upper_uncertainty=_upper)
+
+    @property
+    def imag(self):
+        _imag = super(ComplexWithUncertainties, self).imag
+        _lower = self._attr(self.lower_uncertainty, 'imag')
+        _upper = self._attr(self.upper_uncertainty, 'imag')
+        return FloatWithUncertainties(_imag, lower_uncertainty=_lower,
+                                      upper_uncertainty=_upper)
+
+
 if __name__ == '__main__':
     import doctest
     doctest.testmod(exclude_empty=True)
