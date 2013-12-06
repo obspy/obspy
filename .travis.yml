@@ -1,22 +1,32 @@
 language: python
 python:
-  - "2.7"
+  - 2.6
+  - 2.7
 virtualenv:
   system_site_packages: true
 before_install:
   - lsb_release -a # get info on the operating system
-  - sudo apt-get install -qq gfortran python-dev python-numpy python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto
+  - sudo apt-get update
+  - sudo apt-get install -qq gfortran
+  # numpy is installed anyway, even on py!=2.7 where system site-packages are never available. keep it here for completeness
+  - sudo apt-get install -qq python-numpy
+  - pip install --upgrade pip
+  - pip install --upgrade setuptools
+  - pip install wheel
+  - wget -q -O - 'https://github.com/obspy/wheelhouse/archive/master.tar.gz' | tar -C /tmp -xzf -
+  - if [[ $TRAVIS_PYTHON_VERSION == '2.7' ]]; then sudo apt-get install -qq python-dev python-scipy python-suds python-lxml python-sqlalchemy python-m2crypto python-mock; else pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master scipy suds lxml sqlalchemy m2crypto; pip install mock; fi
   - pip install https://github.com/yarikoptic/coveralls-python/archive/master.zip
   - pip install geographiclib
-  - pip install --use-mirrors matplotlib==1.3.0
+  - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
   - pip install --use-mirrors flake8
+  - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
   - git fetch obspy --tags
   - git fetch origin --tags
   - DEPTH=300; while [ "$(git describe 2> /dev/null)" == "" ]; do DEPTH=$(($DEPTH+200)); git fetch origin --depth=$DEPTH --quiet; done # continue fetching more older commits until git describe is able to reach the last tagged version
   - git status
-  - pip install --use-mirrors .
+  - pip install --no-deps --use-mirrors .
   - git status
 script:
   # We change directories to make sure that python won't find the copy

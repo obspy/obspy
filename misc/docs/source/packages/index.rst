@@ -49,5 +49,6 @@ The functionality is provided through the following packages:
    obspy.iris
    obspy.neic
    obspy.neries
+   obspy.pde
    obspy.seedlink
    obspy.seishub

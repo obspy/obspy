@@ -13,7 +13,7 @@ import warnings
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
-    FloatWithUncertaintiesAndUnit, CustomFloat
+    FloatWithUncertaintiesAndUnit, CustomFloat, FloatWithUncertainties
 from obspy.station.util import Frequency, Angle
 
 
@@ -232,7 +232,7 @@ class PolesZerosResponseStage(ResponseStage):
 
     @property
     def zeros(self):
-        return self.__zeros
+        return self._zeros
 
     @zeros.setter
     def zeros(self, value):
@@ -240,11 +240,11 @@ class PolesZerosResponseStage(ResponseStage):
             if not isinstance(x, CustomComplex):
                 msg = "Zeros must be of CustomComplex type."
                 raise TypeError(msg)
-        self.__zeros = value
+        self._zeros = value
 
     @property
     def poles(self):
-        return self.__poles
+        return self._poles
 
     @poles.setter
     def poles(self, value):
@@ -252,11 +252,11 @@ class PolesZerosResponseStage(ResponseStage):
             if not isinstance(x, CustomComplex):
                 msg = "Poles must be of CustomComplex type."
                 raise TypeError(msg)
-        self.__poles = value
+        self._poles = value
 
     @property
     def pz_transfer_function_type(self):
-        return self.__pz_transfer_function_type
+        return self._pz_transfer_function_type
 
     @pz_transfer_function_type.setter
     def pz_transfer_function_type(self, value):
@@ -273,13 +273,13 @@ class PolesZerosResponseStage(ResponseStage):
         value = value.lower()
         if "laplace" in value:
             if "radian" in value:
-                self.__pz_transfer_function_type = "LAPLACE (RADIANS/SECOND)"
+                self._pz_transfer_function_type = "LAPLACE (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
-                self.__pz_transfer_function_type = "LAPLACE (HERTZ)"
+                self._pz_transfer_function_type = "LAPLACE (HERTZ)"
             else:
                 raise ValueError(msg)
         elif "digital" in value:
-            self.__pz_transfer_function_type = "DIGITAL (Z-TRANSFORM)"
+            self._pz_transfer_function_type = "DIGITAL (Z-TRANSFORM)"
         else:
             raise ValueError(msg)
 
@@ -351,7 +351,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
 
     @property
     def numerator(self):
-        return self.__numerator
+        return self._numerator
 
     @numerator.setter
     def numerator(self, value):
@@ -360,11 +360,11 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 msg = ("Numerator elements must be of "
                        "FloatWithUncertaintiesAndUnit type.")
                 raise TypeError(msg)
-        self.__numerator = value
+        self._numerator = value
 
     @property
     def denominator(self):
-        return self.__denominator
+        return self._denominator
 
     @denominator.setter
     def denominator(self, value):
@@ -373,11 +373,11 @@ class CoefficientsTypeResponseStage(ResponseStage):
                 msg = ("Denominator elements must be of "
                        "FloatWithUncertaintiesAndUnit type.")
                 raise TypeError(msg)
-        self.__denominator = value
+        self._denominator = value
 
     @property
     def cf_transfer_function_type(self):
-        return self.__cf_transfer_function_type
+        return self._cf_transfer_function_type
 
     @cf_transfer_function_type.setter
     def cf_transfer_function_type(self, value):
@@ -394,13 +394,13 @@ class CoefficientsTypeResponseStage(ResponseStage):
         value = value.lower()
         if "analog" in value:
             if "radian" in value:
-                self.__cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
+                self._cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
-                self.__cf_transfer_function_type = "ANALOG (HERTZ)"
+                self._cf_transfer_function_type = "ANALOG (HERTZ)"
             else:
                 raise ValueError(msg)
         elif "digital" in value:
-            self.__cf_transfer_function_type = "DIGITAL"
+            self._cf_transfer_function_type = "DIGITAL"
         else:
             raise ValueError(msg)
 
@@ -508,20 +508,20 @@ class FIRResponseStage(ResponseStage):
             * ``NONE``
             * ``EVEN``
             * ``ODD``
-    :type numerator_coefficients: list of floats
-    :param numerator_coefficients: List of numerator coefficients.
+    :type coefficients: list of floats
+    :param coefficients: List of FIR coefficients.
     """
     def __init__(self, stage_sequence_number, stage_gain,
                  stage_gain_frequency, input_units, output_units,
                  symmetry="NONE", resource_id=None, resource_id2=None,
                  name=None,
-                 numerator_coefficients=None, input_units_description=None,
+                 coefficients=None, input_units_description=None,
                  output_units_description=None, description=None,
                  decimation_input_sample_rate=None, decimation_factor=None,
                  decimation_offset=None, decimation_delay=None,
                  decimation_correction=None):
         self._symmetry = symmetry
-        self.numerator_coefficients = numerator_coefficients or []
+        self.coefficients = coefficients or []
         super(FIRResponseStage, self).__init__(
             stage_sequence_number=stage_sequence_number,
             input_units=input_units,
@@ -554,17 +554,17 @@ class FIRResponseStage(ResponseStage):
         self._symmetry = value
 
     @property
-    def numerator_coefficients(self):
-        return self._numerator_coefficients
+    def coefficients(self):
+        return self._coefficients
 
-    @numerator_coefficients.setter
-    def numerator_coefficients(self, value):
+    @coefficients.setter
+    def coefficients(self, value):
         new_values = []
         for x in value:
-            if not isinstance(x, CustomFloat):
-                x = CustomFloat(x)
+            if not isinstance(x, FilterCoefficient):
+                x = FilterCoefficient(x)
             new_values.append(x)
-        self._numerator_coefficients = new_values
+        self._coefficients = new_values
 
 
 class PolynomialResponseStage(ResponseStage):
@@ -642,6 +642,19 @@ class PolynomialResponseStage(ResponseStage):
             msg = msg % (value, "', '".join(allowed))
             raise ValueError(msg)
         self._approximation_type = value
+
+    @property
+    def coefficients(self):
+        return self._coefficients
+
+    @coefficients.setter
+    def coefficients(self, value):
+        new_values = []
+        for x in value:
+            if not isinstance(x, CoefficientWithUncertainties):
+                x = CoefficientWithUncertainties(x)
+            new_values.append(x)
+        self._coefficients = new_values
 
 
 class Response(ComparingObject):
@@ -1101,6 +1114,63 @@ class InstrumentPolynomial(ComparingObject):
             msg = msg % (value, "', '".join(allowed))
             raise ValueError(msg)
         self._approximation_type = value
+
+
+class FilterCoefficient(CustomFloat):
+    """
+    A filter coefficient.
+    """
+    def __init__(self, value, number=None):
+        """
+        :type value: float
+        :param value: The actual value of the coefficient
+        :type number: int, optional
+        :param number: Number to indicate the position of the coefficient.
+        """
+        super(FilterCoefficient, self).__init__(value)
+        self.number = number
+
+    @property
+    def number(self):
+        return self._number
+
+    @number.setter
+    def number(self, value):
+        if value is not None:
+            value = int(value)
+        self._number = value
+
+
+class CoefficientWithUncertainties(FloatWithUncertainties):
+    """
+    A coefficient with optional uncertainties.
+    """
+    def __init__(self, value, number=None, lower_uncertainty=None,
+                 upper_uncertainty=None):
+        """
+        :type value: float
+        :param value: The actual value of the coefficient
+        :type number: int, optional
+        :param number: Number to indicate the position of the coefficient.
+        :type lower_uncertainty: float
+        :param lower_uncertainty: Lower uncertainty (aka minusError)
+        :type upper_uncertainty: float
+        :param upper_uncertainty: Upper uncertainty (aka plusError)
+        """
+        super(CoefficientWithUncertainties, self).__init__(
+            value, lower_uncertainty=lower_uncertainty,
+            upper_uncertainty=upper_uncertainty)
+        self.number = number
+
+    @property
+    def number(self):
+        return self._number
+
+    @number.setter
+    def number(self, value):
+        if value is not None:
+            value = int(value)
+        self._number = value
 
 
 if __name__ == '__main__':

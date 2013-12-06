@@ -12,7 +12,7 @@ FDSN Web service client for ObsPy.
 from io import BytesIO
 from lxml import etree
 import obspy
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
@@ -25,6 +25,9 @@ import urllib
 import urllib2
 import warnings
 import os
+
+
+DEFAULT_SERVICE_VERSIONS = {'dataselect': 1, 'station': 1, 'event': 1}
 
 
 class Client(object):
@@ -45,7 +48,7 @@ class Client(object):
 
     For details see :meth:`__init__`.
     """
-    def __init__(self, base_url="IRIS", major_version=1, user=None,
+    def __init__(self, base_url="IRIS", major_versions={}, user=None,
                  password=None, user_agent=DEFAULT_USER_AGENT, debug=False):
         """
         Initializes an FDSN Web Service client.
@@ -66,8 +69,11 @@ class Client(object):
         :param base_url: Base URL of FDSN web service compatible server
             (e.g. "http://service.iris.edu") or key string for recognized
             server (currently "IRIS", "USGS", "RESIF", "NCEDC")
-        :type major_version: int
-        :param major_version: Major version number of server to access.
+        :type major_versions: dict
+        :param major_versions: Allows to specify custom major version numbers
+            for individual services (e.g.
+            `major_versions={'station': 2, 'dataselect': 3}`), otherwise the
+            latest version at time of implementation will be used.
         :type user: str
         :param user: User name of HTTP Digest Authentication for access to
             restricted data.
@@ -100,7 +106,8 @@ class Client(object):
             urllib2.install_opener(opener)
 
         self.request_headers = {"User-Agent": user_agent}
-        self.major_version = major_version
+        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        self.major_versions.update(major_versions)
 
         if self.debug is True:
             print "Base URL: %s" % self.base_url
@@ -256,27 +263,57 @@ class Client(object):
         Query the station service of the client.
 
         >>> client = Client("IRIS")
-        >>> stationxml_string = client.get_stations(
-        ...     latitude=-56.1, longitude=-26.7, maxradius=15)
-        >>> for line in stationxml_string.splitlines()[:6]:
-        ...     print line  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <BLANKLINE>
-        <FDSNStationXML ...>
-         <Source>IRIS-DMC</Source>
-         <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
-        >>> stationxml_string = client.get_stations(
+        >>> inventory = client.get_stations(latitude=-56.1, longitude=-26.7,
+        ...                                 maxradius=15)
+        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    http://service.iris.edu/fdsnws/station/1/query?lat...
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (3):
+                    AI
+                    II
+                    SY
+                Stations (4):
+                    AI.ORCD (ORCADAS, SOUTH ORKNEY ISLANDS)
+                    II.HOPE (Hope Point, South Georgia Island)
+                    SY.HOPE (HOPE synthetic)
+                    SY.ORCD (ORCD synthetic)
+                Channels (0):
+        >>> inventory = client.get_stations(
         ...     starttime=UTCDateTime("2013-01-01"), network="IU",
         ...     sta="ANMO", level="channel")
-        >>> for line in stationxml_string.splitlines()[:6]:
-        ...     print line  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <BLANKLINE>
-        <FDSNStationXML ...>
-         <Source>IRIS-DMC</Source>
-         <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    http://service.iris.edu/fdsnws/station/1/query?station=...
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (1):
+                    IU
+                Stations (1):
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (57):
+                    IU.ANMO.00.BH1, IU.ANMO.00.BH2, IU.ANMO.00.BHZ,
+                    IU.ANMO.00.LH1, IU.ANMO.00.LH2, IU.ANMO.00.LHZ,
+                    IU.ANMO.00.VH1, IU.ANMO.00.VH2, IU.ANMO.00.VHZ,
+                    IU.ANMO.00.VM1, IU.ANMO.00.VM2, IU.ANMO.00.VMZ,
+                    IU.ANMO.10.BH1, IU.ANMO.10.BH2, IU.ANMO.10.BHZ,
+                    IU.ANMO.10.EH1, IU.ANMO.10.EH2, IU.ANMO.10.EHZ,
+                    IU.ANMO.10.HH1, IU.ANMO.10.HH2, IU.ANMO.10.HHZ,
+                    IU.ANMO.10.LH1, IU.ANMO.10.LH2, IU.ANMO.10.LHZ,
+                    IU.ANMO.10.VH1, IU.ANMO.10.VH2, IU.ANMO.10.VHZ,
+                    IU.ANMO.10.VM1, IU.ANMO.10.VM2, IU.ANMO.10.VMZ,
+                    IU.ANMO.20.EN1, IU.ANMO.20.EN2, IU.ANMO.20.ENZ,
+                    IU.ANMO.20.HN1, IU.ANMO.20.HN1, IU.ANMO.20.HN2,
+                    IU.ANMO.20.HN2, IU.ANMO.20.HNZ, IU.ANMO.20.HNZ,
+                    IU.ANMO.20.LN1, IU.ANMO.20.LN1, IU.ANMO.20.LN2,
+                    IU.ANMO.20.LN2, IU.ANMO.20.LNZ, IU.ANMO.20.LNZ,
+                    IU.ANMO.30.LDO, IU.ANMO.31.LDO, IU.ANMO.35.LDO,
+                    IU.ANMO.40.LFZ, IU.ANMO.50.LDO, IU.ANMO.50.LIO,
+                    IU.ANMO.50.LKO, IU.ANMO.50.LRH, IU.ANMO.50.LRI,
+                    IU.ANMO.50.LWD, IU.ANMO.50.LWS, IU.ANMO.60.HDF
 
         :type starttime:
         :param starttime: Limit to metadata epochs starting on or after the
@@ -350,6 +387,8 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :rtype: :class:`~obspy.station.inventory.Inventory`
+        :returns: Inventory with requested station information.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -373,10 +412,9 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            # XXX: Replace with StationXML reader once ready!
-            station = data_stream.read()
+            inventory = read_inventory(data_stream, format="STATIONXML")
             data_stream.close()
-            return station
+            return inventory
 
     def get_waveform(self, network, station, location, channel, starttime,
                      endtime, quality=None, minimumlength=None,
@@ -531,7 +569,7 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: #SKIP
+        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
@@ -830,7 +868,7 @@ class Client(object):
             raise FDSNException("Service temporarily unavailable")
         return data
 
-    def _build_url(self, resource_type, service, parameters={}):
+    def _build_url(self, service, resource_type, parameters={}):
         """
         Builds the correct URL.
 
@@ -839,10 +877,10 @@ class Client(object):
         """
         # authenticated dataselect queries have different target URL
         if self.user is not None:
-            if resource_type == "dataselect" and service == "query":
-                service = "queryauth"
-        return build_url(self.base_url, self.major_version, resource_type,
-                         service, parameters)
+            if service == "dataselect" and resource_type == "query":
+                resource_type = "queryauth"
+        return build_url(self.base_url, service, self.major_versions[service],
+                         resource_type, parameters)
 
     def _discover_services(self):
         """
@@ -851,13 +889,10 @@ class Client(object):
         They are discovered by downloading the corresponding WADL files. If a
         WADL does not exist, the services are assumed to be non-existent.
         """
-        dataselect_url = self._build_url("dataselect", "application.wadl")
-        station_url = self._build_url("station", "application.wadl")
-        event_url = self._build_url("event", "application.wadl")
-        catalog_url = self._build_url("event", "catalogs")
-        contributor_url = self._build_url("event", "contributors")
-        urls = (dataselect_url, station_url, event_url, catalog_url,
-                contributor_url)
+        urls = [self._build_url(service, "application.wadl")
+                for service in ("dataselect", "event", "station")]
+        urls.append(self._build_url("event", "catalogs"))
+        urls.append(self._build_url("event", "contributors"))
 
         # Request all in parallel.
         wadl_queue = Queue.Queue()
@@ -978,17 +1013,17 @@ def convert_to_string(value):
         return str(value).replace("Z", "")
 
 
-def build_url(base_url, major_version, service, resource_type, parameters={}):
+def build_url(base_url, service, major_version, resource_type, parameters={}):
     """
     URL builder for the FDSN webservices.
 
     Built as a separate function to enhance testability.
 
-    >>> build_url("http://service.iris.edu", 1, "dataselect", \
+    >>> build_url("http://service.iris.edu", "dataselect", 1, \
                   "application.wadl")
     'http://service.iris.edu/fdsnws/dataselect/1/application.wadl'
 
-    >>> build_url("http://service.iris.edu", 1, "dataselect", \
+    >>> build_url("http://service.iris.edu", "dataselect", 1, \
                   "query", {"cha": "EHE"})
     'http://service.iris.edu/fdsnws/dataselect/1/query?cha=EHE'
     """

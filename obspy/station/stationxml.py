@@ -20,9 +20,10 @@ from obspy.station.util import Longitude, Latitude, Distance, Azimuth, Dip, \
     ClockDrift, SampleRate, Frequency, Angle
 from obspy.station.response import PolesZerosResponseStage, \
     CoefficientsTypeResponseStage, ResponseListResponseStage, \
-    FIRResponseStage, PolynomialResponseStage
-from obspy.core.util.obspy_types import FloatWithUncertainties, \
-    FloatWithUncertaintiesAndUnit, CustomComplex, CustomFloat
+    FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
+    CoefficientWithUncertainties
+from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
+    CustomComplex
 
 
 # Define some constants for writing StationXML files.
@@ -445,9 +446,9 @@ def _read_response_stage(stage_elem, _ns):
     elif elem is FIR_elem:
         symmetry = _tag2obj(elem, _ns("Symmetry"), unicode)
         coeffs = _read_floattype_list(elem, _ns("NumeratorCoefficient"),
-                                      CustomFloat,
+                                      FilterCoefficient,
                                       additional_mapping={'i': "number"})
-        return obspy.station.FIRResponseStage(numerator_coefficients=coeffs,
+        return obspy.station.FIRResponseStage(coefficients=coeffs,
                                               symmetry=symmetry, **kwargs)
 
     # Handle polynomial instrument responses.
@@ -459,7 +460,7 @@ def _read_response_stage(stage_elem, _ns):
         appr_high = _tag2obj(elem, _ns("ApproximationUpperBound"), float)
         max_err = _tag2obj(elem, _ns("MaximumError"), float)
         coeffs = _read_floattype_list(elem, _ns("Coefficient"),
-                                      FloatWithUncertainties,
+                                      CoefficientWithUncertainties,
                                       additional_mapping={"number": "number"})
         return obspy.station.PolynomialResponseStage(
             approximation_type=appr_type, frequency_lower_bound=f_low,
@@ -510,7 +511,7 @@ def _read_instrument_polynomial(element, _ns):
     appr_high = _tag2obj(element, _ns("ApproximationUpperBound"), float)
     max_err = _tag2obj(element, _ns("MaximumError"), float)
     coeffs = _read_floattype_list(element, _ns("Coefficient"),
-                                  FloatWithUncertainties,
+                                  CoefficientWithUncertainties,
                                   additional_mapping={"number": "number"})
     return obspy.station.response.InstrumentPolynomial(
         approximation_type=appr_type, frequency_lower_bound=f_low,
@@ -716,7 +717,8 @@ def _write_floattype(parent, obj, attr_name, tag, additional_mapping={}):
     attribs["plusError"] = obj_.upper_uncertainty
     for key1, key2 in additional_mapping.iteritems():
         attribs[key1] = getattr(obj_, key2)
-    attribs = dict([(k, v) for k, v in attribs.iteritems() if v is not None])
+    attribs = dict([(k, str(v)) for k, v in attribs.iteritems()
+                    if v is not None])
     etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
 
@@ -731,7 +733,7 @@ def _write_floattype_list(parent, obj, attr_list_name, tag,
         attribs["plusError"] = obj_.upper_uncertainty
         for key1, key2 in additional_mapping.iteritems():
             attribs[key2] = getattr(obj_, key1)
-        attribs = dict([(k, v) for k, v in attribs.iteritems()
+        attribs = dict([(k, str(v)) for k, v in attribs.iteritems()
                         if v is not None])
         etree.SubElement(parent, tag, attribs).text = _float_to_str(obj_)
 
@@ -971,7 +973,7 @@ def _write_response_stage(parent, stage):
             _write_floattype(sub__, rlelem, "phase", "Phase")
     elif isinstance(stage, FIRResponseStage):
         _obj2tag(sub_, "Symmetry", stage.symmetry)
-        _write_floattype_list(sub_, stage, "numerator_coefficients",
+        _write_floattype_list(sub_, stage, "coefficients",
                               "NumeratorCoefficient",
                               additional_mapping={'number': 'i'})
     elif isinstance(stage, PolynomialResponseStage):

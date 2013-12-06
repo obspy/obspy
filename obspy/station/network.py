@@ -123,7 +123,7 @@ class Network(BaseNode):
 
     @property
     def stations(self):
-        return self.__stations
+        return self._stations
 
     @stations.setter
     def stations(self, values):
@@ -133,7 +133,7 @@ class Network(BaseNode):
         if any([not isinstance(x, Station) for x in values]):
             msg = "stations can only contain Station objects."
             raise ValueError(msg)
-        self.__stations = values
+        self._stations = values
 
     def __short_str__(self):
         return "%s" % self.code

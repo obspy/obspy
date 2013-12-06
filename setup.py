@@ -34,14 +34,17 @@ from numpy.distutils.misc_util import Configuration
 from numpy.distutils.ccompiler import get_default_compiler
 
 import glob
+import inspect
 import fnmatch
 import os
 import platform
 import sys
 
 
-# Directory of the current file
-SETUP_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+# Directory of the current file in the (hopefully) most reliable way
+# possible, according to krischer
+SETUP_DIRECTORY = os.path.dirname(os.path.abspath(inspect.getfile(
+    inspect.currentframe())))
 
 # Import the version string.
 UTIL_PATH = os.path.join(SETUP_DIRECTORY, "obspy", "core", "util")
@@ -84,7 +87,8 @@ INSTALL_REQUIRES = [
     'suds>=0.4.0']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
-              'nose']}
+              'nose',
+              'mock']}
 ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
@@ -204,12 +208,17 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event': [
         'QUAKEML = obspy.core.quakeml',
+        'MCHEDR = obspy.pde.mchedr',
         'JSON = obspy.core.json.core',
     ],
     'obspy.plugin.event.QUAKEML': [
         'isFormat = obspy.core.quakeml:isQuakeML',
         'readFormat = obspy.core.quakeml:readQuakeML',
         'writeFormat = obspy.core.quakeml:writeQuakeML',
+    ],
+    'obspy.plugin.event.MCHEDR': [
+        'isFormat = obspy.pde.mchedr:isMchedr',
+        'readFormat = obspy.pde.mchedr:readMchedr',
     ],
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',

@@ -453,13 +453,13 @@ def parse_STA2(line):
      'lat': -999.0,
      'lon': -999.0,
      'network': ''}
-    >>> l = "STA2 ABCD       12.34567    1.23456 WGS-84       -123.456 1.234"
+    >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
     >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
     {'coordsys': 'WGS-84',
      'edepth': 1.234,
      'elev': -123.456,
      'lat': 12.34567,
-     'lon': 1.23456,
+     'lon': 1.234567,
      'network': 'ABCD'}
     """
     header = {}
