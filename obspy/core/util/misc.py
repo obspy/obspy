@@ -397,7 +397,7 @@ class CatchOutput(object):
         os.close(self._stderr)
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type, exc_val, exc_tb):  # @UnusedVariable
         sys.stdout.flush()
         sys.stderr.flush()
         os.fsync(sys.stdout.fileno())

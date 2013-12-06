@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict

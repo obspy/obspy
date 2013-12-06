@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from obspy.core.json import Default, get_dump_kwargs, writeJSON
 from obspy.core.quakeml import readQuakeML
 import os

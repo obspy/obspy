@@ -107,13 +107,13 @@ def checkForMatplotlibCompareImages():
     try:
         # trying to stay inside 80 char line
         import matplotlib.testing.compare as _compare
-        compare_images = _compare.compare_images  # NOQA
+        compare_images = _compare.compare_images  # NOQA @UnusedVariable
     except:
         return False
     # matplotlib's (< 1.2) compare_images() uses PIL internally
     if getMatplotlibVersion() < [1, 2, 0]:
         try:
-            import PIL  # NOQA
+            import PIL  # NOQA @UnusedImport
         except ImportError:
             return False
     return True
@@ -238,7 +238,7 @@ class ImageComparison(NamedTemporaryFile):
             if os.path.exists(self.diff_filename):
                 os.remove(self.diff_filename)
 
-    def compare(self, reltol=1):
+    def compare(self, reltol=1):  # @UnusedVariable
         """
         Run :func:`matplotlib.testing.compare.compare_images` and raise an
         unittest.TestCase.failureException with the message string given by

@@ -786,7 +786,7 @@ class ResourceIdentifier(object):
         raise Exception(msg)
 
     @uuid.setter
-    def uuid(self, value):
+    def uuid(self, value):  # @UnusedVariable
         """
         Setting is uuid hash is forbidden and will not work.
         """

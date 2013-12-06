@@ -523,17 +523,17 @@ class TraceTestCase(unittest.TestCase):
         tr1 = bigtrace
         tr2 = bigtrace_sort
         for method in [0, 1]:
-            #Random
+            # Random
             bigtrace = tr1.copy()
-            bigtrace = bigtrace.__add__(trace1, method=1)
-            bigtrace = bigtrace.__add__(trace3, method=1)
-            bigtrace = bigtrace.__add__(trace2, method=1)
+            bigtrace = bigtrace.__add__(trace1, method=method)
+            bigtrace = bigtrace.__add__(trace3, method=method)
+            bigtrace = bigtrace.__add__(trace2, method=method)
 
-            #Sorted
+            # Sorted
             bigtrace_sort = tr2.copy()
-            bigtrace_sort = bigtrace_sort.__add__(trace1, method=1)
-            bigtrace_sort = bigtrace_sort.__add__(trace2, method=1)
-            bigtrace_sort = bigtrace_sort.__add__(trace3, method=1)
+            bigtrace_sort = bigtrace_sort.__add__(trace1, method=method)
+            bigtrace_sort = bigtrace_sort.__add__(trace2, method=method)
+            bigtrace_sort = bigtrace_sort.__add__(trace3, method=method)
 
             for tr in (bigtrace, bigtrace_sort):
                 self.assertTrue(isinstance(tr, Trace))

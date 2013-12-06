@@ -470,12 +470,9 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Tests the handling of the case that different ResourceIdentifier
         instances are created that have the same resource id but different
         objects. This should not happen and thus a warning should be emitted.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
-        object_a = UTCDateTime()
-        object_b = UTCDateTime()
+        object_a = UTCDateTime(1000)
+        object_b = UTCDateTime(1001)
         self.assertEqual(object_a is object_b, False)
         id = 'obspy.org/tests/test_resource'
         res_a = ResourceIdentifier(id=id,
@@ -517,16 +514,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         is refered to somewhere else should stay in the dictionary.
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        r1 = ResourceIdentifier()  # NOQA
+        _r1 = ResourceIdentifier()  # NOQA
         self.assertEqual(len(r_dict.keys()), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
         # pretty much immediately.
-        r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
+        _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
         self.assertEqual(len(r_dict.keys()), 0)
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
-        r3 = ResourceIdentifier(referred_object=obj)  # NOQA
+        _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
         self.assertEqual(len(r_dict.keys()), 1)
 
     def test_adding_a_referred_object_after_creation(self):
