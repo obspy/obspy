@@ -1,9 +1,7 @@
-[report]
-omit =
-    */scripts/*
-    */data/*
-    */docs/*
+[run]
+omit = */scripts/*,*/data/*,*/docs/*
 
+[report]
 # Regexes for lines to exclude from consideration
 exclude_lines =
     # Have to re-enable the standard pragma
