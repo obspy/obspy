@@ -2642,9 +2642,26 @@ class Catalog(object):
         Returns a new Catalog object only containing Events which match the
         specified filter rules.
 
+        Valid filter keys are:
+
+        * magnitude;
+        * longitude;
+        * latitude;
+        * depth;
+        * time;
+        * standard_error;
+        * azimuthal_gap;
+        * used_station_count;
+        * used_phase_count.
+
+        Use ``inverse=True`` to return the Events that *do not* match the
+        specified filter rultes.
+
         :rtype: :class:`~obspy.core.stream.Catalog`
-        :return: Filtered catalog. Only the Catalog object is a copy, the
-            events are only references.
+        :return: Filtered catalog. A new Catalog object with filtered
+            Events as references to the original Events.
+
+        .. rubric:: Example
 
         >>> from obspy.core.event import readEvents
         >>> cat = readEvents()
@@ -2657,11 +2674,18 @@ class Catalog(object):
         >>> print cat2
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
-        >>> cat3 = cat.filter("time > 2012-04-04T14:10", \
-                              "time < 2012-04-04T14:20")
+        >>> cat3 = cat.filter("time > 2012-04-04T14:10",
+        ...                   "time < 2012-04-04T14:20")
         >>> print cat3
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        >>> cat4 = cat.filter("time > 2012-04-04T14:10",
+        ...                   "time < 2012-04-04T14:20",
+        ...                   inverse=True)
+        >>> print cat4
+        2 Event(s) in Catalog:
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions.
         def __is_smaller(value_1, value_2):
