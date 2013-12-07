@@ -18,6 +18,7 @@ from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 from obspy.station.network import Network
 import textwrap
 import warnings
+from copy import deepcopy
 
 
 def read_inventory(path_or_file_object, format=None):
@@ -73,6 +74,29 @@ class Inventory(ComparingObject):
             self.created = obspy.UTCDateTime()
         else:
             self.created = created
+
+    def __add__(self, other):
+        new = deepcopy(self)
+        if isinstance(other, Inventory):
+            new.networks.extend(other.networks)
+        elif isinstance(other, Network):
+            new.networks.append(other)
+        else:
+            msg = ("Only Inventory and Network objects can be added to "
+                   "an Inventory.")
+            raise TypeError(msg)
+        return new
+
+    def __iadd__(self, other):
+        if isinstance(other, Inventory):
+            self.networks.extend(other.networks)
+        elif isinstance(other, Network):
+            self.networks.append(other)
+        else:
+            msg = ("Only Inventory and Network objects can be added to "
+                   "an Inventory.")
+            raise TypeError(msg)
+        return self
 
     def __getitem__(self, index):
         return self.networks[index]
