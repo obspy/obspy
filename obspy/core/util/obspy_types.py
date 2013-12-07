@@ -433,11 +433,13 @@ class _ComplexUncertainty(complex):
 
     def __new__(cls, *args):
         cargs = [cls._encode(a) for a in args]
-        if len(cargs) < 1:
+        if len(args) < 1:
             cargs.append(cls._none)
-        if len(cargs) < 2 and (isinstance(cargs[0], float)
-                               or isinstance(cargs[0], int)):
-            cargs.append(cls._none)
+        if len(args) < 2:
+            if args[0] is None:
+                cargs.append(cls._none)
+            else:
+                cargs.append(0)
         return super(_ComplexUncertainty, cls).__new__(cls, *cargs)
 
     @property
@@ -500,7 +502,7 @@ class ComplexWithUncertainties(CustomComplex):
     def __init__(self, *args, **kwargs):
         """
         Complex type with optional keywords:
-        
+
         :type lower_uncertainty: complex
         :param lower_uncertainty: Lower uncertainty (aka minusError)
         :type upper_uncertainty: complex
