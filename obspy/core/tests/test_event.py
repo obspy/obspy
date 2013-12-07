@@ -393,6 +393,14 @@ class CatalogTestCase(unittest.TestCase):
                                 for event in cat_bigger))
             self.assertTrue(all(event in cat
                                 for event in (cat_smaller + cat_bigger)))
+            cat_smaller_inverse = cat.filter(
+                '%s < %s' % (attr_filter, value), inverse=True)
+            self.assertTrue(all(event in cat_bigger
+                                for event in cat_smaller_inverse))
+            cat_bigger_inverse = cat.filter(
+                '%s >= %s' % (attr_filter, value), inverse=True)
+            self.assertTrue(all(event in cat_smaller
+                                for event in cat_bigger_inverse))
 
     def test_catalog_resource_id(self):
         """
