@@ -15,39 +15,39 @@ lib_name = 'libtau_%s_%s_py%s' % (platform.system(),
 # Import libtau in a platform specific way.
 try:
     # linux / mac using python import
-    libtau = __import__('obspy.taup.' + lib_name, globals(), locals(),
+    libtau = __import__('obspy.lib.' + lib_name, globals(), locals(),
                         ['ttimes'])
     ttimes = libtau.ttimes
 except ImportError:
     # windows using ctypes
-    assert(platform.system() == "Windows")
-    import ctypes as C
-    from distutils import sysconfig
-    import numpy as np
-    lib_extension, = sysconfig.get_config_vars('SO')
-    libtau = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
-                    'lib', lib_name + lib_extension))
+    if platform.system() == "Windows":
+        import ctypes as C
+        from distutils import sysconfig
+        import numpy as np
+        lib_extension, = sysconfig.get_config_vars('SO')
+        libtau = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
+                        'lib', lib_name + lib_extension))
 
-    def ttimes(delta, depth, modnam):
-        delta = C.c_float(delta)
-        depth = C.c_float(abs(depth))
-        # initialize some arrays...
-        phase_names = (C.c_char * 8 * 60)()
-        flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
-        tt = np.zeros(60, 'float32', flags)
-        toang = np.zeros(60, 'float32', flags)
-        dtdd = np.zeros(60, 'float32', flags)
-        dtdh = np.zeros(60, 'float32', flags)
-        dddp = np.zeros(60, 'float32', flags)
+        def ttimes(delta, depth, modnam):
+            delta = C.c_float(delta)
+            depth = C.c_float(abs(depth))
+            # initialize some arrays...
+            phase_names = (C.c_char * 8 * 60)()
+            flags = ['F_CONTIGUOUS', 'ALIGNED', 'WRITEABLE']
+            tt = np.zeros(60, 'float32', flags)
+            toang = np.zeros(60, 'float32', flags)
+            dtdd = np.zeros(60, 'float32', flags)
+            dtdh = np.zeros(60, 'float32', flags)
+            dddp = np.zeros(60, 'float32', flags)
 
-        libtau.ttimes_(C.byref(delta), C.byref(depth), modnam, phase_names,
-               tt.ctypes.data_as(C.POINTER(C.c_float)),
-               toang.ctypes.data_as(C.POINTER(C.c_float)),
-               dtdd.ctypes.data_as(C.POINTER(C.c_float)),
-               dtdh.ctypes.data_as(C.POINTER(C.c_float)),
-               dddp.ctypes.data_as(C.POINTER(C.c_float)))
-        phase_names = np.array([p.value for p in phase_names])
-        return phase_names, tt, toang, dtdd, dtdh, dddp
+            libtau.ttimes_(C.byref(delta), C.byref(depth), modnam, phase_names,
+                   tt.ctypes.data_as(C.POINTER(C.c_float)),
+                   toang.ctypes.data_as(C.POINTER(C.c_float)),
+                   dtdd.ctypes.data_as(C.POINTER(C.c_float)),
+                   dtdh.ctypes.data_as(C.POINTER(C.c_float)),
+                   dddp.ctypes.data_as(C.POINTER(C.c_float)))
+            phase_names = np.array([p.value for p in phase_names])
+            return phase_names, tt, toang, dtdd, dtdh, dddp
 
 
 # Directory of obspy.taup.
