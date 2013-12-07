@@ -23,7 +23,7 @@ from obspy.station.response import PolesZerosResponseStage, \
     FIRResponseStage, PolynomialResponseStage, FilterCoefficient, \
     CoefficientWithUncertainties
 from obspy.core.util.obspy_types import FloatWithUncertaintiesAndUnit, \
-    CustomComplex
+    ComplexWithUncertainties
 
 
 # Define some constants for writing StationXML files.
@@ -397,18 +397,33 @@ def _read_response_stage(stage_elem, _ns):
         normalization_frequency = \
             _read_floattype(elem, _ns("NormalizationFrequency"), Frequency)
         # Read poles and zeros to list of imaginary numbers.
-        zeros = []
-        for elem_ in elem.findall(_ns("Zero")):
-            x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
-                              _tag2obj(elem_, _ns("Imaginary"), float))
-            x.number = elem_.attrib.get("number")
-            zeros.append(x)
-        poles = []
-        for elem_ in elem.findall(_ns("Pole")):
-            x = CustomComplex(_tag2obj(elem_, _ns("Real"), float),
-                              _tag2obj(elem_, _ns("Imaginary"), float))
-            x.number = elem_.attrib.get("number")
-            poles.append(x)
+
+        def _tag2pole_or_zero(element):
+            real = _tag2obj(element, _ns("Real"), float)
+            imag = _tag2obj(element, _ns("Imaginary"), float)
+            if real is not None or imag is not None:
+                real = real or 0
+                imag = imag or 0
+            x = ComplexWithUncertainties(real, imag)
+            real = _attr2obj(element.find(_ns("Real")), "minusError", float)
+            imag = _attr2obj(element.find(_ns("Imaginary")), "minusError",
+                             float)
+            if any([value is not None for value in (real, imag)]):
+                real = real or 0
+                imag = imag or 0
+                x.lower_uncertainty = complex(real, imag)
+            real = _attr2obj(element.find(_ns("Real")), "plusError", float)
+            imag = _attr2obj(element.find(_ns("Imaginary")), "plusError",
+                             float)
+            if any([value is not None for value in (real, imag)]):
+                real = real or 0
+                imag = imag or 0
+                x.upper_uncertainty = complex(real, imag)
+            x.number = _attr2obj(element, "number", int)
+            return x
+
+        zeros = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Zero"))]
+        poles = [_tag2pole_or_zero(el) for el in elem.findall(_ns("Pole"))]
         return obspy.station.PolesZerosResponseStage(
             pz_transfer_function_type=pz_transfer_function_type,
             normalization_frequency=normalization_frequency,
@@ -750,20 +765,32 @@ def _float_to_str(x):
 
 
 def _write_polezero_list(parent, obj):
+    def _polezero2tag(parent, tag, obj_):
+        attribs = {}
+        if hasattr(obj_, "number") and obj_.number is not None:
+            attribs["number"] = str(obj_.number)
+        sub = etree.SubElement(parent, tag, attribs)
+        attribs_real = {}
+        attribs_imag = {}
+        if obj_.lower_uncertainty is not None:
+            attribs_real['minusError'] = \
+                _float_to_str(obj_.lower_uncertainty.real)
+            attribs_imag['minusError'] = \
+                _float_to_str(obj_.lower_uncertainty.imag)
+        if obj_.upper_uncertainty is not None:
+            attribs_real['plusError'] = \
+                _float_to_str(obj_.upper_uncertainty.real)
+            attribs_imag['plusError'] = \
+                _float_to_str(obj_.upper_uncertainty.imag)
+        etree.SubElement(sub, "Real", attribs_real).text = \
+            _float_to_str(obj_.real)
+        etree.SubElement(sub, "Imaginary", attribs_imag).text = \
+            _float_to_str(obj_.imag)
+
     for obj_ in obj.zeros:
-        attribs = {}
-        if hasattr(obj_, "number") and obj_.number is not None:
-            attribs["number"] = obj_.number
-        sub = etree.SubElement(parent, "Zero", attribs)
-        etree.SubElement(sub, "Real").text = _float_to_str(obj_.real)
-        etree.SubElement(sub, "Imaginary").text = _float_to_str(obj_.imag)
+        _polezero2tag(parent, "Zero", obj_)
     for obj_ in obj.poles:
-        attribs = {}
-        if hasattr(obj_, "number") and obj_.number is not None:
-            attribs["number"] = obj_.number
-        sub = etree.SubElement(parent, "Pole", attribs)
-        etree.SubElement(sub, "Real").text = _float_to_str(obj_.real)
-        etree.SubElement(sub, "Imaginary").text = _float_to_str(obj_.imag)
+        _polezero2tag(parent, "Pole", obj_)
 
 
 def _write_station(parent, station):
