@@ -33,6 +33,7 @@ dev:
      initialization.
    * added a new test that asserts that the whole codebase is valid according
      to the flake8 tool.
+   * inverse filtering of catalogs.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
