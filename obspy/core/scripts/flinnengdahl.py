@@ -13,7 +13,7 @@ from obspy.core.util import FlinnEngdahl
 
 def main():
     parser = OptionParser(__doc__.strip(), version="%prog " + __version__)
-    (options, args) = parser.parse_args()
+    (_options, args) = parser.parse_args()
 
     if len(args) != 2:
         parser.print_help()

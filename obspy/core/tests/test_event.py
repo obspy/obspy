@@ -159,7 +159,7 @@ class OriginTestCase(unittest.TestCase):
         origin.depth_type = 'from location'
         self.assertEqual(
             origin.resource_id,
-            ResourceIdentifier('smi:ch.ethz.sed/origin/37465'))
+            ResourceIdentifier(id='smi:ch.ethz.sed/origin/37465'))
         self.assertEqual(origin.latitude, 12)
         self.assertEqual(origin.latitude_errors.confidence_level, 95)
         self.assertEqual(origin.latitude_errors.uncertainty, None)
@@ -478,27 +478,24 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         Tests the handling of the case that different ResourceIdentifier
         instances are created that have the same resource id but different
         objects. This should not happen and thus a warning should be emitted.
-
-        Skipped for Python 2.5 because it does not have the catch_warnings
-        context manager.
         """
-        object_a = UTCDateTime()
-        object_b = UTCDateTime()
+        object_a = UTCDateTime(1000)
+        object_b = UTCDateTime(1001)
         self.assertEqual(object_a is object_b, False)
-        resource_id = 'obspy.org/tests/test_resource'
-        res_a = ResourceIdentifier(resource_id=resource_id,
+        id = 'obspy.org/tests/test_resource'
+        res_a = ResourceIdentifier(id=id,
                                    referred_object=object_a)
         # Now create a new resource with the same id but a different object.
         # This will raise a warning.
         with warnings.catch_warnings(record=True):
             warnings.simplefilter('error', UserWarning)
             self.assertRaises(UserWarning, ResourceIdentifier,
-                              resource_id=resource_id,
+                              id=id,
                               referred_object=object_b)
             # Now ignore the warning and actually create the new
             # ResourceIdentifier.
             warnings.simplefilter('ignore', UserWarning)
-            res_b = ResourceIdentifier(resource_id=resource_id,
+            res_b = ResourceIdentifier(id=id,
                                        referred_object=object_b)
         # Object b was the last to added, thus all resource identifiers will
         # now point to it.
@@ -525,16 +522,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         is refered to somewhere else should stay in the dictionary.
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        r1 = ResourceIdentifier()  # NOQA
+        _r1 = ResourceIdentifier()  # NOQA
         self.assertEqual(len(r_dict.keys()), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
         # pretty much immediately.
-        r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
+        _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
         self.assertEqual(len(r_dict.keys()), 0)
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
-        r3 = ResourceIdentifier(referred_object=obj)  # NOQA
+        _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
         self.assertEqual(len(r_dict.keys()), 1)
 
     def test_adding_a_referred_object_after_creation(self):
@@ -619,7 +616,22 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         __init__()) gets set up with a QUAKEML conform ID.
         """
         rid = ResourceIdentifier()
-        self.assertEqual(rid.resource_id, rid.getQuakeMLURI())
+        self.assertEqual(rid.id, rid.getQuakeMLURI())
+
+    def test_resource_id_init_deprecation(self):
+        """
+        Test that a resource identifier initialized with deprecated
+        "resource_id" gets initialized correctly and that a warning is shown.
+        """
+        with warnings.catch_warnings(record=True) as w:
+            warnings.resetwarnings()
+            rid = ResourceIdentifier(resource_id="blablup")
+        self.assertEqual(rid.id, "blablup")
+        self.assertEqual(len(w), 1)
+        w = w[0]
+        self.assertEqual(w.category, DeprecationWarning)
+        self.assertTrue(
+            str(w.message).startswith("Deprecated keyword resource_id "))
 
     def test_resource_id_tracking(self):
         """

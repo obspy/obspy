@@ -1,4 +1,6 @@
 dev:
+ -  general:
+   * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
@@ -27,13 +29,25 @@ dev:
      "filename" instead of the path to a local file now also can be provided
      either a file-like object with RESP information or an obspy.xseed.Parser
      object (e.g. created reading a dataless SEED file).
+   * fix Stream.select() when using values like "" or 0, e.g.
+     Stream.select(location="") or when filtering by component with a channel
+     code less than 3 characters long (now these traces will be omitted from
+     the result when filtering by component).
    * fix a bug when merging valid data into a masked trace (see #638)
    * event.ResourceIdentifier objects are now initialized with a QuakeML
      conform string by default, i.e. if no custom prefix is provided during
      initialization.
+   * event.ResourceIdentifier.resource_id attribute was renamed to
+     event.ResourceIdentifier.id
+   * event.ResourceIdentifier now was has a method regenerate_uuid() that
+     allows the random hash part to be regenerated for resource identifiers
+     with no fixed id string (can be useful to generate a new hash if the
+     referred object changes).
    * added a new test that asserts that the whole codebase is valid according
      to the flake8 tool.
    * inverse filtering of catalogs.
+   * bugfix: Trace.simulate() now passes the SEED network, station, location,
+     and channel identifiers to evalresp.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -44,6 +58,9 @@ dev:
  - obspy.fdsn:
    * new client module to access servers based on the FDSN web service
      definition (http://www.fdsn.org/webservices/)
+ - obspy.gse2:
+   * read/write STA2 header line which is officialy mandatory but in pratice
+     often not used
  - obspy.imaging:
    * more options to customize day plots
    * dayplot now plots matching picks (station, network, location) if a list
@@ -51,11 +68,17 @@ dev:
    * obspy-scan: new option --print-gaps
    * added plotting of record sections
    * automatic merging can be disabled for obspy-plot
+ - obspy.pde:
+   * new module for reading NEIC PDE bulletin files into an obspy catalog
+     object. Only the "mchedr" format (file format revision of February 24,
+     2004) is supported.
  - obspy.realtime:
    * two new processing plugins (offset, kurtosis)
  - obspy.seg2:
    * adding read support for SEG2 data format code 1 and 2
      (signed 16bit/32bit integer)
+ - obspy.segy:
+   * fix a bug in plotting (see #689)
  - obspy.signal:
    * adding cross correlation single-station similarity checking with
      master event templates to coincidence trigger
@@ -68,6 +91,8 @@ dev:
      path to a local file now also can be provided either a file-like
      object with RESP information or an obspy.xseed.Parser object
      (e.g. created reading a dataless SEED file).
+   * seisSim(seedresp={...}): the seedresp dictionary now required network,
+     station, location, and channel keys.
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose
@@ -124,8 +149,10 @@ dev:
    * obspy-scan: adding options to control start/endtime and channels, adding
      options to not plot gaps and reducing file size for plots considerably.
  - obspy.iris:
-   * output format 'bulk' for Client.availability has been deprecated, use
-     'bulkdataselect' instead (#419)
+   * many services have been discontinued on the server side. Use obspy.fdsn
+     instead for discontinued services.
+   * still existing services now are distinguished by a major version of the
+     particular service (like obspy.fdsn).
  - obspy.mseed:
    * Bugfix writing traces containing one or two samples only
    * writeMSEED emits an UserWarning while writing an empty trace

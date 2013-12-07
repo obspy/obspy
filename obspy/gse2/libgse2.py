@@ -175,6 +175,18 @@ def readHeader(fh):
     date = dict((k, header.pop(k)) for k in
                 "year month day hour minute second microsecond".split())
     header['starttime'] = UTCDateTime(**date)
+    # search for STA2 line (mandatory but often omitted in practice)
+    # according to manual this has to follow immediately after WID2
+    pos = fh.tell()
+    line = fh.readline()
+    if line.startswith('STA2'):
+        header2 = parse_STA2(line)
+        header['network'] = header2.pop("network")
+        header['gse2'].update(header2)
+    # in case no STA2 line is encountered we need to rewind the file pointer,
+    # otherwise we might miss the DAT2 line afterwards.
+    else:
+        fh.seek(pos)
     return header
 
 
@@ -216,6 +228,13 @@ def writeHeader(f, headdict):
             headdict['gse2']['hang'],
             headdict['gse2']['vang'])
             )
+    try:
+        sta2_line = compile_STA2(headdict)
+    except:
+        msg = "GSE2: Error while compiling the STA2 header line, omitting it."
+        warnings.warn(msg)
+    else:
+        f.write(sta2_line)
 
 
 def uncompress_CM6(f, n_samps):
@@ -394,6 +413,106 @@ def write(headdict, data, f, inplace=False):
     for line in data_cm6:
         f.write("%s\n" % line)
     f.write("CHK2 %8ld\n\n" % chksum)
+
+
+def parse_STA2(line):
+    """
+    Parses a string with a GSE2 STA2 header line.
+
+    Official Definition::
+
+        Position Name     Format    Description
+           1-4   "STA2"   a4        Must be "STA2"
+          6-14   Network  a9        Network identifier
+         16-34   Lat      f9.5      Latitude (degrees, S is negative)
+         36-45   Lon      f10.5     Longitude (degrees, W is negative)
+         47-58   Coordsys a12       Reference coordinate system (e.g., WGS-84)
+         60-64   Elev     f5.3      Elevation (km)
+         66-70   Edepth   f5.3      Emplacement depth (km)
+
+    Corrected Definition (end column of "Lat" field wrong)::
+
+        Position Name     Format    Description
+           1-4   "STA2"   a4        Must be "STA2"
+          6-14   Network  a9        Network identifier
+         16-24   Lat      f9.5      Latitude (degrees, S is negative)
+         26-35   Lon      f10.5     Longitude (degrees, W is negative)
+         37-48   Coordsys a12       Reference coordinate system (e.g., WGS-84)
+         50-54   Elev     f5.3      Elevation (km)
+         56-60   Edepth   f5.3      Emplacement depth (km)
+
+    However, many files in practice do not adhere to these defined fixed
+    positions. Here are some real-world examples:
+
+    >>> from pprint import pprint
+    >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
+    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
+    {'coordsys': '',
+     'edepth': -0.999,
+     'elev': -0.999,
+     'lat': -999.0,
+     'lon': -999.0,
+     'network': ''}
+    >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
+    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
+    {'coordsys': 'WGS-84',
+     'edepth': 1.234,
+     'elev': -123.456,
+     'lat': 12.34567,
+     'lon': 1.234567,
+     'network': 'ABCD'}
+    """
+    header = {}
+    try:
+        header['network'] = line[5:14].strip()
+        header['lat'] = float(line[15:24])
+        header['lon'] = float(line[25:35])
+        header['coordsys'] = line[36:48].strip()
+        elev, edepth = line[48:].strip().split()
+        header['elev'] = float(elev)
+        header['edepth'] = float(edepth)
+    except:
+        msg = 'GSE2: Invalid STA2 header, ignoring.'
+        warnings.warn(msg)
+        return {}
+    else:
+        return header
+
+
+def compile_STA2(stats):
+    """
+    Returns a STA2 line as a string (including newline at end) from a
+    :class:`~obspy.core.stats.Stats` object.
+    """
+    fmt1 = "STA2 %-9s %9.5f %10.5f %-12s "
+    fmt2 = "%5.3f %5.3f\n"
+    # compile first part, problems can only arise with invalid lat/lon values
+    # or if coordsys has more than 12 characters. raise in case of problems.
+    line = fmt1 % (
+        stats['network'],
+        stats['gse2']['lat'],
+        stats['gse2']['lon'],
+        stats['gse2']['coordsys'])
+    if len(line) != 49:
+        msg = ("GSE2: Invalid header values, unable to compile valid "
+               "STA2 line. Omitting STA2 line in output")
+        warnings.warn(msg)
+        raise Exception()
+    # compile second part, in many cases it is impossible to adhere to manual.
+    # follow common practice, just not adhere to fixed format strictly.
+    line = line + fmt2 % (
+        stats['gse2']['elev'],
+        stats['gse2']['edepth'])
+    for key in ('elev', 'edepth'):
+        if len('%5.3f' % stats['gse2'][key]) > 5:
+            msg = ("Bad value in GSE2 '%s' header field detected. "
+                   "The last two header fields of the STA2 line in the "
+                   "output file will deviate from the official fixed "
+                   "column format description (because they can not be "
+                   "represented as '%%f5.3' properly).") % key
+            warnings.warn(msg)
+    return line
+
 
 if __name__ == '__main__':
     doctest.testmod(exclude_empty=True)

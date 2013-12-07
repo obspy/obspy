@@ -75,37 +75,37 @@ class ClientTestCase(unittest.TestCase):
         """
         # Application WADL
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "dataselect",
+            build_url("http://service.iris.edu", "dataselect", 1,
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/dataselect/1/application.wadl")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "event",
+            build_url("http://service.iris.edu", "event", 1,
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/event/1/application.wadl")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "application.wadl"),
             "http://service.iris.edu/fdsnws/station/1/application.wadl")
 
         # Test one parameter.
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "dataselect",
+            build_url("http://service.iris.edu", "dataselect", 1,
                       "query", {"network": "BW"}),
             "http://service.iris.edu/fdsnws/dataselect/1/query?network=BW")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "dataselect",
+            build_url("http://service.iris.edu", "dataselect", 1,
                       "queryauth", {"network": "BW"}),
             "http://service.iris.edu/fdsnws/dataselect/1/queryauth?network=BW")
         # Test two parameters. Note random order, two possible results.
         self.assertTrue(
-            build_url("http://service.iris.edu", 1, "dataselect",
+            build_url("http://service.iris.edu", "dataselect", 1,
                       "query", {"net": "A", "sta": "BC"}) in
             ("http://service.iris.edu/fdsnws/dataselect/1/query?net=A&sta=BC",
              "http://service.iris.edu/fdsnws/dataselect/1/query?sta=BC&net=A"))
 
-        # A wrong resource_type raises a ValueError
-        self.assertRaises(ValueError, build_url, "http://service.iris.edu", 1,
-                          "obspy", "query")
+        # A wrong service raises a ValueError
+        self.assertRaises(ValueError, build_url, "http://service.iris.edu",
+                          "obspy", 1, "query")
 
     def test_location_parameters(self):
         """
@@ -122,50 +122,50 @@ class ClientTestCase(unittest.TestCase):
         """
         # requests with no specified location should be treated as a wildcard
         self.assertFalse(
-            "--" in build_url("http://service.iris.edu", 1, "station",
+            "--" in build_url("http://service.iris.edu", "station", 1,
                               "query", {"network": "IU", "station": "ANMO",
                                         "starttime": "2013-01-01"}))
         # location of "  " is the same as "--"
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "  "}),
             "http://service.iris.edu/fdsnws/station/1/query?location=--")
         # wildcard locations are valid. Will be encoded.
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "*"}),
             "http://service.iris.edu/fdsnws/station/1/query?location=%2A")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "A?"}),
             "http://service.iris.edu/fdsnws/station/1/query?location=A%3F")
 
         # lists are valid, including <space><space> lists. Again encoded
         # result.
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "  ,1?,?0"}),
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=--%2C1%3F%2C%3F0")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "1?,--,?0"}),
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=1%3F%2C--%2C%3F0")
 
         # Test all three special cases with empty parameters into lists.
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "  ,AA,BB"}),
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=--%2CAA%2CBB")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "AA,  ,BB"}),
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2C--%2CBB")
         self.assertEqual(
-            build_url("http://service.iris.edu", 1, "station",
+            build_url("http://service.iris.edu", "station", 1,
                       "query", {"location": "AA,BB,  "}),
             "http://service.iris.edu/fdsnws/station/1/query?"
             "location=AA%2CBB%2C--")

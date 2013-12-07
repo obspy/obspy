@@ -1,9 +1,5 @@
 [run]
-omit =
-    */scripts/*
-    */data/*
-    */docs/*
-
+omit = */scripts/*,*/data/*,*/docs/*
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -18,6 +14,7 @@ exclude_lines =
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
     raise NotImplementedError
+    raise OSError
 
     # Don't complain if non-runnable code isn't run:
     if __name__ == .__main__.:

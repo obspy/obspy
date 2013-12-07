@@ -61,14 +61,14 @@ class Default(object):
             # Map to a serializable dict
             # Leave out nulls, empty strings, list, dicts, except for numbers
             if self.OMIT_NULLS:
-                return {k: v for k, v in obj.iteritems() if v or v == 0}
+                return dict((k, v) for k, v in obj.iteritems() if v or v == 0)
             else:
-                return {k: v for k, v in obj.iteritems()}
+                return dict((k, v) for k, v in obj.iteritems())
         elif isinstance(obj, Catalog):
             # Catalog isn't a dict
-            return {k: getattr(obj, k) for k in self._catalog_attrib
-                    if getattr(obj, k)
-                    }
+            return dict((k, getattr(obj, k))
+                        for k in self._catalog_attrib
+                        if getattr(obj, k))
         elif isinstance(obj, UTCDateTime):
             if self.TIME_FORMAT is None:
                 return str(obj)

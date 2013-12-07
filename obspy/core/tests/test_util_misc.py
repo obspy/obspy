@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import unittest
-import os
-import sys
 from ctypes import CDLL
 from ctypes.util import find_library
 from obspy.core.util.misc import wrap_long_string, CatchOutput
+import os
+import platform
+import sys
+import unittest
 
 
 class UtilMiscTestCase(unittest.TestCase):
@@ -58,8 +59,12 @@ class UtilMiscTestCase(unittest.TestCase):
             os.system('echo "123" 1>&2')
             print >> sys.stderr, "456"
 
-        self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
-        self.assertEqual(out.stderr, "123\n456\n")
+        if platform.system() == "Windows":
+            self.assertEqual(out.stdout, '"abc"\ndef\nghi\njkl\n')
+            self.assertEqual(out.stderr, '"123" \n456\n')
+        else:
+            self.assertEqual(out.stdout, "abc\ndef\nghi\njkl\n")
+            self.assertEqual(out.stderr, "123\n456\n")
 
 
 def suite():

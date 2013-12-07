@@ -9,17 +9,13 @@ IRIS Web service client for ObsPy.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 from obspy import UTCDateTime, read, Stream, __version__
-from obspy.core.event import readEvents
-from obspy.core.util import NamedTemporaryFile, BAND_CODE, loadtxt
-from obspy.core.util.decorator import deprecated
+from obspy.core.util import NamedTemporaryFile, loadtxt
 from urllib2 import HTTPError
 import StringIO
 import json
-import os
 import platform
 import urllib
 import urllib2
-import warnings
 
 
 DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
@@ -27,13 +23,16 @@ DEFAULT_USER_AGENT = "ObsPy %s (%s, Python %s)" % (__version__,
                                                    platform.python_version())
 DEFAULT_PHASES = ['p', 's', 'P', 'S', 'Pn', 'Sn', 'PcP', 'ScS', 'Pdiff',
                   'Sdiff', 'PKP', 'SKS', 'PKiKP', 'SKiKS', 'PKIKP', 'SKIKS']
-DEPR_WARN = ("This service will be shut down on the server side in december "
+DEPR_WARN = ("This service was shut down on the server side in december "
              "2013, please use %s instead. Further information: "
              "http://www.iris.edu/dms/nodes/dmc/news/2013/03/"
              "new-fdsn-web-services-and-retirement-of-deprecated-services/")
-DEPR_WARNS = {}
-for new in ["get_waveform", "get_events", "get_stations", "get_waveform_bulk"]:
-    DEPR_WARNS[new] = DEPR_WARN % "obspy.fdsn.client.Client.%s" % new
+DEPR_WARNS = dict([(new, DEPR_WARN % "obspy.fdsn.client.Client.%s" % new)
+                   for new in ["get_waveform", "get_events", "get_stations",
+                               "get_waveform_bulk"]])
+DEFAULT_SERVICE_VERSIONS = {"timeseries": 1, "sacpz": 1, "resp": 1,
+                            "evalresp": 1, "traveltime": 1, "flinnengdahl": 2,
+                            "distaz": 1}
 
 
 class Client(object):
@@ -60,21 +59,28 @@ class Client(object):
         current module version and basic information about the used
         operation system, e.g.
         ``'ObsPy 0.4.7.dev-r2432 (Windows-7-6.1.7601-SP1, Python 2.7.1)'``.
+    :type major_versions: dict
+    :param major_versions: Allows to specify custom major version numbers
+        for individual services (e.g.
+        `major_versions={'evalresp': 2, 'sacpz': 3}`), otherwise the
+        latest version at time of implementation will be used.
 
     .. rubric:: Example
 
     >>> from obspy.iris import Client
-    >>> from obspy import UTCDateTime
     >>> client = Client()
-    >>> t = UTCDateTime("2010-02-27T06:30:00.000")
-    >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t, t + 20)
-    >>> print(st)  # doctest: +ELLIPSIS
-    1 Trace(s) in Stream:
-    IU.ANMO.00.BHZ | 2010-02-27T06:30:00.019538Z - ... | 20.0 Hz, 401 samples
+    >>> result = client.distaz(stalat=1.1, stalon=1.2, evtlat=3.2,
+    ...                        evtlon=1.4)
+    >>> print(result['distance'])
+    2.09554
+    >>> print(result['backazimuth'])
+    5.46946
+    >>> print(result['azimuth'])
+    185.47692
     """
-    def __init__(self, base_url="http://www.iris.edu/ws",
+    def __init__(self, base_url="http://service.iris.edu/irisws",
                  user="", password="", timeout=20, debug=False,
-                 user_agent=DEFAULT_USER_AGENT):
+                 user_agent=DEFAULT_USER_AGENT, major_versions={}):
         """
         Initializes the IRIS Web service client.
 
@@ -84,6 +90,8 @@ class Client(object):
         self.timeout = timeout
         self.debug = debug
         self.user_agent = user_agent
+        self.major_versions = DEFAULT_SERVICE_VERSIONS
+        self.major_versions.update(major_versions)
         # Create an OpenerDirector for Basic HTTP Authentication
         password_mgr = urllib2.HTTPPasswordMgrWithDefaultRealm()
         password_mgr.add_password(None, base_url, user, password)
@@ -92,12 +100,12 @@ class Client(object):
         # install globally
         urllib2.install_opener(opener)
 
-    def _fetch(self, url, data=None, headers={}, param_list=[], **params):
+    def _fetch(self, service, data=None, headers={}, param_list=[], **params):
         """
         Send a HTTP request via urllib2.
 
-        :type url: str
-        :param url: Complete URL of resource
+        :type service: str
+        :param service: Name of service
         :type data: str
         :param data: Channel list as returned by `availability` Web service
         :type headers: dict, optional
@@ -105,7 +113,8 @@ class Client(object):
         """
         headers['User-Agent'] = self.user_agent
         # replace special characters
-        remoteaddr = self.base_url + url
+        remoteaddr = "/".join([self.base_url.rstrip("/"), service,
+                               str(self.major_versions[service]), "query"])
         options = '&'.join(param_list)
         if params:
             if options:
@@ -158,393 +167,60 @@ class Client(object):
             if file_opened is True:
                 fh.close()
 
-    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def getWaveform(self, network, station, location, channel, starttime,
                     endtime, quality='B'):
         """
-        Retrieves waveform data from IRIS and returns an ObsPy Stream object.
+        SHUT DOWN ON SERVER SIDE!
 
-        :type network: str
-        :param network: Network code, e.g. ``'IU'`` or ``'I*'``. Network code
-            may contain wild cards.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'`` or ``'A*'``. Station code
-            may contain wild cards.
-        :type location: str
-        :param location: Location code, e.g. ``'00'`` or ``'*'``. Location code
-            may contain wild cards.
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'`` or ``'B*'``. Channel code
-            may contain wild cards.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-        :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
-            (default) are treated the same and indicate best available.
-            If ``'M'`` or ``'B'`` are selected, the output data records will be
-            stamped with a ``'M'``.
-        :return: ObsPy :class:`~obspy.core.stream.Stream` object.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        .. rubric:: Examples
-
-        (1) Requesting waveform of a single channel.
-
-            >>> from obspy.iris import Client
-            >>> from obspy import UTCDateTime
-            >>> client = Client()
-            >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-            >>> t2 = UTCDateTime("2010-02-27T07:00:00.000")
-            >>> st = client.getWaveform("IU", "ANMO", "00", "BHZ", t1, t2)
-            >>> print(st)  # doctest: +ELLIPSIS
-            1 Trace(s) in Stream:
-            IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 36001 samples
-
-        (2) Requesting waveforms of multiple channels using wildcard
-            characters.
-
-            >>> t1 = UTCDateTime("2010-084T00:00:00")
-            >>> t2 = UTCDateTime("2010-084T00:30:00")
-            >>> st = client.getWaveform("TA", "A25A", "", "BH*", t1, t2)
-            >>> print(st)  # doctest: +ELLIPSIS
-            3 Trace(s) in Stream:
-            TA.A25A..BHE | 2010-03-25T00:00:00... | 40.0 Hz, 72001 samples
-            TA.A25A..BHN | 2010-03-25T00:00:00... | 40.0 Hz, 72001 samples
-            TA.A25A..BHZ | 2010-03-25T00:00:00... | 40.0 Hz, 72001 samples
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        kwargs = {}
-        kwargs['network'] = str(network)[0:2]
-        kwargs['station'] = str(station)[0:5]
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)[0:3]
-        # try to be intelligent in starttime/endtime extension for fetching
-        # data
-        try:
-            t_extension = 2.0 / BAND_CODE[kwargs['channel'][0]]
-        except:
-            # use 1 second extension if no proper bandcode info
-            t_extension = 1.0
-        kwargs['starttime'] = UTCDateTime(starttime) - t_extension
-        kwargs['endtime'] = UTCDateTime(endtime) + t_extension
-        if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
-            kwargs['quality'] = str(quality).upper()
-        # single channel request, go via `dataselect` Web service
-        if all([val.isalnum() for val in (kwargs['network'],
-                                          kwargs['station'],
-                                          kwargs['location'],
-                                          kwargs['channel'])]):
-            st = self.dataselect(**kwargs)
-        # wildcarded channel request, go via `availability` and
-        # `bulkdataselect` Web services
-        else:
-            quality = kwargs.pop("quality", "")
-            bulk = self.availability(**kwargs)
-            st = self.bulkdataselect(bulk, quality)
-        st.trim(UTCDateTime(starttime), UTCDateTime(endtime))
-        return st
+        raise Exception(DEPR_WARNS['get_waveform'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def saveWaveform(self, filename, network, station, location, channel,
                      starttime, endtime, quality='B'):
         """
-        Writes a retrieved waveform directly into a file.
+        SHUT DOWN ON SERVER SIDE!
 
-        This method ensures the storage of the unmodified waveform data
-        delivered by the IRIS server, e.g. preserving the record based
-        quality flags of Mini-SEED files which would be neglected reading it
-        with obspy.mseed.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        :type filename: str
-        :param filename: Name of the output file.
-        :type network: str
-        :param network: Network code, e.g. ``'IU'`` or ``'I*'``. Network code
-            may contain wild cards.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'`` or ``'A*'``. Station code
-            may contain wild cards.
-        :type location: str
-        :param location: Location code, e.g. ``'00'`` or ``'*'``. Location code
-            may contain wild cards.
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'`` or ``'B*'``. Channel code
-            may contain wild cards.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-        :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
-            (default) are treated the same and indicate best available.
-            If ``'M'`` or ``'B'`` are selected, the output data records will be
-            stamped with a ``'M'``.
-        :return: ObsPy :class:`~obspy.core.stream.Stream` object.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> t1 = UTCDateTime('2010-02-27T06:30:00.000')
-        >>> t2 = UTCDateTime('2010-02-27T10:30:00.000')
-        >>> client.saveWaveform('IU.ANMO.00.BHZ.mseed', 'IU', 'ANMO',
-        ...                     '00', 'BHZ', t1, t2) # doctest: +SKIP
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        kwargs = {}
-        kwargs['network'] = str(network)[0:2]
-        kwargs['station'] = str(station)[0:5]
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)[0:3]
-        kwargs['filename'] = filename
-        # try to be intelligent in starttime/endtime extension for fetching
-        # data
-        try:
-            t_extension = 2.0 / BAND_CODE[kwargs['channel'][0]]
-        except:
-            # use 1 second extension if no proper bandcode info
-            t_extension = 1.0
-        kwargs['starttime'] = UTCDateTime(starttime) - t_extension
-        kwargs['endtime'] = UTCDateTime(endtime) + t_extension
-        if str(quality).upper() in ['D', 'R', 'Q', 'M', 'B']:
-            kwargs['quality'] = str(quality).upper()
-        self.dataselect(**kwargs)
+        raise Exception(DEPR_WARNS['get_waveform'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def saveResponse(self, filename, network, station, location, channel,
                      starttime, endtime, format='RESP'):
         """
-        Writes response information into a file.
+        SHUT DOWN ON SERVER SIDE!
 
-        Possible output formats are
-        ``RESP`` (http://www.iris.edu/KB/questions/69/What+is+a+RESP+file%3F),
-        ``StationXML`` (http://www.data.scec.org/xml/station/) or ``SACPZ``
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        :type filename: str
-        :param filename: Name of the output file.
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str
-        :param location: Location code, e.g. ``'00'``, wildcards allowed.
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-        :type format: ``'RESP'``, ``'StationXML'`` or ``'SACPZ'``, optional
-        :param format: Output format. Defaults to ``'RESP'``.
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        kwargs = {}
-        kwargs['network'] = str(network)[0:2]
-        kwargs['station'] = str(station)[0:5]
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)[0:3]
-        kwargs['starttime'] = UTCDateTime(starttime)
-        kwargs['endtime'] = UTCDateTime(endtime)
-        # check format
-        format = format.upper()
-        if format == 'STATIONXML':
-            # StationXML
-            data = self.station(level='resp', **kwargs)
-        elif format == 'SACPZ':
-            # StationXML
-            data = self.sacpz(**kwargs)
-        elif format == 'RESP':
-            # RESP
-            data = self.resp(**kwargs)
-        else:
-            raise ValueError("Unsupported format %s" % format)
-        return self._toFileOrData(filename, data)
+        raise Exception(DEPR_WARNS['get_stations'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_events'])
     def getEvents(self, format='catalog', **kwargs):
         """
-        Retrieves event data from IRIS.
+        SHUT DOWN ON SERVER SIDE!
 
-        :type format: ``'xml'`` or ``'catalog'``, optional
-        :param format: Format of returned results. Defaults to ``'catalog'``.
-        :rtype: :class:`~obspy.core.event.Catalog` or str
-        :return: This method returns either a ObsPy
-            :class:`~obspy.core.event.Catalog` object or a
-            `QuakeML <https://quake.ethz.ch/quakeml/>`_ string depending on
-            the given ``format`` keyword.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        **Geographic constraints - bounding rectangle**
-
-        The following four parameters work together to specify a boundary
-        rectangle. All four parameters are optional, but they may not be mixed
-        with the parameters used for searching within a defined radius.
-
-        :type minlat: float, optional
-        :param minlat: Specify the southern boundary. The minimum latitude must
-            be between -90 and 90 degrees inclusive (and less than or equal to
-            maxlat). If not specified, then this value defaults to ``-90``.
-        :type maxlat: float, optional
-        :param maxlat: Specify the northern boundary. The maximum latitude must
-            be between -90 and 90 degrees inclusive and greater than or equal
-            to minlat. If not specified, then this value defaults to ``90``.
-        :type minlon: float, optional
-        :param minlon: Specify the western boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to ``-180``. If minlon > maxlon, then the
-            boundary will cross the -180/180 meridian
-        :type maxlon: float, optional
-        :param maxlon: Specify the eastern boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to +180. If maxlon < minlon, then the boundary
-            will cross the -180/180 meridian
-
-        **Geographic constraints - bounding radius**
-
-        The following four parameters work together to specify a boundary using
-        a radius around a coordinate. ``lat``, ``lon``, and ``maxradius`` are
-        all required, and must be used together. These parameters are
-        incompatible with the boundary-box parameters described above.
-
-        :type lat: float, optional
-        :param lat: Specify the central latitude point, in degrees. This value
-            must be between -90 and 90 degrees. This MUST be used in
-            conjunction with the lon and maxradius parameters.
-        :type lon: float, optional
-        :param lon: Specify the central longitude point, in degrees. This MUST
-            be used in conjunction with the lat and maxradius parameters.
-        :type maxradius: float, optional
-        :param maxradius: Specify the maximum radius, in degrees. Only
-            earthquakes within maxradius degrees of the lat/lon point will be
-            retrieved. This MUST be used in conjunction with the lat and lon
-            parameters.
-        :type minradius: float, optional
-        :param minradius: This optional parameter allows for the exclusion of
-            events that are closer than minradius degrees from the specified
-            lat/lon point. This MUST be used in conjunction with the lat, lon,
-            and maxradius parameters and is subject to the same restrictions.
-            If this parameter isn't specified, then it defaults to ``0.0``
-            degrees.
-
-        **Depth constraints**
-
-        :type mindepth: float, optional
-        :param mindepth: Specify minimum depth (kilometers), values increase
-            positively with depth, e.g. ``-1``.
-        :type maxdepth: float, optional
-        :param maxdepth: Specify maximum depth (kilometers), values increase
-            positively with depth, e.g. ``20``.
-
-        **Temporal constraints**
-
-        The following two parameters impose time constrants on the query.
-
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Limit results to the events occurring after the
-            specified start time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: Limit results to the events occurring before the
-            specified end time.
-
-        **Magnitude constraints**
-
-        :type minmag: float, optional
-        :param minmag: Specify a minimum magnitude.
-        :type maxmag: float, optional
-        :param maxmag: Specify a maximum magnitude.
-        :type magtype: string, optional
-        :param magtype: Specify magnitude type. Some common types (there are
-            many) include ``"Ml"`` (local/Richter magnitude), ``"Ms"`` (surface
-            magnitude), ``"mb"`` (body wave magnitude), ``"Mw"`` (moment
-            magnitude).
-
-        **Subset the data by organization**
-
-        :type catalog: string, optional
-        :param catalog: Specify a catalog
-            [`available catalogs <http://www.iris.edu/ws/event/catalogs>`_].
-            Results will include any origins which contain the specified
-            catalog text, i.e. ``"PDE"`` will match ``"NEIC PDE"``
-        :type contributor: string, optional
-        :param contributor: Specify a contributor [`available
-            contributors <http://www.iris.edu/ws/event/contributors>`_]. When
-            selecting a contributor, the result includes a preferred origin as
-            specified by the contributor. Results will include any origins
-            which contain the specified contributor text, i.e. ``"NEIC"`` will
-            match ``"NEIC PDE-Q"``.
-
-        **Miscellaneous parameters**
-
-        These parameters affect how the search is conducted, and how the events
-        are returned.
-
-        :type limit: int, optional
-        :param limit: Limit the results to the specified number of events. This
-            value must be 10 or greater. By default, the results are not
-            limited.
-        :type orderby: ``"time"`` or ``"magnitude"``, optional
-        :param orderby: Sort the resulting events in order of descending time
-            or magnitude. By default, results are sorted in descending time
-            order.
-        :type updatedafter:  :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
-        :param updatedafter: Select origins updated after a certain date. This
-            is most useful for synchronization purposes.
-        :type includeallmagnitudes: bool, optional
-        :param includeallmagnitudes: This will include all the magnitudes in
-            search and print criteria. If magnitudes do not exist for a certain
-            origin, the search algorithm will consider it a miss and therefore
-            will not include the event. Defaults to ``True``.
-        :type includearrivals: bool, optional
-        :param includearrivals: If this event has associated phase arrival
-            information, then it will be included in the results. Defaults to
-            ``False``.
-        :type preferredonly: bool, optional
-        :param preferredonly: Include preferred estimates only. When catalog is
-            selected, the result returned will include the preferred origin as
-            specified by the catalog. Defaults to ``True``.
-
-        **Specifying an event using an IRIS ID number**
-
-        Individual events can be retrieved using ID numbers assigned by IRIS.
-        When these parameters are used, then only the ``includeallmagnitudes``
-        and ``preferredonly`` parameters are also allowed.
-
-        :type eventid: int, optional
-        :param eventid: Retrieve an event based on the unique IRIS event id.
-        :type originid: int, optional
-        :param originid: Retrieve an event based on the unique IRIS origin id.
-        :type magnitudeid: int, optional
-        :param magnitudeid: Retrieve an event based on the unique IRIS
-            magnitude id.
-
-        The IRIS DMC receives earthquake location and magnitude information
-        primarily from the
-        `USGS NEIC <http://earthquake.usgs.gov/regional/neic/>`_ and the
-        `ISC <http://www.isc.ac.uk/>`_, other sources include the
-        `Global CMT project <http://www.globalcmt.org/>`_ and the
-        `USArray ANF <http://anf.ucsd.edu/>`_.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> client = Client()
-        >>> events = client.getEvents(format='xml', minmag=9.1)
-        >>> print(events)  # doctest: +ELLIPSIS
-        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" ...
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        # fetch data
-        data = self.event(**kwargs)
-        # format output
-        if format == "catalog":
-            return readEvents(StringIO.StringIO(data), 'QUAKEML')
-        return data
+        raise Exception(DEPR_WARNS['get_events'])
 
     def timeseries(self, network, station, location, channel,
                    starttime, endtime, filter=[], filename=None,
@@ -709,9 +385,8 @@ class Client(object):
         else:
             kwargs['output'] = 'miniseed'
         # build up query
-        url = '/timeseries/query'
         try:
-            data = self._fetch(url, param_list=filter, **kwargs)
+            data = self._fetch("timeseries", param_list=filter, **kwargs)
         except HTTPError, e:
             msg = "No waveform data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -813,372 +488,57 @@ class Client(object):
             except:
                 pass
         # build up query
-        url = '/resp/query'
         try:
-            data = self._fetch(url, **kwargs)
+            data = self._fetch("resp", **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
             raise Exception(msg)
         return self._toFileOrData(filename, data)
 
-    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def station(self, network, station, location="*", channel="*",
                 starttime=None, endtime=None, level='sta', filename=None,
                 **kwargs):
         """
-        Low-level interface for `station` Web service of IRIS
-        (http://www.iris.edu/ws/station/) - release 1.3.6 (2012-04-30).
+        SHUT DOWN ON SERVER SIDE!
 
-        This method provides access to station metadata in the IRIS DMC
-        database. The results are returned in XML format using the StationXML
-        schema (http://www.data.scec.org/xml/station/). Users can query for
-        station metadata by network, station, channel, location, time and other
-        search criteria and request results at multiple levels (station,
-        channel, response, etc.).
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
-        :type location: str, optional
-        :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type channel: str, optional
-        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-            Defaults to ``'*'``.
-
-        **Geographic constraints - bounding rectangle**
-
-        The following four parameters work together to specify a boundary
-        rectangle. All four parameters are optional, but they may not be mixed
-        with the parameters used for searching within a defined radius.
-
-        :type minlat: float, optional
-        :param minlat: Specify the southern boundary. The minimum latitude must
-            be between -90 and 90 degrees inclusive (and less than or equal to
-            maxlat). If not specified, then this value defaults to ``-90``.
-        :type maxlat: float, optional
-        :param maxlat: Specify the northern boundary. The maximum latitude must
-            be between -90 and 90 degrees inclusive and greater than or equal
-            to minlat. If not specified, then this value defaults to ``90``.
-        :type minlon: float, optional
-        :param minlon: Specify the western boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to ``-180``. If minlon > maxlon, then the
-            boundary will cross the -180/180 meridian
-        :type maxlon: float, optional
-        :param maxlon: Specify the eastern boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to +180. If maxlon < minlon, then the boundary
-            will cross the -180/180 meridian
-
-        **Geographic constraints - bounding radius**
-
-        The following four parameters work together to specify a circular
-        bounding area. ``lat``, ``lon``, and ``maxradius`` are all required,
-        and must be used together. ``minradius`` is optional, and defaults
-        to ``0``. These parameters are incompatible with the boundary-box
-        parameters described above.
-
-        :type lat: float, optional
-        :param lat: Specify the central latitude point, in degrees. This value
-            must be between -90 and 90 degrees. This MUST be used in
-            conjunction with the lon and maxradius parameters.
-        :type lon: float, optional
-        :param lon: Specify the central longitude point, in degrees. This MUST
-            be used in conjunction with the lat and maxradius parameters.
-        :type maxradius: float, optional
-        :param maxradius: Specify the maximum radius, in degrees. Only
-            earthquakes within maxradius degrees of the lat/lon point will be
-            retrieved. This MUST be used in conjunction with the lat and lon
-            parameters.
-        :type minradius: float, optional
-        :param minradius: This optional parameter allows for the exclusion of
-            events that are closer than minradius degrees from the specified
-            lat/lon point. This MUST be used in conjunction with the lat, lon,
-            and maxradius parameters and is subject to the same restrictions.
-            If this parameter isn't specified, then it defaults to ``0.0``
-            degrees.
-
-        **Temporal constraints**
-
-        The following parameters impose various time constrants on the query.
-
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Limit results to the stations that were operational
-            on or after this time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: Limit results to the stations that were operational on
-            or before this time.
-        :type startbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
-        :param startbefore: Limit results to the stations starting before this
-            time.
-        :type startafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
-        :param startafter: Limit results to the stations starting after this
-            time.
-        :type endbefore: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endbefore: Limit results to the stations ending before this
-            time.
-        :type endafter: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endafter: Limit results to the stations ending after this time.
-
-        **Miscelleneous options**
-
-        :type updatedafter: :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
-        :param updatedafter: Only show stations that were updated after a
-            specific time.
-        :type level: ``'net'``, ``'sta'``, ``'chan'``, or ``'resp'``, optional
-        :param level: Specify whether to include channel/response metadata or
-            not. Defaults to ``'sta'``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: str or ``None``
-        :return: StationXML file as string if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> t1 = UTCDateTime("2006-03-01")
-        >>> t2 = UTCDateTime("2006-09-01")
-        >>> station_xml = client.station(network="IU", station="ANMO",
-        ...                              location="00", channel="BHZ",
-        ...                              starttime=t1, endtime=t2, level="net")
-        >>> print(station_xml) # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <BLANKLINE>
-        <StaMessage ...>
-         ...
-         <Network net_code="IU">
-          <StartDate>1988-01-01T00:00:00</StartDate>
-          <EndDate>2500-12-12T23:59:59</EndDate>
-          <Description>Global Seismograph Network ...</Description>
-          <TotalNumberStations>91</TotalNumberStations>
-          <SelectedNumberStations>0</SelectedNumberStations>
-         </Network>
-        </StaMessage>
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        kwargs['network'] = str(network)
-        kwargs['station'] = str(station)
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)
-        kwargs['level'] = level
-        # convert UTCDateTimes to string
-        if starttime and endtime:
-            try:
-                kwargs['starttime'] = \
-                    UTCDateTime(starttime).formatIRISWebService()
-            except:
-                kwargs['starttime'] = starttime
-        if endtime:
-            try:
-                kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
-            except:
-                kwargs['endtime'] = endtime
-        for key in ['startbefore', 'startafter', 'endbefore', 'endafter',
-                    'updatedafter']:
-            try:
-                kwargs[key] = \
-                    UTCDateTime(kwargs[key]).formatIRISWebService()
-            except KeyError:
-                pass
-        # build up query
-        url = '/station/query'
-        try:
-            data = self._fetch(url, **kwargs)
-        except HTTPError, e:
-            msg = "No response data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e)
-            raise Exception(msg)
-        return self._toFileOrData(filename, data)
+        raise Exception(DEPR_WARNS['get_stations'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_waveform'])
     def dataselect(self, network, station, location, channel,
                    starttime, endtime, quality='B', filename=None, **kwargs):
         """
-        Low-level interface for `dataselect` Web service of IRIS
-        (http://www.iris.edu/ws/dataselect/)- release 1.8.1 (2012-05-03).
+        SHUT DOWN ON SERVER SIDE!
 
-        This method returns a single channel of time series data (no wildcards
-        are allowed). With this service you specify network, station, location,
-        channel and a time range and the service returns either as an ObsPy
-        :class:`~obspy.core.stream.Stream` object or saves the data directly
-        as Mini-SEED file.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        :type network: str
-        :param network: Network code, e.g. ``'IU'``.
-        :type station: str
-        :param station: Station code, e.g. ``'ANMO'``.
-        :type location: str
-        :param location: Location code, e.g. ``'00'``
-        :type channel: str
-        :param channel: Channel code, e.g. ``'BHZ'``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-        :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
-            (default) are treated the same and indicate best available.
-            If ``'B'`` is selected, the output data records will be stamped
-            with a ``M``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: :class:`~obspy.core.stream.Stream` or ``None``
-        :return: ObsPy Stream object if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> t1 = UTCDateTime("2010-02-27T06:30:00.000")
-        >>> t2 = UTCDateTime("2010-02-27T07:00:00.000")
-        >>> st = client.dataselect("IU", "ANMO", "00", "BHZ", t1, t2)
-        >>> print(st)  # doctest: +ELLIPSIS
-        1 Trace(s) in Stream:
-        IU.ANMO.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 36000 samples
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        kwargs['network'] = str(network)
-        kwargs['station'] = str(station)
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)
-        kwargs['quality'] = str(quality)
-        # convert UTCDateTime to string for query
-        kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
-        kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
-        # build up query
-        url = '/dataselect/query'
-        try:
-            data = self._fetch(url, **kwargs)
-        except HTTPError, e:
-            msg = "No waveform data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e)
-            raise Exception(msg)
-        # write directly if filename is given
-        if filename is not None:
-            return self._toFileOrData(filename, data, True)
-        # create temporary file for writing data
-        with NamedTemporaryFile() as tf:
-            tf.write(data)
-            # read stream using obspy.mseed
-            tf.seek(0)
-            try:
-                stream = read(tf.name, 'MSEED')
-            except:
-                stream = Stream()
-        return stream
+        raise Exception(DEPR_WARNS['get_waveform'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_waveform_bulk'])
     def bulkdataselect(self, bulk, quality=None, filename=None,
                        minimumlength=None, longestonly=False):
         """
-        Low-level interface for `bulkdataselect` Web service of IRIS
-        (http://www.iris.edu/ws/bulkdataselect/) - release 1.4.5 (2012-05-03).
+        SHUT DOWN ON SERVER SIDE!
 
-        This method returns multiple channels of time series data for specified
-        time ranges. With this service you specify a list of selections
-        composed of network, station, location, channel, starttime and endtime
-        and the service streams back the selected raw waveform data as an ObsPy
-        :class:`~obspy.core.stream.Stream` object.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        Simple requests with wildcards can be performed via
-        :meth:`~obspy.iris.client.Client.getWaveform`. The list with channels
-        can also be generated using
-        :meth:`~obspy.iris.client.Client.availability`.
-
-        :type bulk: str
-        :param bulk: List of channels to fetch as returned by
-            :meth:`~obspy.iris.client.Client.availability`.
-            Can be a filename with a text file in bulkdataselect compatible
-            format or a string in the same format.
-        :type quality: ``'D'``, ``'R'``, ``'Q'``, ``'M'`` or ``'B'``, optional
-        :param quality: Mini-SEED data quality indicator. ``'M'`` and ``'B'``
-            (default) are treated the same and indicate best available.
-            If ``'B'`` is selected, the output data records will be stamped
-            with a ``M``.
-        :type minimumlength: float, optional
-        :param minimumlength: Enforce minimum segment length - seconds. Only
-            time-series segments of this length or longer will be returned.
-            .. note:: No data will be returned for selected time windows
-                shorter than ``minimumlength``.
-        :type longestonly: bool, optional
-        :param longestonly: Limit to longest segment only. For each time-series
-            selection, only the longest segment is returned. Defaults to
-            ``False``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: :class:`~obspy.core.stream.Stream` or ``None``
-        :return: ObsPy Stream object if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> client = Client()
-        >>> req = []
-        >>> req.append("TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00")
-        >>> req.append("TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00")
-        >>> req.append("TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00")
-        >>> req = "\\n".join(req) # use only a single backslash!
-        >>> print(req)
-        TA A25A -- BHZ 2010-084T00:00:00 2010-084T00:10:00
-        TA A25A -- BHN 2010-084T00:00:00 2010-084T00:10:00
-        TA A25A -- BHE 2010-084T00:00:00 2010-084T00:10:00
-
-        >>> st = client.bulkdataselect(req)
-        >>> print(st)  # doctest: +ELLIPSIS
-        3 Trace(s) in Stream:
-        TA.A25A..BHE | 2010-03-25T00:00:00.000001Z ... | 40.0 Hz, 24001 samples
-        TA.A25A..BHN | 2010-03-25T00:00:00.000000Z ... | 40.0 Hz, 24001 samples
-        TA.A25A..BHZ | 2010-03-25T00:00:00.000000Z ... | 40.0 Hz, 24000 samples
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        url = '/bulkdataselect/query'
-        # check for file
-        if os.path.isfile(bulk):
-            bulk = open(bulk).read()
-        # optional parameters
-        if quality:
-            bulk = "quality %s\n" % (quality.upper()) + bulk
-        if minimumlength:
-            bulk = "minimumlength %lf\n" % (minimumlength) + bulk
-        if longestonly:
-            bulk = "longestonly\n" + bulk
-        # build up query
-        try:
-            data = self._fetch(url, data=bulk)
-        except HTTPError, e:
-            msg = "No waveform data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e)
-            raise Exception(msg)
-        # write directly if filename is given
-        if filename:
-            return self._toFileOrData(filename, data, True)
-        # create temporary file for writing data
-        with NamedTemporaryFile() as tf:
-            tf.write(data)
-            # read stream using obspy.mseed
-            tf.seek(0)
-            try:
-                stream = read(tf.name, 'MSEED')
-            except:
-                stream = Stream()
-        return stream
+        raise Exception(DEPR_WARNS['get_waveform_bulk'])
 
-    @deprecated(warning_msg=DEPR_WARNS['get_stations'])
     def availability(self, network="*", station="*", location="*",
                      channel="*", starttime=UTCDateTime() - (60 * 60 * 24 * 7),
                      endtime=UTCDateTime() - (60 * 60 * 24 * 7) + 10,
@@ -1187,178 +547,16 @@ class Client(object):
                      output="bulkdataselect", restricted=False, filename=None,
                      **kwargs):
         """
-        Low-level interface for `availability` Web service of IRIS
-        (http://www.iris.edu/ws/availability/) - release 1.2.1 (2012-04-06).
+        SHUT DOWN ON SERVER SIDE!
 
-        This method returns information about what time series data is
-        available at the IRIS DMC. Users can query for station metadata by
-        network, station, channel, location, time and other search criteria.
-        Results are may be formated in two formats: ``'bulk'`` or ``'xml'``.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        The 'bulk' formatted information can be passed directly to the
-        :meth:`~obspy.iris.client.Client.bulkdataselect()` method.
-
-        The XML format contains station locations as well as channel time range
-        for :meth:`~obspy.iris.client.Client.availability()`.
-
-        :type network: str, optional
-        :param network: Network code, e.g. ``'IU'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type station: str, optional
-        :param station: Station code, e.g. ``'ANMO'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type location: str, optional
-        :param location: Location code, e.g. ``'00'``, wildcards allowed.
-            Defaults to ``'*'``.
-            Use ``'--'`` for empty location codes.
-        :type channel: str, optional
-        :param channel: Channel code, e.g. ``'BHZ'``, wildcards allowed.
-            Defaults to ``'*'``.
-        :type restricted: bool, optional
-        :param restricted: If ``True``, availability of restricted as well as
-            unrestricted data is reported. Defaults to ``False``.
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param starttime: Start date and time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`
-        :param endtime: End date and time.
-        :type minlat: float, optional
-        :param minlat: Minimum latitude for rectangular bounding box.
-        :type minlon: float, optional
-        :param minlon: Minimum longitude for rectangular bounding box.
-        :type maxlat: float, optional
-        :param maxlat: Maximum latitude for rectangular bounding box.
-        :type maxlon: float, optional
-        :param maxlon: Maximum longitude for rectangular bounding box.
-        :type lat: float, optional
-        :param lat: Latitude of center point for circular bounding area.
-        :type lon: float, optional
-        :param lon: Longitude of center point for circular bounding area.
-        :type minradius: float, optional
-        :param minradius: Minimum radius for circular bounding area.
-        :type maxradius: float, optional
-        :param maxradius: Maximum radius for circular bounding area.
-        :type output: str, optional
-        :param output: Output format, either ``"bulkdataselect"`` or ``"xml"``.
-            Defaults to ``"bulkdataselect"``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype: str or ``None``
-        :return: String that lists available channels, either as plaintext
-            `bulkdataselect` format (``output="bulkdataselect"``) or in XML
-            format (``output="xml"``) if no ``filename`` is given.
-
-        .. note::
-
-            For restricting data by geographical coordinates either:
-
-            * all of ``minlat``, ``maxlat``, ``minlon`` and ``maxlon`` have to
-              be specified for a rectangular bounding box, or
-            * all of ``lat``, ``lon``, ``minradius`` and ``maxradius`` have to
-              be specified for a circular bounding area
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> from obspy import UTCDateTime
-        >>> client = Client()
-        >>> t1 = UTCDateTime("2010-02-27T06:30:00")
-        >>> t2 = UTCDateTime("2010-02-27T06:40:00")
-        >>> result = client.availability("IU", "B*", "*", "BH*", t1, t2)
-        >>> print(result)
-        IU BBSR 00 BH1 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BBSR 00 BH2 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BBSR 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BBSR 10 BHE 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BBSR 10 BHN 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BBSR 10 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BILL 00 BHE 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BILL 00 BHN 2010-02-27T06:30:00 2010-02-27T06:40:00
-        IU BILL 00 BHZ 2010-02-27T06:30:00 2010-02-27T06:40:00
-        <BLANKLINE>
-
-        >>> st = client.bulkdataselect(result)
-        >>> print(st)  # doctest: +ELLIPSIS
-        9 Trace(s) in Stream:
-        IU.BBSR.00.BH1 | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BBSR.00.BH2 | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BBSR.00.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BBSR.10.BHE | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BBSR.10.BHN | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BBSR.10.BHZ | 2010-02-27T06:30:00... | 40.0 Hz, 24000 samples
-        IU.BILL.00.BHE | 2010-02-27T06:30:00... | 20.0 Hz, 12000 samples
-        IU.BILL.00.BHN | 2010-02-27T06:30:00... | 20.0 Hz, 12000 samples
-        IU.BILL.00.BHZ | 2010-02-27T06:30:00... | 20.0 Hz, 12000 samples
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        url = '/availability/query'
-        # build up query
-        kwargs['network'] = str(network)
-        kwargs['station'] = str(station)
-        if location:
-            kwargs['location'] = str(location)[0:2]
-        else:
-            kwargs['location'] = '--'
-        kwargs['channel'] = str(channel)
-        try:
-            kwargs['starttime'] = UTCDateTime(starttime).formatIRISWebService()
-        except:
-            kwargs['starttime'] = starttime
-        try:
-            kwargs['endtime'] = UTCDateTime(endtime).formatIRISWebService()
-        except:
-            kwargs['endtime'] = endtime
-        # stay backward compatible to API change, see #419 and also
-        # http://iris.washington.edu/pipermail/webservices/2012-October/000322
-        output = str(output).lower()
-        if output == 'bulk':
-            msg = "output format 'bulk' for Client.availability is " + \
-                " deprecated, please use 'bulkdataselect' instead"
-            warnings.warn(msg, DeprecationWarning)
-            output = 'bulkdataselect'
-        kwargs['output'] = output
-        kwargs['restricted'] = str(restricted).lower()
-        # sanity checking geographical bounding areas
-        rectangular = (minlat, minlon, maxlat, maxlon)
-        circular = (lon, lat, minradius, maxradius)
-        # helper variables to check the user's selection
-        any_rectangular = any([value is not None for value in rectangular])
-        any_circular = any([value is not None for value in circular])
-        all_rectangular = all([value is not None for value in rectangular])
-        all_circular = all([value is not None for value in circular])
-        # not both can be specified at the same time
-        if any_rectangular and any_circular:
-            msg = "Rectangular and circular bounding areas can not be combined"
-            raise ValueError(msg)
-        # check and setup rectangular box criteria
-        if any_rectangular:
-            if not all_rectangular:
-                msg = "Missing constraints for rectangular bounding box"
-                raise ValueError(msg)
-            kwargs['minlat'] = str(minlat)
-            kwargs['minlon'] = str(minlon)
-            kwargs['maxlat'] = str(maxlat)
-            kwargs['maxlon'] = str(maxlon)
-        # check and setup circular box criteria
-        if any_circular:
-            if not all_circular:
-                msg = "Missing constraints for circular bounding area"
-                raise ValueError(msg)
-            kwargs['lat'] = str(lat)
-            kwargs['lon'] = str(lon)
-            kwargs['minradius'] = str(minradius)
-            kwargs['maxradius'] = str(maxradius)
-        # checking output options
-        if not kwargs['output'] in ("bulkdataselect", "xml"):
-            msg = "kwarg output must be either 'bulkdataselect' or 'xml'."
-            raise ValueError(msg)
-        try:
-            data = self._fetch(url, **kwargs)
-        except HTTPError, e:
-            if e.code == 404 and e.msg == 'Not Found':
-                data = ''
-            else:
-                raise
-        return self._toFileOrData(filename, data)
+        raise Exception(DEPR_WARNS['get_stations'])
 
     def sacpz(self, network, station, location="*", channel="*",
               starttime=None, endtime=None, filename=None, **kwargs):
@@ -1439,7 +637,6 @@ class Client(object):
         <BLANKLINE>
         <BLANKLINE>
         """
-        url = '/sacpz/query'
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
         if location:
@@ -1463,7 +660,7 @@ class Client(object):
                 kwargs['time'] = UTCDateTime(starttime).formatIRISWebService()
             except:
                 kwargs['time'] = starttime
-        data = self._fetch(url, **kwargs)
+        data = self._fetch("sacpz", **kwargs)
         return self._toFileOrData(filename, data)
 
     def distaz(self, stalat, stalon, evtlat, evtlon):
@@ -1510,9 +707,8 @@ class Client(object):
         # set JSON as expected content type
         headers = {'Accept': 'application/json'}
         # build up query
-        url = '/distaz/query'
         try:
-            data = self._fetch(url, headers=headers, stalat=stalat,
+            data = self._fetch("distaz", headers=headers, stalat=stalat,
                                stalon=stalon, evtlat=evtlat, evtlon=evtlon)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
@@ -1557,16 +753,24 @@ class Client(object):
         >>> client.flinnengdahl(lat=-20.5, lon=-100.6)
         (683, 'SOUTHEAST CENTRAL PACIFIC OCEAN')
         """
-        url = '/flinnengdahl/%s?lat=%f&lon=%f'
+        service = 'flinnengdahl'
         # check rtype
         try:
             if rtype == 'code':
-                return int(self._fetch(url % (rtype, lat, lon)))
+                param_list = ["output=%s" % rtype, "lat=%s" % lat,
+                              "lon=%s" % lon]
+                return int(self._fetch(service, param_list=param_list))
             elif rtype == 'region':
-                return self._fetch(url % (rtype, lat, lon)).strip()
+                param_list = ["output=%s" % rtype, "lat=%s" % lat,
+                              "lon=%s" % lon]
+                return self._fetch(service, param_list=param_list).strip()
             else:
-                code = int(self._fetch(url % ('code', lat, lon)))
-                region = self._fetch(url % ('region', lat, lon)).strip()
+                param_list = ["output=code", "lat=%s" % lat,
+                              "lon=%s" % lon]
+                code = int(self._fetch(service, param_list=param_list))
+                param_list = ["output=region", "lat=%s" % lat,
+                              "lon=%s" % lon]
+                region = self._fetch(service, param_list=param_list).strip()
                 return (code, region)
         except HTTPError, e:
             msg = "No Flinn-Engdahl data available (%s: %s)"
@@ -1706,9 +910,8 @@ class Client(object):
         elif mintimeonly:
             kwargs['mintimeonly'] = 1
         # build up query
-        url = '/traveltime/query'
         try:
-            data = self._fetch(url, **kwargs)
+            data = self._fetch("traveltime", **kwargs)
         except HTTPError, e:
             msg = "No response data available (%s: %s)"
             msg = msg % (e.__class__.__name__, e)
@@ -1841,7 +1044,6 @@ class Client(object):
                 dt = UTCDateTime("2005-01-01")
                 client.evalresp("IU", "ANMO", "00", "BHZ", dt)
         """
-        url = '/evalresp/query'
         kwargs['network'] = str(network)
         kwargs['station'] = str(station)
         if location:
@@ -1870,7 +1072,7 @@ class Client(object):
             kwargs['width'] = int(width)
             kwargs['height'] = int(height)
             kwargs['annotate'] = bool(annotate)
-        data = self._fetch(url, **kwargs)
+        data = self._fetch("evalresp", **kwargs)
         # check output
         if 'plot' in output:
             # image
@@ -1903,221 +1105,18 @@ class Client(object):
             else:
                 return self._toFileOrData(filename, data)
 
-    @deprecated(warning_msg=DEPR_WARNS['get_events'])
     def event(self, filename=None, **kwargs):
         """
-        Low-level interface for `event` Web service of IRIS
-        (http://www.iris.edu/ws/event/) - release 1.2.1 (2012-02-29).
+        SHUT DOWN ON SERVER SIDE!
 
-        This method returns contributed earthquake origin and magnitude
-        estimates stored in the IRIS database. Selected information is returned
-        in `QuakeML <https://quake.ethz.ch/quakeml/>`_ format.
+        This service was shut down on the server side in december
+        2013, please use :mod:`obspy.fdsn` instead.
 
-        The IRIS DMC receives earthquake location and magnitude information
-        primarily from the
-        `USGS NEIC <http://earthquake.usgs.gov/regional/neic/>`_ and the
-        `ISC <http://www.isc.ac.uk/>`_, other sources include the
-        `Global CMT project <http://www.globalcmt.org/>`_ and the
-        `USArray ANF <http://anf.ucsd.edu/>`_.
-
-        **Geographic constraints - bounding rectangle**
-
-        The following four parameters work together to specify a boundary
-        rectangle. All four parameters are optional, but they may not be mixed
-        with the parameters used for searching within a defined radius.
-
-        :type minlat: float, optional
-        :param minlat: Specify the southern boundary. The minimum latitude must
-            be between -90 and 90 degrees inclusive (and less than or equal to
-            maxlat). If not specified, then this value defaults to ``-90``.
-        :type maxlat: float, optional
-        :param maxlat: Specify the northern boundary. The maximum latitude must
-            be between -90 and 90 degrees inclusive and greater than or equal
-            to minlat. If not specified, then this value defaults to ``90``.
-        :type minlon: float, optional
-        :param minlon: Specify the western boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to ``-180``. If minlon > maxlon, then the
-            boundary will cross the -180/180 meridian
-        :type maxlon: float, optional
-        :param maxlon: Specify the eastern boundary. The minimum longitude must
-            be between -180 and 180 degrees inclusive. If not specified, then
-            this value defaults to +180. If maxlon < minlon, then the boundary
-            will cross the -180/180 meridian
-
-        **Geographic constraints - bounding radius**
-
-        The following four parameters work together to specify a boundary using
-        a radius around a coordinate. ``lat``, ``lon``, and ``maxradius`` are
-        all required, and must be used together. These parameters are
-        incompatible with the boundary-box parameters described above.
-
-        :type lat: float, optional
-        :param lat: Specify the central latitude point, in degrees. This value
-            must be between -90 and 90 degrees. This MUST be used in
-            conjunction with the lon and maxradius parameters.
-        :type lon: float, optional
-        :param lon: Specify the central longitude point, in degrees. This MUST
-            be used in conjunction with the lat and maxradius parameters.
-        :type maxradius: float, optional
-        :param maxradius: Specify the maximum radius, in degrees. Only
-            earthquakes within maxradius degrees of the lat/lon point will be
-            retrieved. This MUST be used in conjunction with the lat and lon
-            parameters.
-        :type minradius: float, optional
-        :param minradius: This optional parameter allows for the exclusion of
-            events that are closer than minradius degrees from the specified
-            lat/lon point. This MUST be used in conjunction with the lat, lon,
-            and maxradius parameters and is subject to the same restrictions.
-            If this parameter isn't specified, then it defaults to ``0.0``
-            degrees.
-
-        **Depth constraints**
-
-        :type mindepth: float, optional
-        :param mindepth: Specify minimum depth (kilometers), values increase
-            positively with depth, e.g. ``-1``.
-        :type maxdepth: float, optional
-        :param maxdepth: Specify maximum depth (kilometers), values increase
-            positively with depth, e.g. ``20``.
-
-        **Temporal constraints**
-
-        The following two parameters impose time constrants on the query.
-
-        :type starttime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param starttime: Limit results to the events occurring after the
-            specified start time.
-        :type endtime: :class:`~obspy.core.utcdatetime.UTCDateTime`, optional
-        :param endtime: Limit results to the events occurring before the
-            specified end time.
-
-        **Magnitude constraints**
-
-        :type minmag: float, optional
-        :param minmag: Specify a minimum magnitude.
-        :type maxmag: float, optional
-        :param maxmag: Specify a maximum magnitude.
-        :type magtype: string, optional
-        :param magtype: Specify magnitude type. Some common types (there are
-            many) include ``"Ml"`` (local/Richter magnitude), ``"Ms"`` (surface
-            magnitude), ``"mb"`` (body wave magnitude), ``"Mw"`` (moment
-            magnitude).
-
-        **Subset the data by organization**
-
-        :type catalog: string, optional
-        :param catalog: Specify a catalog
-            [`available catalogs <http://www.iris.edu/ws/event/catalogs>`_].
-            Results will include any origins which contain the specified
-            catalog text, i.e. ``"PDE"`` will match ``"NEIC PDE"``
-        :type contributor: string, optional
-        :param contributor: Specify a contributor [`available
-            contributors <http://www.iris.edu/ws/event/contributors>`_]. When
-            selecting a contributor, the result includes a preferred origin as
-            specified by the contributor. Results will include any origins
-            which contain the specified contributor text, i.e. ``"NEIC"`` will
-            match ``"NEIC PDE-Q"``.
-
-        **Specifying an event using an IRIS ID number**
-
-        Individual events can be retrieved using ID numbers assigned by IRIS.
-        When these parameters are used, then only the ``includeallmagnitudes``
-        and ``preferredonly`` parameters are also allowed.
-
-        :type eventid: int, optional
-        :param eventid: Retrieve an event based on the unique IRIS event id.
-        :type originid: int, optional
-        :param originid: Retrieve an event based on the unique IRIS origin id.
-        :type magnitudeid: int, optional
-        :param magnitudeid: Retrieve an event based on the unique IRIS
-            magnitude id.
-
-        **Miscellaneous parameters**
-
-        These parameters affect how the search is conducted, and how the events
-        are returned.
-
-        :type limit: int, optional
-        :param limit: Limit the results to the specified number of events. This
-            value must be 10 or greater. By default, the results are not
-            limited.
-        :type orderby: ``"time"`` or ``"magnitude"``, optional
-        :param orderby: Sort the resulting events in order of descending time
-            or magnitude. By default, results are sorted in descending time
-            order.
-        :type updatedafter:  :class:`~obspy.core.utcdatetime.UTCDateTime`,
-            optional
-        :param updatedafter: Select origins updated after a certain date. This
-            is most useful for synchronization purposes.
-        :type includeallmagnitudes: bool, optional
-        :param includeallmagnitudes: This will include all the magnitudes in
-            search and print criteria. If magnitudes do not exist for a certain
-            origin, the search algorithm will consider it a miss and therefore
-            will not include the event. Defaults to ``True``.
-        :type includearrivals: bool, optional
-        :param includearrivals: If this event has associated phase arrival
-            information, then it will be included in the results. Defaults to
-            ``False``.
-        :type preferredonly: bool, optional
-        :param preferredonly: Include preferred estimates only. When catalog is
-            selected, the result returned will include the preferred origin as
-            specified by the catalog. Defaults to ``True``.
-        :type filename: str, optional
-        :param filename: Name of a output file. If this parameter is given
-            nothing will be returned. Default is ``None``.
-        :rtype:  str or ``None``
-        :return: QuakeML formated string if no ``filename`` is given.
-
-        .. rubric:: Example
-
-        >>> from obspy.iris import Client
-        >>> client = Client()
-        >>> events = client.event(minmag=9.1)
-        >>> print(events)  # doctest: +ELLIPSIS
-        <q:quakeml xmlns:q="http://quakeml.org/xmlns/quakeml/1.2" ...
+        Further information:
+        http://www.iris.edu/dms/nodes/dmc/news/2013/03/
+        new-fdsn-web-services-and-retirement-of-deprecated-services/
         """
-        # convert UTCDateTimes to string
-        try:
-            kwargs['starttime'] = \
-                UTCDateTime(kwargs['starttime']).formatIRISWebService()
-        except KeyError:
-            pass
-        try:
-            kwargs['endtime'] = \
-                UTCDateTime(kwargs['endtime']).formatIRISWebService()
-        except KeyError:
-            pass
-        try:
-            kwargs['updatedafter'] = \
-                str(UTCDateTime(kwargs['updatedafter']).date)
-        except KeyError:
-            pass
-        # convert boolean values to string
-        if 'includeallmagnitudes' in kwargs:
-            if not kwargs['includeallmagnitudes']:
-                kwargs['includeallmagnitudes'] = 'no'
-            else:
-                kwargs['includeallmagnitudes'] = 'yes'
-        if 'includearrivals' in kwargs:
-            if not kwargs['includearrivals']:
-                kwargs['includearrivals'] = 'no'
-            else:
-                kwargs['includearrivals'] = 'yes'
-        if 'preferredonly' in kwargs:
-            if not kwargs['preferredonly']:
-                kwargs['preferredonly'] = 'no'
-            else:
-                kwargs['preferredonly'] = 'yes'
-        # build up query
-        url = '/event/query'
-        try:
-            data = self._fetch(url, **kwargs)
-        except HTTPError, e:
-            msg = "No response data available (%s: %s)"
-            msg = msg % (e.__class__.__name__, e)
-            raise Exception(msg)
-        return self._toFileOrData(filename, data)
+        raise Exception(DEPR_WARNS['get_events'])
 
 
 if __name__ == '__main__':

@@ -18,54 +18,54 @@ class TestCase(unittest.TestCase):
             return map(str, (a, b, kwargs))
 
         @map_example_filename("a")
-        def changed(a, b="", **kwargs):
+        def changed1(a, b="", **kwargs):
             return map(str, (a, b, kwargs))
         self.assertEqual(
-            changed(dummy, dummy), unchanged(dummy, dummy))
+            changed1(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(
-            changed(path, dummy), unchanged(path_mapped, dummy))
+            changed1(path, dummy), unchanged(path_mapped, dummy))
         self.assertEqual(
-            changed(dummy, path), unchanged(dummy, path))
+            changed1(dummy, path), unchanged(dummy, path))
         self.assertEqual(
-            changed(a=path, b=dummy), unchanged(path_mapped, dummy))
+            changed1(a=path, b=dummy), unchanged(path_mapped, dummy))
         self.assertEqual(
-            changed(path, b=dummy), unchanged(path_mapped, dummy))
+            changed1(path, b=dummy), unchanged(path_mapped, dummy))
         self.assertEqual(
-            changed(path, b=path, x=path),
+            changed1(path, b=path, x=path),
             unchanged(path_mapped, path, x=path))
 
         @map_example_filename("b")
-        def changed(a, b="", **kwargs):
+        def changed2(a, b="", **kwargs):
             return map(str, (a, b, kwargs))
         self.assertEqual(
-            changed(dummy, dummy), unchanged(dummy, dummy))
+            changed2(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(
-            changed(path, dummy), unchanged(path, dummy))
+            changed2(path, dummy), unchanged(path, dummy))
         self.assertEqual(
-            changed(dummy, path), unchanged(dummy, path_mapped))
+            changed2(dummy, path), unchanged(dummy, path_mapped))
         self.assertEqual(
-            changed(a=path, b=dummy), unchanged(path, dummy))
+            changed2(a=path, b=dummy), unchanged(path, dummy))
         self.assertEqual(
-            changed(path, b=path), unchanged(path, path_mapped))
+            changed2(path, b=path), unchanged(path, path_mapped))
         self.assertEqual(
-            changed(path, b=path, x=path),
+            changed2(path, b=path, x=path),
             unchanged(path, path_mapped, x=path))
 
         @map_example_filename("x")
-        def changed(a, b="", **kwargs):
+        def changed3(a, b="", **kwargs):
             return map(str, (a, b, kwargs))
         self.assertEqual(
-            changed(dummy, dummy), unchanged(dummy, dummy))
+            changed3(dummy, dummy), unchanged(dummy, dummy))
         self.assertEqual(
-            changed(path, dummy), unchanged(path, dummy))
+            changed3(path, dummy), unchanged(path, dummy))
         self.assertEqual(
-            changed(dummy, path), unchanged(dummy, path))
+            changed3(dummy, path), unchanged(dummy, path))
         self.assertEqual(
-            changed(a=path, b=dummy), unchanged(path, dummy))
+            changed3(a=path, b=dummy), unchanged(path, dummy))
         self.assertEqual(
-            changed(path, b=dummy), unchanged(path, dummy))
+            changed3(path, b=dummy), unchanged(path, dummy))
         self.assertEqual(
-            changed(path, b=path, x=path),
+            changed3(path, b=path, x=path),
             unchanged(path, path, x=path_mapped))
 
 

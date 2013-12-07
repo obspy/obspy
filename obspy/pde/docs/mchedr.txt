@@ -1,0 +1,513 @@
+
+                 FORMAT OF MACHINE-READABLE EARTHQUAKE DATA REPORT
+                            (Revised February 24, 2004)
+
+
+Fourteen types of records may be found in this file, all with a maximum length 
+of 60 characters (bytes). They are:
+
+     1. hypocenter record (one record per event - always present)
+     2. error and magnitude record (one record per event - always present)
+     3. 90% error ellipse record (one record per event - always present*)
+     4. additional parameters record (one record per event - always present$)
+     5. general comment record (zero or more records per event)
+     6. additional hypocenter record (one per additional hypocenter, zero or 
+        more additional hypocenters per event $1)
+     7. additional hyp. error records (one for each additional hypocenter
+        record, zero or more additional hypocenters per event $1)
+     8. source parameter data - primary record (one per source - zero or more
+             sources per event#)
+     9. source parameter data - tensor record (zero or one records per source#)
+    10. source parameter data - axes/nodal planes record (zero or one/source#)
+    11. source parameter data - comment record (zero or more records/source#)
+    12. primary phase record (one record per station in each event)
+    13. surface wave record (zero or one record per station) 
+    14. secondary phases record (zero or more records per station)
+
+     (* This record exists only in files created since Dec 31, 1996. It exists
+        but will be blank for March-August 1996 Monthly files.)
+     (# These records exist in files created since June 10, 1997.)
+     ($ These records exist in files created since 25 February 2004.)
+     ($1 These records exist in files created since 25 Feb 2004, but only for
+        events beginning with 1 January 2004.)
+
+Each event in the file begins with a hypocenter record, which is always followed
+by an error and magnitude record and (since Dec. 1996) an error ellipse record.
+These are followed by an additional parameters record, beginning with files
+produced on or after 25 February 2004. If there are any general comments, those
+records come next. Beginning with files produced on or after 25 February 2004
+AND for events on or after 1 January 2004, there may be one or more pairs of
+additional hypocenter and additional hypocenter error records. These will be
+followed by the source parameter records, if any. Each source parameter 
+computation must begin with a primary record, followed by the other records as
+needed for that computation type. (For example, a HRV centroid, moment tensor 
+will have all four source parameter record types, whereas a scalar moment from 
+PPT will have only the primary record).  The remaining records for the event 
+contain the station data, and are grouped by station in increasing distance 
+from the epicenter. There is one primary phase record for each station reading
+associated with the given event. This may be followed by one surface wave 
+record and one or more secondary phase records.
+
+The format of each record type is given below. For additional information about
+the individual fields within the records, see the introduction page for any
+Earthquake Data Report and/or the explanation pages printed in the January and
+July issues of the Preliminary Determination of Epicenters, Monthly Listing.
+
+Programming Note: It is suggested that each record in the file be read as a
+character string (a60), then the first 2 characters be parsed to determine the 
+record type. The remaining characters of the record can then be parsed using
+internal reads according to the field descriptors given below.
+
+
+           IMPORTANT NOTE CONCERNING CHANGE IN EARTH MODEL USED
+
+NEIC hypocenters were computed using the Jeffreys-Bullen earth model prior to
+1 January 2004.  Beginning with 1 January 2004, NEIC hypocenters have been
+computed using the AK135 earth model.
+
+
+                            (1) HYPOCENTER RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'HY' - the record type identifier                        (a2)
+ 3 - 10     date (YYYYMMDD format)                                   (i8)
+  11        blank                                                    (1x)
+12 - 20     origin time (HHMMSS.TH format)                           (f9.2)
+  21        location quality flag (blank, '*', '?', '%'  or '&')     (a1)
+22 - 27     latitude (DD.THT format)                                 (f6.3)
+  28        'N' or 'S'                                               (a1)
+  29        blank                                                    (1x)
+30 - 36     longitude (DDD.THT format)                               (f7.3)
+  37        'E' or 'W'                                               (a1)
+  38        blank                                                    (1x)
+39 - 43     depth in kilometers (NNN.T format)                       (f5.1)
+  44        depth quality flag (blank, 'N', 'G', 'D', '*' or '?')    (a1)
+45 - 48     standard deviation (N.TH format)                         (f4.2)
+49 - 51     number of stations used or, for contributed hypo-
+            centers, number of stations reported (NNN format)        (i3)
+            NOTE: This was actually number of READINGS used prior to
+            the June 2000 Monthly and/or PDE 50, 2000.
+  52        version flag, beginning with "d" as of 25 Feb 2004,      (a1)
+            this was blank (1x) on files created before 25 Feb 2004
+53 - 55     Flinn-Engdahl region number (NNN format)                 (i3)
+            (using 1995 revision - 757 regions - since 1/1/2000)
+56 - 60     source code for contributed hypocenter (given only 
+            if byte 21 is '&') see PDE Monthly Listing for 
+            hypocenter codes. Prior to version "d" (files created    (a5)
+            between 10 June 1997 and 24 Feb 2004) the source code
+            was 4 characters (56-59) and character 60 was a 
+            preliminary computation flag.
+
+
+Note: For machine-readable EDRs created prior to June 10, 1997, the final 16
+characters of the hypocenter record had the following format:
+
+  45        blank                                                    (1x)
+46 - 48     standard deviation (N.T format)                          (f3.1)
+49 - 51     number of stations used or, for contributed hypo-
+            centers, number of stations reported (NNN format)        (i3)
+  52        blank                                                    (1x)
+53 - 55     Flinn-Engdahl region number (NNN format)                 (i3)
+  56        blank                                                    (1x)
+57 - 59     source code for contributed hypocenter (given only 
+            if byte 21 is '&') see PDE Monthly Listing for 
+            hypocenter codes                                         (a3)
+  60        preliminary computation flag for contributed
+            hypocenter (blank or 'P')                                (a1)
+
+
+
+                         (2) ERROR AND MAGNITUDE RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'E ' - the record type identifier                        (a2)
+ 3 -  7     origin time standard error in seconds (SS.TH format)     (f5.2)
+   8        blank                                                    (1x)
+ 9 - 14     latitude standard error in kilometers (NNN.TH format)    (f6.2)
+  15        blank                                                    (1x)
+16 - 21     longitude standard error in km. (NNN.TH format)          (f6.2)
+  22        blank                                                    (1x) 
+23 - 27     depth standard error in kilometers (NNN.T format)        (f5.1)
+  28        blank                                                    (1x)
+29 - 31     event mb magnitude (N.T format)                          (f3.1)
+  32        blank                                                    (1x)
+33 - 35     number of stations used for mb magnitude (NNN format)    (i3)
+  36        blank                                                    (1x)
+37 - 39     event Ms magnitude (N.T format)                          (f3.1)
+40 - 42     number of stations used for Ms magnitude (NNN format)    (i3)
+            [prior to 1 Feb 2000 this field was (1x,i2)]
+43 - 45     contributed magnitude #1 - value (N.T format)            (f3.1)
+46 - 47     contributed magnitude #1 - type (ML, LG, Ms, etc.)       (a2)
+48 - 51     contributed magnitude #1 - source code                   (a4)
+52 - 54     contributed magnitude #2 - value (N.T format)            (f3.1)
+55 - 56     contributed magnitude #2 - type (ML, LG, Ms, etc.)       (a2)
+57 - 60     contributed magnitude #2 - source code                   (a4)
+
+Note: For machine-readable EDRs created prior to June 10, 1997, the final 18
+characters of the error and magnitude record had the following format:
+
+  43        blank                                                    (1x)
+44 - 46     contributed magnitude #1 - value (N.T format)            (f3.1)
+47 - 48     contributed magnitude #1 - type (ML, LG, Ms, etc.)       (a2)
+49 - 51     contributed magnitude #1 - source code                   (a3)
+  52        blank                                                    (1x)
+53 - 55     contributed magnitude #2 - value (N.T format)            (f3.1)
+56 - 57     contributed magnitude #2 - type (ML, LG, Ms, etc.)       (a2)
+58 - 60     contributed magnitude #2 - source code                   (a3)
+
+
+                      (3) 90 PERCENT ERROR ELLIPSE RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'L ' - the record type identifier                        (a2)
+ 3 -  8     azimuth of semi-major axis (DDD.TH format)               (f6.2)
+ 9 - 13     plunge of semi-major axis# (DD.TH format)                (f5.2)
+14 - 21     value of semi-major axis (N.THe+NN format)               (e8.2)
+22 - 27     azimuth of intermediate axis* (DDD.TH format)            (f6.2)
+28 - 32     plunge of intermediate axis#* (DD.TH format)             (f5.2)
+33 - 40     value of intermediate axis* (N.THe+NN format)            (e8.2)
+41 - 46     azimuth of semi-minor axis# (DDD.TH format)              (f6.2)
+47 - 51     plunge of semi-minor axis# (DD.TH format)                (f5.2)
+52 - 59     value of semi-minor axis# (N.THe+NN format)              (e8.2)
+  60        blank                                                    (1x)
+
+* Note: If depth is fixed (held), these fields are for the semi-minor axis.
+# Note: These fields will be zero if depth is fixed.
+
+
+
+                     (4) ADDITIONAL PARAMETERS RECORD
+             (does not exist prior to files created 25 Feb 2004)
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'A ' - the record type identifier                        (a2)
+ 3 -  6     number of phases used# (NNNN format)                     (i4)
+   7        blank                                                    (1x)
+ 8 - 10     number of stations used# (NNN format)                    (i3)
+11 - 15     horizontal gap of readings used# (DDD.T format)          (f5.1)
+  16        blank                                                    (1x)
+17 - 19     official magnitude value (N.T format)                    (f3.1)
+20 - 21     official magnitude type (MW, MS, MB, ML, LG, etc)        (a2)
+22 - 26     official magnitude source code                           (a5)
+  27        blank                                                    (1x)
+  28        descriptor for deaths field (see below)                  (a1)
+29 - 35     total number of people dead or missing                   (i7)
+  36        descriptor for injuries field (see below)                (a1)
+37 - 43     total number of people injured                           (i7)
+  44        descriptor for buildings damaged field (see below)       (a1)
+45 - 51     total number of buildings damaged or destroyed           (i7)
+  52        event quality flag ('A','B','C','D','F' or 'N')          (a1)
+53 - 60     blank                                                    (a8)
+
+# Note: for contributed hypocenters, these refer to total data associated,
+        not data used.
+
+  Symbols used in descriptor fields for deaths, injuries and buildings damaged:
+
+ Number field MUST have a value:            Number field MUST be blank/zero:
+   & = at least                               N = none 
+   ~ = about, approximately                   U = unknown (but presumed >0)
+   > = more than, over                        I = included in a previous event
+   ? = unconfirmed, uncertain                 F = a few
+   E = exact figure                           S = some, several, additional
+   O = "official" figure (implies this        M = many
+        may not be an "actual" total)         D = dozens
+                                              H = hundreds
+                                              K = thousands
+                                              T = tens of thousands
+
+   numberless descriptions such as minor injuries or moderate damage are
+   classed as unknown (U), since the number is unknown.
+
+   blank is also a valid character for QED, PDE weekly and EXP files, since
+   the program which populates these fields is not run for these publications.
+
+
+                          (5) GENERAL COMMENT RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'C ' - the record type identifier                        (a2)
+ 3 - 60     comment string in plain text, continued on 
+            succeeding comment records, if needed. Note that 
+            byte 60 of current record will abut directly to 
+            byte 3 of the succeeding record.                         (a58)
+
+
+
+                      (6) ADDITIONAL HYPOCENTER RECORD
+(does not exist prior to files created 25 Feb 2004, nor for events before 2004)
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'AH' - the record type identifier                        (a2)
+ 3 - 10     date (YYYYMMDD format)                                   (i8)
+  11        blank                                                    (1x)
+12 - 20     origin time (HHMMSS.TH format)                          (a9 or d9.2)
+  21        hypocenter quality flag (blank,'A','B','C' or 'D')       (a1)
+22 - 27     latitude (DD.THT format)                                 (f6.3)
+  28        'N' or 'S'                                               (a1)
+  29        blank                                                    (1x)
+30 - 36     longitude (DDD.THT format)                               (f7.3)
+  37        'E' or 'W'                                               (a1)
+  38        preliminary computation flag (blank or 'P')              (a1)
+39 - 43     depth in kilometers (NNN.T format)                       (f5.1)
+  44        depth quality flag (blank,'G')                           (a1)
+45 - 48     standard deviation (N.TH format, -1 if unavailable)      (f4.2)
+49 - 51     number of stations used (NNN format, -1 if unavailable)  (i3)
+52 - 55     number of phases used (NNNN format, -1 if unavailable)   (i4)
+56 - 60     source code for this hypocenter                          (a5)
+
+
+
+             (7) ADDITIONAL HYPOCENTER ERROR AND MAGNITUDE RECORD
+(does not exist prior to files created 25 Feb 2004, nor for events before 2004)
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'AE' - the record type identifier                        (a2)
+            All standard errors here are set to -1.0 if unavailable
+ 3 -  7     origin time standard error in seconds (SS.TH format)     (f5.2)
+   8        blank                                                    (1x)
+ 9 - 14     latitude standard error in kilometers (NNN.TH format)    (f6.2)
+  15        blank                                                    (1x)
+16 - 21     longitude standard error in km. (NNN.TH format)          (f6.2)
+  22        blank                                                    (1x)
+23 - 27     depth standard error in kilometers (NNN.T format)        (f5.1)
+  28        blank                                                    (1x)
+29 - 33     horizontal gap (DDD.T format, -1.0 if unavailable)       (f5.1)
+34 - 36     magnitude #1 - value (N.T format)                        (f3.1)
+37 - 38     magnitude #1 - type (ML, LG, MS, MB, etc.)               (a2)
+39 - 43     blank                                                    (5x)
+44 - 46     magnitude #2 - value (N.T format)                        (f3.1)
+47 - 48     magnitude #2 - type (ML, LG, MS, MB, etc.)               (a2)
+49 - 60     blank                                                    (12x)
+
+
+
+
+                   (8) SOURCE PARAMETER DATA - PRIMARY RECORD
+
+  Note that all real values in this record are written without decimal points.
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'Dp' - the record type identifier                        (a2)
+ 3 -  6     source contributor (network) code                        (a4)
+   7        computation type (C=CMT, M=moment tensor, B=broadband
+                 data, F=P-wave first motion, S=scalar moment)       (a1)
+   8        multiplier exponent for error values (N, where
+                  actual multiplier will be 10**N)                   (i1)
+ 9 - 15     centroid origin time (HHMMSST)                           (f7.1)
+16 - 17    #origin time standard error (NT, or "FX" if held)       (a2 or f2.1)
+18 - 21     centroid latitude (DDTH)                                 (f4.2)
+  22        "N" or "S"                                               (a1)
+23 - 25    #latitude standard error (NTH, or "FX " if held)        (a3 or f3.2)
+26 - 30     centroid longitude (DDDTH)                               (f5.2)
+  31        "E" or "W" for CMT; or mechanism used (F","M" or "C")
+                  for BB radiated energy                             (a1)
+32 - 34    #longitude standard error (NTH, or "FX " if held)       (a3 or f3.2)
+35 - 38     centroid, moment or BB depth (NNNT)                      (f4.1)
+39 - 40    #depth standard error (NT, "FX" or "BD" if held)        (a2 or f2.1)
+41 - 43     no. of stations used (NNN) - LP waves for CMT
+                                 - for mechanism in BB data
+                                 - in general comp. for all others   (i3)
+44 - 46     no. of components used (NNN)                             (i3)
+47 - 48     no. of stations used (NN) - mantle waves for CMT
+                                      - for depth in BB data         (i2)
+49 - 51     no. of components used (NNN) - mantle waves (CMT only)   (i3)
+52 - 54     half-duration (NNT)                                      (f3.1)
+55 - 56     energy, moment or best double couple moment value (NT)   (f2.1)
+57 - 58     energy or moment standard error (NT)                     (f2.1)
+59 - 60     energy or moment exponent in Nm (NN)                     (i2)
+
+ # Note: these fields are modified by the error value multiplier (byte 13).
+   For example, if centroid origin time error is "21" and multiplier is "1"
+   then the actual error is 2.1 * 10**1 = 21. If multiplier is "0", then
+   the actual error is 2.1 * 10**0 = 2.1.
+ 
+
+                   (9) SOURCE PARAMETER DATA - TENSOR RECORD
+
+  Note that all real values in this record are written without decimal points.
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'Dt' - the record type identifier                        (a2)
+   3        blank                                                    (1x)
+ 4 -  5     exponent in Nm for tensor values (NN)                    (i2)
+   6        blank                                                    (1x)
+ 7 -  8     element code - usually "rr" or "xx"                      (a2)
+ 9 - 12     value of element (-NTH)                                  (f4.2)
+13 - 15     standard error of value (NTH)                            (f3.2)
+16 - 17     element code - usually "tt" or "yy"                      (a2)
+18 - 21     value of element (-NTH)                                  (f4.2)
+22 - 24     standard error of value (NTH)                            (f3.2)
+25 - 26     element code - usually "ff" or "zz"                      (a2)
+27 - 30     value of element (-NTH)                                  (f4.2)
+31 - 33     standard error of value (NTH)                            (f3.2)
+34 - 35     element code - usually "rt" or "xy"                      (a2)
+36 - 39     value of element (-NTH)                                  (f4.2)
+40 - 42     standard error of value (NTH)                            (f3.2)
+43 - 44     element code - usually "rf" or "xz"                      (a2)
+45 - 48     value of element (-NTH)                                  (f4.2)
+49 - 51     standard error of value (NTH)                            (f3.2)
+52 - 53     element code - usually "tf" or "yz"                      (a2)
+54 - 57     value of element (-NTH)                                  (f4.2)
+58 - 60     standard error of value (NTH)                            (f3.2)
+
+
+
+       (10) SOURCE PARAMETER DATA - PRINCIPAL AXES AND NODAL PLANES RECORD
+
+  Note that all real values in this record are written without decimal points.
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'Da' - the record type identifier                        (a2)
+   3        blank                                                    (1x)
+ 4 -  5     exponent in Nm for principal axes values (NN)            (i2)
+ 6 -  9     T-axis value (-NTH)                                      (f4.2)
+10 - 12     T-axis standard error for value (NTH)                    (f3.2)
+13 - 14     T-axis plunge in degrees (NN)                            (i2)
+15 - 17     T-axis azimuth in positive degrees (NNN)                 (i3)
+18 - 21     N-axis value (-NTH)                                      (f4.2)
+22 - 24     N-axis standard error for value (NTH)                    (f3.2)
+25 - 26     N-axis plunge in degrees (NN)                            (i2)
+27 - 29     N-axis azimuth in positive degrees (NNN)                 (i2)
+30 - 33     P-axis value (-NTH)                                      (f4.2)
+34 - 36     P-axis standard error for value (NTH)                    (f3.2)
+37 - 38     P-axis plunge in degrees (NN)                            (i2)
+39 - 41     P-axis azimuth in positive degrees (NNN)                 (i3)
+  42        blank                                                    (1x)
+43 - 45     strike of NP1 in positive degrees (NNN)                  (i3)
+46 - 47     dip of NP1 in degrees (NN)                               (i2)
+48 - 51     slip of NP1 in degrees (-NNN)                            (i4)
+52 - 54     strike of NP2 in positive degrees (NNN)                  (i3)
+55 - 56     dip of NP2 in degrees (NN)                               (i2)
+57 - 60     slip of NP2 in degrees (-NNN)                            (i4)
+
+
+                   (11) SOURCE PARAMETER DATA - COMMENT RECORD                  
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'Dc' - the record type identifier                        (a2)
+ 3 - 60     comment string in plain text, continued on 
+            succeeding comment records, if needed. Note that 
+            byte 60 of current record will abut directly to 
+            byte 3 of the succeeding record.                         (a58)
+
+
+
+                          (12) PRIMARY PHASE RECORD
+
+Note that beginning with data for 2004, this primary phase is simply the first 
+phase of the reading. Prior to data for 2004 it was always a P-type phase (P, 
+Pn, Pb, Pg, Pdif or PKP).
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'P ' - the record type identifier                        (a2)
+ 3 -  7     international station code                               (a5)
+ 8 - 15     primary phase code, including onset clarity and 
+            first motion codes, if any                               (a8)
+16 - 24     arrival time (HHMMSS.TH format)                          (f9.2)
+  25        blank                                                    (1x)
+26 - 30     P residual (O-C) in seconds (-NN.T format)               (f5.1)
+  31        residual flag (blank or 'X')                             (a1)
+  32        blank                                                    (1x)
+33 - 38     event-to-station distance in degrees (DDD.TH format)     (f6.2)
+  39        blank                                                    (1x)
+40 - 44     event-to-station azimuth in degrees (DDD.T format)       (f5.1)
+45 - 48     station mb - period in seconds (SS.T format)             (f4.1)
+49 - 55     station mb - ground amplitude in nanometers (NNNN.TH)    (f7.2)
+  56        blank                                                    (1x)
+57 - 59     station mb - magnitude (N.T format)                      (f3.1)
+  60        station mb - usage flag (blank or 'X')                   (a1)
+
+
+
+                            (13) SURFACE WAVE RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'M ' - the record type identifier                        (a2)
+ 3 -  7     blank - data belong with station given in preceding 
+            primary phase record.                                    (5x)
+   8        'Z' component indicator (blank if no Z information)      (a1)
+   9        blank                                                    (1x)
+10 - 13     Z-component - period in seconds (SS.T format)            (f4.1)
+14 - 20     Z-component - ground amplitude in micrometers (NNNN.TH)  (f7.2)
+  21        blank                                                    (1x)
+  22        'N' component indicator (blank if no N information)      (a1)
+  23        blank                                                    (1x)
+24 - 27     N-component - period in seconds (SS.T format)            (f4.1)
+28 - 34     N-component - ground amplitude in micrometers (NNNN.TH)  (f7.2)
+  35        blank                                                    (1x)
+  36        'E' component indicator (blank if no E information)      (a1)
+  37        blank                                                    (1x)
+38 - 41     E-component - period in seconds (SS.T format)            (f4.1)
+42 - 48     E-component - ground amplitude in micrometers (NNNN.TH)  (f7.2)
+  49        blank                                                    (1x)
+50 - 52     'MSZ' - magnitude type indicator (blank if no Ms was 
+            computed for that station)                               (a3)
+  53        blank                                                    (1x)
+54 - 56     station Ms magnitude (N.T format)                        (f3.1)
+  57        station Ms usage flag (blank or 'X')                     (a1)
+58 - 60     blank                                                    (3x)
+
+
+                          (14) SECONDARY PHASES RECORD
+
+                                                                    Fortran
+Byte(s)                         Contents                        Field descriptor
+
+ 1 -  2     'S ' - the record type identifier                        (a2)
+ 3 -  7     blank - data belong with station given in preceding 
+            primary phase record. secondary phase records are 
+            repeated until all phases have been listed for that 
+            station.                                                 (5x)
+ 8 - 15*    secondary phase code (or depth value, see note)          (a8)
+16 - 24     secondary phase arrival time (HHMMSS.TH format)  
+            (blank if preceding field is a depth value)              (f9.2)
+  25        blank                                                    (1x)
+26 - 33*    secondary phase code (or depth value, see note)          (a8)
+34 - 42     secondary phase arrival time (HHMMSS.TH format)
+            (blank if preceding field is a depth value)              (f9.2)
+  43        blank                                                    (1x)
+44 - 51*    secondary phase code (or depth value, see note)          (a8)
+52 - 60     secondary phase arrival time (HHMMSS.TH format)
+            (blank if preceding field is a depth value)              (f9.2)
+
+* Note: If the preceding secondary phase is pP, or has been used by the 
+  epicenter program as pP, this field will contain a depth value instead 
+  of a phase code. The format for this is shown below for bytes 8-15. The 
+  fields are in the same relative positions for bytes 26-33 and 44-51.
+
+ 8 -  9     'D=' - identifier flag for depth value                   (a2)
+10 - 14     depth value in kilometers (NNN.T format)                 (f5.1)
+  15        depth usage flag (blank or 'X')                          (a1)
+
+If a depth value is given, the succeeding arrival time field will be blank 
+and additional secondary phases, if any, will continue with the next secondary 
+phase code field.  There should be no more than one depth value for any 
+station reading.
+

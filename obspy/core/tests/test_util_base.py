@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 from obspy.core.util.testing import ImageComparison, \
     ImageComparisonException, HAS_COMPARE_IMAGE
