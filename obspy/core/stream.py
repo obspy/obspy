@@ -2635,6 +2635,64 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             new_stream.extend(trace.split())
         return new_stream
 
+    @map_example_filename("inventories")
+    def attach_response(self, inventories):
+        """
+        Search for and attach channel response to each trace as
+        trace.stats.response. Does not raise an exception but shows a warning
+        if response information can not be found for all traces. Returns a
+        list of traces for which no response could be found.
+
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> st.attach_response(inv)
+        []
+        >>> tr = st[1]
+        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> st = read()
+        >>> st.attach_response("/path/to/BW_RJOB.xml")
+        []
+        >>> tr = st[1]
+        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+
+        :type inventories: :class:`~obspy.station.inventory.Inventory` or
+            :class:`~obspy.station.network.Network` or a list containing
+            objects of these types.
+        :param inventories: Station metadata to use in search for response for
+            each trace in the stream.
+        :rtype: list of :class:`~obspy.core.trace.Trace`
+        :returns: list of traces for which no response information could be
+            found.
+        """
+        skipped_traces = []
+        for tr in self.traces:
+            try:
+                tr.attach_response(inventories)
+            except Exception as e:
+                if str(e) == "No matching response information found.":
+                    warnings.warn(str(e))
+                    skipped_traces.append(tr)
+                else:
+                    raise
+        return skipped_traces
+
 
 def isPickle(filename):  # @UnusedVariable
     """

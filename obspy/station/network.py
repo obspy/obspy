@@ -12,6 +12,7 @@ Provides the Network class.
 from obspy.station.util import BaseNode
 from obspy.station.station import Station
 import textwrap
+import warnings
 
 
 class Network(BaseNode):
@@ -137,6 +138,37 @@ class Network(BaseNode):
 
     def __short_str__(self):
         return "%s" % self.code
+
+    def get_response(self, seed_id, datetime):
+        """
+        Find response for a given channel at given time.
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get response for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Time to get response for.
+        :rtype: :class:`~obspy.station.response.Response`
+        :returns: Response for timeseries specified by input arguments.
+        """
+        network, station, location, channel = seed_id.split(".")
+        if self.code != network:
+            responses = []
+        else:
+            channels = [cha for sta in self.stations for cha in sta.channels
+                        if cha.code == channel
+                        and cha.location_code == location
+                        and (cha.start_date is None
+                             or cha.start_date <= datetime)
+                        and (cha.end_date is None or cha.end_date >= datetime)]
+            responses = [cha.response for cha in channels
+                         if cha.response is not None]
+        if len(responses) > 1:
+            msg = "Found more than one matching response. Returning first."
+            warnings.warn(msg)
+        elif len(responses) < 1:
+            msg = "No matching response information found."
+            raise Exception(msg)
+        return responses[0]
 
 
 if __name__ == '__main__':

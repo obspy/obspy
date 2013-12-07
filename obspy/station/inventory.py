@@ -17,6 +17,7 @@ from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin
 from obspy.station.stationxml import SOFTWARE_MODULE, SOFTWARE_URI
 from obspy.station.network import Network
 import textwrap
+import warnings
 
 
 def read_inventory(path_or_file_object, format=None):
@@ -161,6 +162,50 @@ class Inventory(ComparingObject):
             msg = "networks can only contain Network objects."
             raise ValueError(msg)
         self._networks = value
+
+    def get_response(self, seed_id, datetime):
+        """
+        Find response for a given channel at given time.
+
+        >>> from obspy import read_inventory, UTCDateTime
+        >>> inventory = read_inventory("/path/to/BW_RJOB.xml")
+        >>> datetime = UTCDateTime("2009-08-24T00:20:00")
+        >>> response = inventory.get_response("BW.RJOB..EHZ", datetime)
+        >>> print response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+
+        :type seed_id: str
+        :param seed_id: SEED ID string of channel to get response for.
+        :type datetime: :class:`~obspy.core.utcdatetime.UTCDateTime`
+        :param datetime: Time to get response for.
+        :rtype: :class:`~obspy.station.response.Response`
+        :returns: Response for timeseries specified by input arguments.
+        """
+        network, station, location, channel = seed_id.split(".")
+        networks = [net for net in self.networks if net.code == network]
+        stations = [sta for sta in net.stations if sta.code == station
+                    for net in networks]
+        channels = [cha for sta in stations for cha in sta.channels
+                    if cha.code == channel
+                    and cha.location_code == location
+                    and (cha.start_date is None or cha.start_date <= datetime)
+                    and (cha.end_date is None or cha.end_date >= datetime)]
+        responses = [cha.response for cha in channels
+                     if cha.response is not None]
+        if len(responses) > 1:
+            msg = "Found more than one matching response. Returning first."
+            warnings.warn(msg)
+        elif len(responses) < 1:
+            msg = "No matching response information found."
+            raise Exception(msg)
+        return responses[0]
 
 
 if __name__ == '__main__':

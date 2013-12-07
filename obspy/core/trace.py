@@ -2022,6 +2022,35 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             timeArray = np.ma.array(timeArray, mask=self.data.mask)
         return timeArray
 
+    def attach_response(self, inventories):
+        """
+        Search for and attach channel response to the trace as
+        trace.stats.response. Raises an exception if no matching response can
+        be found.
+
+        :type inventories: :class:`~obspy.station.inventory.Inventory` or
+            :class:`~obspy.station.network.Network` or a list containing
+            objects of these types or a string with a filename of a StationXML
+            file.
+        :param inventories: Station metadata to use in search for response for
+            each trace in the stream.
+        """
+        from obspy.station import Inventory, Network, read_inventory
+        if isinstance(inventories, Inventory) or \
+           isinstance(inventories, Network):
+            inventories = [inventories]
+        elif isinstance(inventories, basestring):
+            inventories = [read_inventory(inventories)]
+        responses = [obj.get_response(self.id, self.stats.starttime)
+                     for obj in inventories]
+        if len(responses) > 1:
+            msg = "Found more than one matching response. Attaching first."
+            warnings.warn(msg)
+        elif len(responses) < 1:
+            msg = "No matching response information found."
+            raise Exception(msg)
+        self.stats.response = responses[0]
+
 
 if __name__ == '__main__':
     import doctest

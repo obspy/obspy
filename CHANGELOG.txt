@@ -47,6 +47,8 @@ dev:
      to the flake8 tool.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
