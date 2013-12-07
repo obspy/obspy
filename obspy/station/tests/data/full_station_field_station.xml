@@ -69,8 +69,8 @@
                 </Phone>
               </Author>
           </Comment>
-          <Latitude>10.0</Latitude>
-          <Longitude>20.0</Longitude>
+          <Latitude unit="DEGREES">10.0</Latitude>
+          <Longitude unit="DEGREES">20.0</Longitude>
           <Elevation>100.0</Elevation>
           <Site>
               <Name>Some site</Name>
