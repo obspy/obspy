@@ -42,7 +42,7 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
         st.plot()
 
 (2) :meth:`~obspy.fdsn.client.Client.get_events()`: Retrieves event data from
-    the server. Results are returned as a :class:`~obspy.core.event.Catalog`)
+    the server. Results are returned as a :class:`~obspy.core.event.Catalog`
     object.
 
     >>> client = Client()
@@ -68,20 +68,28 @@ providers are available too, see :meth:`~obspy.fdsn.client.Client.__init__()`.
         cat.plot()
 
 (3) :meth:`~obspy.fdsn.client.Client.get_stations()`: Retrieves station data
-    from the server. Results are returned as a StationXML string (will be
-    changed to an Obspy Inventory object in the near future).
+    from the server. Results are returned as an
+    :class:`~obspy.station.inventory.Inventory` object.
 
     >>> client = Client()
-    >>> stationxml_string = client.get_stations(
+    >>> inventory = client.get_stations(
     ...     latitude=-56.1, longitude=-26.7, maxradius=15)
-    >>> for line in stationxml_string.splitlines()[:6]:
-    ...     print line  # doctest: +ELLIPSIS
-    <?xml version="1.0" encoding="ISO-8859-1"?>
-    <BLANKLINE>
-    <FDSNStationXML ...>
-     <Source>IRIS-DMC</Source>
-     <Sender>IRIS-DMC</Sender>
-     <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+    >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+    Inventory created at ...
+        Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                http://service.iris.edu/fdsnws/station/1/query?latitude=...
+        Sending institution: IRIS-DMC (IRIS-DMC)
+        Contains:
+            Networks (3):
+                AI
+                II
+                SY
+            Stations (4):
+                AI.ORCD (ORCADAS, SOUTH ORKNEY ISLANDS)
+                II.HOPE (Hope Point, South Georgia Island)
+                SY.HOPE (HOPE synthetic)
+                SY.ORCD (ORCD synthetic)
+            Channels (0):
 
 Please see the documentation for each method for further information and
 examples.
