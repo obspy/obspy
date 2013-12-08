@@ -14,6 +14,7 @@ The functionality is provided through the following packages:
    obspy.imaging
    obspy.realtime
    obspy.signal
+   obspy.station
    obspy.taup
    obspy.xseed
 

@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
+ <Source>IRIS-DMC</Source>
+ <Sender>IRIS-DMC</Sender>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.2</Module>
+ <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?starttime=2013-01-01&amp;network=IU&amp;sta=ANMO&amp;level=response&amp;nodata=404</ModuleURI>
+ <Created>2013-04-16T06:15:28</Created>
+ <Network code="IU" startDate="1988-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
+  <Description>Global Seismograph Network (GSN - IRIS/USGS)</Description>
+  <TotalNumberStations>252</TotalNumberStations>
+  <SelectedNumberStations>1</SelectedNumberStations>
+  <Station code="ANMO" startDate="2008-06-30T20:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
+   <Latitude>34.94591</Latitude>
+   <Longitude>-106.4572</Longitude>
+   <Elevation>1820.0</Elevation>
+   <Site>
+    <Name>Albuquerque, New Mexico, USA</Name>
+   </Site>
+   <CreationDate>1989-08-29T00:00:00</CreationDate>
+   <TotalNumberChannels>117</TotalNumberChannels>
+   <SelectedNumberChannels>1</SelectedNumberChannels>
+   <Channel locationCode="10" startDate="2012-03-13T08:10:00" restrictedStatus="open" endDate="2599-12-31T23:59:59" code="BHZ">
+    <Latitude>34.945913</Latitude>
+    <Longitude>-106.457122</Longitude>
+    <Elevation>1759.0</Elevation>
+    <Depth>57.0</Depth>
+    <Azimuth>0.0</Azimuth>
+    <Dip>-90.0</Dip>
+    <Type>CONTINUOUS</Type>
+    <Type>GEOPHYSICAL</Type>
+    <SampleRate>40.0</SampleRate>
+    <ClockDrift>0.0</ClockDrift>
+    <Sensor>
+     <Type>Guralp CMG3-T Seismometer (borehole)</Type>
+    </Sensor>
+    <Response>
+     <InstrumentSensitivity>
+      <Value>3.31283E10</Value>
+      <Frequency>0.02</Frequency>
+      <InputUnits>
+       <Name>M/S</Name>
+       <Description>Velocity in Meters Per Second</Description>
+      </InputUnits>
+      <OutputUnits>
+       <Name>COUNTS</Name>
+       <Description>Digital Counts</Description>
+      </OutputUnits>
+     </InstrumentSensitivity>
+     <Stage number="1">
+      <PolesZeros>
+       <InputUnits>
+        <Name>M/S</Name>
+        <Description>Velocity in Meters Per Second</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>V</Name>
+        <Description>Volts</Description>
+       </OutputUnits>
+       <PzTransferFunctionType>LAPLACE (RADIANS/SECOND)</PzTransferFunctionType>
+       <NormalizationFactor>72698900</NormalizationFactor>
+       <NormalizationFrequency>.1</NormalizationFrequency>
+       <Zero number="0">
+        <Real>0</Real>
+        <Imaginary>0</Imaginary>
+       </Zero>
+       <Zero number="1">
+        <Real>0</Real>
+        <Imaginary>0</Imaginary>
+       </Zero>
+       <Pole number="2">
+        <Real>-.0374903</Real>
+        <Imaginary>.036711</Imaginary>
+       </Pole>
+       <Pole number="3">
+        <Real>-.0374903</Real>
+        <Imaginary>-.036711</Imaginary>
+       </Pole>
+       <Pole number="4">
+        <Real>-197.9</Real>
+        <Imaginary>197.9</Imaginary>
+       </Pole>
+       <Pole number="5">
+        <Real>-197.9</Real>
+        <Imaginary>-197.9</Imaginary>
+       </Pole>
+       <Pole number="6">
+        <Real>-911.1</Real>
+        <Imaginary>0</Imaginary>
+       </Pole>
+      </PolesZeros>
+      <StageGain>
+       <Value>19746</Value>
+       <Frequency>.02</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="2">
+      <Coefficients>
+       <InputUnits>
+        <Name>V</Name>
+        <Description>Volts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>Digital Counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>40</InputSampleRate>
+       <Factor>1</Factor>
+       <Offset>0</Offset>
+       <Delay>0.0</Delay>
+       <Correction>0.0</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>1677720</Value>
+       <Frequency>0</Frequency>
+      </StageGain>
+     </Stage>
+     <Stage number="3">
+      <Coefficients>
+       <InputUnits>
+        <Name>COUNTS</Name>
+        <Description>Digital Counts</Description>
+       </InputUnits>
+       <OutputUnits>
+        <Name>COUNTS</Name>
+        <Description>Digital Counts</Description>
+       </OutputUnits>
+       <CfTransferFunctionType>DIGITAL</CfTransferFunctionType>
+       <Numerator>.000000000000418952</Numerator>
+       <Numerator>.000330318</Numerator>
+       <Numerator>.00102921</Numerator>
+       <Numerator>-.00314123</Numerator>
+       <Numerator>.000205709</Numerator>
+       <Numerator>.00152521</Numerator>
+       <Numerator>-.00623193</Numerator>
+       <Numerator>.0104801</Numerator>
+       <Numerator>-.0131202</Numerator>
+       <Numerator>.0107821</Numerator>
+       <Numerator>-.00144455</Numerator>
+       <Numerator>-.0158729</Numerator>
+       <Numerator>.0395074</Numerator>
+       <Numerator>-.0651036</Numerator>
+       <Numerator>.0853716</Numerator>
+       <Numerator>-.0891913</Numerator>
+       <Numerator>.0500619</Numerator>
+       <Numerator>.837233</Numerator>
+       <Numerator>.266723</Numerator>
+       <Numerator>-.166693</Numerator>
+       <Numerator>.095284</Numerator>
+       <Numerator>-.0509218</Numerator>
+       <Numerator>.0161458</Numerator>
+       <Numerator>.00706362</Numerator>
+       <Numerator>-.0183877</Numerator>
+       <Numerator>.0199414</Numerator>
+       <Numerator>-.0154895</Numerator>
+       <Numerator>.00852735</Numerator>
+       <Numerator>-.00255789</Numerator>
+       <Numerator>-.00181103</Numerator>
+       <Numerator>.00242649</Numerator>
+       <Numerator>-.00375769</Numerator>
+       <Numerator>.000467293</Numerator>
+       <Numerator>.000633072</Numerator>
+       <Numerator>-.00000156874</Numerator>
+       <Numerator>-.000012548</Numerator>
+       <Numerator>.000000321041</Numerator>
+       <Numerator>-.0000000263324</Numerator>
+       <Numerator>-.0000000509997</Numerator>
+      </Coefficients>
+      <Decimation>
+       <InputSampleRate>40</InputSampleRate>
+       <Factor>1</Factor>
+       <Offset>0</Offset>
+       <Delay>0.43046</Delay>
+       <Correction>0.43046</Correction>
+      </Decimation>
+      <StageGain>
+       <Value>1</Value>
+       <Frequency>0</Frequency>
+      </StageGain>
+     </Stage>
+    </Response>
+   </Channel>
+  </Station>
+ </Network>
+</FDSNStationXML>

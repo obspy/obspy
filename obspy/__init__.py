@@ -31,9 +31,11 @@ for seismology.
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import _getVersionString
+__version__ = _getVersionString()
 from obspy.core.trace import Trace
 from obspy.core.stream import Stream, read
 from obspy.core.event import readEvents, Catalog
+from obspy.station import read_inventory
 
 # insert supported read/write format plugin lists dynamically in docstrings
 from obspy.core.util.base import make_format_plugin_table
@@ -47,8 +49,6 @@ readEvents.__doc__ = \
 Catalog.write.im_func.func_doc = \
     Catalog.write.__doc__ % make_format_plugin_table("event", "write",
                                                      numspaces=8)
-
-__version__ = _getVersionString()
 
 
 if __name__ == '__main__':

@@ -48,6 +48,8 @@ dev:
    * inverse filtering of catalogs.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
@@ -91,8 +93,10 @@ dev:
      path to a local file now also can be provided either a file-like
      object with RESP information or an obspy.xseed.Parser object
      (e.g. created reading a dataless SEED file).
-   * seisSim(seedresp={...}): the seedresp dictionary now required network,
+   * seisSim(seedresp={...}): the seedresp dictionary now requires network,
      station, location, and channel keys.
+ - obspy.station:
+   * adding support for FDSN StationXML
  - obspy.mseed:
    * new kwarg arguments for reading mseed files: header_byteorder and
      verbose

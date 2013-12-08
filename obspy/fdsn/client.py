@@ -12,7 +12,7 @@ FDSN Web service client for ObsPy.
 from io import BytesIO
 from lxml import etree
 import obspy
-from obspy import UTCDateTime
+from obspy import UTCDateTime, read_inventory
 from obspy.fdsn.wadl_parser import WADLParser
 from obspy.fdsn.header import DEFAULT_USER_AGENT, \
     URL_MAPPINGS, DEFAULT_PARAMETERS, PARAMETER_ALIASES, \
@@ -263,27 +263,57 @@ class Client(object):
         Query the station service of the client.
 
         >>> client = Client("IRIS")
-        >>> stationxml_string = client.get_stations(
-        ...     latitude=-56.1, longitude=-26.7, maxradius=15)
-        >>> for line in stationxml_string.splitlines()[:6]:
-        ...     print line  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <BLANKLINE>
-        <FDSNStationXML ...>
-         <Source>IRIS-DMC</Source>
-         <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
-        >>> stationxml_string = client.get_stations(
+        >>> inventory = client.get_stations(latitude=-56.1, longitude=-26.7,
+        ...                                 maxradius=15)
+        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    http://service.iris.edu/fdsnws/station/1/query?lat...
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (3):
+                    AI
+                    II
+                    SY
+                Stations (4):
+                    AI.ORCD (ORCADAS, SOUTH ORKNEY ISLANDS)
+                    II.HOPE (Hope Point, South Georgia Island)
+                    SY.HOPE (HOPE synthetic)
+                    SY.ORCD (ORCD synthetic)
+                Channels (0):
+        >>> inventory = client.get_stations(
         ...     starttime=UTCDateTime("2013-01-01"), network="IU",
         ...     sta="ANMO", level="channel")
-        >>> for line in stationxml_string.splitlines()[:6]:
-        ...     print line  # doctest: +ELLIPSIS
-        <?xml version="1.0" encoding="ISO-8859-1"?>
-        <BLANKLINE>
-        <FDSNStationXML ...>
-         <Source>IRIS-DMC</Source>
-         <Sender>IRIS-DMC</Sender>
-         <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+        >>> print inventory  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Inventory created at ...
+            Created by: IRIS WEB SERVICE: fdsnws-station | version: ...
+                    http://service.iris.edu/fdsnws/station/1/query?station=...
+            Sending institution: IRIS-DMC (IRIS-DMC)
+            Contains:
+                Networks (1):
+                    IU
+                Stations (1):
+                    IU.ANMO (Albuquerque, New Mexico, USA)
+                Channels (57):
+                    IU.ANMO.00.BH1, IU.ANMO.00.BH2, IU.ANMO.00.BHZ,
+                    IU.ANMO.00.LH1, IU.ANMO.00.LH2, IU.ANMO.00.LHZ,
+                    IU.ANMO.00.VH1, IU.ANMO.00.VH2, IU.ANMO.00.VHZ,
+                    IU.ANMO.00.VM1, IU.ANMO.00.VM2, IU.ANMO.00.VMZ,
+                    IU.ANMO.10.BH1, IU.ANMO.10.BH2, IU.ANMO.10.BHZ,
+                    IU.ANMO.10.EH1, IU.ANMO.10.EH2, IU.ANMO.10.EHZ,
+                    IU.ANMO.10.HH1, IU.ANMO.10.HH2, IU.ANMO.10.HHZ,
+                    IU.ANMO.10.LH1, IU.ANMO.10.LH2, IU.ANMO.10.LHZ,
+                    IU.ANMO.10.VH1, IU.ANMO.10.VH2, IU.ANMO.10.VHZ,
+                    IU.ANMO.10.VM1, IU.ANMO.10.VM2, IU.ANMO.10.VMZ,
+                    IU.ANMO.20.EN1, IU.ANMO.20.EN2, IU.ANMO.20.ENZ,
+                    IU.ANMO.20.HN1, IU.ANMO.20.HN1, IU.ANMO.20.HN2,
+                    IU.ANMO.20.HN2, IU.ANMO.20.HNZ, IU.ANMO.20.HNZ,
+                    IU.ANMO.20.LN1, IU.ANMO.20.LN1, IU.ANMO.20.LN2,
+                    IU.ANMO.20.LN2, IU.ANMO.20.LNZ, IU.ANMO.20.LNZ,
+                    IU.ANMO.30.LDO, IU.ANMO.31.LDO, IU.ANMO.35.LDO,
+                    IU.ANMO.40.LFZ, IU.ANMO.50.LDO, IU.ANMO.50.LIO,
+                    IU.ANMO.50.LKO, IU.ANMO.50.LRH, IU.ANMO.50.LRI,
+                    IU.ANMO.50.LWD, IU.ANMO.50.LWS, IU.ANMO.60.HDF
 
         :type starttime:
         :param starttime: Limit to metadata epochs starting on or after the
@@ -357,6 +387,8 @@ class Client(object):
         :param filename: If given, the downloaded data will be saved there
             instead of being parse to an ObsPy object. Thus it will contain the
             raw data from the webservices.
+        :rtype: :class:`~obspy.station.inventory.Inventory`
+        :returns: Inventory with requested station information.
 
         Any additional keyword arguments will be passed to the webservice as
         additional arguments. If you pass one of the default parameters and the
@@ -380,10 +412,9 @@ class Client(object):
             self._write_to_file_object(filename, data_stream)
             data_stream.close()
         else:
-            # XXX: Replace with StationXML reader once ready!
-            station = data_stream.read()
+            inventory = read_inventory(data_stream, format="STATIONXML")
             data_stream.close()
-            return station
+            return inventory
 
     def get_waveform(self, network, station, location, channel, starttime,
                      endtime, quality=None, minimumlength=None,
@@ -538,7 +569,7 @@ class Client(object):
         GR.GRA1..BHZ   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.00.BHZ | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples
         IU.ANMO.10.BHZ | 2010-02-27T00:00:00... | 40.0 Hz, 80 samples
-        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: #SKIP
+        >>> st = client.get_waveform_bulk("/tmp/request.txt")  # doctest: +SKIP
         >>> print st  # doctest: +SKIP
         5 Trace(s) in Stream:
         GR.GRA1..BHE   | 2010-02-27T00:00:00... | 20.0 Hz, 40 samples

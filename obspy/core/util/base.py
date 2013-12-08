@@ -23,7 +23,7 @@ import tempfile
 # defining ObsPy modules currently used by runtests and the path function
 DEFAULT_MODULES = ['core', 'gse2', 'mseed', 'sac', 'wav', 'signal', 'imaging',
                    'xseed', 'seisan', 'sh', 'segy', 'taup', 'seg2', 'db',
-                   'realtime', 'datamark', 'css', 'y', 'pde']
+                   'realtime', 'datamark', 'css', 'y', 'pde', 'station']
 NETWORK_MODULES = ['arclink', 'seishub', 'iris', 'neries', 'earthworm',
                    'seedlink', 'neic', 'fdsn']
 ALL_MODULES = DEFAULT_MODULES + NETWORK_MODULES
@@ -228,6 +228,9 @@ ENTRY_POINTS = {
     'event': _getEntryPoints('obspy.plugin.event', 'readFormat'),
     'event_write': _getEntryPoints('obspy.plugin.event', 'writeFormat'),
     'taper': _getEntryPoints('obspy.plugin.taper'),
+    'inventory': _getEntryPoints('obspy.plugin.inventory', 'readFormat'),
+    'inventory_write': _getEntryPoints('obspy.plugin.inventory',
+                                       'writeFormat'),
 }
 
 
@@ -408,6 +411,17 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     if unindent_first_line:
         ret = ret[numspaces:]
     return ret
+
+
+class ComparingObject(object):
+    """
+    Simple base class that implements == and != based on self.__dict__
+    """
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
 
 if __name__ == '__main__':

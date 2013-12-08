@@ -75,8 +75,8 @@ KEYWORDS = [
     'processing', 'PQLX', 'Q', 'real time', 'realtime', 'RESP',
     'response file', 'RT', 'SAC', 'SEED', 'SeedLink', 'SEG-2', 'SEG Y',
     'SEISAN', 'SeisHub', 'Seismic Handler', 'seismology', 'seismogram',
-    'seismograms', 'signal', 'slink', 'spectrogram', 'taper', 'taup',
-    'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
+    'seismograms', 'signal', 'slink', 'spectrogram', 'StationXML', 'taper',
+    'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
     'numpy>1.0.0',
@@ -222,6 +222,14 @@ ENTRY_POINTS = {
     ],
     'obspy.plugin.event.JSON': [
         'writeFormat = obspy.core.json.core:writeJSON',
+    ],
+    'obspy.plugin.inventory': [
+        'STATIONXML = obspy.station.stationxml',
+    ],
+    'obspy.plugin.inventory.STATIONXML': [
+        'isFormat = obspy.station.stationxml:is_StationXML',
+        'readFormat = obspy.station.stationxml:read_StationXML',
+        'writeFormat = obspy.station.stationxml:write_StationXML',
     ],
     'obspy.plugin.detrend': [
         'linear = scipy.signal:detrend',
