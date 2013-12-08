@@ -678,16 +678,16 @@ class Unpickler(object):
             #FIXME: not sure which kind of data is used by
             #"moment tensor" algorithm.
             data_used.wave_type = 'unknown'
-        if computation_type == 'B':
+        elif computation_type == 'B':
             res_id = '/'.join((res_id_prefix, 'methodID=broadband_data'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
             #FIXME: is 'combined' correct here?
             data_used.wave_type = 'combined'
-        if computation_type == 'F':
+        elif computation_type == 'F':
             res_id = '/'.join((res_id_prefix, 'methodID=P-wave_first_motion'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
             data_used.wave_type = 'P waves'
-        if computation_type == 'S':
+        elif computation_type == 'S':
             res_id = '/'.join((res_id_prefix, 'methodID=scalar_moment'))
             focal_mechanism.method_id = ResourceIdentifier(id=res_id)
             #FIXME: not sure which kind of data is used
@@ -830,10 +830,10 @@ class Unpickler(object):
         if onset == 'e':
             pick.onset = 'emergent'
             phase = phase[1:]
-        if onset == 'i':
+        elif onset == 'i':
             pick.onset = 'impulsive'
             phase = phase[1:]
-        if onset == 'q':
+        elif onset == 'q':
             pick.onset = 'questionable'
             phase = phase[1:]
         pick.phase_hint = phase.strip()
@@ -984,10 +984,10 @@ class Unpickler(object):
                 if onset == 'e':
                     pick.onset = 'emergent'
                     phase = phase[1:]
-                if onset == 'i':
+                elif onset == 'i':
                     pick.onset = 'impulsive'
                     phase = phase[1:]
-                if onset == 'q':
+                elif onset == 'q':
                     pick.onset = 'questionable'
                     phase = phase[1:]
                 pick.phase_hint = phase.strip()
@@ -1015,31 +1015,31 @@ class Unpickler(object):
             if record_id == 'HY':
                 event = self._parseRecordHY(line)
                 catalog.append(event)
-            if record_id == 'E ':
-                self._parseRecordE(line, event)
-            if record_id == 'L ':
-                self._parseRecordL(line, event)
-            if record_id == 'A ':
-                self._parseRecordA(line, event)
-            if record_id == 'C ':
-                self._parseRecordC(line, event)
-            if record_id == 'AH':
-                self._parseRecordAH(line, event)
-            if record_id == 'AE':
-                self._parseRecordAE(line, event)
-            if record_id == 'Dp':
-                focal_mechanism = self._parseRecordDp(line, event)
-            if record_id == 'Dt':
-                self._parseRecordDt(line, focal_mechanism)
-            if record_id == 'Da':
-                self._parseRecordDa(line, focal_mechanism)
-            if record_id == 'Dc':
-                self._parseRecordDc(line, focal_mechanism)
-            if record_id == 'P ':
+            elif record_id == 'P ':
                 pick, arrival = self._parseRecordP(line, event)
-            if record_id == 'M ':
+            elif record_id == 'E ':
+                self._parseRecordE(line, event)
+            elif record_id == 'L ':
+                self._parseRecordL(line, event)
+            elif record_id == 'A ':
+                self._parseRecordA(line, event)
+            elif record_id == 'C ':
+                self._parseRecordC(line, event)
+            elif record_id == 'AH':
+                self._parseRecordAH(line, event)
+            elif record_id == 'AE':
+                self._parseRecordAE(line, event)
+            elif record_id == 'Dp':
+                focal_mechanism = self._parseRecordDp(line, event)
+            elif record_id == 'Dt':
+                self._parseRecordDt(line, focal_mechanism)
+            elif record_id == 'Da':
+                self._parseRecordDa(line, focal_mechanism)
+            elif record_id == 'Dc':
+                self._parseRecordDc(line, focal_mechanism)
+            elif record_id == 'M ':
                 self._parseRecordM(line, event, pick)
-            if record_id == 'S ':
+            elif record_id == 'S ':
                 self._parseRecordS(line, event, pick, arrival)
         self.fh.close()
         # strip extra whitespaces from event comments
