@@ -2693,14 +2693,31 @@ class Catalog(object):
         """
         self.events = []
 
-    def filter(self, *args):
+    def filter(self, *args, **kwargs):
         """
         Returns a new Catalog object only containing Events which match the
         specified filter rules.
 
+        Valid filter keys are:
+
+        * magnitude;
+        * longitude;
+        * latitude;
+        * depth;
+        * time;
+        * standard_error;
+        * azimuthal_gap;
+        * used_station_count;
+        * used_phase_count.
+
+        Use ``inverse=True`` to return the Events that *do not* match the
+        specified filter rultes.
+
         :rtype: :class:`~obspy.core.stream.Catalog`
-        :return: Filtered catalog. Only the Catalog object is a copy, the
-            events are only references.
+        :return: Filtered catalog. A new Catalog object with filtered
+            Events as references to the original Events.
+
+        .. rubric:: Example
 
         >>> from obspy.core.event import readEvents
         >>> cat = readEvents()
@@ -2713,11 +2730,18 @@ class Catalog(object):
         >>> print cat2
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
-        >>> cat3 = cat.filter("time > 2012-04-04T14:10", \
-                              "time < 2012-04-04T14:20")
+        >>> cat3 = cat.filter("time > 2012-04-04T14:10",
+        ...                   "time < 2012-04-04T14:20")
         >>> print cat3
         1 Event(s) in Catalog:
         2012-04-04T14:18:37.000000Z | +39.342,  +41.044 | 4.3 ML | manual
+        >>> cat4 = cat.filter("time > 2012-04-04T14:10",
+        ...                   "time < 2012-04-04T14:20",
+        ...                   inverse=True)
+        >>> print cat4
+        2 Event(s) in Catalog:
+        2012-04-04T14:21:42.300000Z | +41.818,  +79.689 | 4.4 mb | manual
+        2012-04-04T14:08:46.000000Z | +38.017,  +37.736 | 3.0 ML | manual
         """
         # Helper functions.
         def __is_smaller(value_1, value_2):
@@ -2746,6 +2770,11 @@ class Catalog(object):
                         ">": __is_greater,
                         ">=": __is_greater_or_equal}
 
+        try:
+            inverse = kwargs["inverse"]
+        except KeyError:
+            inverse = False
+
         events = list(self.events)
         for arg in args:
             try:
@@ -2756,9 +2785,10 @@ class Catalog(object):
             if key == "magnitude":
                 temp_events = []
                 for event in events:
-                    if event.magnitudes and event.magnitudes[0].mag and \
-                        operator_map[operator](event.magnitudes[0].mag,
-                                               float(value)):
+                    if (event.magnitudes and event.magnitudes[0].mag and
+                        operator_map[operator](
+                            event.magnitudes[0].mag,
+                            float(value))):
                         temp_events.append(event)
                 events = temp_events
             elif key in ("longitude", "latitude", "depth", "time"):
@@ -2785,6 +2815,8 @@ class Catalog(object):
             else:
                 msg = "%s is not a valid filter key" % key
                 raise ValueError(msg)
+        if inverse:
+            events = [ev for ev in self.events if not ev in events]
         return Catalog(events=events)
 
     def copy(self):

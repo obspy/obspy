@@ -45,6 +45,7 @@ dev:
      referred object changes).
    * added a new test that asserts that the whole codebase is valid according
      to the flake8 tool.
+   * inverse filtering of catalogs.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
  - obspy.css:
