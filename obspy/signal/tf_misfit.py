@@ -23,9 +23,6 @@ Kristekova et. al. (2009).
 
 import numpy as np
 from obspy.signal import util
-import matplotlib.pyplot as plt
-from matplotlib.ticker import NullFormatter
-from matplotlib.colors import LinearSegmentedColormap
 
 
 def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
@@ -930,6 +927,9 @@ def plotTfMisfits(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
                                             phase_shift * np.pi) * 1j))
         plotTfMisfits(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
@@ -1205,6 +1205,9 @@ def plotTfGofs(st1, st2, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6,
         st1 = st1 * 3.
         plotTfGofs(st1, st2, dt=dt, fmin=1., fmax=10.)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st1.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
@@ -1439,6 +1442,9 @@ def plotTfr(st, dt=0.01, t0=0., fmin=1., fmax=10., nf=100, w0=6, left=0.1,
         plotTfr(tr.data, dt=tr.stats.delta, fmin=.01,
                 fmax=50., w0=8., nf=512, fft_zero_pad_fac=4)
     """
+    import matplotlib.pyplot as plt
+    from matplotlib.ticker import NullFormatter
+    from matplotlib.colors import LinearSegmentedColormap
     npts = st.shape[-1]
     tmax = (npts - 1) * dt
     t = np.linspace(0., tmax, npts) + t0
