@@ -699,6 +699,16 @@ class Response(ComparingObject):
             raise ValueError(msg)
 
     def get_evalresp_response(self, t_samp, nfft):
+        """
+        Returns frequency response and corresponding frequencies using
+        evalresp.
+
+        .. note:: This method is still expermimental
+
+        :param t_samp: time resolution (inverse frequency resolution)
+        :param nfft: Number of FFT points to use
+        :returns: tuple containing frequency response and frequencies
+        """
         import ctypes as C
         import numpy as np
         import obspy.signal.evrespwrapper as ew
