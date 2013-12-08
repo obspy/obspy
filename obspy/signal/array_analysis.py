@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: array.py
 #  Purpose: Functions for Array Analysis
@@ -23,7 +24,6 @@ import numpy as np
 from obspy.signal.util import utlGeoKm, nextpow2
 from obspy.signal.headers import clibsignal
 from obspy.core import Stream
-from obspy.core.util.decorator import deprecated
 from scipy.integrate import cumtrapz
 from obspy.signal.invsim import cosTaper
 
@@ -589,19 +589,6 @@ def array_rotation_strain(subarray, ts1, ts2, ts3, vp, vs, array_coords,
     return out
 
 
-@deprecated()
-def sonic(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-          semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-          verbose=False, coordsys='lonlat', timestamp='mlabday'):
-    """
-    DEPRECATED: Please use :func:`obspy.signal.array_analysis.array_processing`
-    """
-    return array_processing(
-        stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y, sl_s,
-        semb_thres, vel_thres, frqlow, frqhigh, stime, etime, prewhiten,
-        verbose=False, coordsys='lonlat', timestamp='mlabday', method=0)
-
-
 def get_geometry(stream, coordsys='lonlat', return_center=False,
                  verbose=False):
     """
@@ -897,7 +884,7 @@ def array_processing(stream, win_len, win_frac, sll_x, slm_x, sll_y, slm_y,
     :return: numpy.ndarray of timestamp, relative relpow, absolute relpow,
         backazimut, slowness
     """
-    BF, CAPON = 0, 1
+    _BF, CAPON = 0, 1
     res = []
     eotr = True
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 The cross correlation test suite.
 """

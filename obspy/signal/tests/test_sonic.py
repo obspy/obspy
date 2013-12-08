@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util import AttribDict

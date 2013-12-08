@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 import numpy as np
 import ctypes as C
 from obspy.signal.headers import clibevresp
+
 
 clibevresp.twoPi = 3.141
 

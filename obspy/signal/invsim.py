@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Filename: invsim.py
 #  Purpose: Python Module for Instrument Correction (Seismology)
@@ -20,7 +21,6 @@ to m/s.
 """
 
 from obspy.core.util.base import NamedTemporaryFile
-from obspy.core.util.decorator import deprecated_keywords
 from obspy.signal.detrend import simple as simpleDetrend
 from obspy.signal.headers import clibevresp
 import ctypes as C
@@ -139,6 +139,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     return cos_win
 
 
+# XXX: npts, p as well as pitsa are never used parameters!
 def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
     twopi = 6.283185307179586
     dblepi = 0.5 * twopi
@@ -157,7 +158,6 @@ def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
     return np.array(taper)
 
 
-@deprecated_keywords({'pitsa': None})
 def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
              network='*', locid='*', units="VEL", freq=False,
              debug=False):
@@ -252,7 +252,6 @@ def cornFreq2Paz(fc, damp=0.707):
     return {'poles': poles, 'zeros': [0j, 0j], 'gain': 1, 'sensitivity': 1.0}
 
 
-@deprecated_keywords({'pitsa': None})
 def pazToFreqResp(poles, zeros, scale_fac, t_samp, nfft, freq=False):
     """
     Convert Poles and Zeros (PAZ) to frequency response. The output

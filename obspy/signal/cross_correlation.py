@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #--------------------------------------------------------------------
 # Filename: cross_correlation.py
 #   Author: Moritz Beyreuther, Tobias Megies
@@ -311,8 +312,8 @@ def xcorrPickCorrection(pick1, trace1, pick2, trace2, t_before, t_after,
         slices.append(tr.slice(start, end))
     # cross correlate
     shift_len = int(cc_maxlag * samp_rate)
-    cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
-                                 shift_len, full_xcorr=True)
+    _cc_shift, cc_max, cc = xcorr(slices[0].data, slices[1].data,
+                                  shift_len, full_xcorr=True)
     cc_curvature = np.concatenate((np.zeros(1), np.diff(cc, 2), np.zeros(1)))
     cc_convex = np.ma.masked_where(np.sign(cc_curvature) >= 0, cc)
     cc_concave = np.ma.masked_where(np.sign(cc_curvature) < 0, cc)

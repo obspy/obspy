@@ -95,7 +95,8 @@ dev:
      (e.g. created reading a dataless SEED file).
    * seisSim(seedresp={...}): the seedresp dictionary now requires network,
      station, location, and channel keys.
-   * removing deprecated psd module - obspy.signal.spectral_estimation instead
+   * removed deprecated psd module - use spectral_estimation module instead
+   * removed deprecated sonic function - use array_processing function instead
  - obspy.station:
    * adding support for FDSN StationXML
  - obspy.mseed:

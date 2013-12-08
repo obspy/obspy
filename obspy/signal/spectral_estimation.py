@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 #------------------------------------------------------------------------------
 # Filename: spectral_estimation.py
 #  Purpose: Various Routines Related to Spectral Estimation
