@@ -25,12 +25,16 @@ class mchedrTestCase(unittest.TestCase):
     """
     Test suite for obspy.mchedr
     """
-    @classmethod
-    def setUpClass(cls):
+
+    catalog = None
+
+    def setUp(self):
         # directory where the test files are located
-        cls.path = os.path.join(os.path.dirname(__file__), 'data')
-        filename = os.path.join(cls.path, 'mchedr.dat')
-        cls.catalog = readMchedr(filename)
+        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        filename = os.path.join(self.path, 'mchedr.dat')
+        # read the mchedr file once for all
+        if self.__class__.catalog is None:
+            self.__class__.catalog = readMchedr(filename)
 
     def test_catalog(self):
         self.assertEqual(len(self.catalog), 1)
