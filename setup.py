@@ -93,6 +93,7 @@ ENTRY_POINTS = {
     'console_scripts': [
         'obspy-runtests = obspy.core.scripts.runtests:main',
         'obspy-reftek-rescue = obspy.core.scripts.reftekrescue:main',
+        'obspy-print = obspy.core.scripts.print:main',
         'obspy-indexer = obspy.db.scripts.indexer:main',
         'obspy-scan = obspy.imaging.scripts.scan:main',
         'obspy-plot = obspy.imaging.scripts.plot:main',
