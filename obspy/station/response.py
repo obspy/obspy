@@ -703,12 +703,18 @@ class Response(ComparingObject):
         Returns frequency response and corresponding frequencies using
         evalresp.
 
-        .. note:: This method is still expermimental
+        .. note::
+
+            This method is still experimental and not yet tested for all
+            possible response scenarios.
 
         :param t_samp: time resolution (inverse frequency resolution)
         :param nfft: Number of FFT points to use
         :returns: tuple containing frequency response and frequencies
         """
+        msg = ("Response.get_evalresp_response() is experimental and not yet "
+               "tested for all possible response scenarios.")
+        warnings.warn(msg)
         import ctypes as C
         import numpy as np
         import obspy.signal.evrespwrapper as ew
