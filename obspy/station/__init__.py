@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from obspy.station.util import BaseNode, Equipment, Operator, Person, \
     PhoneNumber, ExternalReference, Comment, Site
 from obspy.station.channel import Channel

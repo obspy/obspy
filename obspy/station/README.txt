@@ -1,25 +1,23 @@
-package obspy.neries
-==================
+package obspy.station
+=====================
 
 Copyright
 ---------
 GNU Lesser General Public License, Version 3 (LGPLv3)
 
-Copyright (c) 2010-2013 by:
+Copyright (c) 2013 by:
     * Tobias Megies
     * Lion Krischer
-    * Robert Barsch
+    * Moritz Beyreuther
+    * Mark C. Williams
 
 
 Overview
 --------
-NERIES Web service client for ObsPy.
+StationXML read and write support for ObsPy.
 
-The obspy.neries package contains a client for the Seismic Data Portal
-(http://www.seismicportal.eu) which was developed under the European
-Commission-funded NERIES project. The Portal provides a single point of access
-to diverse, distributed European earthquake data provided in a unique joint
-initiative by observatories and research institutes in and around Europe.
+The obspy.station package contains methods in order to read and write inventory
+data in the StationXML format.
 
 ObsPy is an open-source project dedicated to provide a Python framework for
 processing seismological data. It provides parsers for common file formats and
@@ -29,8 +27,3 @@ The goal of the ObsPy project is to facilitate rapid application development
 for seismology.
 
 For more information visit http://www.obspy.org.
-
-
-Dependencies
-------------
-* suds
