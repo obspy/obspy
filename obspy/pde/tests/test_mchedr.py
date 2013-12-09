@@ -113,9 +113,9 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         self.assertEqual(origin.quality.used_station_count, 628)
         self.assertEqual(origin.quality.standard_error, 0.84)
         self.assertEqual(origin.quality.azimuthal_gap, 10.8)
-        self.assertEqual(origin.quality.maximum_distance, 128.07)
+        self.assertEqual(origin.quality.maximum_distance, 29.1)
         self.assertEqual(origin.quality.minimum_distance, 2.22)
-        self.assertEqual(origin.quality.associated_phase_count, 878)
+        self.assertEqual(origin.quality.associated_phase_count, 52)
         self.assertEqual(origin.quality.associated_station_count, 628)
         self.assertEqual(origin.quality.depth_phase_count, 0)
         self.assertEqual(origin.quality.secondary_azimuthal_gap, None)
@@ -177,7 +177,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests StationMagnitude object.
         """
-        self.assertEqual(len(self.catalog[0].station_magnitudes), 337)
+        self.assertEqual(len(self.catalog[0].station_magnitudes), 19)
         mag = self.catalog[0].station_magnitudes[0]
         self.assertEqual(mag.mag, 6.6)
         self.assertEqual(mag.mag_errors.uncertainty, None)
@@ -189,7 +189,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Amplitude object.
         """
-        self.assertEqual(len(self.catalog[0].station_magnitudes), 337)
+        self.assertEqual(len(self.catalog[0].station_magnitudes), 19)
         amp = self.catalog[0].amplitudes[0]
         self.assertAlmostEqual(amp.generic_amplitude, 3.94502e-06)
         self.assertEqual(amp.type, 'AB')
@@ -202,7 +202,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Arrival object.
         """
-        self.assertEqual(len(self.catalog[0].origins[0].arrivals), 878)
+        self.assertEqual(len(self.catalog[0].origins[0].arrivals), 52)
         ar = self.catalog[0].origins[0].arrivals[0]
         self.assertEqual(ar.phase, 'Pn')
         self.assertEqual(ar.azimuth, 41.4)
@@ -224,7 +224,7 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Pick object.
         """
-        self.assertEqual(len(self.catalog[0].picks), 878)
+        self.assertEqual(len(self.catalog[0].picks), 52)
         pick = self.catalog[0].picks[0]
         self.assertEqual(pick.time, UTCDateTime(2012, 1, 1, 5, 28, 48, 180000))
         self.assertEqual(pick.time_errors.uncertainty, None)
