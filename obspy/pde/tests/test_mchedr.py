@@ -25,22 +25,17 @@ class mchedrTestCase(unittest.TestCase):
     """
     Test suite for obspy.mchedr
     """
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         # directory where the test files are located
-        self.path = os.path.join(os.path.dirname(__file__), 'data')
+        cls.path = os.path.join(os.path.dirname(__file__), 'data')
+        filename = os.path.join(cls.path, 'mchedr.dat')
+        cls.catalog = readMchedr(filename)
 
-    def test_readMchedr(self):
-        """
-        """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
+    def test_catalog(self):
+        self.assertEqual(len(self.catalog), 1)
         self.assertEqual(
-            catalog[0].resource_id,
-            ResourceIdentifier(
-                id='quakeml:us.anss.org/event/20120101052755.98'))
-        self.assertEqual(
-            str(catalog),
+            str(self.catalog),
             '''1 Event(s) in Catalog:
 2012-01-01T05:27:55.980000Z | +31.456, +138.072 | 6.2 Mb'''
         )
@@ -49,10 +44,7 @@ class mchedrTestCase(unittest.TestCase):
         """
         Tests Event object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        event = catalog[0]
+        event = self.catalog[0]
         self.assertEqual(
             event.resource_id,
             ResourceIdentifier(
@@ -82,11 +74,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Origin object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].origins), 4)
-        origin = catalog[0].origins[0]
+        self.assertEqual(len(self.catalog[0].origins), 4)
+        origin = self.catalog[0].origins[0]
         self.assertEqual(
             origin.resource_id,
             ResourceIdentifier(
@@ -158,11 +147,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Magnitude object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].magnitudes), 3)
-        mag = catalog[0].magnitudes[0]
+        self.assertEqual(len(self.catalog[0].magnitudes), 3)
+        mag = self.catalog[0].magnitudes[0]
         self.assertEqual(
             mag.resource_id,
             ResourceIdentifier(
@@ -187,11 +173,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests StationMagnitude object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].station_magnitudes), 337)
-        mag = catalog[0].station_magnitudes[0]
+        self.assertEqual(len(self.catalog[0].station_magnitudes), 337)
+        mag = self.catalog[0].station_magnitudes[0]
         self.assertEqual(mag.mag, 6.6)
         self.assertEqual(mag.mag_errors.uncertainty, None)
         self.assertEqual(mag.station_magnitude_type, 'Mb')
@@ -202,11 +185,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Amplitude object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].station_magnitudes), 337)
-        amp = catalog[0].amplitudes[0]
+        self.assertEqual(len(self.catalog[0].station_magnitudes), 337)
+        amp = self.catalog[0].amplitudes[0]
         self.assertAlmostEqual(amp.generic_amplitude, 3.94502e-06)
         self.assertEqual(amp.type, 'AB')
         self.assertEqual(amp.period, 1.3)
@@ -218,11 +198,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Arrival object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].origins[0].arrivals), 878)
-        ar = catalog[0].origins[0].arrivals[0]
+        self.assertEqual(len(self.catalog[0].origins[0].arrivals), 878)
+        ar = self.catalog[0].origins[0].arrivals[0]
         self.assertEqual(ar.phase, 'Pn')
         self.assertEqual(ar.azimuth, 41.4)
         self.assertEqual(ar.distance, 2.22)
@@ -243,11 +220,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests Pick object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].picks), 878)
-        pick = catalog[0].picks[0]
+        self.assertEqual(len(self.catalog[0].picks), 878)
+        pick = self.catalog[0].picks[0]
         self.assertEqual(pick.time, UTCDateTime(2012, 1, 1, 5, 28, 48, 180000))
         self.assertEqual(pick.time_errors.uncertainty, None)
         self.assertEqual(pick.waveform_id.station_code, 'JHJ2')
@@ -263,11 +237,8 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests FocalMechanism object.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
-        catalog = readMchedr(filename)
-        self.assertEqual(len(catalog), 1)
-        self.assertEqual(len(catalog[0].focal_mechanisms), 4)
-        fm = catalog[0].focal_mechanisms[0]
+        self.assertEqual(len(self.catalog[0].focal_mechanisms), 4)
+        fm = self.catalog[0].focal_mechanisms[0]
         self.assertEqual(
             fm.resource_id,
             ResourceIdentifier(
@@ -333,12 +304,9 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         """
         Tests writing a QuakeML document.
         """
-        filename = os.path.join(self.path, 'mchedr.dat')
         with NamedTemporaryFile() as tf:
             tmpfile = tf.name
-            catalog = readMchedr(filename)
-            self.assertTrue(len(catalog), 1)
-            writeQuakeML(catalog, tmpfile, validate=IS_RECENT_LXML)
+            writeQuakeML(self.catalog, tmpfile, validate=IS_RECENT_LXML)
             # Read file again. Avoid the (legit) warning about the already used
             # resource identifiers.
             with warnings.catch_warnings(record=True):
@@ -351,17 +319,11 @@ Gumma, Ibaraki, Kanagawa, Miyagi, Saitama, Tochigi and Tokyo.')
         Tests reading an mchedr document via readEvents.
         """
         filename = os.path.join(self.path, 'mchedr.dat')
-        with NamedTemporaryFile() as tf:
-            tmpfile = tf.name
+        # Read file again. Avoid the (legit) warning about the already used
+        # resource identifiers.
+        with warnings.catch_warnings(record=True):
             catalog = readEvents(filename)
             self.assertTrue(len(catalog), 1)
-            catalog.write(tmpfile, format='QUAKEML')
-            # Read file again. Avoid the (legit) warning about the already used
-            # resource identifiers.
-            with warnings.catch_warnings(record=True):
-                warnings.simplefilter("ignore")
-                catalog2 = readEvents(tmpfile)
-        self.assertTrue(len(catalog2), 1)
 
 
 def suite():
