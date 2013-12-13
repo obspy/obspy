@@ -168,8 +168,8 @@ def main(option_list=None):
                       type="string", dest="ids",
                       help="Optional, a list of SEED channel identifiers " +
                       "separated by commas " +
-                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'. Only these " +
-                      "channels will not be plotted.")
+                      "(e.g. 'GR.FUR..HHZ,BW.MANZ..EHN'). Only these " +
+                      "channels will be plotted.")
     parser.add_option("-t", "--event-times", default=None,
                       type="string", dest="event_times",
                       help="Optional, a list of UTCDateTime compatible " +
