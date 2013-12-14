@@ -139,8 +139,14 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     return cos_win
 
 
-# XXX: npts, p as well as pitsa are never used parameters!
-def c_sac_taper(npts, p=0.1, freqs=None, flimit=None, pitsa=False):
+def c_sac_taper(freqs, flimit):
+    """
+    Generate frequency domain taper similar to sac.
+
+    :param freqs: frequency vector to use
+    :param flimit: sequence containing the 4  frequency limits
+    :returns: taper
+    """
     twopi = 6.283185307179586
     dblepi = 0.5 * twopi
     fl1, fl2, fl3, fl4 = flimit
@@ -490,8 +496,7 @@ def seisSim(data, samp_rate, paz_remove=None, paz_simulate=None,
             # make cosine taper
             fl1, fl2, fl3, fl4 = pre_filt
             if sacsim:
-                cos_win = c_sac_taper(freqs.size, freqs=freqs,
-                                      flimit=(fl1, fl2, fl3, fl4))
+                cos_win = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
             else:
                 cos_win = cosTaper(freqs.size, freqs=freqs,
                                    flimit=(fl1, fl2, fl3, fl4))

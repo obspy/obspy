@@ -99,6 +99,7 @@
      station, location, and channel keys.
    * removed deprecated psd module - use spectral_estimation module instead
    * removed deprecated sonic function - use array_processing function instead
+   * corrected function signature of c_sac_taper
  - obspy.station:
    * adding support for FDSN StationXML
  - obspy.mseed:

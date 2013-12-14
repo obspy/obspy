@@ -299,8 +299,7 @@ class InvSimTestCase(unittest.TestCase):
         #fl4 = 35.0
         #npts = freqs.size
         #tap = cosTaper(freqs.size, freqs=freqs, flimit=(fl1, fl2, fl3, fl4))
-        #tap2 = c_sac_taper(freqs.size, freqs=freqs,
-        #                   flimit=(fl1, fl2, fl3, fl4))
+        #tap2 = c_sac_taper(freqs, flimit=(fl1, fl2, fl3, fl4))
         #import matplotlib.pyplot as plt
         #plt.plot(tap,'b')
         #plt.plot(tap2,'g--')
