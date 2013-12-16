@@ -227,11 +227,9 @@ class Trace(object):
     """
 
     def __init__(self, data=np.array([]), header=None):
-        # make sure Trace gets initialized with ndarray as self.data
+        # make sure Trace gets initialized with suitable ndarray as self.data
         # otherwise we could end up with e.g. a list object in self.data
-        if not isinstance(data, np.ndarray):
-            msg = "Trace.data must be a NumPy array."
-            raise ValueError(msg)
+        _data_sanity_checks(data)
         # set some defaults if not set yet
         if header is None:
             # Default values: For detail see
@@ -364,9 +362,7 @@ class Trace(object):
         """
         # any change in Trace.data will dynamically set Trace.stats.npts
         if key == 'data':
-            if not isinstance(value, np.ndarray):
-                msg = "Trace.data must be a NumPy array."
-                raise ValueError(msg)
+            _data_sanity_checks(value)
             self.stats.npts = len(value)
         return super(Trace, self).__setattr__(key, value)
 
@@ -2050,6 +2046,20 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             msg = "No matching response information found."
             raise Exception(msg)
         self.stats.response = responses[0]
+
+
+def _data_sanity_checks(value):
+    """
+    Checks if a given input is suitable to be used for Trace.data. Raises the
+    corresponding exception if it is not, otherwise silently passes.
+    """
+    if not isinstance(value, np.ndarray):
+        msg = "Trace.data must be a NumPy array."
+        raise ValueError(msg)
+    if value.ndim != 1:
+        msg = ("Numpy array for Trace.data has bad shape ('%s'). Only 1-d "
+               "arrays are allowed for initialization.") % str(value.shape)
+        raise ValueError(msg)
 
 
 if __name__ == '__main__':
