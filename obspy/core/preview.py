@@ -198,9 +198,9 @@ def resamplePreview(trace, samples, method='accurate'):
         return 0
     # Fast method.
     if method == 'fast':
-        trace.data = trace.data[:int(npts / samples) * samples]
-        trace.data = trace.data.reshape(samples, len(trace.data) // samples)
-        trace.data = trace.data.max(axis=1)
+        data = trace.data[:int(npts / samples) * samples]
+        data = data.reshape(samples, len(data) // samples)
+        trace.data = data.max(axis=1)
         # Set new sampling rate.
         trace.stats.delta = (endtime - trace.stats.starttime) / \
             float(samples - 1)
