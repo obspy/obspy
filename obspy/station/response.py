@@ -763,10 +763,11 @@ class Response(ComparingObject):
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "PA": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
-                msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
-                       "would refuse to calculate a response for this channel."
-                       " Proceed with caution.") % key
-                warnings.warn(msg)
+                if key is not None:
+                    msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
+                           "would refuse to calculate a response for this "
+                           "channel. Proceed with caution.") % key
+                    warnings.warn(msg)
                 value = ew.ENUM_UNITS["UNDEF_UNITS"]
             else:
                 value = units_mapping[key]
@@ -808,8 +809,6 @@ class Response(ComparingObject):
 
             stage_blkts = []
 
-            blkt = ew.blkt()
-
             blockette = all_stages[stage_number][0]
 
             # Write the input and output units.
@@ -817,6 +816,7 @@ class Response(ComparingObject):
             st.output_units = get_unit_mapping(blockette.output_units)
 
             if isinstance(blockette, PolesZerosResponseStage):
+                blkt = ew.blkt()
                 # Map the transfer function type.
                 transfer_fct_mapping = {
                     "LAPLACE (RADIANS/SECOND)": "LAPLACE_PZ",
@@ -849,6 +849,7 @@ class Response(ComparingObject):
                 pz.zeros = C.cast(C.pointer(zeros),
                                   C.POINTER(ew.complex_number))
             elif isinstance(blockette, CoefficientsTypeResponseStage):
+                blkt = ew.blkt()
                 # This type can have either an FIR or an IIR response. If
                 # the number of denominators is 0, it is a FIR. Otherwise
                 # an IIR.
@@ -874,11 +875,23 @@ class Response(ComparingObject):
                 # IIR
                 else:
                     raise NotImplementedError
+            elif isinstance(blockette, ResponseListResponseStage):
+                raise NotImplementedError
+            elif isinstance(blockette, FIRResponseStage):
+                raise NotImplementedError
+            elif isinstance(blockette, PolynomialResponseStage):
+                raise NotImplementedError
             else:
-                msg = "Type: %s." % str(type(blockette))
-                raise NotImplementedError(msg)
+                # Otherwise it could be a gain only stage.
+                if blockette.stage_gain is not None and \
+                        blockette.stage_gain_frequency is not None:
+                    blkt = None
+                else:
+                    msg = "Type: %s." % str(type(blockette))
+                    raise NotImplementedError(msg)
 
-            stage_blkts.append(blkt)
+            if blkt is not None:
+                stage_blkts.append(blkt)
 
             # Parse the decimation if is given.
             decimation_values = set([
