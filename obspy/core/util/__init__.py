@@ -34,6 +34,6 @@ from obspy.core.util.geodetics import calcVincentyInverse, gps2DistAzimuth, \
 from obspy.core.util.misc import BAND_CODE, complexifyString, guessDelta, \
     scoreatpercentile, toIntOrZero, loadtxt, CatchOutput
 from obspy.core.util.obspy_types import OrderedDict, Enum, \
-    ComplexWithUncertainties, FloatWithUncertainties
+    ComplexWithUncertainties, FloatWithUncertainties, BoundedValueType
 from obspy.core.util.xmlwrapper import XMLParser, tostring, register_namespace
 from obspy.core.util.version import get_git_version as _getVersionString

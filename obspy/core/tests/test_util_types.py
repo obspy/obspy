@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from obspy.core.util import Enum, ComplexWithUncertainties, \
-    FloatWithUncertainties
+    FloatWithUncertainties, BoundedValueType
 import unittest
 
 
@@ -84,6 +84,52 @@ class UtilTypesTestCase(unittest.TestCase):
         self._check_complex_with_u(c4, f1, lu1, uu1, f2, lu2, uu2)
         self.assertEqual(c4.real, fu1)
         self.assertEqual(c4.imag, fu2)
+
+    def test_boundedvaluetype(self):
+        """
+        Test the metaclass BoundedValueType
+        """
+        # Test an integer base
+        min_ = 0
+        max_ = 99
+        # Should enforce class min/max in attributes
+        dict_ = {'_minimum': min_, '_maximum': max_}
+        Test = BoundedValueType('TwoPlaceInt', (int,), dict_)
+        t = Test(47)
+        self.assertEqual(t, 47)
+        self.assertEqual(t._minimum, min_)
+        self.assertEqual(t._maximum, max_)
+        # Should throw error if out of bounds
+        with self.assertRaises(ValueError) as e:
+            t = Test(100)
+        with self.assertRaises(ValueError) as e:
+            t = Test(-1)
+        self.assertTrue(t.__class__.__name__ in e.exception.args[0])
+
+        # Test a float base
+        min_ = -90.
+        max_ = 90.
+        # Test setting bounds on the fly
+        meta = BoundedValueType.set_bounds(min_, max_)
+        self.assertEqual(meta.MAXIMUM, max_)
+        self.assertEqual(meta.MINIMUM, min_)
+        Test = meta('Latitude', (float,), {})
+        t = Test(44.5)
+        self.assertEqual(t, 44.5)
+        self.assertEqual(t._minimum, min_)
+        self.assertEqual(t._maximum, max_)
+        with self.assertRaises(ValueError) as e:
+            t = Test(120.)
+        self.assertTrue(t.__class__.__name__ in e.exception.args[0])
+
+        # Test string base class
+        meta = BoundedValueType.set_bounds('A', 'M')
+        Test = meta('HalfAlphabet', (str,), {})
+        t = Test('H')
+        self.assertEqual(t, 'H')
+        with self.assertRaises(ValueError) as e:
+            t = Test('Z')
+        self.assertTrue(t.__class__.__name__ in e.exception.args[0])
 
 
 def suite():
