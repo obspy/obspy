@@ -10,6 +10,9 @@ Classes related to instrument responses.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import warnings
+import ctypes as C
+import numpy as np
+from collections import defaultdict
 
 from obspy.core.util.base import ComparingObject
 from obspy.core.util.obspy_types import CustomComplex, \
@@ -698,7 +701,8 @@ class Response(ComparingObject):
             msg = "response_stages must be an iterable."
             raise ValueError(msg)
 
-    def get_evalresp_response(self, t_samp, nfft):
+    def get_evalresp_response(self, t_samp, nfft, output="VEL",
+                              start_stage=None, end_stage=None):
         """
         Returns frequency response and corresponding frequencies using
         evalresp.
@@ -708,18 +712,34 @@ class Response(ComparingObject):
             This method is still experimental and not yet tested for all
             possible response scenarios.
 
+        :type t_samp: float
         :param t_samp: time resolution (inverse frequency resolution)
+        :type nfft: int
         :param nfft: Number of FFT points to use
-        :returns: tuple containing frequency response and frequencies
+        :type output: str
+        :param output: Output units. One of "DISP" (displacement, output unit
+            is meters), "VEL" (velocity, output unit is meters/second) or "ACC"
+            (acceleration, output unit is meters/second**2).
+        :type start_stage: int, optional
+        :param start_stage: Stage sequence number of first stage that will be
+            used (disregarding all earlier stages).
+        :type end_stage: int, optional
+        :param end_stage: Stage sequence number of last stage that will be
+            used (disregarding all later stages).
+        :rtype: tuple of two arrays
+        :returns: frequency response and corresponding frequencies
         """
         msg = ("Response.get_evalresp_response() is experimental and not yet "
                "tested for all possible response scenarios.")
         warnings.warn(msg)
-        import ctypes as C
-        import numpy as np
         import obspy.signal.evrespwrapper as ew
-        from collections import defaultdict
         from obspy.signal.headers import clibevresp
+
+        out_units = output.upper()
+        if out_units not in ("DISP", "VEL", "ACC"):
+            msg = ("requested output is '%s' but must be one of 'DISP', 'VEL' "
+                   "or 'ACC'") % output
+            raise ValueError(msg)
 
         # Whacky. Evalresp uses a global variable and uses that to scale the
         # response if it encounters any unit that is not SI.
@@ -764,6 +784,13 @@ class Response(ComparingObject):
         all_stages = defaultdict(list)
 
         for stage in self.response_stages:
+            # optionally select only stages as requested by user
+            if start_stage is not None:
+                if stage.stage_sequence_number < start_stage:
+                    continue
+            if end_stage is not None:
+                if stage.stage_sequence_number > end_stage:
+                    continue
             all_stages[stage.stage_sequence_number].append(stage)
 
         stage_lengths = set(map(len, all_stages.values()))
@@ -922,7 +949,7 @@ class Response(ComparingObject):
         freqs = np.linspace(0, fy, nfft // 2 + 1).astype("float64")
 
         output = np.empty(len(freqs), dtype="complex128")
-        out_units = C.c_char_p("VEL")
+        out_units = C.c_char_p(out_units)
 
         clibevresp.check_channel(C.pointer(chan))
         clibevresp.norm_resp(C.pointer(chan), -1, 0)
