@@ -2021,8 +2021,8 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
     def attach_response(self, inventories):
         """
         Search for and attach channel response to the trace as
-        trace.stats.response. Raises an exception if no matching response can
-        be found.
+        :class:`Trace`.stats.response. Raises an exception if no matching
+        response can be found.
 
         :type inventories: :class:`~obspy.station.inventory.Inventory` or
             :class:`~obspy.station.network.Network` or a list containing
