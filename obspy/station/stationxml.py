@@ -350,6 +350,11 @@ def _read_response_stage(stage_elem, _ns):
         if elem is not None:
             break
     else:
+        # Gain only blockettes are being used in the wild.
+        if stage_gain is not None and stage_gain_frequency is not None:
+            return obspy.station.ResponseStage(
+                stage_sequence_number, stage_gain, stage_gain_frequency,
+                input_units=None, output_units=None)
         # Raise if none of the previous ones has been found.
         msg = "Could not find a valid Response Stage Type."
         raise ValueError(msg)
