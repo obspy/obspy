@@ -391,36 +391,35 @@ def CatchOutput():
         out.stdout = ""
         out.stderr = ""
 
-        with os.fdopen(os.dup(sys.stdout.fileno()), "w") as old_stdout, \
-                os.fdopen(os.dup(sys.stderr.fileno()), "w") as old_stderr:
-
-            sys.stdout.flush()
-            sys.stderr.flush()
-
-            os.dup2(stdout_file, fd_stdout)
-            os.dup2(stderr_file, fd_stderr)
-
-            os.close(stdout_file)
-            os.close(stderr_file)
-
-            try:
-                yield out
-            finally:
+        with os.fdopen(os.dup(sys.stdout.fileno()), "w") as old_stdout:
+            with os.fdopen(os.dup(sys.stderr.fileno()), "w") as old_stderr:
                 sys.stdout.flush()
                 sys.stderr.flush()
-                os.fsync(sys.stdout.fileno())
-                os.fsync(sys.stderr.fileno())
-                sys.stdout = sys.__stdout__
-                sys.stderr = sys.__stderr__
-                sys.stdout.flush()
-                sys.stderr.flush()
-                os.dup2(old_stdout.fileno(), sys.stdout.fileno())
-                os.dup2(old_stderr.fileno(), sys.stderr.fileno())
 
-                with open(stdout_filename, "r") as fh:
-                    out.stdout = fh.read()
-                with open(stderr_filename, "r") as fh:
-                    out.stderr = fh.read()
+                os.dup2(stdout_file, fd_stdout)
+                os.dup2(stderr_file, fd_stderr)
+
+                os.close(stdout_file)
+                os.close(stderr_file)
+
+                try:
+                    yield out
+                finally:
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    os.fsync(sys.stdout.fileno())
+                    os.fsync(sys.stderr.fileno())
+                    sys.stdout = sys.__stdout__
+                    sys.stderr = sys.__stderr__
+                    sys.stdout.flush()
+                    sys.stderr.flush()
+                    os.dup2(old_stdout.fileno(), sys.stdout.fileno())
+                    os.dup2(old_stderr.fileno(), sys.stderr.fileno())
+
+                    with open(stdout_filename, "r") as fh:
+                        out.stdout = fh.read()
+                    with open(stderr_filename, "r") as fh:
+                        out.stderr = fh.read()
 
     finally:
         # Make sure to always close and remove the temporary files.
