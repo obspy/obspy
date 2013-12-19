@@ -1117,6 +1117,7 @@ class Trace(object):
             raise Exception(msg)
         return self
 
+    @_add_processing_info
     def simulate(self, paz_remove=None, paz_simulate=None,
                  remove_sensitivity=True, simulate_sensitivity=True, **kwargs):
         """
@@ -1251,17 +1252,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             paz_simulate=paz_simulate, remove_sensitivity=remove_sensitivity,
             simulate_sensitivity=simulate_sensitivity, **kwargs)
 
-        # add processing information to the stats dictionary
-        if paz_remove:
-            proc_info = "simulate:inverse:%s:sensitivity=%s" % \
-                (paz_remove, remove_sensitivity)
-            self._addProcessingInfo(proc_info)
-        if paz_simulate:
-            proc_info = "simulate:forward:%s:sensitivity=%s" % \
-                (paz_simulate, simulate_sensitivity)
-            self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def filter(self, type, **options):
         """
         Filters the data of the current trace.
@@ -1331,11 +1324,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the filter_functions dictionary
         self.data = func(self.data, df=self.stats.sampling_rate, **options)
-        # add processing information to the stats dictionary
-        proc_info = "filter:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def trigger(self, type, **options):
         """
         Runs a triggering algorithm on the data of the current trace.
@@ -1419,12 +1410,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # the options dictionary is passed as kwargs to the function that is
         # mapped according to the trigger_functions dictionary
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "trigger:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
+    @_add_processing_info
     def resample(self, sampling_rate, window='hanning', no_filter=True,
                  strict_length=False):
         """
@@ -1491,11 +1480,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         num = int(self.stats.npts / factor)
         self.data = resample(self.data, num, window=window)
         self.stats.sampling_rate = sampling_rate
-        # add processing information to the stats dictionary
-        proc_info = "resample:%d:%s" % (sampling_rate, window)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def decimate(self, factor, no_filter=False, strict_length=False):
         """
         Downsample trace data by an integer factor.
@@ -1568,10 +1555,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         from obspy.signal import integerDecimation
         self.data = integerDecimation(self.data, factor)
         self.stats.sampling_rate = self.stats.sampling_rate / float(factor)
-
-        # add processing information to the stats dictionary
-        proc_info = "downsample:integerDecimation:%s" % factor
-        self._addProcessingInfo(proc_info)
         return self
 
     def max(self):
@@ -1619,6 +1602,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         return self.data.std()
 
     @skipIfNoData
+    @_add_processing_info
     def differentiate(self, type='gradient', **options):
         """
         Method to differentiate the trace with respect to time.
@@ -1650,12 +1634,10 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         func = _getFunctionFromEntryPoint('differentiate', type)
         # differentiate
         self.data = func(self.data, self.stats.delta, **options)
-        # add processing information to the stats dictionary
-        proc_info = "differentiate:%s" % type
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
+    @_add_processing_info
     def integrate(self, type='cumtrapz', **options):
         """
         Method to integrate the trace with respect to time.
@@ -1706,13 +1688,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             args = [self.data, self.stats.delta]
         # integrating
         self.data = func(*args, **options)
-        # add processing information to the stats dictionary
-        proc_info = "integrate:%s" % (type)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
     @raiseIfMasked
+    @_add_processing_info
     def detrend(self, type='simple', **options):
         """
         Method to remove a linear trend from the trace.
@@ -1755,13 +1735,11 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             options['type'] = type
         # detrending
         self.data = func(self.data, **options)
-        # add processing information to the stats dictionary
-        proc_info = "detrend:%s:%s" % (type, options)
-        self._addProcessingInfo(proc_info)
         return self
 
     @skipIfNoData
     @taper_API_change()
+    @_add_processing_info
     def taper(self, max_percentage, type='hann', max_length=None,
               side='both', **kwargs):
         """
@@ -1894,12 +1872,9 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             taper = np.hstack((taper_sides[:wlen], np.ones(npts - 2 * wlen),
                                taper_sides[len(taper_sides) - wlen:]))
         self.data = self.data * taper
-        # add processing information to the stats dictionary
-        proc_info = "taper:%s:%s:%s:%s:%s" % (type, str(max_percentage),
-                                              str(max_length), side, kwargs)
-        self._addProcessingInfo(proc_info)
         return self
 
+    @_add_processing_info
     def normalize(self, norm=None):
         """
         Method to normalize the trace to its absolute maximum.
@@ -1951,9 +1926,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         self.data = self.data.astype("float64")
         self.data /= abs(norm)
 
-        # add processing information to the stats dictionary
-        proc_info = "normalize:%s" % norm
-        self._addProcessingInfo(proc_info)
         return self
 
     def copy(self):
