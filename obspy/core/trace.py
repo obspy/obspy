@@ -18,6 +18,8 @@ from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
 import math
 import numpy as np
 import warnings
+from inspect import getcallargs
+import functools
 
 
 class Stats(AttribDict):
@@ -195,6 +197,32 @@ class Stats(AttribDict):
                           'starttime', 'endtime', 'sampling_rate', 'delta',
                           'npts', 'calib']
         return self._pretty_str(priorized_keys)
+
+
+def _add_processing_info(func):
+    """
+    This is a decorator that attaches information about a processing call as a
+    string to the Trace.stats.processing list.
+    """
+    @functools.wraps(func)
+    def new_func(*args, **kwargs):
+        callargs = getcallargs(func, *args, **kwargs)
+        callargs.pop("self")
+        kwargs_ = callargs.pop("kwargs", {})
+        from obspy import __version__
+        info = [__version__, func.__name__]
+        info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
+                 "%s='%s'" % (k, v) for k, v in callargs.iteritems()]
+        info += ["%s=%s" % (k, v) if not isinstance(v, basestring) else
+                 "%s='%s'" % (k, v) for k, v in kwargs_.iteritems()]
+        self = args[0]
+        self._addProcessingInfo(":".join(info))
+        return func(*args, **kwargs)
+
+    new_func.__name__ = func.__name__
+    new_func.__doc__ = func.__doc__
+    new_func.__dict__.update(func.__dict__)
+    return new_func
 
 
 class Trace(object):
