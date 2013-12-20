@@ -766,10 +766,12 @@ class Parser(object):
 
         # Write all other blockettes. Sort by stage number (0 at the end) and
         # the specified blockette id order.
-        order = [53, 54, 55, 56, 60, 61, 62, 57, 58]
+        order = [53, 54, 55, 56, 60, 61, 62, 57, 58, 59]
         blockettes = sorted(
             blockettes[1:],
-            key=lambda x: (x.stage_sequence_number if x.stage_sequence_number
+            key=lambda x: (x.stage_sequence_number
+                           if (hasattr(x, "stage_sequence_number") and
+                               x.stage_sequence_number)
                            else float("inf"), order.index(x.id)))
 
         for blkt in blockettes:
