@@ -11,6 +11,7 @@ Main module containing XML-SEED parser.
 
 from StringIO import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
+from obspy import __version__
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import deprecated_keywords
 from obspy.core.util.decorator import map_example_filename
@@ -351,7 +352,7 @@ class Parser(object):
                     blockettes.append(station[_i])
                     # Write header and the first two lines to the string.
                     header = \
-                        '#\t\t<< obspy.xseed, Version 0.1.3 >>\n' + \
+                        '#\t\t<< obspy, Version %s >>\n' % __version__ + \
                         '#\t\t\n' + \
                         '#\t\t======== CHANNEL RESPONSE DATA ========\n' + \
                         'B050F03     Station:     %s\n' % cur_station + \
