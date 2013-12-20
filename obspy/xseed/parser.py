@@ -763,9 +763,8 @@ class Parser(object):
             'B052F22     Start date:  %s\n' % channel_info['Start date'] +
             'B052F23     End date:    %s\n' % channel_info['End date'] +
             '#\t\t=======================================\n')
-        # Write all other blockettes. Currently now sorting takes place. This
-        # is just an experiment to see how rdseed does it. The Blockettes
-        # might need to be sorted.
+        # Write all other blockettes. Sort by blockette id.
+        blockettes = sorted(blockettes, key=lambda x: x.id)
         for blkt in blockettes[1:]:
             if blkt.id not in RESP_BLOCKETTES:
                 continue
