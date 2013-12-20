@@ -886,7 +886,26 @@ class Response(ComparingObject):
             elif isinstance(blockette, ResponseListResponseStage):
                 raise NotImplementedError
             elif isinstance(blockette, FIRResponseStage):
-                raise NotImplementedError
+                blkt = ew.blkt()
+
+                if blockette.symmetry == "NONE":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_ASYM"]
+                if blockette.symmetry == "ODD":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_1"]
+                if blockette.symmetry == "EVEN":
+                    blkt.type = ew.ENUM_FILT_TYPES["FIR_SYM_2"]
+
+                # The blockette is a fir blockette
+                fir = blkt.blkt_info.fir
+                fir.h0 = 1.0
+                fir.ncoeffs = len(blockette.coefficients)
+
+                # XXX: Find a better way to do this.
+                coeffs = (C.c_double * len(blockette.coefficients))()
+                for i, value in enumerate(blockette.coefficients):
+                    coeffs[i] = float(value)
+                fir.coeffs = C.cast(C.pointer(coeffs),
+                                    C.POINTER(C.c_double))
             elif isinstance(blockette, PolynomialResponseStage):
                 raise NotImplementedError
             else:
