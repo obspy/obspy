@@ -752,13 +752,21 @@ class Response(ComparingObject):
                 "CM": ew.ENUM_UNITS["DIS"],
                 "MM": ew.ENUM_UNITS["DIS"],
                 "M/S": ew.ENUM_UNITS["VEL"],
+                "M/SEC": ew.ENUM_UNITS["VEL"],
                 "NM/S": ew.ENUM_UNITS["VEL"],
+                "NM/SEC": ew.ENUM_UNITS["VEL"],
                 "CM/S": ew.ENUM_UNITS["VEL"],
+                "CM/SEC": ew.ENUM_UNITS["VEL"],
                 "MM/S": ew.ENUM_UNITS["VEL"],
+                "MM/SEC": ew.ENUM_UNITS["VEL"],
                 "M/S**2": ew.ENUM_UNITS["ACC"],
+                "M/SEC**2": ew.ENUM_UNITS["ACC"],
                 "NM/S**2": ew.ENUM_UNITS["ACC"],
+                "NM/SEC**2": ew.ENUM_UNITS["ACC"],
                 "CM/S**2": ew.ENUM_UNITS["ACC"],
+                "CM/SEC**2": ew.ENUM_UNITS["ACC"],
                 "MM/S**2": ew.ENUM_UNITS["ACC"],
+                "MM/SEC**2": ew.ENUM_UNITS["ACC"],
                 "V": ew.ENUM_UNITS["VOLTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "PA": ew.ENUM_UNITS["PRESSURE"]}
@@ -773,11 +781,11 @@ class Response(ComparingObject):
                 value = units_mapping[key]
 
             # Scale factor with the same logic as evalresp.
-            if key in ["CM/S**2", "CM/S*2"]:
+            if key in ["CM/S**2", "CM/S", "CM/SEC", "CM"]:
                 scale_factor[0] = 1.0E2
-            elif key in ["MM/S**2", "MM/S*2"]:
+            elif key in ["MM/S**2", "MM/S", "MM/SEC", "MM"]:
                 scale_factor[0] = 1.0E3
-            elif key in ["NM/S**2", "NM/S*2"]:
+            elif key in ["NM/S**2", "NM/S", "NM/SEC", "NM"]:
                 scale_factor[0] = 1.0E9
 
             return value
