@@ -379,6 +379,10 @@ class VariableString(Field):
             buffer += temp
             i = i + 1
             if self.max_length and i > self.max_length:
+                while True:
+                    tmp = data.read(1)
+                    if tmp == '~':
+                        break
                 return buffer
         return buffer
 
