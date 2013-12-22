@@ -8,6 +8,8 @@ dev:
  - obspy.xseed:
    * allow parsing of oversized VariableString from SEED, but warn and cut
      string to max_length at writing SEED (#701)
+ - obspy.mseed:
+   * libmseed v2.12
 
 0.9.0rc1:
  -  general:

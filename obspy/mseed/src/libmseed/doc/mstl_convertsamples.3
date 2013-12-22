@@ -1,0 +1,48 @@
+.TH MST_CONVERTSAMPLES 3 2013/10/01 "Libmseed API"
+.SH DESCRIPTION
+Convert data samples between numeric types
+
+.SH SYNOPSIS
+.nf
+.B #include <libmseed.h>
+
+.BI "int  \fBmst_convertsamples\fP ( MSTrace *" mst ", char " type ", flag " truncate ");"
+
+.BI "int  \fBmstl_convertsamples\fP ( MSTraceSeg *" seg ", char " type ", flag " truncate ");"
+
+.SH DESCRIPTION
+\fBmst_convertsamples\fP and \fBmst_convertsamples\fP convert any data
+samples associated with an \fIMSTrace\fP or \fIMSTraceSeg\fP to a
+specified \fitype\fP.
+
+The routines can convert between 32-bit integers (type \fIi\fP),
+32-bit floats (type \fIf\fP) and 64-bit doubles (type \fId\fP).
+
+When converting float and double sample types to integer type a simple
+rouding is applied by adding 0.5 to the sample value before converting
+(truncating) to integer.  This compensates for common machine
+representations of floating point values (e.g. "40.0" represented by
+"39.99999999").
+
+If the \fItruncate\fP flag is true data samples will be truncated to
+integers even if loss of sample precision is detected.  If the
+\fItruncate\fP flag is false (0) and loss of precision is detected an
+error is returned.  Loss of precision is determined by testing that
+the difference between the floating point value and the (truncated)
+integer value is greater than 0.000001.
+
+ASCII data samples (type \fIa\fP) cannot be converted, if supplied or
+requested an error will be returned.
+
+.SH RETURN VALUES
+\fBmst_convertsamples\fP and \fBmstl_convertsamples\fP return 0 on
+success and -1 on error.
+
+.SH SEE ALSO
+\fBms_intro(3)\fP.
+
+.SH AUTHOR
+.nf
+Chad Trabant
+IRIS Data Management Center
+.fi
