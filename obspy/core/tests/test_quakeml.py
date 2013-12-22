@@ -440,12 +440,13 @@ class QuakeMLTestCase(unittest.TestCase):
         self.assertEqual(
             fm.resource_id,
             ResourceIdentifier('smi:ISC/fmid=292309'))
-        self.assertEqual(fm.waveform_id.network_code, 'BW')
-        self.assertEqual(fm.waveform_id.station_code, 'FUR')
+        self.assertEqual(len(fm.waveform_id), 2)
+        self.assertEqual(fm.waveform_id[0].network_code, 'BW')
+        self.assertEqual(fm.waveform_id[0].station_code, 'FUR')
         self.assertEqual(
-            fm.waveform_id.resource_uri,
+            fm.waveform_id[0].resource_uri,
             ResourceIdentifier(id="smi:ch.ethz.sed/waveform/201754"))
-        self.assertTrue(isinstance(fm.waveform_id, WaveformStreamID))
+        self.assertTrue(isinstance(fm.waveform_id[0], WaveformStreamID))
         self.assertEqual(
             fm.triggering_origin_id,
             ResourceIdentifier('smi:local/originId=7680412'))

@@ -262,18 +262,23 @@ class Unpickler(object):
             obj.confidence_ellipsoid = ConfidenceEllipsoid()
         return obj
 
+    def _waveform_ids(self, element):
+        objs = []
+        for wid_el in self._xpath('waveformID', element):
+            obj = WaveformStreamID()
+            obj.network_code = wid_el.get('networkCode') or ''
+            obj.station_code = wid_el.get('stationCode') or ''
+            obj.location_code = wid_el.get('locationCode')
+            obj.channel_code = wid_el.get('channelCode')
+            obj.resource_uri = wid_el.text
+            objs.append(obj)
+        return objs
+
     def _waveform_id(self, element):
-        obj = WaveformStreamID()
         try:
-            wid_el = self._xpath('waveformID', element)[0]
-        except:
-            return obj
-        obj.network_code = wid_el.get('networkCode') or ''
-        obj.station_code = wid_el.get('stationCode') or ''
-        obj.location_code = wid_el.get('locationCode')
-        obj.channel_code = wid_el.get('channelCode')
-        obj.resource_uri = wid_el.text
-        return obj
+            return self._waveform_ids(element)[0]
+        except IndexError:
+            return WaveformStreamID()
 
     def _arrival(self, element):
         """
@@ -656,7 +661,7 @@ class Unpickler(object):
         obj = FocalMechanism(force_resource_id=False)
         # required parameter
         # optional parameter
-        obj.waveform_id = self._waveform_id(element)
+        obj.waveform_id = self._waveform_ids(element)
         obj.triggering_origin_id = \
             self._xpath2obj('triggeringOriginID', element)
         obj.azimuthal_gap = self._xpath2obj('azimuthalGap', element, float)
@@ -815,9 +820,9 @@ class Pickler(object):
         element.append(subelement)
 
     def _waveform_id(self, obj, element, required=False):
-        attrib = {}
         if obj is None:
             return
+        attrib = {}
         if obj.network_code:
             attrib['networkCode'] = obj.network_code
         if obj.station_code:
@@ -835,6 +840,10 @@ class Pickler(object):
 
         if len(subelement.attrib) > 0 or required:
             element.append(subelement)
+
+    def _waveform_ids(self, objs, element, required=False):
+        for obj in objs:
+            self._waveform_id(obj, element, required=required)
 
     def _creation_info(self, creation_info, element):
         if creation_info is None:
@@ -1257,7 +1266,7 @@ class Pickler(object):
             'focalMechanism',
             attrib={'publicID': self._id(focal_mechanism.resource_id)})
         # optional parameter
-        self._waveform_id(focal_mechanism.waveform_id, element)
+        self._waveform_ids(focal_mechanism.waveform_id, element)
         self._str(focal_mechanism.triggering_origin_id, element,
                   'triggeringOriginID')
         self._str(focal_mechanism.azimuthal_gap, element,

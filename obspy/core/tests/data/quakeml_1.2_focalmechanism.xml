@@ -6,6 +6,8 @@
       <focalMechanism publicID="smi:ISC/fmid=292309">
         <waveformID networkCode="BW" stationCode="FUR"
           >smi:ch.ethz.sed/waveform/201754</waveformID>
+        <waveformID networkCode="BW" stationCode="MANZ"
+          >smi:ch.ethz.sed/waveform/201755</waveformID>
         <triggeringOriginID>smi:local/originId=7680412</triggeringOriginID>
         <azimuthalGap>0.123</azimuthalGap>
         <stationPolarityCount>987</stationPolarityCount>

@@ -2,6 +2,9 @@ dev:
  - obspy.core:
    * check if ndim == 1 when setting Trace.data and raise if necessary,
      see #695
+ - obspy.core:
+   * change waveform_id parameter in obspy.core.event.FocalMechanism to list of
+     WaveformStreamID as specified in QuakeML docs (#633)
 
 0.9.0rc1:
  -  general:

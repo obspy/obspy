@@ -2233,12 +2233,11 @@ __FocalMechanism = _eventTypeClassFactory(
                       ("misfit", float),
                       ("station_distribution_ratio", float),
                       ("method_id", ResourceIdentifier),
-                      ("waveform_id", WaveformStreamID),
                       ("evaluation_mode", EvaluationMode),
                       ("evaluation_status", EvaluationStatus),
                       ("moment_tensor", MomentTensor),
                       ("creation_info", CreationInfo)],
-    class_contains=['comments'])
+    class_contains=['waveform_id', 'comments'])
 
 
 class FocalMechanism(__FocalMechanism):
