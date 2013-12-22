@@ -2276,7 +2276,8 @@ class FocalMechanism(__FocalMechanism):
     :type method_id: :class:`~obspy.core.event.ResourceIdentifier`, optional
     :param method_id: Resource identifier of the method used for determination
         of the focal mechanism.
-    :type waveform_id: :class:`~obspy.core.event.WaveformStreamID`, optional
+    :type waveform_id: list of :class:`~obspy.core.event.WaveformStreamID`,
+        optional
     :param waveform_id: Refers to a set of waveform streams from which the
         focal mechanism was derived.
     :type evaluation_mode: str, optional
