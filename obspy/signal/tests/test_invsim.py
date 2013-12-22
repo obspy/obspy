@@ -373,7 +373,7 @@ class InvSimTestCase(unittest.TestCase):
         Asserts that the network, station, location and channel identifiers can
         be used to select difference responses.
         """
-        kwargs = {"filename": os.path.join(self.path, "RESP.OB.AAA..BH_"),
+        kwargs = {"filename": os.path.join(self.path, "RESP.OB.AAA._.BH_"),
                   "t_samp": 0.1, "nfft": 1024, "units": "VEL",
                   "date": UTCDateTime(2013, 1, 1), "network": "OP",
                   "station": "AAA", "locid": "", "freq": False, "debug": False}
