@@ -107,11 +107,10 @@ class FieldsTestCase(unittest.TestCase):
         self.assertEqual(field.write(dt), '~')
         #6 - bad syntax
         orig = ''
-        dt = field.read(StringIO(orig))
-        self.assertEqual(dt, '')
+        self.assertRaises(Exception, field.read, StringIO(orig))
         self.assertEqual(field.write(dt), '~')
         #7
-        orig = '2007,199'
+        orig = '2007,199~'
         dt = field.read(StringIO(orig))
         self.assertEqual(dt, UTCDateTime(2007, 7, 18))
         self.assertEqual(field.write(dt), '2007,199~')

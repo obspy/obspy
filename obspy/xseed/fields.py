@@ -99,7 +99,7 @@ class Field(object):
         """
         """
         try:
-            text = self.read(data, blockette.strict)
+            text = self.read(data, strict=blockette.strict)
         except Exception, e:
             if blockette.strict:
                 raise e
@@ -135,7 +135,7 @@ class Field(object):
         # debug
         if blockette.debug:
             print('  %s: %s' % (self, result))
-        return self.write(result)
+        return self.write(result, strict=blockette.strict)
 
     def getXML(self, blockette, pos=0):
         """
@@ -234,7 +234,7 @@ class Integer(Field):
         temp = data.read(self.length)
         return self.convert(temp)
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         format_str = "%%0%dd" % self.length
         try:
             temp = int(data)
@@ -277,7 +277,7 @@ class Float(Field):
         temp = data.read(self.length)
         return self.convert(temp)
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         format_str = "%%0%ds" % self.length
         try:
             temp = float(data)
@@ -308,7 +308,7 @@ class FixedString(Field):
     def read(self, data, strict=False):  # @UnusedVariable
         return self._formatString(data.read(self.length).strip())
 
-    def write(self, data):
+    def write(self, data, strict=False):  # @UnusedVariable
         # Leave fixed length alphanumeric fields left justified (no leading
         # spaces), and pad them with spaces (after the field’s contents).
         format_str = "%%-%ds" % self.length
@@ -376,22 +376,37 @@ class VariableString(Field):
             temp = data.read(1)
             if temp == '~':
                 return buffer
+            elif temp == '':
+                # raise if EOF is reached
+                raise SEEDTypeException('Variable string has no terminator')
             buffer += temp
             i = i + 1
-            if self.max_length and i > self.max_length:
-                return buffer
         return buffer
 
-    def write(self, data):
-        result = self._formatString(data) + '~'
+    def write(self, data, strict=False):  # @UnusedVariable
+        result = self._formatString(data)
         if self.max_length and len(result) > self.max_length + 1:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.attribute_name)
-            raise SEEDTypeException(msg)
+                  (len(result), self.max_length, self.attribute_name)
+            if strict:
+                raise SEEDTypeException(msg)
+            msg += ' Reducing to %d chars.' % (self.max_length)
+            warnings.warn(msg, UserWarning)
+            result = result[:self.max_length]
+        # MSEED manual p. 30: Character counts for variable length fields do
+        # not include the tilde terminator - however this is not valid for
+        # minimum sizes - e.g. optional date fields in Blockette 10
+        # so we add here the terminator string, and check minimum size below
+        result += '~'
         if len(result) < self.min_length:
             msg = "Invalid field length %d of %d in %s." % \
-                  (len(result), self.length, self.attribute_name)
-            raise SEEDTypeException(msg)
+                  (len(result), self.min_length, self.attribute_name)
+            if strict:
+                raise SEEDTypeException(msg)
+            delta = self.min_length - len(result)
+            msg += ' Adding %d space(s).' % (delta)
+            warnings.warn(msg, UserWarning)
+            result = ' ' * delta + result
         return result
 
 

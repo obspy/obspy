@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 
 from glob import iglob
-from lxml import etree
-from obspy.xseed.blockette import Blockette054, Blockette060
+from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
 from obspy.xseed.blockette.blockette import BlocketteLengthException
+from obspy.xseed.fields import SEEDTypeException
 import os
 import sys
 import unittest
+import warnings
+
+from lxml import etree
 
 
 class BlocketteTestCase(unittest.TestCase):
@@ -190,6 +193,38 @@ class BlocketteTestCase(unittest.TestCase):
         blkt = Blockette060()
         self.assertEqual(blkt.blockette_id, "060")
         self.assertEqual(blkt.id, 60)
+
+    def test_issue701(self):
+        """
+        Testing an oversized site name.
+        """
+        b050_orig = "0500168ANTF +43.564000  +7.123000  +54.0   6  0" + \
+            "Antibes - 06004 - Alpes-Maritimes - Provence-Alpes-Côte d'" + \
+            "Azur - France~ 363210102003,211,11:18:00~2004,146,08:52:00~NFR"
+        b050_cut = "0500166ANTF +43.564000  +7.123000  +54.00006000" + \
+            "Antibes - 06004 - Alpes-Maritimes - Provence-Alpes-Côte d'A~" + \
+            "0363210102003,211,11:18:00.0000~2004,146,08:52:00.0000~NFR"
+        # reading should work but without issues
+        blockette = Blockette050()
+        blockette.parseSEED(b050_orig)
+        self.assertEquals(len(blockette.site_name), 72)
+        # writing raises an UserWarning by default
+        with warnings.catch_warnings(record=True):
+            warnings.simplefilter('error', UserWarning)
+            self.assertRaises(UserWarning, blockette.getSEED)
+            # Now ignore the warnings and test the default values.
+            warnings.simplefilter('ignore', UserWarning)
+            # writing should cut to 60 chars
+            out = blockette.getSEED()
+            self.assertEquals(out, b050_cut)
+            # reading it again should have cut length
+            blockette = Blockette050()
+            blockette.parseSEED(out)
+            self.assertEquals(len(blockette.site_name), 60)
+        # writing with strict=True will raise
+        blockette = Blockette050(strict=True)
+        blockette.parseSEED(b050_orig)
+        self.assertRaises(SEEDTypeException, blockette.getSEED)
 
 
 def suite():
