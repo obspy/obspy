@@ -53,12 +53,20 @@ class WADLParser(object):
         parameters = self._xpath(
             doc, "/application/resources/resource/resource/"
             "method[@id='query'][@name='GET']/request/param")
-        # XXX: USGS is special right now. They have to make it one layer
-        # deeper. Remove once they fix it.
-        if not parameters and "usgs" in url.lower():
-            parameters = self._xpath(
-                doc, "/application/resources/resource/"
-                "method[@id='query'][@name='GET']/request/param")
+        if not parameters:
+            # XXX: USGS is special right now. They have to make it one layer
+            # deeper. Remove once they fix it.
+            if "usgs" in url.lower():
+                parameters = self._xpath(
+                    doc, "/application/resources/resource/"
+                    "method[@id='query'][@name='GET']/request/param")
+            # XXX: ETHZ wadl is special right now. Remove when this is fixed
+            # - localhost adress
+            # - different wadl structuring
+            elif "localhost" in url.lower():
+                parameters = self._xpath(
+                    doc, "/application/"
+                    "method[@id='queryGET'][@name='GET']/request/param")
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
