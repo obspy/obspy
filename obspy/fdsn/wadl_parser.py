@@ -12,10 +12,9 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import UTCDateTime
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
+    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES, PARAM_TYPE_MAP
 
 from lxml import etree
 import warnings
@@ -61,12 +60,17 @@ class WADLParser(object):
                     doc, "/application/resources/resource/"
                     "method[@id='query'][@name='GET']/request/param")
             # XXX: ETHZ wadl is special right now. Remove when this is fixed
-            # - localhost adress
+            # - localhost address
             # - different wadl structuring
             elif "localhost" in url.lower():
-                parameters = self._xpath(
-                    doc, "/application/"
-                    "method[@id='queryGET'][@name='GET']/request/param")
+                if "dataselect" in url.lower():
+                    parameters = self._xpath(
+                        doc, "/application/"
+                        "method[@id='queryGET'][@name='GET']/request/param")
+                elif "event" in url.lower() or "station" in url.lower():
+                    parameters = self._xpath(
+                        doc, "/application/resources/resource[@path='query']/"
+                        "method[@name='GET']/request/param")
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
@@ -120,19 +124,12 @@ class WADLParser(object):
                 param_type = DEFAULT_TYPES[name]
             else:
                 param_type = str
-        elif param_type in ["xs:date", "xs:dateTime"]:
-            param_type = UTCDateTime
-        elif param_type == "xs:string":
-            param_type = str
-        elif param_type == "xs:double":
-            param_type = float
-        elif param_type in ["xs:long", "xs:int", "xs:integer"]:
-            param_type = int
-        elif param_type == "xs:boolean":
-            param_type = bool
         else:
-            msg = "Unknown parameter type '%s' in WADL." % param_type
-            raise ValueError(msg)
+            try:
+                param_type = PARAM_TYPE_MAP[param_type]
+            except KeyError:
+                msg = "Unknown parameter type '%s' in WADL." % param_type
+                raise ValueError(msg)
 
         default_value = param_doc.get("default")
         if default_value is not None:

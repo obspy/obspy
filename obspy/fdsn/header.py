@@ -121,6 +121,26 @@ DEFAULT_TYPES = {
     "contributor": str,
     "updatedafter": UTCDateTime}
 
+PARAM_TYPE_MAP = {
+    "xs:date": UTCDateTime,
+    "xs:dateTime": UTCDateTime,
+    "xs:string": str,
+    "xs:double": float,
+    "xs:long": int,
+    "xs:int": int,
+    "xs:integer": int,
+    "xs:boolean": bool,
+    "xsd:date": UTCDateTime,
+    "xsd:dateTime": UTCDateTime,
+    "xsd:string": str,
+    "xsd:double": float,
+    "xsd:float": float,
+    "xsd:long": int,
+    "xsd:int": int,
+    "xsd:integer": int,
+    "xsd:boolean": bool,
+    }
+
 # This list collects WADL parameters that will not be parsed because they are
 # not useful for the ObsPy client.
 # Current the nodata parameter used by IRIS is part of that list. The ObsPy
