@@ -12,9 +12,10 @@ and should be removed once the datacenters are fully standard compliant.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from obspy import UTCDateTime
 from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
-    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES, PARAM_TYPE_MAP
+    WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
 
 from lxml import etree
 import warnings
@@ -49,28 +50,7 @@ class WADLParser(object):
             self._short_to_long_mapping[item[1]] = item[0]
 
         # Retrieve all the parameters.
-        parameters = self._xpath(
-            doc, "/application/resources/resource/resource/"
-            "method[@id='query'][@name='GET']/request/param")
-        if not parameters:
-            # XXX: USGS is special right now. They have to make it one layer
-            # deeper. Remove once they fix it.
-            if "usgs" in url.lower():
-                parameters = self._xpath(
-                    doc, "/application/resources/resource/"
-                    "method[@id='query'][@name='GET']/request/param")
-            # XXX: ETHZ wadl is special right now. Remove when this is fixed
-            # - localhost address
-            # - different wadl structuring
-            elif "localhost" in url.lower():
-                if "dataselect" in url.lower():
-                    parameters = self._xpath(
-                        doc, "/application/"
-                        "method[@id='queryGET'][@name='GET']/request/param")
-                elif "event" in url.lower() or "station" in url.lower():
-                    parameters = self._xpath(
-                        doc, "/application/resources/resource[@path='query']/"
-                        "method[@name='GET']/request/param")
+        parameters = self._xpath(doc, "//method[@name='GET']/request/param")
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
@@ -125,9 +105,18 @@ class WADLParser(object):
             else:
                 param_type = str
         else:
-            try:
-                param_type = PARAM_TYPE_MAP[param_type]
-            except KeyError:
+            p = param_type.lower()
+            if "date" in p:
+                param_type = UTCDateTime
+            elif "string" in p:
+                param_type = str
+            elif "double" in p or "float" in p:
+                param_type = float
+            elif "long" in p or "int" in p:
+                param_type = int
+            elif "bool" in p:
+                param_type = bool
+            else:
                 msg = "Unknown parameter type '%s' in WADL." % param_type
                 raise ValueError(msg)
 
