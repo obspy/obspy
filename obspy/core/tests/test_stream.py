@@ -656,7 +656,7 @@ class StreamTestCase(unittest.TestCase):
         # Sorting without a list or a wrong item string should fail.
         self.assertRaises(TypeError, stream.sort, keys=1)
         self.assertRaises(TypeError, stream.sort, keys='sampling_rate')
-        self.assertRaises(TypeError, stream.sort, keys=['npts', 'starttime',
+        self.assertRaises(KeyError, stream.sort, keys=['npts', 'starttime',
                                                         'wrong_value'])
 
     def test_sortingTwice(self):

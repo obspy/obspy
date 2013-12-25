@@ -1273,6 +1273,12 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
+        # check if list
+        msg = "keys must be a list of strings. Always available items to " + \
+            "sort after: \n'network', 'station', 'channel', 'location', " + \
+            "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
+        if not isinstance(keys, list):
+            raise TypeError(msg)
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
