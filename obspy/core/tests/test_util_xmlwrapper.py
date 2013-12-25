@@ -1,8 +1,11 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
 # -*- coding: utf-8 -*-
 from lxml import etree as lxml_etree
 from xml.etree import ElementTree as xml_etree
 from obspy.core.util.xmlwrapper import XMLParser, tostring
-import StringIO
+import io
 import os
 import unittest
 
@@ -49,7 +52,7 @@ class XMLWrapperTestCase(unittest.TestCase):
         XMLParser(fh)
         fh.close()
         # 4 - StringIO
-        data = StringIO.StringIO(XML_DOC)
+        data = io.StringIO(XML_DOC)
         XMLParser(data)
         # 5 - with xml parsed XML documents
         xml_doc = xml_etree.parse(self.iris_xml)

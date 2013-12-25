@@ -80,6 +80,7 @@ UTCDateTime(2009, 8, 24, 0, 20, 3)
 
 .. _NumPy: http://docs.scipy.org
 """
+from __future__ import unicode_literals
 
 # don't change order
 from obspy.core.utcdatetime import UTCDateTime

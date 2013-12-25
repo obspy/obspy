@@ -1,11 +1,16 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import str
+from future.builtins import open
 # -*- coding: utf-8 -*-
 
 from obspy import Trace, read
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile, _getEntryPoints
 from pkg_resources import load_entry_point
-import StringIO
-import cStringIO
+import io
+import io
 import numpy as np
 import os
 import threading
@@ -31,7 +36,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
             open(tmpfile, 'wb').close()
             formats_ep = _getEntryPoints('obspy.plugin.waveform', 'readFormat')
             # using format keyword
-            for ep in formats_ep.values():
+            for ep in list(formats_ep.values()):
                 isFormat = load_entry_point(ep.dist.key,
                                             'obspy.plugin.waveform.' + ep.name,
                                             'isFormat')
@@ -92,25 +97,25 @@ class WaveformPluginsTestCase(unittest.TestCase):
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # StringIO without format
-                            temp = StringIO.StringIO(
+                            temp = io.StringIO(
                                 open(outfile, 'rb').read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # StringIO with format
-                            temp = StringIO.StringIO(
+                            temp = io.StringIO(
                                 open(outfile, 'rb').read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # cStringIO without format
-                            temp = cStringIO.StringIO(
+                            temp = io.StringIO(
                                 open(outfile, 'rb').read())
                             st = read(temp)
                             self.assertEqual(len(st), 1)
                             self.assertEqual(st[0].stats._format, format)
                             # cStringIO with format
-                            temp = cStringIO.StringIO(
+                            temp = io.StringIO(
                                 open(outfile, 'rb').read())
                             st = read(temp, format=format)
                             self.assertEqual(len(st), 1)
@@ -146,7 +151,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
         modules for false positives.
         """
         formats_ep = _getEntryPoints('obspy.plugin.waveform', 'isFormat')
-        formats = formats_ep.values()
+        formats = list(formats_ep.values())
         # Collect all false positives.
         false_positives = []
         # Big loop over every format.
@@ -224,7 +229,7 @@ class WaveformPluginsTestCase(unittest.TestCase):
                     streams.append(st)
                 # Read the ten files at one and save the output in the just
                 # created class.
-                for _i in xrange(n_threads):
+                for _i in range(n_threads):
                     thread = threading.Thread(target=testFunction,
                                               args=(streams,))
                     thread.start()

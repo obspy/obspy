@@ -8,6 +8,11 @@ Various additional utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import int
+from future.builtins import open
 from contextlib import contextmanager
 import os
 import sys
@@ -211,7 +216,7 @@ except TypeError:
         # lets get the data
         try:
             data = np.loadtxt(*args, **kwargs)
-        except IOError, e:
+        except IOError as e:
             # raises in older versions if no data could be read
             if 'reached before encountering data' in str(e):
                 # return empty array

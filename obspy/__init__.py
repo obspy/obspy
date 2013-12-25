@@ -41,14 +41,14 @@ from obspy.station import read_inventory
 from obspy.core.util.base import make_format_plugin_table
 read.__doc__ = \
     read.__doc__ % make_format_plugin_table("waveform", "read", numspaces=4)
-Stream.write.im_func.func_doc = \
-    Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
-                                                    numspaces=8)
+#Stream.write.im_func.func_doc = \
+#    Stream.write.__doc__ % make_format_plugin_table("waveform", "write",
+#                                                    numspaces=8)
 readEvents.__doc__ = \
     readEvents.__doc__ % make_format_plugin_table("event", "read", numspaces=4)
-Catalog.write.im_func.func_doc = \
-    Catalog.write.__doc__ % make_format_plugin_table("event", "write",
-                                                     numspaces=8)
+#Catalog.write.im_func.func_doc = \
+#    Catalog.write.__doc__ % make_format_plugin_table("event", "write",
+#                                                     numspaces=8)
 
 
 if __name__ == '__main__':

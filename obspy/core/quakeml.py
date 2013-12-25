@@ -15,6 +15,12 @@ by a distributed team in a transparent collaborative manner.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from future.builtins import int
+from future.builtins import str
 from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     EventDescription, OriginUncertainty, OriginQuality, CompositeTime, \
     ConfidenceEllipsoid, StationMagnitude, Comment, WaveformStreamID, Pick, \
@@ -23,7 +29,7 @@ from obspy.core.event import Catalog, Event, Origin, CreationInfo, Magnitude, \
     ResourceIdentifier, StationMagnitudeContribution
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util.xmlwrapper import XMLParser, tostring, etree
-import StringIO
+import io
 import inspect
 import os
 import warnings
@@ -84,7 +90,7 @@ class Unpickler(object):
         :rtype: :class:`~obspy.core.event.Catalog`
         :returns: ObsPy Catalog object.
         """
-        self.parser = XMLParser(StringIO.StringIO(string))
+        self.parser = XMLParser(io.StringIO(string))
         return self._deserialize()
 
     def _xpath2obj(self, *args, **kwargs):
@@ -1399,7 +1405,7 @@ def writeQuakeML(catalog, filename, validate=False,
     """
     xml_doc = Pickler().dumps(catalog)
 
-    if validate is True and not _validate(StringIO.StringIO(xml_doc)):
+    if validate is True and not _validate(io.StringIO(xml_doc)):
         raise AssertionError(
             "The final QuakeML file did not pass validation.")
 
@@ -1428,7 +1434,7 @@ def readSeisHubEventXML(filename):
     lines.insert(3, '  <eventParameters>')
     lines.append('  </eventParameters>\n')
     lines.append('</quakeml>\n')
-    temp = StringIO.StringIO(''.join(lines))
+    temp = io.StringIO(''.join(lines))
     return readQuakeML(temp)
 
 
@@ -1459,9 +1465,9 @@ def _validate(xml_file, verbose=False):
 
     # Pretty error printing if the validation fails.
     if verbose and valid is not True:
-        print "Error validating QuakeML file:"
+        print("Error validating QuakeML file:")
         for entry in relaxng.error_log:
-            print "\t%s" % entry
+            print("\t%s" % entry)
     return valid
 
 

@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import str
 # -*- coding: utf-8 -*-
 
 import copy
@@ -523,16 +526,16 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         """
         r_dict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
         _r1 = ResourceIdentifier()  # NOQA
-        self.assertEqual(len(r_dict.keys()), 0)
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Adding a ResourceIdentifier with an object that has a reference
         # somewhere will have no effect because it gets garbage collected
         # pretty much immediately.
         _r2 = ResourceIdentifier(referred_object=UTCDateTime())  # NOQA
-        self.assertEqual(len(r_dict.keys()), 0)
+        self.assertEqual(len(list(r_dict.keys())), 0)
         # Give it a reference and it will stick around.
         obj = UTCDateTime()
         _r3 = ResourceIdentifier(referred_object=obj)  # NOQA
-        self.assertEqual(len(r_dict.keys()), 1)
+        self.assertEqual(len(list(r_dict.keys())), 1)
 
     def test_adding_a_referred_object_after_creation(self):
         """
@@ -568,10 +571,10 @@ class ResourceIdentifierTestCase(unittest.TestCase):
         res2 = ResourceIdentifier(referred_object=obj_b)
         # Now two keys should be in the global dict.
         rdict = ResourceIdentifier._ResourceIdentifier__resource_id_weak_dict
-        self.assertEqual(len(rdict.keys()), 2)
+        self.assertEqual(len(list(rdict.keys())), 2)
         # Deleting the objects should also remove the from the dictionary.
         del obj_a, obj_b
-        self.assertEqual(len(rdict.keys()), 0)
+        self.assertEqual(len(list(rdict.keys())), 0)
         # references are still around but no longer have associates objects.
         self.assertEqual(res1.getReferredObject(), None)
         self.assertEqual(res2.getReferredObject(), None)

@@ -1,12 +1,17 @@
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import open
 # -*- coding: utf-8 -*-
 from copy import deepcopy
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.stream import writePickle, readPickle, isPickle
 from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.base import NamedTemporaryFile, getMatplotlibVersion
-from obspy.xseed import Parser
+#from obspy.xseed import Parser
 from obspy.core.util.decorator import skipIf
-import cPickle
+import pickle
 import numpy as np
 import os
 import pickle
@@ -104,7 +109,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(8, len(stream))
         # This will not create copies of Traces and thus the objects should
         # be identical (and the Traces attributes should be identical).
-        for _i in xrange(4):
+        for _i in range(4):
             self.assertEqual(stream[_i], stream[_i + 4])
             self.assertEqual(stream[_i] == stream[_i + 4], True)
             self.assertEqual(stream[_i] != stream[_i + 4], False)
@@ -116,7 +121,7 @@ class StreamTestCase(unittest.TestCase):
         new_stream = stream + other_stream
         self.assertEqual(9, len(new_stream))
         # The traces of all streams are copied.
-        for _i in xrange(8):
+        for _i in range(8):
             self.assertEqual(new_stream[_i], stream[_i])
             self.assertEqual(new_stream[_i] is stream[_i], True)
         # Also test for the newly added stream.
@@ -304,9 +309,9 @@ class StreamTestCase(unittest.TestCase):
              4.125, 824.0)]
         # Assert the number of gaps.
         self.assertEqual(len(mseed_gap_list), len(gap_list))
-        for _i in xrange(len(mseed_gap_list)):
+        for _i in range(len(mseed_gap_list)):
             # Compare the string values directly.
-            for _j in xrange(6):
+            for _j in range(6):
                 self.assertEqual(gap_list[_i][_j], mseed_gap_list[_i][_j])
             # The small differences are probably due to rounding errors.
             self.assertAlmostEqual(mseed_gap_list[_i][6], gap_list[_i][6],
@@ -365,7 +370,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all remaining Traces.
         self.assertEqual(2, len(stream))
         self.assertEqual(2, len(traces))
-        for _i in xrange(len(traces)):
+        for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -491,7 +496,7 @@ class StreamTestCase(unittest.TestCase):
         # Compare all Traces.
         self.assertEqual(4, len(stream))
         self.assertEqual(4, len(traces))
-        for _i in xrange(len(traces)):
+        for _i in range(len(traces)):
             self.assertEqual(traces[_i].stats, stream[_i].stats)
             np.testing.assert_array_equal(traces[_i].data, stream[_i].data)
 
@@ -784,7 +789,7 @@ class StreamTestCase(unittest.TestCase):
         self.assertEqual(len(stream[3]), 50668)
         self.assertEqual(stream[0].stats.starttime, start)
         self.assertEqual(stream[3].stats.endtime, end)
-        for i in xrange(4):
+        for i in range(4):
             self.assertEqual(stream[i].stats.sampling_rate, 200)
             self.assertEqual(stream[i].getId(), 'BW.BGLD..EHE')
         stream.verify()
@@ -891,7 +896,7 @@ class StreamTestCase(unittest.TestCase):
                          UTCDateTime("2007-12-31T23:59:59.915000"))
         self.assertEqual(st2[3].stats.endtime,
                          UTCDateTime("2008-01-01T00:04:31.790000"))
-        for i in xrange(4):
+        for i in range(4):
             self.assertEqual(st2[i].stats.sampling_rate, 200)
             self.assertEqual(st2[i].getId(), 'BW.BGLD..EHE')
 
@@ -983,7 +988,7 @@ class StreamTestCase(unittest.TestCase):
         # create a stream with multiple traces overlapping
         trace1 = Trace(data=np.empty(10))
         traces = [trace1]
-        for _ in xrange(10):
+        for _ in range(10):
             trace = Trace(data=np.empty(10))
             trace.stats.starttime = \
                 traces[-1].stats.endtime - trace1.stats.delta
@@ -1203,18 +1208,18 @@ class StreamTestCase(unittest.TestCase):
         st = Stream([tr])
         st.verify()
         # protocol 0 (ASCII)
-        temp = cPickle.dumps(st, protocol=0)
-        st2 = cPickle.loads(temp)
+        temp = pickle.dumps(st, protocol=0)
+        st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
         # protocol 1 (old binary)
-        temp = cPickle.dumps(st, protocol=1)
-        st2 = cPickle.loads(temp)
+        temp = pickle.dumps(st, protocol=1)
+        st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
         # protocol 2 (new binary)
-        temp = cPickle.dumps(st, protocol=2)
-        st2 = cPickle.loads(temp)
+        temp = pickle.dumps(st, protocol=2)
+        st2 = pickle.loads(temp)
         np.testing.assert_array_equal(st[0].data, st2[0].data)
         self.assertEqual(st[0].stats, st2[0].stats)
 
@@ -1438,7 +1443,7 @@ class StreamTestCase(unittest.TestCase):
         st.trim(t + 3.5, t + 6.5)
         start = [4.0, 4.25, 4.5, 3.75, 4.0]
         end = [6.0, 6.25, 6.50, 5.75, 6.0]
-        for i in xrange(len(st)):
+        for i in range(len(st)):
             self.assertEqual(3, st[i].stats.npts)
             self.assertEqual(st[i].stats.starttime.timestamp, start[i])
             self.assertEqual(st[i].stats.endtime.timestamp, end[i])
@@ -1459,7 +1464,7 @@ class StreamTestCase(unittest.TestCase):
         st.trim(t - 3.5, t + 16.5, pad=True)
         start = [-4.0, -3.75, -3.5, -4.25, -4.0]
         end = [17.0, 17.25, 17.50, 16.75, 17.0]
-        for i in xrange(len(st)):
+        for i in range(len(st)):
             self.assertEqual(22, st[i].stats.npts)
             self.assertEqual(st[i].stats.starttime.timestamp, start[i])
             self.assertEqual(st[i].stats.endtime.timestamp, end[i])
@@ -1480,7 +1485,7 @@ class StreamTestCase(unittest.TestCase):
         start = [4.00, 4.25, 3.50, 3.75, 4.00]
         end = [6.00, 6.25, 6.50, 5.75, 6.00]
         npts = [3, 3, 4, 3, 3]
-        for i in xrange(len(st)):
+        for i in range(len(st)):
             self.assertEqual(st[i].stats.npts, npts[i])
             self.assertEqual(st[i].stats.starttime.timestamp, start[i])
             self.assertEqual(st[i].stats.endtime.timestamp, end[i])
@@ -1501,7 +1506,7 @@ class StreamTestCase(unittest.TestCase):
         start = [-3.00, -2.75, -3.50, -3.25, -3.00]
         end = [16.00, 16.25, 16.50, 15.75, 16.00]
         npts = [20, 20, 21, 20, 20]
-        for i in xrange(len(st)):
+        for i in range(len(st)):
             self.assertEqual(st[i].stats.npts, npts[i])
             self.assertEqual(st[i].stats.starttime.timestamp, start[i])
             self.assertEqual(st[i].stats.endtime.timestamp, end[i])

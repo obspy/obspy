@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import super
+from future.builtins import str
 # -*- coding: utf-8 -*-
 """
 Testing utilities for ObsPy.
@@ -17,7 +21,7 @@ import os
 import glob
 import unittest
 import doctest
-import StringIO
+import io
 import shutil
 import warnings
 
@@ -326,7 +330,7 @@ def check_flake8():
                 files.append(py_file)
     flake8_style = get_style_guide(parse_argv=False,
                                    config_file=flake8.main.DEFAULT_CONFIG)
-    sys.stdout = StringIO.StringIO()
+    sys.stdout = io.StringIO()
     report = flake8_style.check_files(files)
     sys.stdout.seek(0)
     message = sys.stdout.read()

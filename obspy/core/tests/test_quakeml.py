@@ -1,3 +1,9 @@
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from future.builtins import str
 # -*- coding: utf-8 -*-
 
 from obspy.core.event import ResourceIdentifier, WaveformStreamID, Magnitude, \
@@ -8,7 +14,7 @@ from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
 from obspy.core.util.xmlwrapper import LXML_ETREE
 from xml.etree.ElementTree import tostring, fromstring
-import StringIO
+import io
 import difflib
 import math
 import os
@@ -56,7 +62,7 @@ class QuakeMLTestCase(unittest.TestCase):
         has_error = False
         for line in unified_diff:  # pragma: no cover
             has_error = True
-            print line
+            print(line)
         if has_error:  # pragma: no cover
             msg = "Strings are not equal."
             raise AssertionError(msg)
@@ -598,11 +604,11 @@ class QuakeMLTestCase(unittest.TestCase):
                 continue
             # Assign clearer names.
             enum_name = module_item_name
-            enum_values = [_i.lower() for _i in module_item.keys()]
+            enum_values = [_i.lower() for _i in list(module_item.keys())]
             all_enums[enum_name] = enum_values
         # Now loop over all enums defined in the xsd file and check them.
-        for enum_name, enum_items in xsd_enum_definitions.iteritems():
-            self.assertTrue(enum_name in all_enums.keys())
+        for enum_name, enum_items in xsd_enum_definitions.items():
+            self.assertTrue(enum_name in list(all_enums.keys()))
             # Check that also all enum items are available.
             all_items = all_enums[enum_name]
             all_items = [_i.lower() for _i in all_items]
@@ -695,7 +701,7 @@ class QuakeMLTestCase(unittest.TestCase):
 
         # write QuakeML file
         cat = Catalog(events=[ev])
-        memfile = StringIO.StringIO()
+        memfile = io.StringIO()
         cat.write(memfile, format="quakeml", validate=IS_RECENT_LXML)
 
         memfile.seek(0, 0)

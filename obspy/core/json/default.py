@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future.builtins import str
 # -*- coding: utf-8 -*-
 """
 JSON Encoder default function
@@ -61,9 +63,9 @@ class Default(object):
             # Map to a serializable dict
             # Leave out nulls, empty strings, list, dicts, except for numbers
             if self.OMIT_NULLS:
-                return dict((k, v) for k, v in obj.iteritems() if v or v == 0)
+                return dict((k, v) for k, v in obj.items() if v or v == 0)
             else:
-                return dict((k, v) for k, v in obj.iteritems())
+                return dict((k, v) for k, v in obj.items())
         elif isinstance(obj, Catalog):
             # Catalog isn't a dict
             return dict((k, getattr(obj, k))

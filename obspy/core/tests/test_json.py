@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future import standard_library
 # -*- coding: utf-8 -*-
 
 from obspy.core.json import Default, get_dump_kwargs, writeJSON
@@ -6,7 +8,7 @@ import os
 import unittest
 import warnings
 import json
-import StringIO
+import io
 
 warnings.filterwarnings("ignore")
 
@@ -57,14 +59,14 @@ class JSONTestCase(unittest.TestCase):
         self.assertTrue(len(s1) < len(s2))
 
     def test_write_json(self):
-        memfile = StringIO.StringIO()
+        memfile = io.StringIO()
         writeJSON(self.c, memfile)
         memfile.seek(0, 0)
         # Verify json module can load
         j = json.load(memfile)
         self.assertTrue(isinstance(j, dict))
         # Test registered method call
-        memfile = StringIO.StringIO()
+        memfile = io.StringIO()
         self.c.write(memfile, format="json")
         memfile.seek(0, 0)
         # Verify json module can load

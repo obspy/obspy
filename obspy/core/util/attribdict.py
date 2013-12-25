@@ -8,6 +8,7 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 
 import collections
 import copy
@@ -104,7 +105,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in adict.iteritems():
+        for (key, value) in adict.items():
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)
@@ -122,7 +123,7 @@ class AttribDict(collections.MutableMapping):
             to ``16``.
         :return: String representation of current AttribDict object.
         """
-        keys = self.keys()
+        keys = list(self.keys())
         # determine longest key name for alignment of all items
         try:
             i = max(max([len(k) for k in keys]), min_label_length)

@@ -1,3 +1,5 @@
+from __future__ import print_function
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 from ctypes import CDLL
 from ctypes.util import find_library
@@ -54,10 +56,10 @@ class UtilMiscTestCase(unittest.TestCase):
         with CatchOutput() as out:
             os.system('echo "abc"')
             libc.printf("def\n")
-            print "ghi"
-            print >> sys.stdout, "jkl"
+            print("ghi")
+            print("jkl", file=sys.stdout)
             os.system('echo "123" 1>&2')
-            print >> sys.stderr, "456"
+            print("456", file=sys.stderr)
 
         if platform.system() == "Windows":
             self.assertEqual(out.stdout, '"abc"\ndef\nghi\njkl\n')

@@ -8,6 +8,15 @@ Module for handling ObsPy Catalog and Event objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import map
+from future.builtins import int
+from future.builtins import super
+from future.builtins import round
+from future.builtins import str
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -30,10 +39,10 @@ import inspect
 import numpy as np
 import os
 import re
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import warnings
 import weakref
-import cStringIO
+import io
 
 
 EVENT_ENTRY_POINTS = ENTRY_POINTS['event']
@@ -79,7 +88,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
     if pathname_or_url is None:
         # if no pathname or URL specified, return example catalog
         return _createExampleCatalog()
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         try:
             # first try reading directly
@@ -94,13 +103,13 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         return catalog
     elif pathname_or_url.strip().startswith('<'):
         # XML string
-        return _read(cStringIO.StringIO(pathname_or_url), format, **kwargs)
+        return _read(io.StringIO(pathname_or_url), format, **kwargs)
     elif "://" in pathname_or_url:
         # URL
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib2.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
@@ -155,7 +164,7 @@ def _bool(value):
     and for (empty) strings.
     """
     if value == 0 or\
-       isinstance(value, basestring):
+       isinstance(value, str):
         return True
     return bool(value)
 
@@ -319,7 +328,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
                 error_key = key + "_errors"
                 if hasattr(self, error_key) and\
                    _bool(getattr(self, error_key)):
-                    err_items = getattr(self, error_key).items()
+                    err_items = list(getattr(self, error_key).items())
                     err_items.sort()
                     repr_str += " [%s]" % ', '.join(
                         [str(k) + "=" + str(v) for k, v in err_items])
@@ -359,7 +368,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         def __repr__(self):
             return self.__str__(force_one_line=True)
 
-        def __nonzero__(self):
+        def __bool__(self):
             # We use custom _bool() for testing getattr() since we want
             # zero valued int and float and empty string attributes to be True.
             if any([_bool(getattr(self, _i))
@@ -393,7 +402,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
             inheriting from AttribDict.
             """
             # Pass to the parent method if not a custom property.
-            if name not in self._property_dict.keys():
+            if name not in list(self._property_dict.keys()):
                 AttribDict.__setattr__(self, name, value)
                 return
             attrib_type = self._property_dict[name]
@@ -753,7 +762,7 @@ class ResourceIdentifier(object):
     @id.setter
     def id(self, value):
         self.fixed = True
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             msg = "attribute id needs to be a string."
             raise TypeError(msg)
         self.__dict__["id"] = value
@@ -768,7 +777,7 @@ class ResourceIdentifier(object):
 
     @prefix.setter
     def prefix(self, value):
-        if not isinstance(value, basestring):
+        if not isinstance(value, str):
             msg = "prefix id needs to be a string."
             raise TypeError(msg)
         self._prefix = value
@@ -2639,7 +2648,7 @@ class Catalog(object):
         """
         __setitem__ method of the Catalog object.
         """
-        if not isinstance(index, basestring):
+        if not isinstance(index, str):
             self.events.__setitem__(index, event)
         else:
             super(Catalog, self).__setitem__(index, event)
@@ -3119,7 +3128,7 @@ class Catalog(object):
         map.drawparallels(np.arange(-90, 90, 30))
 
         # compute the native map projection coordinates for events.
-        x, y = map(lons, lats)
+        x, y = list(map(lons, lats))
         # plot labels
         if 100 > len(self.events) > 1:
             for name, xpt, ypt, colorpt in zip(labels, x, y, colors):

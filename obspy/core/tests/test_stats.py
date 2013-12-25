@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 # -*- coding: utf-8 -*-
 
 from obspy import Stream, Trace, UTCDateTime
@@ -171,7 +172,7 @@ class StatsTestCase(unittest.TestCase):
             self.assertEqual(tr.stats.station, 'BBB')
             self.assertEqual(tr.stats['station'], 'BBB')
             self.assertEqual(tr.stats.get('station'), 'BBB')
-            self.assertTrue('BBB' in tr.stats.values())
+            self.assertTrue('BBB' in list(tr.stats.values()))
 
     def test_pickleStats(self):
         """

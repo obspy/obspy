@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
 # -*- coding: utf-8 -*-
 """
 Simple ASCII time series formats
@@ -31,7 +34,7 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from StringIO import StringIO
+from io import StringIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
@@ -132,7 +135,7 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
                 headers[key].write(line.strip() + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in headers.items():
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -197,7 +200,7 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
                 headers[key].write(line.strip().split()[-1] + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.iteritems():
+    for header, data in headers.items():
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()

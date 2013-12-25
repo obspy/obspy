@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from future.builtins import super
+from future.builtins import zip
+from future.builtins import str
 # -*- coding: utf-8 -*-
 """
 Various types used in ObsPy.
@@ -87,9 +91,9 @@ except ImportError:
             if not self:
                 raise KeyError('dictionary is empty')
             if last:
-                key = reversed(self).next()
+                key = next(reversed(self))
             else:
-                key = iter(self).next()
+                key = next(iter(self))
             value = self.pop(key)
             return key, value
 
@@ -118,7 +122,7 @@ except ImportError:
         def __repr__(self):
             if not self:
                 return '%s()' % (self.__class__.__name__,)
-            return '%s(%r)' % (self.__class__.__name__, self.items())
+            return '%s(%r)' % (self.__class__.__name__, list(self.items()))
 
         def copy(self):
             return self.__class__(self)
@@ -134,7 +138,7 @@ except ImportError:
             if isinstance(other, OrderedDict):
                 if len(self) != len(other):
                     return False
-                for p, q in zip(self.items(), other.items()):
+                for p, q in zip(list(self.items()), list(other.items())):
                     if p != q:
                         return False
                 return True
@@ -204,7 +208,7 @@ class Enum(object):
     __isabstractmethod__ = False
 
     def __init__(self, enums, replace={}):
-        self.__enums = OrderedDict(zip([str(e).lower() for e in enums], enums))
+        self.__enums = OrderedDict(list(zip([str(e).lower() for e in enums], enums)))
         self.__replace = replace
 
     def __call__(self, enum):
@@ -215,7 +219,7 @@ class Enum(object):
 
     def get(self, key):
         if isinstance(key, int):
-            return self.__enums.values()[key]
+            return list(self.__enums.values())[key]
         if key in self._Enum__replace:
             return self._Enum__replace[key.lower()]
         return self.__enums.__getitem__(key.lower())
@@ -238,16 +242,16 @@ class Enum(object):
         return value.lower() in self.__enums
 
     def values(self):
-        return self.__enums.values()
+        return list(self.__enums.values())
 
     def keys(self):
-        return self.__enums.keys()
+        return list(self.__enums.keys())
 
     def items(self):
-        return self.__enums.items()
+        return list(self.__enums.items())
 
     def iteritems(self):
-        return self.__enums.iteritems()
+        return iter(self.__enums.items())
 
     def __str__(self):
         """
@@ -255,7 +259,7 @@ class Enum(object):
         >>> print enum
         Enum(["c", "a", "b"])
         """
-        keys = self.__enums.keys()
+        keys = list(self.__enums.keys())
         return "Enum([%s])" % ", ".join(['"%s"' % _i for _i in keys])
 
 

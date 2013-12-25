@@ -1,5 +1,8 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import int
 # -*- coding: utf-8 -*-
-import StringIO
+import io
 import warnings
 try:
     # try using lxml as it is faster
@@ -61,10 +64,10 @@ class XMLParser:
         :type namespace: str, optional
         :param namespace: Document-wide default namespace. Defaults to ``''``.
         """
-        if isinstance(xml_doc, basestring):
+        if isinstance(xml_doc, str):
             # some string - check if it starts with <?xml
             if xml_doc.strip()[0:5].upper().startswith('<?XML'):
-                xml_doc = StringIO.StringIO(xml_doc)
+                xml_doc = io.StringIO(xml_doc)
             # parse XML file
             self.xml_doc = etree.parse(xml_doc)
         elif hasattr(xml_doc, 'seek'):

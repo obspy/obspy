@@ -8,6 +8,15 @@ Module for handling ObsPy Stream objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import range
+from future.builtins import int
+from future.builtins import open
+from future.builtins import round
+from future.builtins import str
 from glob import glob, has_magic
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
@@ -17,13 +26,13 @@ from obspy.core.util.base import ENTRY_POINTS, _readFromPlugin, \
     _getFunctionFromEntryPoint
 from obspy.core.util.decorator import uncompressFile, raiseIfMasked
 from pkg_resources import load_entry_point
-import cPickle
+import pickle
 import copy
 import fnmatch
 import math
 import numpy as np
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import warnings
 
 
@@ -189,7 +198,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
     if pathname_or_url is None:
         # if no pathname or URL specified, return example stream
         st = _createExampleStream(headonly=headonly)
-    elif not isinstance(pathname_or_url, basestring):
+    elif not isinstance(pathname_or_url, str):
         # not a string - we assume a file-like object
         pathname_or_url.seek(0)
         try:
@@ -209,7 +218,7 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib2.urlopen(pathname_or_url).read())
+            fh.write(urllib.request.urlopen(pathname_or_url).read())
             st.extend(_read(fh.name, format, headonly, **kwargs).traces)
     else:
         # some file name
@@ -757,7 +766,7 @@ class Stream(object):
         copied_traces = copy.copy(self.traces)
         self.sort()
         gap_list = []
-        for _i in xrange(len(self.traces) - 1):
+        for _i in range(len(self.traces) - 1):
             # skip traces with different network, station, location or channel
             if self.traces[_i].id != self.traces[_i + 1].id:
                 continue
@@ -813,7 +822,7 @@ class Stream(object):
                     msg = 'Trace object or a list of Trace objects expected!'
                     raise TypeError(msg)
             # Insert each item of the list.
-            for _i in xrange(len(object)):
+            for _i in range(len(object)):
                 self.traces.insert(position + _i, object[_i])
         elif isinstance(object, Stream):
             self.insert(position, object.traces)
@@ -1168,9 +1177,9 @@ class Stream(object):
         Total: 0 gap(s) and 1 overlap(s)
         """
         result = self.getGaps(min_gap, max_gap)
-        print("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
+        print(("%-17s %-27s %-27s %-15s %-8s" % ('Source', 'Last Sample',
                                                 'Next Sample', 'Delta',
-                                                'Samples'))
+                                                'Samples')))
         gaps = 0
         overlaps = 0
         for r in result:
@@ -1178,9 +1187,9 @@ class Stream(object):
                 gaps += 1
             else:
                 overlaps += 1
-            print("%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
-                                                      r[4], r[5], r[6], r[7]))
-        print("Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps))
+            print(("%-17s %-27s %-27s %-15.6f %-8d" % ('.'.join(r[0:4]),
+                                                      r[4], r[5], r[6], r[7])))
+        print(("Total: %d gap(s) and %d overlap(s)" % (gaps, overlaps)))
 
     def remove(self, trace):
         """
@@ -1735,10 +1744,10 @@ class Stream(object):
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for _id in traces_dict.keys():
+        for _id in list(traces_dict.keys()):
             cur_trace = traces_dict[_id].pop(0)
             # loop through traces of same id
-            for _i in xrange(len(traces_dict[_id])):
+            for _i in range(len(traces_dict[_id])):
                 trace = traces_dict[_id].pop(0)
                 # disable sanity checks because there are already done
                 cur_trace = cur_trace.__add__(
@@ -2560,7 +2569,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # check sampling rates and dtypes
         try:
             self._mergeChecks()
-        except Exception, e:
+        except Exception as e:
             if "Can't merge traces with same ids but" in str(e):
                 msg = "Incompatible traces (sampling_rate, dtype, ...) " + \
                       "with same id detected. Doing nothing."
@@ -2586,7 +2595,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         # clear traces of current stream
         self.traces = []
         # loop through ids
-        for id in traces_dict.keys():
+        for id in list(traces_dict.keys()):
             trace_list = traces_dict[id]
             cur_trace = trace_list.pop(0)
             # work through all traces of same id
@@ -2702,14 +2711,14 @@ def isPickle(filename):  # @UnusedVariable
     >>> isPickle('/path/to/pickle.file')  # doctest: +SKIP
     True
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, str):
         try:
-            st = cPickle.load(open(filename, 'rb'))
+            st = pickle.load(open(filename, 'rb'))
         except:
             return False
     else:
         try:
-            st = cPickle.load(filename)
+            st = pickle.load(filename)
         except:
             return False
     return isinstance(st, Stream)
@@ -2728,10 +2737,10 @@ def readPickle(filename, **kwargs):  # @UnusedVariable
     :rtype: :class:`~obspy.core.stream.Stream`
     :return: A ObsPy Stream object.
     """
-    if isinstance(filename, basestring):
-        return cPickle.load(open(filename, 'rb'))
+    if isinstance(filename, str):
+        return pickle.load(open(filename, 'rb'))
     else:
-        return cPickle.load(filename)
+        return pickle.load(filename)
 
 
 def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
@@ -2754,10 +2763,10 @@ def writePickle(stream, filename, protocol=2, **kwargs):  # @UnusedVariable
     :type protocol: int, optional
     :param protocol: Pickle protocol, defaults to ``2``.
     """
-    if isinstance(filename, basestring):
-        cPickle.dump(stream, open(filename, 'wb'), protocol=protocol)
+    if isinstance(filename, str):
+        pickle.dump(stream, open(filename, 'wb'), protocol=protocol)
     else:
-        cPickle.dump(stream, filename, protocol=protocol)
+        pickle.dump(stream, filename, protocol=protocol)
 
 
 if __name__ == '__main__':

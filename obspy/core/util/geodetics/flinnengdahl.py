@@ -1,3 +1,8 @@
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import zip
+from future.builtins import int
+from future.builtins import range
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -41,14 +46,14 @@ class FlinnEngdahl(object):
             for index in fh:
                 indexes += [n.strip() for n in index.split(' ') if n != '']
 
-        self.lons_per_lat = dict(zip(
+        self.lons_per_lat = dict(list(zip(
             self.quads_order,
-            [indexes[x:x + 91] for x in xrange(0, len(indexes), 91)]
-        ))
+            [indexes[x:x + 91] for x in range(0, len(indexes), 91)]
+        )))
 
         self.lat_begins = {}
 
-        for quad, index in self.lons_per_lat.items():
+        for quad, index in list(self.lons_per_lat.items()):
             begin = 0
             end = -1
             begins = []

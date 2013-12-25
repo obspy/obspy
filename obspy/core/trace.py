@@ -8,6 +8,13 @@ Module for handling ObsPy Trace objects.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import super
+from future.builtins import str
+from future.builtins import int
+from future.builtins import round
 from copy import deepcopy, copy
 from obspy.core.utcdatetime import UTCDateTime
 from obspy.core.util import AttribDict, createEmptyDataChunk
@@ -2035,7 +2042,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         if isinstance(inventories, Inventory) or \
            isinstance(inventories, Network):
             inventories = [inventories]
-        elif isinstance(inventories, basestring):
+        elif isinstance(inventories, str):
             inventories = [read_inventory(inventories)]
         responses = [obj.get_response(self.id, self.stats.starttime)
                      for obj in inventories]

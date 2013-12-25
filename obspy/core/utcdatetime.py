@@ -8,6 +8,12 @@ Module containing a UTC-based datetime class.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import round
+from future.builtins import range
+from future.builtins import int
 import datetime
 import time
 
@@ -233,7 +239,7 @@ class UTCDateTime(object):
                 dt = datetime.datetime(value.year, value.month, value.day)
                 self._fromDateTime(dt)
                 return
-            elif isinstance(value, basestring):
+            elif isinstance(value, str):
                 # got a string instance
                 value = value.strip()
                 # check for ISO8601 date string
@@ -907,7 +913,7 @@ class UTCDateTime(object):
         >>> unicode(dt)
         u'2008-10-01T12:30:35.045020Z'
         """
-        return unicode(self.__str__())
+        return str(self.__str__())
 
     def __eq__(self, other):
         """

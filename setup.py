@@ -84,7 +84,8 @@ INSTALL_REQUIRES = [
     'matplotlib',
     'lxml',
     'sqlalchemy',
-    'suds>=0.4.0']
+    'suds']
+    #'suds>=0.4.0']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',
               'nose',
