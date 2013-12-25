@@ -1248,8 +1248,9 @@ class Stream(object):
         :param keys: List containing the values according to which the traces
              will be sorted. They will be sorted by the first item first and
              then by the second item and so on.
-             Available items: 'network', 'station', 'channel', 'location',
-             'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'
+             Always available items: 'network', 'station', 'channel',
+             'location', 'starttime', 'endtime', 'sampling_rate', 'npts',
+             'dataquality'
              Defaults to ['network', 'station', 'location', 'channel',
              'starttime', 'endtime'].
         :type reverse: bool
@@ -1272,19 +1273,6 @@ class Stream(object):
         BW.RJOB..EHN | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         """
-        # Check the list and all items.
-        msg = "keys must be a list of item strings. Available items to " + \
-              "sort after: \n'network', 'station', 'channel', 'location', " + \
-              "'starttime', 'endtime', 'sampling_rate', 'npts', 'dataquality'"
-        if not isinstance(keys, list):
-            raise TypeError(msg)
-        items = ['network', 'station', 'channel', 'location', 'starttime',
-                 'endtime', 'sampling_rate', 'npts', 'dataquality']
-        for _i in keys:
-            try:
-                items.index(_i)
-            except:
-                raise TypeError(msg)
         # Loop over all keys in reversed order.
         for _i in keys[::-1]:
             self.traces.sort(key=lambda x: x.stats[_i], reverse=reverse)
