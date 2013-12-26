@@ -17,9 +17,14 @@ from future.builtins import int
 from future.builtins import bytes
 import datetime
 import time
+import math
 
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
+
+# PY3K compat
+if "unicode" not in dir(__builtins__):
+    unicode = str
 
 
 class UTCDateTime(object):
@@ -327,8 +332,9 @@ class UTCDateTime(object):
 
         # check if seconds are given as float value
         if len(args) == 6 and isinstance(args[5], float):
-            kwargs['microsecond'] = int(args[5] % 1 * 1000000)
-            kwargs['second'] = int(args[5])
+            _frac, _sec = math.modf(round(args[5], 6))
+            kwargs['microsecond'] = int(_frac * 1e6)
+            kwargs['second'] = int(_sec)
             args = args[0:5]
         dt = datetime.datetime(*args, **kwargs)
         self._fromDateTime(dt)
@@ -498,7 +504,12 @@ class UTCDateTime(object):
         >>> dt.datetime
         datetime.datetime(2008, 10, 1, 12, 30, 35, 45020)
         """
-        return datetime.datetime.utcfromtimestamp(self.timestamp)
+        # we are exact at the border of floating point precision
+        # datetime.utcfromtimestamp will cut off but not round
+        # avoid through adding extra timedelta
+        _fsec, _isec = math.modf(self.timestamp)
+        return datetime.datetime.utcfromtimestamp(_isec) + \
+            datetime.timedelta(seconds=_fsec)
 
     datetime = property(_getDateTime)
 
@@ -901,13 +912,8 @@ class UTCDateTime(object):
         >>> str(dt)
         '2008-10-01T12:30:35.045020Z'
         """
-        # Make a temporary copy to be able to round to only six digits.
-        old_timestamp = self.timestamp
-        self.timestamp = round(self.timestamp, 6)
-        string = "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
-                           (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
-        self.timestamp = old_timestamp
-        return string
+        return "%s%sZ" % (self.strftime('%Y-%m-%dT%H:%M:%S'),
+                          (self.__ms_pattern % (abs(self.timestamp % 1)))[1:])
 
     def __unicode__(self):
         """
