@@ -8,8 +8,7 @@ AttribDict class for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from __future__ import unicode_literals
-
+from __future__ import unicode_literals, print_function
 import collections
 import copy
 
@@ -28,16 +27,16 @@ class AttribDict(collections.MutableMapping):
     >>> stats = AttribDict()
     >>> stats.network = 'BW'
     >>> stats['station'] = 'ROTZ'
-    >>> stats.get('network')
-    'BW'
-    >>> stats['network']
-    'BW'
-    >>> stats.station
-    'ROTZ'
+    >>> print(stats.get('network'))
+    BW
+    >>> print(stats['network'])
+    BW
+    >>> print(stats.station)
+    ROTZ
     >>> x = stats.keys()
     >>> x = sorted(x)
-    >>> x[0:3]
-    ['network', 'station']
+    >>> print(x[0], x[1])
+    network station
     """
     defaults = {}
     readonly = []
@@ -50,7 +49,7 @@ class AttribDict(collections.MutableMapping):
 
         >>> attrib_dict_1 = AttribDict({"a":1, "b":2})
         >>> attrib_dict_2 = AttribDict(a=1, b=2)
-        >>> print attrib_dict_1
+        >>> attrib_dict_1  #doctest: +SKIP
         AttribDict({'a': 1, 'b': 2})
         >>> assert(attrib_dict_1 == attrib_dict_2)
         """
@@ -105,7 +104,7 @@ class AttribDict(collections.MutableMapping):
         return ad
 
     def update(self, adict={}):
-        for (key, value) in adict.items():
+        for (key, value) in list(adict.items()):
             if key in self.readonly:
                 continue
             self.__setitem__(key, value)

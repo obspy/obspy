@@ -10,6 +10,7 @@ Module containing a UTC-based datetime class.
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 from future.builtins import str
 from future.builtins import round
 from future.builtins import range
