@@ -15,7 +15,7 @@ from future.builtins import round
 from future.builtins import range
 from future.builtins import int
 from future.builtins import bytes
-from future.utils import native_str
+from future.utils import native_str, PY2
 import datetime
 import time
 import math
@@ -23,8 +23,8 @@ import math
 
 TIMESTAMP0 = datetime.datetime(1970, 1, 1)
 
-## PY3K compat
-if "unicode" not in dir(__builtins__):
+# Py3k compat, avoid circular import
+if not PY2:
     unicode = str
 
 
@@ -435,7 +435,7 @@ class UTCDateTime(object):
         else:
             delta = 0
         if delta:
-            tz = tz.replace(':', '')
+            tz = tz.replace(':', '')   # XXX: not needed
             while len(tz) < 3:
                 tz += '0'
             delta = delta * (int(tz[0:2]) * 60 * 60 + int(tz[2:]) * 60)
@@ -460,7 +460,7 @@ class UTCDateTime(object):
         dt = datetime.datetime.strptime(date + 'T' + time,
                                         date_pattern + 'T' + time_pattern)
         # add microseconds and eventually correct time zone
-        return UTCDateTime(dt) + (delta + ms)
+        return UTCDateTime(dt) + (float(delta) + ms)
 
     def _getTimeStamp(self):
         """
