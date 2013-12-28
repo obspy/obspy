@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
 from __future__ import print_function
 from __future__ import unicode_literals
 from future.builtins import open
-# -*- coding: utf-8 -*-
 # Author: Douglas Creager <dcreager@dcreager.net>
 # This file is placed into the public domain.
 
