@@ -17,6 +17,7 @@ from future.builtins import int
 from future.builtins import super
 from future.builtins import round
 from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.event_header import PickOnset, PickPolarity, EvaluationMode, \
     EvaluationStatus, OriginUncertaintyDescription, OriginDepthType, \
@@ -29,6 +30,7 @@ from obspy.core.util import uncompressFile, _readFromPlugin, \
 from obspy.core.util.decorator import map_example_filename
 from obspy.core.util.base import ENTRY_POINTS
 from obspy.core.util.decorator import deprecated_keywords, deprecated
+from obspy.core.compatibility import urlopen
 from pkg_resources import load_entry_point
 from uuid import uuid4
 from copy import deepcopy
@@ -39,7 +41,6 @@ import inspect
 import numpy as np
 import os
 import re
-import urllib.request, urllib.error, urllib.parse
 import warnings
 import weakref
 import io
@@ -109,7 +110,7 @@ def readEvents(pathname_or_url=None, format=None, **kwargs):
         # extract extension if any
         suffix = os.path.basename(pathname_or_url).partition('.')[2] or '.tmp'
         with NamedTemporaryFile(suffix=suffix) as fh:
-            fh.write(urllib.request.urlopen(pathname_or_url).read())
+            fh.write(urlopen(pathname_or_url).read())
             catalog = _read(fh.name, format, **kwargs)
         return catalog
     else:
@@ -438,7 +439,7 @@ def _eventTypeClassFactory(class_name, class_attributes=[], class_contains=[]):
         base_class = AbstractEventType
 
     # Set the class type name.
-    setattr(base_class, "__name__", class_name)
+    setattr(base_class, "__name__", native_str(class_name))
     return base_class
 
 
