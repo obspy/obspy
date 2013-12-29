@@ -34,6 +34,7 @@ Simple ASCII time series formats
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import open
+from future.utils import native_str
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
@@ -286,7 +287,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
         2776        2766        2759        2760        2765        2767
         ...
     """
-    with open(filename, 'wt') as fh:
+    with open(filename, 'wb') as fh:
         for trace in stream:
             stats = trace.stats
             # quality code
@@ -313,7 +314,7 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
                                stats.channel, dataquality, stats.npts,
                                stats.sampling_rate, stats.starttime, 'SLIST',
                                dtype, unit)
-            fh.write(header)
+            fh.write(header.encode('ascii', 'strict'))
             # write data
             rest = stats.npts % 6
             if rest:
@@ -321,10 +322,11 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
             else:
                 data = trace.data
             data = data.reshape((-1, 6))
-            np.savetxt(fh, data, fmt=fmt, delimiter='\t')
+            #import pdb; pdb.set_trace()
+            np.savetxt(fh, data, fmt=fmt.encode('ascii', 'strict'), delimiter='\t')
             if rest:
-                fh.write('\t'.join([fmt % d for d in trace.data[-rest:]]) +
-                         '\n')
+                fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
+                         '\n').encode('ascii', 'strict'))
 
 
 def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
@@ -396,7 +398,7 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
         2003-05-29T02:13:22.318400  2767
         ...
     """
-    with open(filename, 'wt') as fh:
+    with open(filename, 'wb') as fh:
         for trace in stream:
             stats = trace.stats
             # quality code
@@ -423,14 +425,15 @@ def writeTSPAIR(stream, filename, **kwargs):  # @UnusedVariable
                                stats.channel, dataquality, stats.npts,
                                stats.sampling_rate, stats.starttime, 'TSPAIR',
                                dtype, unit)
-            fh.write(header)
+            fh.write(header.encode('ascii', 'strict'))
             # write data
             times = np.linspace(stats.starttime.timestamp,
                                 stats.endtime.timestamp, stats.npts)
             times = [UTCDateTime(t) for t in times]
             data = np.vstack((times, trace.data)).T
             # .26s cuts the Z from the time string
-            np.savetxt(fh, data, fmt="%.26s  " + fmt)
+            np.savetxt(fh, data,
+                       fmt=("%.26s  " + fmt).encode('ascii', 'strict'))
 
 
 def _parse_data(data, data_type):
