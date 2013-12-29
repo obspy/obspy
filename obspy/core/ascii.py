@@ -34,7 +34,6 @@ Simple ASCII time series formats
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import open
-from future.utils import native_str
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
@@ -120,25 +119,25 @@ def readSLIST(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     with open(filename, 'rt') as fh:
         # read file and split text into channels
-        headers = {}
-        key = None
+        buf = []
+        key = False
         for line in fh:
             if line.isspace():
                 # blank line
                 continue
             elif line.startswith('TIMESERIES'):
                 # new header line
-                key = line
-                headers[key] = StringIO()
+                key = True
+                buf.append((line, StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
             elif key:
                 # data entry - may be written in multiple columns
-                headers[key].write(line.strip() + ' ')
+                buf[-1][1].write(line.strip() + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.items():
+    for header, data in buf:
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -185,25 +184,25 @@ def readTSPAIR(filename, headonly=False, **kwargs):  # @UnusedVariable
     """
     with open(filename, 'rt') as fh:
         # read file and split text into channels
-        headers = {}
-        key = None
+        buf = []
+        key = False
         for line in fh:
             if line.isspace():
                 # blank line
                 continue
             elif line.startswith('TIMESERIES'):
                 # new header line
-                key = line
-                headers[key] = StringIO()
+                key = True
+                buf.append((line, StringIO()))
             elif headonly:
                 # skip data for option headonly
                 continue
             elif key:
                 # data entry - may be written in multiple columns
-                headers[key].write(line.strip().split()[-1] + ' ')
+                buf[-1][1].write(line.strip().split()[-1] + ' ')
     # create ObsPy stream object
     stream = Stream()
-    for header, data in headers.items():
+    for header, data in buf:
         # create Stats
         stats = Stats()
         parts = header.replace(',', '').split()
@@ -325,7 +324,8 @@ def writeSLIST(stream, filename, **kwargs):  # @UnusedVariable
                 data = trace.data
             data = data.reshape((-1, 6))
             #import pdb; pdb.set_trace()
-            np.savetxt(fh, data, fmt=fmt.encode('ascii', 'strict'), delimiter='\t')
+            np.savetxt(fh, data, delimiter='\t',
+                       fmt=fmt.encode('ascii', 'strict'))
             if rest:
                 fh.write(('\t'.join([fmt % d for d in trace.data[-rest:]]) +
                          '\n').encode('ascii', 'strict'))
