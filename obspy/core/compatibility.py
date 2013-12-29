@@ -20,6 +20,13 @@ else:
     import io
     StringIO = io.StringIO
 
+if PY2:
+    import StringIO
+    BytesIO = StringIO.StringIO
+else:
+    import io
+    BytesIO = io.BytesIO
+
 
 def round_away(number):
     """

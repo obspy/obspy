@@ -25,8 +25,11 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
 """
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 from future.builtins import int
 from future.builtins import str
+from future.builtins import bytes
+from future.utils import native_str
 
 from distutils import sysconfig
 from obspy import UTCDateTime
@@ -40,6 +43,11 @@ import warnings
 # Import shared libgse2
 # create library names
 lib_names = [
+    # python3.3 platform specific library name
+    'libgse2_%s_%s_py%s.cpython-%sm' % (
+        platform.system(), platform.architecture()[0],
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]]),
+        ''.join([str(i) for i in platform.python_version_tuple()[:2]])),
     # platform specific library name
     'libgse2_%s_%s_py%s' % (
         platform.system(), platform.architecture()[0],
@@ -55,35 +63,41 @@ for lib_name in lib_names:
                                        'lib', lib_name + lib_extension))
         break
     except Exception as e:
+        err_msg = str(e)
         pass
 else:
-    msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (e)
+    msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (err_msg)
     raise ImportError(msg)
 
 
 clibgse2.decomp_6b_buffer.argtypes = [
     C.c_int,
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.CFUNCTYPE(C.c_char_p, C.POINTER(C.c_char), C.c_void_p), C.c_void_p]
 clibgse2.decomp_6b_buffer.restype = C.c_int
 
 clibgse2.rem_2nd_diff.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibgse2.rem_2nd_diff.restype = C.c_int
 
 clibgse2.check_sum.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int32]
 clibgse2.check_sum.restype = C.c_int  # do not know why not C.c_int32
 
 clibgse2.diff_2nd.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int, C.c_int]
 clibgse2.diff_2nd.restype = C.c_void_p
 
 clibgse2.compress_6b_buffer.argtypes = [
-    np.ctypeslib.ndpointer(dtype='int32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='int32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int,
     C.CFUNCTYPE(C.c_int, C.c_char)]
 clibgse2.compress_6b_buffer.restype = C.c_int
@@ -146,7 +160,7 @@ def isGse2(f):
     pos = f.tell()
     widi = f.read(4)
     f.seek(pos)
-    if widi != 'WID2':
+    if widi != b'WID2':
         raise TypeError("File is not in GSE2 format")
 
 
@@ -160,7 +174,7 @@ def readHeader(fh):
     # search for WID2 field
     while True:
         line = fh.readline()
-        if line.startswith('WID2'):
+        if line.startswith(b'WID2'):
             # valid GSE2 header
             break
         elif line == '':
@@ -183,7 +197,7 @@ def readHeader(fh):
     # according to manual this has to follow immediately after WID2
     pos = fh.tell()
     line = fh.readline()
-    if line.startswith('STA2'):
+    if line.startswith(b'STA2'):
         header2 = parse_STA2(line)
         header['network'] = header2.pop("network")
         header['gse2'].update(header2)
@@ -191,7 +205,10 @@ def readHeader(fh):
     # otherwise we might miss the DAT2 line afterwards.
     else:
         fh.seek(pos)
-    return header
+    header['gse2'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header['gse2'].items())
+    return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header.items())
 
 
 def writeHeader(f, headdict):
@@ -213,7 +230,7 @@ def writeHeader(f, headdict):
     date = headdict['starttime']
     fmt = "WID2 %4d/%02d/%02d %02d:%02d:%06.3f %-5s %-3s %-4s %-3s %8d " + \
           "%11.6f %s %7.3f %-6s %5.1f %4.1f\n"
-    f.write(fmt % (
+    f.write((fmt % (
             date.year,
             date.month,
             date.day,
@@ -230,7 +247,7 @@ def writeHeader(f, headdict):
             headdict['gse2']['calper'],
             headdict['gse2']['instype'],
             headdict['gse2']['hang'],
-            headdict['gse2']['vang'])
+            headdict['gse2']['vang'])).encode('ascii', 'strict')
             )
     try:
         sta2_line = compile_STA2(headdict)
@@ -252,7 +269,7 @@ def uncompress_CM6(f, n_samps):
     """
     def read83(cbuf, vptr):
         line = f.readline()
-        if line == '':
+        if line == b'':
             return None
         # avoid buffer overflow through clipping to 82
         sb = C.create_string_buffer(line[:82])
@@ -316,7 +333,7 @@ def verifyChecksum(fh, data, version=2):
     # find checksum within file
     buf = fh.readline()
     chksum_file = 0
-    CHK_LINE = 'CHK%d' % version
+    CHK_LINE = ('CHK%d' % version).encode('ascii', 'strict')
     while buf:
         if buf.startswith(CHK_LINE):
             chksum_file = int(buf.strip().split()[1])
@@ -413,10 +430,10 @@ def write(headdict, data, f, inplace=False):
     # the different format of 10.4e with fprintf on Windows and Linux.
     # For further details, see the __doc__ of writeHeader
     writeHeader(f, headdict)
-    f.write("DAT2\n")
+    f.write(b"DAT2\n")
     for line in data_cm6:
-        f.write("%s\n" % line)
-    f.write("CHK2 %8ld\n\n" % chksum)
+        f.write(line + b"\n")
+    f.write(("CHK2 %8ld\n\n" % chksum).encode('ascii', 'strict'))
 
 
 def parse_STA2(line):
@@ -448,23 +465,24 @@ def parse_STA2(line):
     However, many files in practice do not adhere to these defined fixed
     positions. Here are some real-world examples:
 
-    >>> from pprint import pprint
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
-    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
-    {'coordsys': '',
-     'edepth': -0.999,
-     'elev': -0.999,
-     'lat': -999.0,
-     'lon': -999.0,
-     'network': ''}
+    >>> for k, v in parse_STA2(l).items():  # doctest: +NORMALIZE_WHITESPACE
+    ...     print(k, v)
+    network 
+    lon -999.0
+    edepth -0.999
+    elev -0.999
+    lat -999.0
+    coordsys 
     >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
-    >>> pprint(parse_STA2(l))  # doctest: +NORMALIZE_WHITESPACE
-    {'coordsys': 'WGS-84',
-     'edepth': 1.234,
-     'elev': -123.456,
-     'lat': 12.34567,
-     'lon': 1.234567,
-     'network': 'ABCD'}
+    >>> for k, v in parse_STA2(l).items():  # doctest: +NORMALIZE_WHITESPACE
+    ...     print(k, v)
+    network ABCD
+    lon 1.234567
+    edepth 1.234
+    elev -123.456
+    lat 12.34567
+    coordsys WGS-84
     """
     header = {}
     try:
@@ -515,7 +533,7 @@ def compile_STA2(stats):
                    "column format description (because they can not be "
                    "represented as '%%f5.3' properly).") % key
             warnings.warn(msg)
-    return line
+    return line.encode('ascii', 'strict')
 
 
 if __name__ == '__main__':
