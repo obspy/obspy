@@ -48,12 +48,17 @@ class ResponseTest(unittest.TestCase):
 
         seed_file = os.path.join(self.data_dir,
                                  "IRIS_single_channel_with_response.seed")
-        p = Parser(seed_file)
+        parser = Parser(seed_file)
 
-        filename = p.getRESP()[0][-1]
-        filename.seek(0, 0)
+        # older systems don't like an end date in the year 2599 - removing it
+        # 'end_effective_date': UTCDateTime(2599, 12, 31, 23, 59, 59)
+        parser.blockettes[50][0].end_effective_date = None
+        parser.blockettes[52][0].end_date = None
 
-        seed_response, seed_freq = evalresp(t_samp, nfft, filename, date=date,
+        fh = parser.getRESP()[0][-1]
+        fh.seek(0, 0)
+
+        seed_response, seed_freq = evalresp(t_samp, nfft, fh, date=date,
                                             station=station, channel=channel,
                                             network=network, locid=locid,
                                             units=units, freq=True)
