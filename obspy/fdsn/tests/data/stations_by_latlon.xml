@@ -3,9 +3,9 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?latitude=-56.1&amp;maxradius=15.0&amp;longitude=-26.7</ModuleURI>
- <Created>2013-10-03T21:30:15</Created>
+ <Created>2013-12-29T07:42:44</Created>
  <Network code="AI" startDate="1992-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Antarctic Seismographic Argentinean Italian Network (ASAIN)</Description>
   <TotalNumberStations>4</TotalNumberStations>
@@ -45,7 +45,7 @@
  </Network>
  <Network code="SY" startDate="1900-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>Synthetic Seismograms</Description>
-  <TotalNumberStations>3910</TotalNumberStations>
+  <TotalNumberStations>3957</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
   <Station code="HOPE" startDate="1900-01-01T00:00:00" endDate="2599-12-31T23:59:59" restrictedStatus="open">
    <Latitude>-54.2836</Latitude>

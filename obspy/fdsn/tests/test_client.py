@@ -9,7 +9,7 @@ The obspy.fdsn.client test suite.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from obspy import readEvents, UTCDateTime, read
+from obspy import readEvents, UTCDateTime, read, read_inventory
 from obspy.fdsn import Client
 from obspy.fdsn.client import build_url, parse_simple_xml
 from obspy.fdsn.header import DEFAULT_USER_AGENT, FDSNException
@@ -275,13 +275,12 @@ class ClientTestCase(unittest.TestCase):
                                                      "ISC", "UofW",
                                                      "NEIC PDE"))})
 
-    def test_IRIS_example_queries(self):
+    def test_IRIS_example_queries_event(self):
         """
         Tests the (sometimes modified) example queries given on IRIS webpage.
         """
         client = self.client
 
-        # event example queries
         queries = [
             dict(eventid=609301),
             dict(starttime=UTCDateTime("2011-01-07T01:00:00"),
@@ -300,7 +299,7 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             got = client.get_events(**query)
             file_ = os.path.join(self.datapath, filename)
-            #got.write(file_, "QUAKEML")
+            # got.write(file_, "QUAKEML")
             expected = readEvents(file_)
             self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
@@ -312,7 +311,12 @@ class ClientTestCase(unittest.TestCase):
                     expected = fh.read()
             self.assertEqual(got, expected, failmsg(got, expected))
 
-        # station example queries
+    def test_IRIS_example_queries_station(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage.
+        """
+        client = self.client
+
         queries = [
             dict(latitude=-56.1, longitude=-26.7, maxradius=15),
             dict(startafter=UTCDateTime("2003-01-07"),
@@ -331,13 +335,13 @@ class ClientTestCase(unittest.TestCase):
         for query, filename in zip(queries, result_files):
             got = client.get_stations(**query)
             file_ = os.path.join(self.datapath, filename)
-            #with open(file_, "wt") as fh:
+            # with open(file_, "wt") as fh:
             #    fh.write(got)
-            with open(file_) as fh:
-                expected = fh.read()
-            ignore_lines = ['<Created>', '<TotalNumberStations>']
-            msg = failmsg(got, expected, ignore_lines=ignore_lines)
-            self.assertEqual(msg, "", msg)
+            expected = read_inventory(file_, format="STATIONXML")
+            # delete both creating time before comparing objects
+            got.created = None
+            expected.created = None
+            self.assertEqual(got, expected, failmsg(got, expected))
             # test output to file
             with NamedTemporaryFile() as tf:
                 client.get_stations(filename=tf.name, **query)
@@ -345,10 +349,16 @@ class ClientTestCase(unittest.TestCase):
                     got = fh.read()
                 with open(file_) as fh:
                     expected = fh.read()
+            ignore_lines = ['<Created>', '<TotalNumberStations>']
             msg = failmsg(got, expected, ignore_lines=ignore_lines)
             self.assertEqual(msg, "", msg)
 
-        # dataselect example queries
+    def test_IRIS_example_queries_dataselect(self):
+        """
+        Tests the (sometimes modified) example queries given on IRIS webpage.
+        """
+        client = self.client
+
         queries = [
             ("IU", "ANMO", "00", "BHZ",
              UTCDateTime("2010-02-27T06:30:00.000"),
