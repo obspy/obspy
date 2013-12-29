@@ -60,7 +60,8 @@ def isSLIST(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, 'rt') as f:
+            temp = f.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
@@ -85,7 +86,8 @@ def isTSPAIR(filename):
     True
     """
     try:
-        temp = open(filename, 'rt').readline()
+        with open(filename, 'rt') as f:
+            temp = f.readline()
     except:
         return False
     if not temp.startswith('TIMESERIES'):
