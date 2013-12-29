@@ -23,6 +23,10 @@ See: http://www.orfeus-eu.org/Software/softwarelib.html#gse
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import str
 
 from distutils import sysconfig
 from obspy import UTCDateTime
@@ -50,7 +54,7 @@ for lib_name in lib_names:
         clibgse2 = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                        'lib', lib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
         pass
 else:
     msg = 'Could not load shared library for obspy.gse2.\n\n %s' % (e)
@@ -85,14 +89,14 @@ clibgse2.compress_6b_buffer.argtypes = [
 clibgse2.compress_6b_buffer.restype = C.c_int
 
 
-class ChksumError(StandardError):
+class ChksumError(Exception):
     """
     Exception type for mismatching checksums
     """
     pass
 
 
-class GSEUtiError(StandardError):
+class GSEUtiError(Exception):
     """
     Exception type for other errors in GSE_UTI
     """

@@ -76,6 +76,7 @@ You may export the data to the file system using the
 
 >>> st.write('GSE2-filename.gse', format='GSE2') #doctest: +SKIP
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

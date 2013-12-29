@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from future.builtins import open
 # -*- coding: utf-8 -*-
 """
 GSE2/GSE1 bindings to ObsPy core module.

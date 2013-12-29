@@ -1,3 +1,7 @@
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import open
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
@@ -9,7 +13,7 @@ from obspy.core.util import NamedTemporaryFile, CatchOutput
 from obspy.gse2 import libgse2
 from obspy.gse2.libgse2 import ChksumError, GSEUtiError, parse_STA2, \
     compile_STA2
-from cStringIO import StringIO
+from io import StringIO
 import numpy as np
 import os
 import unittest

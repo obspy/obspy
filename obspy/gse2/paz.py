@@ -19,6 +19,10 @@ The read in PAZ information can be used with
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import open
 
 import doctest
 import numpy as np
@@ -62,7 +66,7 @@ def readPaz(paz_file):
 
     ind = 1
     npoles = int(PAZ[ind])
-    for i in xrange(npoles):
+    for i in range(npoles):
         try:
             poles.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))
@@ -72,7 +76,7 @@ def readPaz(paz_file):
 
     ind += i + 2
     nzeros = int(PAZ[ind])
-    for i in xrange(nzeros):
+    for i in range(nzeros):
         try:
             zeros.append(complex(*[float(n)
                                    for n in PAZ[i + 1 + ind].split()]))
