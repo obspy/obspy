@@ -1,11 +1,11 @@
-from __future__ import unicode_literals
-from future.builtins import open
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The libgse1 test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import str
 from obspy.gse2 import libgse1
 from obspy.gse2.libgse2 import ChksumError
 import os

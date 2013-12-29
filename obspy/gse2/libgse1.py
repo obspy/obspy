@@ -64,7 +64,7 @@ def readIntegerData(fh, npts):
     # find next DAT1 section within file
     buf = fh.readline()
     while buf:
-        if buf.startswith("DAT1"):
+        if buf.startswith(b"DAT1"):
             data = np.fromfile(fh, dtype=np.int32, count=npts, sep=' ')
             break
         buf = fh.readline()
@@ -81,7 +81,7 @@ def readHeader(fh):
     # search for WID1 field
     line = fh.readline()
     while line:
-        if line.startswith("WID1"):
+        if line.startswith(b"WID1"):
             # valid GSE1 header
             break
         line = fh.readline()
@@ -121,7 +121,10 @@ def readHeader(fh):
     header['gse1']['unknown2'] = float(line[66:73])
     header['gse1']['unknown3'] = float(line[74:81])
     header['gse1']['unknown4'] = float(line[74:80])
-    return header
+    header['gse1'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header['gse1'].items())
+    return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                for k, v in header.items())
 
 
 if __name__ == '__main__':
