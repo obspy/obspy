@@ -22,6 +22,7 @@ from obspy.core.util.base import _getFunctionFromEntryPoint
 from obspy.core.util.misc import flatnotmaskedContiguous
 from obspy.core.util.decorator import raiseIfMasked, skipIfNoData, \
     taper_API_change
+from obspy.core import compatibility
 import math
 import numpy as np
 import warnings
@@ -644,7 +645,7 @@ class Trace(object):
             fill_value = (lt.data[-1], rt.data[0])
         sr = self.stats.sampling_rate
         delta = (rt.stats.starttime - lt.stats.endtime) * sr
-        delta = int(round(delta)) - 1
+        delta = int(compatibility.round_away(delta)) - 1
         delta_endtime = lt.stats.endtime - rt.stats.endtime
         # create the returned trace
         out = self.__class__(header=deepcopy(lt.stats))
@@ -865,7 +866,7 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((starttime - self.stats.starttime) *
+            delta = compatibility.round_away((starttime - self.stats.starttime) *
                           self.stats.sampling_rate)
             # due to rounding and npts starttime must always be right of
             # self.stats.starttime, rtrim relies on it
@@ -873,7 +874,7 @@ class Trace(object):
                 npts = abs(delta) + 10  # use this as a start
                 newstarttime = self.stats.starttime - npts / \
                     float(self.stats.sampling_rate)
-                newdelta = round((starttime - newstarttime) *
+                newdelta = compatibility.round_away((starttime - newstarttime) *
                                  self.stats.sampling_rate)
                 delta = newdelta - npts
             delta = int(delta)
@@ -927,12 +928,12 @@ class Trace(object):
             raise TypeError
         # check if in boundary
         if nearest_sample:
-            delta = round((endtime - self.stats.starttime) *
+            delta = compatibility.round_away((endtime - self.stats.starttime) *
                           self.stats.sampling_rate) - self.stats.npts + 1
             delta = int(delta)
         else:
             # solution for #127, however some tests need to be changed
-            #delta = -1*int(math.floor(round((self.stats.endtime - endtime) * \
+            #delta = -1*int(math.floor(compatibility.round_away((self.stats.endtime - endtime) * \
             #                       self.stats.sampling_rate, 7)))
             delta = int(math.floor(round((endtime - self.stats.endtime) *
                                    self.stats.sampling_rate, 7)))
@@ -1075,7 +1076,7 @@ class Trace(object):
             raise Exception(msg % (self.stats.endtime, self.stats.starttime))
         sr = self.stats.sampling_rate
         if self.stats.starttime != self.stats.endtime:
-            if int(round(delta * sr)) + 1 != len(self.data):
+            if int(compatibility.round_away(delta * sr)) + 1 != len(self.data):
                 msg = "Sample rate(%f) * time delta(%.4lf) + 1 != data len(%d)"
                 raise Exception(msg % (sr, delta, len(self.data)))
             # Check if the endtime fits the starttime, npts and sampling_rate.
