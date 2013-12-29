@@ -171,10 +171,9 @@ def read(pathname_or_url=None, format=None, headonly=False, starttime=None,
 
     (5) Reading a file-like object.
 
-        >>> from StringIO import StringIO
-        >>> import urllib2
+        >>> from compatibility import StringIO, urlopen
         >>> example_url = "http://examples.obspy.org/loc_RJOB20050831023349.z"
-        >>> stringio_obj = StringIO(urllib2.urlopen(example_url).read())
+        >>> stringio_obj = StringIO(urlopen(example_url).read())
         >>> st = read(stringio_obj)
         >>> print(st)  # doctest: +ELLIPSIS
         1 Trace(s) in Stream:

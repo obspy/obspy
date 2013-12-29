@@ -419,10 +419,10 @@ class Trace(object):
 
         >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr / 7
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         7 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 429 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:07.290000Z ... | 100.0 Hz, 429 samples
@@ -463,10 +463,10 @@ class Trace(object):
 
         >>> from obspy import read
         >>> tr = read()[0]
-        >>> print tr  # doctest: +ELLIPSIS
+        >>> print(tr)  # doctest: +ELLIPSIS
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 3000 samples
         >>> st = tr % 800
-        >>> print st  # doctest: +ELLIPSIS
+        >>> print(st)  # doctest: +ELLIPSIS
         4 Trace(s) in Stream:
         BW.RJOB..EHZ | 2009-08-24T00:20:03.000000Z ... | 100.0 Hz, 800 samples
         BW.RJOB..EHZ | 2009-08-24T00:20:11.000000Z ... | 100.0 Hz, 800 samples
