@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from future import standard_library
-from future.builtins import open
 # -*- coding: utf-8 -*-
 """
 Simple ASCII time series formats
@@ -34,10 +31,13 @@ Simple ASCII time series formats
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-from io import StringIO
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import AttribDict, loadtxt
+from obspy.core.compatibility import StringIO
 import numpy as np
 
 
@@ -454,8 +454,9 @@ def _parse_data(data, data_type):
     data.seek(0)
     # Data will always be a StringIO. Avoid to send empty StringIOs to
     # numpy.readtxt() which raises a warning.
-    if not data.buf:
+    if len(data.read(1)) == 0:
         return np.array([], dtype=dtype)
+    data.seek(0)
     return loadtxt(data, dtype=dtype, ndlim=1)
 
 
