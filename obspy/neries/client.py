@@ -290,10 +290,12 @@ class Client(object):
         Gets a list of recent events.
 
         :type num: int, optional
-        :param num: Number of events to return. Defaults to ``10``.
+        :param num: Number of events to return. Defaults to ``10``. Absolute
+            maximum is 2500 events.
 
             .. note::
-                Absolute maximum is 2500 events.
+                Unfortunately you can't rely on this number due to an
+                implementation error in the NERIES web service.
 
         :type format: ``'list'``, ``'xml'`` or ``'catalog'``, optional
         :param format: Format of returned results. Defaults to ``'xml'``.
@@ -310,7 +312,7 @@ class Client(object):
         >>> from obspy.neries import Client
         >>> client = Client()
         >>> events = client.getLatestEvents(num=5, format='list')
-        >>> len(events)
+        >>> len(events)  #doctest: +SKIP
         5
         >>> events[0]  #doctest: +SKIP
         [{'author': u'CSEM', 'event_id': u'20041226_0000148',
