@@ -91,7 +91,16 @@ class AttribDict(collections.MutableMapping):
         # update with pickle dictionary
         self.update(adict)
 
-    __getattr__ = __getitem__
+    def __getattr__(self, name, default=None):
+        """
+        Py3k hasattr() expects an AttributeError no KeyError to be
+        raised if the attribute is not found.
+        """
+        try:
+            return self.__getitem__(name, default)
+        except KeyError as e:
+            raise AttributeError(e.args[0])
+
     __setattr__ = __setitem__
     __delattr__ = __delitem__
 
