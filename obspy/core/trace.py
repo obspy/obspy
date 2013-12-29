@@ -451,6 +451,9 @@ class Trace(object):
             tend = tstart + (self.stats.delta * packet_length)
         return st
 
+    # Py3k: '/' does not map to __div__ anymore in Python 3
+    __truediv__ = __div__
+
     def __mod__(self, num):
         """
         Splits Trace into new Stream containing Traces with num samples.
