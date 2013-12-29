@@ -20,6 +20,9 @@ For more information visit http://www.obspy.org.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import str
 # Importing setuptools monkeypatches some of distutils commands so things like
 # 'python setup.py develop' work. Wrap in try/except so it is not an actual
 # dependency. Inplace installation with pip works also without importing
@@ -83,8 +86,8 @@ INSTALL_REQUIRES = [
     'scipy',
     'matplotlib',
     'lxml',
-    'sqlalchemy',
-    'suds']
+    'sqlalchemy']
+    #'suds']
     #'suds>=0.4.0']
 EXTRAS_REQUIRE = {
     'tests': ['flake8>=2',

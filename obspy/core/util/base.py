@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-from future.builtins import map
-from future.builtins import range
 # -*- coding: utf-8 -*-
 """
 Base utilities and constants for ObsPy.
@@ -11,7 +8,11 @@ Base utilities and constants for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from __future__ import print_function
+from future.builtins import map
+from future.builtins import range
+from future.utils import native_str
 from obspy.core.util.misc import toIntOrZero
 from obspy.core.util.obspy_types import OrderedDict
 from pkg_resources import iter_entry_points, load_entry_point
@@ -58,10 +59,8 @@ class NamedTemporaryFile(object):
     .. rubric:: Example
 
     >>> with NamedTemporaryFile() as tf:
-    ...     tf._fileobj  # doctest: +ELLIPSIS
-    ...     tf.write("test")
+    ...     _ = tf.write(b"test")
     ...     os.path.exists(tf.name)
-    <open file '<fdopen>', mode 'w+b' at 0x...>
     True
     >>> # when using the with statement, the file is deleted at the end:
     >>> os.path.exists(tf.name)
@@ -70,9 +69,9 @@ class NamedTemporaryFile(object):
     >>> with NamedTemporaryFile() as tf:
     ...     filename = tf.name
     ...     with open(filename, 'wb') as fh:
-    ...         fh.write("just a test")
+    ...         _ = fh.write(b"just a test")
     ...     with open(filename, 'r') as fh:
-    ...         print fh.read()
+    ...         print(fh.read())
     just a test
     >>> # when using the with statement, the file is deleted at the end:
     >>> os.path.exists(tf.name)
@@ -160,7 +159,8 @@ def getExampleFile(filename):
     """
     for module in ALL_MODULES:
         try:
-            mod = __import__("obspy.%s.tests" % module, fromlist=["obspy"])
+            mod = __import__("obspy.%s.tests" % module,
+                             fromlist=[native_str("obspy")])
         except ImportError:
             continue
         file = os.path.join(mod.__path__[0], "data", filename)
@@ -360,7 +360,7 @@ def make_format_plugin_table(group="waveform", method="read", numspaces=4,
     in docstrings.
 
     >>> table = make_format_plugin_table("event", "write", 4, True)
-    >>> print table  # doctest: +NORMALIZE_WHITESPACE
+    >>> print(table)  # doctest: +NORMALIZE_WHITESPACE
     ======= ================= =======================================
         Format  Required Module   _`Linked Function Call`
         ======= ================= =======================================
