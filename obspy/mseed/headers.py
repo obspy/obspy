@@ -2,7 +2,8 @@
 """
 Defines the libmseed structures and blockettes.
 """
-
+from __future__ import unicode_literals
+from future.builtins import str
 from distutils import sysconfig
 import ctypes as C
 import numpy as np
@@ -10,7 +11,7 @@ import os
 import platform
 
 
-HPTERROR = -2145916800000000L
+HPTERROR = -2145916800000000
 
 ENDIAN = {0: '<', 1: '>'}
 
@@ -31,7 +32,7 @@ for lib_name in lib_names:
         clibmseed = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                         'lib', lib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
         pass
 else:
     msg = 'Could not load shared library for obspy.mseed.\n\n %s' % (e)

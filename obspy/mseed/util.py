@@ -2,7 +2,13 @@
 """
 Mini-SEED specific utilities.
 """
-from headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import open
+from future.builtins import int
+from .headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
@@ -198,7 +204,7 @@ def getTimingAndDataQuality(file_or_file_object):
         if 'timing_quality' in this_info:
             timing_quality.append(float(this_info['timing_quality']))
         # Add the value of each bit to the quality_count.
-        for _i in xrange(8):
+        for _i in range(8):
             if (this_info['data_quality_flags'] & (1 << _i)) != 0:
                 quality_count[_i] += 1
         offset += this_info['record_length']
@@ -245,7 +251,7 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
      'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
      'number_of_records': 2L, 'io_and_clock_flags': 0}
     """
-    if isinstance(file_or_file_object, basestring):
+    if isinstance(file_or_file_object, str):
         with open(file_or_file_object, 'rb') as f:
             info = _getRecordInformation(f, offset=offset, endian=endian)
     else:
@@ -278,7 +284,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
 
     # Get the size of the buffer.
     file_object.seek(0, 2)
-    info['filesize'] = long(file_object.tell() - record_start)
+    info['filesize'] = int(file_object.tell() - record_start)
     file_object.seek(record_start, 0)
 
     # check current position
@@ -410,9 +416,9 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     info['endtime'] = starttime + (npts - 1) / samp_rate
     info['byteorder'] = endian
 
-    info['number_of_records'] = long(info['filesize'] //
+    info['number_of_records'] = int(info['filesize'] //
                                      info['record_length'])
-    info['excess_bytes'] = long(info['filesize'] % info['record_length'])
+    info['excess_bytes'] = int(info['filesize'] % info['record_length'])
 
     # Reset file pointer.
     file_object.seek(initial_position, 0)

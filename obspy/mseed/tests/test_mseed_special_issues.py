@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from future.builtins import range
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.attribdict import AttribDict
@@ -11,7 +15,7 @@ import ctypes as C
 import numpy as np
 import os
 import random
-from StringIO import StringIO
+from io import StringIO
 import sys
 import unittest
 import warnings
@@ -577,7 +581,7 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         # documentation for more details.
         # Use every 5th year. Otherwise the test takes too long. Use 1901 as
         # start to get year 2056.
-        years = range(1901, 2101, 5)
+        years = list(range(1901, 2101, 5))
         for year in years:
             for byteorder in ["<", ">"]:
                 memfile = StringIO()

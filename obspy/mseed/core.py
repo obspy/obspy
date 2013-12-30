@@ -2,18 +2,26 @@
 """
 MSEED bindings to ObsPy core module.
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import open
+from future.builtins import int
+from future.builtins import chr
 
-from headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
+from .headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
     VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
-from itertools import izip
+
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
 from obspy.mseed.headers import blkt_100_s
 import ctypes as C
 import numpy as np
 import os
-import util
+from . import util
 import warnings
 
 
@@ -215,7 +223,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 'number_of_records': info['number_of_records']}
 
     # If its a filename just read it.
-    if isinstance(mseed_object, basestring):
+    if isinstance(mseed_object, str):
         # Read to NumPy array which is used as a buffer.
         buffer = np.fromfile(mseed_object, dtype='b')
     elif hasattr(mseed_object, 'read'):
@@ -274,7 +282,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # HPTERROR results in no starttime.
             selections.timewindows.contents.endtime = HPTERROR
         if sourcename is not None:
-            if not isinstance(sourcename, basestring):
+            if not isinstance(sourcename, str):
                 msg = 'sourcename needs to be a string'
                 raise ValueError(msg)
             # libmseed uses underscores as separators and allows filtering
@@ -309,7 +317,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 
     def log_message(msg):
-        print msg[6:].strip()
+        print(msg[6:].strip())
     log_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_message)
 
     try:
@@ -370,7 +378,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             trace = Trace(header=header, data=data)
             # Append information if necessary.
             if recinfo:
-                for key, value in info.iteritems():
+                for key, value in info.items():
                     setattr(trace.stats.mseed, key, value)
             traces.append(trace)
             # A Null pointer access results in a ValueError
@@ -457,12 +465,12 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
 
     # Check if encoding kwarg is set and catch invalid encodings.
     # XXX: Currently INT24 is not working due to lacking NumPy support.
-    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.iteritems()])
+    encoding_strings = dict([(v[0], k) for (k, v) in ENCODINGS.items()])
 
     if encoding is not None:
         if isinstance(encoding, int) and encoding in ENCODINGS:
             pass
-        elif encoding and isinstance(encoding, basestring) and encoding \
+        elif encoding and isinstance(encoding, str) and encoding \
                 in encoding_strings:
             encoding = encoding_strings[encoding]
         else:
@@ -594,7 +602,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
             # Check if the encoding is valid.
             if isinstance(mseed_encoding, int) and mseed_encoding in ENCODINGS:
                 trace_attr['encoding'] = mseed_encoding
-            elif isinstance(mseed_encoding, basestring) and \
+            elif isinstance(mseed_encoding, str) and \
                     mseed_encoding in encoding_strings:
                 trace_attr['encoding'] = encoding_strings[mseed_encoding]
             else:
@@ -655,7 +663,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         f = filename
 
     # Loop over every trace and finally write it to the filehandler.
-    for trace, data, trace_attr in izip(stream, trace_data, trace_attributes):
+    for trace, data, trace_attr in zip(stream, trace_data, trace_attributes):
         if not len(data):
             msg = 'Skipping empty trace "%s".' % (trace)
             warnings.warn(msg)

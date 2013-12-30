@@ -1,4 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import range
+from future.builtins import open
+from future.builtins import str
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict
 from obspy.core.util import NamedTemporaryFile
@@ -9,7 +15,7 @@ from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
-from StringIO import StringIO
+from io import StringIO
 import sys
 import unittest
 import warnings
@@ -59,10 +65,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         XXX: This tests is a straight port from an old libmseed test. Redundant
         to some other tests.
         """
-        mseed_file = os.path.join(self.path, 'data', unicode('gaps.mseed'))
+        mseed_file = os.path.join(self.path, 'data', str('gaps.mseed'))
         # list of known data samples
-        starttime = [1199145599915000L, 1199145604035000L, 1199145610215000L,
-                     1199145618455000L]
+        starttime = [1199145599915000, 1199145604035000, 1199145610215000,
+                     1199145618455000]
         datalist = [[-363, -382, -388, -420, -417, -397, -418, -390, -388],
                     [-427, -416, -393, -430, -426, -407, -401, -422, -439],
                     [-396, -399, -387, -384, -393, -380, -365, -394, -426],
@@ -80,10 +86,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             i += 1
         del stream
         # Also test unicode filenames.
-        mseed_filenames = [unicode('BW.BGLD.__.EHE.D.2008.001.first_record'),
-                           unicode('qualityflags.mseed'),
-                           unicode('test.mseed'),
-                           unicode('timingquality.mseed')]
+        mseed_filenames = [str('BW.BGLD.__.EHE.D.2008.001.first_record'),
+                           str('qualityflags.mseed'),
+                           str('test.mseed'),
+                           str('timingquality.mseed')]
         samprate = [200.0, 200.0, 40.0, 200.0]
         station = ['BGLD', 'BGLD', 'HGN', 'BGLD']
         npts = [412, 412, 11947, 41604, 1]
@@ -116,7 +122,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over every combination.
         for reclen in record_length_values:
             for byteorder in byteorder_values:
-                for encoding in encoding_values.keys():
+                for encoding in list(encoding_values.keys()):
                     this_stream = copy.deepcopy(stream)
                     this_stream[0].data = \
                         np.require(this_stream[0].data,
@@ -145,7 +151,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         # Build encoding strings.
         encoding_strings = {}
-        for key, value in ENCODINGS.iteritems():
+        for key, value in ENCODINGS.items():
             encoding_strings[value[0]] = key
         # Test the encodings and byteorders.
         path = os.path.join(self.path, "data", "encoding")
@@ -243,7 +249,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data',
                                 'BW.BGLD.__.EHE.D.2008.001.first_10_records')
-        start, end = [1199145599915000L, 1199145620510000L]
+        start, end = [1199145599915000, 1199145620510000]
         # start and endtime
         ms = _MSStruct(filename, init_msrmsf=False)
         ms.read(-1, 0, 1, 0)
@@ -268,7 +274,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         self.assertEqual(stream[0].stats.npts, 11947)
         self.assertEqual(stream[0].stats['sampling_rate'], 40.0)
         self.assertEqual(stream[0].stats.get('channel'), 'BHZ')
-        for _i in xrange(5):
+        for _i in range(5):
             self.assertEqual(stream[0].data[_i], data[_i])
 
     def test_readPartialTimewindowFromFile(self):
@@ -481,7 +487,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Loop over the attributes to be able to assert them because a
         # dictionary is not a stats dictionary.
         # This also assures that there are no additional keys.
-        for key in stats.keys():
+        for key in list(stats.keys()):
             self.assertEqual(stats[key], stream[0].stats[key])
 
     def test_readingAndWritingViaTheStatsAttribute(self):
@@ -496,10 +502,10 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # byteorder.
         record_lengths = [256, 512, 1024, 2048, 4096, 8192]
         byteorders = ['>', '<']
-        encodings = [value[0] for value in ENCODINGS.values()]
+        encodings = [value[0] for value in list(ENCODINGS.values())]
         np_encodings = {}
         # Special handling for ASCII encoded files.
-        for value in ENCODINGS.values():
+        for value in list(ENCODINGS.values()):
             if value[0] == 'ASCII':
                 np_encodings[value[0]] = np.dtype("|S1")
             else:
@@ -580,8 +586,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         # Float64, Float32, Int32, Int24, Int16, Char
         encodings = {5: "f8", 4: "f4", 3: "i4", 0: "S1", 1: "i2"}
         byteorders = {0: '<', 1: '>'}
-        for byteorder, btype in byteorders.iteritems():
-            for encoding, dtype in encodings.iteritems():
+        for byteorder, btype in byteorders.items():
+            for encoding, dtype in encodings.items():
                 # Convert data to floats and write them again
                 st[0].data = data_copy.astype(dtype)
                 with NamedTemporaryFile() as tf:
@@ -683,7 +689,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
             ('float64', 'd', 5, def_content.astype('float64'))
         }
         # Loop over all files and read them.
-        for file in files.keys():
+        for file in list(files.keys()):
             # Check little and big Endian for each file.
             for _i in ('littleEndian', 'bigEndian'):
                 cur_file = file[:-6] + '_' + _i + '.mseed'
@@ -859,7 +865,7 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         data = np.random.randn(npts).astype('float64') * 1e3 + .5
         st = Stream([Trace(data=data)])
         # Loop over some record lengths.
-        for encoding, value in ENCODINGS.iteritems():
+        for encoding, value in ENCODINGS.items():
             seed_dtype = value[2]
             # Special handling for the ASCII dtype. NumPy 1.7 changes the
             # default dtype of numpy.string_ from "|S1" to "|S32". Enforce

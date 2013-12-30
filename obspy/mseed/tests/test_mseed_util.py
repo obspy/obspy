@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-from StringIO import StringIO
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from io import StringIO
 from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
@@ -41,9 +44,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
             200000000: UTCDateTime(1976, 5, 3, 19, 33, 20)
         }
         # Loop over timesdict.
-        for ts, dt in timesdict.iteritems():
-            self.assertEqual(dt, util._convertMSTimeToDatetime(ts * 1000000L))
-            self.assertEqual(ts * 1000000L, util._convertDatetimeToMSTime(dt))
+        for ts, dt in timesdict.items():
+            self.assertEqual(dt, util._convertMSTimeToDatetime(ts * 1000000))
+            self.assertEqual(ts * 1000000, util._convertDatetimeToMSTime(dt))
         # Additional sanity tests.
         # Today.
         now = UTCDateTime()
