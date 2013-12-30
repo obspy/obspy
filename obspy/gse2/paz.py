@@ -38,8 +38,8 @@ def readPaz(paz_file):
     simulation, the A0_normalization_factor might be set wrongly. Use
     :func:`~obspy.gse2.libgse2.attach_paz` instead.
 
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> from obspy.core import compatibility
+    >>> f = compatibility.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709
@@ -49,8 +49,8 @@ def readPaz(paz_file):
     ... 0.0 0.0
     ... 0.4""")
     >>> p, z, k = readPaz(f)
-    >>> ['%.4f' % i for i in (p[0].real, z[0].real, k)]
-    ['-4.3982', '0.0000', '0.4000']
+    >>> print('%.4f %.4f %.4f' % (p[0].real, z[0].real, k))
+    -4.3982 0.0000 0.4000
     '''
     poles = []
     zeros = []
@@ -107,10 +107,10 @@ def attach_paz(tr, paz_file):
             attributes
     :param paz_file: path to pazfile or file pointer
 
+    >>> from obspy.core import Trace, compatibility
     >>> from obspy import Trace
     >>> tr = Trace(header={'calib': .094856, 'gse2': {'calper': 1}})
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
+    >>> f = compatibility.StringIO("""CAL1 RJOB   LE-3D    Z  M24    PAZ 010824 0001
     ... 2
     ... -4.39823 4.48709
     ... -4.39823 -4.48709
