@@ -12,17 +12,17 @@ from future.builtins import int
 from future.builtins import chr
 from future.builtins import str
 
-from .headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
+from obspy.mseed.headers import clibmseed, ENCODINGS, HPTMODULUS, \
+    SAMPLETYPE, DATATYPES, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
-    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS
+    VALID_CONTROL_HEADERS, SEED_CONTROL_HEADERS, blkt_100_s
+from obspy.mseed import util
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core.util import NATIVE_BYTEORDER
-from obspy.mseed.headers import blkt_100_s
 import ctypes as C
 import numpy as np
 import os
-from . import util
 import warnings
 
 
@@ -289,9 +289,10 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
             # libmseed uses underscores as separators and allows filtering
             # after the dataquality which is disabled here to not confuse
             # users. (* == all data qualities)
-            selections.srcname = sourcename.replace('.', '_') + '_*'
+            selections.srcname = (sourcename.replace('.', '_') + '_*').\
+                                 encode('ascii', 'ignore')
         else:
-            selections.srcname = '*'
+            selections.srcname = b'*'
     all_data = []
 
     # Use a callback function to allocate the memory and keep track of the
@@ -311,9 +312,9 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     allocData = C.CFUNCTYPE(C.c_long, C.c_int, C.c_char)(allocate_data)
 
     def log_error_or_warning(msg):
-        if msg.startswith("ERROR: "):
+        if msg.startswith(b"ERROR: "):
             raise InternalMSEEDReadingError(msg[7:].strip())
-        if msg.startswith("INFO: "):
+        if msg.startswith(b"INFO: "):
             warnings.warn(msg[6:].strip(), InternalMSEEDReadingWarning)
     diag_print = C.CFUNCTYPE(C.c_void_p, C.c_char_p)(log_error_or_warning)
 

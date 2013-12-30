@@ -5,12 +5,13 @@ Mini-SEED specific utilities.
 from __future__ import division
 from __future__ import absolute_import
 from __future__ import unicode_literals
+from __future__ import print_function
 from future.builtins import range
 from future.builtins import open
 from future.builtins import int
 from future.builtins import str
 from future.utils import native_str
-from .headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
+from obspy.mseed.headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
 from struct import unpack
@@ -52,10 +53,10 @@ def getStartAndEndTime(file_or_file_object):
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
-    And also with a Mini-SEED file stored in a StringIO.
+    And also with a Mini-SEED file stored in a BytesIO
 
-    >>> from StringIO import StringIO
-    >>> file_object = StringIO(f.read())
+    >>> from obspy.core import compatibility
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2007, 12, 31, 23, 59, 59, 915000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -64,14 +65,14 @@ def getStartAndEndTime(file_or_file_object):
     If the file pointer does not point to the first record, the start time will
     refer to the record it points to.
 
-    >>> f.seek(512)
+    >>> _ = f.seek(512)
     >>> getStartAndEndTime(f)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
 
     The same is valid for a file-like object.
 
-    >>> file_object = StringIO(f.read())
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> getStartAndEndTime(file_object)  # doctest: +NORMALIZE_WHITESPACE
         (UTCDateTime(2008, 1, 1, 0, 0, 1, 975000),
         UTCDateTime(2008, 1, 1, 0, 0, 20, 510000))
@@ -139,27 +140,35 @@ def getTimingAndDataQuality(file_or_file_object):
 
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("qualityflags.mseed")
-    >>> getTimingAndDataQuality(filename)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(filename)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    Also works with file pointers and StringIOs.
+    Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> getTimingAndDataQuality(f)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(f)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    >>> from StringIO import StringIO
-    >>> file_object = StringIO(f.read())
+    >>> from obspy.core import compatibility
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> f.close()
-    >>> getTimingAndDataQuality(file_object)
-    {'data_quality_flags': [9, 8, 7, 6, 5, 4, 3, 2]}
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [9, 8, 7, 6, 5, 4, 3, 2]
 
-    If the file pointer or StringIO position does not correspond to the first
+    If the file pointer or BytesIO position does not correspond to the first
     record the omitted records will be skipped.
 
-    >>> file_object.seek(1024, 1)
-    >>> getTimingAndDataQuality(file_object)
-    {'data_quality_flags': [8, 8, 7, 6, 5, 4, 3, 2]}
+    >>> _ = file_object.seek(1024, 1)
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in tq.items():
+    ...     print(k, v)
+    data_quality_flags [8, 8, 7, 6, 5, 4, 3, 2]
     >>> file_object.close()
 
     Reading a file with Blockette 1001 will return timing quality statistics.
@@ -167,28 +176,43 @@ def getTimingAndDataQuality(file_or_file_object):
     fixed Mini-SEED header and therefore need to be in every Mini-SEED file.
 
     >>> filename = getExampleFile("timingquality.mseed")
-    >>> getTimingAndDataQuality(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(filename)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
 
-    Also works with file pointers and StringIOs.
+    Also works with file pointers and BytesIOs.
 
     >>> f = open(filename, 'rb')
-    >>> getTimingAndDataQuality(f)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(f)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
 
-    >>> file_object = StringIO(f.read())
+    >>> file_object = compatibility.BytesIO(f.read())
     >>> f.close()
-    >>> getTimingAndDataQuality(file_object)  # doctest: +NORMALIZE_WHITESPACE
-    {'timing_quality_upper_quantile': 75.0,
-    'data_quality_flags': [0, 0, 0, 0, 0, 0, 0, 0], 'timing_quality_min': 0.0,
-    'timing_quality_lower_quantile': 25.0, 'timing_quality_average': 50.0,
-    'timing_quality_median': 50.0, 'timing_quality_max': 100.0}
+    >>> tq = getTimingAndDataQuality(file_object)
+    >>> for k, v in sorted(tq.items()):
+    ...     print(k, v)
+    data_quality_flags [0, 0, 0, 0, 0, 0, 0, 0]
+    timing_quality_average 50.0
+    timing_quality_lower_quantile 25.0
+    timing_quality_max 100.0
+    timing_quality_median 50.0
+    timing_quality_min 0.0
+    timing_quality_upper_quantile 75.0
     >>> file_object.close()
     """
     # Read the first record to get a starting point and.
@@ -245,13 +269,22 @@ def getRecordInformation(file_or_file_object, offset=0, endian=None):
 
     >>> from obspy.core.util import getExampleFile
     >>> filename = getExampleFile("test.mseed")
-    >>> getRecordInformation(filename)  # doctest: +NORMALIZE_WHITESPACE
-    {'record_length': 4096, 'data_quality_flags': 0, 'activity_flags': 0,
-     'byteorder': '>', 'encoding': 11, 'samp_rate': 40.0, 'excess_bytes': 0L,
-     'filesize': 8192L,
-     'starttime': UTCDateTime(2003, 5, 29, 2, 13, 22, 43400), 'npts': 5980,
-     'endtime': UTCDateTime(2003, 5, 29, 2, 15, 51, 518400),
-     'number_of_records': 2L, 'io_and_clock_flags': 0}
+    >>> ri = getRecordInformation(filename)
+    >>> for k, v in sorted(ri.items()):
+    ...     print(k, v)
+    activity_flags 0
+    byteorder >
+    data_quality_flags 0
+    encoding 11
+    endtime 2003-05-29T02:15:51.518400Z
+    excess_bytes 0
+    filesize 8192
+    io_and_clock_flags 0
+    npts 5980
+    number_of_records 2
+    record_length 4096
+    samp_rate 40.0
+    starttime 2003-05-29T02:13:22.043400Z
     """
     if isinstance(file_or_file_object, str):
         with open(file_or_file_object, 'rb') as f:
@@ -594,7 +627,7 @@ def shiftTimeOfFile(input_file, output_file, timeshift):
     sys_byteorder = "<" if (sys.byteorder == "little") else ">"
     doSwap = False if (byteorder == sys_byteorder) else True
 
-    # This is in this scenario somewhat easier to use than StringIO because one
+    # This is in this scenario somewhat easier to use than BytesIO because one
     # can directly modify the data array.
     data = np.fromfile(input_file, dtype="uint8")
     array_length = len(data)

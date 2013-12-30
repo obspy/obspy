@@ -8,7 +8,7 @@ from __future__ import unicode_literals
 from future.builtins import int
 from future.builtins import open
 
-from .headers import clibmseed, MSRecord, MSFileParam, MS_NOERROR, HPTMODULUS
+from obspy.mseed.headers import clibmseed, MSRecord, MSFileParam, MS_NOERROR, HPTMODULUS
 from obspy import UTCDateTime
 import ctypes as C
 import os
