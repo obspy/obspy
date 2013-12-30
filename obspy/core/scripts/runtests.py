@@ -244,7 +244,8 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     for module in DEPENDENCIES:
         temp = module.split('.')
         try:
-            mod = __import__(module, fromlist=temp[1:])
+            mod = __import__(module,
+                             fromlist=[native_str(temp[1:])])
             if module == '_omnipy':
                 result['dependencies'][module] = mod.coreVersion()
             else:

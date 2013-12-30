@@ -1,7 +1,3 @@
-from __future__ import unicode_literals
-from future import standard_library
-from future.builtins import super
-from future.builtins import str
 # -*- coding: utf-8 -*-
 """
 Testing utilities for ObsPy.
@@ -12,6 +8,11 @@ Testing utilities for ObsPy.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import super
+from future.builtins import str
+from future.utils import native_str
 from obspy.core.util.misc import get_untracked_files_from_git
 from obspy.core.util.base import getMatplotlibVersion, NamedTemporaryFile
 import fnmatch
@@ -45,14 +46,15 @@ def add_unittests(testsuite, module_name):
     >>> add_unittests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
-    MODULE_TESTS = __import__(MODULE_NAME + ".tests", fromlist="obspy")
-
+    MODULE_TESTS = __import__(MODULE_NAME + ".tests",
+                              fromlist=[native_str("obspy")])
     filename_pattern = os.path.join(MODULE_TESTS.__path__[0], "test_*.py")
     files = glob.glob(filename_pattern)
     names = (os.path.basename(file).split(".")[0] for file in files)
     module_names = (".".join([MODULE_NAME, "tests", name]) for name in names)
     for module_name in module_names:
-        module = __import__(module_name, fromlist="obspy")
+        module = __import__(module_name,
+                            fromlist=[native_str("obspy")])
         testsuite.addTest(module.suite())
 
 
@@ -75,7 +77,7 @@ def add_doctests(testsuite, module_name):
     >>> add_doctests(suite, "obspy.core")
     """
     MODULE_NAME = module_name
-    MODULE = __import__(MODULE_NAME, fromlist="obspy")
+    MODULE = __import__(MODULE_NAME, fromlist=[native_str("obspy")])
     MODULE_PATH = MODULE.__path__[0]
     MODULE_PATH_LEN = len(MODULE_PATH)
 
@@ -101,7 +103,8 @@ def add_doctests(testsuite, module_name):
             parts = root[MODULE_PATH_LEN:].split(os.sep)[1:]
             module_name = ".".join([MODULE_NAME] + parts + [file[:-3]])
             try:
-                module = __import__(module_name, fromlist="obspy")
+                module = __import__(module_name,
+                                    fromlist=[native_str("obspy")])
                 testsuite.addTest(doctest.DocTestSuite(module))
             except ValueError:
                 pass
