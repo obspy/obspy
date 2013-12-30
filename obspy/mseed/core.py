@@ -10,6 +10,7 @@ from future.builtins import zip
 from future.builtins import open
 from future.builtins import int
 from future.builtins import chr
+from future.builtins import str
 
 from .headers import clibmseed, ENCODINGS, HPTMODULUS, SAMPLETYPE, DATATYPES, \
     VALID_RECORD_LENGTHS, HPTERROR, SelectTime, Selections, blkt_1001_s, \
@@ -57,21 +58,21 @@ def isMSEED(filename):
     if len(header) != 7:
         return False
     # Sequence number must contains a single number or be empty
-    seqnr = header[0:6].replace('\x00', ' ').strip()
-    if not seqnr.isdigit() and seqnr != '':
+    seqnr = header[0:6].replace(b'\x00', b' ').strip()
+    if not seqnr.isdigit() and seqnr != b'':
         return False
     # Check for any valid control header types.
-    if header[6] in ['D', 'R', 'Q', 'M']:
+    if header[6:7] in [b'D', b'R', b'Q', b'M']:
         return True
     # Check if Full-SEED
-    if not header[6] == 'V':
+    if not header[6:7] == b'V':
         return False
     # Parse the whole file and check whether it has has a data record.
     fp.seek(1, 1)
     _i = 0
     # search for blockettes 010 or 008
     while True:
-        if fp.read(3) in ['010', '008']:
+        if fp.read(3) in [b'010', b'008']:
             break
         # the next for bytes are the record length
         # as we are currently at position 7 (fp.read(3) fp.read(4))
@@ -98,7 +99,7 @@ def isMSEED(filename):
     # record
     while fp.tell() < file_size:
         flag = fp.read(1)
-        if flag in ['D', 'R', 'Q', 'M']:
+        if flag in [b'D', b'R', b'Q', b'M']:
             return True
         fp.seek(record_length - 1, 1)
     return False
@@ -298,7 +299,7 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
     def allocate_data(samplecount, sampletype):
         # Enhanced sanity checking for libmseed 2.10 can result in the
         # sampletype not being set. Just return an empty array in this case.
-        if sampletype == "\x00":
+        if sampletype == b"\x00":
             data = np.empty(0)
         else:
             data = np.empty(samplecount, dtype=DATATYPES[sampletype])
@@ -375,6 +376,11 @@ def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,
                 data = np.array([])
                 header['npts'] = currentSegment.samplecnt
             # Make sure to init the number of samples.
+            # Py3k: convert to unicode
+            header['mseed'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                                  for k, v in header['mseed'].items())
+            header = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
+                          for k, v in header.items())
             trace = Trace(header=header, data=data)
             # Append information if necessary.
             if recinfo:

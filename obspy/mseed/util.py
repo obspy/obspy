@@ -8,6 +8,8 @@ from __future__ import unicode_literals
 from future.builtins import range
 from future.builtins import open
 from future.builtins import int
+from future.builtins import str
+from future.utils import native_str
 from .headers import HPTMODULUS, clibmseed, FRAME, SAMPLESIZES, ENDIAN
 from obspy import UTCDateTime
 from obspy.core.util import scoreatpercentile
@@ -291,13 +293,13 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     if info['filesize'] % 256 != 0:
         # if a multiple of minimal record length 256
         record_start = 0
-    elif file_object.read(8)[6] not in ['D', 'R', 'Q', 'M']:
+    elif file_object.read(8)[6:7] not in [b'D', b'R', b'Q', b'M']:
         # if valid data record start at all starting with D, R, Q or M
         record_start = 0
     file_object.seek(record_start, 0)
 
     # check if full SEED or Mini-SEED
-    if file_object.read(8)[6] == 'V':
+    if file_object.read(8)[6:7] == b'V':
         # found a full SEED record - seek first Mini-SEED record
         # search blockette 005, 008 or 010 which contain the record length
         blockette_id = file_object.read(3)
@@ -318,7 +320,7 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         # reset file pointer
         file_object.seek(record_start, 0)
         # cycle through file using record length until first data record found
-        while file_object.read(7)[6] not in ['D', 'R', 'Q', 'M']:
+        while file_object.read(7)[6:7] not in [b'D', b'R', b'Q', b'M']:
             record_start += rec_len
             file_object.seek(record_start, 0)
 
@@ -326,23 +328,24 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     file_object.seek(record_start + 20, 0)
     # Capital letters indicate unsigned quantities.
     data = file_object.read(28)
+    fmt = lambda s: native_str('%sHHBBBxHHhhBBBxlxxH' % s) #.encode('ascii', 'strict')
     if endian is None:
         try:
             endian = ">"
-            values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+            values = unpack(fmt(endian), data)
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
         except:
             endian = "<"
-            values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+            values = unpack(fmt(endian), data)
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
                 hour=values[2], minute=values[3], second=values[4],
                 microsecond=values[5] * 100)
     else:
-        values = unpack('%sHHBBBxHHhhBBBxlxxH' % endian, data)
+        values = unpack(fmt(endian), data)
         try:
             starttime = UTCDateTime(
                 year=values[0], julday=values[1],
@@ -373,26 +376,31 @@ def _getRecordInformation(file_object, offset=0, endian=None):
     # if any of those is found.
     while blkt_offset:
         file_object.seek(record_start + blkt_offset, 0)
-        blkt_type, blkt_offset = unpack('%sHH' % endian, file_object.read(4))
+        blkt_type, blkt_offset = unpack(native_str('%sHH' % endian),
+                                        file_object.read(4))
         # Parse in order of likeliness.
         if blkt_type == 1000:
             encoding, word_order, record_length = \
-                unpack('%sBBB' % endian, file_object.read(3))
+                unpack(native_str('%sBBB' % endian),
+                       file_object.read(3))
             if ENDIAN[word_order] != endian:
                 msg = 'Inconsistent word order.'
                 warnings.warn(msg, UserWarning)
             info['encoding'] = encoding
             info['record_length'] = 2 ** record_length
         elif blkt_type == 1001:
-            info['timing_quality'], mu_sec = unpack('%sBb' % endian,
-                                                    file_object.read(2))
+            info['timing_quality'], mu_sec = \
+                unpack(native_str('%sBb' % endian),
+                       file_object.read(2))
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 500:
             file_object.seek(14, 1)
-            mu_sec = unpack('%sb' % endian, file_object.read(1))[0]
+            mu_sec = unpack(native_str('%sb' % endian),
+                            file_object.read(1))[0]
             starttime += float(mu_sec) / 1E6
         elif blkt_type == 100:
-            samp_rate = unpack('%sf' % endian, file_object.read(4))[0]
+            samp_rate = unpack(native_str('%sf' % endian),
+                               file_object.read(4))[0]
 
     # If samprate not set via blockette 100 calculate the sample rate according
     # to the SEED manual.

@@ -9,7 +9,7 @@ from obspy.core.util.attribdict import AttribDict
 from obspy.core.util.decorator import skipIf
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED
-from obspy.mseed.headers import clibmseed, PyFile_FromFile
+from obspy.mseed.headers import clibmseed
 from obspy.mseed.msstruct import _MSStruct
 import ctypes as C
 import numpy as np
@@ -92,7 +92,6 @@ class MSEEDSpecialIssueTestCase(unittest.TestCase):
         self.assertRaises(ArgumentError, cl.ms_readmsr_r, *args)
         self.assertRaises(TypeError, cl.ms_readmsr_r, *args[:-1])
         self.assertRaises(ArgumentError, cl.mst_printtracelist, *args[:5])
-        self.assertRaises(ArgumentError, PyFile_FromFile, *args[:5])
         self.assertRaises(ArgumentError, cl.ms_detect, *args[:4])
         args.append(1)  # 10 argument function
         self.assertRaises(ArgumentError, cl.mst_packgroup, *args)
