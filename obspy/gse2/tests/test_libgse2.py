@@ -1,12 +1,12 @@
-from __future__ import unicode_literals
-from future import standard_library
-from future.builtins import zip
-from future.builtins import open
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 The libgse2 test suite.
 """
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import open
 from ctypes import ArgumentError
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile, CatchOutput
