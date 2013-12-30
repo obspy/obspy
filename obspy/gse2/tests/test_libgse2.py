@@ -76,7 +76,8 @@ class LibGSE2TestCase(unittest.TestCase):
         with NamedTemporaryFile() as f:
             libgse2.write(header, data, f)
             f.flush()
-            newheader, newdata = libgse2.read(open(f.name, 'rb'))
+            with open(f.name, 'rb') as f2:
+                newheader, newdata = libgse2.read(f2)
         self.assertEqual(header, newheader)
         np.testing.assert_equal(data, newdata)
 
@@ -105,7 +106,8 @@ class LibGSE2TestCase(unittest.TestCase):
         The values can be read from the filename.
         """
         gse2file = os.path.join(self.path, 'twiceCHK2.gse2')
-        header = libgse2.readHeader(open(gse2file, 'rb'))
+        with open(gse2file, 'rb') as f:
+            header = libgse2.readHeader(f)
         self.assertEqual('RNHA', header['station'])
         self.assertEqual('EHN', header['channel'])
         self.assertEqual(200, header['sampling_rate'])
@@ -118,13 +120,14 @@ class LibGSE2TestCase(unittest.TestCase):
         """
         See if first 4 characters are WID2, if not raise type error.
         """
-        f = open(os.path.join(self.path, 'loc_RNON20040609200559.z'), 'rb')
-        pos = f.tell()
-        self.assertEqual(None, libgse2.isGse2(f))
-        self.assertEqual(pos, f.tell())
-        f.seek(10)
-        self.assertRaises(TypeError, libgse2.isGse2, f)
-        self.assertEqual(10, f.tell())
+        filename =  os.path.join(self.path, 'loc_RNON20040609200559.z')
+        with open(filename, 'rb') as f:
+            pos = f.tell()
+            self.assertEqual(None, libgse2.isGse2(f))
+            self.assertEqual(pos, f.tell())
+            f.seek(10)
+            self.assertRaises(TypeError, libgse2.isGse2, f)
+            self.assertEqual(10, f.tell())
 
     def test_maxValueExceeded(self):
         """
@@ -166,8 +169,8 @@ class LibGSE2TestCase(unittest.TestCase):
         Tests a file which contains the "CHK2" string in the CM6 encoded
         string (line 13 of twiceCHK2.gse2).
         """
-        f = open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb')
-        header, data = libgse2.read(f, verify_chksum=True)
+        with open(os.path.join(self.path, 'twiceCHK2.gse2'), 'rb') as f:
+            header, data = libgse2.read(f, verify_chksum=True)
         self.assertEqual(header['npts'], 750)
         np.testing.assert_array_equal(data[-4:],
                                       np.array([-139, -153, -169, -156]))
@@ -177,8 +180,8 @@ class LibGSE2TestCase(unittest.TestCase):
         Tests that gse2 files with n_samps=0 will not end up with a
         segmentation fault
         """
-        f = open(os.path.join(self.path, 'broken_head.gse2'), 'rb')
-        self.assertRaises(ChksumError, libgse2.read, f)
+        with open(os.path.join(self.path, 'broken_head.gse2'), 'rb') as f:
+            self.assertRaises(ChksumError, libgse2.read, f)
 
     def test_noDAT2NullPointer(self):
         """
