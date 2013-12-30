@@ -172,13 +172,14 @@ def readHeader(fh):
     current file position.
     """
     # search for WID2 field
-    while True:
-        line = fh.readline()
+    line = fh.readline()
+    while line:
         if line.startswith(b'WID2'):
             # valid GSE2 header
             break
-        elif line == '':
-            raise EOFError
+        line = fh.readline()
+    else:
+        raise EOFError
     # fetch header
     header = {}
     header['gse2'] = {}
@@ -205,6 +206,7 @@ def readHeader(fh):
     # otherwise we might miss the DAT2 line afterwards.
     else:
         fh.seek(pos)
+    # Py3k: convert to unicode
     header['gse2'] = dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
                 for k, v in header['gse2'].items())
     return dict((k, v.decode()) if isinstance(v, bytes) else (k, v)
@@ -466,23 +468,23 @@ def parse_STA2(line):
     positions. Here are some real-world examples:
 
     >>> l = "STA2           -999.0000 -999.00000              -.999 -.999"
-    >>> for k, v in parse_STA2(l).items():  # doctest: +NORMALIZE_WHITESPACE
+    >>> for k, v in sorted(parse_STA2(l).items()):
     ...     print(k, v)
-    network 
-    lon -999.0
+    coordsys 
     edepth -0.999
     elev -0.999
     lat -999.0
-    coordsys 
+    lon -999.0
+    network 
     >>> l = "STA2 ABCD       12.34567   1.234567 WGS-84       -123.456 1.234"
-    >>> for k, v in parse_STA2(l).items():  # doctest: +NORMALIZE_WHITESPACE
+    >>> for k, v in sorted(parse_STA2(l).items()):
     ...     print(k, v)
-    network ABCD
-    lon 1.234567
+    coordsys WGS-84
     edepth 1.234
     elev -123.456
     lat 12.34567
-    coordsys WGS-84
+    lon 1.234567
+    network ABCD
     """
     header = {}
     try:
