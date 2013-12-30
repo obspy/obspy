@@ -14,15 +14,13 @@ else:
 
 
 if PY2:
-    import StringIO
-    StringIO = StringIO.StringIO
+    from StringIO import StringIO
 else:
     import io
     StringIO = io.StringIO
 
 if PY2:
-    import StringIO
-    BytesIO = StringIO.StringIO
+    from StringIO import StringIO as BytesIO
 else:
     import io
     BytesIO = io.BytesIO
