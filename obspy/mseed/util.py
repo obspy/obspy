@@ -18,6 +18,7 @@ from struct import unpack
 import sys
 import ctypes as C
 import numpy as np
+import math
 import warnings
 
 
@@ -506,7 +507,8 @@ def _convertDatetimeToMSTime(dt):
 
     :param dt: obspy.util.UTCDateTime object.
     """
-    return int(dt.timestamp * HPTMODULUS)
+    _fsec, _sec = math.modf(dt.timestamp)
+    return int(round(_fsec * HPTMODULUS)) + int(_sec * HPTMODULUS)
 
 
 def _convertMSTimeToDatetime(timestring):

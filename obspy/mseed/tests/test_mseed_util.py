@@ -2,11 +2,11 @@
 from __future__ import unicode_literals
 from future import standard_library
 from future.builtins import open
-from io import StringIO
 from obspy import UTCDateTime
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED
 from obspy.core.util import NamedTemporaryFile
+from obspy.core import compatibility
 import numpy as np
 import os
 import random
@@ -41,7 +41,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
             1313131313: UTCDateTime(2011, 8, 12, 6, 41, 53),
             100000: UTCDateTime(1970, 1, 2, 3, 46, 40),
             100000.111112: UTCDateTime(1970, 1, 2, 3, 46, 40, 111112),
-            200000000: UTCDateTime(1976, 5, 3, 19, 33, 20)
+            200000000: UTCDateTime(1976, 5, 3, 19, 33, 20),
+            # test rounding of 7th digit of microseconds
+            1388479508.871572: UTCDateTime(1388479508.8715718),
         }
         # Loop over timesdict.
         for ts, dt in timesdict.items():
@@ -82,9 +84,9 @@ class MSEEDUtilTestCase(unittest.TestCase):
         self.assertEqual(info['excess_bytes'], 302)
         self.assertEqual(open_file.tell(), 1234)
         open_file.close()
-        # Now test with a StringIO with the first ten percent.
+        # Now test with a BytesIO with the first ten percent.
         open_file = open(filename, 'rb')
-        open_file_string = StringIO(open_file.read())
+        open_file_string = compatibility.BytesIO(open_file.read())
         open_file.close()
         open_file_string.seek(111)
         info = util.getRecordInformation(open_file_string)

@@ -6,7 +6,7 @@ from future.builtins import range
 from future.builtins import open
 from future.builtins import str
 from obspy import UTCDateTime, Stream, Trace, read
-from obspy.core import AttribDict
+from obspy.core import AttribDict, compatibility
 from obspy.core.util import NamedTemporaryFile
 from obspy.mseed import util
 from obspy.mseed.core import readMSEED, writeMSEED, isMSEED
@@ -15,7 +15,6 @@ from obspy.mseed.msstruct import _MSStruct
 import copy
 import numpy as np
 import os
-from io import StringIO
 import sys
 import unittest
 import warnings
@@ -971,8 +970,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                                 'BW.UH3.__.EHZ.D.2010.171.first_record')
 
         # Catch output.
-        sys.stdout = StringIO()
-        sys.stderr = StringIO()
+        sys.stdout = compatibility.StringIO()
+        sys.stderr = compatibility.StringIO()
         st = read(filename, verbose=2)
         sys.stdout.seek(0, 0)
         stdout = sys.stdout.read()
