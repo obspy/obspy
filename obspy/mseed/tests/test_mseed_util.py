@@ -75,19 +75,17 @@ class MSEEDUtilTestCase(unittest.TestCase):
         # Now with an open file. This should work regardless of the current
         # value of the file pointer and it should also not change the file
         # pointer.
-        open_file = open(filename, 'rb')
-        open_file.seek(1234)
-        info = util.getRecordInformation(open_file)
-        self.assertEqual(info['filesize'], 5120 - 1234)
-        self.assertEqual(info['record_length'], 512)
-        self.assertEqual(info['number_of_records'], 7)
-        self.assertEqual(info['excess_bytes'], 302)
-        self.assertEqual(open_file.tell(), 1234)
-        open_file.close()
+        with open(filename, 'rb') as open_file:
+            open_file.seek(1234)
+            info = util.getRecordInformation(open_file)
+            self.assertEqual(info['filesize'], 5120 - 1234)
+            self.assertEqual(info['record_length'], 512)
+            self.assertEqual(info['number_of_records'], 7)
+            self.assertEqual(info['excess_bytes'], 302)
+            self.assertEqual(open_file.tell(), 1234)
         # Now test with a BytesIO with the first ten percent.
-        open_file = open(filename, 'rb')
-        open_file_string = compatibility.BytesIO(open_file.read())
-        open_file.close()
+        with open(filename, 'rb') as open_file:
+            open_file_string = compatibility.BytesIO(open_file.read())
         open_file_string.seek(111)
         info = util.getRecordInformation(open_file_string)
         self.assertEqual(info['filesize'], 5120 - 111)
@@ -183,7 +181,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         steim1_file = os.path.join(self.path, 'data',
                                    'BW.BGLD.__.EHE.D.2008.001.first_record')
         # 64 Bytes header.
-        data_string = open(steim1_file, 'rb').read()[64:]
+        with open(steim1_file, 'rb') as fp:
+            data_string = fp.read()[64:]
         data = util._unpackSteim1(data_string, 412, swapflag=self.swap,
                                   verbose=0)
         data_record = readMSEED(steim1_file)[0].data
@@ -196,7 +195,8 @@ class MSEEDUtilTestCase(unittest.TestCase):
         """
         steim2_file = os.path.join(self.path, 'data', 'steim2.mseed')
         # 128 Bytes header.
-        data_string = open(steim2_file, 'rb').read()[128:]
+        with open(steim2_file, 'rb') as fp:
+            data_string = fp.read()[128:]
         data = util._unpackSteim2(data_string, 5980, swapflag=self.swap,
                                   verbose=0)
         data_record = readMSEED(steim2_file)[0].data
