@@ -7,6 +7,13 @@
 #
 # Copyright (C) 2008-2012 Yannik Behr, C. J. Ammon's
 #-------------------------------------------------------------------
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import map
+from future.builtins import int
+from future.builtins import range
 from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
 import numpy as np
@@ -108,7 +115,7 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(map(chr, range(32, 127)) + list("\n\r\t\b"))
+    text_characters = "".join(list(map(chr, list(range(32, 127)))) + list("\n\r\t\b"))
     _null_trans = string.maketrans("", "")
     s = open(filename).read(blocksize)
     if "\0" in s:
@@ -543,7 +550,7 @@ class SacIO(object):
             raise SacIOError("Cannot read all header values")
         try:
             self.IsSACfile(fname)
-        except SacError, e:
+        except SacError as e:
             try:
                 # if it is not a valid SAC-file try with big endian
                 # byte order
@@ -554,7 +561,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 self.hf = self.hi = self.hs = None
                 f.close()
                 raise SacError(e)
@@ -600,7 +607,7 @@ class SacIO(object):
                 self.hf.tofile(f)
                 self.hi.tofile(f)
                 self.hs.tofile(f)
-            except Exception, e:
+            except Exception as e:
                 f.close()
                 raise SacError("Cannot write header to file: " + fname, e)
         f.close()
@@ -656,7 +663,7 @@ class SacIO(object):
                 self.hs = np.fromfile(f, dtype='|S8', count=24)
                 self.IsSACfile(fname, fsize)
                 self.byteorder = 'big'
-            except SacError, e:
+            except SacError as e:
                 f.close()
                 raise SacError(e)
         #--------------------------------------------------------------
@@ -724,14 +731,14 @@ class SacIO(object):
             # because every string field has to be 8 characters long
             # apart from the second field which is 16 characters long
             # resulting in a total length of 192 characters
-            for i in xrange(0, 24, 3):
+            for i in range(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline()  # strip the newline
             #--------------------------------------------------------------
             # read in the seismogram points
             #--------------------------------------------------------------
             self.seis = loadtxt(f, dtype='<f4', ndlim=1).ravel()
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
@@ -786,16 +793,16 @@ class SacIO(object):
             # because every string field has to be 8 characters long
             # apart from the second field which is 16 characters long
             # resulting in a total length of 192 characters
-            for i in xrange(0, 24, 3):
+            for i in range(0, 24, 3):
                 self.hs[i:i + 3] = np.fromfile(f, dtype='|S8', count=3)
                 f.readline()  # strip the newline
-        except IOError, e:
+        except IOError as e:
             self.hf = self.hs = self.hi = self.seis = None
             f.close()
             raise SacIOError("%s is not a valid SAC file:" % fname, e)
         try:
             self.IsSACfile(fname, fsize=False)
-        except SacError, e:
+        except SacError as e:
             f.close()
             raise SacError(e)
         try:
@@ -824,7 +831,7 @@ class SacIO(object):
         self.fromarray(trace.data, begin=b, delta=trace.stats.delta,
                        starttime=trace.stats.starttime)
         # overwriting with ObsPy defaults
-        for _j, _k in convert_dict.iteritems():
+        for _j, _k in convert_dict.items():
             self.SetHvalue(_j, trace.stats[_k])
         # overwriting up SAC specific values
         # note that the SAC reference time values (including B and E) are
@@ -859,7 +866,7 @@ class SacIO(object):
                        fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
             np.savetxt(f, np.reshape(self.hi, (8, 5)),
                        fmt="%10d%10d%10d%10d%10d")
-            for i in xrange(0, 24, 3):
+            for i in range(0, 24, 3):
                 self.hs[i:i + 3].tofile(f)
                 f.write('\n')
         except:
@@ -901,7 +908,7 @@ class SacIO(object):
             self.hi.tofile(f)
             self.hs.tofile(f)
             self.seis.tofile(f)
-        except Exception, e:
+        except Exception as e:
             f.close()
             msg = "Cannot write SAC-buffer to file: "
             raise SacIOError(msg, ofname, e)
@@ -913,21 +920,21 @@ class SacIO(object):
         Convenience function for printing undefined integer header values.
         """
         if value != -12345:
-            print(label, value)
+            print((label, value))
 
     def PrintFValue(self, label='=', value=-12345.0):
         """
         Convenience function for printing undefined float header values.
         """
         if value != -12345.0:
-            print('%s %.8g' % (label, value))
+            print(('%s %.8g' % (label, value)))
 
     def PrintSValue(self, label='=', value='-12345'):
         """
         Convenience function for printing undefined string header values.
         """
         if value.find('-12345') == -1:
-            print(label, value)
+            print((label, value))
 
     def ListStdValues(self):  # h is a header list, s is a float list
         """
@@ -967,13 +974,13 @@ class SacIO(object):
             date = time.strptime(repr(nzyear) + " " + repr(nzjday),
                                  "%Y %j").tm_mday
             pattern = '\nReference Time = %2.2d/%2.2d/%d (%d) %d:%d:%d.%d'
-            print(pattern % (month, date,
+            print((pattern % (month, date,
                              self.GetHvalue('nzyear'),
                              self.GetHvalue('nzjday'),
                              self.GetHvalue('nzhour'),
                              self.GetHvalue('nzmin'),
                              self.GetHvalue('nzsec'),
-                             self.GetHvalue('nzmsec')))
+                             self.GetHvalue('nzmsec'))))
         except ValueError:
             pass
         self.PrintIValue('Npts  = ', self.GetHvalue('npts'))
@@ -1248,7 +1255,7 @@ class SacIO(object):
         """
         header = {}
         # convert common header types of the ObsPy trace object
-        for i, j in convert_dict.iteritems():
+        for i, j in convert_dict.items():
             value = self.GetHvalue(i)
             if isinstance(value, str):
                 null_term = value.find('\x00')
@@ -1353,7 +1360,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         if line.find('ZEROS') != -1:
             a = line.split()
             noz = int(a[1])
-            for _k in xrange(noz):
+            for _k in range(noz):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('POLES') != -1 or line.find('CONSTANT') != -1 or \
@@ -1367,7 +1374,7 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
         if line.find('POLES') != -1:
             a = line.split()
             nop = int(a[1])
-            for _k in xrange(nop):
+            for _k in range(nop):
                 line = paz_file.readline()
                 a = line.split()
                 if line.find('CONSTANT') != -1 or line.find('ZEROS') != -1 or \

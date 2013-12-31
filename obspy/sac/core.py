@@ -8,7 +8,10 @@ SAC bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
-
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import open
 from obspy import Trace, Stream
 from obspy.sac.sacio import SacIO, _isText
 import os
@@ -106,7 +109,7 @@ def isSACXY(filename):
         f = open(filename)
         hdcards = []
         # read in the header cards
-        for _i in xrange(30):
+        for _i in range(30):
             hdcards.append(f.readline())
         npts = int(hdcards[15].split()[-1])
         # read in the seismogram
