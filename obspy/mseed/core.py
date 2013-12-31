@@ -715,7 +715,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Only use Blockette 100 if necessary.
         if use_blkt_100:
             size = C.sizeof(blkt_100_s)
-            blkt100 = C.c_char(' ')
+            blkt100 = C.c_char(b' ')
             C.memset(C.pointer(blkt100), 0, size)
             ret_val = clibmseed.msr_addblockette(
                 msr, C.pointer(blkt100), size, 100, 0)  # NOQA
@@ -747,7 +747,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         clibmseed.msr_free(C.pointer(msr))  # NOQA
         del mst, msr  # NOQA
     # Close if its a file handler.
-    if hasattr(f, 'write'):
+    if not hasattr(filename, 'write'):
         f.close()
 
 
