@@ -52,57 +52,57 @@ def isMSEED(filename):
 
     Thus it cannot be used to validate a Mini-SEED or SEED file.
     """
-    fp = open(filename, 'rb')
-    header = fp.read(7)
-    # File has less than 7 characters
-    if len(header) != 7:
-        return False
-    # Sequence number must contains a single number or be empty
-    seqnr = header[0:6].replace(b'\x00', b' ').strip()
-    if not seqnr.isdigit() and seqnr != b'':
-        return False
-    # Check for any valid control header types.
-    if header[6:7] in [b'D', b'R', b'Q', b'M']:
-        return True
-    # Check if Full-SEED
-    if not header[6:7] == b'V':
-        return False
-    # Parse the whole file and check whether it has has a data record.
-    fp.seek(1, 1)
-    _i = 0
-    # search for blockettes 010 or 008
-    while True:
-        if fp.read(3) in [b'010', b'008']:
-            break
-        # the next for bytes are the record length
-        # as we are currently at position 7 (fp.read(3) fp.read(4))
-        # we need to subtract this first before we seek
-        # to the appropriate position
+    with open(filename, 'rb') as fp:
+        header = fp.read(7)
+        # File has less than 7 characters
+        if len(header) != 7:
+            return False
+        # Sequence number must contains a single number or be empty
+        seqnr = header[0:6].replace(b'\x00', b' ').strip()
+        if not seqnr.isdigit() and seqnr != b'':
+            return False
+        # Check for any valid control header types.
+        if header[6:7] in [b'D', b'R', b'Q', b'M']:
+            return True
+        # Check if Full-SEED
+        if not header[6:7] == b'V':
+            return False
+        # Parse the whole file and check whether it has has a data record.
+        fp.seek(1, 1)
+        _i = 0
+        # search for blockettes 010 or 008
+        while True:
+            if fp.read(3) in [b'010', b'008']:
+                break
+            # the next for bytes are the record length
+            # as we are currently at position 7 (fp.read(3) fp.read(4))
+            # we need to subtract this first before we seek
+            # to the appropriate position
+            try:
+                fp.seek(int(fp.read(4)) - 7, 1)
+            except:
+                return False
+            _i += 1
+            # break after 3 cycles
+            if _i == 3:
+                return False
+        # Try to get a record length.
+        fp.seek(8, 1)
         try:
-            fp.seek(int(fp.read(4)) - 7, 1)
+            record_length = pow(2, int(fp.read(2)))
         except:
             return False
-        _i += 1
-        # break after 3 cycles
-        if _i == 3:
-            return False
-    # Try to get a record length.
-    fp.seek(8, 1)
-    try:
-        record_length = pow(2, int(fp.read(2)))
-    except:
+        file_size = os.path.getsize(filename)
+        # Jump to the second record.
+        fp.seek(record_length + 6)
+        # Loop over all records and return True if one record is a data
+        # record
+        while fp.tell() < file_size:
+            flag = fp.read(1)
+            if flag in [b'D', b'R', b'Q', b'M']:
+                return True
+            fp.seek(record_length - 1, 1)
         return False
-    file_size = os.path.getsize(filename)
-    # Jump to the second record.
-    fp.seek(record_length + 6)
-    # Loop over all records and return True if one record is a data
-    # record
-    while fp.tell() < file_size:
-        flag = fp.read(1)
-        if flag in [b'D', b'R', b'Q', b'M']:
-            return True
-        fp.seek(record_length - 1, 1)
-    return False
 
 
 def readMSEED(mseed_object, starttime=None, endtime=None, headonly=False,

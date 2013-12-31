@@ -597,7 +597,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
                              reclen=256, byteorder=byteorder)
                     # Read the first record of data without header not using
                     # ObsPy
-                    s = open(tempfile, "rb").read()
+                    with open(tempfile, "rb") as fp:
+                        s = fp.read()
                     data = np.fromstring(s[56:256], dtype=btype + dtype)
                     np.testing.assert_array_equal(data, st[0].data[:len(data)])
                     # Read the binary chunk of data with ObsPy
@@ -897,12 +898,12 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         # one samples
         tr = Trace(data=np.ones(1))
-        tempfile = NamedTemporaryFile().name
-        tr.write(tempfile, format="MSEED")
-        st = read(tempfile)
-        self.assertEqual(len(st), 1)
-        self.assertEqual(len(st[0]), 1)
-        os.remove(tempfile)
+        with NamedTemporaryFile() as tf:
+            tempfile = tf.name
+            tr.write(tempfile, format="MSEED")
+            st = read(tempfile)
+            self.assertEqual(len(st), 1)
+            self.assertEqual(len(st[0]), 1)
         # two samples
         tr = Trace(data=np.ones(2))
         with NamedTemporaryFile() as tf:
