@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+from __future__ import print_function
 from future import standard_library
 from future.builtins import zip
 from future.builtins import range
 from future.builtins import open
 from future.builtins import str
+from future.utils import native_str
 from obspy import UTCDateTime, Stream, Trace, read
 from obspy.core import AttribDict, compatibility
 from obspy.core.util import NamedTemporaryFile
@@ -931,7 +933,8 @@ class MSEEDReadingAndWritingTestCase(unittest.TestCase):
         """
         filename = os.path.join(self.path, 'data', 'timingquality.mseed')
         st = read(filename, details=True)
-        dt = np.dtype([('npts', 'i4'), ('qual', 'i4')])
+        dt = np.dtype([(native_str('npts'), native_str('i4')),
+                       (native_str('qual'), native_str('i4'))])
         res = np.array([(tr.stats.npts, tr.stats.mseed.timing_quality)
                         for tr in st], dtype=dt)
         one_big_st = read(filename)  # do not read timing quality info

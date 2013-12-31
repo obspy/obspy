@@ -136,7 +136,8 @@ class _MSStruct(object):
         """
         errcode = clibmseed.ms_readmsr_r(C.pointer(self.msf),
                                          C.pointer(self.msr),
-                                         self.file, reclen, None, None,
+                                         self.file.encode('ascii', 'strict'),
+                                         reclen, None, None,
                                          skipnotdata, dataflag, verbose)
         if raise_flag:
             if errcode != MS_NOERROR:

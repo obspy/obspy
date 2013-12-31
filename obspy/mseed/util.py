@@ -337,8 +337,8 @@ def _getRecordInformation(file_object, offset=0, endian=None):
         # found a full SEED record - seek first Mini-SEED record
         # search blockette 005, 008 or 010 which contain the record length
         blockette_id = file_object.read(3)
-        while blockette_id not in ['010', '008', '005']:
-            if not blockette_id.startswith('0'):
+        while blockette_id not in [b'010', b'008', b'005']:
+            if not blockette_id.startswith(b'0'):
                 msg = "SEED Volume Index Control Headers: blockette 0xx" + \
                       " expected, got %s"
                 raise Exception(msg % blockette_id)

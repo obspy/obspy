@@ -691,16 +691,16 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         # Fill up msr record structure, this is already contained in
         # mstg, however if blk1001 is set we need it anyway
         msr = clibmseed.msr_init(None)
-        msr.contents.network = trace.stats.network
-        msr.contents.station = trace.stats.station
-        msr.contents.location = trace.stats.location
-        msr.contents.channel = trace.stats.channel
-        msr.contents.dataquality = trace_attr['dataquality']
+        msr.contents.network = trace.stats.network.encode('ascii', 'strict')
+        msr.contents.station = trace.stats.station.encode('ascii', 'strict')
+        msr.contents.location = trace.stats.location.encode('ascii', 'strict')
+        msr.contents.channel = trace.stats.channel.encode('ascii', 'strict')
+        msr.contents.dataquality = trace_attr['dataquality'].encode('ascii', 'strict')
 
         # Only use Blockette 1001 if necessary.
         if use_blkt_1001:
             size = C.sizeof(blkt_1001_s)
-            blkt1001 = C.c_char(' ')
+            blkt1001 = C.c_char(b' ')
             C.memset(C.pointer(blkt1001), 0, size)
             ret_val = clibmseed.msr_addblockette(msr, C.pointer(blkt1001),
                                                  size, 1001, 0)
@@ -747,7 +747,7 @@ def writeMSEED(stream, filename, encoding=None, reclen=None, byteorder=None,
         clibmseed.msr_free(C.pointer(msr))  # NOQA
         del mst, msr  # NOQA
     # Close if its a file handler.
-    if isinstance(f, file):
+    if hasattr(f, 'write'):
         f.close()
 
 
@@ -766,12 +766,12 @@ class MST(object):
         sampletype = SAMPLETYPE[data.dtype.type]
 
         # Set the header values.
-        self.mst.contents.network = trace.stats.network
-        self.mst.contents.station = trace.stats.station
-        self.mst.contents.location = trace.stats.location
-        self.mst.contents.channel = trace.stats.channel
-        self.mst.contents.dataquality = dataquality
-        self.mst.contents.type = '\x00'
+        self.mst.contents.network = trace.stats.network.encode('ascii', 'strict')
+        self.mst.contents.station = trace.stats.station.encode('ascii', 'strict')
+        self.mst.contents.location = trace.stats.location.encode('ascii', 'strict')
+        self.mst.contents.channel = trace.stats.channel.encode('ascii', 'strict')
+        self.mst.contents.dataquality = dataquality.encode('ascii', 'strict')
+        self.mst.contents.type = b'\x00'
         self.mst.contents.starttime = \
             util._convertDatetimeToMSTime(trace.stats.starttime)
         self.mst.contents.endtime = \
@@ -779,7 +779,7 @@ class MST(object):
         self.mst.contents.samprate = trace.stats.sampling_rate
         self.mst.contents.samplecnt = trace.stats.npts
         self.mst.contents.numsamples = trace.stats.npts
-        self.mst.contents.sampletype = sampletype
+        self.mst.contents.sampletype = sampletype.encode('ascii', 'strict')
 
         # libmseed expects data in the native byteorder.
         if data.dtype.byteorder != "=":
