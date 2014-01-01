@@ -90,6 +90,7 @@ from future.builtins import super
 from future.builtins import input
 from future.builtins import map
 from future.builtins import str
+from future.utils import native_str
 
 from obspy.core.util import DEFAULT_MODULES, ALL_MODULES, NETWORK_MODULES
 from obspy.core.util.version import get_git_version
@@ -177,9 +178,8 @@ def _getSuites(verbosity=1, names=[]):
 
 def _createReport(ttrs, timetaken, log, server, hostname):
     # import additional libraries here to speed up normal tests
+    from obspy.core import compatibility
     import http.client
-    import urllib.request, urllib.parse, urllib.error
-    from urllib.parse import urlparse
     from xml.sax.saxutils import escape
     import codecs
     from xml.etree import ElementTree as etree
@@ -250,7 +250,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
                 result['dependencies'][module] = mod.coreVersion()
             else:
                 result['dependencies'][module] = mod.__version__
-        except:
+        except ImportError:
             result['dependencies'][module] = ''
     # get system / environment settings
     result['platform'] = {}
@@ -298,7 +298,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     xml_doc = etree.tostring(root)
     print()
     # send result to report server
-    params = urllib.parse.urlencode({
+    params = compatibility.urlencode({
         'timestamp': timestamp,
         'system': result['platform']['system'],
         'python_version': result['platform']['python_version'],
@@ -317,7 +317,7 @@ def _createReport(ttrs, timetaken, log, server, hostname):
     response = conn.getresponse()
     # handle redirect
     if response.status == 301:
-        o = urlparse(response.msg['location'])
+        o = compatibility.urlparse(response.msg['location'])
         conn = http.client.HTTPConnection(o.netloc)
         conn.request("POST", o.path, params, headers)
         # get the response

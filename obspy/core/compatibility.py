@@ -30,6 +30,12 @@ if PY2:
 else:
     maketrans = bytes.maketrans
 
+if PY2:
+    from urlparse import urlparse
+    from urllib import urlencode
+else:
+    from urllib.parse import urlparse
+    from urllib.parse import urlencode
 
 def round_away(number):
     """
