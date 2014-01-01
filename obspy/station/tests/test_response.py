@@ -63,8 +63,9 @@ class ResponseTest(unittest.TestCase):
         xml_response, xml_freq = \
             inv[0][0][0].response.get_evalresp_response(t_samp, nfft)
 
-        np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
-        np.testing.assert_allclose(seed_response, xml_response, rtol=1E-5)
+        self.assertTrue(np.allclose(seed_freq, xml_freq, rtol=1E-5))
+        self.assertTrue(np.allclose(seed_response, xml_response,
+                                    rtol=1E-5))
 
 
 def suite():
