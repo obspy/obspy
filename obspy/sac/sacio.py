@@ -122,7 +122,8 @@ def _isText(filename, blocksize=512):
     text_characters = "".join(list(map(chr, list(range(32, 127)))) + \
                               list("\n\r\t\b")).encode('ascii', 'ignore')
     _null_trans = compatibility.maketrans(b"", b"")
-    s = open(filename, 'rb').read(blocksize)
+    with open(filename, 'rb') as fp:
+        s = fp.read(blocksize)
     if b"\0" in s:
         return False
 
@@ -879,6 +880,7 @@ class SacIO(object):
         # traces
         npts = self.GetHvalue('npts')
         if npts == -12345 or npts == 0:
+            f.close()
             return
         try:
             rows = npts // 5
@@ -1503,8 +1505,10 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
      (-314.15926535897933+202.31856689118268j),
      (-314.15926535897933-202.31856689118268j)]
     """
-    if isinstance(resp_file, str):
-        resp_file = open(resp_file, 'r')
+    if not hasattr(resp_file, 'write'):
+        resp_filep = open(resp_file, 'r')
+    else:
+        resp_filep = resp_file
 
     zeros_pat = r'B053F10-13'
     poles_pat = r'B053F15-18'
@@ -1515,7 +1519,7 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     poles = []
     zeros = []
     while True:
-        line = resp_file.readline()
+        line = resp_filep.readline()
         if not line:
             break
         if line.startswith(a0_pat):
@@ -1531,6 +1535,9 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
         if line.startswith(t_shift_pat):
             t_shift += float(line.split(':')[1])
     constant = a0 * sens
+
+    if not hasattr(resp_file, 'write'):
+        resp_filep.close()
 
     if torad:
         tmp = [z * 2. * np.pi for z in zeros]

@@ -107,14 +107,14 @@ def isSACXY(filename):
     if not _isText(filename, blocksize=512):
         return False
     try:
-        f = open(filename)
-        hdcards = []
-        # read in the header cards
-        for _i in range(30):
-            hdcards.append(f.readline())
-        npts = int(hdcards[15].split()[-1])
-        # read in the seismogram
-        seis = f.read(-1).split()
+        with open(filename) as f:
+            hdcards = []
+            # read in the header cards
+            for _i in range(30):
+                hdcards.append(f.readline())
+            npts = int(hdcards[15].split()[-1])
+            # read in the seismogram
+            seis = f.read(-1).split()
     except:
         return False
     # check that npts header value and seismogram length are consistent
