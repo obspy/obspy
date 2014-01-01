@@ -25,6 +25,11 @@ else:
     import io
     BytesIO = io.BytesIO
 
+if PY2:
+    from string import maketrans
+else:
+    maketrans = bytes.maketrans
+
 
 def round_away(number):
     """

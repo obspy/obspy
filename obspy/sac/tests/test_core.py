@@ -370,10 +370,10 @@ class CoreTestCase(unittest.TestCase):
 
     def test_writeSmallTrace(self):
         """
-        Tests writing Traces containing 0, 1 or 2 samples only.
+        Tests writing Traces containing 0, 1, 2, 3, 4 samples only.
         """
         for format in ['SAC', 'SACXY']:
-            for num in range(0, 4):
+            for num in range(5):
                 tr = Trace(data=np.arange(num))
                 with NamedTemporaryFile() as tf:
                     tempfile = tf.name
@@ -381,7 +381,7 @@ class CoreTestCase(unittest.TestCase):
                     # test results
                     st = read(tempfile, format=format)
                 self.assertEquals(len(st), 1)
-                self.assertEquals(len(st[0]), num)
+                np.testing.assert_array_equal(tr.data, st[0].data)
 
     def test_issue390(self):
         """

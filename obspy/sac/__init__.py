@@ -44,7 +44,9 @@ values).
             npts: 100
            calib: 1.0
          _format: SAC
-             sac: AttribDict({'dist': -12345.0, 'isynth': -12345, ...'})
+             sac: AttribDict({...})
+>>> print(st[0].stats.sac.dist)
+-12345.0
 
 The data is stored in the data attribut.
 

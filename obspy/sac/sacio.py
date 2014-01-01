@@ -10,12 +10,16 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-from future.builtins import open
 from future.builtins import map
 from future.builtins import int
 from future.builtins import range
+from future.builtins import round
+from future.builtins import str
+from future.builtins import bytes
+from future.utils import native_str
 from obspy import UTCDateTime, Trace
 from obspy.core.util import gps2DistAzimuth, loadtxt, AttribDict
+from obspy.core import compatibility
 import numpy as np
 import os
 import string
@@ -115,10 +119,11 @@ def _isText(filename, blocksize=512):
     # This should  always be true if a file is a text-file and only true for a
     # binary file in rare occasions (see Recipe 173220 found on
     # http://code.activestate.com/)
-    text_characters = "".join(list(map(chr, list(range(32, 127)))) + list("\n\r\t\b"))
-    _null_trans = string.maketrans("", "")
-    s = open(filename).read(blocksize)
-    if "\0" in s:
+    text_characters = "".join(list(map(chr, list(range(32, 127)))) + \
+                              list("\n\r\t\b")).encode('ascii', 'ignore')
+    _null_trans = compatibility.maketrans(b"", b"")
+    s = open(filename, 'rb').read(blocksize)
+    if b"\0" in s:
         return False
 
     if not s:  # Empty files are considered text
@@ -341,7 +346,7 @@ class SacIO(object):
         #
         # allocate the array for header characters
         self.hs = np.ndarray(24, dtype='|S8')
-        self.hs[:] = '-12345  '  # setting default value
+        self.hs[:] = b'-12345  '  # setting default value
         # allocate the array for the points
         self.seis = np.ndarray([], dtype='<f4')
 
@@ -432,11 +437,11 @@ class SacIO(object):
         elif key in SDICT:
             index = SDICT[key]
             if index == 0:
-                myarray = self.hs[0]
+                myarray = self.hs[0].decode()
             elif index == 1:
-                myarray = self.hs[1] + self.hs[2]
+                myarray = self.hs[1].decode() + self.hs[2].decode()
             else:
-                myarray = self.hs[index + 1]  # extra 1 is from item #2
+                myarray = self.hs[index + 1].decode()  # extra 1 is from item #2
             return myarray
         else:
             raise SacError("Cannot find header entry for: " + item)
@@ -451,13 +456,11 @@ class SacIO(object):
 
         >>> from obspy.sac import SacIO
         >>> tr = SacIO()
-        >>> tr.GetHvalue('kstnm')
-        '-12345  '
+        >>> print(tr.GetHvalue('kstnm'))
+        -12345  
         >>> tr.SetHvalue('kstnm', 'STA_NEW')
-        >>> tr.GetHvalue('kstnm')
-        'STA_NEW '
-
-
+        >>> print(tr.GetHvalue('kstnm'))
+        STA_NEW 
         """
         key = item.lower()  # convert the item to lower case
         #
@@ -474,14 +477,15 @@ class SacIO(object):
             else:
                 value = '-12345  '
             if index == 0:
-                self.hs[0] = value
+                self.hs[0] = value.encode('ascii', 'strict')
             elif index == 1:
                 value1 = '%-8s' % value[0:8]
                 value2 = '%-8s' % value[8:16]
-                self.hs[1] = value1
-                self.hs[2] = value2
+                self.hs[1] = value1.encode('ascii', 'strict')
+                self.hs[2] = value2.encode('ascii', 'strict')
+
             else:
-                self.hs[index + 1] = value
+                self.hs[index + 1] = value.encode('ascii', 'strict')
         else:
             raise SacError("Cannot find header entry for: " + item)
 
@@ -712,7 +716,7 @@ class SacIO(object):
         """
         ###### open the file
         try:
-            f = open(fname, 'r')
+            f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
@@ -774,7 +778,7 @@ class SacIO(object):
         """
         ###### open the file
         try:
-            f = open(fname, 'r')
+            f = open(fname, 'rb')
         except IOError:
             raise SacIOError("No such file: " + fname)
         try:
@@ -840,7 +844,7 @@ class SacIO(object):
         for _i in SAC_EXTRA:
             try:
                 self.SetHvalue(_i, trace.stats.sac[_i])
-            except KeyError:
+            except (AttributeError, KeyError):
                 pass
         return
 
@@ -857,29 +861,29 @@ class SacIO(object):
         True
         """
         try:
-            f = open(ofname, 'w')
+            f = open(ofname, 'wb')
         except IOError:
             raise SacIOError("Cannot open file: " + ofname)
         # header
         try:
             np.savetxt(f, np.reshape(self.hf, (14, 5)),
-                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+                       fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, np.reshape(self.hi, (8, 5)),
-                       fmt="%10d%10d%10d%10d%10d")
+                       fmt=native_str("%10d%10d%10d%10d%10d"))
             for i in range(0, 24, 3):
                 self.hs[i:i + 3].tofile(f)
-                f.write('\n')
+                f.write(b'\n')
         except:
             f.close()
             raise SacIOError("Cannot write header values: " + ofname)
         # traces
         npts = self.GetHvalue('npts')
-        if npts == -12345:
+        if npts == -12345 or npts == 0:
             return
         try:
-            rows = npts / 5
+            rows = npts // 5
             np.savetxt(f, np.reshape(self.seis[0:5 * rows], (rows, 5)),
-                       fmt="%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g")
+                       fmt=native_str("%#15.7g%#15.7g%#15.7g%#15.7g%#15.7g"))
             np.savetxt(f, self.seis[5 * rows:], delimiter='\t')
         except:
             f.close()
@@ -1121,8 +1125,8 @@ class SacIO(object):
         If date header values are set calculate date in julian seconds
 
         >>> t = SacIO()
-        >>> t.fromarray(np.random.randn(100), delta=1.0, \
-                        starttime=UTCDateTime(1970,01,01))
+        >>> t.fromarray(np.random.randn(100), delta=1.0,
+        ...             starttime=UTCDateTime(1970,1,1))
         >>> t._get_date()
         >>> t.reftime.timestamp
         0.0
@@ -1182,11 +1186,11 @@ class SacIO(object):
         >>> t.SetHvalue('stla',-41.2869)
         >>> t.SetHvalue('stlo',174.7746)
         >>> t._get_dist()
-        >>> print(round(t.GetHvalue('dist'), 2))
+        >>> print('%.2f' % t.GetHvalue('dist'))
         18486.53
-        >>> print(round(t.GetHvalue('az'), 5))
+        >>> print('%.5f' % t.GetHvalue('az'))
         65.65415
-        >>> print(round(t.GetHvalue('baz'), 4))
+        >>> print('%.4f' % t.GetHvalue('baz'))
         305.9755
 
         The original SAC-program calculates the distance assuming a
@@ -1327,9 +1331,9 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     :param tohz: change to Hertz
 
     >>> from obspy import Trace
+    >>> from obspy.core import compatibility
     >>> tr = Trace()
-    >>> import StringIO
-    >>> f = StringIO.StringIO("""ZEROS 3
+    >>> f = compatibility.StringIO("""ZEROS 3
     ... -5.032 0.0
     ... POLES 6
     ... -0.02365 0.02365
@@ -1340,8 +1344,11 @@ def attach_paz(tr, paz_file, todisp=False, tovel=False, torad=False,
     ... -53.5979 -21.7494
     ... CONSTANT 2.16e18""")
     >>> attach_paz(tr, f,torad=True)
-    >>> print(tr.stats.paz['zeros'][0])
-    (-31.6169884657+0j)
+    >>> for z in tr.stats.paz['zeros']:
+    ...     print("%.2f %.2f" % (z.real, z.imag))
+    -31.62 0.00
+    0.00 0.00
+    0.00 0.00
     '''
 
     poles = []
@@ -1481,9 +1488,15 @@ def attach_resp(tr, resp_file, todisp=False, tovel=False, torad=False,
     >>> respfile = os.path.join(os.path.dirname(__file__), 'tests', 'data',
     ...                         'RESP.NZ.CRLZ.10.HHZ')
     >>> attach_resp(tr, respfile, torad=True, todisp=False)
-    >>> print tr.stats.paz.keys()  # doctest: +NORMALIZE_WHITESPACE
-    ['sensitivity', 'digitizer_gain', 'seismometer_gain', 'zeros', 'gain',
-     't_shift', 'poles']
+    >>> for k in sorted(tr.stats.paz):  # doctest: +NORMALIZE_WHITESPACE
+    ...     print(k)
+    digitizer_gain
+    gain
+    poles
+    seismometer_gain
+    sensitivity
+    t_shift
+    zeros
     >>> print tr.stats.paz.poles  # doctest: +SKIP
     [(-0.15931644664884559+0.15931644664884559j),
      (-0.15931644664884559-0.15931644664884559j),
