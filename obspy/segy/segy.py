@@ -17,13 +17,13 @@ from future import standard_library
 from future.builtins import open
 from future.builtins import str
 
+from obspy.core import compatibility
 from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
+from obspy.segy.unpack import OnTheFlyDataUnpacker
 from struct import pack, unpack
-from .unpack import OnTheFlyDataUnpacker
-import io
 import numpy as np
 import os
 
@@ -130,14 +130,14 @@ class SEGYFile(object):
         pos = self.file.tell()
         # Jump to the data sample format code.
         self.file.seek(3224, 1)
-        format = unpack('>h', self.file.read(2))[0]
+        format = unpack(b'>h', self.file.read(2))[0]
         # Check if valid.
         if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
             self.endian = '>'
         # Else test little endian.
         else:
             self.file.seek(-2, 1)
-            format = unpack('<h', self.file.read(2))[0]
+            format = unpack(b'<h', self.file.read(2))[0]
             if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
                 self.endian = '<'
             else:
@@ -151,7 +151,7 @@ class SEGYFile(object):
         """
         Creates an empty SEGYFile object.
         """
-        self.textual_file_header = ''
+        self.textual_file_header = b''
         self.binary_file_header = None
         self.traces = []
 
@@ -166,7 +166,7 @@ class SEGYFile(object):
         # encoding. Sometimes is it not C but also cannot be decoded from
         # EBCDIC so it is treated as ASCII and all empty symbols are removed.
         if not self.textual_header_encoding:
-            if textual_header[0] != 'C':
+            if textual_header[0:1] != b'C':
                 try:
                     textual_header = \
                         textual_header.decode('EBCDIC-CP-BE').encode('ascii')
@@ -311,8 +311,11 @@ class SEGYFile(object):
         """
         self.traces = []
         # Determine the filesize once.
-        if isinstance(self.file, io.StringIO):
-            filesize = self.file.len
+        if isinstance(self.file, compatibility.BytesIO):
+            pos = self.file.tell()
+            self.file.seek(0, 2)  # go t end of file
+            filesize = self.file.tell()
+            self.file.seek(pos, 0)
         else:
             filesize = os.fstat(self.file.fileno())[6]
         # Big loop to read all data traces.
@@ -352,20 +355,20 @@ class SEGYBinaryFileHeader(object):
             pos += length
             # Unpack according to different lengths.
             if length == 2:
-                format = '%sh' % self.endian
+                format = ('%sh' % self.endian).encode('ascii', 'strict')
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % self.endian
+                format = ('%si' % self.endian).encode('ascii', 'strict')
                 # Set the class attribute.
                 setattr(self, name, unpack(format, string)[0])
             # The other value are the unassigned values. As it is unclear how
             # these are formated they will be stored as strings.
             elif name.startswith('unassigned'):
                 # These are only the unassigned fields.
-                format = 'h' * (length / 2)
+                format = 'h' * (length // 2)
                 # Set the class attribute.
                 setattr(self, name, string)
             # Should not happen.
@@ -392,22 +395,22 @@ class SEGYBinaryFileHeader(object):
             length, name, _ = item
             # Unpack according to different lengths.
             if length == 2:
-                format = '%sh' % endian
+                format = ('%sh' % endian).encode('ascii', 'strict')
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % endian
+                format = ('%si' % endian).encode('ascii', 'strict')
                 # Write to file.
                 file.write(pack(format, getattr(self, name)))
             # These are the two unassigned values in the binary file header.
             elif name.startswith('unassigned'):
-                temp = '%s' % str(getattr(self, name))
+                temp = getattr(self, name)
                 temp_length = len(temp)
                 # Pad to desired length if necessary.
                 if temp_length != length:
-                    temp += '\x00' * (length - temp_length)
+                    temp += b'\x00' * (length - temp_length)
                 file.write(temp)
             # Should not happen.
             else:
@@ -475,8 +478,11 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            if isinstance(self.file, io.StringIO):
-                self.filesize = self.file.len
+            if isinstance(self.file, compatibility.BytesIO):
+                _pos = self.file.tell()
+                self.file.seek(0, 2)
+                self.filesize = self.file.tell()
+                self.file.seek(_pos)
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
         # Otherwise read the file.
@@ -657,23 +663,26 @@ class SEGYTraceHeader(object):
             length, name, special_format, _ = item
             # Use special format if necessary.
             if special_format:
-                format = '%s%s' % (endian, special_format)
+                format = ('%s%s' % (endian,
+                                    special_format)).encode('ascii',
+                                                            'strict')
                 file.write(pack(format, getattr(self, name)))
             # Pack according to different lengths.
             elif length == 2:
-                format = '%sh' % endian
+                format = ('%sh' % endian).encode('ascii', 'strict')
                 file.write(pack(format, getattr(self, name)))
             # Update: Seems to be correct. Two's complement integers seem to be
             # the common way to store integer values.
             elif length == 4:
-                format = '%si' % endian
+                format = ('%si' % endian).encode('ascii', 'strict')
                 file.write(pack(format, getattr(self, name)))
             # Just the one unassigned field.
             elif length == 8:
                 field = getattr(self, name)
                 # An empty field will have a zero.
                 if field == 0:
-                    field = 2 * pack('%si' % endian, 0)
+                    field = 2 * pack(('%si' % endian).encode('ascii',
+                                                             'strict'), 0)
                 file.write(field)
             # Should not happen.
             else:
@@ -967,8 +976,10 @@ def autodetectEndianAndSanityCheckSU(file):
     the Trace header.
     """
     pos = file.tell()
-    if isinstance(file, io.StringIO):
-        size = file.len
+    if isinstance(file, compatibility.BytesIO):
+        file.seek(0, 2)
+        size = file.tell()
+        file.seek(pos, 0)
     else:
         size = os.fstat(file.fileno())[6]
     if size < 244:
@@ -991,8 +1002,8 @@ def autodetectEndianAndSanityCheckSU(file):
     # Jump to previous position.
     file.seek(pos, 0)
     # Unpack in little and big endian.
-    le_sample_count = unpack('<h', sample_count)[0]
-    be_sample_count = unpack('>h', sample_count)[0]
+    le_sample_count = unpack(b'<h', sample_count)[0]
+    be_sample_count = unpack(b'>h', sample_count)[0]
     # Check if both work.
     working_byteorders = []
     if le_sample_count > 0:
@@ -1009,12 +1020,13 @@ def autodetectEndianAndSanityCheckSU(file):
     # Check if the other header values make sense.
     still_working_byteorders = []
     for bo in working_byteorders:
-        this_interval = unpack('%sh' % bo, interval)[0]
-        this_year = unpack('%sh' % bo, year)[0]
-        this_julday = unpack('%sh' % bo, jul_day)[0]
-        this_hour = unpack('%sh' % bo, hour)[0]
-        this_minute = unpack('%sh' % bo, minute)[0]
-        this_second = unpack('%sh' % bo, second)[0]
+        fmt = ("%sh" % bo).encode('ascii', 'strict')
+        this_interval = unpack(fmt, interval)[0]
+        this_year = unpack(fmt, year)[0]
+        this_julday = unpack(fmt, jul_day)[0]
+        this_hour = unpack(fmt, hour)[0]
+        this_minute = unpack(fmt, minute)[0]
+        this_second = unpack(fmt, second)[0]
         # Make a sanity check for each.
         # XXX: The arbitrary maximum of the sample interval is 10 seconds.
         if this_interval <= 0 or this_interval > 10E7:

@@ -14,6 +14,7 @@ numpy array with the unpacked values.
 from __future__ import absolute_import
 from __future__ import unicode_literals
 from future.builtins import open
+from future.utils import native_str
 from obspy.segy.util import clibsegy
 
 import ctypes as C
@@ -31,7 +32,8 @@ else:
 
 
 clibsegy.ibm2ieee.argtypes = [
-    np.ctypeslib.ndpointer(dtype='float32', ndim=1, flags='C_CONTIGUOUS'),
+    np.ctypeslib.ndpointer(dtype='float32', ndim=1,
+                           flags=native_str('C_CONTIGUOUS')),
     C.c_int]
 clibsegy.ibm2ieee.restype = C.c_void_p
 

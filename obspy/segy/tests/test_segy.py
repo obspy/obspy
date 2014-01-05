@@ -8,7 +8,7 @@ from future import standard_library
 from future.builtins import range
 from future.builtins import open
 
-from io import StringIO
+from obspy.core import compatibility
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
@@ -81,7 +81,7 @@ class SEGYTestCase(unittest.TestCase):
                 f.seek(3200 + 400 + 240)
                 packed_data = f.read(count * size)
             # The pack functions all write to file objects.
-            f = StringIO()
+            f = compatibility.BytesIO()
             # Pack the data.
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[data_format](f, data, endian)
             # Read again.0.
@@ -152,7 +152,7 @@ class SEGYTestCase(unittest.TestCase):
                 new_packed_data.dtype = 'int32'
                 new_packed_data = new_packed_data[non_normalized]
                 length = len(new_packed_data)
-                f = StringIO()
+                f = compatibility.BytesIO()
                 f.write(new_packed_data.tostring())
                 f.seek(0, 0)
                 new_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
@@ -161,7 +161,7 @@ class SEGYTestCase(unittest.TestCase):
                 packed_data.dtype = 'int32'
                 packed_data = packed_data[non_normalized]
                 length = len(packed_data)
-                f = StringIO()
+                f = compatibility.BytesIO()
                 f.write(packed_data.tostring())
                 f.seek(0, 0)
                 old_data = DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS[1](
@@ -193,7 +193,7 @@ class SEGYTestCase(unittest.TestCase):
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = StringIO()
+                f = compatibility.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
@@ -223,7 +223,7 @@ class SEGYTestCase(unittest.TestCase):
             # Loop over little and big endian.
             for endian in endians:
                 # Pack.
-                f = StringIO()
+                f = compatibility.BytesIO()
                 DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
                 # Jump to beginning and read again.
                 f.seek(0, 0)
@@ -252,7 +252,7 @@ class SEGYTestCase(unittest.TestCase):
         # Loop over little and big endian.
         for endian in endians:
             # Pack.
-            f = StringIO()
+            f = compatibility.BytesIO()
             DATA_SAMPLE_FORMAT_PACK_FUNCTIONS[1](f, data, endian)
             # Jump to beginning and read again.
             f.seek(0, 0)
@@ -275,7 +275,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(400)
             header = SEGYBinaryFileHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = compatibility.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -308,7 +308,7 @@ class SEGYTestCase(unittest.TestCase):
             # Close the file.
             f.close()
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = compatibility.BytesIO()
             segy._writeTextualHeader(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -330,7 +330,7 @@ class SEGYTestCase(unittest.TestCase):
                 org_header = f.read(240)
             header = SEGYTraceHeader(header=org_header, endian=endian)
             # The header writes to a file like object.
-            new_header = StringIO()
+            new_header = compatibility.BytesIO()
             header.write(new_header)
             new_header.seek(0, 0)
             new_header = new_header.read()
@@ -543,34 +543,34 @@ class SEGYTestCase(unittest.TestCase):
         self.assertEqual(header.source_measurement_exponent, 0)
         self.assertEqual(header.source_measurement_unit, 0)
 
-    def test_readStringIO(self):
+    def test_readBytesIO(self):
         """
-        Tests reading from StringIO instances.
+        Tests reading from BytesIO instances.
         """
         # 1
         file = os.path.join(self.path, 'example.y_first_trace')
         data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
         data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
         data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
         data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
         data = open(file, 'rb').read()
-        st = readSEGY(StringIO(data))
+        st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 
 

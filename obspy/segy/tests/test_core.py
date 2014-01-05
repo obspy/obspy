@@ -90,7 +90,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # Read once with EBCDIC encoding and check if it is correct.
         st1 = readSEGY(file, textual_header_encoding='EBCDIC')
         self.assertTrue(st1.stats.textual_file_header[3:21]
-                        == 'CLIENT: LITHOPROBE')
+                        == b'CLIENT: LITHOPROBE')
         # This should also be written the stats dictionary.
         self.assertEqual(st1.stats.textual_file_header_encoding,
                          'EBCDIC')
@@ -98,7 +98,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         # argument should also work.
         st2 = readSEGY(file, textual_header_encoding='ascii')
         self.assertFalse(st2.stats.textual_file_header[3:21]
-                         == 'CLIENT: LITHOPROBE')
+                         == b'CLIENT: LITHOPROBE')
         self.assertEqual(st2.stats.textual_file_header_encoding,
                          'ASCII')
         # Autodection should also write the textual file header encoding to the
@@ -497,7 +497,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             f.seek(3600 + 156, 0)
             date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('>5h', date_time)
+        year, julday, hour, minute, second = unpack(b'>5h', date_time)
         self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
                           second == 54], 5 * [True])
         # Read and set zero time.
@@ -510,7 +510,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 f.seek(3600 + 156, 0)
                 date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('>5h', date_time)
+        year, julday, hour, minute, second = unpack(b'>5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
         # The same for SU.
@@ -519,7 +519,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         with open(file, 'rb') as f:
             f.seek(156, 0)
             date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('<5h', date_time)
+        year, julday, hour, minute, second = unpack(b'<5h', date_time)
         self.assertEqual([year == 2005, julday == 353, hour == 15, minute == 7,
                           second == 54], 5 * [True])
         # Read and set zero time.
@@ -532,7 +532,7 @@ class SEGYCoreTestCase(unittest.TestCase):
             with open(outfile, 'rb') as f:
                 f.seek(156, 0)
                 date_time = f.read(10)
-        year, julday, hour, minute, second = unpack('<5h', date_time)
+        year, julday, hour, minute, second = unpack(b'<5h', date_time)
         self.assertEqual([year == 0, julday == 0, hour == 0, minute == 0,
                           second == 0], 5 * [True])
 

@@ -87,7 +87,7 @@ def isSEGY(filename):
         return False
     # Unpack using big endian first and check if it is valid.
     try:
-        format = unpack('>h', data_format_code)[0]
+        format = unpack(b'>h', data_format_code)[0]
     except:
         return False
     if format in VALID_FORMATS:
@@ -96,20 +96,21 @@ def isSEGY(filename):
     # both yield a valid data sample format code because they are restricted to
     # be between 1 and 8.
     else:
-        format = unpack('<h', data_format_code)[0]
+        format = unpack(b'<h', data_format_code)[0]
         if format in VALID_FORMATS:
             _endian = '<'
         else:
             return False
     # Check if the sample interval and samples per Trace make sense.
-    _sample_interval = unpack('%sh' % _endian, _sample_interval)[0]
-    _samples_per_trace = unpack('%sh' % _endian, _samples_per_trace)[0]
-    _number_of_data_traces = unpack('%sh' % _endian, _number_of_data_traces)[0]
-    _number_of_auxiliary_traces = unpack('%sh' % _endian,
+    fmt = ('%sh' % _endian).encode('ascii', 'strict')
+    _sample_interval = unpack(fmt, _sample_interval)[0]
+    _samples_per_trace = unpack(fmt, _samples_per_trace)[0]
+    _number_of_data_traces = unpack(fmt, _number_of_data_traces)[0]
+    _number_of_auxiliary_traces = unpack(fmt,
                                          _number_of_auxiliary_traces)[0]
-    _format_number = unpack('%sh' % _endian, _format_number)[0]
-    _fixed_length = unpack('%sh' % _endian, _fixed_length)[0]
-    _extended_number = unpack('%sh' % _endian, _extended_number)[0]
+    _format_number = unpack(fmt, _format_number)[0]
+    _fixed_length = unpack(fmt, _fixed_length)[0]
+    _extended_number = unpack(fmt, _extended_number)[0]
     # Make some sanity checks and return False if they fail.
     # Unfortunately the format number is 0 in many files so it cannot be truly
     # tested.
@@ -664,7 +665,7 @@ def __segy_trace__str__(self, *args, **kwargs):
         out = "%s" % (
             'Seq. No. in line: %4i' %
             self.stats.segy.trace_header.trace_sequence_number_within_line)
-    except KeyError:
+    except (KeyError, AttributeError):
         # fall back if for some reason the segy attribute does not exists
         return getattr(Trace, '__original_str__')(self, *args, **kwargs)
     # output depending on delta or sampling rate bigger than one
