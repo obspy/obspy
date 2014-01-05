@@ -11,6 +11,11 @@ A file format description is given by [Pullan1990]_.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import open
 from copy import deepcopy
 import numpy as np
 from struct import unpack
@@ -18,7 +23,7 @@ import warnings
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core import AttribDict
-from header import MONTHS
+from .header import MONTHS
 
 
 WARNING_HEADER = "Many companies use custom defined SEG2 header variables." + \
@@ -67,7 +72,7 @@ class SEG2(object):
         beginning of the SEG-2 file.
         """
         # Read the file if it is a filename.
-        if isinstance(file_object, basestring):
+        if isinstance(file_object, str):
             self.file_pointer = open(file_object, 'rb')
         else:
             self.file_pointer = file_object
@@ -149,7 +154,7 @@ class SEG2(object):
         trace_pointer_sub_block = \
             self.file_pointer.read(size_of_trace_pointer_sub_block)
         self.trace_pointers = []
-        for _i in xrange(number_of_traces):
+        for _i in range(number_of_traces):
             index = _i * 4
             self.trace_pointers.append(
                 unpack('%sL' % self.endian,
@@ -276,7 +281,7 @@ class SEG2(object):
 
 
 def isSEG2(filename):
-    if isinstance(filename, basestring):
+    if isinstance(filename, str):
         is_filename = True
         file_pointer = open(filename, 'rb')
     else:

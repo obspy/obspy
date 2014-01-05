@@ -9,6 +9,7 @@ Headers for obspy.seg2.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import unicode_literals
 MONTHS = {'jan': 1,
           'feb': 2,
           'mar': 3,
