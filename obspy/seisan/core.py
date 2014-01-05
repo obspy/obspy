@@ -34,12 +34,11 @@ def isSEISAN(filename):
     True
     """
     try:
-        f = open(filename, 'rb')
+        with open(filename, 'rb') as f:
+            data = f.read(12 * 80)
     except:
         return False
     # read some data - contains at least 12 lines a 80 characters
-    data = f.read(12 * 80)
-    f.close()
     if _getVersion(data):
         return True
     return False
@@ -198,6 +197,7 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
             # convert to system byte order
             data = np.require(data, stype)
             stream.append(Trace(data=data[2:], header=header))
+    fh.close()
     return stream
 
 
