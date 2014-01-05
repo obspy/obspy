@@ -287,11 +287,11 @@ def logbankm(p, n, fs, w):
     lr = np.log((fh) / (fl)) / (p + 1)
     bl = n * ((fl) *
               np.exp(np.array([0, 1, p, p + 1]) * float(lr)) / float(fs))
-    b2 = np.ceil(bl[1])
-    b3 = np.floor(bl[2])
-    b1 = np.floor(bl[0]) + 1
-    b4 = min(fn2, np.ceil(bl[3])) - 1
-    pf = np.log(((np.arange(b1 - 1, b4 + 1) / n) * fs) / (fl)) / lr
+    b2 = int(np.ceil(bl[1]))
+    b3 = int(np.floor(bl[2]))
+    b1 = int(np.floor(bl[0])) + 1
+    b4 = int(min(fn2, np.ceil(bl[3]))) - 1
+    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype=np.float) / n) * fs) / (fl)) / lr
     fp = np.floor(pf)
     pm = pf - fp
     k2 = b2 - b1 + 1
@@ -304,7 +304,6 @@ def logbankm(p, n, fs, w):
     mx = b4 + 1
     #x = np.array([[c],[r]], dtype=[('x', 'float'), ('y', 'float')])
     #ind=np.argsort(x, order=('x','y'))
-    help = np.append([c], [r], axis=0)
     if (w == 'Hann'):
         v = 1. - [np.cos([v * float(np.pi / 2.)])]
     elif (w == 'Hamming'):
@@ -312,7 +311,7 @@ def logbankm(p, n, fs, w):
     # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a
     # transposed matrix depending on the installed NumPy version - using
     # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
-    xx = sparse.coo_matrix((v, help)).transpose().todense()
+    xx = sparse.coo_matrix((v, (c,r))).transpose().todense()
     return xx, mn - 1, mx - 1
 
 

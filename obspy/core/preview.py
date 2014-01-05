@@ -41,7 +41,7 @@ def createPreview(trace, delta=60):
     if samples_per_slice < 1:
         raise ValueError('samples_per_slice is less than 0 - skipping')
     # minimum and maximum of samples before a static time marker
-    start = (delta - start_time % delta) * int(trace.stats.sampling_rate)
+    start = int((delta - start_time % delta) * int(trace.stats.sampling_rate))
     start_time = start_time - start_time % delta
     if start > (delta / 2) and data[0:start].size:
         first_diff = [data[0:start].max() - data[0:start].min()]
