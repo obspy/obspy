@@ -10,14 +10,20 @@
 """
 Routines to read and write SEG Y rev 1 encoded seismic data files.
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
+from future.builtins import str
 
 from obspy.segy.header import ENDIAN, DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS, \
     BINARY_FILE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     TRACE_HEADER_FORMAT, DATA_SAMPLE_FORMAT_SAMPLE_SIZE, TRACE_HEADER_KEYS
 from obspy.segy.util import unpack_header_value
 from struct import pack, unpack
-from unpack import OnTheFlyDataUnpacker
-import StringIO
+from .unpack import OnTheFlyDataUnpacker
+import io
 import numpy as np
 import os
 
@@ -126,13 +132,13 @@ class SEGYFile(object):
         self.file.seek(3224, 1)
         format = unpack('>h', self.file.read(2))[0]
         # Check if valid.
-        if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
+        if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
             self.endian = '>'
         # Else test little endian.
         else:
             self.file.seek(-2, 1)
             format = unpack('<h', self.file.read(2))[0]
-            if format in DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys():
+            if format in list(DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS.keys()):
                 self.endian = '<'
             else:
                 msg = 'Unable to determine the endianness of the file. ' + \
@@ -305,7 +311,7 @@ class SEGYFile(object):
         """
         self.traces = []
         # Determine the filesize once.
-        if isinstance(self.file, StringIO.StringIO):
+        if isinstance(self.file, io.StringIO):
             filesize = self.file.len
         else:
             filesize = os.fstat(self.file.fileno())[6]
@@ -469,7 +475,7 @@ class SEGYTrace(object):
         if filesize:
             self.filesize = filesize
         else:
-            if isinstance(self.file, StringIO.StringIO):
+            if isinstance(self.file, io.StringIO):
                 self.filesize = self.file.len
             else:
                 self.filesize = os.fstat(self.file.fileno())[6]
@@ -961,7 +967,7 @@ def autodetectEndianAndSanityCheckSU(file):
     the Trace header.
     """
     pos = file.tell()
-    if isinstance(file, StringIO.StringIO):
+    if isinstance(file, io.StringIO):
         size = file.len
     else:
         size = os.fstat(file.fileno())[6]

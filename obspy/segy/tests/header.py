@@ -2,6 +2,7 @@
 """
 Information about files/segy useful for all tests.
 """
+from __future__ import unicode_literals
 
 # All the files and information about them. These files will be used in
 # most tests. data_sample_enc is the encoding of the data value and

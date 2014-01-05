@@ -2,10 +2,13 @@
 """
 The obspy.segy Seismic Unix test suite.
 """
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
 
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.segy import readSU, SEGYTraceReadingError
-from StringIO import StringIO
+from io import StringIO
 import numpy as np
 import os
 import unittest

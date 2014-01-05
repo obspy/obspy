@@ -2,7 +2,8 @@
 """
 The obspy.segy core test suite.
 """
-
+from __future__ import unicode_literals
+from future.builtins import open
 import numpy as np
 from obspy import UTCDateTime, read
 from obspy.core.util import NamedTemporaryFile
@@ -36,7 +37,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSEGY method.
         """
         # Test all files in the test directory.
-        for file in self.files.keys():
+        for file in list(self.files.keys()):
             file = os.path.join(self.path, file)
             self.assertEqual(isSEGY(file), True)
         # Also check all the other files in the test directory and they should
@@ -51,7 +52,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         Tests the isSU method.
         """
         # Test all SEG Y files in the test directory.
-        for file in self.files.keys():
+        for file in list(self.files.keys()):
             file = os.path.join(self.path, file)
             self.assertEqual(isSU(file), False)
         # Also check all the other files in the test directory and they should
@@ -172,7 +173,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         with NamedTemporaryFile() as tf:
             out_file = tf.name
             # Loop over all encodings.
-            for data_encoding, dtype in encodings.iteritems():
+            for data_encoding, dtype in encodings.items():
                 this_data = np.require(data.copy(), dtype)
                 st[0].data = this_data
                 writeSEGY(st, out_file, data_encoding=data_encoding)
@@ -285,7 +286,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         obspy.segy.tests.test_segy, is correct and compared all values to it.
         This seems to be the easiest way to test everything.
         """
-        for file, _ in self.files.iteritems():
+        for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
             segy_file = readSEGYInternal(file)
@@ -309,11 +310,11 @@ class SEGYCoreTestCase(unittest.TestCase):
                              st.stats.data_encoding)
             # Test the file and trace binary headers.
             for key, value in \
-                    segy_file.binary_file_header.__dict__.iteritems():
+                    segy_file.binary_file_header.__dict__.items():
                 self.assertEqual(getattr(st.stats.binary_file_header,
                                  key), value)
             for key, value in \
-                    segy_file.traces[0].header.__dict__.iteritems():
+                    segy_file.traces[0].header.__dict__.items():
                 self.assertEqual(getattr(st[0].stats.segy.trace_header, key),
                                  value)
 
@@ -324,7 +325,7 @@ class SEGYCoreTestCase(unittest.TestCase):
         files using the internal SEGY object which is thoroughly tested in
         obspy.segy.tests.test_segy.
         """
-        for file, _ in self.files.iteritems():
+        for file, _ in self.files.items():
             file = os.path.join(self.path, file)
             # Read the file with the internal SEGY representation.
             segy_file = readSEGYInternal(file)

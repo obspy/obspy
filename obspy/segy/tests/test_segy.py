@@ -2,8 +2,13 @@
 """
 The obspy.segy test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import open
 
-from StringIO import StringIO
+from io import StringIO
 from obspy.core.util import NamedTemporaryFile
 from obspy.segy.header import DATA_SAMPLE_FORMAT_PACK_FUNCTIONS, \
     DATA_SAMPLE_FORMAT_UNPACK_FUNCTIONS
@@ -33,7 +38,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Tests the unpacking of various SEG Y files.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
             count = attribs['sample_count']
@@ -57,7 +62,7 @@ class SEGYTestCase(unittest.TestCase):
         Tests the packing of various SEG Y files.
         """
         # Loop over all files.
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             # Get some attributes.
             data_format = attribs['data_sample_enc']
             endian = attribs['endian']
@@ -237,7 +242,7 @@ class SEGYTestCase(unittest.TestCase):
         endians = ['>', '<']
         # Create the first 10 powers of 16.
         data = []
-        for i in xrange(10):
+        for i in range(10):
             data.append(16 ** i)
             data.append(-16 ** i)
         data = np.array(data)
@@ -261,7 +266,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the binary file header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             file = os.path.join(self.path, file)
             # Read the file.
@@ -283,7 +288,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the textual file header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             header_enc = attribs['textual_header_enc']
             file = os.path.join(self.path, file)
@@ -316,7 +321,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing should not change the trace header.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             endian = attribs['endian']
             file = os.path.join(self.path, file)
             # Read the file.
@@ -338,7 +343,7 @@ class SEGYTestCase(unittest.TestCase):
         """
         Reading and writing again should not change a file.
         """
-        for file, attribs in self.files.iteritems():
+        for file, attribs in self.files.items():
             file = os.path.join(self.path, file)
             non_normalized_samples = attribs['non_normalized_samples']
             # Read the file.

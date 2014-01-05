@@ -8,6 +8,12 @@ SEG Y bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
+from future.builtins import open
+from future.builtins import super
+from future.builtins import round
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import AttribDict
 from obspy.segy.segy import readSEGY as readSEGYrev1
@@ -169,7 +175,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
     textual_file_header = segy_object.textual_file_header
     # The binary file header will be a new AttribDict
     binary_file_header = AttribDict()
-    for key, value in segy_object.binary_file_header.__dict__.iteritems():
+    for key, value in segy_object.binary_file_header.__dict__.items():
         setattr(binary_file_header, key, value)
     # Get the data encoding and the endianness from the first trace.
     data_encoding = segy_object.traces[0].data_encoding
@@ -200,7 +206,7 @@ def readSEGY(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -510,7 +516,7 @@ def readSU(filename, headonly=False, byteorder=None,
         if unpack_trace_headers:
             # Add the trace header as a new attrib dictionary.
             header = AttribDict()
-            for key, value in tr.header.__dict__.iteritems():
+            for key, value in tr.header.__dict__.items():
                 setattr(header, key, value)
         # Otherwise use the LazyTraceHeaderAttribDict.
         else:
@@ -732,7 +738,7 @@ class LazyTraceHeaderAttribDict(AttribDict):
         ad = self.__class__(
             unpacked_header=deepcopy(self.__dict__['unpacked_header']),
             unpacked_header_endian=deepcopy(self.__dict__['endian']),
-            data=dict((k, deepcopy(v)) for k, v in self.__dict__.iteritems()
+            data=dict((k, deepcopy(v)) for k, v in self.__dict__.items()
                       if k not in ('unpacked_data', 'endian')))
         return ad
 

@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import str
 
 from distutils import sysconfig
 from struct import unpack
@@ -23,7 +25,7 @@ for lib_name in lib_names:
         clibsegy = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                        'lib', lib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
         pass
 else:
     msg = 'Could not load shared library for obspy.segy.\n\n %s' % (e)
