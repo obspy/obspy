@@ -63,6 +63,7 @@ or
 
 >>> st.write('file.asc', format = 'SH_ASC') #doctest: +SKIP
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

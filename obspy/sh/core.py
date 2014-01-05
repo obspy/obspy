@@ -8,8 +8,15 @@ SH bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import zip
+from future.builtins import open
+from future.builtins import range
+from future.builtins import int
 
-from StringIO import StringIO
+from io import StringIO
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
 from obspy.core.util import loadtxt
@@ -56,9 +63,9 @@ SH_IDX = {
 
 STANDARD_ASC_HEADERS = ['START', 'COMP', 'CHAN1', 'CHAN2', 'STATION', 'CALIB']
 
-SH_KEYS_INT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('I')]
-SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.iteritems() if v.startswith('R')]
-INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.iteritems()])
+SH_KEYS_INT = [k for (k, v) in SH_IDX.items() if v.startswith('I')]
+SH_KEYS_FLOAT = [k for (k, v) in SH_IDX.items() if v.startswith('R')]
+INVERTED_SH_IDX = dict([(v, k) for (k, v) in SH_IDX.items()])
 
 
 def isASC(filename):
@@ -169,7 +176,7 @@ def readASC(filename, headonly=False, skip=0, delta=None, length=None,
         header['sh'] = {}
         channel = [' ', ' ', ' ']
         # generate headers
-        for key, value in headers.iteritems():
+        for key, value in headers.items():
             if key == 'DELTA':
                 header['delta'] = float(value)
             elif key == 'LENGTH':
@@ -255,7 +262,7 @@ def writeASC(stream, filename, included_headers=None, npl=4,
         fh.write("DELTA: %-.6e\n" % (trace.stats.delta))
         fh.write("LENGTH: %d\n" % trace.stats.npts)
         # additional headers
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in trace.stats.get('sh', {}).items():
             if included_headers and key not in included_headers:
                 continue
             fh.write("%s: %s\n" % (key, value))
@@ -376,7 +383,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
     cmtlines = int(line[5:7]) - 1
     # comment lines
     comments = []
-    for _i in xrange(0, cmtlines):
+    for _i in range(0, cmtlines):
         comments += [fh.readline()]
     # trace lines
     traces = {}
@@ -533,9 +540,9 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
         # special format for start time
         dt = trace.stats.starttime
         temp += "S021:%s~ " % fromUTCDateTime(dt)
-        for key, value in trace.stats.get('sh', {}).iteritems():
+        for key, value in trace.stats.get('sh', {}).items():
             # skip unknown keys
-            if not key or key not in SH_IDX.keys():
+            if not key or key not in list(SH_IDX.keys()):
                 continue
             # convert UTCDateTimes into strings
             if isinstance(value, UTCDateTime):
@@ -554,7 +561,7 @@ def writeQ(stream, filename, data_directory=None, byteorder='=', append=False,
     for i, trace in enumerate(stream):
         # write headers
         temp = [headers[i][j:j + 74] for j in range(0, len(headers[i]), 74)]
-        for j in xrange(0, minnol):
+        for j in range(0, minnol):
             try:
                 fh.write("%02d|%s\n" % ((i + 1 + count_offset) % 100, temp[j]))
             except:
