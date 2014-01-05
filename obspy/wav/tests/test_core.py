@@ -16,7 +16,7 @@ import os
 import unittest
 
 
-numpy_version = float(np.version.version.rsplit('.', 1)[0])
+numpy_version = float(".".join(np.version.version.split('.')[:2]))
 if numpy_version <= 1.3:
     OLD_NUMPY = True
 else:
