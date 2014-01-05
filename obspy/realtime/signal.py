@@ -21,6 +21,7 @@ in a previous packet, so has to be retrieved from memory see
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import print_function
 import math
 import sys
 import numpy as np
@@ -467,7 +468,7 @@ def mwpIntegral(trace, max_time, ref_time, mem_time=1.0, gain=1.0,
             msg = "Error: Mwp: attempt to access rtmemory.input array of " + \
                 "size=%d at invalid index=%d: this should not happen!" % \
                 (np.size(rtmemory.input), n + np.size(rtmemory.input))
-            print msg
+            print(msg)
             continue  # should never reach here
         disp_amp = amplitude - mwp_amp_at_pick
         # check displacement polarity
