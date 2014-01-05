@@ -12,7 +12,6 @@ from __future__ import division
 from __future__ import unicode_literals
 from future.builtins import range
 from future.builtins import str
-from future.builtins import open
 from future.builtins import int
 
 from obspy import Stream, Trace, UTCDateTime
@@ -99,17 +98,17 @@ def _getVersion(data):
     # check size of data chunk
     if len(data) < 12 * 80:
         return False
-    if data[0:2] == 'KP' and data[82] == 'P':
+    if data[0:2] == b'KP' and data[82:83] == 'P':
         return ("<", 32, 6)
-    elif data[0:8] == '\x00\x00\x00\x00\x00\x00\x00P' and \
-            data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+    elif data[0:8] == b'\x00\x00\x00\x00\x00\x00\x00P' and \
+            data[88:96] == b'\x00\x00\x00\x00\x00\x00\x00P':
         return (">", 64, 7)
-    elif data[0:8] == 'P\x00\x00\x00\x00\x00\x00\x00' and \
-            data[88:96] == '\x00\x00\x00\x00\x00\x00\x00P':
+    elif data[0:8] == b'P\x00\x00\x00\x00\x00\x00\x00' and \
+            data[88:96] == b'\x00\x00\x00\x00\x00\x00\x00P':
         return ("<", 64, 7)
-    elif data[0:4] == '\x00\x00\x00P' and data[84:88] == '\x00\x00\x00P':
+    elif data[0:4] == b'\x00\x00\x00P' and data[84:88] == b'\x00\x00\x00P':
         return (">", 32, 7)
-    elif data[0:4] == 'P\x00\x00\x00' and data[84:88] == 'P\x00\x00\x00':
+    elif data[0:4] == b'P\x00\x00\x00' and data[84:88] == b'P\x00\x00\x00':
         return ("<", 32, 7)
     return None
 
@@ -167,12 +166,12 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
         data = _readline(fh)
     # now parse each event file channel header + data
     stream = Stream()
-    dlen = arch / 8
+    dlen = arch // 8
     dtype = byteorder + 'i' + str(dlen)
     stype = '=i' + str(dlen)
     for _i in range(number_of_channels):
         # get channel header
-        temp = _readline(fh, 1040)
+        temp = _readline(fh, 1040).decode()
         # create Stats
         header = Stats()
         header['network'] = (temp[16] + temp[19]).strip()
