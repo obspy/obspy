@@ -82,7 +82,8 @@ def isASC(filename):
     """
     # first six chars should contain 'DELTA:'
     try:
-        temp = open(filename, 'rb').read(6)
+        with open(filename, 'rb') as f:
+            temp = f.read(6)
     except:
         return False
     if temp != b'DELTA:':
@@ -310,7 +311,8 @@ def isQ(filename):
     """
     # file must start with magic number 43981
     try:
-        temp = open(filename, 'rb').read(5)
+        with open(filename, 'rb') as f:
+            temp = f.read(5)
     except:
         return False
     if temp != b'43981':
@@ -468,6 +470,7 @@ def readQ(filename, headonly=False, data_directory=None, byteorder='=',
             stream.append(Trace(data=data, header=header))
     if not headonly:
         fh_data.close()
+    fh.close()
     return stream
 
 
