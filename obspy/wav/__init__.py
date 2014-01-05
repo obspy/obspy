@@ -59,6 +59,7 @@ squeezed. Using the original sampling_rate results in an WAV file with
 frequencies which cannot be heard by a human, therefore it makes sense to
 set the framerate to a high value.
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

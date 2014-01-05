@@ -5,6 +5,8 @@ The audio wav.core test suite.
 """
 
 from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
 from obspy import read, Stream, Trace
 from obspy.core.util import NamedTemporaryFile
 from obspy.core.util.decorator import skipIf
