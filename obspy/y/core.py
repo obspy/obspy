@@ -9,6 +9,8 @@ Y bindings to ObsPy core module.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 
+from __future__ import unicode_literals
+from future.builtins import open
 from obspy import Stream
 from obspy.core.trace import Trace
 from obspy.core.utcdatetime import UTCDateTime
