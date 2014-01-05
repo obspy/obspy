@@ -9,6 +9,7 @@ import numpy as np
 from obspy import read
 from obspy.core import AttribDict
 import os
+import gzip
 import unittest
 
 
@@ -76,7 +77,8 @@ class SEG2TestCase(unittest.TestCase):
         # read SEG2 data (in counts, int32)
         st = read(basename + ".seg2.gz")
         # read reference ASCII data (in micrometer/s)
-        results = np.loadtxt(basename + ".DAT.gz").T
+        with gzip.open(basename + ".DAT.gz", 'rb') as f:
+            results = np.loadtxt(f).T
         # test all three components
         for tr, result in zip(st, results):
             # convert raw data to micrometer/s (descaling goes to mm/s)
