@@ -89,6 +89,8 @@ class SEG2(object):
             self.file_pointer.seek(tr_pointer, 0)
             self.stream.append(self.parseNextTrace())
 
+        if not hasattr(file_object, 'write'):
+            self.file_pointer.close()
         return self.stream
 
     def readFileDescriptorBlock(self):
