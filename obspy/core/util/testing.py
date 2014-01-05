@@ -192,11 +192,11 @@ class ImageComparison(NamedTemporaryFile):
         import locale
 
         try:
-            locale.setlocale(locale.LC_ALL, str('en_US.UTF-8'))
+            locale.setlocale(locale.LC_ALL, native_str('en_US.UTF-8'))
         except:
             try:
                 locale.setlocale(locale.LC_ALL,
-                                 str('English_United States.1252'))
+                                 native_str('English_United States.1252'))
             except:
                 msg = "Could not set locale to English/United States. " + \
                       "Some date-related tests may fail"

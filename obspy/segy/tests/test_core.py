@@ -72,13 +72,13 @@ class SEGYCoreTestCase(unittest.TestCase):
         # readSEGY
         file = os.path.join(self.path, '1.sgy_first_trace')
         st = readSEGY(file, headonly=True)
-        self.assertEquals(st[0].stats.npts, 8000)
-        self.assertEquals(len(st[0].data), 0)
+        self.assertEqual(st[0].stats.npts, 8000)
+        self.assertEqual(len(st[0].data), 0)
         # readSU
         file = os.path.join(self.path, '1.su_first_trace')
         st = readSU(file, headonly=True)
-        self.assertEquals(st[0].stats.npts, 8000)
-        self.assertEquals(len(st[0].data), 0)
+        self.assertEqual(st[0].stats.npts, 8000)
+        self.assertEqual(len(st[0].data), 0)
 
     def test_enforcingTextualHeaderEncodingWhileReading(self):
         """

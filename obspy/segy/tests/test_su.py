@@ -115,8 +115,9 @@ class SUTestCase(unittest.TestCase):
         Tests reading from BytesIO instances.
         """
         # 1
-        file = os.path.join(self.path, '1.su_first_trace')
-        data = open(file, 'rb').read()
+        filename = os.path.join(self.path, '1.su_first_trace')
+        with open(filename, 'rb') as fp:
+            data = fp.read()
         st = readSU(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
 

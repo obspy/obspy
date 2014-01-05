@@ -152,6 +152,7 @@ class OnTheFlyDataUnpacker:
             msg += "; data may be read incorrectly "
             msg += "(modification time = %s)." % mtime
             warnings.warn(msg)
-        file = open(self.filename, self.filemode)
-        file.seek(self.seek)
-        return self.unpack_function(file, self.count, endian=self.endian)
+        with open(self.filename, self.filemode) as fp:
+            fp.seek(self.seek)
+            raw = self.unpack_function(fp, self.count, endian=self.endian)
+        return raw

@@ -293,20 +293,18 @@ class SEGYTestCase(unittest.TestCase):
             header_enc = attribs['textual_header_enc']
             file = os.path.join(self.path, file)
             # Read the file.
-            f = open(file, 'rb')
-            org_header = f.read(3200)
-            f.seek(0, 0)
-            # Initialize an empty SEGY object and set certain attributes.
-            segy = SEGYFile()
-            segy.endian = endian
-            segy.file = f
-            segy.textual_header_encoding = None
-            # Read the textual header.
-            segy._readTextualHeader()
-            # Assert the encoding and compare with known values.
-            self.assertEqual(segy.textual_header_encoding, header_enc)
-            # Close the file.
-            f.close()
+            with open(file, 'rb') as f:
+                org_header = f.read(3200)
+                f.seek(0, 0)
+                # Initialize an empty SEGY object and set certain attributes.
+                segy = SEGYFile()
+                segy.endian = endian
+                segy.file = f
+                segy.textual_header_encoding = None
+                # Read the textual header.
+                segy._readTextualHeader()
+                # Assert the encoding and compare with known values.
+                self.assertEqual(segy.textual_header_encoding, header_enc)
             # The header writes to a file like object.
             new_header = compatibility.BytesIO()
             segy._writeTextualHeader(new_header)
@@ -549,27 +547,32 @@ class SEGYTestCase(unittest.TestCase):
         """
         # 1
         file = os.path.join(self.path, 'example.y_first_trace')
-        data = open(file, 'rb').read()
+        with open(file, 'rb') as f:
+            data = f.read()
         st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 500)
         # 2
         file = os.path.join(self.path, 'ld0042_file_00018.sgy_first_trace')
-        data = open(file, 'rb').read()
+        with open(file, 'rb') as f:
+            data = f.read()
         st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2050)
         # 3
         file = os.path.join(self.path, '1.sgy_first_trace')
-        data = open(file, 'rb').read()
+        with open(file, 'rb') as f:
+            data = f.read()
         st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 8000)
         # 4
         file = os.path.join(self.path, '00001034.sgy_first_trace')
-        data = open(file, 'rb').read()
+        with open(file, 'rb') as f:
+            data = f.read()
         st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 2001)
         # 5
         file = os.path.join(self.path, 'planes.segy_first_trace')
-        data = open(file, 'rb').read()
+        with open(file, 'rb') as f:
+            data = f.read()
         st = readSEGY(compatibility.BytesIO(data))
         self.assertEqual(len(st.traces[0].data), 512)
 

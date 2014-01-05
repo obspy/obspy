@@ -69,20 +69,19 @@ def isSEGY(filename):
     # greater than 0 and that the number of samples per trace is greater than
     # 0.
     try:
-        temp = open(filename, 'rb')
-        temp.seek(3212)
-        _number_of_data_traces = temp.read(2)
-        _number_of_auxiliary_traces = temp.read(2)
-        _sample_interval = temp.read(2)
-        temp.seek(2, 1)
-        _samples_per_trace = temp.read(2)
-        temp.seek(2, 1)
-        data_format_code = temp.read(2)
-        temp.seek(3500, 0)
-        _format_number = temp.read(2)
-        _fixed_length = temp.read(2)
-        _extended_number = temp.read(2)
-        temp.close()
+        with open(filename, 'rb') as fp:
+            fp.seek(3212)
+            _number_of_data_traces = fp.read(2)
+            _number_of_auxiliary_traces = fp.read(2)
+            _sample_interval = fp.read(2)
+            fp.seek(2, 1)
+            _samples_per_trace = fp.read(2)
+            fp.seek(2, 1)
+            data_format_code = fp.read(2)
+            fp.seek(3500, 0)
+            _format_number = fp.read(2)
+            _fixed_length = fp.read(2)
+            _extended_number = fp.read(2)
     except:
         return False
     # Unpack using big endian first and check if it is valid.
