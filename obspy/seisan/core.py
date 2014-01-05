@@ -8,6 +8,12 @@ SEISAN bindings to ObsPy core module.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import str
+from future.builtins import open
+from future.builtins import int
 
 from obspy import Stream, Trace, UTCDateTime
 from obspy.core import Stats
@@ -157,14 +163,14 @@ def readSEISAN(filename, headonly=False, **kwargs):  # @UnusedVariable
     # line 2
     data = _readline(fh)
     # line 3
-    for _i in xrange(0, number_of_lines):
+    for _i in range(0, number_of_lines):
         data = _readline(fh)
     # now parse each event file channel header + data
     stream = Stream()
     dlen = arch / 8
     dtype = byteorder + 'i' + str(dlen)
     stype = '=i' + str(dlen)
-    for _i in xrange(number_of_channels):
+    for _i in range(number_of_channels):
         # get channel header
         temp = _readline(fh, 1040)
         # create Stats
