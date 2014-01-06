@@ -26,26 +26,26 @@ def isDATAMARK(filename):  # @UnusedVariable
     # file like readDATAMARK and check for errors
     century = "20"  # hardcoded ;(
     try:
-        fpin = open(filename, "rb")
-        fpin.read(4)
-        buff = fpin.read(6)
-        yy = century + "%02x" % np.fromstring(buff[0:1], dtype='b')[0]
-        mm = "%x" % np.fromstring(buff[1:2], dtype='b')[0]
-        dd = "%x" % np.fromstring(buff[2:3], dtype='b')[0]
-        hh = "%x" % np.fromstring(buff[3:4], dtype='b')[0]
-        mi = "%x" % np.fromstring(buff[4:5], dtype='b')[0]
-        sec = "%x" % np.fromstring(buff[5:6], dtype='b')[0]
+        with open(filename, "rb") as fpin:
+            fpin.read(4)
+            buff = fpin.read(6)
+            yy = century + "%02x" % np.fromstring(buff[0:1], dtype='b')[0]
+            mm = "%x" % np.fromstring(buff[1:2], dtype='b')[0]
+            dd = "%x" % np.fromstring(buff[2:3], dtype='b')[0]
+            hh = "%x" % np.fromstring(buff[3:4], dtype='b')[0]
+            mi = "%x" % np.fromstring(buff[4:5], dtype='b')[0]
+            sec = "%x" % np.fromstring(buff[5:6], dtype='b')[0]
 
-        # This will raise for invalid dates.
-        UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
-                    int(sec))
-        buff = fpin.read(4)
-        np.fromstring(buff[0:1], dtype='b')[0]
-        np.fromstring(buff[1:2], dtype='b')[0]
-        np.fromstring(buff[2:3], dtype='b')[0] >> 4
-        np.fromstring(buff[3:4], dtype='b')[0]
-        idata00 = fpin.read(4)
-        np.fromstring(idata00, '>i')[0]
+            # This will raise for invalid dates.
+            UTCDateTime(int(yy), int(mm), int(dd), int(hh), int(mi),
+                        int(sec))
+            buff = fpin.read(4)
+            np.fromstring(buff[0:1], dtype='b')[0]
+            np.fromstring(buff[1:2], dtype='b')[0]
+            np.fromstring(buff[2:3], dtype='b')[0] >> 4
+            np.fromstring(buff[3:4], dtype='b')[0]
+            idata00 = fpin.read(4)
+            np.fromstring(idata00, '>i')[0]
     except:
         return False
     return True
