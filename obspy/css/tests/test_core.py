@@ -4,6 +4,9 @@
 The obspy.css.core test suite.
 """
 
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import open
 from obspy import read
 from obspy.core import UTCDateTime, Trace, Stream
 from obspy.core.util import NamedTemporaryFile
