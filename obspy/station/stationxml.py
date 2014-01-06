@@ -241,7 +241,7 @@ def _read_channel(cha_element, _ns):
                                           SampleRate)
     # Parse the optional sample rate ratio.
     sample_rate_ratio = cha_element.find(_ns("SampleRateRatio"))
-    if sample_rate_ratio:
+    if sample_rate_ratio is not None:
         channel.sample_rate_ratio_number_samples = \
             _tag2obj(sample_rate_ratio, _ns("NumberSamples"), int)
         channel.sample_rate_ratio_number_seconds = \

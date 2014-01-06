@@ -3,12 +3,12 @@
 <FDSNStationXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://www.fdsn.org/xml/station/1" schemaVersion="1.0" xsi:schemaLocation="http://www.fdsn.org/xml/station/1 http://www.fdsn.org/xml/station/fdsn-station-1.0.xsd">
  <Source>IRIS-DMC</Source>
  <Sender>IRIS-DMC</Sender>
- <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.7</Module>
+ <Module>IRIS WEB SERVICE: fdsnws-station | version: 1.0.8</Module>
  <ModuleURI>http://service.iris.edu/fdsnws/station/1/query?endbefore=2011-02-07T00%3A00%3A00.000000&amp;maxlongitude=-170.0&amp;startafter=2003-01-07T00%3A00%3A00.000000&amp;minlatitude=15.0&amp;maxlatitude=55.0&amp;minlongitude=170.0</ModuleURI>
- <Created>2013-10-03T21:30:16</Created>
+ <Created>2013-12-29T07:43:13</Created>
  <Network code="IM" startDate="1965-01-01T00:00:00" endDate="2500-12-12T23:59:59" restrictedStatus="open">
   <Description>International Miscellaneous Stations</Description>
-  <TotalNumberStations>149</TotalNumberStations>
+  <TotalNumberStations>178</TotalNumberStations>
   <SelectedNumberStations>2</SelectedNumberStations>
   <Station code="ATTU1" startDate="2006-06-20T00:00:00" endDate="2010-04-01T19:15:00" restrictedStatus="open">
    <Latitude>52.882099</Latitude>

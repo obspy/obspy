@@ -1029,7 +1029,7 @@ def build_url(base_url, service, major_version, resource_type, parameters={}):
     """
     # Only allow certain resource types.
     if service not in ["dataselect", "event", "station"]:
-        msg = "Resource type '%s' not allowed. Allowed resource types: \n%s" %\
+        msg = "Resource type '%s' not allowed. Allowed types: \n%s" % \
             (service, ",".join(("dataselect", "event", "station")))
         raise ValueError(msg)
 
