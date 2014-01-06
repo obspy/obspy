@@ -2713,7 +2713,8 @@ def isPickle(filename):  # @UnusedVariable
     """
     if isinstance(filename, str):
         try:
-            st = pickle.load(open(filename, 'rb'))
+            with open(filename, 'rb') as fp:
+                st = pickle.load(fp)
         except:
             return False
     else:

@@ -5,7 +5,6 @@ CSS bindings to ObsPy core module.
 
 from __future__ import unicode_literals
 from future.builtins import int
-from future.builtins import open
 import os
 import struct
 import numpy as np
