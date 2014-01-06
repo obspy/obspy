@@ -52,7 +52,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
     t = np.linspace(0., tmax, npts)
     f = np.logspace(np.log10(fmin), np.log10(fmax), nf)
 
-    cwt = np.zeros((npts / 2, nf), dtype=np.complex)
+    cwt = np.zeros((npts // 2, nf), dtype=np.complex)
 
     if wl == 'morlet':
         psi = lambda t: np.pi ** (-.25) * np.exp(1j * w0 * t) * \

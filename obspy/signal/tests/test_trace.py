@@ -97,7 +97,7 @@ class TraceTestCase(unittest.TestCase):
                 self.assertEqual(len(tr.stats.processing), 1)
                 processing = "filter:%s:%s" % (filt_type, filt_ops)
                 for part in re.split("[,{}]", tr.stats.processing[0]):
-                    self.assertTrue(part in processing)
+                    self.assertTrue(part.strip() in processing)
                 # another filter run
                 tr.filter(filt_type, **filt_ops)
                 data_filt = filter_map[filt_type](
@@ -107,8 +107,9 @@ class TraceTestCase(unittest.TestCase):
                 self.assertTrue('processing' in tr.stats)
                 self.assertEqual(len(tr.stats.processing), 2)
                 for proc_info in tr.stats.processing:
-                    self.assertEqual(proc_info, "filter:%s:%s" %
-                                     (filt_type, filt_ops))
+                    processing = "filter:%s:%s" % (filt_type, filt_ops)
+                    for part in re.split("[,{}]", proc_info):
+                        self.assertTrue(part.strip() in processing)
         # some tests that should raise an Exception
         tr = traces[0]
         bad_filters = [

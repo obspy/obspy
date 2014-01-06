@@ -342,7 +342,7 @@ class InvSimTestCase(unittest.TestCase):
                     UTCDateTime(2012, 9, 4, 5, 12, 15, 863300)]
             kwargs = {'units': 'VEL', 'freq': True}
             _h, f = evalresp(*args, **kwargs)
-            self.assertEquals(len(f), nfft // 2 + 1)
+            self.assertEqual(len(f), nfft // 2 + 1)
 
     def test_evalresp_file_like_object(self):
         """

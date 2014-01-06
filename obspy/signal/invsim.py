@@ -36,7 +36,7 @@ import math as M
 import numpy as np
 import os
 import scipy.signal
-from . import util
+from obspy.signal import util
 import warnings
 
 
@@ -83,7 +83,7 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
     >>> npts = 100
     >>> p = 0.1
     >>> tap3 = cosTaper(npts, p)
-    >>> ( tap3[npts*p/2.:npts*(1-p/2.)]==np.ones(npts*(1-p)) ).all()
+    >>> ( tap3[int(npts*p/2):int(npts*(1-p/2))]==np.ones(int(npts*(1-p))) ).all()
     True
     """
     if p < 0 or p > 1:
