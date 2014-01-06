@@ -20,6 +20,7 @@ before_install:
   - pip install geographiclib
   - pip install --use-wheel --no-index --find-links=/tmp/wheelhouse-master matplotlib
   - pip install --use-mirrors flake8
+  - pip install --use-mirrors future
   - pip freeze
 install:
   - git remote add obspy git://github.com/obspy/obspy.git
