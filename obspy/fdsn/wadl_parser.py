@@ -17,6 +17,7 @@ from obspy.fdsn.header import DEFAULT_DATASELECT_PARAMETERS, \
     DEFAULT_STATION_PARAMETERS, DEFAULT_EVENT_PARAMETERS, \
     WADL_PARAMETERS_NOT_TO_BE_PARSED, DEFAULT_TYPES
 
+from collections import defaultdict
 from lxml import etree
 import warnings
 
@@ -51,6 +52,39 @@ class WADLParser(object):
 
         # Retrieve all the parameters.
         parameters = self._xpath(doc, "//method[@name='GET']/request/param")
+
+        # The following is an attempt to parse WADL files in a very general way
+        # that is hopefully able to deal with faulty WADLs as maintaining a
+        # list of special cases for different WADLs is not a good solution.
+        all_parameters = defaultdict(list)
+
+        # Group the parameters by the 'id' attribute of the greatparents tag.
+        # The 'name' tag will always be 'GET' due to the construction of the
+        # xpath expression.
+        for param in parameters:
+            gparent = param.getparent().getparent()
+            id_attr = gparent.get("id") or ""
+            all_parameters[id_attr.lower()].append(param)
+
+        # If query is a key, choose it.
+        if "query" in all_parameters:
+            parameters = all_parameters["query"]
+        # Otherwise discard any keys that have "auth" in them but choose others
+        # that have query in them. If all of that fails but an empty "id"
+        # attribute is available, choose that.
+        else:
+            for key in all_parameters.iterkeys():
+                if "query" in key and "auth" not in key:
+                    parameters = all_parameters[key]
+                    break
+            else:
+                if "" in all_parameters:
+                    parameters = all_parameters[""]
+                else:
+                    msg = "Could not parse the WADL at '%s'. Invalid WADL?" \
+                        % url
+                    raise ValueError(msg)
+
         if not parameters:
             msg = "Could not find any parameters"
             raise ValueError(msg)
