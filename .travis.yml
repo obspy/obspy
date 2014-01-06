@@ -22,7 +22,7 @@ before_install:
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build numpy
   - pip wheel ${WHEEL_BUILD_ARGS} scipy
   - pip install --upgrade --use-wheel --no-index --find-links=/tmp/wheelhouse-build scipy
-  - pip wheel ${WHEEL_BUILD_ARGS} matplotlib lxml sqlalchemy m2crypto
+  - pip wheel ${WHEEL_BUILD_ARGS} matplotlib lxml sqlalchemy m2crypto six
   - if [ "${TRAVIS_PYTHON_VERSION:0:1}" == '3' ]; then SUDS='suds-jurko'; else SUDS='suds'; fi; pip wheel ${WHEEL_BUILD_ARGS} $SUDS
   - git clone https://${GH_TOKEN}@github.com/obspy/wheelhouse.git /tmp/wheelhouse
   - mv -n /tmp/wheelhouse-build/* /tmp/wheelhouse/
