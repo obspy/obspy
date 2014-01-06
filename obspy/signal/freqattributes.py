@@ -291,7 +291,7 @@ def logbankm(p, n, fs, w):
     b3 = int(np.floor(bl[2]))
     b1 = int(np.floor(bl[0])) + 1
     b4 = int(min(fn2, np.ceil(bl[3]))) - 1
-    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype=np.float) / n) * fs) / (fl)) / lr
+    pf = np.log(((np.arange(b1 - 1, b4 + 1, dtype='f8') / n) * fs) / (fl)) / lr
     fp = np.floor(pf)
     pm = pf - fp
     k2 = b2 - b1 + 1
@@ -311,7 +311,7 @@ def logbankm(p, n, fs, w):
     # bugfix for #70 - scipy.sparse.csr_matrix() delivers sometimes a
     # transposed matrix depending on the installed NumPy version - using
     # scipy.sparse.coo_matrix() ensures compatibility with old NumPy versions
-    xx = sparse.coo_matrix((v, (c,r))).transpose().todense()
+    xx = sparse.coo_matrix((v, (c, r))).transpose().todense()
     return xx, mn - 1, mx - 1
 
 
