@@ -82,6 +82,7 @@ KEYWORDS = [
     'taup', 'travel time', 'trigger', 'VERCE', 'WAV', 'waveform', 'WaveServer',
     'WaveServerV', 'WebDC', 'web service', 'Winston', 'XML-SEED', 'XSEED']
 INSTALL_REQUIRES = [
+    'future',
     'numpy>1.0.0',
     'scipy',
     'matplotlib',
