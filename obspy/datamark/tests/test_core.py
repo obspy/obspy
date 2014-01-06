@@ -3,6 +3,7 @@
 """
 The obspy.datamark.core test suite.
 """
+from __future__ import unicode_literals
 
 from obspy import read
 from obspy.core.utcdatetime import UTCDateTime

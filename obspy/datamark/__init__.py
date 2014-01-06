@@ -12,6 +12,7 @@ This module provides read support for DataMark waveform data.
     (http://www.gnu.org/copyleft/lesser.html)
 
 """
+from __future__ import unicode_literals
 
 
 if __name__ == '__main__':

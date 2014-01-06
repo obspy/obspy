@@ -2,6 +2,12 @@
 """
 DATAMARK bindings to ObsPy core module.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import open
+from future.builtins import range
+from future.builtins import int
 
 from obspy import Trace, UTCDateTime, Stream
 import numpy as np
@@ -137,7 +143,7 @@ def readDATAMARK(filename, century="20", **kwargs):  # @UnusedVariable
                     output[chanum].append(idata22)
 
     traces = []
-    for i in output.keys():
+    for i in list(output.keys()):
         t = Trace(data=np.array(output[i]))
         t.stats.channel = str(i)
         t.stats.sampling_rate = float(srate)
