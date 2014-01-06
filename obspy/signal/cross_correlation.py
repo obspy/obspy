@@ -453,7 +453,7 @@ def templatesMaxSimilarity(st, time, streams_templates):
     >>> templ = st.copy().slice(t, t+5)
     >>> for tr in templ:
     ...     tr.data += np.random.random(len(tr)) * tr.data.max() * 0.5
-    >>> print templatesMaxSimilarity(st, t, [templ])
+    >>> print(templatesMaxSimilarity(st, t, [templ]))
     0.922536411468
 
     :param time: Time around which is checked for a similarity. Cross

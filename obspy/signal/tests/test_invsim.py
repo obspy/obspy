@@ -6,11 +6,11 @@ The InvSim test suite.
 from __future__ import division
 from __future__ import unicode_literals
 from future import standard_library
-from future.builtins import open
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.core.util.misc import CatchOutput
+from obspy.core import compatibility
 from obspy.sac import attach_paz
 from obspy.signal.invsim import seisSim, estimateMagnitude, evalresp
 from obspy.signal.invsim import cosTaper
@@ -18,7 +18,6 @@ import gzip
 import numpy as np
 import os
 import unittest
-from io import StringIO
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
@@ -75,9 +74,8 @@ class InvSimTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rjob_20051006.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(file) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -95,9 +93,8 @@ class InvSimTestCase(unittest.TestCase):
                               zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rjob_20051006_%s.gz' % id)
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            with gzip.open(file) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -110,9 +107,8 @@ class InvSimTestCase(unittest.TestCase):
         """
         # load test file
         file = os.path.join(self.path, 'rotz_20081028.gz')
-        f = gzip.open(file)
-        data = np.loadtxt(f)
-        f.close()
+        with gzip.open(file) as f:
+            data = np.loadtxt(f)
 
         # paz of test file
         samp_rate = 200.0
@@ -129,9 +125,8 @@ class InvSimTestCase(unittest.TestCase):
                               zero_mean=False, nfft_pow2=True)
             # load pitsa file
             file = os.path.join(self.path, 'rotz_20081028_%s.gz' % id)
-            f = gzip.open(file)
-            data_pitsa = np.loadtxt(f)
-            f.close()
+            with gzip.open(file) as f:
+                data_pitsa = np.loadtxt(f)
             # calculate normalized rms
             rms = np.sqrt(np.sum((datcorr - data_pitsa) ** 2) /
                           np.sum(data_pitsa ** 2))
@@ -212,14 +207,16 @@ class InvSimTestCase(unittest.TestCase):
                  'station': 'KARC', 'location': 'S1',
                  'starttime': UTCDateTime(2001, 2, 13, 0, 0, 0, 993700),
                  'calib': 1.00868e+09, 'channel': 'BHZ'}
-        tr = Trace(np.loadtxt(sacf), stats)
+        with gzip.open(sacf) as f:
+            tr = Trace(np.loadtxt(f), stats)
 
         attach_paz(tr, pzf, tovel=False)
         tr.data = seisSim(tr.data, tr.stats.sampling_rate,
                           paz_remove=tr.stats.paz, remove_sensitivity=False,
                           pre_filt=(fl1, fl2, fl3, fl4))
 
-        data = np.loadtxt(testsacf)
+        with gzip.open(testsacf) as f:
+            data = np.loadtxt(f)
 
         # import matplotlib.pyplot as plt
         # plt.plot(tr.data)
@@ -364,8 +361,8 @@ class InvSimTestCase(unittest.TestCase):
         tr1.data = seisSim(tr1.data, tr1.stats.sampling_rate,
                            seedresp=seedresp)
 
-        with open(respf) as fh:
-            stringio = StringIO(fh.read())
+        with open(respf, 'rb') as fh:
+            stringio = compatibility.BytesIO(fh.read())
         seedresp['filename'] = stringio
         tr2.data = seisSim(tr2.data, tr2.stats.sampling_rate,
                            seedresp=seedresp)

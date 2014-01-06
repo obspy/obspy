@@ -192,10 +192,10 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 from obspy.signal.filter import bandpass, bandstop, lowpass, highpass, remezFIR, \
-    lobspy.signalowpassFIR, envelope, integerDecimation
+    lowpassFIR, envelope, integerDecimation
 from obspy.signal.rotate import rotate_NE_RT, rotate_RT_NE, rotate_ZNE_LQT, rotate_LQT_ZNE
 from obspy.signal.invsim import cosTaper, cornFreq2Paz, pazToFreqResp, seisSim, specInv, \
-    eobspy.signalstimateMagnitude
+    estimateMagnitude
 from obspy.signal.cpxtrace import normEnvelope, centroid, instFreq, instBwith
 from obspy.signal.util import utlGeoKm, utlLonLat
 from obspy.signal.cross_correlation import xcorr, xcorr_3C, xcorrPickCorrection

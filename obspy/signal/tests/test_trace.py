@@ -8,6 +8,7 @@ from obspy import UTCDateTime, Trace, read
 from obspy.signal import seisSim, bandpass, bandstop, lowpass, highpass
 from obspy.signal.filter import lowpassCheby2
 import unittest
+import re
 
 
 class TraceTestCase(unittest.TestCase):
@@ -36,7 +37,7 @@ class TraceTestCase(unittest.TestCase):
                        remove_sensitivity=True, simulate_sensitivity=True)
         try:
             proc_info = tr.stats.processing
-        except KeyError:
+        except (KeyError, AttributeError):
             proc_info = []
         proc_info.append("simulate:inverse:%s:sensitivity=True" % paz_sts2)
         proc_info.append("simulate:forward:%s:sensitivity=True" % paz_le3d1s)
@@ -94,8 +95,9 @@ class TraceTestCase(unittest.TestCase):
                 np.testing.assert_array_equal(tr.data, data_filt)
                 self.assertTrue('processing' in tr.stats)
                 self.assertEqual(len(tr.stats.processing), 1)
-                self.assertEqual(tr.stats.processing[0],
-                                 "filter:%s:%s" % (filt_type, filt_ops))
+                processing = "filter:%s:%s" % (filt_type, filt_ops)
+                for part in re.split("[,{}]", tr.stats.processing[0]):
+                    self.assertTrue(part in processing)
                 # another filter run
                 tr.filter(filt_type, **filt_ops)
                 data_filt = filter_map[filt_type](

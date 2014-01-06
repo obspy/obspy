@@ -12,6 +12,7 @@ from obspy.signal.spectral_estimation import PPSD, psd, welch_window, \
     welch_taper
 import numpy as np
 import os
+import gzip
 import unittest
 import warnings
 
@@ -96,7 +97,8 @@ class PsdTestCase(unittest.TestCase):
         file_binning = os.path.join(
             self.path, 'BW.KW1._.EHZ.D.2011.090_downsampled__ppsd_mixed.npz')
         # parameters for the test
-        data = np.loadtxt(file_data)
+        with gzip.open(file_data) as f:
+            data = np.loadtxt(f)
         stats = {'_format': 'MSEED',
                  'calib': 1.0,
                  'channel': 'EHZ',

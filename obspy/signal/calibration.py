@@ -212,7 +212,7 @@ def spectral_helper(x, y, NFFT=256, Fs=2, noverlap=0, pad_to=None,
 
     windowVals = np.hanning(NFFT)
 
-    step = NFFT - noverlap
+    step = int(NFFT) - int(noverlap)
     ind = np.arange(0, len(x) - NFFT + 1, step)
     n = len(ind)
     Pxy = np.zeros((numFreqs, n), np.complex_)

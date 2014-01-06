@@ -26,6 +26,7 @@ from future.builtins import zip
 from future.builtins import range
 from future.builtins import open
 from future.builtins import int
+from future.builtins import str
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
@@ -124,18 +125,18 @@ def cosTaper(npts, p=0.1, freqs=None, flimit=None, halfcosine=True,
         #cos_win[idx1:idx2+1] =  0.5 * (1.0 + np.cos((np.pi * \
         #    (idx2 - np.arange(idx1, idx2+1)) / (idx2 - idx1))))
         cos_win[idx1:idx2 + 1] = 0.5 * (
-            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - idx1) /
+            1.0 - np.cos((np.pi * (np.arange(idx1, idx2 + 1) - float(idx1)) /
                           (idx2 - idx1))))
         cos_win[idx2 + 1:idx3] = 1.0
         cos_win[idx3:idx4 + 1] = 0.5 * (
-            1.0 + np.cos((np.pi * (idx3 - np.arange(idx3, idx4 + 1)) /
+            1.0 + np.cos((np.pi * (float(idx3) - np.arange(idx3, idx4 + 1)) /
                           (idx4 - idx3))))
     else:
         cos_win[idx1:idx2 + 1] = np.cos(-(
-            np.pi / 2.0 * (idx2 - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
+            np.pi / 2.0 * (float(idx2) - np.arange(idx1, idx2 + 1)) / (idx2 - idx1)))
         cos_win[idx2 + 1:idx3] = 1.0
         cos_win[idx3:idx4 + 1] = np.cos((
-            np.pi / 2.0 * (idx3 - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
+            np.pi / 2.0 * (float(idx3) - np.arange(idx3, idx4 + 1)) / (idx4 - idx3)))
 
     # if indices are identical division by zero
     # causes NaN values in cos_win
@@ -211,7 +212,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     # evalresp needs files with correct line separators depending on OS
     with NamedTemporaryFile() as fh:
         tempfile = fh.name
-        fh.write(os.linesep.join(data.splitlines()))
+        fh.write(os.linesep.encode('ascii', 'strict').join(data.splitlines()))
         fh.close()
 
         fy = 1 / (t_samp * 2.0)
@@ -220,18 +221,18 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         start_stage = C.c_int(-1)
         stop_stage = C.c_int(0)
         stdio_flag = C.c_int(0)
-        sta = C.create_string_buffer(station)
-        cha = C.create_string_buffer(channel)
-        net = C.create_string_buffer(network)
-        locid = C.create_string_buffer(locid)
-        unts = C.create_string_buffer(units)
+        sta = C.create_string_buffer(station.encode('ascii', 'strict'))
+        cha = C.create_string_buffer(channel.encode('ascii', 'strict'))
+        net = C.create_string_buffer(network.encode('ascii', 'strict'))
+        locid = C.create_string_buffer(locid.encode('ascii', 'strict'))
+        unts = C.create_string_buffer(units.encode('ascii', 'strict'))
         if debug:
-            vbs = C.create_string_buffer("-v")
+            vbs = C.create_string_buffer(b"-v")
         else:
-            vbs = C.create_string_buffer("")
-        rtyp = C.create_string_buffer("CS")
-        datime = C.create_string_buffer(date.formatSEED())
-        fn = C.create_string_buffer(tempfile)
+            vbs = C.create_string_buffer(b"")
+        rtyp = C.create_string_buffer(b"CS")
+        datime = C.create_string_buffer(date.formatSEED().encode('ascii', 'strict'))
+        fn = C.create_string_buffer(tempfile.encode('ascii', 'strict'))
         nfreqs = C.c_int(freqs.shape[0])
         res = clibevresp.evresp(sta, cha, net, locid, datime, unts, fn,
                                 freqs, nfreqs, rtyp, vbs, start_stage,

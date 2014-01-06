@@ -70,7 +70,7 @@ def cwt(st, dt, w0, fmin, fmax, nf=100., wl='morlet'):
         psih = psi(-1 * (t - t[-1] / 2.) / a).conjugate() / np.abs(a) ** .5
         psihf = np.fft.fft(psih, n=nfft)
         tminin = int(t[-1] / 2. / (t[1] - t[0]))
-        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts / 2] * \
+        cwt[:, n] = np.fft.ifft(psihf * sf)[tminin:tminin + npts // 2] * \
             (t[1] - t[0])
     return cwt.T
 

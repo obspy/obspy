@@ -399,7 +399,7 @@ def pkBaer(reltrc, samp_int, tdownmax, tupevent, thr1, thr2, preset_len,
     """
     pptime = C.c_int()
     # c_chcar_p strings are immutable, use string_buffer for pointers
-    pfm = C.create_string_buffer("     ", 5)
+    pfm = C.create_string_buffer(b"     ", 5)
     # be nice and adapt type if necessary
     reltrc = np.require(reltrc, 'float32', ['C_CONTIGUOUS'])
     # intex in pk_mbaer.c starts with 1, 0 index is lost, length must be
