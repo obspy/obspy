@@ -19,6 +19,13 @@ to m/s.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import range
+from future.builtins import open
+from future.builtins import int
 
 from obspy.core.util.base import NamedTemporaryFile
 from obspy.signal.detrend import simple as simpleDetrend
@@ -28,7 +35,7 @@ import math as M
 import numpy as np
 import os
 import scipy.signal
-import util
+from . import util
 import warnings
 
 
@@ -196,7 +203,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
     :rtype: numpy.ndarray complex128
     :return: Frequency response from SEED RESP-file of length nfft
     """
-    if isinstance(filename, basestring):
+    if isinstance(filename, str):
         with open(filename, 'rb') as fh:
             data = fh.read()
     elif hasattr(filename, 'read'):
@@ -234,7 +241,7 @@ def evalresp(t_samp, nfft, filename, date, station='*', channel='*',
         nfreqs, rfreqs, rvec = res[0].nfreqs, res[0].freqs, res[0].rvec
         h = np.empty(nfreqs, dtype='complex128')
         f = np.empty(nfreqs, dtype='float64')
-        for i in xrange(nfreqs):
+        for i in range(nfreqs):
             h[i] = rvec[i].real + rvec[i].imag * 1j
             f[i] = rfreqs[i]
         clibevresp.free_response(res)

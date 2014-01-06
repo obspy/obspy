@@ -17,6 +17,11 @@ Functions for relative calibration.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import str
 
 from obspy.core.stream import Stream
 from obspy.core.trace import Trace

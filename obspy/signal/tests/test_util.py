@@ -3,6 +3,7 @@
 """
 The Filter test suite.
 """
+from __future__ import unicode_literals
 
 from obspy.signal.headers import lib_name, lib_extension
 from obspy.signal import xcorr

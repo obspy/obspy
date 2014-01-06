@@ -18,6 +18,9 @@ Functions to smooth spectra with the so called Konno & Ohmachi method.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 
 import numpy as np
 import warnings
@@ -201,7 +204,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
         np.seterr(**temp)
         new_spec = np.dot(spectra, smoothing_matrix)
         # Eventually apply more than once.
-        for _i in xrange(count - 1):
+        for _i in range(count - 1):
             new_spec = np.dot(new_spec, smoothing_matrix)
         return new_spec
     # Otherwise just calculate the smoothing window every time and apply it.
@@ -213,7 +216,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
-            for _i in xrange(len(frequencies)):
+            for _i in range(len(frequencies)):
                 window = konnoOhmachiSmoothingWindow(
                     frequencies, frequencies[_i], bandwidth,
                     normalize=normalize)
@@ -225,7 +228,7 @@ def konnoOhmachiSmoothing(spectra, frequencies, bandwidth=40, count=1,
             # zero/logarithms of zero.
             temp = np.geterr()
             np.seterr(all='ignore')
-            for _i in xrange(len(frequencies)):
+            for _i in range(len(frequencies)):
                 window = konnoOhmachiSmoothingWindow(
                     frequencies, frequencies[_i], bandwidth,
                     normalize=normalize)

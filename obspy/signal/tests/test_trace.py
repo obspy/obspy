@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import division
+from __future__ import unicode_literals
 
 from copy import deepcopy
 import numpy as np

@@ -17,6 +17,12 @@ Various Routines Related to Spectral Estimation
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import zip
+from future.builtins import int
+from future.builtins import open
 
 import os
 import warnings
@@ -571,7 +577,7 @@ class PPSD():
                     if success:
                         self.__insert_used_time(t1)
                         if verbose:
-                            print t1
+                            print(t1)
                         changed = True
                 t1 += (1 - self.overlap) * self.ppsd_length  # advance
 
@@ -597,7 +603,7 @@ class PPSD():
         if len(tr) != self.len:
             msg = "Got a piece of data with wrong length. Skipping"
             warnings.warn(msg)
-            print len(tr), self.len
+            print(len(tr), self.len)
             return False
         # being paranoid, only necessary if in-place operations would follow
         tr.data = tr.data.astype("float64")
@@ -612,7 +618,7 @@ class PPSD():
         # get instrument response preferably from parser object
         try:
             paz = self.parser.getPAZ(self.id, datetime=tr.stats.starttime)
-        except Exception, e:
+        except Exception as e:
             if self.parser is not None:
                 msg = "Error getting response from parser:\n%s: %s\n" \
                       "Skipping time segment(s)."

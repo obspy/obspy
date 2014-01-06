@@ -20,6 +20,9 @@ Kristekova et. al. (2009).
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import int
 
 import numpy as np
 from obspy.signal import util

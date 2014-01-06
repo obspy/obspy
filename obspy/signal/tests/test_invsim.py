@@ -3,6 +3,10 @@
 """
 The InvSim test suite.
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import open
 
 from obspy import Trace, UTCDateTime, read
 from obspy.core.util.base import NamedTemporaryFile
@@ -14,7 +18,7 @@ import gzip
 import numpy as np
 import os
 import unittest
-from StringIO import StringIO
+from io import StringIO
 
 # Seismometers defined as in Pitsa with one zero less. The corrected
 # signals are in velocity, thus must be integrated to offset and take one
@@ -84,7 +88,7 @@ class InvSimTestCase(unittest.TestCase):
                     'sensitivity': 1.0,
                     'gain': 0.4}
 
-        for id, paz in INSTRUMENTS.iteritems():
+        for id, paz in INSTRUMENTS.items():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, paz_remove=PAZ_LE3D,
                               paz_simulate=paz, water_level=600.0,
@@ -118,7 +122,7 @@ class InvSimTestCase(unittest.TestCase):
                     'sensitivity': 1.0,
                     'gain': 1.5}
 
-        for id, paz in INSTRUMENTS.iteritems():
+        for id, paz in INSTRUMENTS.items():
             # simulate instrument
             datcorr = seisSim(data, samp_rate, paz_remove=PAZ_STS2,
                               paz_simulate=paz, water_level=600.0,

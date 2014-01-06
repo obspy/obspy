@@ -2,6 +2,8 @@
 """
 Defines the libsignal and evalresp structures and blockettes.
 """
+from __future__ import unicode_literals
+from future.builtins import str
 
 from distutils import sysconfig
 import ctypes as C
@@ -27,7 +29,7 @@ for lib_name in lib_names:
         clibsignal = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', lib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
         pass
 else:
     msg = 'Could not load shared library for obspy.signal.\n\n %s' % (e)
@@ -48,7 +50,7 @@ for erlib_name in erlib_names:
         clibevresp = C.CDLL(os.path.join(os.path.dirname(__file__), os.pardir,
                                          'lib', erlib_name + lib_extension))
         break
-    except Exception, e:
+    except Exception as e:
         pass
 else:
     msg = 'Could not load shared library for ' + \

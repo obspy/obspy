@@ -3,6 +3,8 @@
 """
 The psd test suite.
 """
+from __future__ import unicode_literals
+from future.builtins import zip
 
 from obspy import Trace, Stream, UTCDateTime
 from obspy.core.util.base import NamedTemporaryFile

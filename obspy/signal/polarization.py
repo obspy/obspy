@@ -16,6 +16,9 @@ Polarization Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
 
 from scipy import signal
 import numpy as np
@@ -60,7 +63,7 @@ def eigval(datax, datay, dataz, fk, normf=1):
     rect = np.zeros(datax.shape[0], dtype='float64')
     plan = np.zeros(datax.shape[0], dtype='float64')
     i = 0
-    for i in xrange(datax.shape[0]):
+    for i in range(datax.shape[0]):
         covmat[0][0] = np.cov(datax[i, :], rowvar=False)
         covmat[0][1] = covmat[1][0] = np.cov(datax[i, :], datay[i, :],
                                              rowvar=False)[0, 1]

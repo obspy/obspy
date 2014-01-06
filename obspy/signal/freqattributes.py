@@ -16,12 +16,17 @@ Frequency Attributes
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 
 from operator import itemgetter
 from scipy import fftpack, signal, sparse
 from obspy.signal.invsim import seisSim, cornFreq2Paz
 import numpy as np
-import util
+from . import util
 
 
 def mper(data, win, Nfft, n1=0, n2=0):
@@ -81,7 +86,7 @@ def welch(data, win, Nfft, L=0, over=0):
     n0 = (1. - float(over)) * L
     nsect = 1 + int(np.floor((len(data) - L) / (n0)))
     Px = 0
-    for _i in xrange(nsect):
+    for _i in range(nsect):
         Px = Px + mper(data, win, Nfft, n1, n2) / nsect
         n1 = n1 + n0
         n2 = n2 + n0

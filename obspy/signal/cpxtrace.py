@@ -16,12 +16,17 @@ Complex Trace Analysis
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
 
 from numpy import size, pi
 from scipy import signal
 from scipy.integrate import cumtrapz
 import numpy as np
-import util
+from . import util
 
 
 def envelope(data):
@@ -156,7 +161,7 @@ def centroid(data, fk):
             # Integral within window
             half = 0.5 * sum(row)
             # Estimate energy centroid
-            for k in xrange(2, size(row)):
+            for k in range(2, size(row)):
                 t = sum(row[0:k])
                 if (t >= half):
                     frac = (half - (t - sum(row[0:k - 1]))) / \
@@ -177,7 +182,7 @@ def centroid(data, fk):
         # Integral within window
         half = 0.5 * sum(x[1])
         # Estimate energy centroid
-        for k in xrange(2, size(x[1])):
+        for k in range(2, size(x[1])):
             t = sum(x[1][0:k])
             if (t >= half):
                 frac = (half - (t - sum(x[1][0:k - 1]))) / \
