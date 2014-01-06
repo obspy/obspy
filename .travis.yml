@@ -54,7 +54,7 @@ env:
   global:
     - secure: JiBG/vFGw/23q6Y/Sbel35EtqLSl+ehuKBGjrLJtUZFBFxRnbcZvqgDXjC+UpyoPhECMfin/boxvT0nG2p0n3x5Gtp2RyN2ue+U2G5c0ECxe+MTDntBYn2lC6quoIh568uj+gcdLc4Dq2Px9aM0cfQSEBd4TO+ENMgg4MRnEMg0=
     - WHEEL_BUILD_ARGS='-vvv --use-mirrors --allow-all-external --wheel-dir=/tmp/wheelhouse-build'
-    - SUDS=`if [[ ${TRAVIS_PYTHON_VERSION:0:1} == '3' ]]; then echo 'suds-jurko'; else echo 'suds'; fi`
+    - SUDS=`if [ "${TRAVIS_PYTHON_VERSION:0:1}" == '3' ]; then echo 'suds-jurko'; else echo 'suds'; fi`
 script:
   # We change directories to make sure that python won't find the copy
   # of obspy in the source directory, see 
