@@ -396,7 +396,7 @@ class CoefficientsTypeResponseStage(ResponseStage):
                "\tDIGITAL") % value
         value = value.lower()
         if "analog" in value:
-            if "radian" in value:
+            if "rad" in value:
                 self._cf_transfer_function_type = "ANALOG (RADIANS/SECOND)"
             elif "hertz" in value or "hz" in value:
                 self._cf_transfer_function_type = "ANALOG (HERTZ)"
