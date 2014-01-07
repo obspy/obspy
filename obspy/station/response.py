@@ -1013,7 +1013,8 @@ class Response(ComparingObject):
         clibevresp.norm_resp(C.pointer(chan), -1, 0)
         clibevresp.calc_resp(C.pointer(chan), freqs, len(freqs), output,
                              out_units, -1, 0, 0)
-        output *= scale_factor[0]
+        # XXX: Check if this is really not needed.
+        #output *= scale_factor[0]
 
         return output, freqs
 
