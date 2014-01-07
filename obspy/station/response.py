@@ -950,13 +950,15 @@ class Response(ComparingObject):
                     blockette.decimation_correction
                 stage_blkts.append(blkt)
 
-            # Always add the gain.
-            blkt = ew.blkt()
-            blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
-            gain_blkt = blkt.blkt_info.gain
-            gain_blkt.gain = blockette.stage_gain
-            gain_blkt.gain_freq = blockette.stage_gain_frequency
-            stage_blkts.append(blkt)
+            # Add the gain if it is available.
+            if blockette.stage_gain is not None and \
+                    blockette.stage_gain_frequency is not None:
+                blkt = ew.blkt()
+                blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+                gain_blkt = blkt.blkt_info.gain
+                gain_blkt.gain = blockette.stage_gain
+                gain_blkt.gain_freq = blockette.stage_gain_frequency
+                stage_blkts.append(blkt)
 
             if not stage_blkts:
                 msg = "At least one blockette is needed for the stage."
@@ -968,6 +970,19 @@ class Response(ComparingObject):
                 stage_blkts[_i - 1].next_blkt = C.pointer(stage_blkts[_i])
 
             stage_objects.append(st)
+
+        # Attach the instrument sensitivity as stage 0 at the end.
+        st = ew.stage()
+        st.sequence_no = 0
+        st.input_units = 0
+        st.output_units = 0
+        blkt = ew.blkt()
+        blkt.type = ew.ENUM_FILT_TYPES["GAIN"]
+        gain_blkt = blkt.blkt_info.gain
+        gain_blkt.gain = self.instrument_sensitivity.value
+        gain_blkt.gain_freq = self.instrument_sensitivity.frequency
+        st.first_blkt = C.pointer(blkt)
+        stage_objects.append(st)
 
         chan = ew.channel()
         if not stage_objects:
