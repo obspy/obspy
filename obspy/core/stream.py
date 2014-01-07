@@ -2650,20 +2650,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         >>> inv = read_inventory("/path/to/BW_RJOB.xml")
         >>> st.attach_response(inv)
         []
-        >>> tr = st[1]
-        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
-        Channel Response
-           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
-           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
-           4 stages:
-              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
-              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
-              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> st = read()
-        >>> st.attach_response("/path/to/BW_RJOB.xml")
-        []
-        >>> tr = st[1]
+        >>> tr = st[0]
         >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
         Channel Response
            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
@@ -2702,6 +2689,30 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         For details see the corresponding
         :meth:`~obspy.core.trace.Trace.deconvolve` method of
         :class:`~obspy.core.trace.Trace`.
+
+        >>> from obspy import read
+        >>> st = read()
+        >>> # Response object is already attached to example data:
+        >>> resp = st[0].stats.response
+        >>> print resp  # doctest: +NORMALIZE_WHITESPACE +ELLIPSIS
+        Channel Response
+            From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+            Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+            4 stages:
+                Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+                Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+                Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+                Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+        >>> st.deconvolve()
+        <...Stream object at 0x...>
+        >>> st.plot()  # doctest: +SKIP
+
+        .. plot::
+
+            from obspy import read
+            st = read()
+            st.deconvolve()
+            st.plot()
 
         .. note::
 

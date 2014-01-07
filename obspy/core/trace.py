@@ -2024,6 +2024,21 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
         :class:`Trace`.stats.response. Raises an exception if no matching
         response can be found.
 
+        >>> from obspy import read, read_inventory
+        >>> st = read()
+        >>> tr = st[0]
+        >>> inv = read_inventory("/path/to/BW_RJOB.xml")
+        >>> tr.attach_response(inv)
+        >>> print tr.stats.response  # doctest: +ELLIPSIS +NORMALIZE_WHITESPACE
+        Channel Response
+           From M/S (Velocity in Meters Per Second) to COUNTS (Digital Counts)
+           Overall Sensitivity: 2.5168e+09 defined at 0.020 Hz
+           4 stages:
+              Stage 1: PolesZerosResponseStage from M/S to V, gain: 1500.00
+              Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
+              Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+              Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
+
         :type inventories: :class:`~obspy.station.inventory.Inventory` or
             :class:`~obspy.station.network.Network` or a list containing
             objects of these types or a string with a filename of a StationXML
@@ -2095,7 +2110,6 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
             from obspy import read
             st = read()
             tr = st[0]
-            tr.plot()
             tr.deconvolve()
             tr.plot()
 
