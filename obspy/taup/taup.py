@@ -115,7 +115,8 @@ def getTravelTimes(delta, depth, model='iasp91'):
     phases = []
     for _i, phase in enumerate(phase_names):
         # An empty returned string will contain "\x00".
-        phase_name = phase.tostring().strip().replace("\x00", "")
+        phase_name = phase.tostring().strip().\
+                           replace(b"\x00", b"").decode()
         if not phase_name:
             break
         time_dict = {
