@@ -121,7 +121,8 @@ class blkt_info_union(C.Union):
         ("pole_zero", pole_zeroType),
         ("fir", firType),
         ("decimation", decimationType),
-        ("gain", gainType)
+        ("gain", gainType),
+        ("coeff", coeffType)
     ]
 
 

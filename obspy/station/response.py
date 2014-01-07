@@ -885,7 +885,24 @@ class Response(ComparingObject):
                                         C.POINTER(C.c_double))
                 # IIR
                 else:
-                    raise NotImplementedError
+                    blkt.type = ew.ENUM_FILT_TYPES["IIR_COEFFS"]
+                    coeff = blkt.blkt_info.coeff
+
+                    coeff.h0 = 1.0
+                    coeff.nnumer = len(blockette.numerator)
+                    coeff.ndenom = len(blockette.denominator)
+
+                    # XXX: Find a better way to do this.
+                    coeffs = (C.c_double * len(blockette.numerator))()
+                    for i, value in enumerate(blockette.numerator):
+                        coeffs[i] = float(value)
+                    coeff.numer = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
+                    coeffs = (C.c_double * len(blockette.denominator))()
+                    for i, value in enumerate(blockette.denominator):
+                        coeffs[i] = float(value)
+                    coeff.denom = C.cast(C.pointer(coeffs),
+                                         C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
                 raise NotImplementedError
             elif isinstance(blockette, FIRResponseStage):
