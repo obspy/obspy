@@ -96,6 +96,11 @@ examples.
 """
 
 from client import Client
+from header import URL_MAPPINGS
+
+# insert supported URL mapping list dynamically in docstring
+Client.__init__.im_func.func_doc = \
+    Client.__init__.__doc__ % str(sorted(URL_MAPPINGS.keys())).strip("[]")
 
 
 if __name__ == '__main__':

@@ -68,7 +68,7 @@ class Client(object):
         :type base_url: str
         :param base_url: Base URL of FDSN web service compatible server
             (e.g. "http://service.iris.edu") or key string for recognized
-            server (currently "IRIS", "USGS", "RESIF", "NCEDC")
+            server (one of %s)
         :type major_versions: dict
         :param major_versions: Allows to specify custom major version numbers
             for individual services (e.g.

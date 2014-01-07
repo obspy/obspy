@@ -297,6 +297,8 @@ def _createExampleStream(headonly=False):
             st.append(Trace(data=data[channel], header=header))
         else:
             st.append(Trace(header=header))
+    from obspy.station import read_inventory
+    st.attach_response(read_inventory("/path/to/BW_RJOB.xml"))
     return st
 
 
@@ -2686,6 +2688,25 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 else:
                     raise
         return skipped_traces
+
+    def deconvolve(self, *args, **kwargs):
+        """
+        Method to deconvolve instrument response for all Traces in Stream.
+
+        For details see the corresponding
+        :meth:`~obspy.core.trace.Trace.deconvolve` method of
+        :class:`~obspy.core.trace.Trace`.
+
+        .. note::
+
+            This operation is performed in place on the actual data arrays. The
+            raw data is not accessible anymore afterwards. To keep your
+            original data, use :meth:`~obspy.core.stream.Stream.copy` to create
+            a copy of your stream object.
+        """
+        for tr in self:
+            tr.deconvolve(*args, **kwargs)
+        return self
 
 
 def isPickle(filename):  # @UnusedVariable
