@@ -2,6 +2,9 @@
 """
 obspy.taup - Travel time calculation tool
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import str
 import inspect
 import numpy as np
 import os
@@ -187,7 +190,7 @@ def travelTimePlot(min_degree=0, max_degree=360, npoints=1000,
                     data[phase][1].append(np.NaN)
                     data[phase][0].append(degree)
     # Plot and some formatting.
-    for key, value in data.iteritems():
+    for key, value in data.items():
         plt.plot(value[0], value[1], '.', label=key)
     plt.grid()
     plt.xlabel('Distance (degrees)')
