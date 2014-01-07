@@ -181,12 +181,13 @@ class Unpickler(object):
         degrees = 180 * radians / np.pi
         return degrees
 
-    def _sphericalToCartesian(self, (lenght, azimuth, plunge)):
+    def _sphericalToCartesian(self, spherical_coords):
+        length, azimuth, plunge = spherical_coords
         plunge_rad = self._toRad(plunge)
         azimuth_rad = self._toRad(azimuth)
-        x = lenght * np.sin(plunge_rad) * np.cos(azimuth_rad)
-        y = lenght * np.sin(plunge_rad) * np.sin(azimuth_rad)
-        z = lenght * np.cos(plunge_rad)
+        x = length * np.sin(plunge_rad) * np.cos(azimuth_rad)
+        y = length * np.sin(plunge_rad) * np.sin(azimuth_rad)
+        z = length * np.cos(plunge_rad)
         return (x, y, z)
 
     def _angleBetween(self, u1, u2):
