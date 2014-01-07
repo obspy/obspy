@@ -768,7 +768,10 @@ class Response(ComparingObject):
                 "MM/S**2": ew.ENUM_UNITS["ACC"],
                 "MM/SEC**2": ew.ENUM_UNITS["ACC"],
                 "V": ew.ENUM_UNITS["VOLTS"],
+                # This is weird, but evalresp appears to do the same.
+                "V/M": ew.ENUM_UNITS["VOLTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
+                "T": ew.ENUM_UNITS["TESLA"],
                 "PA": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
