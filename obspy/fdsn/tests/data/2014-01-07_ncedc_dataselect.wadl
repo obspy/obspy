@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<application xmlns="http://wadl.dev.java.net/2009/02">
+  <doc title="FDSN dataselect web service 1.0"/>
+  <grammars/>
+  <resources base="http://service.ncedc.org/fdsnws/dataselect/1/">
+    <resource path="/">
+      <method name="GET" id="root">
+        <response>
+          <representation mediaType="text/html"/>
+        </response>
+      </method>
+      <resource path="/query">
+        <method name="GET" id="query">
+          <request>
+            <param name="starttime" style="query" required="true" type="xs:date"/>
+            <doc xml:lang="english" title="limit to channels that are active on or after the specified start time">
+              Examples: starttime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000 </doc>
+            <param name="endtime" style="query" required="true" type="xs:date"/>
+            <doc xml:lang="english" title="limit to channels that are active on or before the specified end time">
+              Examples: endtime=2012-11-29 or 2012-11-29T00:00:00 or 2012-11-29T00:00:00.000 </doc>
+            <param name="network" style="query" type="xs:string"/>
+            <doc xml:lang="english" title="Select one or more network codes. Lists and wildcards are accepted"> Examples:
+              network=BK or network=BK,NC or network=B? </doc>
+            <param name="station" style="query" type="xs:string"/>
+            <doc xml:lang="english" title="Select one or more SEED station codes. Lists and wildcards are accepted">
+              Examples: station=BKS or station=BKS,CMB or station=C* or station=?MN? </doc>
+            <param name="location" style="query" type="xs:string"/>
+            <doc xml:lang="english" title="Select one or more SEED location codes. Use -- for spaces. Lists and wildcards are accepted">
+              Examples: location=-- or location=?0 or location=--,10 </doc>
+            <param name="channel" style="query" type="xs:string"/>
+            <doc xml:lang="english" title="Select one or more SEED channel codes. Lists and wildcards are accepted">
+              Examples: channel=BHZ or channel=BH1,BH2 or channel=*Z or channel=BH? </doc>
+          </request>
+          <response>
+            <representation mediaType="text/plain"/>
+            <representation mediaType="application/vnd.fdsn.mseed"/>
+          </response>
+        </method>
+        <method name="POST" id="postQuery">
+          <request>
+            <representation mediaType="*/*"/>
+          </request>
+          <response>
+            <representation mediaType="text/plain"/>
+            <representation mediaType="application/vnd.fdsn.mseed"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/version">
+        <method name="GET" id="version">
+          <response>
+            <representation mediaType="text/plain"/>
+          </response>
+        </method>
+      </resource>
+      <resource path="/application.wadl">
+        <method name="GET" id="application.wadl">
+          <response>
+            <representation mediaType="application/xml"/>
+          </response>
+        </method>
+      </resource>
+    </resource>
+  </resources>
+</application>

@@ -1,0 +1,97 @@
+<application xmlns="http://wadl.dev.java.net/2009/02"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<resources base="http://localhost:8080/fdsnws/1/event">
+		<resource path="query">
+			<method name="GET">
+				<request>
+					<param name="starttime" style="query" type="xsd:dateTime"/>
+					<param name="endtime" style="query" type="xsd:dateTime"/>
+					<param name="minlatitude" style="query" type="xsd:float"/>
+					<param name="maxlatitude" style="query" type="xsd:float"/>
+					<param name="minlongitude" style="query" type="xsd:float"/>
+					<param name="maxlongitude" style="query" type="xsd:float"/>
+					<param name="latitude" style="query" type="xsd:float"/>
+					<param name="longitude" style="query" type="xsd:float"/>
+					<param name="minradius" style="query" type="xsd:float"/>
+					<param name="maxradius" style="query" type="xsd:float"/>
+					<param name="mindepth" style="query" type="xsd:float"/>
+					<param name="maxdepth" style="query" type="xsd:float"/>
+					<param name="minmagnitude" style="query" type="xsd:float"/>
+					<param name="maxmagnitude" style="query" type="xsd:float"/>
+					<param name="magnitudetype" style="query" type="xsd:string"/>
+					<param name="includeallorigins" style="query" type="xsd:boolean" default="false"/>
+					<param name="includemagnitudes" style="query" type="xsd:boolean" default="false"/>
+					<param name="includearrivals" style="query" type="xsd:boolean" default="false"/>
+					<param name="includepicks" style="query" type="xsd:boolean" default="false"/>
+					<param name="eventid" style="query" repeating="true"/>
+					<param name="limit" style="query" type="xsd:int"/>
+					<param name="offset" style="query" type="xsd:int" default="1">
+						<doc title="definition">
+							The FDSNWS specification uses a weird definition of
+							an offset where the first element is not addressed
+							by 'offset=0' but 'offset=1'. So the implementation
+							will decrement the offset value by one when
+							generating the SQL database query.
+						</doc>
+					</param>
+					<param name="orderby" style="query" type="xsd:string" default="time">
+						<option value="time"/>
+						<option value="time-asc"/>
+						<option value="magnitude"/>
+						<option value="magnitude-asc"/>
+					</param>
+					<param name="contributor" style="query" type="xsd:string" default="time"/>
+					<param name="updatedafter" style="query" type="xsd:dateTime"/>
+					<!-- additional, non standard parameters -->
+					<param name="output" style="query" type="xsd:string" default="qml">
+						<option value="qml" mediaType="application/xml"/>
+						<option value="qml-rt" mediaType="application/xml"/>
+						<option value="sc3ml" mediaType="application/xml"/>
+						<option value="csv" mediaType="text/plain"/>
+					</param>
+					<param name="includecomments" style="query" type="xsd:boolean" default="true"/>
+					<param name="formatted" style="query" type="xsd:boolean" default="false"/>
+					<param name="nodata" style="query" type="xsd:int" default="204">
+						<option value="204"/>
+						<option value="404"/>
+					</param>
+				</request>
+				<response status="200">
+					<representation mediaType="application/xml"/>
+					<representation mediaType="text/plain"/>
+				</response>
+				<response status="204 400 404 413 414 500 503">
+					<representation mediaType="text/plain"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="catalogs">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="contributors">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="version">
+			<method name="GET">
+				<response>
+					<representation mediaType="text/plain"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="application.wadl">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+	</resources>
+</application>

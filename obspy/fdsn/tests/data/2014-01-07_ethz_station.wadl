@@ -1,0 +1,81 @@
+<application xmlns="http://wadl.dev.java.net/2009/02"
+		xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<resources base="http://localhost:8080/fdsnws/1/station">
+		<resource path="query">
+			<method name="GET">
+				<request>
+					<param name="starttime" style="query" type="xsd:dateTime"/>
+					<param name="endtime" style="query" type="xsd:dateTime"/>
+					<param name="startbefore" style="query" type="xsd:dateTime"/>
+					<param name="startafter" style="query" type="xsd:dateTime"/>
+					<param name="endbefore" style="query" type="xsd:dateTime"/>
+					<param name="endafter" style="query" type="xsd:dateTime"/>
+					<param name="network" style="query" type="xsd:string"/>
+					<param name="station" style="query" type="xsd:string"/>
+					<param name="location" style="query" type="xsd:string"/>
+					<param name="channel" style="query" type="xsd:string"/>
+					<param name="minlatitude" style="query" type="xsd:float"/>
+					<param name="maxlatitude" style="query" type="xsd:float"/>
+					<param name="minlongitude" style="query" type="xsd:float"/>
+					<param name="maxlongitude" style="query" type="xsd:float"/>
+					<param name="latitude" style="query" type="xsd:float"/>
+					<param name="longitude" style="query" type="xsd:float"/>
+					<param name="minradius" style="query" type="xsd:float"/>
+					<param name="maxradius" style="query" type="xsd:float"/>
+					<param name="level" style="query" type="xsd:string" default="station">
+						<option value="network"/>
+						<option value="station"/>
+						<option value="channel"/>
+						<option value="response"/>
+					</param>
+					<param name="includerestricted" style="query" type="xsd:boolean" default="false"/>
+					<!-- additional, non standard parameters -->
+					<param name="output" style="query" type="xsd:string" default="fdsnxml">
+						<option value="fdsnxml"/>
+						<option value="stationxml"/>
+						<option value="sc3ml"/>
+					</param>
+					<param name="formatted" style="query" type="xsd:boolean" default="false"/>
+					<param name="nodata" style="query" type="xsd:int" default="204">
+						<option value="204"/>
+						<option value="404"/>
+					</param>
+				</request>
+				<response status="200">
+					<representation mediaType="application/xml"/>
+				</response>
+				<response status="204 400 404 413 414 500 503">
+					<representation mediaType="text/plain"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="catalogs">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="contributors">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="version">
+			<method name="GET">
+				<response>
+					<representation mediaType="text/plain"/>
+				</response>
+			</method>
+		</resource>
+		<resource path="application.wadl">
+			<method name="GET">
+				<response>
+					<representation mediaType="application/xml"/>
+				</response>
+			</method>
+		</resource>
+	</resources>
+</application>
