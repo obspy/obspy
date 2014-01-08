@@ -44,27 +44,30 @@ class ResponseTest(unittest.TestCase):
         station = "ANMO"
         locid = "10"
         channel = "BHZ"
-        units = "VEL"
+        units = ["DISP", "VEL", "ACC"]
 
         seed_file = os.path.join(self.data_dir,
                                  "IRIS_single_channel_with_response.seed")
         p = Parser(seed_file)
-
-        filename = p.getRESP()[0][-1]
-        filename.seek(0, 0)
-
-        seed_response, seed_freq = evalresp(t_samp, nfft, filename, date=date,
-                                            station=station, channel=channel,
-                                            network=network, locid=locid,
-                                            units=units, freq=True)
-
         inv = read_inventory(os.path.join(
             self.data_dir, "IRIS_single_channel_with_response.xml"))
-        xml_response, xml_freq = \
-            inv[0][0][0].response.get_evalresp_response(t_samp, nfft)
 
-        np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
-        np.testing.assert_allclose(seed_response, xml_response, rtol=1E-5)
+        filename = p.getRESP()[0][-1]
+
+        for unit in units:
+            filename.seek(0, 0)
+
+            seed_response, seed_freq = evalresp(
+                t_samp, nfft, filename, date=date, station=station,
+                channel=channel, network=network, locid=locid, units=unit,
+                freq=True)
+
+            xml_response, xml_freq = \
+                inv[0][0][0].response.get_evalresp_response(t_samp, nfft,
+                                                            output=unit)
+
+            np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
+            np.testing.assert_allclose(seed_response, xml_response, rtol=1E-5)
 
 
 def suite():
