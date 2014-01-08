@@ -787,7 +787,8 @@ class Response(ComparingObject):
                 "V/M": ew.ENUM_UNITS["VOLTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
                 "T": ew.ENUM_UNITS["TESLA"],
-                "PA": ew.ENUM_UNITS["PRESSURE"]}
+                "PA": ew.ENUM_UNITS["PRESSURE"],
+                "MBAR": ew.ENUM_UNITS["PRESSURE"]}
             if key not in units_mapping:
                 if key is not None:
                     msg = ("The unit '%s' is not known to ObsPy. Raw evalresp "
