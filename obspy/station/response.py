@@ -911,8 +911,10 @@ class Response(ComparingObject):
                     coeff.denom = C.cast(C.pointer(coeffs),
                                          C.POINTER(C.c_double))
             elif isinstance(blockette, ResponseListResponseStage):
-                msg = ("ResponseListResponseStage not yet implemented. Please"
-                       " contact the developers.")
+                msg = ("ResponseListResponseStage not yet implemented due to "
+                       "missing example data. Please contact the developers "
+                       "with a test data set (waveforms and StationXML "
+                       "metadata).")
                 raise NotImplementedError(msg)
             elif isinstance(blockette, FIRResponseStage):
                 blkt = ew.blkt()
@@ -936,7 +938,9 @@ class Response(ComparingObject):
                 fir.coeffs = C.cast(C.pointer(coeffs),
                                     C.POINTER(C.c_double))
             elif isinstance(blockette, PolynomialResponseStage):
-                raise NotImplementedError
+                msg = ("PolynomialResponseStage not yet implemented. "
+                       "Please contact the developers.")
+                raise NotImplementedError(msg)
             else:
                 # Otherwise it could be a gain only stage.
                 if blockette.stage_gain is not None and \
