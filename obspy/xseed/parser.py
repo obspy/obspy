@@ -8,8 +8,15 @@ Main module containing XML-SEED parser.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import open
+from future.builtins import int
 
-from StringIO import StringIO
+from io import StringIO
 from lxml.etree import Element, SubElement, tostring, parse as xmlparse
 from obspy import __version__
 from obspy.core.utcdatetime import UTCDateTime
@@ -21,7 +28,7 @@ import copy
 import datetime
 import math
 import os
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import warnings
 import zipfile
 
@@ -145,10 +152,10 @@ class Parser(object):
             warnings.warn("Clearing parser before every subsequent read()")
             self.__init__()
         # try to transform everything into StringIO object
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             if "://" in data:
                 # some URL
-                data = urllib2.urlopen(data).read()
+                data = urllib.request.urlopen(data).read()
             elif os.path.isfile(data):
                 # looks like a file - read it
                 data = open(data, 'rb').read()
@@ -253,11 +260,11 @@ class Parser(object):
         Writes a XML-SEED file with given name.
         """
         result = self.getXSEED(*args, **kwargs)
-        if isinstance(result, basestring):
+        if isinstance(result, str):
             open(filename, 'w').write(result)
             return
         elif isinstance(result, dict):
-            for key, value in result.iteritems():
+            for key, value in result.items():
                 if isinstance(key, datetime.datetime):
                     # past meta data - append timestamp
                     fn = filename.split('.xml')[0]
@@ -333,7 +340,7 @@ class Parser(object):
             cur_station = station[0].station_call_letters.strip()
             cur_network = station[0].network_code.strip()
             # Loop over all blockettes in that station.
-            for _i in xrange(1, len(station)):
+            for _i in range(1, len(station)):
                 # Catch all blockette 52.
                 if station[_i].id == 52:
                     cur_location = station[_i].location_identifier.strip()
@@ -375,7 +382,7 @@ class Parser(object):
             if len(channel_list) == 1:
                 new_resp_list.append(channel_list[0])
             else:
-                for _i in xrange(1, len(channel_list)):
+                for _i in range(1, len(channel_list)):
                     channel_list[_i][1].seek(0, 0)
                     channel_list[0][1].write(channel_list[_i][1].read())
                 new_resp_list.append(channel_list[0])
@@ -602,7 +609,7 @@ class Parser(object):
             raise SEEDParserException(msg)
         self.record_length = length
         if self.debug:
-            print("RECORD LENGTH: %d" % (self.record_length))
+            print(("RECORD LENGTH: %d" % (self.record_length)))
         # Set all temporary attributes.
         self.temp = {'volume': [], 'abbreviations': [], 'stations': []}
         # Jump back to beginning.
@@ -633,7 +640,7 @@ class Parser(object):
             if self.debug:
                 if not record_continuation:
                     print("========")
-                print(record[0:8])
+                print((record[0:8]))
             record = data.read(self.record_length)
         # Use parse once again.
         self._parseMergedData(merged_data.strip(), record_type)
@@ -653,7 +660,7 @@ class Parser(object):
                 if blkt.id == 50:
                     current_network = blkt.network_code.strip()
                     network_id = blkt.network_identifier_code
-                    if isinstance(network_id, basestring):
+                    if isinstance(network_id, str):
                         new_id = ""
                         for _i in network_id:
                             if _i.isdigit():
@@ -782,7 +789,7 @@ class Parser(object):
         Takes the lxml tree of any blockette and returns a blockette object.
         """
         # Get blockette number.
-        blockette_id = int(XML_blockette.values()[0])
+        blockette_id = int(list(XML_blockette.values())[0])
         if blockette_id in HEADER_INFO[record_type].get('blockettes', []):
             class_name = 'Blockette%03d' % blockette_id
             if not hasattr(blockette, class_name):
@@ -843,7 +850,7 @@ class Parser(object):
                 rest_of_the_record = blockette_str[(len(blockette_str) -
                                                     overhead):]
                 # Loop over the number of records to be written.
-                for _i in xrange(
+                for _i in range(
                         int(math.ceil(len(rest_of_the_record) /
                                       float(length)))):
                     return_records.append(record)
@@ -885,7 +892,7 @@ class Parser(object):
         """
         Compares two blockettes.
         """
-        for key in blkt1.__dict__.keys():
+        for key in list(blkt1.__dict__.keys()):
             # Continue if just some meta data.
             if key in utils.IGNORE_ATTR:
                 continue

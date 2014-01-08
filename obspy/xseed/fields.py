@@ -8,6 +8,11 @@ Helper module containing xseed fields.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.builtins import str
+from future.builtins import range
+from future.builtins import int
 
 from lxml.etree import Element, SubElement
 from obspy import UTCDateTime
@@ -100,7 +105,7 @@ class Field(object):
         """
         try:
             text = self.read(data, strict=blockette.strict)
-        except Exception, e:
+        except Exception as e:
             if blockette.strict:
                 raise e
             # default value if not set
@@ -116,7 +121,7 @@ class Field(object):
         self.data = text
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(('  %s: %s' % (self, text)))
 
     def getSEED(self, blockette, pos=0):
         """
@@ -134,7 +139,7 @@ class Field(object):
             result = result[pos]
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, result))
+            print(('  %s: %s' % (self, result)))
         return self.write(result, strict=blockette.strict)
 
     def getXML(self, blockette, pos=0):
@@ -174,10 +179,10 @@ class Field(object):
             result = utils.setXPath(self.xpath, result)
         # create XML element
         node = Element(self.field_name)
-        node.text = unicode(result).strip()
+        node.text = str(result).strip()
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, [node]))
+            print(('  %s: %s' % (self, [node])))
         return [node]
 
     def parseXML(self, blockette, xml_doc, pos=0):
@@ -189,8 +194,8 @@ class Field(object):
             setattr(blockette, self.attribute_name, self.default_value)
             # debug
             if blockette.debug:
-                print('  %s: set to default value %s' % (self,
-                                                         self.default_value))
+                print(('  %s: set to default value %s' % (self,
+                                                         self.default_value)))
             return
         # Parse X-Path if necessary. The isdigit test assures legacy support
         # for XSEED without XPaths.
@@ -206,7 +211,7 @@ class Field(object):
         setattr(blockette, self.attribute_name, self.convert(text))
         # debug
         if blockette.debug:
-            print('  %s: %s' % (self, text))
+            print(('  %s: %s' % (self, text)))
 
 
 class Integer(Field):
@@ -440,7 +445,7 @@ class Loop(Field):
         debug = blockette.debug
         blockette.debug = False
         temp = []
-        for _i in xrange(0, self.length):
+        for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseSEED(blockette, data)
@@ -449,9 +454,9 @@ class Loop(Field):
         # debug
         if debug:
             if len(temp) > 3:
-                print('  LOOP: ... (%d elements) ' % (len(temp)))
+                print(('  LOOP: ... (%d elements) ' % (len(temp))))
             else:
-                print('  LOOP: %s' % (temp))
+                print(('  LOOP: %s' % (temp)))
             blockette.debug = debug
 
     def getSEED(self, blockette):
@@ -464,7 +469,7 @@ class Loop(Field):
             raise Exception(msg % (self.index_field, blockette))
         # loop over number of entries
         data = ''
-        for i in xrange(0, self.length):
+        for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 data += field.getSEED(blockette, i)
@@ -486,7 +491,7 @@ class Loop(Field):
             # parent tag is repeated over every child tag
             # e.g. <parent><i1/><i2/></parent><parent><i1/><i2/></parent>
             root = Element(self.field_name)
-            for _i in xrange(0, self.length):
+            for _i in range(0, self.length):
                 se = SubElement(root, self.field_name)
                 # loop over data fields within one entry
                 for field in self.data_fields:
@@ -495,7 +500,7 @@ class Loop(Field):
             return root.getchildren()
         # loop over number of entries
         root = Element(self.field_name)
-        for _i in xrange(0, self.length):
+        for _i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 node = field.getXML(blockette, _i)
@@ -533,7 +538,7 @@ class Loop(Field):
             if not text:
                 return
             # loop over number of entries
-            for _i in xrange(0, self.length):
+            for _i in range(0, self.length):
                 # loop over data fields within one entry
                 for field in self.data_fields:
                     temp = getattr(blockette, field.attribute_name, [])
@@ -554,7 +559,7 @@ class Loop(Field):
             # standard loop
             root = xml_doc.xpath(self.field_name)[pos]
         # loop over number of entries
-        for i in xrange(0, self.length):
+        for i in range(0, self.length):
             # loop over data fields within one entry
             for field in self.data_fields:
                 field.parseXML(blockette, root, i)

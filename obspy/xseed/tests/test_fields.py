@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library
 
-from StringIO import StringIO
+from io import StringIO
 from obspy import UTCDateTime
 from obspy.xseed.fields import Float, VariableString
 import unittest
@@ -60,22 +62,22 @@ class FieldsTestCase(unittest.TestCase):
         #
         orig = '2008,358,01:30:22.0987~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 98700))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 98700))
         self.assertEqual(field.write(dt), orig)
         #
         orig = '2008,358,01:30:22.9876~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 987600))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 987600))
         self.assertEqual(field.write(dt), orig)
         #
         orig = '2008,358,01:30:22.0005~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 500))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 500))
         self.assertEqual(field.write(dt), orig)
         #
         orig = '2008,358,01:30:22.0000~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 0))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 0))
         self.assertEqual(field.write(dt), orig)
 
     def test_readCompactDateTime(self):
@@ -122,7 +124,7 @@ class FieldsTestCase(unittest.TestCase):
         #9
         orig = '2008,358,01:30:22.0012~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 1200))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 1200))
         self.assertEqual(field.write(dt), orig)
         #
         orig = '2008,358,00:00:22~'
@@ -137,7 +139,7 @@ class FieldsTestCase(unittest.TestCase):
         #
         orig = '2008,358,01~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 0, 0, 0))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 0, 0, 0))
         self.assertEqual(field.write(dt), orig)
         #
         orig = '2008,358~'
@@ -147,7 +149,7 @@ class FieldsTestCase(unittest.TestCase):
         #
         orig = '2008,358,01:30:22.5~'
         dt = field.read(StringIO(orig))
-        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 01, 30, 22, 500000))
+        self.assertEqual(dt, UTCDateTime(2008, 12, 23, 0o1, 30, 22, 500000))
         self.assertEqual(field.write(dt), '2008,358,01:30:22.5000~')
 
 

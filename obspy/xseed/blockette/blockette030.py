@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, Loop

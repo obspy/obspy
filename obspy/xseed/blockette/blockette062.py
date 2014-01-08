@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import range
 
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import FixedString, Float, Integer, Loop
@@ -110,7 +112,7 @@ class Blockette062(Blockette):
             string += '#\t\tPolynomial coefficients:\n' + \
                 '#\t\t  i, coefficient,  error\n'
             if self.number_of_polynomial_coefficients > 1:
-                for _i in xrange(self.number_of_polynomial_coefficients):
+                for _i in range(self.number_of_polynomial_coefficients):
                     string += 'B062F15-16   %2s %13s %13s\n' \
                         % (_i, formatRESP(self.polynomial_coefficient[_i], 6),
                            formatRESP(self.polynomial_coefficient_error[_i],

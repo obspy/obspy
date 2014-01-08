@@ -8,6 +8,11 @@ Various additional utilities for ObsPy xseed.
     GNU Lesser General Public License, Version 3
     (http://www.gnu.org/copyleft/lesser.html)
 """
+from __future__ import division
+from __future__ import unicode_literals
+from future.builtins import range
+from future.builtins import int
+from future.builtins import str
 
 from obspy import UTCDateTime
 import sys
@@ -48,7 +53,7 @@ def DateTime2String(dt, compact=False):
     """
     if isinstance(dt, UTCDateTime):
         return dt.formatSEED(compact)
-    elif isinstance(dt, basestring):
+    elif isinstance(dt, str):
         dt = dt.strip()
     if not dt:
         return ""
@@ -76,7 +81,7 @@ def compareSEED(seed1, seed2):
     # empty records. Redundant code to ease coding...
     recnums = len(seed1) / 4096
     new_seed1 = ''
-    for _i in xrange(recnums):
+    for _i in range(recnums):
         cur_record = seed1[_i * 4096 + 8:(_i + 1) * 4096].strip()
         if cur_record == '':
             continue
@@ -84,7 +89,7 @@ def compareSEED(seed1, seed2):
     seed1 = new_seed1
     recnums = len(seed2) / 4096
     new_seed2 = ''
-    for _i in xrange(recnums):
+    for _i in range(recnums):
         cur_record = seed2[_i * 4096 + 8:(_i + 1) * 4096].strip()
         if cur_record == '':
             continue
@@ -109,7 +114,7 @@ def compareSEED(seed1, seed2):
         seed1 = seed1[0:11] + '%04i' % (l + 1) + seed1[15:(l + 8)] + '~' + \
             seed1[(l + 8):4095] + seed1[4096:]
     # check each byte
-    for i in xrange(0, len(seed1)):
+    for i in range(0, len(seed1)):
         if seed1[i] == seed2[i]:
             continue
         temp = seed1[i] + seed2[i]
@@ -212,4 +217,4 @@ def uniqueList(seq):
     keys = {}
     for e in seq:
         keys[e] = 1
-    return keys.keys()
+    return list(keys.keys())

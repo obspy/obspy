@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import str
 
-from StringIO import StringIO
+from io import StringIO
 from lxml.etree import Element
 from obspy.xseed import DEFAULT_XSEED_VERSION, utils
 from obspy.xseed.fields import Integer, Loop
@@ -44,7 +48,7 @@ class Blockette(object):
         # debug
         if self.debug:
             print("----")
-            print(str(self))
+            print((str(self)))
         # filter versions specific fields
         self.xseed_version = kwargs.get('xseed_version', DEFAULT_XSEED_VERSION)
         self.seed_version = kwargs.get('version', 2.4)
@@ -56,7 +60,7 @@ class Blockette(object):
         temp = 'Blockette %s: %s Blockette' % (
             self.blockette_id, utils.toString(self.blockette_name)) + \
             os.linesep
-        keys = self.__dict__.keys()
+        keys = list(self.__dict__.keys())
         keys = sorted(keys)
         for key in keys:
             if key in utils.IGNORE_ATTR:
@@ -83,13 +87,13 @@ class Blockette(object):
         Parse given data for blockette fields and create attributes.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             expected_length = len(data)
             data = StringIO(data)
         start_pos = data.tell()
         # debug
         if self.debug:
-            print(' DATA: %s' % (data.read(expected_length)))
+            print((' DATA: %s' % (data.read(expected_length))))
             data.seek(-expected_length, 1)
         blockette_fields = self.default_fields + self.getFields()
         # loop over all blockette fields

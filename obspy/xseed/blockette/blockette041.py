@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import int
 
-from StringIO import StringIO
+from io import StringIO
 from obspy.xseed.blockette import Blockette
 from obspy.xseed.fields import Integer, VariableString, FixedString, Float, \
     Loop
@@ -40,7 +44,7 @@ class Blockette041(Blockette):
         response lookup key is expected - this is checked here.
         """
         # convert to stream for test issues
-        if isinstance(data, basestring):
+        if isinstance(data, str):
             expected_length = len(data)
             data = StringIO(data)
         # get current lookup key
@@ -124,7 +128,7 @@ class Blockette041(Blockette):
         if self.number_of_factors > 1:
             string += '#\t\tNumerator coefficients:\n' + \
                       '#\t\t  i, coefficient\n'
-            for _i in xrange(self.number_of_factors):
+            for _i in range(self.number_of_factors):
                 string += 'B041F09    %4s %13s\n' \
                     % (_i, formatRESP(self.FIR_coefficient[_i], 6))
         elif self.number_of_factors == 1:

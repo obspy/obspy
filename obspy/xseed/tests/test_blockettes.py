@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future.builtins import open
+from future.builtins import range
+from future.builtins import int
 
 from glob import iglob
 from obspy.xseed.blockette import Blockette054, Blockette060, Blockette050
@@ -86,7 +90,7 @@ class BlocketteTestCase(unittest.TestCase):
                 raise Exception(msg)
             # Some other stuff is not tested! Please be careful and adhere to
             # the format rules for writing blockette tests.
-            for _i in xrange(len(example)):
+            for _i in range(len(example)):
                 ex_type = example[_i]
                 # Loop over each type in the example and differentiate between
                 # SEED and not SEED types.
@@ -110,7 +114,7 @@ class BlocketteTestCase(unittest.TestCase):
                 ex_type[1] = ex_type[1].replace('PLACEHOLDER', ' ')
                 example[_i] = ex_type[0:2]
         # Now create a dictionary for each example.
-        for _i in xrange(len(examples)):
+        for _i in range(len(examples)):
             ex_dict = {}
             for part in examples[_i]:
                 ex_dict[part[0]] = part[1]
@@ -137,7 +141,7 @@ class BlocketteTestCase(unittest.TestCase):
             versions['SEED']['blkt'].parseSEED(example['SEED'])
 
             # prepare XSEED
-            for key, data in example.iteritems():
+            for key, data in example.items():
                 if not 'XSEED' in key:
                     continue
                 if key == 'XSEED':
@@ -149,13 +153,13 @@ class BlocketteTestCase(unittest.TestCase):
                 versions[key]['data'] = data
             # loop over all combinations
             errmsg = 'Blockette %s - Getting %s from %s\n%s\n!=\n%s'
-            for key1, blkt1 in versions.iteritems():
+            for key1, blkt1 in versions.items():
                 # conversion to SEED
                 seed = blkt1['blkt'].getSEED()
                 self.assertEqual(seed, versions['SEED']['data'],
                                  errmsg % (blkt_number, 'SEED', key1,
                                            seed, versions['SEED']['data']))
-                for key2, blkt2 in versions.iteritems():
+                for key2, blkt2 in versions.items():
                     if key2 == 'SEED':
                         continue
                     xseed = etree.tostring(blkt1['blkt'].getXML(

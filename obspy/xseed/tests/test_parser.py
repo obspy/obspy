@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+from future import standard_library
+from future.builtins import range
+from future.builtins import str
+from future.builtins import open
 
-from StringIO import StringIO
+from io import StringIO
 from lxml import etree
 from obspy import UTCDateTime
 from obspy.core.util import NamedTemporaryFile
