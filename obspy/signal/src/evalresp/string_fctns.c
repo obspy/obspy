@@ -547,8 +547,9 @@ int check_units(char *line) {
  * We will play with string_match ater if more requests show
  * up for pressure data.
 ********************************************/
-  if (strncasecmp(line, "PA", 2) == 0)
+  if ((strncasecmp(line, "PA", 2) == 0) || (strncasecmp(line, "MBAR", 4) == 0))
 	return(PRESSURE);
+
 
 /* IGD 08/21/06 Added support for TESLA */
   if (strncasecmp(line, "T -", 3) == 0)
