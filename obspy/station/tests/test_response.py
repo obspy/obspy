@@ -10,7 +10,6 @@ Test suite for the response handling.
     (http://www.gnu.org/copyleft/lesser.html)
 """
 import inspect
-import obspy
 from obspy.signal.invsim import evalresp
 from obspy.station import read_inventory
 from obspy.xseed import Parser
@@ -39,35 +38,41 @@ class ResponseTest(unittest.TestCase):
         """
         t_samp = 0.05
         nfft = 16384
-        date = obspy.UTCDateTime(2013, 1, 1)
-        network = "IU"
-        station = "ANMO"
-        locid = "10"
-        channel = "BHZ"
+        # Test for different output units.
         units = ["DISP", "VEL", "ACC"]
+        filenames = ["IRIS_single_channel_with_response", "XM.05"]
 
-        seed_file = os.path.join(self.data_dir,
-                                 "IRIS_single_channel_with_response.seed")
-        p = Parser(seed_file)
-        inv = read_inventory(os.path.join(
-            self.data_dir, "IRIS_single_channel_with_response.xml"))
+        for filename in filenames:
+            xml_filename = os.path.join(self.data_dir,
+                                        filename + os.path.extsep + "xml")
+            seed_filename = os.path.join(self.data_dir,
+                                         filename + os.path.extsep + "seed")
 
-        filename = p.getRESP()[0][-1]
+            p = Parser(seed_filename)
+            resp_filename = p.getRESP()[0][-1]
+            inv = read_inventory(xml_filename)
 
-        for unit in units:
-            filename.seek(0, 0)
+            network = inv[0].code
+            station = inv[0][0].code
+            location = inv[0][0][0].location_code
+            channel = inv[0][0][0].code
+            date = inv[0][0][0].start_date
 
-            seed_response, seed_freq = evalresp(
-                t_samp, nfft, filename, date=date, station=station,
-                channel=channel, network=network, locid=locid, units=unit,
-                freq=True)
+            for unit in units:
+                resp_filename.seek(0, 0)
 
-            xml_response, xml_freq = \
-                inv[0][0][0].response.get_evalresp_response(t_samp, nfft,
-                                                            output=unit)
+                seed_response, seed_freq = evalresp(
+                    t_samp, nfft, resp_filename, date=date, station=station,
+                    channel=channel, network=network, locid=location,
+                    units=unit, freq=True)
 
-            np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
-            np.testing.assert_allclose(seed_response, xml_response, rtol=1E-5)
+                xml_response, xml_freq = \
+                    inv[0][0][0].response.get_evalresp_response(t_samp, nfft,
+                                                                output=unit)
+
+                np.testing.assert_allclose(seed_freq, xml_freq, rtol=1E-5)
+                np.testing.assert_allclose(seed_response, xml_response,
+                                           rtol=1E-5)
 
 
 def suite():
