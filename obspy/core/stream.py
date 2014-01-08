@@ -2703,7 +2703,7 @@ seismometer_correction_simulation.html#using-a-resp-file>`_.
                 Stage 2: CoefficientsTypeResponseStage from V to COUNTS, ...
                 Stage 3: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
                 Stage 4: FIRResponseStage from COUNTS to COUNTS, gain: 1.00
-        >>> st.deconvolve()
+        >>> st.deconvolve()  # doctest: +ELLIPSIS
         <...Stream object at 0x...>
         >>> st.plot()  # doctest: +SKIP
 
