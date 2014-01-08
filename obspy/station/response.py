@@ -707,12 +707,6 @@ class Response(ComparingObject):
         Returns frequency response and corresponding frequencies using
         evalresp.
 
-        .. note::
-
-            This method is still experimental. It has been tested for a very
-            large number of responses but there still might be non-working
-            edge-cases.
-
         :type t_samp: float
         :param t_samp: time resolution (inverse frequency resolution)
         :type nfft: int
@@ -730,9 +724,6 @@ class Response(ComparingObject):
         :rtype: tuple of two arrays
         :returns: frequency response and corresponding frequencies
         """
-        msg = ("Response.get_evalresp_response() is experimental and not yet "
-               "tested for all possible response scenarios.")
-        warnings.warn(msg)
         import obspy.signal.evrespwrapper as ew
         from obspy.signal.headers import clibevresp
 
