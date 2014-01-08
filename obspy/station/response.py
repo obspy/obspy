@@ -747,6 +747,10 @@ class Response(ComparingObject):
         scale_factor = [1.0]
 
         def get_unit_mapping(key):
+            try:
+                key = key.upper()
+            except:
+                pass
             units_mapping = {
                 "M": ew.ENUM_UNITS["DIS"],
                 "NM": ew.ENUM_UNITS["DIS"],
@@ -769,6 +773,8 @@ class Response(ComparingObject):
                 "MM/S**2": ew.ENUM_UNITS["ACC"],
                 "MM/SEC**2": ew.ENUM_UNITS["ACC"],
                 "V": ew.ENUM_UNITS["VOLTS"],
+                "VOLT": ew.ENUM_UNITS["VOLTS"],
+                "VOLTS": ew.ENUM_UNITS["VOLTS"],
                 # This is weird, but evalresp appears to do the same.
                 "V/M": ew.ENUM_UNITS["VOLTS"],
                 "COUNTS": ew.ENUM_UNITS["COUNTS"],
@@ -1019,8 +1025,9 @@ class Response(ComparingObject):
 
         chan.nstages = len(stage_objects)
 
-        chan.sensit = self.instrument_sensitivity.value
-        chan.sensfreq = self.instrument_sensitivity.frequency
+        # Evalresp will take care of setting it to the overall sensitivity.
+        chan.sensit = 0.0
+        chan.sensfreq = 0.0
 
         fy = 1 / (t_samp * 2.0)
         # start at zero to get zero for offset/ DC of fft
