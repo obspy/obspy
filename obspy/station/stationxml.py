@@ -296,6 +296,8 @@ def _read_response(resp_element, _ns):
             _read_instrument_polynomial(instrument_polynomial, _ns)
     # Now read all the stages.
     for stage in resp_element.findall(_ns("Stage")):
+        if not len(stage):
+            continue
         response.response_stages.append(_read_response_stage(stage, _ns))
     return response
 
