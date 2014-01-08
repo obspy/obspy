@@ -1,20 +1,17 @@
-dev:
- - obspy.core:
-   * check if ndim == 1 when setting Trace.data and raise if necessary,
-     see #695
- - new method Stream/Trace.remove_response() to remove instrument response
-   from Response object attached to trace(s), e.g. after parsing a
-   StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for using a
-   Parser object (from dataless or xseed) or RESP file, but less
-   cluttered parameters and without the simulating a different instrument
-   part.
-
-0.9.0rc1:
+0.9.0:
  -  general:
    * Added mock testing library.
  - obspy.arclink:
    * user keyword is now required during client initialization
  - obspy.core:
+   * Stream/Trace.attach_response(): convenience method to attach response to
+     traces from inventories.
+   * new method Stream/Trace.remove_response() to remove instrument response
+     from Response object attached to trace(s), e.g. after parsing a
+     StationXML file. Similar to Stream/Trace.simulate(seedresp=...) for
+     using a Parser object (from dataless or xseed) or RESP file, but less
+     cluttered parameters and without the simulating a different instrument
+     part.
    * Updated event classes to QuakeML 1.2 final.
    * Moved obspy.core.event.validate() to obspy.core.quakeml.validate()
    * The writeQuakeML() function, also accessible through
@@ -59,10 +56,10 @@ dev:
    * inverse filtering of catalogs.
    * bugfix: Trace.simulate() now passes the SEED network, station, location,
      and channel identifiers to evalresp.
-   * Stream/Trace.attach_response(): convenience method to attach response to
-     traces from inventories.
    * added command line script "obspy-print" to print information on local
      waveform files
+   * check if ndim == 1 when setting Trace.data and raise if necessary,
+     see #695
  - obspy.css:
    * new module for CSS (Center for Seismic Studies) format
    * currently read support for waveform data
